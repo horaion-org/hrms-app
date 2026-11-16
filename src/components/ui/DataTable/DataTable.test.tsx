@@ -57,6 +57,48 @@ describe("DataTable", () => {
 		);
 	});
 
+	it("given_rowGroups_when_rendered_then_headsEachRunOfAGroupWithItsOwnRow", () => {
+		const grouped = [
+			{ id: "b-1", name: "Main Branch", code: "0010" },
+			{ id: "b-3", name: "Jurong", code: "0010" },
+			{ id: "b-2", name: "Orchard", code: "0002" },
+		];
+		render(
+			<DataTable
+				columns={columns}
+				data={grouped}
+				getRowId={getRowId}
+				label="Branches"
+				rowGroups={{
+					groupOf: (branch) => branch.code,
+					label: (code) => `Code ${code}`,
+				}}
+			/>
+		);
+
+		const headings = screen.getAllByRole("columnheader", { name: /^Code / });
+		expect(headings.map((heading) => heading.textContent)).toEqual([
+			"Code 0010",
+			"Code 0002",
+		]);
+		expect(headings[0]).toHaveAttribute("colspan", "2");
+	});
+
+	it("given_aHeaderCell_when_rendered_then_drawsItInPlaceOfTheHeaderText", () => {
+		render(
+			<DataTable
+				columns={[{ ...columns[0]!, headerCell: <span>Drawn header</span> }]}
+				data={branches}
+				getRowId={getRowId}
+				label="Branches"
+			/>
+		);
+
+		expect(
+			screen.getByRole("columnheader", { name: /Drawn header/ })
+		).toBeVisible();
+	});
+
 	it("sorts a column with a sort value on the client, toggling direction", async () => {
 		const user = userEvent.setup();
 		render(

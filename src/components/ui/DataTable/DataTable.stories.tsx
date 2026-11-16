@@ -269,3 +269,14 @@ export const PhoneNameAndActions: Story = {
 	},
 	parameters: { viewport: { defaultViewport: "mobile1" } },
 };
+
+/** Rows headed by their group, as the Shifts page lists shifts by their group. */
+export const Grouped: Story = {
+	args: {
+		defaultSort: undefined,
+		rowGroups: {
+			groupOf: (branch: Branch): string => branch.code.slice(0, 2),
+			label: (group: string): string => `Codes starting ${group}`,
+		},
+	},
+};

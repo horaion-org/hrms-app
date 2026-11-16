@@ -11,7 +11,7 @@ import {
 	type SortingState,
 	type Updater,
 } from "@tanstack/react-table";
-import { useMemo, useRef, useState, type ReactNode } from "react";
+import { Fragment, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
@@ -51,6 +51,8 @@ export type DataTableColumn<TData extends object> = {
 	id: string;
 	/** Visible header text; also names the column's sort button. */
 	header: string;
+	/** Drawn in the header cell in place of `header`'s text, such as a scale; it carries its own accessible name. */
+	headerCell?: ReactNode;
 	cell: (row: TData) => ReactNode;
 	/** The value the column sorts by; a column with one is sortable. */
 	sortValue?: (row: TData) => string | number;
@@ -124,6 +126,15 @@ export type DataTableProps<TData extends object> = {
 	};
 	/** Shown across the table body when there are no rows. */
 	emptyState?: ReactNode;
+	/**
+	 * Heads each run of rows of one group with a row of its own, as a list of
+	 * shifts by their group: `groupOf` names a row's group and `label` says
+	 * what the heading reads. Rows arrive already in group order.
+	 */
+	rowGroups?: {
+		groupOf: (row: TData) => string;
+		label: (group: string) => ReactNode;
+	};
 	className?: string;
 };
 
@@ -182,6 +193,7 @@ export const DataTable = <TData extends object>({
 	sortControl = "toggle",
 	selection,
 	emptyState,
+	rowGroups,
 	className,
 }: DataTableProps<TData>): FunctionComponent => {
 	const { t } = useTranslation();
@@ -353,7 +365,7 @@ export const DataTable = <TData extends object>({
 													: "min-w-0 truncate"
 											}
 										>
-											{column?.header}
+											{column?.headerCell ?? column?.header}
 										</span>
 										{column === naming &&
 											hiddenSort.bands.map((band) => (
@@ -415,57 +427,82 @@ export const DataTable = <TData extends object>({
 							</td>
 						</tr>
 					)}
-					{rows.map((row) => (
-						<tr key={row.id} className="hover:[&>td]:bg-neutral-50">
-							{selection && (
-								<td
-									className={joinClassNames(
-										bodyCellClasses,
-										selectionCellClasses,
-										checkboxPinClasses
-									)}
-								>
-									<Checkbox
-										hideLabel
-										checked={row.getIsSelected()}
-										className="justify-center"
-										disabled={!row.getCanSelect()}
-										label={t("dataTable.selectRow", {
-											name: selection.rowLabel(row.original),
-										})}
-										onChange={row.getToggleSelectedHandler()}
-									/>
-								</td>
-							)}
-							{[
-								...row.getStartVisibleCells(),
-								...row.getCenterVisibleCells(),
-								...row.getEndVisibleCells(),
-							].map((cell) => {
-								const column = columnsById.get(cell.column.id);
-								return (
-									<td
-										key={cell.id}
-										className={joinClassNames(
-											bodyCellClasses,
-											column?.hideBelow && hiddenBelowClasses[column.hideBelow],
-											column?.cellClassName,
-											column?.pin === "start" && namingColumnPhoneClasses,
-											pinnedCellClasses(cell.column.getIsPinned(), leadingCount)
-										)}
-									>
-										{column?.cell(row.original)}
-										{column === naming && summaryColumns.length > 0 && (
-											<SummaryLine
-												columns={summaryColumns}
-												row={row.original}
+					{rows.map((row, index) => {
+						const group = rowGroups?.groupOf(row.original);
+						const previous = rows[index - 1];
+						const startsGroup =
+							group !== undefined &&
+							(previous === undefined ||
+								rowGroups?.groupOf(previous.original) !== group);
+						return (
+							<Fragment key={row.id}>
+								{startsGroup && (
+									<tr>
+										<th
+											className="border-t border-neutral-400 bg-neutral-100 px-3 pt-4 pb-2 text-left text-sm font-normal text-neutral-900"
+											colSpan={columnCount}
+											scope="colgroup"
+										>
+											{rowGroups?.label(group)}
+										</th>
+									</tr>
+								)}
+								<tr className="hover:[&>td]:bg-neutral-50">
+									{selection && (
+										<td
+											className={joinClassNames(
+												bodyCellClasses,
+												selectionCellClasses,
+												checkboxPinClasses
+											)}
+										>
+											<Checkbox
+												hideLabel
+												checked={row.getIsSelected()}
+												className="justify-center"
+												disabled={!row.getCanSelect()}
+												label={t("dataTable.selectRow", {
+													name: selection.rowLabel(row.original),
+												})}
+												onChange={row.getToggleSelectedHandler()}
 											/>
-										)}
-									</td>
-								);
-							})}
-						</tr>
-					))}
+										</td>
+									)}
+									{[
+										...row.getStartVisibleCells(),
+										...row.getCenterVisibleCells(),
+										...row.getEndVisibleCells(),
+									].map((cell) => {
+										const column = columnsById.get(cell.column.id);
+										return (
+											<td
+												key={cell.id}
+												className={joinClassNames(
+													bodyCellClasses,
+													column?.hideBelow &&
+														hiddenBelowClasses[column.hideBelow],
+													column?.cellClassName,
+													column?.pin === "start" && namingColumnPhoneClasses,
+													pinnedCellClasses(
+														cell.column.getIsPinned(),
+														leadingCount
+													)
+												)}
+											>
+												{column?.cell(row.original)}
+												{column === naming && summaryColumns.length > 0 && (
+													<SummaryLine
+														columns={summaryColumns}
+														row={row.original}
+													/>
+												)}
+											</td>
+										);
+									})}
+								</tr>
+							</Fragment>
+						);
+					})}
 				</tbody>
 			</table>
 		</div>
