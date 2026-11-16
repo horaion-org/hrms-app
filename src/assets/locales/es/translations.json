@@ -3956,7 +3956,8 @@
 		},
 		"forecast": {
 			"title": "Previsión de personal",
-			"description": "Define la demanda de personal de tus turnos. Puedes empezar con algo sencillo y ajustarlo después.",
+			"description": "Cuánto personal necesitan tus turnos, como referencia.",
+			"notUsedYet": "Estas cifras aún no se usan para generar. Cuántas personas tiene cada turno lo deciden sus restricciones de personal. Importar, exportar y reutilizar una previsión están desactivados hasta entonces.",
 			"import": "Importar",
 			"export": "Exportar",
 			"useExisting": "Usar una previsión existente",

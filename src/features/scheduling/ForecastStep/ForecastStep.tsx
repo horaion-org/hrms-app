@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { RadioCard } from "@/components/forms/RadioCard";
 import { Button } from "@/components/ui/Button";
+import { Callout } from "@/components/ui/Callout";
 import {
 	DownloadIcon,
 	GridIcon,
@@ -48,7 +49,9 @@ const isForecastMode = (value: string): value is ForecastMode =>
 
 /**
  * How many staff the schedule needs, either per shift or per time block.
- * Importing, exporting and reusing forecasts wait for the scheduling API.
+ * Nothing here is sent to generate yet: staffing constraints decide how many
+ * people each shift gets. Importing, exporting and reusing forecasts wait for
+ * the scheduling API; the callout says so.
  */
 export const ForecastStep = ({
 	mode,
@@ -101,6 +104,9 @@ export const ForecastStep = ({
 					)
 				}
 			>
+				<Callout className="mt-8">
+					{t("scheduling.forecast.notUsedYet")}
+				</Callout>
 				<p
 					className="mt-8 text-sm font-semibold text-neutral-900"
 					id={questionId}

@@ -4156,7 +4156,8 @@
 		},
 		"forecast": {
 			"title": "Staffing forecast",
-			"description": "Define the staffing demand for your shifts. You can start simple and refine later.",
+			"description": "How many staff your shifts need, for planning.",
+			"notUsedYet": "These numbers aren’t used to generate yet. How many people each shift gets comes from its staffing constraints. Import, export and reusing a forecast are off until they are.",
 			"import": "Import",
 			"export": "Export",
 			"useExisting": "Use existing forecast",

@@ -82,4 +82,12 @@ describe("ForecastStep", () => {
 			screen.getByRole("button", { name: "Use existing forecast" })
 		).toBeDisabled();
 	});
+
+	it("given_anyMode_when_rendered_then_saysTheForecastIsNotUsedToGenerateYet", () => {
+		render(<ForecastStep {...props()} />);
+
+		expect(screen.getByRole("note")).toHaveTextContent(
+			"These numbers aren’t used to generate yet. How many people each shift gets comes from its staffing constraints. Import, export and reusing a forecast are off until they are."
+		);
+	});
 });
