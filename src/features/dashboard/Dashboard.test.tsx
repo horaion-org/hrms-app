@@ -351,6 +351,135 @@ describe("Dashboard", () => {
 	});
 });
 
+const PREFERENCES_PATH = "/api/v1/companies/c-1/me/dashboard-preferences";
+
+/** The member's saved choice: these sections hidden. */
+const savedHidden = (hiddenSections: Array<string>): StubReply => ({
+	status: 200,
+	body: envelope({ hiddenSections }),
+});
+
+/** Whether Home asked for pending leave, the read behind "Pending leave requests". */
+const askedForPendingLeave = (
+	calls: Array<{ method: string; path: string; search: string }>
+): boolean =>
+	calls.some(
+		(call) =>
+			`${call.method} ${call.path}` === LEAVE &&
+			new URLSearchParams(call.search).get("status") === "PENDING"
+	);
+
+describe("Customise Home", () => {
+	it("given_nothingSaved_when_opened_then_showsEverySection", async () => {
+		stubApi({ ...routes(), [`GET ${PREFERENCES_PATH}`]: savedHidden([]) });
+		await open();
+
+		expect(
+			await screen.findByRole("region", { name: "Pending leave requests" })
+		).toBeInTheDocument();
+	});
+
+	it("given_aHiddenSection_when_opened_then_neitherShowsNorReadsIt", async () => {
+		const calls = stubApi({
+			...routes(),
+			[`GET ${PREFERENCES_PATH}`]: savedHidden(["leave-to-decide"]),
+		});
+		await open();
+
+		await screen.findByRole("button", { name: "Customise" });
+		await waitFor(() => {
+			expect(calls.some((call) => call.path === PREFERENCES_PATH)).toBe(true);
+		});
+		expect(
+			screen.queryByRole("region", { name: "Pending leave requests" })
+		).toBeNull();
+		expect(askedForPendingLeave(calls)).toBe(false);
+	});
+
+	it("given_anUnknownSavedKey_when_opened_then_ignoresIt", async () => {
+		stubApi({
+			...routes(),
+			[`GET ${PREFERENCES_PATH}`]: savedHidden(["a-retired-section"]),
+		});
+		await open();
+
+		expect(
+			await screen.findByRole("region", { name: "Pending leave requests" })
+		).toBeInTheDocument();
+	});
+
+	it("given_theDialog_when_aSectionIsCleared_then_hidesItAndSavesTheChoice", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...routes(),
+			[`GET ${PREFERENCES_PATH}`]: savedHidden([]),
+			[`PUT ${PREFERENCES_PATH}`]: savedHidden(["leave-to-decide"]),
+		});
+		await open();
+		await screen.findByRole("region", { name: "Pending leave requests" });
+
+		await user.click(screen.getByRole("button", { name: "Customise" }));
+		await user.click(
+			await screen.findByRole("checkbox", { name: "Pending leave requests" })
+		);
+		await user.click(screen.getByRole("button", { name: "Done" }));
+
+		await waitFor(() => {
+			expect(
+				screen.queryByRole("region", { name: "Pending leave requests" })
+			).toBeNull();
+		});
+		expect(calls.find((call) => call.method === "PUT")?.body).toEqual({
+			hiddenSections: ["leave-to-decide"],
+		});
+	});
+
+	it("given_hiddenSections_when_reset_then_showsEverySectionAgain", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...routes(),
+			[`GET ${PREFERENCES_PATH}`]: savedHidden(["leave-to-decide"]),
+			[`PUT ${PREFERENCES_PATH}`]: savedHidden([]),
+		});
+		await open();
+
+		await user.click(await screen.findByRole("button", { name: "Customise" }));
+		await user.click(
+			await screen.findByRole("button", { name: "Reset to default" })
+		);
+		await user.click(screen.getByRole("button", { name: "Done" }));
+
+		expect(
+			await screen.findByRole("region", { name: "Pending leave requests" })
+		).toBeInTheDocument();
+		expect(calls.find((call) => call.method === "PUT")?.body).toEqual({
+			hiddenSections: [],
+		});
+	});
+
+	it("given_aRefusedSave_when_aSectionIsCleared_then_putsItBackAndSaysSo", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			...routes(),
+			[`GET ${PREFERENCES_PATH}`]: savedHidden([]),
+			[`PUT ${PREFERENCES_PATH}`]: { status: 500 },
+		});
+		await open();
+		await screen.findByRole("region", { name: "Pending leave requests" });
+
+		await user.click(screen.getByRole("button", { name: "Customise" }));
+		const box = await screen.findByRole("checkbox", {
+			name: "Pending leave requests",
+		});
+		await user.click(box);
+
+		expect(
+			await screen.findByText(/^We couldn’t save your choice\./)
+		).toBeInTheDocument();
+		expect(box).toBeChecked();
+	});
+});
+
 describe("Recent Activity", () => {
 	it("given_activity_when_opened_then_listsItAPageAtATime", async () => {
 		const calls = stubApi(routes());
