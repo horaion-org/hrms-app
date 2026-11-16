@@ -28,6 +28,7 @@ describe("ConstraintStatement", () => {
 		expect(container).toHaveTextContent(
 			"Must Everyone gets at least 11 hours off between shifts."
 		);
+		expect(screen.getByText("Must")).toHaveClass("bg-neutral-400");
 	});
 
 	it("puts no tag before a setting, which is neither a Must nor an If possible", () => {
@@ -80,6 +81,8 @@ describe("ConstraintStatement", () => {
 		);
 
 		expect(screen.getAllByText("If possible")).toHaveLength(2);
+		for (const tag of screen.getAllByText("If possible"))
+			expect(tag).toHaveClass("bg-warning-100");
 		expect(screen.getAllByText("If possible")[0]).toHaveAttribute(
 			"title",
 			"Kept when it can be. The schedule shows where it wasn't."

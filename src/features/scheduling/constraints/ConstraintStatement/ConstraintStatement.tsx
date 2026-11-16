@@ -15,6 +15,7 @@ import {
 	sentencePartsOf,
 	type SentenceValue,
 } from "@/features/scheduling/constraints/constraintSentence";
+import { requirementTagTone } from "@/features/scheduling/constraints/requirementTagTones";
 import { problemLines } from "@/features/scheduling/constraints/valueProblems";
 
 export type ConstraintStatementProps = {
@@ -100,7 +101,12 @@ export const ConstraintStatement = ({
 			<p>
 				{tag && (
 					<>
-						<Badge compact className="mr-1" title={tagTitle}>
+						<Badge
+							compact
+							className="mr-1"
+							title={tagTitle}
+							tone={requirementTagTone(firmness)}
+						>
 							{tag}
 						</Badge>{" "}
 					</>
