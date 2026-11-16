@@ -1526,14 +1526,16 @@
 					"create": "Crear roles de acceso",
 					"update": "Editar roles de acceso",
 					"delete": "Eliminar roles de acceso",
-					"assign": "Dar roles de acceso a personas"
+					"assign": "Dar roles de acceso a personas",
+					"assign_system_admin": "Dar o quitar el rol Administrador del sistema"
 				},
 				"actionHints": {
 					"read": "Con sus permisos, y dónde los tiene cada persona",
 					"create": "Solo con permisos que quien lo tiene posee en toda la empresa",
 					"update": "Renombrar, cambiar permisos o desactivar, dentro de los permisos propios",
 					"delete": "Solo roles que nadie tiene",
-					"assign": "O desactivarlos o quitarlos, donde quien lo tiene posee todos los permisos del rol"
+					"assign": "O desactivarlos o quitarlos; solo los roles Propietario del sistema y Administrador del sistema lo tienen",
+					"assign_system_admin": "Solo el rol Propietario del sistema lo tiene"
 				}
 			},
 			"audit_event": {

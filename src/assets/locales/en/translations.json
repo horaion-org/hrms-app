@@ -2536,14 +2536,16 @@
 					"create": "Create access roles",
 					"update": "Edit access roles",
 					"delete": "Delete access roles",
-					"assign": "Give access roles to people"
+					"assign": "Give access roles to people",
+					"assign_system_admin": "Give or remove System Admin"
 				},
 				"actionHints": {
 					"read": "With their permissions, and where each person holds them",
 					"create": "Only with permissions the holder has company-wide",
 					"update": "Rename, change permissions or switch off, within the holder’s own permissions",
 					"delete": "Only roles nobody holds",
-					"assign": "Or switch them off or remove them, where the holder has all the role’s permissions"
+					"assign": "Or switch them off or remove them; only the System Owner and System Admin roles have this",
+					"assign_system_admin": "Only the System Owner role has this"
 				}
 			},
 			"audit_event": {

@@ -22,6 +22,7 @@
       "resource": "company",
       "resourceName": "Company",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -38,6 +39,7 @@
       "resource": "company",
       "resourceName": "Company",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -53,6 +55,7 @@
       "resource": "branch",
       "resourceName": "Branch",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -69,6 +72,7 @@
       "resource": "branch",
       "resourceName": "Branch",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -86,6 +90,7 @@
       "resource": "branch",
       "resourceName": "Branch",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -101,6 +106,7 @@
       "resource": "branch_member",
       "resourceName": "Branch Member",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -118,6 +124,7 @@
       "resource": "branch_member",
       "resourceName": "Branch Member",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -135,6 +142,7 @@
       "resource": "branch_member",
       "resourceName": "Branch Member",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -152,6 +160,7 @@
       "resource": "branch_member",
       "resourceName": "Branch Member",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -168,6 +177,7 @@
       "resource": "department",
       "resourceName": "Department",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -185,6 +195,7 @@
       "resource": "department",
       "resourceName": "Department",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": [
         {
           "key": "branch:read",
@@ -208,6 +219,7 @@
       "resource": "department",
       "resourceName": "Department",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -224,6 +236,7 @@
       "resource": "department_member",
       "resourceName": "Department Member",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -242,6 +255,7 @@
       "resource": "department_member",
       "resourceName": "Department Member",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -260,6 +274,7 @@
       "resource": "department_member",
       "resourceName": "Department Member",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -278,6 +293,7 @@
       "resource": "department_member",
       "resourceName": "Department Member",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -294,6 +310,7 @@
       "resource": "job_title",
       "resourceName": "Job Title",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -312,6 +329,7 @@
       "resource": "job_title",
       "resourceName": "Job Title",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -330,6 +348,7 @@
       "resource": "job_title",
       "resourceName": "Job Title",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -344,6 +363,7 @@
       "resource": "skill",
       "resourceName": "Skill",
       "since": "2026-11-05",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -360,6 +380,7 @@
       "resource": "skill",
       "resourceName": "Skill",
       "since": "2026-11-05",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -376,6 +397,7 @@
       "resource": "skill",
       "resourceName": "Skill",
       "since": "2026-11-05",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -392,6 +414,7 @@
       "resource": "skill",
       "resourceName": "Skill",
       "since": "2026-11-05",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -408,6 +431,7 @@
       "resource": "member_profile",
       "resourceName": "Member Profile",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -426,6 +450,7 @@
       "resource": "member_profile",
       "resourceName": "Member Profile",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": [
         {
           "key": "job_title:read",
@@ -449,6 +474,7 @@
       "resource": "member_profile",
       "resourceName": "Member Profile",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": [
         {
           "key": "job_title:read",
@@ -470,6 +496,7 @@
       "resource": "member_note",
       "resourceName": "Member Note",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": [
         {
           "key": "member_profile:read",
@@ -493,6 +520,7 @@
       "resource": "member_note",
       "resourceName": "Member Note",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -511,6 +539,7 @@
       "resource": "member_note",
       "resourceName": "Member Note",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -529,6 +558,7 @@
       "resource": "member_note",
       "resourceName": "Member Note",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -545,6 +575,7 @@
       "resource": "work_availability",
       "resourceName": "Work Availability",
       "since": "2026-11-03",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -563,6 +594,7 @@
       "resource": "work_availability",
       "resourceName": "Work Availability",
       "since": "2026-11-04",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -579,6 +611,7 @@
       "resource": "shift_preference",
       "resourceName": "Shift Preference",
       "since": "2026-11-16",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -595,6 +628,7 @@
       "resource": "member_event",
       "resourceName": "Member Event",
       "since": "2026-11-16",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -609,6 +643,7 @@
       "resource": "employment_terms",
       "resourceName": "Employment Terms",
       "since": "2026-11-05",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -625,6 +660,7 @@
       "resource": "employment_terms",
       "resourceName": "Employment Terms",
       "since": "2026-11-05",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -641,6 +677,7 @@
       "resource": "member_employment_terms",
       "resourceName": "Member Employment Terms",
       "since": "2026-11-05",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -659,6 +696,7 @@
       "resource": "member_employment_terms",
       "resourceName": "Member Employment Terms",
       "since": "2026-11-05",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -675,6 +713,7 @@
       "resource": "leave_request",
       "resourceName": "Leave Request",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -693,6 +732,7 @@
       "resource": "leave_request",
       "resourceName": "Leave Request",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": [
         {
           "key": "member_profile:read",
@@ -716,6 +756,7 @@
       "resource": "leave_request",
       "resourceName": "Leave Request",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": [
         {
           "key": "approval:decide",
@@ -735,6 +776,7 @@
       "resource": "leave_type",
       "resourceName": "Leave Type",
       "since": "2026-11-05",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -751,6 +793,7 @@
       "resource": "leave_type",
       "resourceName": "Leave Type",
       "since": "2026-11-05",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -767,6 +810,7 @@
       "resource": "leave_duration",
       "resourceName": "Leave Duration",
       "since": "2026-11-13",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -785,6 +829,7 @@
       "resource": "leave_duration",
       "resourceName": "Leave Duration",
       "since": "2026-11-13",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -801,6 +846,7 @@
       "resource": "schedule",
       "resourceName": "Schedule",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": [
         {
           "key": "shift_preference:read",
@@ -824,6 +870,7 @@
       "resource": "schedule",
       "resourceName": "Schedule",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": [
         {
           "key": "shift:read",
@@ -847,6 +894,7 @@
       "resource": "schedule",
       "resourceName": "Schedule",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": [
         {
           "key": "shift:read",
@@ -870,6 +918,7 @@
       "resource": "schedule",
       "resourceName": "Schedule",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": [
         {
           "key": "shift:read",
@@ -897,6 +946,7 @@
       "resource": "schedule",
       "resourceName": "Schedule",
       "since": "2026-11-04",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -915,6 +965,7 @@
       "resource": "schedule",
       "resourceName": "Schedule",
       "since": "2026-11-04",
+      "systemRolesOnly": false,
       "worksWith": [
         {
           "key": "approval:decide",
@@ -938,6 +989,7 @@
       "resource": "schedule",
       "resourceName": "Schedule",
       "since": "2026-11-05",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -954,6 +1006,7 @@
       "resource": "shift",
       "resourceName": "Shift",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -972,6 +1025,7 @@
       "resource": "shift",
       "resourceName": "Shift",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -990,6 +1044,7 @@
       "resource": "shift",
       "resourceName": "Shift",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -1008,6 +1063,7 @@
       "resource": "shift",
       "resourceName": "Shift",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -1024,6 +1080,7 @@
       "resource": "constraint",
       "resourceName": "Constraint",
       "since": "2026-10-13",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -1042,6 +1099,7 @@
       "resource": "constraint",
       "resourceName": "Constraint",
       "since": "2026-10-13",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -1060,6 +1118,7 @@
       "resource": "constraint",
       "resourceName": "Constraint",
       "since": "2026-10-13",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -1078,6 +1137,7 @@
       "resource": "constraint",
       "resourceName": "Constraint",
       "since": "2026-10-13",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -1092,6 +1152,7 @@
       "resource": "scheduling_policy",
       "resourceName": "Work Policy",
       "since": "2026-11-05",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -1108,6 +1169,7 @@
       "resource": "scheduling_policy",
       "resourceName": "Work Policy",
       "since": "2026-11-05",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -1122,6 +1184,7 @@
       "resource": "approval_flow",
       "resourceName": "Approval Flow",
       "since": "2026-11-07",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -1138,6 +1201,7 @@
       "resource": "approval_flow",
       "resourceName": "Approval Flow",
       "since": "2026-11-07",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -1154,6 +1218,7 @@
       "resource": "approval",
       "resourceName": "Approval",
       "since": "2026-11-07",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -1172,6 +1237,7 @@
       "resource": "approval",
       "resourceName": "Approval",
       "since": "2026-11-07",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -1188,6 +1254,7 @@
       "resource": "report",
       "resourceName": "Report",
       "since": "2026-11-16",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -1204,6 +1271,7 @@
       "resource": "access_role",
       "resourceName": "Access Role",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -1220,6 +1288,7 @@
       "resource": "access_role",
       "resourceName": "Access Role",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -1236,6 +1305,7 @@
       "resource": "access_role",
       "resourceName": "Access Role",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -1252,6 +1322,7 @@
       "resource": "access_role",
       "resourceName": "Access Role",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     },
     {
@@ -1270,6 +1341,24 @@
       "resource": "access_role",
       "resourceName": "Access Role",
       "since": "2026-10-11",
+      "systemRolesOnly": true,
+      "worksWith": []
+    },
+    {
+      "action": "assign_system_admin",
+      "actionName": "Give or remove System Admin",
+      "assignableScopes": [
+        "COMPANY"
+      ],
+      "key": "access_role:assign_system_admin",
+      "module": "access_and_activity",
+      "prerequisites": [
+        "access_role:read"
+      ],
+      "resource": "access_role",
+      "resourceName": "Access Role",
+      "since": "2026-11-17",
+      "systemRolesOnly": true,
       "worksWith": []
     },
     {
@@ -1284,6 +1373,7 @@
       "resource": "audit_event",
       "resourceName": "Audit Event",
       "since": "2026-10-11",
+      "systemRolesOnly": false,
       "worksWith": []
     }
   ],
@@ -1365,7 +1455,6 @@
         "access_role:read",
         "access_role:create",
         "access_role:update",
-        "access_role:assign",
         "audit_event:read"
       ]
     },
