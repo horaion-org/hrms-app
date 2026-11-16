@@ -223,6 +223,10 @@ export const AssignAccessRoleDialog = ({
 						id={personId}
 						multiple={false}
 						options={people}
+						placeholder={t(`${key}.personPlaceholder`)}
+						query={query}
+						searchPlaceholder={t(`${key}.searchPlaceholder`)}
+						value={person}
 						renderOption={(member) => (
 							<span className="flex min-w-0 flex-col">
 								<span className="truncate">{member.displayName}</span>
@@ -231,10 +235,6 @@ export const AssignAccessRoleDialog = ({
 								</span>
 							</span>
 						)}
-						placeholder={t(`${key}.personPlaceholder`)}
-						query={query}
-						searchPlaceholder={t(`${key}.searchPlaceholder`)}
-						value={person}
 						onQueryChange={onQueryChange}
 						onChange={(next): void => {
 							setPerson(next);
