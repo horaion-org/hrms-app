@@ -170,13 +170,15 @@ it("submits where a flow applies, then says it waits and lets the submitter see 
 	);
 
 	expect(
-		await screen.findByText("Waiting for approval · step 1 of 2 (Endorse)")
+		await screen.findByText(
+			"You submitted this roster, so you can’t approve it · step 1 of 2 (Endorse)"
+		)
 	).toBeInTheDocument();
 	expect(
 		screen.getByText("Sent for approval. Endorse (step 1 of 2) is asked first.")
 	).toHaveAttribute("role", "status");
 	expect(document.activeElement).toHaveTextContent(
-		"Waiting for approval · step 1 of 2 (Endorse)"
+		"You submitted this roster, so you can’t approve it · step 1 of 2 (Endorse)"
 	);
 	expect(
 		screen.queryByRole("button", { name: "Submit for approval" })
@@ -257,7 +259,9 @@ it("lets a submitter without approval:read see where their submission waits, and
 	);
 
 	expect(
-		await screen.findByText("Waiting for approval · step 1 of 2 (Endorse)")
+		await screen.findByText(
+			"You submitted this roster, so you can’t approve it · step 1 of 2 (Endorse)"
+		)
 	).toBeInTheDocument();
 	expect(screen.queryByText("Needs approval: Endorse → Publish")).toBeNull();
 	expect(

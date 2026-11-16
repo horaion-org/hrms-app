@@ -304,6 +304,7 @@
 		"meta": {
 			"waitingOnYou": "Waiting on you · step {{step}} of {{total}} ({{label}})",
 			"waiting": "Waiting for approval · step {{step}} of {{total}} ({{label}})",
+			"yourSubmission": "You submitted this roster, so you can’t approve it · step {{step}} of {{total}} ({{label}})",
 			"needsApproval": "Needs approval: {{steps}}",
 			"failed": "Couldn’t load the approval.",
 			"retry": "Try again",

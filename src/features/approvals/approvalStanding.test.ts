@@ -175,8 +175,15 @@ describe("approvalMetaLine", () => {
 			key: "approvals.meta.waitingOnYou",
 			values: { step: 1, total: 2, label: "Endorse" },
 		});
-		expect(approvalMetaLine(pending("submitter", STEP_TWO))).toEqual({
+		expect(approvalMetaLine(pending("waiting", STEP_TWO))).toEqual({
 			key: "approvals.meta.waiting",
+			values: { step: 2, total: 2, label: "Publish" },
+		});
+	});
+
+	it("tells the submitter they can't approve their own submission", () => {
+		expect(approvalMetaLine(pending("submitter", STEP_TWO))).toEqual({
+			key: "approvals.meta.yourSubmission",
 			values: { step: 2, total: 2, label: "Publish" },
 		});
 	});
