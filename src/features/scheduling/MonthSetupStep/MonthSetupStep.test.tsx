@@ -252,6 +252,35 @@ describe("MonthSetupStep", () => {
 		expect(onMonthChange).not.toHaveBeenCalledWith("2026-12");
 	});
 
+	it("given_theDefaultMonthChosenByHandAfterAnother_when_aNewSuggestionArrives_then_theChosenMonthStays", async () => {
+		const user = userEvent.setup();
+		const onMonthChange = vi.fn();
+		const { rerender } = render(
+			<Harness suggestedMonth="2026-12" onMonthChange={onMonthChange} />
+		);
+		await vi.waitFor(() => {
+			expect(onMonthChange).toHaveBeenLastCalledWith("2026-12");
+		});
+		await user.click(screen.getByRole("button", { name: /Month/ }));
+		await user.click(
+			await screen.findByRole("option", { name: "January 2027" })
+		);
+		await user.click(screen.getByRole("button", { name: /Month/ }));
+		await user.click(
+			await screen.findByRole("option", { name: "November 2026" })
+		);
+
+		// November is the form's default: chosen by hand, it still holds.
+		rerender(
+			<Harness suggestedMonth="2027-01" onMonthChange={onMonthChange} />
+		);
+
+		expect(onMonthChange).toHaveBeenLastCalledWith("2026-11");
+		expect(screen.getByRole("button", { name: /Month/ })).toHaveTextContent(
+			"November 2026"
+		);
+	});
+
 	it("given_nothingChosen_when_submitted_then_asksForADepartment", async () => {
 		const user = userEvent.setup();
 		const onSubmit = vi.fn();

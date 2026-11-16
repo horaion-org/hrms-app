@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useId, useMemo, type ReactNode } from "react";
+import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
@@ -110,7 +110,7 @@ export const MonthSetupStep = ({
 	const language = formattingLocale(i18n);
 	const workspace = useQuery({ ...workspaceQuery, retry });
 	const schema = useMemo(() => monthSetupSchema(t), [t]);
-	const { control, handleSubmit, setValue, getFieldState, formState } =
+	const { control, handleSubmit, setValue, formState } =
 		useForm<MonthSetupValues>({
 			resolver: zodResolver(schema),
 			defaultValues,
@@ -142,8 +142,9 @@ export const MonthSetupStep = ({
 	useEffect(() => {
 		if (outside) setValue("departmentId", "");
 	}, [outside, setValue]);
-	// A month chosen by hand stays; otherwise the page's suggestion is taken, without marking the field changed.
-	const monthChosenByHand = getFieldState("month", formState).isDirty;
+	// A month the manager chose stays, even one equal to the default; until then the page's suggestion is taken.
+	// A month named in the URL gets no suggestion from the page.
+	const [monthChosenByHand, setMonthChosenByHand] = useState(false);
 	useEffect(() => {
 		if (suggestedMonth && !monthChosenByHand) setValue("month", suggestedMonth);
 	}, [suggestedMonth, monthChosenByHand, setValue]);
@@ -276,7 +277,10 @@ export const MonthSetupStep = ({
 											value: choice,
 											label: formatMonth(choice, language),
 										}))}
-										onChange={field.onChange}
+										onChange={(value) => {
+											setMonthChosenByHand(true);
+											field.onChange(value);
+										}}
 									/>
 								)}
 							/>
