@@ -12,6 +12,13 @@ import { dayTypeInSentence } from "@/features/scheduling/dayTypes";
 import { formatTimeRange } from "@/features/scheduling/formatShift";
 import type { RosterShiftCell } from "@/features/scheduling/roster/roster";
 import { paidShiftHours } from "@/features/scheduling/scheduleDraft";
+import type { SchedulePreferenceOutcome } from "@/features/shiftPreferences/api";
+import {
+	OUTCOME_TONES,
+	outcomeLabelKey,
+	preferredShiftsText,
+	reasonLabelKey,
+} from "@/features/shiftPreferences/preferenceOutcome";
 
 export type ShiftDetailsPanelProps = {
 	staffName: string;
@@ -20,6 +27,8 @@ export type ShiftDetailsPanelProps = {
 	onClose: () => void;
 	/** What needs a look on the day (`RosterDayNotes`), shown first; nothing without. */
 	issues?: ReactNode;
+	/** The person's shift preference that day and what the roster made of it, shown last; nothing without. */
+	preferenceOutcome?: SchedulePreferenceOutcome;
 	className?: string;
 };
 
@@ -28,13 +37,15 @@ const key = "scheduling.detail.shiftDetails";
 /**
  * One worked day beside the roster, read-only: what needs a look on it, who
  * is assigned and on what non-working day type, then its date, time, shift,
- * group and role.
+ * group and role, and the person's shift preference that day with what the
+ * roster made of it.
  */
 export const ShiftDetailsPanel = ({
 	staffName,
 	shift,
 	onClose,
 	issues,
+	preferenceOutcome,
 	className,
 }: ShiftDetailsPanelProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -134,6 +145,32 @@ export const ShiftDetailsPanel = ({
 						</div>
 					))}
 				</dl>
+				{preferenceOutcome && (
+					<dl className="flex flex-col gap-1 px-4 py-4 text-sm">
+						<dt className="font-medium text-neutral-800">
+							{t("shiftPreferences.preference")}
+						</dt>
+						<dd className="flex flex-wrap items-center gap-2 text-neutral-900">
+							{t("shiftPreferences.preferred", {
+								shifts: preferredShiftsText(
+									preferenceOutcome.shiftNames,
+									language
+								),
+							})}
+							<Badge
+								className="uppercase"
+								tone={OUTCOME_TONES[preferenceOutcome.outcome]}
+							>
+								{t(outcomeLabelKey(preferenceOutcome.outcome))}
+							</Badge>
+						</dd>
+						{preferenceOutcome.reason && (
+							<dd className="text-xs text-neutral-800">
+								{t(reasonLabelKey(preferenceOutcome.reason))}
+							</dd>
+						)}
+					</dl>
+				)}
 			</div>
 		</aside>
 	);
