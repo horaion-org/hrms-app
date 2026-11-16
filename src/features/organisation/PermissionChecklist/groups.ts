@@ -9,6 +9,7 @@ import {
 	type PermissionKey,
 	type PermissionUse,
 	requiredFor,
+	ROLE_PERMISSION_KEYS,
 	usesOf,
 } from "@/features/workspace/permissionKeys";
 
@@ -20,15 +21,16 @@ type HintKeyOf<K> = K extends `${infer R}:${infer A}`
 	? `organisation.permissions.${R}.actionHints.${A}`
 	: never;
 
-const LOCAL_KEYS = PERMISSION_KEYS.filter((key) => !isCompanyOnly(key));
+const LOCAL_KEYS = ROLE_PERMISSION_KEYS.filter((key) => !isCompanyOnly(key));
 
 /**
- * The keys a role of `kind` may hold, in the catalog's order: all of them,
- * except the company-only ones for a local role. Every key until a kind is
- * chosen.
+ * The keys a role of `kind` may hold, in the catalog's order: every key but
+ * those only the System Owner and System Admin roles hold (API ADR-0108),
+ * and for a local role not the company-only ones either. Those keys until a
+ * kind is chosen.
  */
 export const keysFor = (kind?: AccessRoleKind): ReadonlyArray<PermissionKey> =>
-	kind === "LOCAL" ? LOCAL_KEYS : PERMISSION_KEYS;
+	kind === "LOCAL" ? LOCAL_KEYS : ROLE_PERMISSION_KEYS;
 
 /**
  * Where a key can be given, as the hint beside it in a role of `kind`. In a

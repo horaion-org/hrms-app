@@ -321,8 +321,34 @@ describe("PermissionChecklist", () => {
 			"Their code, city, country, status and heads. Not at departments"
 		);
 
+		// Assigning is held only by the System Owner and System Admin roles, so a local role can only see roles.
+		await chooseLevel(user, "Access roles", "Can view");
+		expect(latest).toEqual(["access_role:read"]);
+	});
+
+	it("never offers the permissions only the System Owner and System Admin roles hold", async () => {
+		const user = userEvent.setup();
+		render(<Harness initial={[]} kind="COMPANY" />);
+
+		await openDetails(user, "Access roles");
+		expect(
+			within(area("Access roles")).queryByRole("checkbox", {
+				name: "Give access roles to people",
+			})
+		).not.toBeInTheDocument();
+		expect(
+			within(area("Access roles")).queryByRole("checkbox", {
+				name: "Give or remove System Admin",
+			})
+		).not.toBeInTheDocument();
+
 		await chooseLevel(user, "Access roles", "Can manage");
-		expect(latest).toEqual(["access_role:read", "access_role:assign"]);
+		expect(latest).toEqual([
+			"access_role:read",
+			"access_role:create",
+			"access_role:update",
+			"access_role:delete",
+		]);
 	});
 
 	it("marks areas with whole-company parts until a kind is chosen", () => {

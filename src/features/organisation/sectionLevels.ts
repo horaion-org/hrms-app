@@ -2,12 +2,12 @@ import type { TFunction } from "i18next";
 import {
 	definitionOf,
 	moduleOf,
-	PERMISSION_KEYS,
 	PERMISSION_MODULES,
 	type PermissionKey,
 	type PermissionModule,
 	type PermissionResource,
 	resourceOf,
+	ROLE_PERMISSION_KEYS,
 } from "@/features/workspace/permissionKeys";
 
 /**
@@ -24,10 +24,12 @@ export type SectionSummary = {
 	resources: Array<PermissionResource>;
 };
 
+// A section counts the keys a role can be given, so a role holding all of them, the System Admin role included,
+// reads as Full: the keys only the built-in roles hold never make a section fall short (API ADR-0108).
 const KEYS_BY_MODULE = new Map<PermissionModule, Array<PermissionKey>>(
 	PERMISSION_MODULES.map((module) => [
 		module,
-		PERMISSION_KEYS.filter((key) => moduleOf(key) === module),
+		ROLE_PERMISSION_KEYS.filter((key) => moduleOf(key) === module),
 	])
 );
 
