@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
-import dayjs from "dayjs";
+import type { TFunction } from "i18next";
 import { useEffect, useId, useMemo, type ReactNode } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -8,13 +8,22 @@ import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Select } from "@/components/forms/Select";
+import { Badge } from "@/components/ui/Badge";
+import { Callout } from "@/components/ui/Callout";
 import { Checkbox } from "@/components/ui/Checkbox";
+import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import type { MonthSetup } from "@/features/scheduling/months/monthGeneration";
 import {
 	formatMonth,
 	formatWeekdayDate,
-	mondaysIn,
 } from "@/features/scheduling/months/monthWeeks";
+import {
+	badgeOf,
+	skippedWeeksOf,
+	tickedRangesOf,
+	type TickableWeek,
+	type TickedRange,
+} from "@/features/scheduling/months/weekTicks";
 import { chosenOutsideOffered } from "@/features/scheduling/ScheduleSetupStep/chosenDepartment";
 import {
 	monthSetupSchema,
@@ -29,6 +38,13 @@ import { departmentChoices } from "@/features/workspace/unitChoices";
 
 export type { MonthSetupValues };
 
+/** The month's weeks to tick, and which are ticked; the page owns the ticks. */
+export type MonthSetupWeeks = {
+	rows: Array<TickableWeek>;
+	ticked: Array<string>;
+	onTickedChange: (ticked: Array<string>) => void;
+};
+
 export type MonthSetupStepProps = {
 	/** Lets the step's Next button, outside the form, submit it. */
 	formId: string;
@@ -38,6 +54,10 @@ export type MonthSetupStepProps = {
 	defaultValues: MonthSetupValues;
 	/** The months offered, as "yyyy-MM" in order: `monthChoicesFrom(today)`. */
 	months: Array<string>;
+	/** The chosen month's weeks to tick; undefined while no Department is chosen or the month is loading. */
+	weeks?: MonthSetupWeeks;
+	/** A month to choose while the person hasn't chosen one by hand: the first with a week to schedule. */
+	suggestedMonth?: string;
 	/** Shown below the Department and Month row: the Department's readiness. */
 	departmentExtras?: ReactNode;
 	/** Shown last: what the month's weeks use, and the way to choose per week. */
@@ -61,11 +81,24 @@ const SETTINGS = [
 	},
 ] as const;
 
+/** A week's or a range's dates in the person's language, e.g. "Mon 23 Nov to Sun 29 Nov". */
+const datesOf = (range: TickedRange, language: string, t: TFunction): string =>
+	t("scheduling.months.setup.weekDates", {
+		from: formatWeekdayDate(range.start, language),
+		to: formatWeekdayDate(range.end, language),
+	});
+
+const rangeOf = (week: TickableWeek): TickedRange => ({
+	start: week.periodStart,
+	end: week.periodEnd,
+});
+
 /**
- * Which Department and month to generate, and whether leave counts in the
- * weeks it creates. No name: the API names each week. The
- * Department is chosen as a week's setup chooses it (ScheduleSetupStep):
- * the active ones of the header's Branch where schedules may be created.
+ * Which Department and month to generate, which of the month's weeks, and
+ * whether leave counts in the weeks it creates. No name: the API names each
+ * week. The Department is chosen as a week's setup chooses it
+ * (ScheduleSetupStep): the active ones of the header's Branch where schedules
+ * may be created.
  */
 export const MonthSetupStep = ({
 	formId,
@@ -73,6 +106,8 @@ export const MonthSetupStep = ({
 	branchId,
 	defaultValues,
 	months,
+	weeks,
+	suggestedMonth,
 	departmentExtras,
 	usesLine,
 	onDepartmentChange,
@@ -85,16 +120,13 @@ export const MonthSetupStep = ({
 	const language = formattingLocale(i18n);
 	const workspace = useQuery({ ...workspaceQuery, retry });
 	const schema = useMemo(() => monthSetupSchema(t), [t]);
-	const {
-		control,
-		handleSubmit,
-		setValue,
-		formState: { errors },
-	} = useForm<MonthSetupValues>({
-		resolver: zodResolver(schema),
-		defaultValues,
-		mode: "onTouched",
-	});
+	const { control, handleSubmit, setValue, getFieldState, formState } =
+		useForm<MonthSetupValues>({
+			resolver: zodResolver(schema),
+			defaultValues,
+			mode: "onTouched",
+		});
+	const { errors } = formState;
 	const [departmentId, month, includeLeave] = useWatch({
 		control,
 		name: ["departmentId", "month", "includeLeave"],
@@ -120,6 +152,11 @@ export const MonthSetupStep = ({
 	useEffect(() => {
 		if (outside) setValue("departmentId", "");
 	}, [outside, setValue]);
+	// A month chosen by hand stays; otherwise the page's suggestion is taken, without marking the field changed.
+	const monthChosenByHand = getFieldState("month", formState).isDirty;
+	useEffect(() => {
+		if (suggestedMonth && !monthChosenByHand) setValue("month", suggestedMonth);
+	}, [suggestedMonth, monthChosenByHand, setValue]);
 	const departmentHint =
 		workspace.data === undefined && workspace.isError
 			? t("scheduling.setup.departmentsError")
@@ -137,20 +174,39 @@ export const MonthSetupStep = ({
 		if (errors[name]) return ids.errorId;
 		return hint ? ids.hintId : undefined;
 	};
-	const mondays = month ? mondaysIn(month) : [];
-	const firstMonday = mondays[0];
-	const lastMonday = mondays[mondays.length - 1];
-	const weeksLine =
-		firstMonday && lastMonday
-			? t("scheduling.months.setup.weeks", {
-					count: mondays.length,
-					from: formatWeekdayDate(firstMonday, language),
-					to: formatWeekdayDate(
-						dayjs(lastMonday).add(6, "day").format("YYYY-MM-DD"),
-						language
-					),
-				})
-			: undefined;
+	const monthHint = t("scheduling.months.setup.belongs");
+	const weekColumns = useMemo(
+		(): Array<DataTableColumn<TickableWeek>> => [
+			{
+				id: "week",
+				header: t("scheduling.months.setup.weekColumn"),
+				cell: (week) => datesOf(rangeOf(week), language, t),
+			},
+			{
+				id: "state",
+				header: t("scheduling.months.setup.stateColumn"),
+				cell: (week) => {
+					const badge = badgeOf(week.look);
+					return <Badge tone={badge.tone}>{t(badge.key)}</Badge>;
+				},
+			},
+		],
+		[t, language]
+	);
+	const ticked = weeks?.ticked ?? [];
+	const tickedRanges = new Intl.ListFormat(language, {
+		type: "conjunction",
+	}).format(
+		tickedRangesOf(ticked).map((range) => datesOf(range, language, t))
+	);
+	// Each ticked week with a note, Monday order: what generating it replaces or how it is generated.
+	const tickedNotes = (weeks?.rows ?? []).flatMap((week) =>
+		week.note !== undefined && ticked.includes(week.periodStart)
+			? [{ week, note: week.note }]
+			: []
+	);
+	const noneCanBeTicked = !(weeks?.rows ?? []).some((week) => week.canTick);
+	const skippedWeeks = skippedWeeksOf(weeks?.rows ?? [], ticked);
 
 	return (
 		<StepPanel
@@ -209,7 +265,7 @@ export const MonthSetupStep = ({
 							required
 							className="sm:w-72"
 							error={errors.month?.message}
-							hint={weeksLine}
+							hint={monthHint}
 							htmlFor={fieldId("month")}
 							label={t("scheduling.months.setup.month")}
 							layout="stacked"
@@ -225,10 +281,7 @@ export const MonthSetupStep = ({
 										name={field.name}
 										status={errors.month ? "error" : undefined}
 										value={field.value}
-										aria-describedby={describedBy(
-											"month",
-											weeksLine !== undefined
-										)}
+										aria-describedby={describedBy("month", true)}
 										options={months.map((choice) => ({
 											value: choice,
 											label: formatMonth(choice, language),
@@ -239,6 +292,55 @@ export const MonthSetupStep = ({
 							/>
 						</FormRow>
 					</div>
+					{weeks && (
+						<div className="flex flex-col gap-4">
+							<h3 className="text-xl font-semibold text-neutral-900">
+								{t("scheduling.months.setup.weeksLabel")}
+							</h3>
+							<DataTable
+								columns={weekColumns}
+								data={weeks.rows}
+								getRowId={(week) => week.periodStart}
+								label={t("scheduling.months.setup.weeksLabel")}
+								selection={{
+									rowLabel: (week) => datesOf(rangeOf(week), language, t),
+									selectedIds: weeks.ticked,
+									onChange: weeks.onTickedChange,
+									canSelect: (week) => week.canTick,
+								}}
+							/>
+							{ticked.length > 0 ? (
+								<p className="text-sm font-semibold text-neutral-900">
+									{t("scheduling.months.setup.chosen", {
+										count: ticked.length,
+										ranges: tickedRanges,
+									})}
+								</p>
+							) : (
+								<Callout tone="error">
+									{noneCanBeTicked
+										? t("scheduling.months.setup.noneOpen", {
+												month: formatMonth(month, language),
+											})
+										: t("scheduling.months.setup.noneTicked")}
+								</Callout>
+							)}
+							{tickedNotes.map(({ week, note }) => (
+								<Callout key={week.periodStart} tone="warning">
+									{t(`scheduling.months.setup.${note}Note`, {
+										week: datesOf(rangeOf(week), language, t),
+									})}
+								</Callout>
+							))}
+							{skippedWeeks.map((week) => (
+								<Callout key={week.periodStart} tone="warning">
+									{t("scheduling.months.setup.skippedNote", {
+										week: datesOf(rangeOf(week), language, t),
+									})}
+								</Callout>
+							))}
+						</div>
+					)}
 					{departmentExtras}
 				</div>
 				<hr className="my-10 border-neutral-400" />

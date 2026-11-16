@@ -21,11 +21,15 @@ import {
 	CONSTRAINT_FIXTURES,
 	CONSTRAINT_OPTIONS_RESPONSE,
 } from "@/features/scheduling/constraints/fixtures";
-import type { GenerateMonthBody } from "@/features/scheduling/months/api";
+import type {
+	GenerateMonthBody,
+	MonthWeek,
+} from "@/features/scheduling/months/api";
 import { midMonthOpenings } from "@/features/scheduling/hours/fixtures";
 import {
 	monthGenerationCheckFixture,
 	monthGenerationFixture,
+	monthSummaryFixture,
 	monthWeekFixture,
 	scheduleMonthFixture,
 	ungeneratedMonthFixture,
@@ -161,9 +165,21 @@ describe("Create schedules for a month", () => {
 			await screen.findByRole("region", { name: "Schedule setup" })
 		).toBeVisible();
 		expect(
-			screen.getByText(
-				"4 weeks: Mon, Dec 7 to Sun, Jan 3. A week belongs to the month its Monday falls in."
-			)
+			screen.getByText("A week belongs to the month its Monday falls in.")
+		).toBeInTheDocument();
+		const table = await screen.findByRole("table", { name: "Weeks" });
+		for (const dates of [
+			"Mon, Dec 7 to Sun, Dec 13",
+			"Mon, Dec 14 to Sun, Dec 20",
+			"Mon, Dec 21 to Sun, Dec 27",
+			"Mon, Dec 28 to Sun, Jan 3",
+		]) {
+			expect(
+				within(table).getByRole("checkbox", { name: `Select ${dates}` })
+			).toBeChecked();
+		}
+		expect(
+			screen.getByText("4 weeks: Mon, Dec 7 to Sun, Jan 3")
 		).toBeInTheDocument();
 		expect(await screen.findByText(EVERY_WEEK_LINE)).toBeInTheDocument();
 		expect(screen.queryByRole("textbox", { name: /Schedule name/ })).toBeNull();
@@ -273,6 +289,7 @@ describe("Create schedules for a month", () => {
 		);
 		expect(post?.body as GenerateMonthBody).toEqual({
 			includeLeave: true,
+			weeks: ["2026-12-07", "2026-12-14", "2026-12-21", "2026-12-28"],
 			newWeeks: ["2026-12-07", "2026-12-14", "2026-12-21", "2026-12-28"].map(
 				(periodStart) => ({
 					periodStart,
@@ -311,6 +328,324 @@ describe("Create schedules for a month", () => {
 			"You don’t have permission to generate this month here."
 		);
 		expect(opened.router.state.location.pathname).toBe("/scheduling/new");
+	});
+});
+
+describe("Create schedules for a month: ticking weeks", () => {
+	const NOVEMBER = `${COMPANY}/schedule-months/2026-11`;
+	const JANUARY = `${COMPANY}/schedule-months/2027-01`;
+	const SUMMARIES = `GET ${COMPANY}/schedule-months`;
+	const SCHEDULES = `${DEPARTMENT}/schedules`;
+	const NEW_NOVEMBER = "/scheduling/new?department=d-1&month=2026-11";
+	const NOVEMBER_WEEKS = [
+		["2026-11-02", "2026-11-08"],
+		["2026-11-09", "2026-11-15"],
+		["2026-11-16", "2026-11-22"],
+		["2026-11-23", "2026-11-29"],
+		["2026-11-30", "2026-12-06"],
+	] as const;
+	/** November on Thursday 12 Nov: the week of 2 Nov has ended, the week of 9 Nov has started; none generated unless `changes` says. */
+	const novemberRead = (
+		changes: Record<string, Partial<MonthWeek>> = {}
+	): StubReply =>
+		reply(
+			scheduleMonthFixture({
+				weeks: NOVEMBER_WEEKS.map(([periodStart, periodEnd]) =>
+					monthWeekFixture({
+						periodStart,
+						periodEnd,
+						state: "NOT_GENERATED",
+						scheduleId: null,
+						days: [],
+						handChangedDays: null,
+						includedInMonthGeneration: periodStart !== "2026-11-02",
+						...changes[periodStart],
+					})
+				),
+			})
+		);
+	const novemberRoutes = (
+		changes: Record<string, Partial<MonthWeek>> = {}
+	): Record<string, StubReply> => ({
+		[`GET ${NOVEMBER}`]: novemberRead(changes),
+		[`GET ${NOVEMBER}/generation-check`]: reply(
+			monthGenerationCheckFixture({ month: "2026-11" })
+		),
+		[`POST ${NOVEMBER}/generation`]: reply(
+			monthGenerationFixture({ month: "2026-11" })
+		),
+	});
+	const box = (dates: string): HTMLElement =>
+		within(screen.getByRole("table", { name: "Weeks" })).getByRole(
+			"checkbox",
+			{ name: `Select ${dates}` }
+		);
+	const monthField = (): HTMLElement =>
+		screen.getByRole("button", { name: /Month/ });
+	const chooseMonth = async (
+		user: ReturnType<typeof userEvent.setup>,
+		name: string
+	): Promise<void> => {
+		await user.click(monthField());
+		await user.click(await screen.findByRole("option", { name }));
+	};
+	/** From a ready Setup, through Forecast, to Generate, and clicks it. */
+	const generateFromSetup = async (
+		user: ReturnType<typeof userEvent.setup>
+	): Promise<void> => {
+		await vi.waitFor(() => {
+			expect(next()).toBeEnabled();
+		});
+		await user.click(next());
+		await screen.findByRole("region", { name: "Staffing forecast" });
+		await user.click(next());
+		const generate = await screen.findByRole("button", {
+			name: /^Generate /,
+		});
+		await vi.waitFor(() => {
+			expect(generate).toBeEnabled();
+		});
+		await user.click(generate);
+	};
+	const postedBody = async (
+		calls: ReturnType<typeof stubApi>,
+		path: string
+	): Promise<GenerateMonthBody> => {
+		await vi.waitFor(() => {
+			expect(
+				calls.some((call) => call.method === "POST" && call.path === path)
+			).toBe(true);
+		});
+		return calls.find((call) => call.method === "POST" && call.path === path)
+			?.body as GenerateMonthBody;
+	};
+
+	it("given_midWeek_when_opened_then_theStartedWeekIsUntickedAndTheRestTicked", async () => {
+		await open(NEW_NOVEMBER, novemberRoutes());
+
+		await screen.findByRole("table", { name: "Weeks" });
+		expect(box("Mon, Nov 2 to Sun, Nov 8")).toBeDisabled();
+		expect(box("Mon, Nov 2 to Sun, Nov 8")).not.toBeChecked();
+		expect(box("Mon, Nov 9 to Sun, Nov 15")).toBeEnabled();
+		expect(box("Mon, Nov 9 to Sun, Nov 15")).not.toBeChecked();
+		expect(box("Mon, Nov 16 to Sun, Nov 22")).toBeChecked();
+		expect(box("Mon, Nov 23 to Sun, Nov 29")).toBeChecked();
+		expect(box("Mon, Nov 30 to Sun, Dec 6")).toBeChecked();
+	});
+
+	it("given_aWeekUnderReview_when_opened_then_untickedAndNotRegenerated", async () => {
+		const user = userEvent.setup();
+		const { calls } = await open(
+			NEW_NOVEMBER,
+			novemberRoutes({
+				"2026-11-23": { state: "TO_REVIEW", scheduleId: "s-23" },
+			})
+		);
+
+		await screen.findByRole("table", { name: "Weeks" });
+		expect(box("Mon, Nov 23 to Sun, Nov 29")).not.toBeChecked();
+		await generateFromSetup(user);
+
+		const body = await postedBody(calls, `${NOVEMBER}/generation`);
+		expect(body.weeks).toEqual(["2026-11-16", "2026-11-30"]);
+		expect(body.newWeeks.map((week) => week.periodStart)).toEqual([
+			"2026-11-16",
+			"2026-11-30",
+		]);
+	});
+
+	it("given_someWeeksUnticked_when_generated_then_postsOnlyTheTickedWeeksAndTheirChoices", async () => {
+		const user = userEvent.setup();
+		const { calls } = await open(NEW_DECEMBER);
+
+		await screen.findByRole("table", { name: "Weeks" });
+		await user.click(box("Mon, Dec 14 to Sun, Dec 20"));
+		await user.click(box("Mon, Dec 28 to Sun, Jan 3"));
+		await generateFromSetup(user);
+
+		const body = await postedBody(calls, `${DECEMBER}/generation`);
+		expect(body.weeks).toEqual(["2026-12-07", "2026-12-21"]);
+		expect(body.newWeeks).toEqual(
+			["2026-12-07", "2026-12-21"].map((periodStart) => ({
+				periodStart,
+				includedShiftIds: EVERYTHING.shiftIds,
+				includedConstraintIds: EVERYTHING.constraintIds,
+			}))
+		);
+	});
+
+	it("given_nothingTicked_when_onSetup_then_nextWaits", async () => {
+		const user = userEvent.setup();
+		await open(NEW_DECEMBER);
+
+		await screen.findByText(EVERY_WEEK_LINE);
+		await user.click(
+			within(screen.getByRole("table", { name: "Weeks" })).getByRole(
+				"checkbox",
+				{ name: "Select all" }
+			)
+		);
+
+		expect(
+			await screen.findByText("Tick at least one week to schedule.")
+		).toBeVisible();
+		expect(next()).toBeDisabled();
+		expect(nextNote()).toBe("");
+	});
+
+	it("given_aDepartmentWithNothingLeftThisMonth_when_chosen_then_theNextMonthIsSuggested", async () => {
+		await open("/scheduling/new?department=d-1", {
+			[SUMMARIES]: reply([
+				monthSummaryFixture({
+					departmentId: "d-1",
+					weeks: [
+						{ periodStart: "2026-11-02", state: "PUBLISHED", scheduleId: "s-1" },
+						{ periodStart: "2026-11-09", state: "PUBLISHED", scheduleId: "s-2" },
+						{ periodStart: "2026-11-16", state: "TO_REVIEW", scheduleId: "s-3" },
+						{ periodStart: "2026-11-23", state: "TENTATIVE", scheduleId: "s-4" },
+						{ periodStart: "2026-11-30", state: "TENTATIVE", scheduleId: "s-5" },
+					],
+				}),
+			]),
+		});
+
+		await vi.waitFor(() => {
+			expect(monthField()).toHaveTextContent("December 2026");
+		});
+		expect(
+			await screen.findByRole("checkbox", {
+				name: "Select Mon, Dec 7 to Sun, Dec 13",
+			})
+		).toBeChecked();
+	});
+
+	it("given_theMonthChosenByHand_when_theDepartmentChanges_then_theMonthStays", async () => {
+		const user = userEvent.setup();
+		await open("/scheduling/new?department=d-1", {
+			[SUMMARIES]: reply([]),
+			[`GET ${JANUARY}`]: reply(ungeneratedMonthFixture({ month: "2027-01" })),
+		});
+
+		await screen.findByRole("region", { name: "Schedule setup" });
+		await chooseMonth(user, "January 2027");
+		await user.click(screen.getByRole("button", { name: /Department/ }));
+		await user.click(await screen.findByRole("option", { name: "Kitchen" }));
+
+		await vi.waitFor(() => {
+			expect(monthField()).toHaveTextContent("January 2027");
+		});
+	});
+
+	it("given_aMonthChanged_when_back_then_ticksReturnToTheDefaults", async () => {
+		const user = userEvent.setup();
+		await open(NEW_DECEMBER, {
+			[`GET ${JANUARY}`]: reply(ungeneratedMonthFixture({ month: "2027-01" })),
+		});
+
+		await screen.findByRole("table", { name: "Weeks" });
+		await user.click(box("Mon, Dec 14 to Sun, Dec 20"));
+		expect(box("Mon, Dec 14 to Sun, Dec 20")).not.toBeChecked();
+		await chooseMonth(user, "January 2027");
+		await chooseMonth(user, "December 2026");
+
+		await vi.waitFor(() => {
+			expect(box("Mon, Dec 14 to Sun, Dec 20")).toBeChecked();
+		});
+	});
+
+	it("given_tickedWeeksToCreate_when_choosingPerWeek_then_onlyThoseHaveTabs", async () => {
+		const user = userEvent.setup();
+		await open(NEW_DECEMBER);
+
+		await screen.findByText(EVERY_WEEK_LINE);
+		await user.click(box("Mon, Dec 21 to Sun, Dec 27"));
+		await user.click(screen.getByRole("button", { name: "Choose per week" }));
+
+		const tabs = within(
+			await screen.findByRole("tablist", { name: "Weeks of December" })
+		)
+			.getAllByRole("tab")
+			.map((tab) => tab.textContent?.trim());
+		expect(tabs).toHaveLength(3);
+		expect(tabs).not.toContainEqual(expect.stringMatching(/^Dec 21/));
+	});
+
+	it("given_twoTickedWeeks_when_onGenerate_then_thePanelNamesThem", async () => {
+		const user = userEvent.setup();
+		await open(NEW_DECEMBER);
+
+		await screen.findByText(EVERY_WEEK_LINE);
+		await user.click(box("Mon, Dec 14 to Sun, Dec 20"));
+		await user.click(box("Mon, Dec 28 to Sun, Jan 3"));
+		await user.click(next());
+		await screen.findByRole("region", { name: "Staffing forecast" });
+		await user.click(next());
+
+		expect(
+			await screen.findByText(
+				"Generating works out the 2 weeks you ticked: Mon, Dec 7 to Sun, Dec 13 and Mon, Dec 21 to Sun, Dec 27. You then review and publish them week by week."
+			)
+		).toBeInTheDocument();
+	});
+
+	it("given_aWeekThatCannotBeGenerated_when_generated_then_saysGoBackToSetup", async () => {
+		const user = userEvent.setup();
+		await open(NEW_DECEMBER, {
+			[`POST ${DECEMBER}/generation`]: problemReply(
+				400,
+				"MONTH_WEEK_CANNOT_BE_GENERATED"
+			),
+		});
+
+		await screen.findByText(EVERY_WEEK_LINE);
+		await generateFromSetup(user);
+
+		expect(await screen.findByRole("alert")).toHaveTextContent(
+			"A week you ticked can no longer be generated. Go back to Setup to see it as it is now."
+		);
+	});
+
+	it("given_theFirstTickedWeekWithNoRosterBefore_when_onSetup_then_asksForItsDaysAndHours", async () => {
+		await open(NEW_NOVEMBER, novemberRoutes());
+
+		expect(
+			await screen.findByText(
+				"Horaion doesn’t know what people worked last week."
+			)
+		).toBeVisible();
+		expect(
+			await screen.findByText(
+				"Horaion doesn’t know the hours people worked this month before Nov 16."
+			)
+		).toBeVisible();
+	});
+
+	it("given_theFirstTickedWeekAfterUntickedWeeks_when_hoursAdded_then_savesThatWeekAndTheHoursRunToTheDayBeforeIt", async () => {
+		const user = userEvent.setup();
+		const { calls } = await open(NEW_DECEMBER, {
+			[`POST ${SCHEDULES}`]: reply(
+				scheduleFixture({ scheduleId: "s-start" }),
+				201
+			),
+		});
+
+		await screen.findByText(EVERY_WEEK_LINE);
+		await user.click(box("Mon, Dec 7 to Sun, Dec 13"));
+		await user.click(box("Mon, Dec 14 to Sun, Dec 20"));
+		expect(
+			await screen.findByText(
+				"Horaion doesn’t know the hours people worked this month before Dec 21."
+			)
+		).toBeVisible();
+		await user.click(screen.getByRole("button", { name: "Add hours worked" }));
+
+		await vi.waitFor(() => {
+			expect(
+				calls
+					.filter((call) => call.method === "POST" && call.path === SCHEDULES)
+					.map((call) => (call.body as { periodStart: string }).periodStart)
+			).toEqual(["2026-12-21"]);
+		});
 	});
 });
 
@@ -753,6 +1088,112 @@ describe("Create schedules for a month: where everyone starts", () => {
 		expect(
 			screen.queryByText("Horaion doesn’t know what people worked last week.")
 		).toBeNull();
+	});
+
+	const LAST_WEEKS_DAYS_UNKNOWN =
+		"Horaion doesn’t know what people worked last week.";
+	/** The block under a week's dates line, e.g. /^Dec 21\s?–\s?27$/. */
+	const weekBlock = (dates: RegExp): HTMLElement => {
+		const block = screen.getByText(dates).parentElement;
+		if (!block) throw new Error("a dates line sits in its week's block");
+		return block;
+	};
+	const untick = async (
+		user: ReturnType<typeof userEvent.setup>,
+		dates: string
+	): Promise<void> => {
+		await user.click(
+			within(await screen.findByRole("table", { name: "Weeks" })).getByRole(
+				"checkbox",
+				{ name: `Select ${dates}` }
+			)
+		);
+	};
+
+	it("given_aTickedWeekAfterAnUntickedWeekWithoutARoster_when_onSetup_then_asksForThatWeeksDaysUnderItsDatesWithoutHours", async () => {
+		const user = userEvent.setup();
+		await open(NEW_DECEMBER);
+
+		await screen.findByText(EVERY_WEEK_LINE);
+		await untick(user, "Mon, Dec 14 to Sun, Dec 20");
+
+		const gapWeek = await vi.waitFor(() => weekBlock(/^Dec 21\s?–\s?27$/));
+		expect(within(gapWeek).getByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeVisible();
+		expect(
+			within(gapWeek).getByRole("button", { name: "Add last week’s shifts" })
+		).toBeVisible();
+		expect(within(gapWeek).queryByText(/hours people worked/)).toBeNull();
+		expect(screen.getByText(/^Dec 7\s?–\s?13$/)).toBeVisible();
+		expect(screen.getAllByText(LAST_WEEKS_DAYS_UNKNOWN)).toHaveLength(2);
+		expect(
+			screen.getAllByRole("button", { name: "Add hours worked" })
+		).toHaveLength(1);
+	});
+
+	it("given_thatWeeksDaysAdded_when_saved_then_savesThatWeekAsADraftAndOpensItsGrid", async () => {
+		const user = userEvent.setup();
+		const december = ungeneratedMonthFixture();
+		const { calls } = await open(NEW_DECEMBER, {
+			[`GET ${DECEMBER}`]: [
+				reply(december),
+				reply({
+					...december,
+					weeks: december.weeks.map((week) =>
+						week.periodStart === "2026-12-21"
+							? { ...week, state: "DRAFT", scheduleId: "s-gap" }
+							: week
+					),
+				}),
+			],
+			[`POST ${SCHEDULES}`]: reply(
+				scheduleFixture({ scheduleId: "s-gap" }),
+				201
+			),
+			[`GET ${SCHEDULES}/s-gap`]: reply(scheduleFixture({ scheduleId: "s-gap" })),
+			[`GET ${SCHEDULES}/s-gap/starting-days`]: reply(firstWeek()),
+		});
+
+		await screen.findByText(EVERY_WEEK_LINE);
+		await untick(user, "Mon, Dec 14 to Sun, Dec 20");
+		const gapWeek = await vi.waitFor(() => weekBlock(/^Dec 21\s?–\s?27$/));
+		await user.click(
+			within(gapWeek).getByRole("button", { name: "Add last week’s shifts" })
+		);
+
+		expect(
+			await screen.findByRole("dialog", { name: "Before this week" })
+		).toBeVisible();
+		expect(
+			calls
+				.filter((call) => call.method === "POST" && call.path === SCHEDULES)
+				.map((call) => (call.body as { periodStart: string }).periodStart)
+		).toEqual(["2026-12-21"]);
+	});
+
+	it("given_aTickedWeekAfterAnUntickedWeekWithARoster_when_onSetup_then_asksNothingForIt", async () => {
+		const december = ungeneratedMonthFixture();
+		await open(NEW_DECEMBER, {
+			[`GET ${DECEMBER}`]: reply({
+				...december,
+				weeks: december.weeks.map((week) =>
+					week.periodStart === "2026-12-14"
+						? { ...week, state: "TO_REVIEW", scheduleId: "s-14" }
+						: week
+				),
+			}),
+		});
+
+		expect(await screen.findByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeVisible();
+		expect(screen.getAllByText(LAST_WEEKS_DAYS_UNKNOWN)).toHaveLength(1);
+		expect(screen.queryByText(/^Dec 21\s?–\s?27$/)).toBeNull();
+	});
+
+	it("given_consecutiveTickedWeeks_when_onSetup_then_asksOnlyForTheFirst", async () => {
+		await open(NEW_DECEMBER);
+
+		expect(await screen.findByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeVisible();
+		expect(screen.getAllByText(LAST_WEEKS_DAYS_UNKNOWN)).toHaveLength(1);
+		expect(screen.queryByText(/^Dec 7\s?–\s?13$/)).toBeNull();
 	});
 
 	it("given_aRefusedSave_when_lastWeekAdded_then_saysWhy", async () => {

@@ -37,6 +37,7 @@ export const SCHEDULE_REFUSAL_CODES = {
 	oncePublished: "409 SCHEDULE_ONCE_PUBLISHED",
 	invalidWithdrawalRemark: "400 INVALID_PUBLICATION_WITHDRAWAL_REMARK",
 	weekChoiceMissing: "400 MONTH_WEEK_CHOICE_MISSING",
+	weekCannotBeGenerated: "400 MONTH_WEEK_CANNOT_BE_GENERATED",
 	monthNotFound: "404 SCHEDULE_MONTH_NOT_FOUND",
 } as const;
 
@@ -223,6 +224,7 @@ export const monthGenerationRefusal = (
 		mapRefusal<never>(error, {
 			alerts: {
 				[codes.weekChoiceMissing]: t(`${key}.choiceMissing`),
+				[codes.weekCannotBeGenerated]: t(`${key}.weekCannotBeGenerated`),
 				[codes.monthNotFound]: t("scheduling.months.page.unavailable"),
 			},
 			forbidden: t(`${key}.forbidden`),

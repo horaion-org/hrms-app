@@ -5007,6 +5007,7 @@
 			},
 			"generate": {
 				"choiceMissing": "Se configuró una semana de este mes mientras estabas aquí. Vuelve a cargar la página y genera de nuevo.",
+				"weekCannotBeGenerated": "Una semana que marcaste ya no se puede generar. Vuelve a Configuración para verla como está ahora.",
 				"forbidden": "No tienes permiso para generar este mes aquí.",
 				"failed": "No pudimos generar el mes. Inténtalo de nuevo.",
 				"panel": {
@@ -5032,6 +5033,8 @@
 					"waiting_other": "{{count}} solicitudes esperan una decisión.",
 					"openLeave": "Abrir solicitudes de ausencia",
 					"hint": "Generar calcula cada semana de {{month}} que no esté publicada. Después revisas y publicas cada semana.",
+					"hintChosen_one": "Generar calcula la semana que marcaste: {{ranges}}. Después la revisas y la publicas.",
+					"hintChosen_other": "Generar calcula las {{count}} semanas que marcaste: {{ranges}}. Después revisas y publicas cada semana.",
 					"generate": "Generar {{month}}",
 					"blockedShift": "{{department}} no se puede generar hasta que tenga un turno.",
 					"blockedStaffing": "{{department}} no se puede generar hasta que una restricción asigne personas a un turno."
@@ -5055,8 +5058,23 @@
 			"setup": {
 				"description": "Selecciona el departamento y el mes que quieres generar.",
 				"month": "Mes",
-				"weeks_one": "{{count}} semana: del {{from}} al {{to}}. Una semana pertenece al mes en que cae su lunes.",
-				"weeks_other": "{{count}} semanas: del {{from}} al {{to}}. Una semana pertenece al mes en que cae su lunes.",
+				"belongs": "Una semana pertenece al mes en que cae su lunes.",
+				"weeksLabel": "Semanas",
+				"weekColumn": "Semana",
+				"stateColumn": "Estado",
+				"weekDates": "{{from}} a {{to}}",
+				"looks": {
+					"OVER": "Terminado",
+					"STARTED": "Empezado"
+				},
+				"chosen_one": "{{count}} semana: {{ranges}}",
+				"chosen_other": "{{count}} semanas: {{ranges}}",
+				"startedNote": "{{week}} ya ha empezado. Se genera completa, lunes incluido.",
+				"rosterWaitingNote": "{{week}} tiene un horario pendiente de revisión. Generar de nuevo lo sustituye.",
+				"rosterRejectedNote": "{{week}} tiene un horario rechazado. Generar de nuevo lo sustituye.",
+				"skippedNote": "{{week}} queda fuera y no tiene horario. Las horas trabajadas esa semana no cuentan para las horas extra de este mes salvo que un horario la cubra.",
+				"noneTicked": "Marca al menos una semana para programar.",
+				"noneOpen": "Ninguna semana de {{month}} se puede programar: cada una está publicada, terminada o generándose. Elige otro mes.",
 				"validation": {
 					"month": "Elige un mes."
 				}
@@ -5069,7 +5087,6 @@
 				"changedWeek_one": "{{week}} ({{count}} fuera)",
 				"changedWeek_other": "{{week}} ({{count}} fuera)",
 				"choosePerWeek": "Elegir por semana",
-				"allSet": "Cada semana de {{month}} ya tiene un horario, así que no hay nada que generar. Elige otro mes o abre {{month}} desde Programación para cambiar sus semanas.",
 				"savedDraft": "{{week}} está guardada como borrador; cambia lo que usa en su propia página."
 			},
 			"regenerate": {

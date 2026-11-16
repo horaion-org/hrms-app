@@ -5207,6 +5207,7 @@
 			},
 			"generate": {
 				"choiceMissing": "A week of this month was set up while you were here. Reload the page and generate again.",
+				"weekCannotBeGenerated": "A week you ticked can no longer be generated. Go back to Setup to see it as it is now.",
 				"forbidden": "You don’t have permission to generate this month here.",
 				"failed": "We couldn’t generate the month. Try again.",
 				"panel": {
@@ -5232,6 +5233,8 @@
 					"waiting_other": "{{count}} requests are waiting for a decision.",
 					"openLeave": "Open leave requests",
 					"hint": "Generating works out every week of {{month}} that isn’t published. You then review and publish them week by week.",
+					"hintChosen_one": "Generating works out the week you ticked: {{ranges}}. You then review and publish it.",
+					"hintChosen_other": "Generating works out the {{count}} weeks you ticked: {{ranges}}. You then review and publish them week by week.",
 					"generate": "Generate {{month}}",
 					"blockedShift": "{{department}} can’t be generated until it has a shift.",
 					"blockedStaffing": "{{department}} can’t be generated until a constraint puts people on a shift."
@@ -5255,8 +5258,23 @@
 			"setup": {
 				"description": "Select the department and the month to generate.",
 				"month": "Month",
-				"weeks_one": "{{count}} week: {{from}} to {{to}}. A week belongs to the month its Monday falls in.",
-				"weeks_other": "{{count}} weeks: {{from}} to {{to}}. A week belongs to the month its Monday falls in.",
+				"belongs": "A week belongs to the month its Monday falls in.",
+				"weeksLabel": "Weeks",
+				"weekColumn": "Week",
+				"stateColumn": "State",
+				"weekDates": "{{from}} to {{to}}",
+				"looks": {
+					"OVER": "Over",
+					"STARTED": "Started"
+				},
+				"chosen_one": "{{count}} week: {{ranges}}",
+				"chosen_other": "{{count}} weeks: {{ranges}}",
+				"startedNote": "{{week}} has already started. It is generated whole, Monday included.",
+				"rosterWaitingNote": "{{week}} has a roster waiting for review. Generating again replaces it.",
+				"rosterRejectedNote": "{{week}} has a rejected roster. Generating again replaces it.",
+				"skippedNote": "{{week}} is left out and has no roster. Hours worked that week don’t count towards this month’s overtime unless a roster covers it.",
+				"noneTicked": "Tick at least one week to schedule.",
+				"noneOpen": "No week of {{month}} can be scheduled: each is published, over or being generated. Choose another month.",
 				"validation": {
 					"month": "Choose a month."
 				}
@@ -5269,7 +5287,6 @@
 				"changedWeek_one": "{{week}} ({{count}} left out)",
 				"changedWeek_other": "{{week}} ({{count}} left out)",
 				"choosePerWeek": "Choose per week",
-				"allSet": "Every week of {{month}} already has a schedule, so there is nothing to generate. Choose another month, or open {{month}} from Scheduling to change its weeks.",
 				"savedDraft": "{{week}} is saved as a draft; change what it uses on its own page."
 			},
 			"regenerate": {

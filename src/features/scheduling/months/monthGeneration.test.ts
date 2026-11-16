@@ -5,14 +5,17 @@ import {
 	scheduleMonthFixture,
 	ungeneratedMonthFixture,
 } from "@/features/scheduling/months/fixtures";
+import type { MonthWeek } from "@/features/scheduling/months/api";
 import {
 	coveredWeeks,
+	generateMonthBody,
 	handChangedCoveredWeeks,
 	isGenerating,
 	refusedWeeks,
 	showsBeforeGenerate,
 	showsRegenerate,
 	startingWeekOf,
+	startingWeeksOf,
 	weekNameOf,
 	weeksToCreate,
 } from "@/features/scheduling/months/monthGeneration";
@@ -233,6 +236,110 @@ describe("startingWeekOf", () => {
 				})),
 			})
 		).toBeUndefined();
+	});
+});
+
+/** Kitchen's December with the given states by Monday; a generating week is not covered, as the API says. */
+const decemberWith = (
+	states: Record<string, MonthWeek["state"]>
+): ReturnType<typeof ungeneratedMonthFixture> => {
+	const month = ungeneratedMonthFixture();
+	return {
+		...month,
+		weeks: month.weeks.map((week) => {
+			const state = states[week.periodStart] ?? week.state;
+			return {
+				...week,
+				state,
+				includedInMonthGeneration: state !== "GENERATING",
+			};
+		}),
+	};
+};
+
+const mondaysOf = (weeks: Array<MonthWeek>): Array<string> =>
+	weeks.map((week) => week.periodStart);
+
+describe("chosen weeks", () => {
+	const EVERYTHING = { shiftIds: ["sh-1"], constraintIds: ["co-1"] };
+	const SETUP = { includeLeave: true };
+
+	it("given_someWeeksChosen_when_bodyBuilt_then_weeksAreTheChosenMondaysAndNewWeeksOnlyTheChosenOnesToCreate", () => {
+		const month = decemberWith({ "2026-12-14": "DRAFT" });
+
+		const body = generateMonthBody(month, {}, EVERYTHING, SETUP, [
+			"2026-12-21",
+			"2026-12-14",
+		]);
+
+		expect(body.weeks).toEqual(["2026-12-14", "2026-12-21"]);
+		expect(body.newWeeks).toEqual([
+			{
+				periodStart: "2026-12-21",
+				includedShiftIds: ["sh-1"],
+				includedConstraintIds: ["co-1"],
+			},
+		]);
+	});
+
+	it("given_noChoiceOfWeeks_when_bodyBuilt_then_everyCoveredWeekIsSent", () => {
+		const month = decemberWith({ "2026-12-07": "GENERATING" });
+
+		const body = generateMonthBody(month, {}, EVERYTHING, SETUP);
+
+		expect(body.weeks).toEqual(["2026-12-14", "2026-12-21", "2026-12-28"]);
+		expect(body.newWeeks.map((week) => week.periodStart)).toEqual(body.weeks);
+	});
+
+	it("given_theFirstWeekNotChosen_when_startingWeekOf_then_theFirstChosenWeek", () => {
+		expect(
+			startingWeekOf(ungeneratedMonthFixture(), ["2026-12-14", "2026-12-21"])
+				?.periodStart
+		).toBe("2026-12-14");
+	});
+
+	it("given_consecutiveChosenWeeks_when_startingWeeksOf_then_onlyTheFirst", () => {
+		expect(
+			mondaysOf(
+				startingWeeksOf(ungeneratedMonthFixture(), [
+					"2026-12-14",
+					"2026-12-21",
+					"2026-12-28",
+				])
+			)
+		).toEqual(["2026-12-14"]);
+	});
+
+	it("given_aChosenWeekAfterAnUnchosenWeekWithoutARoster_when_startingWeeksOf_then_bothChosenWeeks", () => {
+		expect(
+			mondaysOf(
+				startingWeeksOf(ungeneratedMonthFixture(), ["2026-12-07", "2026-12-21"])
+			)
+		).toEqual(["2026-12-07", "2026-12-21"]);
+	});
+
+	it("given_aChosenWeekAfterAnUnchosenWeekUnderReview_when_startingWeeksOf_then_onlyTheFirst", () => {
+		const month = decemberWith({ "2026-12-14": "TO_REVIEW" });
+
+		expect(
+			mondaysOf(startingWeeksOf(month, ["2026-12-07", "2026-12-21"]))
+		).toEqual(["2026-12-07"]);
+	});
+
+	it("given_aChosenWeekAfterAGeneratingWeek_when_startingWeeksOf_then_notIncluded", () => {
+		const month = decemberWith({ "2026-12-14": "GENERATING" });
+
+		expect(
+			mondaysOf(startingWeeksOf(month, ["2026-12-07", "2026-12-21"]))
+		).toEqual(["2026-12-07"]);
+	});
+
+	it("given_theFirstChosenWeekUnderReview_when_startingWeeksOf_then_onlyLaterGapWeeks", () => {
+		const month = decemberWith({ "2026-12-07": "TO_REVIEW" });
+
+		expect(
+			mondaysOf(startingWeeksOf(month, ["2026-12-07", "2026-12-21"]))
+		).toEqual(["2026-12-21"]);
 	});
 });
 

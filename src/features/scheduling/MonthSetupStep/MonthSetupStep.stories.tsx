@@ -4,6 +4,10 @@ import { fn } from "storybook/test";
 import { Callout } from "@/components/ui/Callout";
 import { storyProviders } from "@/features/organisation/storyApi";
 import { monthChoicesFrom } from "@/features/scheduling/months/monthWeeks";
+import {
+	defaultTicksOf,
+	tickableWeeksOf,
+} from "@/features/scheduling/months/weekTicks";
 import { MonthSetupStep } from "@/features/scheduling/MonthSetupStep";
 import { schedulingWorkspace } from "@/features/scheduling/schedules/fixtures";
 import { workspaceQuery } from "@/features/workspace/api";
@@ -60,6 +64,33 @@ export const DepartmentNotReady: Story = {
 				generated.
 			</Callout>
 		),
+	},
+};
+
+/** Front Desk's November on Tuesday 17 Nov, as the mock-up shows it. */
+const FRONT_DESK_NOVEMBER = tickableWeeksOf(
+	[
+		{ periodStart: "2026-11-02", state: "PUBLISHED" },
+		{ periodStart: "2026-11-09", state: "PUBLISHED" },
+		{ periodStart: "2026-11-16", state: "TO_REVIEW" },
+		{ periodStart: "2026-11-23", state: "TO_REVIEW" },
+		{ periodStart: "2026-11-30", state: "NOT_GENERATED" },
+	],
+	"2026-11-17"
+);
+
+/**
+ * Mid-week, some weeks done: two weeks published, two waiting for review
+ * (unticked), and the week of 30 Nov ticked.
+ */
+export const MidWeekSomeWeeksDone: Story = {
+	args: {
+		defaultValues: { ...meta.args.defaultValues, departmentId: "d-1" },
+		weeks: {
+			rows: FRONT_DESK_NOVEMBER,
+			ticked: defaultTicksOf(FRONT_DESK_NOVEMBER),
+			onTickedChange: fn(),
+		},
 	},
 };
 

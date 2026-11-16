@@ -122,6 +122,7 @@ describe("generating a month", () => {
 	const GENERATION = `${NOVEMBER}/generation`;
 	const BODY = {
 		includeLeave: true,
+		weeks: ["2026-11-30"],
 		newWeeks: [
 			{
 				periodStart: "2026-11-30",
@@ -160,6 +161,7 @@ describe("generating a month", () => {
 		expect(calls[0]?.path).toBe(GENERATION);
 		expect(calls[0]?.search).toBe("departmentId=d-1");
 		expect(calls[0]?.body).toEqual(BODY);
+		expect(calls[0]?.body).toMatchObject({ weeks: ["2026-11-30"] });
 	});
 
 	it("given_anOutcomeANewerApiAdds_when_parsed_then_readsAsUnknown", async () => {

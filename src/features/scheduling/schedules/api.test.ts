@@ -1156,6 +1156,14 @@ describe("schedule refusals", () => {
 		expect(monthGenerationRefusal(problem(status, code), t)).toBe(copy);
 	});
 
+	it("given_aWeekThatCannotBeGenerated_when_monthRefused_then_saysGoBackToSetup", () => {
+		expect(
+			monthGenerationRefusal(problem(400, "MONTH_WEEK_CANNOT_BE_GENERATED"), t)
+		).toBe(
+			"A week you ticked can no longer be generated. Go back to Setup to see it as it is now."
+		);
+	});
+
 	it("falls back to a plain failure for a month generation", () => {
 		expect(monthGenerationRefusal(new Error("offline"), t)).toBe(
 			"We couldn’t generate the month. Try again."

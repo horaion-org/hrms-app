@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { Navigate, useNavigate, useSearch } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import type { TFunction } from "i18next";
@@ -18,6 +18,7 @@ import { MonthChoiceDialog } from "@/features/scheduling/MonthChoiceDialog";
 import {
 	monthGenerationCheckQuery,
 	scheduleMonthQuery,
+	scheduleMonthSummariesQuery,
 	type MonthWeek,
 } from "@/features/scheduling/months/api";
 import { BeforeGeneratePanel } from "@/features/scheduling/months/BeforeGeneratePanel";
@@ -25,6 +26,7 @@ import {
 	MONTH_SETUP_DEFAULTS,
 	refusedWeeks,
 	startingWeekOf,
+	startingWeeksOf,
 	weekNameOf,
 	weeksToCreate,
 	type MonthChoices,
@@ -34,10 +36,18 @@ import {
 	formatMonth,
 	formatMonthName,
 	formatWeekDates,
+	formatWeekdayDate,
 	monthChoicesFrom,
 	monthOf,
+	summaryRange,
 } from "@/features/scheduling/months/monthWeeks";
 import { hasRoster } from "@/features/scheduling/months/weekStateLooks";
+import {
+	defaultMonthOf,
+	defaultTicksOf,
+	tickableWeeksOf,
+	tickedRangesOf,
+} from "@/features/scheduling/months/weekTicks";
 import { withRefusedWeeks } from "@/features/scheduling/months/refusedWeeksState";
 import { useGenerateMonth } from "@/features/scheduling/months/useGenerateMonth";
 import {
@@ -58,7 +68,10 @@ import {
 	emptyScheduleDraft,
 	scheduleDraftReducer,
 } from "@/features/scheduling/scheduleDraft";
-import type { ScheduleShift } from "@/features/scheduling/schedules/api";
+import {
+	scheduleQuery,
+	type ScheduleShift,
+} from "@/features/scheduling/schedules/api";
 import {
 	monthGenerationRefusal,
 	scheduleRefusalMessage,
@@ -169,6 +182,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 	).branch?.branchId;
 	// Today is read once, so the offered months hold still while the page is open.
 	const [today] = useState(() => new Date());
+	const todayIso = dayjs(today).format("YYYY-MM-DD");
 	const months = monthChoicesFrom(today);
 	const [setup, setSetup] = useState<MonthSetupValues>();
 	const setupDefaults: MonthSetupValues = setup ?? {
@@ -176,7 +190,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 		month:
 			search.month && months.includes(search.month)
 				? search.month
-				: (months[0] ?? ""),
+				: (defaultMonthOf(months, todayIso, []) ?? ""),
 		...MONTH_SETUP_DEFAULTS,
 	};
 	// The Department and month the Setup form holds, before it is submitted.
@@ -184,6 +198,8 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 	const [month, setMonth] = useState(setupDefaults.month);
 	// Each week's choice, by Monday; a week without one uses everything.
 	const [choices, setChoices] = useState<MonthChoices>({});
+	// The Mondays the manager ticked; undefined means the defaults of the month's weeks.
+	const [ticks, setTicks] = useState<Array<string>>();
 	const [choosing, setChoosing] = useState(false);
 	// The settings the Setup form holds, for the first week when it is saved before the form is.
 	const [settings, setSettings] = useState<MonthSetup>({
@@ -201,12 +217,13 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 	);
 	const [problem, setProblem] = useState("");
 	const setupFormId = useId();
-	// Another Department or month has other weeks: its choices start again from everything.
+	// Another Department or month has other weeks: its choices and ticks start again from the defaults.
 	const chooseDepartment = useCallback(
 		(next: string): void => {
 			if (next === departmentId) return;
 			setDepartmentId(next);
 			setChoices({});
+			setTicks(undefined);
 		},
 		[departmentId]
 	);
@@ -215,6 +232,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			if (next === month) return;
 			setMonth(next);
 			setChoices({});
+			setTicks(undefined);
 		},
 		[month]
 	);
@@ -243,17 +261,61 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			unit !== undefined && month !== ""
 		)
 	);
+	// The Department's months, to suggest the first with a week to schedule; not when the URL names the month.
+	const summaries = useQuery(
+		scheduleMonthSummariesQuery(
+			companyId,
+			{ branchId: unit?.branchId, departmentId: unit?.departmentId },
+			summaryRange(today),
+			unit !== undefined &&
+				search.month === undefined &&
+				allowedHere("schedule:read")
+		)
+	);
+	const suggestedMonth =
+		summaries.data &&
+		defaultMonthOf(
+			months,
+			todayIso,
+			summaries.data.filter((summary) => summary.departmentId === departmentId)
+		);
+	const tickable =
+		scheduleMonth.data && tickableWeeksOf(scheduleMonth.data.weeks, todayIso);
+	const tickableMondays = new Set(
+		(tickable ?? [])
+			.filter((week) => week.canTick)
+			.map((week) => week.periodStart)
+	);
+	// What is ticked, of the weeks that can still be ticked: the manager's ticks, or the defaults.
+	const ticked = (ticks ?? (tickable ? defaultTicksOf(tickable) : [])).filter(
+		(monday) => tickableMondays.has(monday)
+	);
 	const shifts = useQuery(departmentShiftsQuery(companyId, unit, readsShifts));
 	const constraints = useQuery(
 		constraintsQuery(companyId, unit, readsConstraints)
 	);
 	const constraintOptions = useConstraintOptions(companyId, unit);
-	const generation = useGenerateMonth(companyId, scheduleMonth.data);
+	const generation = useGenerateMonth(companyId, scheduleMonth.data, ticked);
 	const scheduleActions = useScheduleActions(companyId);
-	// Where everyone starts is set on the first covered week without a roster.
+	// Where everyone starts is set on the first ticked week without a roster.
 	const startingWeek = scheduleMonth.data
-		? startingWeekOf(scheduleMonth.data)
+		? startingWeekOf(scheduleMonth.data, ticked)
 		: undefined;
+	// Each later ticked week with nothing before it (after a gap) is asked for its days before, not for hours.
+	const laterStartingWeeks = scheduleMonth.data
+		? startingWeeksOf(scheduleMonth.data, ticked).filter(
+				(week) => week !== startingWeek
+			)
+		: [];
+	const laterDraftIds = laterStartingWeeks.flatMap((week) =>
+		week.state === "DRAFT" && week.scheduleId ? [week.scheduleId] : []
+	);
+	// The later weeks' saved drafts, read for their day-off types.
+	const laterDrafts = useQueries({
+		queries: laterDraftIds.map((draftId) =>
+			scheduleQuery(companyId, unit, draftId, allowedHere("schedule:read"))
+		),
+	});
 	// A saved first week's draft, read for its day-off types.
 	const startingDraft = useSchedule(
 		companyId,
@@ -325,7 +387,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			? allOf(shifts.data, constraints.data)
 			: undefined;
 	const weeks: Array<MonthWeek> = scheduleMonth.data
-		? weeksToCreate(scheduleMonth.data)
+		? weeksToCreate(scheduleMonth.data, ticked)
 		: [];
 	const weekLabel = (week: MonthWeek): string =>
 		formatWeekDates({ start: week.periodStart, end: week.periodEnd }, language);
@@ -370,24 +432,22 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			? undefined
 			: listsHidden
 				? t(`${key}.everything`, { department: choice.name })
-				: !everything || !scheduleMonth.data
+				: !everything || !scheduleMonth.data || weeks.length === 0
 					? undefined
-					: weeks.length === 0
-						? t(`${key}.allSet`, { month: monthName })
-						: monthUsesLine(
-								t,
-								weeks.map((week) => ({
-									label: weekLabel(week),
-									leftOut: leftOutCount(
-										choiceOf(week) ?? everything,
-										shifts.data ?? [],
-										constraints.data ?? []
-									),
-								})),
-								everything,
-								choice.name,
-								language
-							);
+					: monthUsesLine(
+							t,
+							weeks.map((week) => ({
+								label: weekLabel(week),
+								leftOut: leftOutCount(
+									choiceOf(week) ?? everything,
+									shifts.data ?? [],
+									constraints.data ?? []
+								),
+							})),
+							everything,
+							choice.name,
+							language
+						);
 	const weekBeforeRostered = monthBefore.data?.weeks.some(
 		(week) => week.periodStart === weekBefore && hasRoster(week.state)
 	);
@@ -415,18 +475,21 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			setProblem(scheduleRefusalMessage(error, true, t));
 		}
 	};
-	// Saves the first week's draft, then opens one of its dialogs; none without the right to.
-	const addToStartingWeek = (
+	// Saves a week's draft, then opens one of its dialogs; none without the right to.
+	const addToWeek = (
+		week: MonthWeek | undefined,
 		dialog: StartingPointDialog
 	): (() => void) | undefined =>
-		startingWeek &&
+		week &&
 		allowedHere("schedule:create") &&
 		allowedHere("schedule:update") &&
 		everything
 			? (): void => {
-					void saveStartingWeek(startingWeek.periodStart, dialog);
+					void saveStartingWeek(week.periodStart, dialog);
 				}
 			: undefined;
+	const openOnStartOf = (scheduleId: string): StartingPointDialog | undefined =>
+		savedStart?.scheduleId === scheduleId ? savedStart.dialog : undefined;
 	const startingPoint =
 		!unit || !startingWeek ? undefined : startingWeek.state === "DRAFT" &&
 		  startingWeek.scheduleId ? (
@@ -440,11 +503,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 						? startingDraft.schedule.nonWorkingDayTypes
 						: []
 				}
-				openOnStart={
-					savedStart?.scheduleId === startingWeek.scheduleId
-						? savedStart.dialog
-						: undefined
-				}
+				openOnStart={openOnStartOf(startingWeek.scheduleId)}
 			/>
 		) : monthBefore.isPending ? undefined : (
 			// Before the first week's draft exists: the week page's two notices; each button saves the draft first.
@@ -457,18 +516,56 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 							? { kind: "carried", periodStart: weekBefore, uncovered: 0 }
 							: { kind: "none" }
 					}
-					onAdd={addToStartingWeek("days")}
+					onAdd={addToWeek(startingWeek, "days")}
 				/>
 				{startsAfterFirst(startingWeek.periodStart) && (
 					<OpeningHoursCallout
 						adding={scheduleActions.create.isPending}
 						asOf={startingWeek.periodStart}
 						hours={{ kind: "notRead", carried: weekBeforeRostered === true }}
-						onAdd={addToStartingWeek("hours")}
+						onAdd={addToWeek(startingWeek, "hours")}
 					/>
 				)}
 			</div>
 		);
+	// With later weeks asked too, each set of questions sits under its week's dates.
+	const firstWeekDates = startingWeek &&
+		laterStartingWeeks.length > 0 && (
+			<p className="text-sm font-semibold text-neutral-900">
+				{weekLabel(startingWeek)}
+			</p>
+		);
+	const laterStartingPoints =
+		unit &&
+		laterStartingWeeks.map((week) => (
+			<div key={week.periodStart} className="flex flex-col gap-4">
+				<p className="text-sm font-semibold text-neutral-900">
+					{weekLabel(week)}
+				</p>
+				{week.state === "DRAFT" && week.scheduleId ? (
+					<StartingContextSection
+						canEdit={allowedHere("schedule:update")}
+						companyId={companyId}
+						openOnStart={openOnStartOf(week.scheduleId)}
+						scheduleId={week.scheduleId}
+						showsHours={false}
+						unit={unit}
+						nonWorkingDayTypes={
+							laterDrafts[laterDraftIds.indexOf(week.scheduleId)]?.data
+								?.nonWorkingDayTypes ?? []
+						}
+					/>
+				) : (
+					// Before the week's draft exists: the button saves it first, then opens its grid.
+					<StartingContextCallout
+						adding={scheduleActions.create.isPending}
+						enteredCount={0}
+						previous={{ kind: "none" }}
+						onAdd={addToWeek(week, "days")}
+					/>
+				)}
+			</div>
+		));
 	// The first week saved as a draft keeps its own choice, changed on its own page.
 	const savedDraftLine =
 		startingWeek?.state === "DRAFT"
@@ -487,18 +584,32 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			}}
 		/>
 	);
-	// Why Setup's Next waits: the gate, lists the person may not see, or lists still loading (no note).
+	// Why Setup's Next waits: the gate, lists the person may not see, lists still loading or no week ticked (no note).
 	const listsWaiting =
 		unit !== undefined &&
 		!listsHidden &&
 		(everything === undefined || scheduleMonth.data === undefined);
+	// The list itself says to tick a week, so Next waits without a note.
+	const nothingTicked = tickable !== undefined && ticked.length === 0;
 	const setupNextNote = setupGate
 		? t(setupGate.nextNoteKey, { department: setupGate.department })
 		: listsHidden && choice
 			? t("scheduling.week.listsHiddenNote", { department: choice.name })
-			: listsWaiting
+			: listsWaiting || nothingTicked
 				? ""
 				: undefined;
+	// The Generate step names the ticked weeks, joined where they touch, as Setup's list does.
+	const tickedHint = t("scheduling.months.generate.panel.hintChosen", {
+		count: ticked.length,
+		ranges: new Intl.ListFormat(language, { type: "conjunction" }).format(
+			tickedRangesOf(ticked).map((range) =>
+				t("scheduling.months.setup.weekDates", {
+					from: formatWeekdayDate(range.start, language),
+					to: formatWeekdayDate(range.end, language),
+				})
+			)
+		),
+	});
 	const generate = async (): Promise<void> => {
 		if (!setup) return;
 		setProblem("");
@@ -564,6 +675,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 						defaultValues={setupDefaults}
 						formId={setupFormId}
 						months={months}
+						suggestedMonth={suggestedMonth}
 						departmentExtras={
 							setupGate && (
 								<ReadinessGateCallout
@@ -578,14 +690,25 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 								{savedDraftLine && (
 									<p className="text-sm text-neutral-800">{savedDraftLine}</p>
 								)}
+								{firstWeekDates}
 								{startingPoint}
+								{laterStartingPoints}
 							</div>
+						}
+						weeks={
+							tickable && {
+								rows: tickable,
+								ticked,
+								onTickedChange: setTicks,
+							}
 						}
 						onDepartmentChange={chooseDepartment}
 						onMonthChange={chooseMonth}
 						onSettingsChange={setSettings}
 						onSubmit={(values) => {
 							setSetup(values);
+							// Later steps use exactly the ticks Setup showed.
+							setTicks(ticked);
 							goTo(1, values);
 						}}
 					/>
@@ -629,6 +752,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 							<BeforeGeneratePanel
 								check={check.data}
 								generating={generation.isPending}
+								hint={tickedHint}
 								month={month}
 								waiting={generation.block === "listsLoading"}
 								onGenerate={() => {

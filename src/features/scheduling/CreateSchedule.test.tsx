@@ -725,7 +725,7 @@ describe("Create Schedule: generating", () => {
 		]);
 		// The draft is a covered week already: nothing new is created.
 		expect(sent(calls, `POST ${OCTOBER_GENERATION}`)).toEqual([
-			{ includeLeave: true, newWeeks: [] },
+			{ includeLeave: true, weeks: ["2026-10-12"], newWeeks: [] },
 		]);
 	});
 

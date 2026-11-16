@@ -269,6 +269,8 @@ export type NewWeek = {
 /** What generating a month sends: the setup of the weeks it creates, and each one's choice. */
 export type GenerateMonthBody = {
 	includeLeave: boolean;
+	/** The Mondays of the weeks to generate. */
+	weeks: Array<string>;
 	newWeeks: Array<NewWeek>;
 };
 
@@ -291,7 +293,7 @@ export const fetchMonthGenerationCheck = (
 
 /**
  * Generates one Department's month: creates the weeks it still needs with
- * the body's choices, then starts every week that isn't published,
+ * the body's choices, then starts every chosen week that isn't published,
  * generating or ended. Answers each week's outcome.
  */
 export const generateMonth = (
