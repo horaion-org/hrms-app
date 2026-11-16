@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { weekdayOf } from "@/common/weekdays";
 import { Pagination } from "@/components/ui/Pagination";
@@ -14,8 +15,8 @@ import { useTeamPreferences } from "@/features/shiftPreferences/useShiftPreferen
 
 export type TeamShiftPreferencesProps = {
 	companyId: string;
-	/** The Department listed; nothing is asked until one is chosen. */
-	departmentId: string | undefined;
+	/** The Department whose members are listed. */
+	departmentId: string;
 	/** The week shown, as its Monday. */
 	weekStartMonday: string;
 	/** The one day shown below `md`, as the page's `DaySwitcher` picks it. */
@@ -45,10 +46,11 @@ export const TeamShiftPreferences = ({
 }: TeamShiftPreferencesProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const [page, setPage] = useState(0);
-	const team = useTeamPreferences(
-		companyId,
-		departmentId ? { departmentId, weekStartMonday, page } : undefined
-	);
+	const team = useTeamPreferences(companyId, {
+		departmentId,
+		weekStartMonday,
+		page,
+	});
 	if (team.status === "hidden")
 		return <p className="text-sm text-neutral-800">{t(`${key}.hidden`)}</p>;
 	if (team.status === "error")
@@ -58,7 +60,11 @@ export const TeamShiftPreferences = ({
 			</p>
 		);
 	if (team.status !== "ready")
-		return <Skeleton className={`h-36 w-full rounded-lg ${className ?? ""}`} />;
+		return (
+			<Skeleton
+				className={joinClassNames("h-36 w-full rounded-lg", className)}
+			/>
+		);
 	return (
 		<div className={className}>
 			<WeekGrid

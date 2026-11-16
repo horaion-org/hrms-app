@@ -105,8 +105,10 @@ export const PREFERENCE_REASONS = [
 	"ROLE_NOT_STAFFED",
 ] as const;
 
+/** Met, not met, or left out of the generation. */
 export type PreferenceOutcomeKind = (typeof PREFERENCE_OUTCOMES)[number];
 
+/** One reason a preference was left out of a generation. */
 export type PreferenceReason = (typeof PREFERENCE_REASONS)[number];
 
 const schedulePreferenceOutcomeSchema = z.object({
