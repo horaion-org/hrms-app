@@ -168,6 +168,9 @@ describe("Create schedules for a month", () => {
 			screen.getByRole("heading", { level: 1, name: "Schedule a month" })
 		).toBeInTheDocument();
 		expect(
+			screen.getByRole("link", { name: "Back to Scheduling" })
+		).toHaveAttribute("href", "/scheduling");
+		expect(
 			screen.getByText(
 				"Choose a department and a month, tick the weeks to roster, then generate. You review and publish each week afterwards."
 			)

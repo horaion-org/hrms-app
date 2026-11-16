@@ -3232,7 +3232,7 @@
 			}
 		},
 		"create": {
-			"back": "Volver al resumen",
+			"back": "Volver a Programación",
 			"title": "Crear horario",
 			"subtitle": "Configura la generación de tu horario en unos pocos pasos.",
 			"viewSubtitle": "Cómo se configuró este horario: su departamento, periodo, turnos y restricciones.",
@@ -4049,7 +4049,7 @@
 			"weekTaken": "Este departamento ya tiene un horario para esa semana."
 		},
 		"detail": {
-			"back": "Volver al resumen",
+			"back": "Volver a Programación",
 			"title": "Horario de {{department}}",
 			"loadFailed": "No pudimos cargar este horario. Inténtalo de nuevo.",
 			"loading": "Cargando el horario…",

@@ -3432,7 +3432,7 @@
 			}
 		},
 		"create": {
-			"back": "Back to overview",
+			"back": "Back to Scheduling",
 			"title": "Create schedule",
 			"subtitle": "Set up your schedule generation in a few simple steps.",
 			"viewSubtitle": "How this schedule was set up: its department, period, shifts and constraints.",
@@ -4249,7 +4249,7 @@
 			"weekTaken": "This department already has a schedule for that week."
 		},
 		"detail": {
-			"back": "Back to Overview",
+			"back": "Back to Scheduling",
 			"title": "{{department}} Schedule",
 			"loadFailed": "This schedule could not be loaded. Please try again.",
 			"loading": "Loading the schedule…",

@@ -279,7 +279,7 @@ describe("Create Schedule: opening and setup", () => {
 			screen.getByRole("region", { name: "Schedule setup" })
 		).toBeVisible();
 		expect(
-			screen.getByRole("link", { name: "Back to overview" })
+			screen.getByRole("link", { name: "Back to Scheduling" })
 		).toHaveAttribute("href", "/scheduling");
 	});
 
@@ -527,7 +527,7 @@ describe("Create Schedule: a reopened draft", () => {
 			)
 		).toBeVisible();
 		expect(
-			screen.getByRole("link", { name: "Back to overview" })
+			screen.getByRole("link", { name: "Back to Scheduling" })
 		).toHaveAttribute("href", "/scheduling");
 		expect(screen.queryByRole("navigation", { name: "Steps" })).toBeNull();
 	});
