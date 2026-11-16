@@ -33,6 +33,17 @@ export const todayAndTomorrow = (today: Date): DayRange => ({
 	to: dayjs(today).add(1, "day").format(ISO_DAY),
 });
 
+/** How far ahead Home looks for who joins, ends probation or leaves, today included. */
+export const PEOPLE_EVENTS_DAYS = 30;
+
+/** Today and the days after it that Home lists people events for. */
+export const comingPeopleDays = (today: Date): DayRange => ({
+	from: isoDay(today),
+	to: dayjs(today)
+		.add(PEOPLE_EVENTS_DAYS - 1, "day")
+		.format(ISO_DAY),
+});
+
 /** The months this month and next, as the month summaries read them. */
 export const thisAndNextMonth = (today: Date): MonthSpan => ({
 	from: dayjs(today).format(ISO_MONTH),
