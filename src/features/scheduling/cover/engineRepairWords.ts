@@ -80,6 +80,33 @@ const personOf = (move: RepairMove, names: RepairNames, t: TFunction): string =>
 		: names.member(move.membershipId));
 
 /**
+ * A stretch in plain words, by its side: "Chen Wei stays on after Swing Shift
+ * until 15:00 (+2 h)", "… starts Swing Shift early at 11:00 (+2 h)"; without
+ * a side, "Extend Chen Wei's Swing Shift by 2 h".
+ */
+const stretchLine = (
+	move: RepairMove,
+	values: { name: string; shift: string; day: string },
+	names: RepairNames,
+	t: TFunction
+): string => {
+	const hours = names.hours(move.extensionMinutes ?? 0);
+	if (move.side === "AFTER_SHIFT")
+		return t(`${key}.move.OVERTIME_EXTENSION_AFTER`, {
+			...values,
+			hours,
+			time: clockTime(move.period.end),
+		});
+	if (move.side === "BEFORE_SHIFT")
+		return t(`${key}.move.OVERTIME_EXTENSION_BEFORE`, {
+			...values,
+			hours,
+			time: clockTime(move.period.start),
+		});
+	return t(`${key}.move.OVERTIME_EXTENSION`, { ...values, hours });
+};
+
+/**
  * One move in plain words: "Move Lina Tan from Evening Tue, 10 Nov to Morning
  * Tue, 10 Nov", "Call in Ari Lim for Morning Tue, 10 Nov", "Extend Omar
  * Aziz's Night by 2 h".
@@ -104,10 +131,7 @@ export const moveLine = (
 		case "CALL_IN":
 			return t(`${key}.move.CALL_IN`, values);
 		case "OVERTIME_EXTENSION":
-			return t(`${key}.move.OVERTIME_EXTENSION`, {
-				...values,
-				hours: names.hours(move.extensionMinutes ?? 0),
-			});
+			return stretchLine(move, values, names, t);
 		default:
 			return t(`${key}.move.UNKNOWN`);
 	}

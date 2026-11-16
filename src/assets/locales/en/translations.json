@@ -4941,6 +4941,8 @@
 					"REASSIGN": "Move {{name}} from {{fromShift}} {{fromDay}} to {{shift}} {{day}}",
 					"CALL_IN": "Call in {{name}} for {{shift}} {{day}}",
 					"OVERTIME_EXTENSION": "Extend {{name}}’s {{shift}} by {{hours}} h",
+					"OVERTIME_EXTENSION_AFTER": "{{name}} stays on after {{shift}} until {{time}} (+{{hours}} h)",
+					"OVERTIME_EXTENSION_BEFORE": "{{name}} starts {{shift}} early at {{time}} (+{{hours}} h)",
 					"UNKNOWN": "A change the app can’t describe yet"
 				},
 				"refusal": {
