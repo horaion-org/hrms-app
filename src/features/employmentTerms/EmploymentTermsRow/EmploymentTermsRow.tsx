@@ -112,15 +112,14 @@ export const EmploymentTermsRow = ({
 		.reverse()
 		.find((entry) => entry.scheduled);
 	const name = inForce ? inForce.name : t(`${key}.unset`);
-	// Shift work and part-time say so beside the name, as the Settings list does.
-	const kind = inForce
+	// Shift work says so beside the name; part-time is already the profile's Employment type above.
+	const shiftWork = inForce
 		? kindOf(
 				termsFormValuesOf(inForce),
 				[],
 				current.reference?.partTimeBelowMinutes ?? null
-			)
-		: undefined;
-	const pill = kind === "SHIFT_WORK" || kind === "PART_TIME" ? kind : undefined;
+			) === "SHIFT_WORK"
+		: false;
 	return (
 		<span className="flex min-w-0 flex-col gap-1">
 			<span className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -136,7 +135,7 @@ export const EmploymentTermsRow = ({
 				) : (
 					<span>{name}</span>
 				)}
-				{pill && <Badge>{t(`employmentTerms.kinds.${pill}`)}</Badge>}
+				{shiftWork && <Badge>{t("employmentTerms.kinds.SHIFT_WORK")}</Badge>}
 				{canChange && (
 					<Button
 						variant="textlink"
