@@ -191,6 +191,7 @@ describe("RegenerateMonthDialog", () => {
 		expect(post?.search).toBe("departmentId=d-1");
 		expect(post?.body).toEqual({
 			includeLeave: true,
+			weeks: NOVEMBER_WEEKS.map(([periodStart]) => periodStart),
 			newWeeks: [
 				{
 					periodStart: "2026-11-30",

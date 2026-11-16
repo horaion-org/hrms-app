@@ -114,6 +114,7 @@ describe("useGenerateMonth", () => {
 			expect(post?.search).toBe("departmentId=d-1");
 			expect(post?.body).toEqual({
 				includeLeave: true,
+				weeks: ["2026-12-07", "2026-12-14", "2026-12-21", "2026-12-28"],
 				newWeeks: ["2026-12-07", "2026-12-14", "2026-12-21", "2026-12-28"].map(
 					(periodStart) => ({
 						periodStart,

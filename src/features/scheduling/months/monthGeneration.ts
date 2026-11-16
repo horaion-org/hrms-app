@@ -3,6 +3,7 @@ import type {
 	MonthGeneration,
 	MonthWeek,
 	ScheduleMonth,
+	WeekState,
 } from "@/features/scheduling/months/api";
 import type { WeekChoiceIds } from "@/features/scheduling/weekChoice";
 
@@ -20,9 +21,19 @@ export const isGenerating = (month: ScheduleMonth): boolean =>
 export const coveredWeeks = (month: ScheduleMonth): Array<MonthWeek> =>
 	month.weeks.filter((week) => week.includedInMonthGeneration === true);
 
-/** The covered weeks without a schedule: a run creates them, so it needs a choice for each. */
-export const weeksToCreate = (month: ScheduleMonth): Array<MonthWeek> =>
-	coveredWeeks(month).filter((week) => week.state === "NOT_GENERATED");
+/** The Mondays of the covered weeks: what a run generates when the caller chooses no weeks. */
+export const coveredMondaysOf = (month: ScheduleMonth): Array<string> =>
+	coveredWeeks(month).map((week) => week.periodStart);
+
+/** The chosen covered weeks without a schedule: a run creates them, so it needs a choice for each. */
+export const weeksToCreate = (
+	month: ScheduleMonth,
+	chosen: ReadonlyArray<string> = coveredMondaysOf(month)
+): Array<MonthWeek> =>
+	coveredWeeks(month).filter(
+		(week) =>
+			week.state === "NOT_GENERATED" && chosen.includes(week.periodStart)
+	);
 
 /**
  * Whether "Before you generate" shows: nothing is generating and a covered
@@ -72,18 +83,21 @@ export const MONTH_SETUP_DEFAULTS: MonthSetup = {
 };
 
 /**
- * What generating the month sends: the setup, and a choice for every week the
- * run creates, the given one or else `everything`. A week without either is
- * left out, and the API refuses the run with MONTH_WEEK_CHOICE_MISSING.
+ * What generating the month sends: the setup, the chosen Mondays (every
+ * covered week by default), and a choice for every chosen week the run
+ * creates, the given one or else `everything`. A week without either is left
+ * out, and the API refuses the run with MONTH_WEEK_CHOICE_MISSING.
  */
 export const generateMonthBody = (
 	month: ScheduleMonth,
 	choices: MonthChoices,
 	everything: WeekChoiceIds | undefined,
-	setup: MonthSetup
+	setup: MonthSetup,
+	chosen: ReadonlyArray<string> = coveredMondaysOf(month)
 ): GenerateMonthBody => ({
 	...setup,
-	newWeeks: weeksToCreate(month).flatMap((week) => {
+	weeks: [...chosen].sort(),
+	newWeeks: weeksToCreate(month, chosen).flatMap((week) => {
 		const choice = choices[week.periodStart] ?? everything;
 		return choice
 			? [
@@ -97,16 +111,73 @@ export const generateMonthBody = (
 	}),
 });
 
+/** Whether a week has no roster yet: not generated, or a draft. */
+const hasNoRosterYet = (week: MonthWeek): boolean =>
+	week.state === "NOT_GENERATED" || week.state === "DRAFT";
+
+/** The chosen covered weeks, Monday order. */
+const chosenWeeksOf = (
+	month: ScheduleMonth,
+	chosen: ReadonlyArray<string>
+): Array<MonthWeek> =>
+	coveredWeeks(month).filter((week) => chosen.includes(week.periodStart));
+
 /**
  * The week where everyone's starting point is set before a run: the first
- * covered week, while it has no roster yet (not generated, or a draft);
- * none when it has one or nothing is covered.
+ * chosen covered week, while it has no roster yet (not generated, or a
+ * draft); none when it has one or nothing is chosen.
  */
-export const startingWeekOf = (month: ScheduleMonth): MonthWeek | undefined => {
-	const [first] = coveredWeeks(month);
-	return first && (first.state === "NOT_GENERATED" || first.state === "DRAFT")
-		? first
-		: undefined;
+export const startingWeekOf = (
+	month: ScheduleMonth,
+	chosen: ReadonlyArray<string> = coveredMondaysOf(month)
+): MonthWeek | undefined => {
+	const [first] = chosenWeeksOf(month, chosen);
+	return first && hasNoRosterYet(first) ? first : undefined;
+};
+
+/**
+ * States whose week has a roster before the next week runs. GENERATING counts:
+ * the API queues the next week until no week of the Department is generating.
+ */
+const STATES_WITH_A_ROSTER: ReadonlyArray<WeekState> = [
+	"PUBLISHED",
+	"TO_REVIEW",
+	"TENTATIVE",
+	"GENERATING",
+];
+
+/** Whether the week before the month's week at `index` is chosen or has a roster, so it carries into it. */
+const weekBeforeCarriesOver = (
+	month: ScheduleMonth,
+	index: number,
+	chosen: ReadonlyArray<string>
+): boolean => {
+	const before = month.weeks[index - 1];
+	return (
+		before !== undefined &&
+		(chosen.includes(before.periodStart) ||
+			STATES_WITH_A_ROSTER.includes(before.state))
+	);
+};
+
+/**
+ * Every chosen week with nothing before it to start from, Monday order: a
+ * chosen week without a roster yet that is the first chosen week, or whose
+ * week before is neither chosen nor has a roster (a gap). Each is asked for
+ * the days before it.
+ */
+export const startingWeeksOf = (
+	month: ScheduleMonth,
+	chosen: ReadonlyArray<string>
+): Array<MonthWeek> => {
+	const [firstChosen] = chosenWeeksOf(month, chosen);
+	return month.weeks.filter(
+		(week, index) =>
+			week.includedInMonthGeneration === true &&
+			chosen.includes(week.periodStart) &&
+			hasNoRosterYet(week) &&
+			(week === firstChosen || !weekBeforeCarriesOver(month, index, chosen))
+	);
 };
 
 /** The name of a week's draft the app saves: the same words the API names the weeks it creates with. */
