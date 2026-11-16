@@ -100,6 +100,7 @@ describe("PermissionChecklist", () => {
 			"People",
 			"Notes",
 			"Availability",
+			"Shift preferences",
 			"People’s employment terms",
 			"Leave",
 			"Schedules",
@@ -357,6 +358,7 @@ describe("PermissionChecklist", () => {
 			"People",
 			"Notes",
 			"Availability",
+			"Shift preferences",
 			"People’s employment terms",
 			"Leave",
 			"Schedules",
@@ -378,7 +380,7 @@ describe("PermissionChecklist", () => {
 			).getAllByRole("group")
 		).toHaveLength(1);
 		expect(screen.getAllByRole("checkbox")).toHaveLength(
-			PERMISSION_KEYS.filter((key) => !isCompanyOnly(key)).length + 16
+			PERMISSION_KEYS.filter((key) => !isCompanyOnly(key)).length + 17
 		);
 		expect(within(row("Branches")).getAllByRole("checkbox")).toHaveLength(3);
 		expect(

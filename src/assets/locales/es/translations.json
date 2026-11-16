@@ -1235,6 +1235,18 @@
 					"update": "Su patrón semanal y los cambios de una semana"
 				}
 			},
+			"shift_preference": {
+				"name": "Preferencias de turno",
+				"description": "Los turnos que cada persona querría trabajar en una fecha.",
+				"actions": {
+					"read": "Ver las preferencias de turno de las personas",
+					"update": "Definir las preferencias de turno de alguien"
+				},
+				"actionHints": {
+					"read": "Los turnos que querrían, día a día",
+					"update": "Indicar las propias no necesita nada"
+				}
+			},
 			"leave_request": {
 				"name": "Permisos",
 				"description": "Las solicitudes de permiso de cada persona, incluido el tipo de permiso y el motivo por el que se rechazó una solicitud.",

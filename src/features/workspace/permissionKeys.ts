@@ -93,6 +93,11 @@ export const AVAILABILITY_READ_KEYS: ReadonlyArray<PermissionKey> = [
 	"work_availability:read",
 ];
 
+/** Holding this at a Department is what lets a person see its members' shift preferences. */
+export const SHIFT_PREFERENCE_READ_KEYS: ReadonlyArray<PermissionKey> = [
+	"shift_preference:read",
+];
+
 /** A new schedule may be created where this is held at its Department: the wizard's unit choices. */
 export const SCHEDULE_CREATE_KEYS: ReadonlyArray<PermissionKey> = [
 	"schedule:create",
