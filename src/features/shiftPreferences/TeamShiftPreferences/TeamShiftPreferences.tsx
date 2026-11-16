@@ -1,6 +1,5 @@
-import { useState } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { weekdayOf } from "@/common/weekdays";
 import { Pagination } from "@/components/ui/Pagination";
@@ -43,7 +42,11 @@ const rowOf = (
 	})),
 });
 
-/** One Department's members and their preferred shifts for a week, read-only, a page at a time. */
+/**
+ * One Department's members and their preferred shifts for a week, read-only,
+ * a page at a time, under its own heading. Whether the person may read them
+ * is the hook's call alone: held nowhere, or refused, it says so.
+ */
 export const TeamShiftPreferences = ({
 	companyId,
 	departmentId,
@@ -61,22 +64,33 @@ export const TeamShiftPreferences = ({
 		weekStartMonday,
 		page,
 	});
+	const headingId = useId();
+	/** The section, headed, holding `content`. */
+	const headed = (content: ReactNode): FunctionComponent => (
+		<section aria-labelledby={headingId} className={className}>
+			<h2
+				className="mb-4 text-base font-semibold text-neutral-900"
+				id={headingId}
+			>
+				{t(`${key}.label`)}
+			</h2>
+			{content}
+		</section>
+	);
 	if (team.status === "hidden")
-		return <p className="text-sm text-neutral-800">{t(`${key}.hidden`)}</p>;
+		return headed(
+			<p className="text-sm text-neutral-800">{t(`${key}.hidden`)}</p>
+		);
 	if (team.status === "error")
-		return (
+		return headed(
 			<p className="text-sm text-error-700" role="alert">
 				{t(`${key}.failed`)}
 			</p>
 		);
 	if (team.status !== "ready")
-		return (
-			<Skeleton
-				className={joinClassNames("h-36 w-full rounded-lg", className)}
-			/>
-		);
-	return (
-		<div className={className}>
+		return headed(<Skeleton className="h-36 w-full rounded-lg" />);
+	return headed(
+		<>
 			<WeekGrid
 				emptyState={t(`${key}.empty`)}
 				headingLabel={t(`${key}.member`)}
@@ -95,6 +109,6 @@ export const TeamShiftPreferences = ({
 					setPaging({ list, page: next - 1 });
 				}}
 			/>
-		</div>
+		</>
 	);
 };

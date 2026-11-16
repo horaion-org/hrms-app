@@ -40,7 +40,6 @@ import { workspaceQuery } from "@/features/workspace/api";
 import {
 	AVAILABILITY_READ_KEYS,
 	AVAILABILITY_UPDATE_KEY,
-	SHIFT_PREFERENCE_READ_KEYS,
 } from "@/features/workspace/permissionKeys";
 import { retry } from "@/features/workspace/retry";
 import { recordScope } from "@/features/workspace/scopes";
@@ -77,7 +76,7 @@ const problemKeyOf = (
  * the part-timers of the header's Branch (every Branch in reach under "All
  * branches") for one week, read through the person's grants, with editing
  * on the rows they may change; once a Department is chosen, its members'
- * shift preferences are listed beneath. "Shift preferences", last, is
+ * shift preferences are listed beneath, under their own heading. "Shift preferences", last, is
  * everyone's own week of preferred shifts, also changed with nothing
  * granted. Beneath the tabs, one toolbar holds the team's Department filter
  * and the week. The tab (written once it is known), units and week live in
@@ -284,16 +283,15 @@ export const Availability = (): FunctionComponent => {
 										weekStartMonday={week}
 										onEdit={setEditing}
 									/>
-									{units.department &&
-										access.canAny(SHIFT_PREFERENCE_READ_KEYS, "anywhere") && (
-											<TeamShiftPreferences
-												className="mt-10"
-												companyId={companyId}
-												departmentId={units.department.departmentId}
-												shownDay={shownDay}
-												weekStartMonday={week}
-											/>
-										)}
+									{units.department && (
+										<TeamShiftPreferences
+											className="mt-10"
+											companyId={companyId}
+											departmentId={units.department.departmentId}
+											shownDay={shownDay}
+											weekStartMonday={week}
+										/>
+									)}
 								</>
 							)}
 						</TabPanel>

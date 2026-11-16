@@ -191,9 +191,7 @@ describe("Availability", () => {
 		await waitFor(() => {
 			expect(router.state.location.search).toEqual({ view: "team" });
 		});
-		expect(calls.some((call) => call.path === MY_PREFERENCES_PATH)).toBe(
-			false
-		);
+		expect(calls.some((call) => call.path === MY_PREFERENCES_PATH)).toBe(false);
 	});
 
 	it("shows someone holding the read key the team's week, without reading a week of their own", async () => {
@@ -249,6 +247,28 @@ describe("Availability", () => {
 		await waitFor(() => {
 			expect(router.state.location.search).toEqual({ view: "team" });
 		});
+	});
+
+	it("heads a chosen Department's shift preferences and lets the list say there is no access to them", async () => {
+		const calls = stubApi(routes("FULL_TIME", workspaceReply([READ])));
+		await open("/availability?view=team&department=d-1");
+
+		expect(
+			await screen.findByRole("heading", {
+				level: 2,
+				name: "Team shift preferences",
+			})
+		).toBeVisible();
+		expect(
+			screen.getByText(
+				"You don’t have access to anyone’s shift preferences in this company."
+			)
+		).toBeVisible();
+		expect(
+			calls.some(
+				(call) => call.path === "/api/v1/companies/c-1/shift-preferences"
+			)
+		).toBe(false);
 	});
 
 	it("starts the team on the person's home Branch and lists every Branch once All branches is chosen", async () => {

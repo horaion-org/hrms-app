@@ -109,6 +109,9 @@ describe("TeamShiftPreferences", () => {
 		const table = await screen.findByRole("table", {
 			name: "Team shift preferences",
 		});
+		expect(
+			screen.getByRole("heading", { level: 2, name: "Team shift preferences" })
+		).toBeVisible();
 		expect(within(table).getByRole("rowheader")).toHaveTextContent(
 			"Alex Example"
 		);
@@ -192,6 +195,10 @@ describe("TeamShiftPreferences", () => {
 		show([]);
 
 		await screen.findByText("Loaded");
+		// Headed even without access, so the line says what it is about.
+		expect(
+			screen.getByRole("heading", { level: 2, name: "Team shift preferences" })
+		).toBeVisible();
 		expect(
 			screen.getByText(
 				"You don’t have access to anyone’s shift preferences in this company."
