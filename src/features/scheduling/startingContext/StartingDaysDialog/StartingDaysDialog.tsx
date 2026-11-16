@@ -2,7 +2,6 @@ import { useId, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
-import { Input } from "@/components/forms/Input";
 import { Select } from "@/components/forms/Select";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
@@ -10,22 +9,6 @@ import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { Dialog } from "@/components/ui/Dialog";
 import { dayTypeLabel } from "@/features/scheduling/dayTypes";
 import { formatTimeRange } from "@/features/scheduling/formatShift";
-import type {
-	OpeningBalances,
-	OpeningEntry,
-} from "@/features/scheduling/hours/api";
-import {
-	changedOpenings,
-	daysBeforeOf,
-	hoursText,
-	initialOpeningValues,
-	lockedOpeningOf,
-	openingProblem,
-	openingValueOf,
-	withOpeningValue,
-	type OpeningValue,
-	type OpeningValues,
-} from "@/features/scheduling/hours/openingGrid";
 import { formatDay } from "@/common/formatDay";
 import type {
 	EnteredDay,
@@ -55,16 +38,8 @@ export type StartingDaysDialogProps = {
 	saving: boolean;
 	/** Why the last save was refused, shown in the dialog. */
 	problem?: string;
-	/**
-	 * The month's opening balances, once loaded; their cells show only when
-	 * days of the month come before the roster, and a line says why when none do.
-	 */
-	openings?: OpeningBalances;
-	/** The entered days, and the openings changed here, or undefined when none were (nothing to send). */
-	onSave: (
-		days: Array<EnteredDay>,
-		openings: Array<OpeningEntry> | undefined
-	) => void;
+	/** The entered days. */
+	onSave: (days: Array<EnteredDay>) => void;
 	onClose: () => void;
 };
 
@@ -79,9 +54,8 @@ const key = "scheduling.startingContext";
  * Hidden days are still saved. A day a roster or approved leave covers shows
  * what it was, locked; any other day is a department shift, a day off of one
  * of the schedule's types, or not known (left empty). "Fill empty" sets one shown day for everyone not
- * entered yet. When the roster starts mid-month, two more cells take the
- * hours and overtime each member already worked this month, so monthly
- * overtime limits count from the 1st.
+ * entered yet. The 7 nearer days fit the dialog's width; the hours already
+ * worked this month have their own section (OpeningHoursSection).
  */
 export const StartingDaysDialog = ({
 	open,
@@ -89,7 +63,6 @@ export const StartingDaysDialog = ({
 	nonWorkingDayTypes,
 	saving,
 	problem,
-	openings,
 	onSave,
 	onClose,
 }: StartingDaysDialogProps): FunctionComponent => {
@@ -108,25 +81,6 @@ export const StartingDaysDialog = ({
 	const [fillValue, setFillValue] = useState<CellValue>(() =>
 		offCellValue(dayOffTypes[0] ?? null)
 	);
-	const askedOpenings = openings?.applies === true ? openings : undefined;
-	const asksOpenings = askedOpenings !== undefined;
-	// Only what the person typed is state; the API's answer is read on every
-	// render, so openings that arrive after the dialog opened still show.
-	const [openingChanges, setOpeningChanges] = useState<OpeningValues>({});
-	const initialOpenings =
-		openings === undefined ? {} : initialOpeningValues(openings);
-	const openingByMember = new Map(
-		(openings?.members ?? []).map((member) => [member.memberProfileId, member])
-	);
-	const openingTrouble =
-		askedOpenings === undefined
-			? undefined
-			: openingProblem(openingChanges, daysBeforeOf(askedOpenings));
-	const openingsToSave = (): Array<OpeningEntry> | undefined => {
-		if (!asksOpenings) return undefined;
-		const changed = changedOpenings(openingChanges, initialOpenings);
-		return changed.length === 0 ? undefined : changed;
-	};
 	const labelOf = (date: string): string => formatDay(date, language);
 	const dayOffLabel = (dayType: string | null): string =>
 		dayType === null
@@ -152,7 +106,8 @@ export const StartingDaysDialog = ({
 	const dayColumn = (date: string): DataTableColumn<MemberRow> => ({
 		id: date,
 		header: labelOf(date),
-		headerClassName: "w-40",
+		// Seven of these beside the staff column fit the dialog's 1104 px of content.
+		headerClassName: "w-32",
 		wrapHeader: true,
 		cell: (member): ReactNode => {
 			const cell = cellOn(member, date);
@@ -189,76 +144,11 @@ export const StartingDaysDialog = ({
 			);
 		},
 	});
-	const asOfLabel = openings ? labelOf(openings.asOf) : "";
-	const lockedOpeningText = (
-		member: MemberRow,
-		field: keyof OpeningValue
-	): string => {
-		const opening = openingByMember.get(member.memberProfileId);
-		if (opening === undefined) return "";
-		const locked = lockedOpeningOf(opening);
-		if (locked.kind === "rostered") return t(`${key}.opening.fromRosters`);
-		if (locked.kind === "none") return t(`${key}.opening.none`);
-		const minutes =
-			field === "worked" ? locked.workedMinutes : locked.overtimeMinutes;
-		return t(`${key}.opening.hours`, { hours: hoursText(minutes) });
-	};
-	const openingColumn = (
-		field: keyof OpeningValue
-	): DataTableColumn<MemberRow> => ({
-		id: `opening-${field}`,
-		header: t(`${key}.opening.${field}`, { day: asOfLabel }),
-		headerClassName: "w-36",
-		wrapHeader: true,
-		cell: (member): ReactNode => {
-			if (!openingByMember.get(member.memberProfileId)?.editable)
-				return (
-					<span
-						className="block truncate text-sm text-neutral-600"
-						title={lockedOpeningText(member, field)}
-					>
-						{lockedOpeningText(member, field)}
-					</span>
-				);
-			return (
-				<Input
-					className="w-full"
-					inputMode="decimal"
-					min={0}
-					status={openingTrouble ? "error" : undefined}
-					step={0.5}
-					type="number"
-					aria-label={t(`${key}.opening.${field}Label`, {
-						name: member.displayName,
-						day: asOfLabel,
-					})}
-					value={
-						openingValueOf(
-							openingChanges,
-							initialOpenings,
-							member.memberProfileId
-						)[field]
-					}
-					onChange={(event) => {
-						setOpeningChanges((current) =>
-							withOpeningValue(
-								current,
-								initialOpenings,
-								member.memberProfileId,
-								field,
-								event.target.value
-							)
-						);
-					}}
-				/>
-			);
-		},
-	});
 	const columns: Array<DataTableColumn<MemberRow>> = [
 		{
 			id: "member",
 			header: t("scheduling.detail.staff"),
-			headerClassName: "w-48",
+			headerClassName: "w-40",
 			pin: "start",
 			cell: (member) => (
 				<span className="block min-w-0">
@@ -280,9 +170,6 @@ export const StartingDaysDialog = ({
 			),
 		},
 		...shownDays.map(dayColumn),
-		...(asksOpenings
-			? [openingColumn("worked"), openingColumn("overtime")]
-			: []),
 	];
 
 	return (
@@ -298,11 +185,10 @@ export const StartingDaysDialog = ({
 						{t(`${key}.cancel`)}
 					</Button>
 					<Button
-						disabled={openingTrouble !== undefined}
 						loading={saving}
 						variant="primary"
 						onClick={() => {
-							onSave(enteredDays(entries), openingsToSave());
+							onSave(enteredDays(entries));
 						}}
 					>
 						{t(`${key}.save`)}
@@ -325,16 +211,6 @@ export const StartingDaysDialog = ({
 				>
 					{t(`${key}.${showEarlier ? "hideEarlier" : "showEarlier"}`)}
 				</Button>
-			)}
-			{asksOpenings && (
-				<p className="mt-2 text-sm text-neutral-700">
-					{t(`${key}.opening.hint`, { day: asOfLabel })}
-				</p>
-			)}
-			{openings?.applies === false && (
-				<p className="mt-2 text-sm text-neutral-700">
-					{t(`${key}.opening.notNeeded`)}
-				</p>
 			)}
 			<div className="mt-4 flex flex-wrap items-end gap-3">
 				<Select
@@ -368,11 +244,6 @@ export const StartingDaysDialog = ({
 			{problem && (
 				<Callout className="mt-4" tone="warning">
 					{problem}
-				</Callout>
-			)}
-			{openingTrouble && (
-				<Callout className="mt-4" tone="warning">
-					{t(`${key}.opening.${openingTrouble}`)}
 				</Callout>
 			)}
 			<div id={tableId}>

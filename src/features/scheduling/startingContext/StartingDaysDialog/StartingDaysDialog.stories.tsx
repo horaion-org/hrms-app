@@ -7,10 +7,6 @@ import {
 	typedDaysOffWeek,
 } from "@/features/scheduling/startingContext/fixtures";
 import { StartingDaysDialog } from "@/features/scheduling/startingContext/StartingDaysDialog";
-import {
-	editableMember,
-	midMonthOpenings,
-} from "@/features/scheduling/hours/fixtures";
 import "@/common/i18n";
 
 const meta = {
@@ -51,15 +47,5 @@ export const Refused: Story = {
 	args: {
 		problem:
 			"A day couldn’t be saved. Check that its shift is still in use, then try again.",
-	},
-};
-
-/** Mid-month, so the long opening headers ("Paid hours before …") wrap onto two lines. */
-export const WithOpeningBalances: Story = {
-	args: {
-		openings: midMonthOpenings([
-			editableMember("p-tan"),
-			editableMember("p-siti", { editable: false, rosteredBefore: true }),
-		]),
 	},
 };

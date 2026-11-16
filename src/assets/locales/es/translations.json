@@ -4166,25 +4166,7 @@
 			"notDraft": "Este horario ya se generó, así que su punto de partida ya no puede cambiar.",
 			"failed": "No se pudieron guardar los días. Inténtalo de nuevo.",
 			"stale_one": "Los días de {{count}} persona antes de esta semana cambiaron después de generar este cuadrante, así que lo que dice de la semana anterior es lo que se sabía entonces. Para planificar con los días actuales, regenera el mes desde su página.",
-			"stale_other": "Los días de {{count}} personas antes de esta semana cambiaron después de generar este cuadrante, así que lo que dice de la semana anterior es lo que se sabía entonces. Para planificar con los días actuales, regenera el mes desde su página.",
-			"opening": {
-				"hint": "Los límites de horas extra cuentan desde el día 1. Para quien no tenga cuadrante antes en este mes, añade las horas remuneradas y horas extra que ya trabajó antes del {{day}}.",
-				"notNeeded": "Esta semana empieza el día 1, así que no se arrastran horas ni horas extra de antes en el mes.",
-				"worked": "Horas remuneradas antes del {{day}}",
-				"overtime": "Horas extra antes del {{day}}",
-				"workedLabel": "{{name}}, horas remuneradas trabajadas este mes antes del {{day}}",
-				"overtimeLabel": "{{name}}, horas extra este mes antes del {{day}}",
-				"fromRosters": "De los cuadrantes",
-				"none": "Sin datos",
-				"hours": "{{hours}} h",
-				"invalidHours": "Escribe las horas como un número, por ejemplo 72 o 7,5.",
-				"overtimeAboveWorked": "Las horas extra forman parte de las horas trabajadas, así que no pueden ser más.",
-				"invalid": "No se pudieron guardar algunas horas. Comprueba que cada persona sigue en este departamento, que las horas extra no superan sus horas y que las horas caben en los días antes de esta semana.",
-				"locked": "Algunas horas de este mes ya no pueden cambiar aquí: los cuadrantes ya cubren esos días, hay horas de partida introducidas en otra semana o un cuadrante publicado depende de ellas. Cierra y vuelve a abrir para ver lo último.",
-				"moreThanTheDaysHold": "Son más horas de las que caben en los días del mes antes de esta semana.",
-				"published": "Este horario está publicado, así que las horas antes de esta semana ya no pueden cambiar aquí.",
-				"daysSavedHoursNot": "Los días de la semana pasada se guardaron, pero las horas de este mes no. {{reason}} Tus horas siguen aquí: corrígelas y vuelve a guardar."
-			}
+			"stale_other": "Los días de {{count}} personas antes de esta semana cambiaron después de generar este cuadrante, así que lo que dice de la semana anterior es lo que se sabía entonces. Para planificar con los días actuales, regenera el mes desde su página."
 		},
 		"openingHours": {
 			"title": "Horas ya trabajadas este mes (del {{from}} al {{to}})",
