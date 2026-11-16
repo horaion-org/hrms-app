@@ -68,10 +68,10 @@ const show = (permissions: Array<string>): void => {
 	);
 };
 
-/** The list with buttons that move it to the next week and to Department d-2, as the page's toolbar does. */
+/** Branch b-1's list with buttons that move it to the next week and to its Department d-2, as the page's toolbar does. */
 const MovingList = (): ReactElement => {
 	const [week, setWeek] = useState(FIXTURE_WEEK);
-	const [departmentId, setDepartmentId] = useState("d-1");
+	const [departmentId, setDepartmentId] = useState<string>();
 	return (
 		<>
 			<button
@@ -91,6 +91,7 @@ const MovingList = (): ReactElement => {
 				Kitchen
 			</button>
 			<TeamShiftPreferences
+				branchId="b-1"
 				companyId="c-1"
 				departmentId={departmentId}
 				weekStartMonday={week}
@@ -122,7 +123,7 @@ describe("TeamShiftPreferences", () => {
 		// Read-only: no day is a button.
 		expect(within(table).queryByRole("button")).not.toBeInTheDocument();
 		expect(calls.map((call) => call.search)).toEqual([
-			`departmentId=d-1&weekStartMonday=${FIXTURE_WEEK}&page=0&size=${TEAM_PAGE_SIZE}`,
+			`weekStartMonday=${FIXTURE_WEEK}&departmentId=d-1&page=0&size=${TEAM_PAGE_SIZE}`,
 		]);
 	});
 
@@ -145,7 +146,7 @@ describe("TeamShiftPreferences", () => {
 		).toEqual(["Alex Example", "Former member"]);
 	});
 
-	it("given_aLaterPage_when_theWeekOrDepartmentChanges_then_startsAgainAtTheFirstPage", async () => {
+	it("given_aBranchsLaterPage_when_theWeekOrDepartmentChanges_then_startsAgainAtTheFirstPage", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi({
 			[TEAM]: {
@@ -170,10 +171,10 @@ describe("TeamShiftPreferences", () => {
 
 		await waitFor(() => {
 			expect(calls.map((call) => call.search)).toEqual([
-				`departmentId=d-1&weekStartMonday=${FIXTURE_WEEK}&page=0&size=${TEAM_PAGE_SIZE}`,
-				`departmentId=d-1&weekStartMonday=${FIXTURE_WEEK}&page=1&size=${TEAM_PAGE_SIZE}`,
-				`departmentId=d-1&weekStartMonday=${NEXT_WEEK}&page=0&size=${TEAM_PAGE_SIZE}`,
-				`departmentId=d-2&weekStartMonday=${NEXT_WEEK}&page=0&size=${TEAM_PAGE_SIZE}`,
+				`weekStartMonday=${FIXTURE_WEEK}&branchId=b-1&page=0&size=${TEAM_PAGE_SIZE}`,
+				`weekStartMonday=${FIXTURE_WEEK}&branchId=b-1&page=1&size=${TEAM_PAGE_SIZE}`,
+				`weekStartMonday=${NEXT_WEEK}&branchId=b-1&page=0&size=${TEAM_PAGE_SIZE}`,
+				`weekStartMonday=${NEXT_WEEK}&branchId=b-1&departmentId=d-2&page=0&size=${TEAM_PAGE_SIZE}`,
 			]);
 		});
 	});

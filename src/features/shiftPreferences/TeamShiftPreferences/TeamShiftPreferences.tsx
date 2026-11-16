@@ -14,8 +14,10 @@ import { useTeamPreferences } from "@/features/shiftPreferences/useShiftPreferen
 
 export type TeamShiftPreferencesProps = {
 	companyId: string;
-	/** The Department whose members are listed. */
-	departmentId: string;
+	/** The Branch whose members are listed; left out, every Branch in reach. */
+	branchId?: string;
+	/** The Department whose members are listed; left out, every Department of the Branch. */
+	departmentId?: string;
 	/** The week shown, as its Monday. */
 	weekStartMonday: string;
 	/** The one day shown below `md`, as the page's `DaySwitcher` picks it. */
@@ -43,25 +45,27 @@ const rowOf = (
 });
 
 /**
- * One Department's members and their preferred shifts for a week, read-only,
- * a page at a time, under its own heading. Whether the person may read them
+ * The members of a Branch, or of one Department of it, and their preferred
+ * shifts for a week, read-only, a page at a time, under its own heading. Whether the person may read them
  * is the hook's call alone: held nowhere, or refused, it says so.
  */
 export const TeamShiftPreferences = ({
 	companyId,
+	branchId,
 	departmentId,
 	weekStartMonday,
 	shownDay,
 	className,
 }: TeamShiftPreferencesProps): FunctionComponent => {
 	const { t } = useTranslation();
-	// A page number belongs to one Department's week; another starts again at the first page.
-	const list = `${departmentId}|${weekStartMonday}`;
+	// A page number belongs to one list's week; another unit or week starts again at the first page.
+	const list = `${branchId ?? ""}|${departmentId ?? ""}|${weekStartMonday}`;
 	const [paging, setPaging] = useState({ list, page: 0 });
 	const page = paging.list === list ? paging.page : 0;
 	const team = useTeamPreferences(companyId, {
-		departmentId,
 		weekStartMonday,
+		...(branchId ? { branchId } : {}),
+		...(departmentId ? { departmentId } : {}),
 		page,
 	});
 	const headingId = useId();
