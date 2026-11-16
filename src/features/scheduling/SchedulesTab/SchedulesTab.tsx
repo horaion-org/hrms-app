@@ -186,6 +186,13 @@ export const SchedulesTab = ({
 		];
 	}, [t, language, companyId]);
 	const summaries = months.data ?? [];
+	// No month card: say whether a filter emptied the list, and point at Create schedule only for who has it.
+	const monthsEmptyKey =
+		search.trim() !== "" || chips.length > 0
+			? "scheduling.months.tabEmptyFiltered"
+			: access.canAnywhere("schedule:create")
+				? "scheduling.months.tabEmpty"
+				: "scheduling.months.tabEmptyReadOnly";
 	const monthGroups = summariesByMonth(
 		summaries.filter((summary) => monthMatches(summary, search))
 	);
@@ -225,10 +232,8 @@ export const SchedulesTab = ({
 					{t("scheduling.months.tabFailed")}
 				</p>
 			)}
-			{months.isSuccess && search.trim() === "" && monthGroups.length === 0 && (
-				<p className="mt-8 text-sm text-neutral-700">
-					{t("scheduling.months.tabEmpty")}
-				</p>
+			{months.isSuccess && monthGroups.length === 0 && (
+				<p className="mt-8 text-sm text-neutral-700">{t(monthsEmptyKey)}</p>
 			)}
 			{monthGroups.map(([month, monthSummaries]) => (
 				<section

@@ -209,12 +209,42 @@ describe("SchedulesTab", () => {
 		);
 	});
 
-	it("given_noMonthWithASchedule_when_rendered_then_saysSoAndPointsAtCreateSchedule", async () => {
-		show(vi.fn(), ["schedule:read"], "GENERATION_REQUESTED", []);
+	it("given_noMonthWithAScheduleAndScheduleCreate_when_rendered_then_saysSoAndPointsAtCreateSchedule", async () => {
+		show(
+			vi.fn(),
+			["schedule:read", "schedule:create"],
+			"GENERATION_REQUESTED",
+			[]
+		);
 
 		expect(
 			await screen.findByText(
-				"No month has a schedule yet. Use Create schedule to start one."
+				"No upcoming month has a schedule. Use Create schedule to start one."
+			)
+		).toBeInTheDocument();
+	});
+
+	it("given_noMonthWithAScheduleForAReader_when_rendered_then_saysSoWithoutTheButtonTheyLack", async () => {
+		show(vi.fn(), ["schedule:read"], "GENERATION_REQUESTED", []);
+
+		expect(
+			await screen.findByText("No upcoming month has a schedule.")
+		).toBeInTheDocument();
+		expect(screen.queryByText(/Create schedule/)).toBeNull();
+	});
+
+	it("given_aSearchThatMatchesNoMonth_when_typed_then_saysTheSearchEmptiedTheList", async () => {
+		const user = userEvent.setup();
+		show();
+		await screen.findAllByRole("region", {
+			name: /^(November|December) 2026$/,
+		});
+
+		await user.type(screen.getByRole("searchbox"), "Nowhere");
+
+		expect(
+			await screen.findByText(
+				"No upcoming month matches your search or filters."
 			)
 		).toBeInTheDocument();
 	});

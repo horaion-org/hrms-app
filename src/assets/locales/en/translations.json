@@ -5222,7 +5222,9 @@
 			},
 			"tabFailed": "The months couldn’t be loaded. Please try again.",
 			"tabLoading": "Loading the months…",
-			"tabEmpty": "No month has a schedule yet. Use Create schedule to start one.",
+			"tabEmpty": "No upcoming month has a schedule. Use Create schedule to start one.",
+			"tabEmptyReadOnly": "No upcoming month has a schedule.",
+			"tabEmptyFiltered": "No upcoming month matches your search or filters.",
 			"roster": {
 				"unpublished": "<0>Not published.</0> Staff can’t see this week.",
 				"publishFirst": "Publish {{week}} first. Weeks are published in order.",
