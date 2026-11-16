@@ -41,6 +41,13 @@ describe("KeyFigure", () => {
 		).toHaveTextContent(/^Next week published5$/);
 	});
 
+	it("given_aTone_when_rendered_then_coloursTheFigureAndNothingElse", () => {
+		render(<KeyFigure label="Shifts" tone="error" unit="short" value="5" />);
+
+		expect(screen.getByText("5")).toHaveClass("text-error-700");
+		expect(screen.getByText("short")).not.toHaveClass("text-error-700");
+	});
+
 	it("given_aChart_when_rendered_then_placesItUnderTheFigure", () => {
 		render(
 			<KeyFigure label="Next week published" value="5">
