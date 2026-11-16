@@ -522,7 +522,9 @@ describe("shiftStatus", () => {
 			stretch: { beforeMinutes: 60, afterMinutes: 60 },
 		};
 
-		expect(shiftStatus(mondayOf(stretched), false, t)).toBe("Stretched +2 h");
+		expect(shiftStatus(mondayOf(stretched), false, t)).toBe(
+			"Stretched 2 h into overtime"
+		);
 	});
 
 	it("given_aShiftKeptAroundLeaveAndALeaveReader_when_worded_then_namesTheLeaveAndItsTime", () => {
