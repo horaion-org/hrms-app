@@ -24,11 +24,13 @@ export const formatPaidHours = (
 			})
 		: t("scheduling.shifts.paidHoursValue", { hours: paidShiftHours(shift) });
 
-/** "Weekdays" for Monday to Friday, otherwise each day, e.g. "Mon, Wed, Fri". */
+/** "Weekdays" for Monday to Friday, otherwise each day as a list, e.g. "Mon, Wed and Fri". */
 export const formatDays = (
 	days: ScheduleShift["days"],
 	t: TFunction
 ): string =>
 	isWeekdays(days)
 		? t("scheduling.days.weekdays")
-		: days.map((day) => t(`scheduling.days.${day}`)).join(", ");
+		: t("scheduling.constraints.list", {
+				items: days.map((day) => t(`scheduling.days.${day}`)),
+			});

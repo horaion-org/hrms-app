@@ -35,7 +35,9 @@ export const IssueGroupSection = ({
 	const [open, setOpen] = useState(true);
 	const listId = useId();
 	const title = t(`scheduling.issues.groups.${group}`);
-	const gist = [...new Set(items.map((issue) => issue.who))].join(", ");
+	const gist = t("scheduling.constraints.list", {
+		items: [...new Set(items.map((issue) => issue.who))],
+	});
 	return (
 		<section className="flex flex-col border-t border-neutral-300 pt-2">
 			<button

@@ -87,9 +87,11 @@ export const ValidationNote = ({
 			<Callout tone="error">
 				{check.brokenRules.length > 0
 					? t(`${key}.brokenNamed`, {
-							rules: check.brokenRules
-								.map((rule) => brokenRuleLabel(rule, t))
-								.join(", "),
+							rules: t("scheduling.constraints.list", {
+								items: check.brokenRules.map((rule) =>
+									brokenRuleLabel(rule, t)
+								),
+							}),
 						})
 					: t(`${key}.brokenUnnamed`)}
 			</Callout>

@@ -4692,8 +4692,6 @@
 			"neighbours": "{{name}} trabaja {{shifts}}.",
 			"neighbour": "{{shift}} el {{day}} ({{time}})",
 			"noNeighbours": "{{name}} no tiene turno el día anterior ni el siguiente.",
-			"and": " y ",
-			"jobTitlesOr": " o ",
 			"reason": {
 				"MEMBER_GONE": "Ya no está en la empresa",
 				"ON_LEAVE": "De permiso",

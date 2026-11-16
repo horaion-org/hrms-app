@@ -38,7 +38,9 @@ export type CoverNames = {
 
 /** The shift's roles as one phrase: "Front Desk Staff or Front Desk Lead". */
 const jobTitlesOf = (shift: CoverShift | undefined, t: TFunction): string =>
-	(shift?.roles ?? []).map((role) => role.name).join(t(`${key}.jobTitlesOr`));
+	t("scheduling.constraints.listOr", {
+		items: (shift?.roles ?? []).map((role) => role.name),
+	});
 
 /**
  * What is short: "Front Desk AM · Sat, Oct 17 · 09:00 – 15:00 · Front Desk
@@ -148,7 +150,10 @@ export const neighbourLine = (
 	});
 	return shifts.length === 0
 		? t(`${key}.noNeighbours`, { name })
-		: t(`${key}.neighbours`, { name, shifts: shifts.join(t(`${key}.and`)) });
+		: t(`${key}.neighbours`, {
+				name,
+				shifts: t("scheduling.constraints.list", { items: shifts }),
+			});
 };
 
 /** Why someone can't cover the shift, in a few words. */

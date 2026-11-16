@@ -4892,8 +4892,6 @@
 			"neighbours": "{{name}} works {{shifts}}.",
 			"neighbour": "{{shift}} on {{day}} ({{time}})",
 			"noNeighbours": "{{name}} has no shift the day before or after.",
-			"and": " and ",
-			"jobTitlesOr": " or ",
 			"reason": {
 				"MEMBER_GONE": "Has left",
 				"ON_LEAVE": "On leave",

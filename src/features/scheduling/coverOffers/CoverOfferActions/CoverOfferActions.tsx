@@ -178,16 +178,16 @@ export const CoverOfferActions = ({
 						? t(`${key}.groupFull`, { count: rivals.length })
 						: t(`${key}.rivals`, {
 								count: rivals.length,
-								names: rivals
-									.map((offer) => {
+								names: t("scheduling.constraints.list", {
+									items: rivals.map((offer) => {
 										const who =
 											offer.member?.displayName ??
 											t("scheduling.detail.formerMember");
 										return offer.expiresAt
 											? `${who} (${formatOfferTime(offer.expiresAt, language, timeZone, now())})`
 											: who;
-									})
-									.join(", "),
+									}),
+								}),
 							})}
 				</p>
 			)}
