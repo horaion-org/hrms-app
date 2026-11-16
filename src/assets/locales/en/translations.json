@@ -3520,7 +3520,7 @@
 			"validation": {
 				"department": "Choose a department.",
 				"name": "Enter a schedule name.",
-				"nameLength": "Use 2 to {{max}} characters.",
+				"nameLength": "Use {{min}} to {{max}} characters.",
 				"nameCharacters": "Use only letters, numbers, spaces and . ' & - in the name.",
 				"period": "Choose a schedule period."
 			}

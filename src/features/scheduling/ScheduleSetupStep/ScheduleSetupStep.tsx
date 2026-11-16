@@ -22,8 +22,8 @@ import {
 	formatPeriod,
 	type SchedulePeriod,
 } from "@/features/scheduling/periods";
+import { NAME_MAX_LENGTH } from "@/features/organisation/nameSchema";
 import {
-	SCHEDULE_NAME_MAX_LENGTH,
 	scheduleSetupSchema,
 	type ScheduleSetupValues,
 } from "@/features/scheduling/setupSchema";
@@ -305,7 +305,7 @@ export const ScheduleSetupStep = ({
 								aria-required="true"
 								className="w-full"
 								id={fieldId("name")}
-								maxLength={SCHEDULE_NAME_MAX_LENGTH}
+								maxLength={NAME_MAX_LENGTH}
 								placeholder={t("scheduling.setup.namePlaceholder")}
 								readOnly={readOnly}
 								status={errors.name ? "error" : undefined}

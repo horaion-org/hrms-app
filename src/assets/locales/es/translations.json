@@ -3320,7 +3320,7 @@
 			"validation": {
 				"department": "Elige un departamento.",
 				"name": "Escribe un nombre para el horario.",
-				"nameLength": "Usa de 2 a {{max}} caracteres.",
+				"nameLength": "Usa de {{min}} a {{max}} caracteres.",
 				"nameCharacters": "Usa solo letras, números, espacios y . ' & - en el nombre.",
 				"period": "Elige un periodo."
 			}
