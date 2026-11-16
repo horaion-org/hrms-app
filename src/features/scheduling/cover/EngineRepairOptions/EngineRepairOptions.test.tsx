@@ -154,7 +154,7 @@ describe("EngineRepairOptions", () => {
 			status: "ready" as const,
 			options: [
 				feasibleRepair([callInMove()]),
-				feasibleRepair([stretchMove()]),
+				feasibleRepair([stretchMove({ side: null })]),
 			],
 			ask: vi.fn(),
 		};
@@ -192,7 +192,7 @@ describe("EngineRepairOptions", () => {
 				repair={{
 					status: "ready",
 					options: [
-						feasibleRepair([stretchMove()]),
+						feasibleRepair([stretchMove({ side: null })]),
 						feasibleRepair([reassignMove({ fromDate: "2026-10-16" })]),
 						infeasibleRepair(),
 					],
