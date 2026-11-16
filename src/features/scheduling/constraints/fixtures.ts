@@ -338,12 +338,20 @@ export const CONSTRAINT_OPTIONS: ConstraintOptions = {
 	types: CONSTRAINT_TYPE_OPTIONS,
 	dayTypeChoices: DAY_TYPE_CHOICES,
 	dayTypeNames: { OFF: "Day off", REST: "Rest day" },
-	shifts: SHIFT_FIXTURES.map(({ shiftId, name, roles }) => ({
-		shiftId,
-		name,
-		jobTitleIds: roles.map((role) => role.jobTitleId),
-		listedIds: { JOB_TITLE: roles.map((role) => role.jobTitleId) },
-	})),
+	// By group then name, as the API lists them.
+	shifts: [...SHIFT_FIXTURES]
+		.sort(
+			(first, second) =>
+				first.group.localeCompare(second.group) ||
+				first.name.localeCompare(second.name)
+		)
+		.map(({ shiftId, name, group, roles }) => ({
+			shiftId,
+			name,
+			jobTitleIds: roles.map((role) => role.jobTitleId),
+			listedIds: { JOB_TITLE: roles.map((role) => role.jobTitleId) },
+			group,
+		})),
 	jobTitles: [
 		{ jobTitleId: "cashier", name: "Cashier", listedIds: {} },
 		{ jobTitleId: "front-desk-lead", name: "Front Desk Lead", listedIds: {} },
@@ -360,11 +368,12 @@ export const CONSTRAINT_OPTIONS_RESPONSE = {
 	dayTypeNames: CONSTRAINT_OPTIONS.dayTypeNames,
 	links: {
 		SHIFT: CONSTRAINT_OPTIONS.shifts.map(
-			({ shiftId, name, jobTitleIds, listedIds }) => ({
+			({ shiftId, name, jobTitleIds, listedIds, group }) => ({
 				id: shiftId,
 				name,
 				jobTitleIds,
 				listedIds,
+				group,
 			})
 		),
 		JOB_TITLE: CONSTRAINT_OPTIONS.jobTitles.map(({ jobTitleId, name }) => ({

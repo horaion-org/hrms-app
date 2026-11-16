@@ -182,6 +182,38 @@ describe("constraints client", () => {
 		]);
 	});
 
+	it("reads each shift's group, and none from an API that predates it", async () => {
+		stubApi({
+			[`GET ${DEPARTMENT}/constraint-options`]: {
+				status: 200,
+				body: envelope({
+					types: CONSTRAINT_OPTIONS_RESPONSE.types,
+					links: {
+						SHIFT: [
+							{
+								id: "lunch",
+								name: "Lunch Rush",
+								listedIds: {},
+								group: "Service",
+							},
+							{ id: "old", name: "Old shift", listedIds: {} },
+						],
+						JOB_TITLE: [],
+					},
+				}),
+			},
+		});
+
+		const options = await fetchConstraintOptions("c-1", UNIT);
+
+		expect(
+			options.shifts.map(({ shiftId, group }) => [shiftId, group])
+		).toEqual([
+			["lunch", "Service"],
+			["old", null],
+		]);
+	});
+
 	it("reads a shift's job titles as none from an API that predates them", async () => {
 		stubApi({
 			[`GET ${DEPARTMENT}/constraint-options`]: {
@@ -204,6 +236,7 @@ describe("constraints client", () => {
 				name: "Front Desk AM",
 				jobTitleIds: [],
 				listedIds: {},
+				group: null,
 			},
 		]);
 	});
@@ -277,7 +310,10 @@ describe("constraints client", () => {
 					spec.excludes === null
 			)
 		).toBe(true);
-		expect(options.shifts[0]?.listedIds).toEqual({
+		expect(
+			options.shifts.find((shift) => shift.shiftId === "front-desk-am")
+				?.listedIds
+		).toEqual({
 			JOB_TITLE: ["front-desk-staff", "front-desk-lead"],
 		});
 		expect(options.jobTitles[0]?.listedIds).toEqual({});

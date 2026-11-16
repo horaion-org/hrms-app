@@ -541,6 +541,7 @@ describe("ConstraintDialog", () => {
 			"Days off in a run of days",
 			"Days to avoid giving off",
 			"Limit on days in a row",
+			"Keep days off together",
 			"Rest between shifts",
 			"Shortest part of a shift around leave",
 			"Call-backs on a rest or off day",
@@ -550,7 +551,7 @@ describe("ConstraintDialog", () => {
 		for (const [category, count] of [
 			["People on shifts", 2],
 			["On duty throughout", 1],
-			["Days off", 3],
+			["Days off", 4],
 			["Rest and hours", 5],
 		] as const)
 			expect(
@@ -714,6 +715,50 @@ describe("ConstraintDialog", () => {
 				})
 			);
 		});
+	});
+
+	it("given_aStaffingRule_when_aWholeShiftGroupIsChosen_then_everyShiftOfTheGroupIsSavedAndTheirJobTitlesShareNone", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog();
+		await start(user, "People on a shift");
+
+		await user.click(trigger(/^Shifts/));
+		await user.click(
+			await screen.findByRole("option", { name: "Whole group: Service" })
+		);
+		await user.keyboard("{Escape}");
+
+		expect(trigger(/^Shifts/)).toHaveTextContent("3 selected");
+		await user.click(trigger(/^Job titles that count/));
+		expect(
+			await screen.findByText(
+				"The chosen shifts share no job title. Choose shifts that take the same job title, or fewer shifts."
+			)
+		).toBeVisible();
+		await user.keyboard("{Escape}");
+		await user.click(screen.getByRole("button", { name: "Save" }));
+		expect(onSave).not.toHaveBeenCalled();
+	});
+
+	it("given_jobTitlesChosen_when_aWholeShiftGroupIsChosen_then_aJobTitleTheGroupDoesNotAllListIsRemovedAndSaid", async () => {
+		const user = userEvent.setup();
+		renderDialog();
+		await start(user, "People on a shift");
+		await pick(user, /^Shifts/, "Lunch Rush");
+		await pick(user, /^Job titles that count/, "Cashier");
+
+		await user.click(trigger(/^Shifts/));
+		await user.click(
+			await screen.findByRole("option", { name: "Whole group: Service" })
+		);
+		await user.keyboard("{Escape}");
+
+		expect(
+			await screen.findByText(
+				"Cashier was removed: not everything chosen in Shifts lists it."
+			)
+		).toBeVisible();
+		expect(trigger(/^Shifts/)).toHaveTextContent("3 selected");
 	});
 
 	it("given_aTypeChosen_when_rendered_then_itsHintIsAWorkedExample", async () => {

@@ -294,16 +294,16 @@ export const ConstraintDialog = ({
 	): ReadonlyArray<ConstraintComparison> =>
 		spec?.comparisons ?? CONSTRAINT_COMPARISONS;
 	const comparisonLabel = (comparison: string): string =>
-		t(`scheduling.constraints.comparisons.${comparison as ConstraintComparison}`);
+		t(
+			`scheduling.constraints.comparisons.${comparison as ConstraintComparison}`
+		);
 	const comparisonChoices = (spec: ConstraintFieldSpec): Array<SelectOption> =>
-		allowedComparisons(
-			chosen?.fields ?? [],
-			values,
-			comparisonsOf(spec)
-		).map((comparison) => ({
-			value: comparison,
-			label: comparisonLabel(comparison),
-		}));
+		allowedComparisons(chosen?.fields ?? [], values, comparisonsOf(spec)).map(
+			(comparison) => ({
+				value: comparison,
+				label: comparisonLabel(comparison),
+			})
+		);
 	// What a field of each other kind but a number is chosen from.
 	const choices: Record<
 		Exclude<ConstraintFieldKind, "NUMBER" | "COMPARISON">,
@@ -317,9 +317,11 @@ export const ConstraintDialog = ({
 			value: jobTitle.jobTitleId,
 			label: jobTitle.name,
 		})),
+		// Under their group's heading, as on the Shifts page, so a whole group can be chosen at once.
 		SHIFT: (offered?.shifts ?? []).map((shift) => ({
 			value: shift.shiftId,
 			label: shift.name,
+			group: shift.group ?? undefined,
 		})),
 		DAY_TYPE: (offered?.dayTypeChoices ?? []).map((code) => ({
 			value: code,
@@ -414,8 +416,9 @@ export const ConstraintDialog = ({
 		const because = {
 			NOT_LISTED: spec.listedBy,
 			EXCLUDED: spec.excludes,
-			PARTIAL: chosen?.fields.find((other) => other.partialComparisons.length > 0)
-				?.field,
+			PARTIAL: chosen?.fields.find(
+				(other) => other.partialComparisons.length > 0
+			)?.field,
 		}[first.reason];
 		return t(`${key}.dependency.removed.${first.reason}`, {
 			count: removed.length,
@@ -658,6 +661,7 @@ export const ConstraintDialog = ({
 								emptyText={emptyTextOf(spec)}
 								selectAllLabel={t(`${key}.selectAll`)}
 								value={shownValuesOf(spec, value)}
+								wholeGroups={spec.kind === "SHIFT"}
 								onChange={(chosenValues) => {
 									chooseValues(spec.field, chosenValues);
 								}}
