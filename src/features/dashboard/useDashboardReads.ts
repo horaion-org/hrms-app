@@ -31,7 +31,7 @@ import {
 import { scheduleMonthSummariesQuery } from "@/features/scheduling/months/api";
 import { useSchedulingReadiness } from "@/features/scheduling/readiness/useSchedulingReadiness";
 import {
-	PEOPLE_READ_KEYS,
+	MEMBER_EVENT_READ_KEYS,
 	SCHEDULE_EDIT_SHIFT_KEYS,
 	SCHEDULE_READ_KEYS,
 } from "@/features/workspace/permissionKeys";
@@ -142,7 +142,7 @@ export const useWaitingApprovals = (
 	return guardedRead(access, allowed, query);
 };
 
-/** Who joins, ends probation or leaves in the range, where `member_profile:read` is held; `asked` false asks for nothing. */
+/** Who joins, ends probation or leaves in the range, where `member_event:read` is held; `asked` false asks for nothing. */
 export const usePeopleEvents = (
 	companyId: string,
 	units: UnitSelection,
@@ -150,7 +150,7 @@ export const usePeopleEvents = (
 	asked = true
 ): GuardedRead<Array<PeopleEvent>> => {
 	const access = useAccess();
-	const allowed = access.canAny(PEOPLE_READ_KEYS, "anywhere");
+	const allowed = access.canAny(MEMBER_EVENT_READ_KEYS, "anywhere");
 	const query = useQuery(
 		peopleEventsQuery(companyId, units, range, allowed && asked)
 	);
