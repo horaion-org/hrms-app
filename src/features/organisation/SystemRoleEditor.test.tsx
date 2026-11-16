@@ -444,7 +444,7 @@ describe("Access role editor, read-only", () => {
 		).not.toBeInTheDocument();
 	};
 
-	it("shows the Company Owner role with every permission and no way to change it", async () => {
+	it("shows the System Owner role with every permission and no way to change it", async () => {
 		const user = userEvent.setup();
 		stubApi({
 			...routes(),
@@ -453,7 +453,7 @@ describe("Access role editor, read-only", () => {
 				body: envelope({
 					content: [
 						role({
-							name: "Company Owner",
+							name: "System Owner",
 							protectedRole: true,
 							status: "ACTIVE",
 							permissions: PERMISSION_KEYS,
@@ -463,7 +463,7 @@ describe("Access role editor, read-only", () => {
 				}),
 			},
 			[ROLE]: roleReply({
-				name: "Company Owner",
+				name: "System Owner",
 				protectedRole: true,
 				status: "ACTIVE",
 				permissions: PERMISSION_KEYS,
@@ -473,7 +473,7 @@ describe("Access role editor, read-only", () => {
 
 		await user.click(
 			await screen.findByRole("button", {
-				name: "More actions for Company Owner",
+				name: "More actions for System Owner",
 			})
 		);
 		// View opens the role on who has it; its permissions are one tab over.
@@ -484,7 +484,7 @@ describe("Access role editor, read-only", () => {
 
 		expect(
 			await screen.findByText(
-				"The Company Owner role always has every permission and can’t be changed."
+				"This role is built in: it always has full access and can’t be changed."
 			)
 		).toBeVisible();
 		expectReadOnly();

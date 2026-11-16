@@ -31,7 +31,7 @@ export const PROFILE_REFUSAL_CODES = {
 	/** The name belongs to a login the person also uses in another company. */
 	identityShared: "409 IDENTITY_SHARED_ACROSS_COMPANIES",
 	selfDeactivation: "409 CANNOT_DEACTIVATE_SELF",
-	ownerDeactivation: "409 COMPANY_OWNER_CANNOT_BE_DEACTIVATED",
+	ownerDeactivation: "409 SYSTEM_OWNER_CANNOT_BE_DEACTIVATED",
 	/** The person was chosen as their own manager. */
 	reportsToSelf: "400 REPORTS_TO_SELF",
 	/** An inactive person can't be moved to another Department while they stay inactive. */

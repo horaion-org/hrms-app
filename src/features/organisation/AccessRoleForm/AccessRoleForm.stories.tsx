@@ -55,13 +55,13 @@ export const Create: Story = {
 	},
 };
 
-/** How the Company Owner role and roles the person can't change are shown. */
+/** How the built-in System Owner and System Admin roles, and roles the person can't change, are shown. */
 export const ReadOnly: Story = {
 	args: {
 		readOnly: true,
 		initial: {
 			kind: "COMPANY",
-			name: "Company Owner",
+			name: "System Owner",
 			permissions: [...PERMISSION_KEYS],
 		},
 	},

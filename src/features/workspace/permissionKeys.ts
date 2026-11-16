@@ -43,6 +43,8 @@ export type PermissionDefinition = {
 	since: string;
 	/** Keys this one's screens also read, each with why; never required (ADR-0101). */
 	worksWith: ReadonlyArray<{ key: PermissionKey; reason: PermissionUseReason }>;
+	/** Held only by the System Owner and System Admin roles; never offered for another role (API ADR-0108). */
+	systemRolesOnly: boolean;
 };
 
 // Widening checks every prerequisite names a known key at compile time.
@@ -195,6 +197,17 @@ export const assignableAt = (
 	key: PermissionKey,
 	scope: AssignableScope
 ): boolean => definitionOf(key).assignableScopes.includes(scope);
+
+/**
+ * Whether only the System Owner and System Admin roles hold `key`, such as
+ * `access_role:assign` (API ADR-0108). The API refuses it on any other role.
+ */
+export const isSystemRolesOnly = (key: PermissionKey): boolean =>
+	definitionOf(key).systemRolesOnly;
+
+/** Every key a role made in the editor may hold, in catalogue order. */
+export const ROLE_PERMISSION_KEYS: ReadonlyArray<PermissionKey> =
+	PERMISSION_KEYS.filter((key) => !isSystemRolesOnly(key));
 
 /** Whether `key` can only be given company-wide. */
 export const isCompanyOnly = (key: PermissionKey): boolean =>

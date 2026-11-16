@@ -3,7 +3,7 @@
 
 /** SHA-256 of the contract file this module was generated from. */
 export const PERMISSION_CONTRACT_SHA256 =
-	"e1a09eebdb7512e0fef2748f9ba91018febd7563a20c9961036be3e0705e515a";
+	"15fd5f597359166cf44d3abf86dfb2eef4093d83b785f9ed08e7f6b525ad42bd";
 
 /** The places a permission can be assigned at, widest first. */
 export const ASSIGNABLE_SCOPES = ["COMPANY", "BRANCH", "DEPARTMENT"] as const;
@@ -31,6 +31,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: [],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "company:update",
@@ -41,6 +42,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["company:read"],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "branch:read",
@@ -51,6 +53,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: [],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "branch:create",
@@ -61,6 +64,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["branch:read"],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "branch:update",
@@ -71,6 +75,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["branch:read"],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "branch_member:read",
@@ -81,6 +86,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: [],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "branch_member:create",
@@ -91,6 +97,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["branch_member:read"],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "branch_member:update",
@@ -101,6 +108,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["branch_member:read"],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "branch_member:deactivate",
@@ -111,6 +119,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["branch_member:read"],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "department:read",
@@ -121,6 +130,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: [],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "department:create",
@@ -136,6 +146,7 @@ export const PERMISSION_DEFINITIONS = [
 				reason: "departmentBranches",
 			},
 		],
+		systemRolesOnly: false,
 	},
 	{
 		key: "department:update",
@@ -146,6 +157,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["department:read"],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "department_member:read",
@@ -156,6 +168,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: [],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "department_member:create",
@@ -166,6 +179,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["department_member:read"],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "department_member:update",
@@ -176,6 +190,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["department_member:read"],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "department_member:deactivate",
@@ -186,6 +201,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["department_member:read"],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "job_title:read",
@@ -196,6 +212,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: [],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "job_title:create",
@@ -206,6 +223,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["job_title:read"],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "job_title:update",
@@ -216,6 +234,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["job_title:read"],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "skill:read",
@@ -226,6 +245,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: [],
 		since: "2026-11-05",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "skill:create",
@@ -236,6 +256,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["skill:read"],
 		since: "2026-11-05",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "skill:update",
@@ -246,6 +267,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["skill:read"],
 		since: "2026-11-05",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "skill:delete",
@@ -256,6 +278,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["skill:read"],
 		since: "2026-11-05",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "member_profile:read",
@@ -266,6 +289,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: [],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "member_profile:create",
@@ -281,6 +305,7 @@ export const PERMISSION_DEFINITIONS = [
 				reason: "personJobTitles",
 			},
 		],
+		systemRolesOnly: false,
 	},
 	{
 		key: "member_profile:update",
@@ -296,6 +321,7 @@ export const PERMISSION_DEFINITIONS = [
 				reason: "personJobTitles",
 			},
 		],
+		systemRolesOnly: false,
 	},
 	{
 		key: "member_note:read",
@@ -311,6 +337,7 @@ export const PERMISSION_DEFINITIONS = [
 				reason: "notesOnProfile",
 			},
 		],
+		systemRolesOnly: false,
 	},
 	{
 		key: "member_note:create",
@@ -321,6 +348,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["member_note:read"],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "member_note:update",
@@ -331,6 +359,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["member_note:read"],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "member_note:delete",
@@ -341,6 +370,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["member_note:read"],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "work_availability:read",
@@ -351,6 +381,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: [],
 		since: "2026-11-03",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "work_availability:update",
@@ -361,6 +392,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["work_availability:read"],
 		since: "2026-11-04",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "shift_preference:read",
@@ -371,6 +403,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: [],
 		since: "2026-11-16",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "member_event:read",
@@ -381,6 +414,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: [],
 		since: "2026-11-16",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "employment_terms:read",
@@ -391,6 +425,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: [],
 		since: "2026-11-05",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "employment_terms:update",
@@ -401,6 +436,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["employment_terms:read"],
 		since: "2026-11-05",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "member_employment_terms:read",
@@ -411,6 +447,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: [],
 		since: "2026-11-05",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "member_employment_terms:update",
@@ -421,6 +458,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["member_employment_terms:read"],
 		since: "2026-11-05",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "leave_request:read",
@@ -431,6 +469,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: [],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "leave_request:create",
@@ -446,6 +485,7 @@ export const PERMISSION_DEFINITIONS = [
 				reason: "leaveForSomeone",
 			},
 		],
+		systemRolesOnly: false,
 	},
 	{
 		key: "leave_request:review",
@@ -461,6 +501,7 @@ export const PERMISSION_DEFINITIONS = [
 				reason: "leaveApprovals",
 			},
 		],
+		systemRolesOnly: false,
 	},
 	{
 		key: "leave_type:read",
@@ -471,6 +512,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: [],
 		since: "2026-11-05",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "leave_type:update",
@@ -481,6 +523,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["leave_type:read"],
 		since: "2026-11-05",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "leave_duration:read",
@@ -491,6 +534,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: [],
 		since: "2026-11-13",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "leave_duration:update",
@@ -501,6 +545,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["leave_duration:read"],
 		since: "2026-11-13",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "schedule:read",
@@ -516,6 +561,7 @@ export const PERMISSION_DEFINITIONS = [
 				reason: "rosterPreferences",
 			},
 		],
+		systemRolesOnly: false,
 	},
 	{
 		key: "schedule:create",
@@ -531,6 +577,7 @@ export const PERMISSION_DEFINITIONS = [
 				reason: "scheduleShifts",
 			},
 		],
+		systemRolesOnly: false,
 	},
 	{
 		key: "schedule:update",
@@ -546,6 +593,7 @@ export const PERMISSION_DEFINITIONS = [
 				reason: "scheduleShifts",
 			},
 		],
+		systemRolesOnly: false,
 	},
 	{
 		key: "schedule:generate",
@@ -565,6 +613,7 @@ export const PERMISSION_DEFINITIONS = [
 				reason: "generationRules",
 			},
 		],
+		systemRolesOnly: false,
 	},
 	{
 		key: "schedule:delete",
@@ -575,6 +624,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["schedule:read"],
 		since: "2026-11-04",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "schedule:publish",
@@ -590,6 +640,7 @@ export const PERMISSION_DEFINITIONS = [
 				reason: "rosterApprovals",
 			},
 		],
+		systemRolesOnly: false,
 	},
 	{
 		key: "schedule:edit_shift",
@@ -600,6 +651,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["schedule:read"],
 		since: "2026-11-05",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "shift:read",
@@ -610,6 +662,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: [],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "shift:create",
@@ -620,6 +673,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["shift:read"],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "shift:update",
@@ -630,6 +684,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["shift:read"],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "shift:delete",
@@ -640,6 +695,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["shift:read"],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "constraint:read",
@@ -650,6 +706,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: [],
 		since: "2026-10-13",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "constraint:create",
@@ -660,6 +717,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["constraint:read"],
 		since: "2026-10-13",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "constraint:update",
@@ -670,6 +728,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["constraint:read"],
 		since: "2026-10-13",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "constraint:delete",
@@ -680,6 +739,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["constraint:read"],
 		since: "2026-10-13",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "scheduling_policy:read",
@@ -690,6 +750,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: [],
 		since: "2026-11-05",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "scheduling_policy:update",
@@ -700,6 +761,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["scheduling_policy:read"],
 		since: "2026-11-05",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "approval_flow:read",
@@ -710,6 +772,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: [],
 		since: "2026-11-07",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "approval_flow:manage",
@@ -720,6 +783,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["approval_flow:read"],
 		since: "2026-11-07",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "approval:read",
@@ -730,6 +794,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: [],
 		since: "2026-11-07",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "approval:decide",
@@ -740,6 +805,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["approval:read"],
 		since: "2026-11-07",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "report:read",
@@ -750,6 +816,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: [],
 		since: "2026-11-16",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "access_role:read",
@@ -760,6 +827,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: [],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "access_role:create",
@@ -770,6 +838,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["access_role:read"],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "access_role:update",
@@ -780,6 +849,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["access_role:read"],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "access_role:delete",
@@ -790,6 +860,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["access_role:read"],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 	{
 		key: "access_role:assign",
@@ -800,6 +871,18 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: ["access_role:read"],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: true,
+	},
+	{
+		key: "access_role:assign_system_admin",
+		resource: "access_role",
+		action: "assign_system_admin",
+		module: "access_and_activity",
+		assignableScopes: ["COMPANY"],
+		prerequisites: ["access_role:read"],
+		since: "2026-11-17",
+		worksWith: [],
+		systemRolesOnly: true,
 	},
 	{
 		key: "audit_event:read",
@@ -810,6 +893,7 @@ export const PERMISSION_DEFINITIONS = [
 		prerequisites: [],
 		since: "2026-10-11",
 		worksWith: [],
+		systemRolesOnly: false,
 	},
 ] as const;
 
@@ -893,6 +977,7 @@ export const PERMISSION_KEYS = [
 	"access_role:update",
 	"access_role:delete",
 	"access_role:assign",
+	"access_role:assign_system_admin",
 	"audit_event:read",
 ] as const;
 
@@ -972,7 +1057,6 @@ export const ROLE_TEMPLATES = [
 			"access_role:read",
 			"access_role:create",
 			"access_role:update",
-			"access_role:assign",
 			"audit_event:read",
 		],
 		assignableScopes: ["COMPANY"],

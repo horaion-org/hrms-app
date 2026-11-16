@@ -3,6 +3,10 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import {
+	mayAssignRole,
+	whoCanAssign,
+} from "@/features/organisation/accessRoleReadOnly";
 import { placeLabels } from "@/features/organisation/accessSummary";
 import {
 	AccessRoleAssignments,
@@ -27,7 +31,7 @@ import {
 	useAccessRoleHolders,
 	useChangeAccessRoleHolders,
 } from "@/features/organisation/useAccessRoleHolders";
-import { useCompanyMemberSearch } from "@/features/organisation/useCompanyMemberSearch";
+import { useActivePeopleSearch } from "@/features/people/useActivePeopleSearch";
 import { useMemberRoles } from "@/features/people/useMemberRoles";
 import { workspaceQuery } from "@/features/workspace/api";
 import { isPermissionKey } from "@/features/workspace/permissionKeys";
@@ -64,8 +68,8 @@ const changeablePart = (
 /**
  * The assign dialog with its people search and the places a role can apply;
  * mounted only while open. Given one role, that role is assigned; given
- * several, the person chooses. Recipients come from the colleagues directory
- * (any active company member, whatever their Branch or Department); places
+ * several, the person chooses. Recipients come from the People list (any
+ * active member, shown with their Branch and Department); places
  * come from the workspace, only where the person holds `access_role:assign`.
  * Given `editing`, it changes where that person already has the role,
  * starting from their current assignments as last loaded: places newly
@@ -89,7 +93,7 @@ export const AssignSystemRole = ({
 	const [query, setQuery] = useState("");
 	const [recipient, setRecipient] = useState(editing?.membershipId ?? "");
 	const held = useMemberRoles(companyId, recipient);
-	const people = useCompanyMemberSearch(companyId, query);
+	const people = useActivePeopleSearch(companyId, query);
 	const { data: workspace } = useQuery({ ...workspaceQuery, retry });
 	const change = useChangeAccessRoleHolders(companyId);
 	const onlyRole = roles.length === 1 ? roles[0] : undefined;
@@ -175,9 +179,10 @@ export type SystemRoleHoldersProps = {
 
 /**
  * What a system role allows, then who has it and where, with assigning,
- * editing and removing for those who may. The Company Owner role is listed
- * but never assigned or changed here: ownership moves only through its own
- * transfer.
+ * editing and removing for those who may: the System Owner or a System Admin
+ * for a custom role, the System Owner alone for the System Admin role. The
+ * System Owner role is listed but never assigned or changed. Anyone else sees
+ * the holders read-only, with one sentence saying who can change them.
  */
 export const SystemRoleHolders = ({
 	role,
@@ -195,11 +200,11 @@ export const SystemRoleHolders = ({
 		switching?.status === "ACTIVE" ? "deactivate" : "activate"
 	}` as const;
 	const active = role.status === "ACTIVE";
-	// Assignment changes are checked per assignment, at its own place; the Owner role never changes here.
-	const canManage = !role.protectedRole;
+	// Who may change this role's holders (API ADR-0108); each assignment is still checked at its own place.
+	const canManage = mayAssignRole(role, access);
 	const canChangePerson = (person: AccessRolePerson): boolean =>
 		canManage && person.places.some(changeableAt(access.can));
-	const canAssign = canManage && access.canAnywhere("access_role:assign");
+	const canAssign = canManage;
 	const closeConfirm = (): void => {
 		change.reset();
 		setRemoving(undefined);
@@ -215,6 +220,11 @@ export const SystemRoleHolders = ({
 			{!active && (
 				<p className="mt-6 text-sm font-semibold text-neutral-900">
 					{t(`${key}.inactive`)}
+				</p>
+			)}
+			{!canManage && (
+				<p className="mt-6 text-sm text-neutral-700">
+					{t(`${key}.whoCanChange.${whoCanAssign(role)}`)}
 				</p>
 			)}
 			{!holders && (

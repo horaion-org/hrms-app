@@ -43,9 +43,9 @@ const BackToList = (): FunctionComponent => {
 /**
  * One access role: what it allows first (its name and permissions, where
  * nothing is saved until "Save changes"), then who has it and where. The role's
- * permissions are shown but can't be changed when it is the Company Owner
- * role, when the person may not change roles, or when it holds a permission
- * the person doesn't: the API refuses any change to such a role.
+ * permissions are shown but can't be changed when it is the System Owner or
+ * System Admin role, when the person may not change roles, or when it holds a
+ * permission the person doesn't: the API refuses any change to such a role.
  */
 export const SystemRoleEditor = (): FunctionComponent => {
 	const role = route.useLoaderData();

@@ -6,6 +6,7 @@ import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { EmploymentTermsRow } from "@/features/employmentTerms/EmploymentTermsRow";
 import type { MemberProfileDetail } from "@/features/people/api";
 import {
+	describeMemberRoles,
 	roleNames,
 	rolesByPlace,
 	type MemberRoles,
@@ -62,6 +63,12 @@ export const PersonProfileEdit = ({
 		: undefined;
 	const heldChangeable =
 		!rolePlace || access.can("access_role:assign", scopeOfPlace(rolePlace));
+	// Someone who reads roles but may not give them sees them read-only, with who can (API ADR-0108).
+	const readOnlyRoles =
+		access.canAnywhere("access_role:read") &&
+		!access.canAnywhere("access_role:assign")
+			? describeMemberRoles(roles, t)
+			: undefined;
 	const save = useEditProfile(
 		companyId,
 		profile,
@@ -87,6 +94,7 @@ export const PersonProfileEdit = ({
 					roleEditable: ready && heldChangeable,
 					rolePlace,
 					otherRoles: roleNames(elsewhere),
+					readOnlyRoles,
 					header: (actions) => (
 						<ProfileHeader actions={actions} profile={profile} />
 					),

@@ -788,8 +788,8 @@ describe("Editing a person", () => {
 			(): HTMLElement => button(/^Employment status/),
 		],
 		[
-			problemReply(409, "COMPANY_OWNER_CANNOT_BE_DEACTIVATED"),
-			"The company owner can’t be deactivated.",
+			problemReply(409, "SYSTEM_OWNER_CANNOT_BE_DEACTIVATED"),
+			"The System Owner can’t be deactivated.",
 			(): HTMLElement => button(/^Employment status/),
 		],
 		[
@@ -943,6 +943,27 @@ describe("Changing a person's access role", () => {
 			{ companyMembershipId: "m-1", accessRoleId: "r-2" },
 		]);
 		expect(sent(calls, REVOKE)).toEqual([]);
+	});
+
+	it("shows the access role read-only, saying who can change it, to someone who may read roles but not give them", async () => {
+		await openEditing(
+			routes(workspaceReply(ALL.filter((key) => key !== "access_role:assign")))
+		);
+
+		await waitFor(() => {
+			expect(textbox("Access role")).toHaveValue(
+				expect.stringContaining("Supervisor")
+			);
+		});
+		expect(textbox("Access role")).toBeDisabled();
+		expect(
+			screen.getByText(
+				"Only the System Owner or a System Admin can change access roles and where they apply."
+			)
+		).toBeVisible();
+		expect(
+			screen.queryByRole("button", { name: /^Role scope/ })
+		).not.toBeInTheDocument();
 	});
 
 	it("loads a branch assignment without a department and preserves it on an ordinary save", async () => {
@@ -1102,7 +1123,7 @@ describe("Deactivating, reactivating and re-inviting", () => {
 			...routes(),
 			[`PUT ${PROFILE}`]: problemReply(
 				409,
-				"COMPANY_OWNER_CANNOT_BE_DEACTIVATED"
+				"SYSTEM_OWNER_CANNOT_BE_DEACTIVATED"
 			),
 		});
 		await open();
@@ -1117,7 +1138,7 @@ describe("Deactivating, reactivating and re-inviting", () => {
 		);
 
 		expect(
-			await within(dialog).findByText("The company owner can’t be deactivated.")
+			await within(dialog).findByText("The System Owner can’t be deactivated.")
 		).toHaveAttribute("role", "alert");
 	});
 

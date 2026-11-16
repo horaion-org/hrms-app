@@ -6,13 +6,17 @@ import type { FunctionComponent } from "@/common/types";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { AssignAccessRoleDialog } from "@/features/organisation/AssignAccessRoleDialog";
 
-const everyone = ["Marcus Lim", "Priya Nair", "Daniel Tan"].map(
-	(displayName, index) => ({
-		membershipId: `member-${index}`,
-		displayName,
-		status: "ACTIVE" as const,
-	})
-);
+// Two people share a name, so the picker tells them apart by where they are filed.
+const everyone = [
+	{ displayName: "Marcus Lim", branchName: "Orchard", departmentName: "Kitchen" },
+	{ displayName: "Priya Nair", branchName: "Orchard", departmentName: "Service" },
+	{ displayName: "Daniel Tan", branchName: "Tampines", departmentName: "Kitchen" },
+	{ displayName: "Daniel Tan", branchName: "Jurong", departmentName: "Service" },
+].map((person, index) => ({
+	...person,
+	membershipId: `member-${index}`,
+	status: "ACTIVE" as const,
+}));
 
 const meta = {
 	title: "Features/Organisation/AssignAccessRoleDialog",

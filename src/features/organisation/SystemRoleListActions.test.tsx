@@ -25,6 +25,7 @@ import { renderAuthApp } from "@/features/auth/testing";
 import { PERMISSION_KEYS } from "@/features/workspace/permissionKeys";
 
 const ROLES = "GET /api/v1/companies/c-1/access-roles";
+const PEOPLE = "GET /api/v1/companies/c-1/member-profiles";
 const ROLE_PATH = "/api/v1/companies/c-1/access-roles/r-2";
 const HOLDERS = `GET ${ROLE_PATH}/access-role-assignments`;
 const ASSIGNMENT_PATH = "/api/v1/companies/c-1/access-role-assignments/a-2";
@@ -41,6 +42,38 @@ const role = (
 	permissions: ["branch:read", "department:read"],
 	holderCount: 2,
 	...overrides,
+});
+
+/** The System Admin role as the API lists it: built in, company-wide, every key but the owner-only one. */
+const systemAdmin = (): Record<string, unknown> =>
+	role({
+		name: "System Admin",
+		protectedRole: true,
+		protectedRoleType: "SYSTEM_ADMIN",
+		kind: "COMPANY",
+		permissions: PERMISSION_KEYS.filter(
+			(key) => key !== "access_role:assign_system_admin"
+		),
+	});
+
+/** An active person as the People list returns them, filed at Orchard › Kitchen. */
+const activePerson = (
+	membershipId: string,
+	displayName: string
+): Record<string, unknown> => ({
+	membershipId,
+	employeeCode: `EMP-${membershipId}`,
+	displayName,
+	email: `${membershipId}@example.com`,
+	phone: null,
+	branchId: "b-1",
+	branchName: "Orchard",
+	departmentId: "d-1",
+	departmentName: "Kitchen",
+	jobTitleId: null,
+	jobTitleName: null,
+	status: "ACTIVE",
+	invitationPending: false,
 });
 
 // The person testing is `m-c-1`, so the first holder is them.
@@ -354,7 +387,7 @@ describe("Access role people", () => {
 				status: 200,
 				body: envelope({ content: [], page: { totalElements: 0 } }),
 			},
-			"GET /api/v1/companies/c-1/me/colleagues": {
+			[PEOPLE]: {
 				status: 200,
 				body: envelope({ content: [], page: { totalElements: 0 } }),
 			},
@@ -468,6 +501,60 @@ describe("Access role people", () => {
 			screen.queryByRole("button", { name: "Assign role" })
 		).not.toBeInTheDocument();
 	});
+
+	it("shows the holders read-only to a reader who can't assign, saying who can", async () => {
+		stubApi(
+			routes(role(), ["access_role:read", "branch:read", "department:read"])
+		);
+		app = await openApp("/settings/access-roles/r-2?tab=people");
+		renderAuthApp(app);
+
+		expect(
+			await screen.findByText(
+				"Only the System Owner or a System Admin can give, change or remove access roles."
+			)
+		).toBeVisible();
+		expect(
+			screen.queryByRole("button", { name: "Assign role" })
+		).not.toBeInTheDocument();
+	});
+
+	it("lets the System Owner give the System Admin role", async () => {
+		stubApi(routes(systemAdmin()));
+		app = await openApp("/settings/access-roles/r-2?tab=people");
+		renderAuthApp(app);
+
+		expect(
+			await screen.findByRole("button", { name: "Assign role" })
+		).toBeVisible();
+		expect(
+			screen.queryByText(
+				"Only the System Owner can give or remove the System Admin role."
+			)
+		).not.toBeInTheDocument();
+	});
+
+	it("shows a System Admin the System Admin role's holders read-only, saying only the System Owner can change them", async () => {
+		stubApi(
+			routes(
+				systemAdmin(),
+				PERMISSION_KEYS.filter(
+					(key) => key !== "access_role:assign_system_admin"
+				)
+			)
+		);
+		app = await openApp("/settings/access-roles/r-2?tab=people");
+		renderAuthApp(app);
+
+		expect(
+			await screen.findByText(
+				"Only the System Owner can give or remove the System Admin role."
+			)
+		).toBeVisible();
+		expect(
+			screen.queryByRole("button", { name: "Assign role" })
+		).not.toBeInTheDocument();
+	});
 });
 
 /**
@@ -512,7 +599,6 @@ const spreadHolders = [
 	},
 ];
 
-const COLLEAGUES = "GET /api/v1/companies/c-1/me/colleagues";
 const ASSIGNMENTS = "/access-role-assignments";
 
 describe("Access role people, checked at each assignment's own place", () => {
@@ -520,7 +606,7 @@ describe("Access role people, checked at each assignment's own place", () => {
 		stubApi({
 			...routes(),
 			"GET /api/v1/me/workspace": kitchenAssigner(),
-			[COLLEAGUES]: {
+			[PEOPLE]: {
 				status: 200,
 				body: envelope({ content: [], page: { totalElements: 0 } }),
 			},
@@ -543,12 +629,10 @@ describe("Access role people, checked at each assignment's own place", () => {
 		const calls = stubApi({
 			...routes(role({ permissions: ["department:read"] })),
 			"GET /api/v1/me/workspace": kitchenAssigner(),
-			[COLLEAGUES]: {
+			[PEOPLE]: {
 				status: 200,
 				body: envelope({
-					content: [
-						{ membershipId: "m-5", displayName: "Alice Lim", status: "ACTIVE" },
-					],
+					content: [activePerson("m-5", "Alice Lim")],
 					page: { totalElements: 1 },
 				}),
 			},
@@ -569,10 +653,10 @@ describe("Access role people, checked at each assignment's own place", () => {
 		await userEvent.click(within(dialog).getByLabelText("Person"));
 		expect(
 			await screen.findByRole("option", { name: "Alice Lim" })
-		).toBeVisible();
+		).toHaveTextContent("Orchard › Kitchen");
 
-		// Recipients come from the colleagues directory; places never need the unit lists.
-		expect(calls.some((call) => call.path.endsWith("/me/colleagues"))).toBe(
+		// Recipients come from the People list; places never need the unit lists.
+		expect(calls.some((call) => call.path.endsWith("/member-profiles"))).toBe(
 			true
 		);
 		expect(
@@ -589,7 +673,7 @@ describe("Access role people, checked at each assignment's own place", () => {
 			...routes(),
 			"GET /api/v1/me/workspace": kitchenAssigner(),
 			[HOLDERS]: { status: 200, body: envelope(spreadHolders) },
-			[COLLEAGUES]: {
+			[PEOPLE]: {
 				status: 200,
 				body: envelope({ content: [], page: { totalElements: 0 } }),
 			},
@@ -661,7 +745,7 @@ describe("Access role people, checked at each assignment's own place", () => {
 	it("says how many changes failed when only some did, keeping the dialog open (F12)", async () => {
 		const calls = stubApi({
 			...routes(),
-			[COLLEAGUES]: {
+			[PEOPLE]: {
 				status: 200,
 				body: envelope({ content: [], page: { totalElements: 0 } }),
 			},
@@ -723,15 +807,15 @@ describe("Company roles and access previews in the assign dialog", () => {
 		kind: "COMPANY",
 		permissions: ["branch:read", "branch:create"],
 	});
-	const noColleagues = {
-		[COLLEAGUES]: {
+	const noPeople = {
+		[PEOPLE]: {
 			status: 200,
 			body: envelope({ content: [], page: { totalElements: 0 } }),
 		},
 	};
 
 	it("offers a company role only at the whole company", async () => {
-		stubApi({ ...routes(companyRole), ...noColleagues });
+		stubApi({ ...routes(companyRole), ...noPeople });
 		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
@@ -749,7 +833,7 @@ describe("Company roles and access previews in the assign dialog", () => {
 	it("says a company role can't be given by someone who can't assign at the whole company", async () => {
 		stubApi({
 			...routes(companyRole),
-			...noColleagues,
+			...noPeople,
 			"GET /api/v1/me/workspace": kitchenAssigner(),
 		});
 		app = await openApp("/settings/access-roles/r-2?tab=people");
@@ -812,7 +896,7 @@ describe("Company roles and access previews in the assign dialog", () => {
 		});
 		const calls = stubApi({
 			...routes(manager),
-			...noColleagues,
+			...noPeople,
 			[ROLES]: {
 				status: 200,
 				body: envelope({

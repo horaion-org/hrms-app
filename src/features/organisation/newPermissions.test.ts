@@ -27,6 +27,12 @@ describe("permissions new to a role since it was last saved", () => {
 		expect(local).toContain("leave_duration:read");
 	});
 
+	it("never list a key only the System Owner and System Admin roles hold, however new", () => {
+		expect(
+			newSinceReview([], "2026-11-16T09:00:00Z", "COMPANY")
+		).not.toContain("access_role:assign_system_admin");
+	});
+
 	it("are none without a review time", () => {
 		expect(newSinceReview([], null, "COMPANY")).toEqual([]);
 		expect(newSinceReview([], undefined, "COMPANY")).toEqual([]);

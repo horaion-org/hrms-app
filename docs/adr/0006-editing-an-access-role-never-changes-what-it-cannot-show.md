@@ -2,6 +2,10 @@
 
 Status: Proposed — Moses is asked to accept this decision in the PR before merge.
 
+> Note 2026-11-17 (API ADR-0108): the Company Owner role is now called System Owner, and a second built-in role,
+> System Admin, is read-only in the same way. The editor never offers `access_role:assign` or
+> `access_role:assign_system_admin`, which only those two roles hold.
+
 The system role editor sends a role's whole permission set on every save, because the API's `PUT` replaces the set. Three rules keep that save from changing authority the person did not see or could not have granted.
 
 A permission key the role holds that is not in the app's copy of the catalog (`features/workspace/permissionKeys.ts`) cannot be shown as a checkbox. The editor keeps such keys aside and sends them back unchanged with every save. Dropping them would silently remove a permission from everyone holding the role whenever the app is a release behind the API.

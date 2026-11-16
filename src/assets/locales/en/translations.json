@@ -1025,6 +1025,7 @@
 			"systemRole": "Access role",
 			"systemRolePlaceholder": "Select access role",
 			"systemRoleHint": "Applies at the selected role scope.",
+			"systemRoleReadOnlyHint": "Only the System Owner or a System Admin can change access roles and where they apply.",
 			"otherRoles": "Also holds elsewhere: {{roles}}.",
 			"roleScope": "Role scope",
 			"roleScopeHint": "Choose where the access role applies, independently of department membership.",
@@ -1042,7 +1043,7 @@
 			"save": "Save changes",
 			"identityShared": "This name can’t be changed here because they also belong to another company.",
 			"selfDeactivation": "You can’t deactivate yourself.",
-			"ownerDeactivation": "The company owner can’t be deactivated.",
+			"ownerDeactivation": "The System Owner can’t be deactivated.",
 			"departmentForbidden": "You don’t have permission to move people to this department.",
 			"inactiveMove": "They’re inactive. Reactivate them before moving them to another department.",
 			"forbiddenSave": "You no longer have permission to edit this person.",
@@ -2095,6 +2096,7 @@
 					"personPlaceholder": "Select a person",
 					"searchPlaceholder": "Search people",
 					"noResults": "No active members found.",
+					"noDepartment": "No department",
 					"places": "Applies to",
 					"placesPlaceholder": "Select where it applies",
 					"placesSearch": "Search branches and departments",
@@ -2118,6 +2120,11 @@
 				},
 				"loadFailed": "We couldn’t load who holds this role.",
 				"inactive": "This role is inactive, so the people below don’t have its permissions until it is activated again.",
+				"whoCanChange": {
+					"SYSTEM_OWNER": "The System Owner role stays with the person who holds it.",
+					"SYSTEM_ADMIN": "Only the System Owner can give or remove the System Admin role.",
+					"CUSTOM": "Only the System Owner or a System Admin can give, change or remove access roles."
+				},
 				"removeFailed": "We couldn’t remove the role from that person. Try again.",
 				"partial": "{{failed}} of {{total}} changes couldn’t be made; the others were saved. {{reason}}",
 				"remove": {
@@ -2170,7 +2177,7 @@
 				"unavailable": "You can only give a role permissions you hold yourself, so the others are unavailable.",
 				"scope": "Where this role applies is chosen when you assign it to a person.",
 				"fullAccess": "Full access",
-				"protected": "The Company Owner role always has every permission and can’t be changed.",
+				"protected": "This role is built in: it always has full access and can’t be changed.",
 				"viewOnly": "You don’t have permission to change access roles.",
 				"locked": "This role includes permissions you don’t hold, so you can’t change it.",
 				"name": "Role name",
@@ -2189,7 +2196,7 @@
 				"save": "Save changes",
 				"forbidden": "This role includes permissions you don’t hold, or you can no longer change access roles.",
 				"gone": "This role no longer exists.",
-				"protectedRefused": "The Company Owner role can’t be changed.",
+				"protectedRefused": "The System Owner and System Admin roles can’t be changed.",
 				"failed": "We couldn’t save the role. Try again.",
 				"loadForbidden": "You don’t have permission to view this role.",
 				"loadMissing": "This role doesn’t exist or has been deleted.",
@@ -2536,14 +2543,16 @@
 					"create": "Create access roles",
 					"update": "Edit access roles",
 					"delete": "Delete access roles",
-					"assign": "Give access roles to people"
+					"assign": "Give access roles to people",
+					"assign_system_admin": "Give or remove System Admin"
 				},
 				"actionHints": {
 					"read": "With their permissions, and where each person holds them",
 					"create": "Only with permissions the holder has company-wide",
 					"update": "Rename, change permissions or switch off, within the holder’s own permissions",
 					"delete": "Only roles nobody holds",
-					"assign": "Or switch them off or remove them, where the holder has all the role’s permissions"
+					"assign": "Or switch them off or remove them; only the System Owner and System Admin roles have this",
+					"assign_system_admin": "Only the System Owner role has this"
 				}
 			},
 			"audit_event": {

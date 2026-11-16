@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { ArrowLeftIcon } from "@/components/ui/Icon";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
+import { mayAssignRole } from "@/features/organisation/accessRoleReadOnly";
 import type { AccessRole } from "@/features/organisation/api";
 import { CreateSystemRoleDialog } from "@/features/organisation/CreateSystemRoleDialog";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
@@ -60,7 +61,7 @@ export const SystemRoles = (): FunctionComponent => {
 		t("organisation.accessRoles.empty"),
 		t
 	);
-	// The Company Owner role is never edited; any other needs the update key.
+	// The System Owner and System Admin roles are never edited; any other needs the update key.
 	const canEdit = useCallback(
 		(role: AccessRole): boolean =>
 			!role.protectedRole && access.can("access_role:update", COMPANY_SCOPE),
@@ -80,12 +81,12 @@ export const SystemRoles = (): FunctionComponent => {
 	);
 	const [assigning, setAssigning] = useState(false);
 	const [action, setAction] = useState<SystemRoleAction>();
-	// Neither the Company Owner role nor an inactive role is assigned here.
+	// Only roles the person may give, never the System Owner role or an inactive one (API ADR-0108).
 	const assignable =
 		// Assigning happens at a place; the dialog offers only places where it is held.
-		list.status === "ready" && access.canAnywhere("access_role:assign")
+		list.status === "ready"
 			? list.items.filter(
-					(role) => !role.protectedRole && role.status === "ACTIVE"
+					(role) => role.status === "ACTIVE" && mayAssignRole(role, access)
 				)
 			: [];
 	const columns = useMemo(
@@ -107,7 +108,7 @@ export const SystemRoles = (): FunctionComponent => {
 			{
 				id: "permissions",
 				header: t("organisation.accessRoles.permissions"),
-				// What the role allows, section by section; the owner role holds everything.
+				// What the role allows, section by section; the built-in roles hold everything.
 				cell: (role) =>
 					role.protectedRole
 						? t("organisation.accessRoles.fullAccess")

@@ -12,6 +12,7 @@ import {
 	isCompanyOnly,
 	PERMISSION_KEYS,
 	type PermissionKey,
+	ROLE_PERMISSION_KEYS,
 } from "@/features/workspace/permissionKeys";
 
 describe("permission selection follows the contract's prerequisites", () => {
@@ -60,12 +61,19 @@ describe("permission selection follows the contract's prerequisites", () => {
 });
 
 describe("what a role's kind lets it hold", () => {
-	it("gives a local role every key but the company-only ones, and every key otherwise", () => {
+	it("gives a local role every role key but the company-only ones, and every role key otherwise", () => {
 		expect(keysFor("LOCAL")).toEqual(
-			PERMISSION_KEYS.filter((key) => !isCompanyOnly(key))
+			ROLE_PERMISSION_KEYS.filter((key) => !isCompanyOnly(key))
 		);
-		expect(keysFor("COMPANY")).toEqual(PERMISSION_KEYS);
-		expect(keysFor()).toEqual(PERMISSION_KEYS);
+		expect(keysFor("COMPANY")).toEqual(ROLE_PERMISSION_KEYS);
+		expect(keysFor()).toEqual(ROLE_PERMISSION_KEYS);
+	});
+
+	it("never lets a role hold the keys only the System Owner and System Admin roles hold", () => {
+		for (const kind of ["LOCAL", "COMPANY", undefined] as const) {
+			expect(keysFor(kind)).not.toContain("access_role:assign");
+			expect(keysFor(kind)).not.toContain("access_role:assign_system_admin");
+		}
 	});
 
 	it("hints where a key applies only where the kind leaves a doubt", () => {

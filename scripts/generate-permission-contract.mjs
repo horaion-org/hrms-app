@@ -155,6 +155,10 @@ const validate = (contract) => {
 				fail(`${at}.reason ${JSON.stringify(link.reason)} is not camelCase`);
 			return { key: link.key, reason: link.reason };
 		});
+		// Only the System Owner and System Admin roles hold such a key; the role editor never offers it.
+		const { systemRolesOnly } = entry;
+		if (typeof systemRolesOnly !== "boolean")
+			fail(`${key}.systemRolesOnly must be true or false`);
 		return {
 			key,
 			resource,
@@ -164,6 +168,7 @@ const validate = (contract) => {
 			prerequisites,
 			since,
 			worksWith,
+			systemRolesOnly,
 		};
 	});
 	for (const { key, worksWith } of definitions)

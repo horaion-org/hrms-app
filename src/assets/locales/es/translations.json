@@ -1526,14 +1526,16 @@
 					"create": "Crear roles de acceso",
 					"update": "Editar roles de acceso",
 					"delete": "Eliminar roles de acceso",
-					"assign": "Dar roles de acceso a personas"
+					"assign": "Dar roles de acceso a personas",
+					"assign_system_admin": "Dar o quitar el rol Administrador del sistema"
 				},
 				"actionHints": {
 					"read": "Con sus permisos, y dónde los tiene cada persona",
 					"create": "Solo con permisos que quien lo tiene posee en toda la empresa",
 					"update": "Renombrar, cambiar permisos o desactivar, dentro de los permisos propios",
 					"delete": "Solo roles que nadie tiene",
-					"assign": "O desactivarlos o quitarlos, donde quien lo tiene posee todos los permisos del rol"
+					"assign": "O desactivarlos o quitarlos; solo los roles Propietario del sistema y Administrador del sistema lo tienen",
+					"assign_system_admin": "Solo el rol Propietario del sistema lo tiene"
 				}
 			},
 			"audit_event": {
@@ -2025,6 +2027,7 @@
 					"personPlaceholder": "Selecciona una persona",
 					"searchPlaceholder": "Buscar personas",
 					"noResults": "No se encontraron miembros activos.",
+					"noDepartment": "Sin departamento",
 					"places": "Se aplica a",
 					"placesPlaceholder": "Selecciona dónde se aplica",
 					"placesSearch": "Buscar sucursales y departamentos",
@@ -2048,6 +2051,11 @@
 				},
 				"loadFailed": "No pudimos cargar quién tiene este rol.",
 				"inactive": "Este rol está inactivo, así que las personas de abajo no tienen sus permisos hasta que se vuelva a activar.",
+				"whoCanChange": {
+					"SYSTEM_OWNER": "El rol Propietario del sistema se queda con la persona que lo tiene.",
+					"SYSTEM_ADMIN": "Solo el Propietario del sistema puede dar o quitar el rol Administrador del sistema.",
+					"CUSTOM": "Solo el Propietario del sistema o un Administrador del sistema pueden dar, cambiar o quitar roles de acceso."
+				},
 				"removeFailed": "No pudimos quitarle el rol a esa persona. Inténtalo de nuevo.",
 				"partial": "No se pudieron hacer {{failed}} de {{total}} cambios; los demás se guardaron. {{reason}}",
 				"remove": {
@@ -2077,7 +2085,7 @@
 				"unavailable": "Solo puedes dar a un rol los permisos que tienes tú, así que los demás no están disponibles.",
 				"scope": "Dónde se aplica este rol se elige al asignarlo a una persona.",
 				"fullAccess": "Acceso completo",
-				"protected": "El rol Propietario de la empresa siempre tiene todos los permisos y no se puede cambiar.",
+				"protected": "Este rol viene incluido: siempre tiene acceso completo y no se puede cambiar.",
 				"viewOnly": "No tienes permiso para cambiar los roles de acceso.",
 				"locked": "Este rol incluye permisos que no tienes, así que no puedes cambiarlo.",
 				"name": "Nombre del rol",
@@ -2096,7 +2104,7 @@
 				"save": "Guardar cambios",
 				"forbidden": "Este rol incluye permisos que no tienes, o ya no puedes cambiar los roles de acceso.",
 				"gone": "Este rol ya no existe.",
-				"protectedRefused": "El rol Propietario de la empresa no se puede cambiar.",
+				"protectedRefused": "Los roles Propietario del sistema y Administrador del sistema no se pueden cambiar.",
 				"failed": "No pudimos guardar el rol. Inténtalo de nuevo.",
 				"loadForbidden": "No tienes permiso para ver este rol.",
 				"loadMissing": "Este rol no existe o se ha eliminado.",
@@ -3137,6 +3145,7 @@
 			"systemRole": "Rol de acceso",
 			"systemRolePlaceholder": "Seleccionar rol de acceso",
 			"systemRoleHint": "Se aplica en el ámbito del rol seleccionado.",
+			"systemRoleReadOnlyHint": "Solo el Propietario del sistema o un Administrador del sistema pueden cambiar los roles de acceso y dónde se aplican.",
 			"otherRoles": "También tiene en otros lugares: {{roles}}.",
 			"roleScope": "Ámbito del rol",
 			"roleScopeHint": "Elige dónde se aplica el rol de acceso, con independencia del departamento al que pertenezca.",
@@ -3154,7 +3163,7 @@
 			"save": "Guardar cambios",
 			"identityShared": "Este nombre no se puede cambiar aquí porque también pertenece a otra empresa.",
 			"selfDeactivation": "No puedes desactivarte a ti mismo.",
-			"ownerDeactivation": "No se puede desactivar al propietario de la empresa.",
+			"ownerDeactivation": "No se puede desactivar al Propietario del sistema.",
 			"departmentForbidden": "No tienes permiso para mover personas a este departamento.",
 			"inactiveMove": "Está inactivo. Reactívalo antes de moverlo a otro departamento.",
 			"forbiddenSave": "Ya no tienes permiso para editar a esta persona.",
