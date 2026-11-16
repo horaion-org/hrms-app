@@ -1041,15 +1041,12 @@ describe("ConstraintDialog", () => {
 		expect(trigger(/^Status/)).toHaveTextContent("Active");
 	});
 
-	it("given_aTypeWithoutARequirement_when_saved_then_offersNoneAndSendsNone", async () => {
+	it("given_daysToAvoidGivingOff_when_added_then_startsIfPossibleAndSendsIt", async () => {
 		const user = userEvent.setup();
 		const { onSave } = renderDialog();
 		await start(user, "Days to avoid giving off");
 
-		expect(screen.queryByRole("radiogroup")).toBeNull();
-		expect(
-			screen.getByText("Always if possible for this kind of constraint.")
-		).toBeVisible();
+		expect(screen.getByRole("radio", { name: /^If possible/ })).toBeChecked();
 		await pick(user, /^Days of the week/, "Saturday", "Friday");
 		await user.click(submitButton());
 
@@ -1057,12 +1054,36 @@ describe("ConstraintDialog", () => {
 			expect(onSave).toHaveBeenCalledWith(
 				expect.objectContaining({
 					type: "AVOID_DAYS_OFF_ON",
-					requirement: null,
+					requirement: "SHOULD",
 					// Monday first, whatever order they were chosen in.
 					values: [
 						{ field: "WEEKDAY", value: "FRI" },
 						{ field: "WEEKDAY", value: "SAT" },
 					],
+				})
+			);
+		});
+	});
+
+	it("given_keepDaysOffTogetherAsAMust_when_saved_then_saysScatteredDaysCannotKeepItAndSendsMust", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog();
+		await start(user, "Keep days off together");
+		const scattered =
+			"As a Must, someone whose available days are scattered, such as a part-timer on Monday, Wednesday and Friday, cannot keep it, so it is best applied to full-timers.";
+
+		expect(screen.getByRole("radio", { name: /^If possible/ })).toBeChecked();
+		expect(screen.queryByText(scattered)).toBeNull();
+		await user.click(screen.getByRole("radio", { name: /^Must/ }));
+		expect(screen.getByText(scattered)).toBeVisible();
+		await user.click(submitButton());
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "KEEP_DAYS_OFF_TOGETHER",
+					requirement: "MUST",
+					values: [],
 				})
 			);
 		});

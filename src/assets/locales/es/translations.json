@@ -3438,7 +3438,10 @@
 						"EXACTLY_zero": "Ningún <DAY_TYPE/> <PERIOD_WEEKS/>."
 					}
 				},
-				"AVOID_DAYS_OFF_ON": "Evitar días libres el <WEEKDAY/>.",
+				"AVOID_DAYS_OFF_ON": {
+					"ifPossible": "Evitar días libres el <WEEKDAY/>.",
+					"must": "Sin días libres el <WEEKDAY/>."
+				},
 				"REST_BETWEEN_SHIFTS_one": "Todos tienen al menos <REST_HOURS/> hora libre entre turnos.",
 				"REST_BETWEEN_SHIFTS_other": "Todos tienen al menos <REST_HOURS/> horas libres entre turnos.",
 				"MAX_WORK_HOURS_PER_DAY_one": "Nadie a quien se apliquen los límites de horas de la Ley de Empleo trabaja más de <WORK_HOURS_A_DAY/> hora en un día, horas extra incluidas.",
@@ -3457,7 +3460,10 @@
 					"dayOffPriced": "Una hora de trabajo en un día libre cuesta el <DAY_OFF_WORK_PERCENT/> % de una hora normal."
 				},
 				"NO_OVERTIME_WHEN_GENERATING": "Un cuadrante generado no da a nadie horas extra más allá de su día o semana normal ni llama a nadie en un día de descanso. Los turnos que no pueden cubrirse sin horas adicionales quedan vacíos, y las horas extra se ofrecen en las opciones de reparación.",
-				"KEEP_DAYS_OFF_TOGETHER": "Mantener juntos los días de descanso, días libres y permisos de cada persona cuando el cuadrante lo permita.",
+				"KEEP_DAYS_OFF_TOGETHER": {
+					"ifPossible": "Mantener juntos los días de descanso, días libres y permisos de cada persona cuando el cuadrante lo permita.",
+					"must": "Los días de descanso, días libres y permisos de cada persona en una semana van juntos."
+				},
 				"MAX_DAYS_WITHOUT_DAY_TYPES": {
 					"fullTimers_one": "Ningún empleado a tiempo completo pasa más de <DAYS_IN_A_ROW/> día seguido sin un <DAY_TYPE/>.",
 					"fullTimers_other": "Ningún empleado a tiempo completo pasa más de <DAYS_IN_A_ROW/> días seguidos sin un <DAY_TYPE/>.",
@@ -3582,7 +3588,8 @@
 				"departmentsEmpty": "No hay ningún departamento activo al que puedas añadir restricciones.",
 				"optionsNeedDepartment": "Elige primero un departamento.",
 				"firmnessHints": {
-					"WORKING_HOURS": "Con «Si es posible», el horario puede superar esta cifra cuando un turno no podría cubrirse de otro modo, y cada vez que lo haga aparece en Avisos."
+					"WORKING_HOURS": "Con «Si es posible», el horario puede superar esta cifra cuando un turno no podría cubrirse de otro modo, y cada vez que lo haga aparece en Avisos.",
+					"KEEP_DAYS_OFF_TOGETHER": "Como Obligatoria, alguien con días disponibles dispersos, como una persona a tiempo parcial el lunes, miércoles y viernes, no puede cumplirlo, así que conviene aplicarlo a quienes trabajan a tiempo completo."
 				},
 				"dependency": {
 					"chooseFirst": "Elige antes en {{field}}.",

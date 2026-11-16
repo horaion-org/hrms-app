@@ -40,7 +40,16 @@ type SentenceSource = {
 	values: ReadonlyArray<Pick<SentenceValue, "field" | "value">>;
 	/** Whether its type covers full-timers only (`ConstraintTypeOption.fullTimersOnly`); absent reads as everyone. */
 	fullTimersOnly?: boolean;
+	/** Must or If possible, for the two rules whose sentence says it; absent reads as If possible. */
+	requirement?: ConstraintRequirement | null;
 };
+
+/** How a rule whose sentence changes with its firmness reads it: a Must says what never happens. */
+type Firmness = "must" | "ifPossible";
+
+/** A Must reads as what never happens; If possible, or none chosen yet, as what is tried. */
+const firmnessWordsOf = (constraint: SentenceSource): Firmness =>
+	constraint.requirement === "MUST" ? "must" : "ifPossible";
 
 const SENTENCES = "scheduling.constraints.sentences";
 
@@ -65,7 +74,7 @@ export type SentenceKey =
 	| `${typeof SENTENCES}.SHIFT_STAFFING_WITH_STAND_INS.${ShiftCount}.AT_LEAST`
 	| `${typeof SENTENCES}.SHIFT_STAFFING_WITH_STAND_INS.standIns`
 	| `${typeof SENTENCES}.DAYS_OFF_PER_PERIOD.${DaysOffCounted}.${ConstraintComparison}`
-	| `${typeof SENTENCES}.AVOID_DAYS_OFF_ON`
+	| `${typeof SENTENCES}.AVOID_DAYS_OFF_ON.${Firmness}`
 	| `${typeof SENTENCES}.REST_BETWEEN_SHIFTS`
 	| `${typeof SENTENCES}.MAX_WORK_HOURS_PER_DAY`
 	| `${typeof SENTENCES}.MAX_OVERTIME_HOURS_PER_MONTH`
@@ -73,7 +82,7 @@ export type SentenceKey =
 	| `${typeof SENTENCES}.MAX_CALL_BACKS_PER_PERSON`
 	| `${typeof SENTENCES}.PAY_RATES.${PayRatesPart}`
 	| `${typeof SENTENCES}.NO_OVERTIME_WHEN_GENERATING`
-	| `${typeof SENTENCES}.KEEP_DAYS_OFF_TOGETHER`
+	| `${typeof SENTENCES}.KEEP_DAYS_OFF_TOGETHER.${Firmness}`
 	| `${typeof SENTENCES}.MAX_DAYS_WITHOUT_DAY_TYPES.${CoveredGroup}`
 	| `${typeof SENTENCES}.DAY_TYPE_DAYS_PER_WEEK.${CoveredGroup}.${WeeklyComparison}`;
 
@@ -189,7 +198,13 @@ export const sentencePartsOf = (
 				},
 			];
 		case "AVOID_DAYS_OFF_ON":
-			return [{ i18nKey: `${SENTENCES}.${constraint.type}`, count: 1 }];
+		case "KEEP_DAYS_OFF_TOGETHER":
+			return [
+				{
+					i18nKey: `${SENTENCES}.${constraint.type}.${firmnessWordsOf(constraint)}`,
+					count: 1,
+				},
+			];
 		case "REST_BETWEEN_SHIFTS":
 		case "MAX_WORK_HOURS_PER_DAY":
 		case "MAX_OVERTIME_HOURS_PER_MONTH":
@@ -224,7 +239,6 @@ export const sentencePartsOf = (
 				},
 			];
 		case "NO_OVERTIME_WHEN_GENERATING":
-		case "KEEP_DAYS_OFF_TOGETHER":
 			return [{ i18nKey: `${SENTENCES}.${constraint.type}`, count: 1 }];
 	}
 };

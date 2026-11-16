@@ -3638,7 +3638,10 @@
 						"EXACTLY_zero": "No <DAY_TYPE/> <PERIOD_WEEKS/>."
 					}
 				},
-				"AVOID_DAYS_OFF_ON": "Avoid days off on <WEEKDAY/>.",
+				"AVOID_DAYS_OFF_ON": {
+					"ifPossible": "Avoid days off on <WEEKDAY/>.",
+					"must": "No days off on <WEEKDAY/>."
+				},
 				"REST_BETWEEN_SHIFTS_one": "Everyone gets at least <REST_HOURS/> hour off between shifts.",
 				"REST_BETWEEN_SHIFTS_other": "Everyone gets at least <REST_HOURS/> hours off between shifts.",
 				"MAX_WORK_HOURS_PER_DAY_one": "Nobody whose Employment Act limits apply works more than <WORK_HOURS_A_DAY/> hour in a day, overtime included.",
@@ -3657,7 +3660,10 @@
 					"dayOffPriced": "An hour of work on a day off costs <DAY_OFF_WORK_PERCENT/>% of a normal hour."
 				},
 				"NO_OVERTIME_WHEN_GENERATING": "A generated roster gives nobody overtime past their normal day or week and calls nobody back on a rest day. Shifts it can’t staff without extra hours are left as gaps, and overtime is offered in the repair options.",
-				"KEEP_DAYS_OFF_TOGETHER": "Keep each person’s rest days, days off and leave together where the roster allows.",
+				"KEEP_DAYS_OFF_TOGETHER": {
+					"ifPossible": "Keep each person’s rest days, days off and leave together where the roster allows.",
+					"must": "Each person’s rest days, days off and leave in a week are together."
+				},
 				"MAX_DAYS_WITHOUT_DAY_TYPES": {
 					"fullTimers_one": "No full-timer goes more than <DAYS_IN_A_ROW/> day in a row without a <DAY_TYPE/>.",
 					"fullTimers_other": "No full-timer goes more than <DAYS_IN_A_ROW/> days in a row without a <DAY_TYPE/>.",
@@ -3782,7 +3788,8 @@
 				"departmentsEmpty": "No active department you can add constraints to.",
 				"optionsNeedDepartment": "Choose a department first.",
 				"firmnessHints": {
-					"WORKING_HOURS": "Asked “if possible”, the roster may pass this figure when a shift could not be staffed otherwise, and each time it does is listed in Issues."
+					"WORKING_HOURS": "Asked “if possible”, the roster may pass this figure when a shift could not be staffed otherwise, and each time it does is listed in Issues.",
+					"KEEP_DAYS_OFF_TOGETHER": "As a Must, someone whose available days are scattered, such as a part-timer on Monday, Wednesday and Friday, cannot keep it, so it is best applied to full-timers."
 				},
 				"dependency": {
 					"chooseFirst": "Choose in {{field}} first.",

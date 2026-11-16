@@ -124,6 +124,12 @@ const HINTED_FIELDS = [
 
 type HintedField = (typeof HINTED_FIELDS)[number];
 
+/** Kinds that were only ever If possible, so a new one starts If possible rather than Must. */
+const STARTS_IF_POSSIBLE: ReadonlyArray<ConstraintType> = [
+	"AVOID_DAYS_OFF_ON",
+	"KEEP_DAYS_OFF_TOGETHER",
+];
+
 /** Numbers a type may leave out, each worded as a choice: what leaving it out means, or a figure. */
 const CHOICE_FIELDS = [
 	"DAY_OFF_WORK_PERCENT",
@@ -505,12 +511,17 @@ export const ConstraintDialog = ({
 	const firmnessHints: Partial<Record<ConstraintCategory, string>> = {
 		WORKING_HOURS: t(`${key}.firmnessHints.WORKING_HOURS`),
 	};
+	// Keeping days off together as a Must cannot hold for someone whose available days are scattered.
+	const firmnessHintOf = (option: ConstraintTypeOption): string | undefined =>
+		option.type === "KEEP_DAYS_OFF_TOGETHER" && requirement === "MUST"
+			? t(`${key}.firmnessHints.KEEP_DAYS_OFF_TOGETHER`)
+			: firmnessHints[option.category];
 	// Must or If possible as two cards, each saying what happens when unmet; a type that offers no choice says which it always is.
 	const firmnessRow = (option: ConstraintTypeOption): FunctionComponent => {
 		const id = fieldId("requirement");
 		const label = t(`${key}.requirement`);
 		const error = errors.requirement?.message;
-		const hint = firmnessHints[option.category];
+		const hint = firmnessHintOf(option);
 		const hinted = hint !== undefined;
 		if (!option.hasRequirement) {
 			const fixed = firmnessOf({
@@ -826,6 +837,12 @@ export const ConstraintDialog = ({
 						value={type}
 						onChange={(chosenType: ConstraintType) => {
 							setValue("type", chosenType);
+							// A new rule of a kind that was only ever If possible still starts If possible.
+							if (!startingPoint)
+								setValue(
+									"requirement",
+									STARTS_IF_POSSIBLE.includes(chosenType) ? "SHOULD" : "MUST"
+								);
 						}}
 					/>
 				)}

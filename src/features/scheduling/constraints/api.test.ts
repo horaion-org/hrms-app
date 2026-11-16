@@ -71,7 +71,7 @@ describe("constraints client", () => {
 		expect(calls[0]?.body).toEqual(BODY);
 	});
 
-	it("lists the department's live constraints, inactive ones and constraints without a requirement included", async () => {
+	it("lists the department's live constraints, inactive ones included, each with its requirement", async () => {
 		stubApi({
 			[`GET ${CONSTRAINTS}`]: {
 				status: 200,
@@ -88,7 +88,7 @@ describe("constraints client", () => {
 		expect(
 			constraints.find((constraint) => constraint.type === "AVOID_DAYS_OFF_ON")
 				?.requirement
-		).toBeNull();
+		).toBe("SHOULD");
 	});
 
 	it.each([
@@ -564,8 +564,8 @@ describe("constraints client", () => {
 		expect(policyOf("REST_BETWEEN_SHIFTS")).toBe("MUST_OR_SHOULD");
 		expect(policyOf("DAY_TYPE_DAYS_PER_WEEK")).toBe("MUST_OR_SHOULD");
 		expect(policyOf("MAX_WORK_HOURS_PER_DAY")).toBe("MUST_OR_SHOULD");
-		expect(policyOf("AVOID_DAYS_OFF_ON")).toBe("ALWAYS_SHOULD");
-		expect(policyOf("SHORTEST_PART_SHIFT")).toBe("ALWAYS_MUST");
+		expect(policyOf("AVOID_DAYS_OFF_ON")).toBe("MUST_OR_SHOULD");
+		expect(policyOf("MAX_CALL_BACKS_PER_PERSON")).toBe("ALWAYS_MUST");
 		expect(policyOf("SHIFT_STAFFING")).toBe("UNKNOWN");
 	});
 
