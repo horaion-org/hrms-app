@@ -458,10 +458,7 @@ describe("compiled app stylesheet", () => {
 			createElement(Sidebar, { children: null, menuLabel: "Menu" })
 		);
 		expect(colours).toEqual(
-			expect.arrayContaining([
-				"bg-ink-blue-900",
-				"focus-visible:outline-white",
-			])
+			expect.arrayContaining(["bg-ink-blue-900", "focus-visible:outline-white"])
 		);
 		for (const className of colours) {
 			expect(colourDeclarationOf(className), className).toBeDefined();
