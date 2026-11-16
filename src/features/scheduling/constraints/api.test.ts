@@ -506,16 +506,19 @@ describe("constraints client", () => {
 		]);
 	});
 
-	it("reads each type's requirement policy, a setting neither Must nor If possible, and an unknown one safely", async () => {
+	it("reads each type's requirement policy, a setting neither Must nor If possible, a fixed one and an unknown one safely", async () => {
 		stubApi({
 			[`GET ${DEPARTMENT}/constraint-options`]: {
 				status: 200,
 				body: envelope({
 					...CONSTRAINT_OPTIONS_RESPONSE,
+					// A fixed Must as an API that still fixes a type would send it, and a policy a newer API adds.
 					types: CONSTRAINT_OPTIONS_RESPONSE.types.map((type) =>
 						type.type === "SHIFT_STAFFING"
 							? { ...type, requirementPolicy: "SOMETHING_NEW" }
-							: type
+							: type.type === "SHORTEST_PART_SHIFT"
+								? { ...type, requirementPolicy: "ALWAYS_MUST" }
+								: type
 					),
 				}),
 			},
@@ -529,7 +532,9 @@ describe("constraints client", () => {
 		expect(policyOf("NO_OVERTIME_WHEN_GENERATING")).toBe("SETTING");
 		expect(policyOf("REST_BETWEEN_SHIFTS")).toBe("MUST_OR_SHOULD");
 		expect(policyOf("DAY_TYPE_DAYS_PER_WEEK")).toBe("MUST_OR_SHOULD");
-		expect(policyOf("MAX_WORK_HOURS_PER_DAY")).toBe("ALWAYS_MUST");
+		expect(policyOf("MAX_WORK_HOURS_PER_DAY")).toBe("MUST_OR_SHOULD");
+		expect(policyOf("AVOID_DAYS_OFF_ON")).toBe("ALWAYS_SHOULD");
+		expect(policyOf("SHORTEST_PART_SHIFT")).toBe("ALWAYS_MUST");
 		expect(policyOf("SHIFT_STAFFING")).toBe("UNKNOWN");
 	});
 
