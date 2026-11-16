@@ -3,6 +3,7 @@ import { z } from "zod";
 import { apiRequest } from "@/common/api-client";
 import { companyPath } from "@/common/companyPath";
 import type { QueryOptionsFor } from "@/common/query-client";
+import type { PermissionKey } from "@/features/workspace/permissionContract.generated";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
 import type { UnitSelection } from "@/features/workspace/unitSearch";
@@ -277,5 +278,124 @@ export const teamCoverOffersQuery = (
 		companyId,
 		dashboardKey(companyId, "coverOffers", units),
 		(signal) => fetchTeamCoverOffers(companyId, units, signal),
+		allowed
+	);
+
+/*
+ * Two reads beyond the schedules (ADR-0095): the approvals waiting in the
+ * person's units, and who joins, ends probation or leaves.
+ */
+
+/** Holding this anywhere is what lets a person see the approvals waiting in their units. */
+export const APPROVAL_READ_KEYS: ReadonlyArray<PermissionKey> = [
+	"approval:read",
+];
+
+const waitingApprovalSchema = z.object({
+	approvalInstanceId: z.string(),
+	/** What waits: a roster to publish or a leave request, as the approval names it. */
+	subjectType: z.string(),
+	/** The public id of the roster or leave request. */
+	subjectId: z.string(),
+	branchId: z.string(),
+	branchName: z.string(),
+	departmentId: z.string(),
+	departmentName: z.string(),
+	/** Who asked; null once they left the company. */
+	memberDisplayName: z.string().nullable(),
+	currentStepOrder: z.number().int(),
+	stepCount: z.number().int(),
+	/** When the open step began to wait, as an ISO instant. */
+	waitingSince: z.string(),
+	/** Whether the flow's managers were told the step stalled. */
+	stalled: z.boolean(),
+});
+
+/** One approval waiting in the person's units. */
+export type WaitingApproval = z.infer<typeof waitingApprovalSchema>;
+
+const waitingApprovalsSchema = z.object({
+	approvals: z.array(waitingApprovalSchema),
+});
+
+/** What happens to a person on a day: they join, their probation ends, or they leave. */
+export const peopleEventKindSchema = z.enum([
+	"JOINS",
+	"PROBATION_ENDS",
+	"LEAVES",
+]);
+
+export type PeopleEventKind = z.infer<typeof peopleEventKindSchema>;
+
+const peopleEventSchema = z.object({
+	kind: peopleEventKindSchema,
+	day: z.string(),
+	membershipId: z.string(),
+	/** Null once the member left. */
+	displayName: z.string().nullable(),
+	branchId: z.string(),
+	branchName: z.string(),
+	departmentId: z.string(),
+	departmentName: z.string(),
+});
+
+/** One person's join, probation end or leaving day. */
+export type PeopleEvent = z.infer<typeof peopleEventSchema>;
+
+const peopleEventsSchema = z.object({
+	from: z.string(),
+	to: z.string(),
+	events: z.array(peopleEventSchema),
+});
+
+/** The approvals waiting in the units, oldest first. */
+export const fetchWaitingApprovals = (
+	companyId: string,
+	units: UnitSelection,
+	signal?: AbortSignal
+): Promise<Array<WaitingApproval>> =>
+	apiRequest(
+		`${companyPath(companyId)}/approval-instances/waiting${searchOf(units)}`,
+		waitingApprovalsSchema,
+		{ signal }
+	).then((answer) => answer.approvals);
+
+/** Who joins, ends probation or leaves in the range and units, by day. */
+export const fetchPeopleEvents = (
+	companyId: string,
+	units: UnitSelection,
+	range: DayRange,
+	signal?: AbortSignal
+): Promise<Array<PeopleEvent>> =>
+	apiRequest(
+		`${companyPath(companyId)}/member-profiles/events${searchOf(units, range)}`,
+		peopleEventsSchema,
+		{ signal }
+	).then((answer) => answer.events);
+
+/** The approvals waiting; `allowed` false asks for nothing. */
+export const waitingApprovalsQuery = (
+	companyId: string,
+	units: UnitSelection,
+	allowed: boolean
+): QueryOptionsFor<Array<WaitingApproval>, ReadonlyArray<unknown>> =>
+	dashboardQuery(
+		companyId,
+		dashboardKey(companyId, "waitingApprovals", units),
+		(signal) => fetchWaitingApprovals(companyId, units, signal),
+		allowed
+	);
+
+/** The people events; `allowed` false asks for nothing. */
+export const peopleEventsQuery = (
+	companyId: string,
+	units: UnitSelection,
+	range: DayRange,
+	allowed: boolean
+): QueryOptionsFor<Array<PeopleEvent>, ReadonlyArray<unknown>> =>
+	dashboardQuery(
+		companyId,
+		dashboardKey(companyId, "peopleEvents", units, range),
+		(signal) => fetchPeopleEvents(companyId, units, range, signal),
 		allowed
 	);

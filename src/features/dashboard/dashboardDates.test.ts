@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+	comingPeopleDays,
 	nextMonday,
 	thisAndNextMonth,
 	thisAndNextWeek,
@@ -14,6 +15,13 @@ describe("dashboard dates", () => {
 		expect(thisAndNextWeek(WEDNESDAY)).toEqual({
 			from: "2026-11-23",
 			to: "2026-12-06",
+		});
+	});
+
+	it("reads thirty days of people events from today", () => {
+		expect(comingPeopleDays(WEDNESDAY)).toEqual({
+			from: "2026-11-25",
+			to: "2026-12-24",
 		});
 	});
 
