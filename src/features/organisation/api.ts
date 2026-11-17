@@ -482,6 +482,143 @@ export const revokeAccessRole = (
 		{ method: "DELETE" }
 	);
 
+/** Where a default reaches for each person who receives it (API ADR-0118). */
+export const DEFAULT_ACCESS_APPLIES_TO = [
+	"OWN_DEPARTMENT",
+	"OWN_BRANCH",
+] as const;
+
+export type DefaultAccessAppliesTo = (typeof DEFAULT_ACCESS_APPLIES_TO)[number];
+
+/** The most people one "give default access" may name: the API's own limit. */
+export const GIVE_DEFAULT_ACCESS_MAX_PEOPLE = 500;
+
+const defaultAccessRuleSchema = z.object({
+	defaultAccessRuleId: z.string(),
+	accessRoleId: z.string(),
+	/** Whose people it covers: the whole company, one Branch or one Department. */
+	setAt: z.enum(["COMPANY", "BRANCH", "DEPARTMENT"]),
+	/** The Branch it is set for; null otherwise. */
+	branchId: z.string().nullable(),
+	/** The Department it is set for; null otherwise. */
+	departmentId: z.string().nullable(),
+	appliesTo: z.enum(DEFAULT_ACCESS_APPLIES_TO),
+});
+
+/**
+ * One default: a role everyone who receives default access gets in their
+ * own Department or Branch, when they sit in the place it is set for.
+ * Defaults at the company, Branch and Department add up.
+ */
+export type DefaultAccessRule = z.infer<typeof defaultAccessRuleSchema>;
+
+const defaultAccessRulesPath = (companyId: string): string =>
+	`${companyPath(companyId)}/default-access-rules`;
+
+/** The company's defaults, in the order they were added. */
+export const fetchDefaultAccessRules = (
+	companyId: string,
+	signal?: AbortSignal
+): Promise<Array<DefaultAccessRule>> =>
+	apiRequest(
+		defaultAccessRulesPath(companyId),
+		z.array(defaultAccessRuleSchema),
+		{ signal }
+	);
+
+/**
+ * A new default. The place is in the body, unlike an assignment's: a
+ * Branch, a Department (anywhere in the company), or neither for the whole
+ * company; never both.
+ */
+export type DefaultAccessRuleBody = {
+	accessRoleId: string;
+	appliesTo: DefaultAccessAppliesTo;
+	branchId?: string;
+	departmentId?: string;
+};
+
+/** Adds a default at the place the body names. */
+export const addDefaultAccessRule = (
+	companyId: string,
+	body: DefaultAccessRuleBody
+): Promise<DefaultAccessRule> =>
+	apiRequest(defaultAccessRulesPath(companyId), defaultAccessRuleSchema, {
+		method: "POST",
+		body,
+	});
+
+/** Removes one default; removing one already gone changes nothing. */
+export const removeDefaultAccessRule = (
+	companyId: string,
+	defaultAccessRuleId: string
+): Promise<void> =>
+	apiRequestVoid(
+		`${defaultAccessRulesPath(companyId)}/${encodeURIComponent(defaultAccessRuleId)}`,
+		{ method: "DELETE" }
+	);
+
+const defaultAccessRecipientSchema = z.object({
+	companyMembershipId: z.string(),
+	receivesDefaultAccess: z.boolean(),
+	/** When they started receiving it; null when they don't. */
+	receivingSince: z.string().nullable(),
+});
+
+/** Whether one person receives default access. */
+export type DefaultAccessRecipient = z.infer<
+	typeof defaultAccessRecipientSchema
+>;
+
+const defaultAccessRecipientsPath = (companyId: string): string =>
+	`${companyPath(companyId)}/default-access-recipients`;
+
+/** Whether one person receives default access, and since when. */
+export const fetchDefaultAccessRecipient = (
+	companyId: string,
+	companyMembershipId: string,
+	signal?: AbortSignal
+): Promise<DefaultAccessRecipient> =>
+	apiRequest(
+		`${defaultAccessRecipientsPath(companyId)}/${encodeURIComponent(companyMembershipId)}`,
+		defaultAccessRecipientSchema,
+		{ signal }
+	);
+
+const giveDefaultAccessResultSchema = z.object({
+	given: z.number().int().nonnegative(),
+	alreadyReceiving: z.number().int().nonnegative(),
+});
+
+/** How many people were given default access, and how many already had it. */
+export type GiveDefaultAccessResult = z.infer<
+	typeof giveDefaultAccessResultSchema
+>;
+
+/** Gives default access to people already in the company, all or nothing. */
+export const giveDefaultAccess = (
+	companyId: string,
+	companyMembershipIds: ReadonlyArray<string>
+): Promise<GiveDefaultAccessResult> =>
+	apiRequest(
+		defaultAccessRecipientsPath(companyId),
+		giveDefaultAccessResultSchema,
+		{
+			method: "POST",
+			body: { companyMembershipIds },
+		}
+	);
+
+/** Stops default access for one person; they keep roles given by hand. */
+export const stopDefaultAccess = (
+	companyId: string,
+	companyMembershipId: string
+): Promise<void> =>
+	apiRequestVoid(
+		`${defaultAccessRecipientsPath(companyId)}/${encodeURIComponent(companyMembershipId)}`,
+		{ method: "DELETE" }
+	);
+
 const accessRolePath = (companyId: string, accessRoleId: string): string =>
 	`${companyPath(companyId)}/access-roles/${encodeURIComponent(accessRoleId)}`;
 

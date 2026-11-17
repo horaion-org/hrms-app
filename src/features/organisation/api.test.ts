@@ -3,11 +3,17 @@ import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { ApiProblemError, UnexpectedResponseError } from "@/common/problem";
 import { envelope, problemReply, stubApi } from "@/common/testing/stubApi";
 import {
+	addDefaultAccessRule,
 	createAccessRole,
 	createBranch,
 	createDepartment,
 	createJobTitle,
+	fetchDefaultAccessRecipient,
+	fetchDefaultAccessRules,
 	fetchJobTitles,
+	giveDefaultAccess,
+	removeDefaultAccessRule,
+	stopDefaultAccess,
 	updateJobTitle,
 	searchCompanyMembers,
 } from "@/features/organisation/api";
@@ -375,6 +381,129 @@ describe("create access role client", () => {
 			kind: "LOCAL",
 			name: "Branch manager",
 			permissions: ["branch:read", "branch:update"],
+		});
+	});
+});
+
+describe("default access clients", () => {
+	const rule = {
+		defaultAccessRuleId: "d-1",
+		accessRoleId: "r-1",
+		setAt: "DEPARTMENT",
+		branchId: null,
+		departmentId: "dep-1",
+		appliesTo: "OWN_DEPARTMENT",
+	};
+
+	it("lists the company's defaults", async () => {
+		stubApi({
+			"GET /api/v1/companies/c-1/default-access-rules": {
+				status: 200,
+				body: envelope([rule]),
+			},
+		});
+		await expect(fetchDefaultAccessRules("c-1")).resolves.toEqual([rule]);
+	});
+
+	it("rejects a default with an unknown applies-to", async () => {
+		stubApi({
+			"GET /api/v1/companies/c-1/default-access-rules": {
+				status: 200,
+				body: envelope([{ ...rule, appliesTo: "EVERYWHERE" }]),
+			},
+		});
+		await expect(fetchDefaultAccessRules("c-1")).rejects.toBeInstanceOf(
+			UnexpectedResponseError
+		);
+	});
+
+	it("posts a default with its place in the body", async () => {
+		const calls = stubApi({
+			"POST /api/v1/companies/c-1/default-access-rules": {
+				status: 201,
+				body: envelope(rule),
+			},
+		});
+		await expect(
+			addDefaultAccessRule("c-1", {
+				accessRoleId: "r-1",
+				appliesTo: "OWN_DEPARTMENT",
+				departmentId: "dep-1",
+			})
+		).resolves.toEqual(rule);
+		expect(calls[0]?.body).toEqual({
+			accessRoleId: "r-1",
+			appliesTo: "OWN_DEPARTMENT",
+			departmentId: "dep-1",
+		});
+	});
+
+	it("removes one default", async () => {
+		const calls = stubApi({
+			"DELETE /api/v1/companies/c-1/default-access-rules/d-1": { status: 204 },
+		});
+		await removeDefaultAccessRule("c-1", "d-1");
+		expect(calls[0]?.method).toBe("DELETE");
+	});
+
+	it("reads whether one person receives default access", async () => {
+		stubApi({
+			"GET /api/v1/companies/c-1/default-access-recipients/m-1": {
+				status: 200,
+				body: envelope({
+					companyMembershipId: "m-1",
+					receivesDefaultAccess: true,
+					receivingSince: "2026-11-18T02:14:00Z",
+				}),
+			},
+		});
+		await expect(fetchDefaultAccessRecipient("c-1", "m-1")).resolves.toEqual({
+			companyMembershipId: "m-1",
+			receivesDefaultAccess: true,
+			receivingSince: "2026-11-18T02:14:00Z",
+		});
+	});
+
+	it("gives default access to the chosen people and reads both counts", async () => {
+		const calls = stubApi({
+			"POST /api/v1/companies/c-1/default-access-recipients": {
+				status: 200,
+				body: envelope({ given: 2, alreadyReceiving: 1 }),
+			},
+		});
+		await expect(
+			giveDefaultAccess("c-1", ["m-1", "m-2", "m-3"])
+		).resolves.toEqual({ given: 2, alreadyReceiving: 1 });
+		expect(calls[0]?.body).toEqual({
+			companyMembershipIds: ["m-1", "m-2", "m-3"],
+		});
+	});
+
+	it("stops default access for one person", async () => {
+		const calls = stubApi({
+			"DELETE /api/v1/companies/c-1/default-access-recipients/m-1": {
+				status: 204,
+			},
+		});
+		await stopDefaultAccess("c-1", "m-1");
+		expect(calls[0]?.method).toBe("DELETE");
+	});
+
+	it("keeps a typed refusal", async () => {
+		stubApi({
+			"POST /api/v1/companies/c-1/default-access-rules": problemReply(
+				409,
+				"DEFAULT_ACCESS_RULE_CONFLICT"
+			),
+		});
+		await expect(
+			addDefaultAccessRule("c-1", {
+				accessRoleId: "r-1",
+				appliesTo: "OWN_DEPARTMENT",
+			})
+		).rejects.toMatchObject({
+			status: 409,
+			errorCode: "DEFAULT_ACCESS_RULE_CONFLICT",
 		});
 	});
 });
