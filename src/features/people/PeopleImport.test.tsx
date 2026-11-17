@@ -304,6 +304,37 @@ describe("PeopleImport", () => {
 		).toBe("sendInvitations=false&skipInvalid=false");
 	});
 
+	it("leaves Send invitations now unticked when invitations are available, saying how many would be sent", async () => {
+		const user = userEvent.setup({ applyAccept: false });
+		const reply = checkReply(0) as {
+			status: number;
+			body: { data: Record<string, unknown> };
+		};
+		stubApi({
+			...baseRoutes(),
+			[`POST ${IMPORTS}/checks`]: {
+				status: 200,
+				body: envelope({ ...reply.body.data, invitationsAvailable: true }),
+			},
+		});
+		await open("/settings/data/import-people");
+
+		await upload(user, "people.csv");
+
+		const sendNow = await screen.findByRole("checkbox", {
+			name: "Send invitations now",
+		});
+		expect(sendNow).toBeEnabled();
+		expect(sendNow).not.toBeChecked();
+		expect(sendNow).toHaveAccessibleDescription(
+			"Ticked, 2 people get an email with a temporary password, valid for 7 days."
+		);
+		await user.click(screen.getByRole("button", { name: "Import 2 people" }));
+		expect(await screen.findByRole("dialog")).toHaveTextContent(
+			"Nobody is emailed now; invite people from their profile."
+		);
+	});
+
 	it("imports the valid rows only when asked, saying in the confirmation what is left out", async () => {
 		const user = userEvent.setup({ applyAccept: false });
 		const calls = stubApi({
