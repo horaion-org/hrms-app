@@ -5382,6 +5382,7 @@
 				"keptLine": "Ya {{state}}, se queda como está",
 				"new": "Nueva",
 				"kept": "Se mantiene",
+				"redo": "Se rehace",
 				"summary_one": "{{count}} día por generar, {{range}}",
 				"summary_other": "{{count}} días por generar, {{range}}",
 				"keptNote": "{{days}} ya tiene un horario y se queda como está.",

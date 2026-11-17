@@ -5582,6 +5582,7 @@
 				"keptLine": "Already {{state}}, stays as it is",
 				"new": "New",
 				"kept": "Kept",
+				"redo": "Redone",
 				"summary_one": "{{count}} day to generate, {{range}}",
 				"summary_other": "{{count}} days to generate, {{range}}",
 				"keptNote": "{{days}} already has a schedule and stays as it is.",

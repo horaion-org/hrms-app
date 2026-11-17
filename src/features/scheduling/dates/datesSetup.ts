@@ -47,19 +47,42 @@ export const datesProblemOf = (
 	return undefined;
 };
 
-/** One week of "What this creates": its asked days, how its seven days look, and its badge. */
+/**
+ * What generating does with a run of a week's days (API ADR-0129): they stay
+ * as they are, are new with the run's choices, already have a schedule and are
+ * scheduled again with the run's choices, or are scheduled again with the
+ * week's own shifts and rules.
+ */
+export type PlanLineKind = "stays" | "new" | "redone" | "weeksOwn";
+
+/** One line of a week in "What this creates": a run of its days and what generating does with them. */
+export type PlanLine = { kind: PlanLineKind; days: DayRun };
+
+/** A week's badge: new days only, days already scheduled redone, or nothing generated. */
+export type PlanBadge = "new" | "redo" | "kept";
+
+/** One week of "What this creates": its asked days, how its seven days look, its lines and its badge. */
 export type PlanRow = {
 	periodStart: string;
 	/** The asked days of this week. */
 	asked: { start: string; end: string };
-	/** Seven days, Monday first: a new day looks covered, any other has no roster. */
+	/** Seven days, Monday first: a day generated (new or scheduled again) looks covered, any other has no roster. */
 	days: MonthWeek["days"];
-	badge: "new" | "kept";
+	/** The week's days the run touches, in day order: consecutive days treated alike make one line. */
+	lines: Array<PlanLine>;
+	badge: PlanBadge;
 	/** How many of the week's days are new; 7 is the whole week. */
 	newDayCount: number;
 	/** The state of the schedule kept on the asked days, for a week with nothing new. */
 	keptState: WeekState | undefined;
 };
+
+/** The day after `date`. */
+const dayAfter = (date: string): string =>
+	dayjs(date).add(1, "day").format(iso);
+
+/** A schedule's days and state: a month read's part, or a dates plan's kept part. */
+type PartDays = Pick<WeekPart, "coveredFrom" | "coveredTo" | "state">;
 
 /** Whether `date` lies in the run of days from `from` to `to`. */
 const isWithin = (
@@ -68,19 +91,61 @@ const isWithin = (
 	to: string | null
 ): boolean => from !== null && to !== null && date >= from && date <= to;
 
+/** Whether any of `parts` covers `date`. */
+const coversDate = (parts: ReadonlyArray<PartDays>, date: string): boolean =>
+	parts.some((part) => isWithin(date, part.coveredFrom, part.coveredTo));
+
+/** What generating does with one day of a plan week, or undefined when it leaves the day out. */
+const lineKindOf = (
+	week: DatesPlanWeek,
+	date: string
+): PlanLineKind | undefined => {
+	if (coversDate(week.kept, date)) return "stays";
+	if (isWithin(date, week.newFrom, week.newTo))
+		return coversDate(week.redone, date) ? "redone" : "new";
+	if (coversDate(week.rest, date)) return "weeksOwn";
+	return undefined;
+};
+
+/** A plan week's days as lines, in day order: consecutive days of one kind make one line. */
+const planLinesOf = (week: DatesPlanWeek): Array<PlanLine> => {
+	const lines: Array<PlanLine> = [];
+	for (const date of daysOf(week.periodStart)) {
+		const kind = lineKindOf(week, date);
+		if (kind === undefined) continue;
+		const last = lines[lines.length - 1];
+		if (last && last.kind === kind && dayAfter(last.days.to) === date)
+			last.days.to = date;
+		else lines.push({ kind, days: { from: date, to: date } });
+	}
+	return lines;
+};
+
+/** The badge of a plan week: Redo when it schedules again days that have a schedule. */
+const planBadgeOf = (week: DatesPlanWeek): PlanBadge => {
+	if (week.redone.length > 0 || week.rest.length > 0) return "redo";
+	return week.newFrom === null ? "kept" : "new";
+};
+
 /** One plan week as a row of "What this creates" (no fourth "kept" look: kept days have no roster mark). */
 export const planRowOf = (week: DatesPlanWeek): PlanRow => {
-	const days = daysOf(week.periodStart).map((date) => ({
-		date,
-		shortShifts: 0,
-		covered: isWithin(date, week.newFrom, week.newTo),
-	}));
-	const newDayCount = days.filter((day) => day.covered).length;
+	const days = daysOf(week.periodStart).map((date) => {
+		const kind = lineKindOf(week, date);
+		return {
+			date,
+			shortShifts: 0,
+			covered: kind !== undefined && kind !== "stays",
+		};
+	});
+	const newDayCount = days.filter((day) =>
+		isWithin(day.date, week.newFrom, week.newTo)
+	).length;
 	return {
 		periodStart: week.periodStart,
 		asked: { start: week.askedFrom, end: week.askedTo },
 		days,
-		badge: newDayCount > 0 ? "new" : "kept",
+		lines: planLinesOf(week),
+		badge: planBadgeOf(week),
 		newDayCount,
 		keptState: newDayCount > 0 ? undefined : week.kept[0]?.state,
 	};
@@ -88,10 +153,6 @@ export const planRowOf = (week: DatesPlanWeek): PlanRow => {
 
 /** A named schedule's days across touching parts of the weeks shown. */
 export type NamedSpan = { name: string; from: string; to: string };
-
-/** The day after `date`. */
-const dayAfter = (date: string): string =>
-	dayjs(date).add(1, "day").format(iso);
 
 /**
  * The named schedules among `parts`, in day order: touching parts with a name
@@ -160,7 +221,8 @@ export const daysAroundPart = (
 		schedule.coveredTo < schedule.periodEnd
 			? { from: dayAfter(schedule.coveredTo), to: schedule.periodEnd }
 			: undefined,
-	afterTaken: parts.some((part) => part.coveredFrom > schedule.coveredTo),
+	// A redo part lies inside a wider part, which still holds the days after it until the redo's roster is ready.
+	afterTaken: parts.some((part) => part.coveredTo > schedule.coveredTo),
 });
 
 /**
@@ -173,9 +235,6 @@ export const daysBeforeOf = (
 	firstDay: string
 ): DayRun | undefined =>
 	firstDay > monday ? { from: monday, to: dayBefore(firstDay) } : undefined;
-
-/** A schedule's days and state: a month read's part, or a dates plan's kept part. */
-type PartDays = Pick<WeekPart, "coveredFrom" | "coveredTo" | "state">;
 
 /**
  * The part with a roster that covers the day before a run's first generated
