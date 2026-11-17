@@ -296,7 +296,7 @@ const TermsForm = ({
 					/>
 				</form>
 				<TermsMeaningSection
-					className="max-md:border-t max-md:border-neutral-200 max-md:pt-6 md:self-start"
+					className="max-md:border-t max-md:border-neutral-200 max-md:pt-6 md:sticky md:top-0 md:self-start"
 					partTime={week.partTime}
 					reference={reference}
 					values={values}
