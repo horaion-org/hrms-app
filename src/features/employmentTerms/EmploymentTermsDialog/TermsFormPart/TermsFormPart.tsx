@@ -2,6 +2,9 @@ import { useId, type ReactNode } from "react";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 
+/** The heading of a question inside a part, such as "Start from". */
+export const termsQuestionClasses = "mb-3 text-sm font-semibold text-neutral-900";
+
 export type TermsFormPartProps = {
 	/** The part's short plain heading, such as "Working week". */
 	title: string;

@@ -8,7 +8,10 @@ import { Select } from "@/components/forms/Select";
 import { Checkbox } from "@/components/ui/Checkbox";
 import type { TermsPresets } from "@/features/employmentTerms/api";
 import { RateField } from "@/features/employmentTerms/EmploymentTermsDialog/RateField";
-import { TermsFormPart } from "@/features/employmentTerms/EmploymentTermsDialog/TermsFormPart";
+import {
+	TermsFormPart,
+	termsQuestionClasses,
+} from "@/features/employmentTerms/EmploymentTermsDialog/TermsFormPart";
 import { durationShort } from "@/features/employmentTerms/hours";
 import { formatTimes, timesOfPercent } from "@/features/employmentTerms/rates";
 import {
@@ -24,8 +27,6 @@ import {
 } from "@/features/employmentTerms/termsForm";
 
 const key = "employmentTerms.dialog";
-/** The heading of a question inside a part. */
-const questionClasses = "mb-3 text-sm font-semibold text-neutral-900";
 const DAY_OFF_MODES = ["NORMAL", "OWN_RATE"] as const;
 
 export type ExtraHoursPaySectionProps = {
@@ -133,7 +134,7 @@ export const ExtraHoursPaySection = ({
 				name="hoursLimitsApply"
 				render={({ field }) => (
 					<fieldset className="flex min-w-0 flex-col">
-						<legend className={questionClasses}>
+						<legend className={termsQuestionClasses}>
 							{t(`${key}.covered.question`)}
 						</legend>
 						<div className="flex flex-col gap-3" role="radiogroup">
@@ -212,7 +213,7 @@ export const ExtraHoursPaySection = ({
 					name="extraHoursPaidAs"
 					render={({ field }) => (
 						<div className="flex min-w-0 flex-col">
-							<p className={questionClasses} id={idOf("paidAsLegend")}>
+							<p className={termsQuestionClasses} id={idOf("paidAsLegend")}>
 								{t(`${key}.paidAs.legend`)}
 							</p>
 							<div
