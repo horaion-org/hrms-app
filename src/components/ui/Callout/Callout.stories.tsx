@@ -32,6 +32,14 @@ export const Warning: Story = {
 	},
 };
 
+/** Something that holds, confirmed. */
+export const Success: Story = {
+	args: {
+		tone: "success",
+		children: "Validated: no rule broken",
+	},
+};
+
 /** Something that blocks the next step until it is fixed. */
 export const Blocking: Story = {
 	args: {

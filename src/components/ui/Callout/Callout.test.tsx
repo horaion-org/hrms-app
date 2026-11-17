@@ -32,6 +32,15 @@ describe("Callout", () => {
 		);
 	});
 
+	it("given_theSuccessTone_when_rendered_then_confirmsInSuccessColours", () => {
+		render(<Callout tone="success">Validated: no rule broken</Callout>);
+
+		expect(screen.getByRole("note")).toHaveClass(
+			"border-success-400",
+			"bg-success-50"
+		);
+	});
+
 	it("given_theErrorTone_when_rendered_then_namesWhatBlocksInErrorColours", () => {
 		render(<Callout tone="error">2 constraints need attention.</Callout>);
 

@@ -7,13 +7,15 @@ export type CountBadgeProps = Omit<
 	"children"
 > & {
 	count: number | undefined;
-	tone: "active" | "inactive" | "disabled";
+	/** Warning counts what needs a look but does not block, beside an inactive count. */
+	tone: "active" | "inactive" | "disabled" | "warning";
 };
 
 const toneClasses: Record<CountBadgeProps["tone"], string> = {
 	active: "bg-ink-blue-900 text-white",
 	inactive: "bg-neutral-300 text-neutral-800",
 	disabled: "bg-neutral-200 text-neutral-400",
+	warning: "bg-warning-100 text-neutral-900",
 };
 
 export const CountBadge = ({

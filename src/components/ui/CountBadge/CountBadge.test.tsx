@@ -40,4 +40,9 @@ describe("Count badge", () => {
 		render(<CountBadge count={count} tone="inactive" />);
 		expect(screen.getByText(text)).toBeVisible();
 	});
+
+	it("draws the warning tone in amber", () => {
+		render(<CountBadge count={2} tone="warning" />);
+		expect(screen.getByText("2")).toHaveClass("bg-warning-100");
+	});
 });
