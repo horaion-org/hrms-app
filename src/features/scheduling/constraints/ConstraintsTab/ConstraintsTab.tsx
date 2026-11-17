@@ -7,7 +7,6 @@ import { matchesSearch } from "@/common/matchesSearch";
 import type { FunctionComponent } from "@/common/types";
 import type { SelectOption } from "@/components/forms/Select";
 import { Button } from "@/components/ui/Button";
-import { Callout } from "@/components/ui/Callout";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { LockIcon } from "@/components/ui/LockIcon";
 import { placeOf } from "@/features/organisation/assignmentTargets";
@@ -44,6 +43,7 @@ import {
 	constraintTypeLookOf,
 } from "@/features/scheduling/constraints/constraintTypeLooks";
 import { needsAttention } from "@/features/scheduling/constraints/valueProblems";
+import { ConstraintNoticeCallout } from "@/features/scheduling/constraints/ConstraintNoticeCallout";
 import { useConstraintActions } from "@/features/scheduling/constraints/useConstraintActions";
 import { useConstraintOptions } from "@/features/scheduling/constraints/useConstraintOptions";
 import { useConstraintsInUnits } from "@/features/scheduling/constraints/useConstraintsInUnits";
@@ -277,13 +277,13 @@ export const ConstraintsTab = ({
 		}
 	);
 
-	// A staffing rule that can never be met: the live rule against who holds its job titles now.
+	// A staffing rule asking for more people than hold its job titles now: a warning (generation uses it, short), not a fix.
 	const capacityOf = (
 		constraint: DepartmentConstraint
 	): CapacityProblem | undefined =>
 		holders && capacityProblemOf(constraint, holders);
 	const needsFixing = (constraint: DepartmentConstraint): boolean =>
-		needsAttention(constraint.values) || capacityOf(constraint) !== undefined;
+		needsAttention(constraint.values);
 	const listTypes =
 		listOptions.status === "ready" ? listOptions.options.types : [];
 	// The company's once-only rules in the department being added to: adding that kind is refused, so its card opens the company's rule instead.
@@ -309,6 +309,9 @@ export const ConstraintsTab = ({
 		shownRows,
 		typeGroupsOf(listTypes).map((group) => group.category),
 		needsFixing
+	);
+	const shortRules = shownRows.filter(
+		(constraint) => capacityOf(constraint) !== undefined
 	);
 	// What needs attention but the filter leaves out, so the banner says so.
 	const attentionOutside =
@@ -522,30 +525,27 @@ export const ConstraintsTab = ({
 			{list.status === "ready" ? (
 				<div className="mt-8 flex flex-col gap-8">
 					{(laidOut.needingAttention.length > 0 || attentionOutside > 0) && (
-						<Callout tone="error">
-							{laidOut.needingAttention.length > 0 &&
-								t(`${key}.attention`, {
-									count: laidOut.needingAttention.length,
-								})}{" "}
-							{laidOut.needingAttention.map((constraint, index) => (
-								<span key={constraint.constraintId}>
-									{index > 0 && " · "}
-									<Button
-										variant="textlink"
-										onClick={() => {
-											showRow(constraint);
-										}}
-									>
-										{constraint.name}
-									</Button>
-								</span>
-							))}
-							{attentionOutside > 0 && (
-								<span className="block">
-									{t(`${key}.attentionOutside`, { count: attentionOutside })}
-								</span>
-							)}
-						</Callout>
+						<ConstraintNoticeCallout
+							constraints={laidOut.needingAttention}
+							tone="error"
+							footnote={
+								attentionOutside > 0
+									? t(`${key}.attentionOutside`, { count: attentionOutside })
+									: undefined
+							}
+							lead={t(`${key}.attention`, {
+								count: laidOut.needingAttention.length,
+							})}
+							onShow={showRow}
+						/>
+					)}
+					{shortRules.length > 0 && (
+						<ConstraintNoticeCallout
+							constraints={shortRules}
+							lead={t(`${key}.shortRules`, { count: shortRules.length })}
+							tone="warning"
+							onShow={showRow}
+						/>
 					)}
 					{shownRows.length > 0 && (
 						<div className="flex justify-end gap-6">

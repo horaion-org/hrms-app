@@ -99,7 +99,7 @@ export const ConstraintRow = ({
 					}}
 				/>
 				{capacity && (
-					<p className="mt-2 flex items-start gap-2 text-xs text-error-700">
+					<p className="mt-2 flex items-start gap-2 text-xs text-warning-800">
 						<AlertIcon aria-hidden="true" className="size-4 shrink-0" />
 						{t(`${key}.row.capacity`, {
 							count: capacity.peopleWithTitles,

@@ -4282,8 +4282,8 @@
 				"fixLabel": "Fix {{name}}",
 				"makeStricter": "Make stricter",
 				"changeHere": "Change here",
-				"capacity_one": "Only {{count}} person holds {{titles}}, but it asks for {{headcount}}, so it can never be met.",
-				"capacity_other": "Only {{count}} people hold {{titles}}, but it asks for {{headcount}}, so it can never be met.",
+				"capacity_one": "It asks for {{headcount}}, but only {{count}} person holds {{titles}}, so its shifts will be short until more people hold it or the number is lowered.",
+				"capacity_other": "It asks for {{headcount}}, but only {{count}} people hold {{titles}}, so its shifts will be short until more people hold it or the number is lowered.",
 				"locks": {
 					"LOCKED": "Always applies",
 					"DEFAULT": "Ticked by default",
@@ -5240,7 +5240,9 @@
 			"collapseAll": "Collapse all",
 			"expandAll": "Expand all",
 			"attentionOutside_one": "{{count}} more needs attention outside this filter.",
-			"attentionOutside_other": "{{count}} more need attention outside this filter."
+			"attentionOutside_other": "{{count}} more need attention outside this filter.",
+			"shortRules_one": "{{count}} staffing rule asks for more people than hold its job titles. Rosters still use it, but its shifts will be short until more people hold the titles or the number is lowered:",
+			"shortRules_other": "{{count}} staffing rules ask for more people than hold their job titles. Rosters still use them, but their shifts will be short until more people hold the titles or the numbers are lowered:"
 		},
 		"readiness": {
 			"departmentsNotReady_one": "{{count}} department isn’t ready to schedule:",

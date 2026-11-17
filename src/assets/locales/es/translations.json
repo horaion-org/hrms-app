@@ -4082,8 +4082,8 @@
 				"fixLabel": "Corregir {{name}}",
 				"makeStricter": "Hacer más estricta",
 				"changeHere": "Cambiar aquí",
-				"capacity_one": "Solo {{count}} persona tiene {{titles}}, pero pide {{headcount}}, así que nunca se puede cumplir.",
-				"capacity_other": "Solo {{count}} personas tienen {{titles}}, pero pide {{headcount}}, así que nunca se puede cumplir.",
+				"capacity_one": "Pide {{headcount}}, pero solo {{count}} persona tiene {{titles}}, así que sus turnos quedarán cortos hasta que más personas lo tengan o se baje el número.",
+				"capacity_other": "Pide {{headcount}}, pero solo {{count}} personas tienen {{titles}}, así que sus turnos quedarán cortos hasta que más personas lo tengan o se baje el número.",
 				"locks": {
 					"LOCKED": "Siempre se aplica",
 					"DEFAULT": "Marcada por defecto",
@@ -5040,7 +5040,9 @@
 			"collapseAll": "Plegar todo",
 			"expandAll": "Desplegar todo",
 			"attentionOutside_one": "{{count}} más necesita atención fuera de este filtro.",
-			"attentionOutside_other": "{{count}} más necesitan atención fuera de este filtro."
+			"attentionOutside_other": "{{count}} más necesitan atención fuera de este filtro.",
+			"shortRules_one": "{{count}} regla de personal pide más personas de las que tienen sus puestos. Los cuadrantes la siguen usando, pero sus turnos quedarán cortos hasta que más personas tengan los puestos o se baje el número:",
+			"shortRules_other": "{{count}} reglas de personal piden más personas de las que tienen sus puestos. Los cuadrantes las siguen usando, pero sus turnos quedarán cortos hasta que más personas tengan los puestos o se bajen los números:"
 		},
 		"readiness": {
 			"departmentsNotReady_one": "{{count}} departamento no está listo para planificar:",
