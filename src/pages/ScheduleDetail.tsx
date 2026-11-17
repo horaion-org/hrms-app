@@ -69,9 +69,6 @@ import { ScheduleMenu } from "@/features/scheduling/ScheduleMenu";
 import {
 	decidable,
 	GENERATION_POLL_INTERVAL_MS,
-	generationInProgress,
-	hasRoster,
-	newestRunFailed,
 	regenerable,
 	rosterRunId,
 } from "@/features/scheduling/schedules/api";
@@ -89,8 +86,8 @@ import { partLinesOf } from "@/features/scheduling/schedules/partLines";
 import { scheduleDetailItems } from "@/features/scheduling/schedules/scheduleDetails";
 import {
 	rosterShown,
+	scheduleNoticeFactsOf,
 	scheduleNotices,
-	type ScheduleNoticeFacts,
 	type ScheduleNoticeId,
 } from "@/features/scheduling/schedules/scheduleNotices";
 import { weekPassed } from "@/features/scheduling/schedules/weekPassed";
@@ -520,18 +517,11 @@ const ApiSchedule = ({
 		daysText,
 		t
 	);
-	const noticeFacts: ScheduleNoticeFacts = {
-		status: schedule.status,
-		generating: generationInProgress(schedule),
-		hasRoster: hasRoster(schedule),
-		newestRunFailed: newestRunFailed(schedule),
+	const noticeFacts = scheduleNoticeFactsOf(schedule, {
 		weekPublishedElsewhere: weekPublishedBy !== undefined,
 		weekPassed: passed,
-		rulesChanged:
-			scheduleMonth?.weeks.find(
-				(week) => week.scheduleId === schedule.scheduleId
-			)?.rulesChanged === true,
-	};
+		monthWeeks: scheduleMonth?.weeks,
+	});
 	const moment = dateTimeFormatIn(formattingLocale(i18n), schedule.timeZone, {
 		dateStyle: "medium",
 		timeStyle: "short",
