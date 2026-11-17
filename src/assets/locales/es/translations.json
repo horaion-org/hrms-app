@@ -3728,8 +3728,8 @@
 				"MAX_CALL_BACKS_PER_PERSON_zero": "Nadie es llamado a trabajar en un día de descanso o libre.",
 				"MAX_CALL_BACKS_PER_PERSON_one": "Cualquiera puede ser llamado a trabajar en un día de descanso o libre como máximo <CALL_BACKS/> vez por cuadrante.",
 				"MAX_CALL_BACKS_PER_PERSON_other": "Cualquiera puede ser llamado a trabajar en un día de descanso o libre como máximo <CALL_BACKS/> veces por cuadrante.",
-				"OVERTIME_STRETCH_one": "Cuando falta un puesto durante algunas horas de un turno, alguien del turno justo anterior o posterior puede quedarse más o empezar antes, hasta <STRETCH_HOURS/> hora. Solo se usa al preguntar al motor en Buscar cobertura, nunca al generar un cuadrante.",
-				"OVERTIME_STRETCH_other": "Cuando falta un puesto durante algunas horas de un turno, alguien del turno justo anterior o posterior puede quedarse más o empezar antes, hasta <STRETCH_HOURS/> horas. Solo se usa al preguntar al motor en Buscar cobertura, nunca al generar un cuadrante.",
+				"OVERTIME_STRETCH_one": "Cuando a un turno le falta gente durante algunas horas, alguien del turno justo anterior o posterior puede quedarse más o empezar antes, hasta <STRETCH_HOURS/> hora, y cubre esas horas. Solo se usa al preguntar al motor en Buscar cobertura, nunca al generar un cuadrante.",
+				"OVERTIME_STRETCH_other": "Cuando a un turno le falta gente durante algunas horas, alguien del turno justo anterior o posterior puede quedarse más o empezar antes, hasta <STRETCH_HOURS/> horas, y cubre esas horas. Solo se usa al preguntar al motor en Buscar cobertura, nunca al generar un cuadrante.",
 				"PAY_RATES": {
 					"rates": "Una hora extra cuesta el <OVERTIME_PERCENT/> % de una hora normal, y una hora de trabajo en día de descanso el <REST_DAY_WORK_PERCENT/> %.",
 					"dayOffOrdinary": "El trabajo en un día libre cuenta como horas ordinarias.",
@@ -3993,7 +3993,7 @@
 				"MAX_CALL_BACKS_PER_PERSON": "Por ejemplo: Cualquiera puede ser llamado a trabajar en un día de descanso o libre como máximo 2 veces por cuadrante.",
 				"PAY_RATES": "Estas tarifas solo orientan qué cuadrante prefiere el motor; no se usan para pagar.",
 				"NO_OVERTIME_WHEN_GENERATING": "Por ejemplo: los turnos que el equipo no puede cubrir sin horas adicionales quedan abiertos, y eliges las horas extra al preguntar al motor en Buscar cobertura.",
-				"OVERTIME_STRETCH": "Por ejemplo: no hay Supervisor en el turno de tarde hasta las 16:00, así que el Supervisor del turno de mañana puede quedarse 2 horas más. Una ampliación cubre un puesto que falta durante algunas horas de un turno; nunca suma una persona a la plantilla de un turno.",
+				"OVERTIME_STRETCH": "Por ejemplo: no hay Supervisor en el turno de tarde hasta las 16:00, así que el Supervisor del turno de mañana puede quedarse 2 horas más. Una ampliación cubre las horas de un turno con falta de gente en las que se solapa; nunca suma una persona al propio turno.",
 				"KEEP_DAYS_OFF_TOGETHER": "Nunca cuesta cobertura: solo elige entre cuadrantes que, por lo demás, son iguales."
 			},
 			"fieldHints": {
@@ -4053,7 +4053,7 @@
 				"MAX_CALL_BACKS_PER_PERSON": "Cada cuánto se puede llamar a alguien en un día de descanso o libre.",
 				"PAY_RATES": "Lo que cuestan las horas adicionales, para que el motor prefiera cuadrantes más baratos.",
 				"NO_OVERTIME_WHEN_GENERATING": "Los cuadrantes generados dejan turnos abiertos en vez de añadir horas extra.",
-				"OVERTIME_STRETCH": "Permite que alguien que ya trabaja se quede más o empiece antes para cubrir un puesto que falta durante algunas horas de un turno. Solo se usa al preguntar al motor en Buscar cobertura, nunca al generar un cuadrante."
+				"OVERTIME_STRETCH": "Permite que alguien que ya trabaja se quede más o empiece antes para cubrir las horas de un turno con falta de gente. Solo se usa al preguntar al motor en Buscar cobertura, nunca al generar un cuadrante."
 			},
 			"categoryDescriptions": {
 				"STAFFING": "Quién debe estar en cada turno, y cuántos.",

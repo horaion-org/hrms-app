@@ -3928,8 +3928,8 @@
 				"MAX_CALL_BACKS_PER_PERSON_zero": "Nobody is called back to work on a rest or off day.",
 				"MAX_CALL_BACKS_PER_PERSON_one": "Everyone may be called back to work on a rest or off day at most <CALL_BACKS/> time in a roster.",
 				"MAX_CALL_BACKS_PER_PERSON_other": "Everyone may be called back to work on a rest or off day at most <CALL_BACKS/> times in a roster.",
-				"OVERTIME_STRETCH_one": "When a role is missing for some hours of a shift, someone on the shift just before or after it may stay on or start early by up to <STRETCH_HOURS/> hour. Used only when you ask the engine in Find cover, never when a roster is generated.",
-				"OVERTIME_STRETCH_other": "When a role is missing for some hours of a shift, someone on the shift just before or after it may stay on or start early by up to <STRETCH_HOURS/> hours. Used only when you ask the engine in Find cover, never when a roster is generated.",
+				"OVERTIME_STRETCH_one": "When a shift is short for some hours, someone on the shift just before or after it may stay on or start early by up to <STRETCH_HOURS/> hour, and fills those hours. Used only when you ask the engine in Find cover, never when a roster is generated.",
+				"OVERTIME_STRETCH_other": "When a shift is short for some hours, someone on the shift just before or after it may stay on or start early by up to <STRETCH_HOURS/> hours, and fills those hours. Used only when you ask the engine in Find cover, never when a roster is generated.",
 				"PAY_RATES": {
 					"rates": "An hour of overtime costs <OVERTIME_PERCENT/>% of a normal hour, and an hour of work on a rest day <REST_DAY_WORK_PERCENT/>%.",
 					"dayOffOrdinary": "Work on a day off counts as ordinary hours.",
@@ -4193,7 +4193,7 @@
 				"MAX_CALL_BACKS_PER_PERSON": "For example: Everyone may be called back to work on a rest or off day at most 2 times in a roster.",
 				"PAY_RATES": "These rates only guide which roster the engine prefers; they are not used for pay.",
 				"NO_OVERTIME_WHEN_GENERATING": "For example: shifts the team can’t staff without extra hours stay open, and you choose overtime when you ask the engine in Find cover.",
-				"OVERTIME_STRETCH": "For example: no Supervisor is on the Late shift until 16:00, so the Supervisor on Early may stay on for 2 hours. A stretch covers a role missing for some hours of a shift; it never adds a person to a shift’s headcount.",
+				"OVERTIME_STRETCH": "For example: no Supervisor is on the Late shift until 16:00, so the Supervisor on Early may stay on for 2 hours. A stretch fills the hours of a short shift it overlaps; it never adds a person to the shift itself.",
 				"KEEP_DAYS_OFF_TOGETHER": "It never costs cover: it only chooses between rosters that are otherwise equal."
 			},
 			"fieldHints": {
@@ -4253,7 +4253,7 @@
 				"MAX_CALL_BACKS_PER_PERSON": "How often someone may be called in on a rest or off day.",
 				"PAY_RATES": "What extra hours cost, so the engine prefers cheaper rosters.",
 				"NO_OVERTIME_WHEN_GENERATING": "Generated rosters leave shifts open rather than add overtime.",
-				"OVERTIME_STRETCH": "Lets someone already working stay on or start early to cover a role missing for some hours of a shift. Used only when you ask the engine in Find cover, never when a roster is generated."
+				"OVERTIME_STRETCH": "Lets someone already working stay on or start early to fill the hours of a short shift. Used only when you ask the engine in Find cover, never when a roster is generated."
 			},
 			"categoryDescriptions": {
 				"STAFFING": "Who must be on each shift, and how many.",
