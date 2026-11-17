@@ -7,6 +7,7 @@ import { ChevronDownIcon } from "@/components/ui/Icon";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import {
 	GROUPS_STARTING_CLOSED,
+	topicGist,
 	type IssueGroup,
 	type RosterIssue,
 } from "@/features/scheduling/roster/rosterIssueGroups";
@@ -26,7 +27,7 @@ export type IssueGroupSectionProps = {
 
 /**
  * One group, foldable by its heading (its tone's icon, title and count);
- * folded, a one-line gist of who it names. Open at first, unless it is one
+ * folded, a line counting what it holds by kind. Open at first, unless it is one
  * of `GROUPS_STARTING_CLOSED`.
  */
 export const IssueGroupSection = ({
@@ -42,9 +43,7 @@ export const IssueGroupSection = ({
 	const listId = useId();
 	const { badgeTone, icon: GroupIcon, textTone } = GROUP_LOOKS[group];
 	const title = t(`scheduling.issues.groups.${group}`);
-	const gist = t("scheduling.constraints.list", {
-		items: [...new Set(items.map((issue) => issue.who))],
-	});
+	const gist = topicGist(items, t);
 	return (
 		<section className="flex flex-col border-t border-neutral-300 pt-2">
 			<button

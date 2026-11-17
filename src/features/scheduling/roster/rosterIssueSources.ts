@@ -2,11 +2,13 @@ import type { TFunction } from "i18next";
 import { formatDay } from "@/common/formatDay";
 import { timeRangeText } from "@/features/leave/dayPortion";
 import {
+	diagnosticLabel,
 	diagnosticSentence,
 	diagnosticSubject,
 } from "@/features/scheduling/roster/findings/diagnostics";
 import {
 	gapIssueKey,
+	issueTopic,
 	rosterIssues,
 	type IssueNote,
 	type RosterIssue,
@@ -75,6 +77,7 @@ const toDecideIssue = (row: ScheduleAssignment, t: TFunction): RosterIssue => {
 	return {
 		key: `decide|${row.assignmentId}`,
 		group: "mustFix",
+		topic: issueTopic("daysToDecide", t),
 		who: name,
 		memberProfileId: row.member?.memberProfileId ?? null,
 		day: row.day,
@@ -109,6 +112,7 @@ const leaveAndCoverIssue = (
 			...base,
 			key: `leave|${row.assignmentId}`,
 			group: "forInformation",
+			topic: issueTopic("leaveAndCover", t),
 			time: null,
 			rule: row.leaveTypeName
 				? `${marker}: ${leaveLineText(row.leaveTypeName, leavePortionOf(row), t)}`
@@ -119,6 +123,7 @@ const leaveAndCoverIssue = (
 		...base,
 		key: gapIssueKey(shift.shiftId, row.day) ?? `leave|${row.assignmentId}`,
 		group: "mustFix",
+		topic: issueTopic("shiftsShort", t),
 		time:
 			row.uncoveredFrom && row.uncoveredTo
 				? timeRangeText(row.uncoveredFrom, row.uncoveredTo, t)
@@ -150,6 +155,7 @@ const listIssues = ({
 			{
 				key: `start|${row.key}`,
 				group: "forInformation",
+				topic: issueTopic("inARow", t),
 				who: name,
 				memberProfileId: row.memberProfileId ?? null,
 				day: null,
@@ -181,6 +187,7 @@ const findingIssues = (
 		.map((conflict): RosterIssue => ({
 			key: `conflict|${conflict.conflictId}`,
 			group: "mustFix",
+			topic: issueTopic("clashes", t),
 			who: who(conflict.employeeUuid),
 			memberProfileId: conflict.employeeUuid,
 			day: conflict.date,
@@ -191,7 +198,9 @@ const findingIssues = (
 	const errors = (withErrors ? findings.errors : []).flatMap((violation) =>
 		violation.messages.map((message): RosterIssue => ({
 			key: `error|${violation.employeeId ?? ""}|${violation.date ?? ""}|${message}`,
-			group: message.startsWith(IF_POSSIBLE_NOT_MET) ? "notMet" : "mustFix",
+			...(message.startsWith(IF_POSSIBLE_NOT_MET)
+				? { group: "notMet", topic: issueTopic("notMet", t) }
+				: { group: "mustFix", topic: issueTopic("rulesBroken", t) }),
 			who: who(violation.employeeId),
 			memberProfileId: violation.employeeId,
 			day: violation.date,
@@ -206,6 +215,7 @@ const findingIssues = (
 			messages.map((message): RosterIssue => ({
 				key: `message|${employeeId}|${day}|${message}`,
 				group: "forInformation",
+				topic: issueTopic("dayNotes", t),
 				who: who(employeeId),
 				memberProfileId: employeeId,
 				day,
@@ -238,6 +248,7 @@ const setupNoteIssues = ({
 			...diagnosticSubject(diagnostic, names, t),
 			key: `setup|${diagnostic.code}|${detail}`,
 			group: "forInformation",
+			topic: diagnosticLabel(diagnostic.code, t),
 			time: null,
 			rule: detail,
 			action: { kind: "show" },

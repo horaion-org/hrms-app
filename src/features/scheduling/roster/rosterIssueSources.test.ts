@@ -133,7 +133,11 @@ describe("issuesOfRoster", () => {
 			input({
 				startingRuns: new Map([["mp-1", 3]]),
 				noteLines: [
-					{ title: "5 people's days changed", detail: "Regenerate to plan" },
+					{
+						title: "5 people's days changed",
+						detail: "Regenerate to plan",
+						topic: "Days before changed",
+					},
 				],
 			})
 		);

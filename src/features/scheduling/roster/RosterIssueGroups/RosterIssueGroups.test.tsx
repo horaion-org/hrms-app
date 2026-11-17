@@ -52,7 +52,7 @@ describe("RosterIssueGroups", () => {
 		expect(screen.getAllByRole("button", { expanded: true })).toHaveLength(1);
 	});
 
-	it("folds a group with a real button, leaving a gist of who it names", async () => {
+	it("folds a group with a real button, leaving a count of what it holds by kind", async () => {
 		render(<RosterIssueGroups issues={rosterIssuesFixture()} />);
 
 		const fold = screen.getByRole("button", {
@@ -63,7 +63,7 @@ describe("RosterIssueGroups", () => {
 		expect(fold).toHaveAttribute("aria-expanded", "false");
 		expect(fold).toHaveAttribute("aria-controls");
 		expect(
-			screen.getByText("Ben Ortiz", { selector: "p" })
+			screen.getByText("Asked if possible: 1", { selector: "p" })
 		).toBeInTheDocument();
 	});
 

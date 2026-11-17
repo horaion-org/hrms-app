@@ -4574,7 +4574,20 @@
 			"ruleSentence": "{{sentence}} Regla: {{rule}}",
 			"ruleOnly": "Regla: {{rule}}",
 			"brokenSomewhere": "Se incumple, pero el motor no pudo indicar a quién ni qué día.",
-			"notMetSomewhere": "No se cumplió, pero el motor no pudo indicar a quién ni qué día."
+			"notMetSomewhere": "No se cumplió, pero el motor no pudo indicar a quién ni qué día.",
+			"topicCount": "{{topic}}: {{count}}",
+			"topics": {
+				"shiftsShort": "Turnos sin cubrir",
+				"rulesBroken": "Reglas incumplidas",
+				"notMet": "Pedidas si es posible",
+				"daysToDecide": "Días por decidir",
+				"clashes": "Conflictos",
+				"leaveAndCover": "Permisos y coberturas",
+				"inARow": "Días seguidos antes",
+				"dayNotes": "Notas del día",
+				"startChanged": "Días anteriores cambiados",
+				"fromGeneration": "Notas de la generación"
+			}
 		},
 		"rosterMarkers": {
 			"leaveRequested": "Permiso solicitado",

@@ -44,11 +44,33 @@ export type RosterIssue = {
 	time: string | null;
 	/** Why it is listed and, where there is something to do, what to do, the rule's name last. */
 	rule: string;
+	/** What kind of fact it is, in a few plain words ("Shifts short"), which a folded group counts by. */
+	topic: string;
 	action: IssueAction;
 };
 
-/** A note with nothing to fix: a short title, then what it means and what to do. */
-export type IssueNote = { title: string; detail: string };
+/** A note with nothing to fix: a short title, then what it means and what to do, and its kind. */
+export type IssueNote = { title: string; detail: string; topic: string };
+
+/** The kinds of fact the app words itself; the engine's setup notes go by their own kind. */
+export type IssueTopic =
+	| "shiftsShort"
+	| "rulesBroken"
+	| "notMet"
+	| "daysToDecide"
+	| "clashes"
+	| "leaveAndCover"
+	| "inARow"
+	| "dayNotes"
+	| "startChanged"
+	| "fromGeneration";
+
+/** A kind of fact in plain words. */
+export const issueTopic = (topic: IssueTopic, t: TFunction): string =>
+	t(`${key}.topics.${topic}`);
+
+/** Each group's rule rows, by kind. */
+const RULE_TOPICS = { mustFix: "rulesBroken", notMet: "notMet" } as const;
 
 /** What the Issues groups are built from: today's panel inputs. */
 export type RosterIssueInput = {
@@ -92,6 +114,7 @@ const gapIssue = (
 	return {
 		key: gapIssueKey(shiftId, gap.date) ?? `gap|${gap.conflictId}`,
 		group: "mustFix",
+		topic: issueTopic("shiftsShort", t),
 		who: t(`${key}.jobShort`, {
 			count: gap.missing,
 			job: roleNames.get(gap.roleUuid) ?? t(`${key}.unknownJob`),
@@ -151,6 +174,7 @@ const placelessRuleIssue = (
 ): RosterIssue => ({
 	key: `${group}|${rule.rule}|${ruleName}|${messages.join(" ")}`,
 	group,
+	topic: issueTopic(RULE_TOPICS[group], t),
 	who: ruleName,
 	memberProfileId: null,
 	day: null,
@@ -176,6 +200,7 @@ const ruleIssues = (
 		return {
 			key: `${group}|${rule.rule}|${ruleName}|${violation.employeeId ?? ""}|${violation.date ?? ""}`,
 			group,
+			topic: issueTopic(RULE_TOPICS[group], t),
 			who: violation.employeeId
 				? (memberNames.get(violation.employeeId) ??
 					t("scheduling.detail.formerMember"))
@@ -189,9 +214,10 @@ const ruleIssues = (
 	});
 };
 
-const noteIssue = ({ title, detail }: IssueNote): RosterIssue => ({
+const noteIssue = ({ title, detail, topic }: IssueNote): RosterIssue => ({
 	key: `note|${title}|${detail}`,
 	group: "forInformation",
+	topic,
 	who: title,
 	memberProfileId: null,
 	day: null,
@@ -242,6 +268,25 @@ export const issueSummaryParts = (
 		group,
 		text: t(`${key}.summary.${group}`, { count: counts[group] }),
 	}));
+
+/** How many items of each kind, in the order each kind first appears. */
+export const topicCounts = (
+	issues: ReadonlyArray<RosterIssue>
+): Array<{ topic: string; count: number }> => {
+	const counts = new Map<string, number>();
+	for (const { topic } of issues)
+		counts.set(topic, (counts.get(topic) ?? 0) + 1);
+	return [...counts].map(([topic, count]) => ({ topic, count }));
+};
+
+/** A folded group's one line: "Rest carried in from before: 2 · Days before changed: 1". */
+export const topicGist = (
+	issues: ReadonlyArray<RosterIssue>,
+	t: TFunction
+): string =>
+	topicCounts(issues)
+		.map((part) => t(`${key}.topicCount`, part))
+		.join(" · ");
 
 /** Orders items by person or by day. */
 export type IssueOrder = "byPerson" | "byDay";

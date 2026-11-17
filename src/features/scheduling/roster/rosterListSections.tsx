@@ -21,9 +21,10 @@ import {
 	daysToDecideItems,
 	leaveAndCoverItems,
 } from "@/features/scheduling/roster/rosterPanels";
-import type {
-	IssueNote,
-	RosterIssue,
+import {
+	issueTopic,
+	type IssueNote,
+	type RosterIssue,
 } from "@/features/scheduling/roster/rosterIssueGroups";
 import { RosterIssueGroups } from "@/features/scheduling/roster/RosterIssueGroups";
 import type { RosterPanel } from "@/features/scheduling/roster/rosterSearch";
@@ -109,6 +110,7 @@ export const issueNoteLines = ({
 						count: membersWithChangedStart,
 					}),
 					detail: t("scheduling.issues.startChanged.detail"),
+					topic: issueTopic("startChanged", t),
 				},
 			]
 		: []),
@@ -117,6 +119,7 @@ export const issueNoteLines = ({
 				{
 					title: t("scheduling.issues.fromGeneration.title"),
 					detail: t("scheduling.issues.fromGeneration.detail"),
+					topic: issueTopic("fromGeneration", t),
 				},
 			]
 		: []),

@@ -134,6 +134,7 @@ describe("issueNoteLines", () => {
 			{
 				title: "scheduling.issues.startChanged.title(2)",
 				detail: "scheduling.issues.startChanged.detail",
+				topic: "scheduling.issues.topics.startChanged",
 			},
 		]);
 	});
@@ -176,6 +177,7 @@ describe("issueNoteLines", () => {
 			{
 				title: "scheduling.issues.fromGeneration.title",
 				detail: "scheduling.issues.fromGeneration.detail",
+				topic: "scheduling.issues.topics.fromGeneration",
 			},
 		]);
 		expect(

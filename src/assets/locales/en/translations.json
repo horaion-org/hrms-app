@@ -4774,7 +4774,20 @@
 			"ruleSentence": "{{sentence}} Rule: {{rule}}",
 			"ruleOnly": "Rule: {{rule}}",
 			"brokenSomewhere": "Broken, but the engine could not say who or which day.",
-			"notMetSomewhere": "Not met, but the engine could not say who or which day."
+			"notMetSomewhere": "Not met, but the engine could not say who or which day.",
+			"topicCount": "{{topic}}: {{count}}",
+			"topics": {
+				"shiftsShort": "Shifts short",
+				"rulesBroken": "Rules broken",
+				"notMet": "Asked if possible",
+				"daysToDecide": "Days to decide",
+				"clashes": "Clashes",
+				"leaveAndCover": "Leave and cover",
+				"inARow": "Days in a row before",
+				"dayNotes": "Day notes",
+				"startChanged": "Days before changed",
+				"fromGeneration": "Notes from generation"
+			}
 		},
 		"rosterMarkers": {
 			"leaveRequested": "Leave requested",

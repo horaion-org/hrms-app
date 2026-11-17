@@ -5,6 +5,7 @@ import {
 	staffingGapFixture,
 } from "@/features/scheduling/rulesCheck/fixtures";
 import {
+	topicCounts,
 	issueCounts,
 	issueSummaryParts,
 	issuesOfGroup,
@@ -230,8 +231,16 @@ describe("rosterIssues", () => {
 				brokenMusts: [brokenMust, brokenMust],
 				gaps: [staffingGapFixture(), staffingGapFixture()],
 				notes: [
-					{ title: "Roster note", detail: "Public holiday on Monday" },
-					{ title: "Roster note", detail: "Public holiday on Monday" },
+					{
+						title: "Roster note",
+						detail: "Public holiday on Monday",
+						topic: "Day notes",
+					},
+					{
+						title: "Roster note",
+						detail: "Public holiday on Monday",
+						topic: "Day notes",
+					},
 				],
 			})
 		);
@@ -270,6 +279,33 @@ describe("issueSummaryParts", () => {
 		expect(
 			issueSummaryParts({ mustFix: 0, notMet: 0, forInformation: 0 }, t)
 		).toEqual([]);
+	});
+});
+
+describe("topicCounts", () => {
+	it("counts every kind in the order it first appears, none left out", () => {
+		const issues = rosterIssues(
+			input({
+				gaps: [
+					staffingGapFixture(),
+					staffingGapFixture({ conflictId: "c-2", date: "2026-10-18" }),
+				],
+				brokenMusts: [brokenMust],
+				notes: [
+					{ title: "Note", detail: "Detail", topic: "Days before changed" },
+				],
+			})
+		);
+
+		expect(topicCounts(issues)).toEqual([
+			{ topic: "scheduling.issues.topics.shiftsShort", count: 2 },
+			{ topic: "scheduling.issues.topics.rulesBroken", count: 2 },
+			{ topic: "Days before changed", count: 1 },
+		]);
+	});
+
+	it("has nothing to count in an empty group", () => {
+		expect(topicCounts([])).toEqual([]);
 	});
 });
 
