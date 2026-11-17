@@ -25,6 +25,10 @@ export type CreateScheduleSearch = {
 	week?: string;
 	/** A new month run's month, "yyyy-MM"; with no draft named, the month wizard opens. */
 	month?: string;
+	/** "dates": Setup opens on Dates, with these first and last days (ISO dates). */
+	for?: "dates";
+	firstDay?: string;
+	lastDay?: string;
 };
 
 const isId = (value: unknown): value is string =>
@@ -35,7 +39,16 @@ const isIsoDate = (value: unknown): value is string =>
 
 export const Route = createFileRoute("/_authenticated/_app/scheduling_/new")({
 	validateSearch: (search: Record<string, unknown>): CreateScheduleSearch => {
-		const { step, scheduleId, departmentId, department, week, month } = search;
+		const {
+			step,
+			scheduleId,
+			departmentId,
+			department,
+			week,
+			month,
+			firstDay,
+			lastDay,
+		} = search;
 		return {
 			...(isScheduleStep(step) ? { step } : {}),
 			...(isId(scheduleId) ? { scheduleId } : {}),
@@ -43,6 +56,9 @@ export const Route = createFileRoute("/_authenticated/_app/scheduling_/new")({
 			...(isId(department) ? { department } : {}),
 			...(isIsoDate(week) ? { week } : {}),
 			...(typeof month === "string" && isMonth(month) ? { month } : {}),
+			...(search["for"] === "dates" ? { for: "dates" as const } : {}),
+			...(isIsoDate(firstDay) ? { firstDay } : {}),
+			...(isIsoDate(lastDay) ? { lastDay } : {}),
 		};
 	},
 	// Before a draft exists, the header's Branch narrows the Departments it may be created in,

@@ -5374,7 +5374,10 @@
 			}
 		},
 		"roster": {
-			"notInSchedule": "No está en este horario"
+			"notInSchedule": "No está en este horario",
+			"coversCallout": "Este horario cubre {{covered}}. {{rest}} se puede programar más adelante.",
+			"remainingButton": "Programar {{rest}}",
+			"otherPart": "{{days}} están en otro horario."
 		}
 	},
 	"workspace": {

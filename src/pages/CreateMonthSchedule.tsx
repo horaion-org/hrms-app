@@ -1,4 +1,5 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
+import { periodStartingOn } from "@/features/scheduling/periods";
 import { Navigate, useNavigate, useSearch } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import type { TFunction } from "i18next";
@@ -174,9 +175,9 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 	const [setup, setSetup] = useState<MonthSetupValues>();
 	const setupDefaults: MonthSetupValues = setup ?? {
 		departmentId: search.department ?? "",
-		scheduleFor: "month",
-		firstDay: "",
-		lastDay: "",
+		scheduleFor: search.for ?? "month",
+		firstDay: search.firstDay ?? "",
+		lastDay: search.lastDay ?? "",
 		name: "",
 		month:
 			search.month && months.includes(search.month)
@@ -454,6 +455,13 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 				body: {
 					name: weekNameOf(monday),
 					periodStart: monday,
+					// A started week is generated from today on (owner, API ADR-0115): its draft covers today to Sunday.
+					...(monday < branchToday
+						? {
+								coveredFrom: branchToday,
+								coveredTo: periodStartingOn(monday).end,
+							}
+						: {}),
 					includeLeave: settings.includeLeave,
 					includedShiftIds: weekChoice.shiftIds,
 					includedConstraintIds: weekChoice.constraintIds,

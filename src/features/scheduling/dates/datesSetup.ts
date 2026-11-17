@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import { daysOf } from "@/common/weeks";
-import type { DatesPlanWeek } from "@/features/scheduling/dates/api";
+import type { DatesPlanWeek, DayRun } from "@/features/scheduling/dates/api";
 import type {
 	MonthWeek,
 	WeekPart,
@@ -118,3 +118,45 @@ export const namedSpansOf = (
 	}
 	return spans;
 };
+
+/** The day before `date`. */
+const dayBefore = (date: string): string =>
+	dayjs(date).subtract(1, "day").format(iso);
+
+/** A part of a week, by its days. */
+type CoveredWeek = {
+	periodStart: string;
+	periodEnd: string;
+	coveredFrom: string;
+	coveredTo: string;
+};
+
+/** The days of a part's week around it: before it (another part's), and after it, still free or another part's. */
+export type DaysAroundPart = {
+	/** The week's days before this part, which another part holds. */
+	before: DayRun | undefined;
+	/** The week's days after this part. */
+	after: DayRun | undefined;
+	/** Whether a later part already holds the days after. */
+	afterTaken: boolean;
+};
+
+/**
+ * What a part says of its week's other days: the days before it, and the
+ * days after it, which "Schedule the remaining days" offers while no later
+ * part of the week (`parts`, from the month read) holds them.
+ */
+export const daysAroundPart = (
+	schedule: CoveredWeek,
+	parts: ReadonlyArray<WeekPart>
+): DaysAroundPart => ({
+	before:
+		schedule.coveredFrom > schedule.periodStart
+			? { from: schedule.periodStart, to: dayBefore(schedule.coveredFrom) }
+			: undefined,
+	after:
+		schedule.coveredTo < schedule.periodEnd
+			? { from: dayAfter(schedule.coveredTo), to: schedule.periodEnd }
+			: undefined,
+	afterTaken: parts.some((part) => part.coveredFrom > schedule.coveredTo),
+});

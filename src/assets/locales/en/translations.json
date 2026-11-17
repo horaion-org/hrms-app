@@ -5574,7 +5574,10 @@
 			}
 		},
 		"roster": {
-			"notInSchedule": "Not in this schedule"
+			"notInSchedule": "Not in this schedule",
+			"coversCallout": "This schedule covers {{covered}}. {{rest}} can be scheduled later.",
+			"remainingButton": "Schedule {{rest}}",
+			"otherPart": "{{days}} are in another schedule."
 		}
 	},
 	"colourSwatchPicker": {
