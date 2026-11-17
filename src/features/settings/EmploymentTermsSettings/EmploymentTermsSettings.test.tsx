@@ -186,7 +186,7 @@ describe("EmploymentTermsSettings", () => {
 			await within(dialog).findByRole("radio", { name: /Fixed hours, 5 days/ })
 		).toBeChecked();
 		expect(dialog).toHaveTextContent(
-			"Works 44 hours over 5 days a week, 8 hours 48 minutes a day. Sunday is the rest day, every week. Overtime starts after 8 hours 48 minutes in a day or 44 hours in a week. Employment Act hour limits apply: rosters keep them within the work-hour limits."
+			"Works 44 hours over 5 days a week, 8 hours 48 minutes a day. Sunday is the rest day, every week. Overtime starts after 8 hours 48 minutes in a day or 44 hours in a week. Overtime is paid at 1.5 times. Rest day work counts at 2 times. Employment Act hour limits apply: rosters keep them within the work-hour limits."
 		);
 		expect(within(dialog).getByLabelText("Normal hours a day")).toHaveValue(
 			"8:48"

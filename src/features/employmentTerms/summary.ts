@@ -8,6 +8,7 @@ import {
 	durationShort,
 	formatDays,
 } from "@/features/employmentTerms/hours";
+import { formatTimes } from "@/features/employmentTerms/rates";
 
 const key = "employmentTerms.summary";
 
@@ -80,6 +81,38 @@ export const overtimeSentence = (
 	return t(`${key}.overtimeWeek`, { week });
 };
 
+/**
+ * What extra hours earn: "Overtime is paid at 1.5 times." with the rest day's
+ * and a day off's own rates (never for a part-timer, whom rosters give
+ * neither), or "Hours past 44 hours a week earn nothing extra.". Nothing
+ * when the API sent no rate (an older API), rather than a guess.
+ */
+export const paySentence = (
+	fields: WeekFields,
+	partTime: boolean,
+	t: TFunction
+): string | undefined => {
+	if (fields.extraHoursPaidAs === "NOTHING")
+		return t(`${key}.nothingExtra`, {
+			week: durationLong(fields.weekMinutes, t),
+		});
+	if (fields.overtimePercent === null) return undefined;
+	const sentences = [
+		t(`${key}.paidAt`, { times: formatTimes(fields.overtimePercent, t) }),
+	];
+	if (!partTime && fields.restDayWorkPercent !== null)
+		sentences.push(
+			t(`${key}.restDayAt`, {
+				times: formatTimes(fields.restDayWorkPercent, t),
+			})
+		);
+	if (!partTime && fields.dayOffWorkPercent !== null)
+		sentences.push(
+			t(`${key}.dayOffAt`, { times: formatTimes(fields.dayOffWorkPercent, t) })
+		);
+	return sentences.join(" ");
+};
+
 /** Whether the Employment Act's hour limits hold, and what that means for a roster. */
 export const limitsSentence = (fields: WeekFields, t: TFunction): string =>
 	t(fields.hoursLimitsApply ? `${key}.limitsApply` : `${key}.limitsDontApply`);
@@ -96,15 +129,19 @@ export const termsSentence = (
 	fields: WeekFields,
 	reference: TermsReference | undefined,
 	t: TFunction
-): string =>
-	[
+): string => {
+	const partTime = partTimeOf(fields, reference);
+	const pay = paySentence(fields, partTime, t);
+	return [
 		workSentence(fields, t),
-		restSentence(fields, partTimeOf(fields, reference), t),
+		restSentence(fields, partTime, t),
 		...(reference === undefined
 			? []
 			: [overtimeSentence(fields, reference, t)]),
+		...(pay === undefined ? [] : [pay]),
 		limitsSentence(fields, t),
 	].join(" ");
+};
 
 /** The rest day, short: "Rest day Sunday" or "Rest day on the roster". */
 export const restShort = (fields: WeekFields, t: TFunction): string => {
@@ -145,9 +182,10 @@ export const weekLines = (
 };
 
 /**
- * When overtime starts, in a few words for the list: "After 8 h 48 min a
- * day or 44 h a week", "By the week, after 44 h", "Extra hours to 44 h,
- * then overtime". Empty without the API's figures, rather than a guess.
+ * When overtime starts and what it earns, in a few words for the list:
+ * "Overtime after 8 h 48 min a day or 44 h a week, at 1.5 times", "Extra
+ * hours up to 44 h, then overtime, at 1.5 times", "…, nothing extra". Empty
+ * without the API's figures, rather than a guess.
  */
 export const overtimeShort = (
 	fields: WeekFields,
@@ -155,6 +193,22 @@ export const overtimeShort = (
 	t: TFunction
 ): string => {
 	if (reference === undefined) return "";
+	const overtime = overtimeStartShort(fields, reference, t);
+	if (fields.extraHoursPaidAs === "NOTHING")
+		return t(`${key}.list.nothingExtra`, { overtime });
+	if (fields.overtimePercent === null) return overtime;
+	return t(`${key}.list.atRate`, {
+		overtime,
+		times: formatTimes(fields.overtimePercent, t),
+	});
+};
+
+/** When overtime starts, in a few words, before its rate is added. */
+const overtimeStartShort = (
+	fields: WeekFields,
+	reference: TermsReference,
+	t: TFunction
+): string => {
 	const week = durationShort(fields.weekMinutes, t);
 	if (partTimeOf(fields, reference))
 		return reference.fullTimeWeekMinutes === null

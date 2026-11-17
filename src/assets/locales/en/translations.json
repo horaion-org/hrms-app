@@ -5898,8 +5898,14 @@
 				"overtimeDayOrWeek": "Overtime after {{day}} a day or {{week}} a week",
 				"overtimeShiftWork": "Overtime by the week, after {{week}}",
 				"overtimePartTime": "Extra hours up to a full-timer’s week, then overtime",
-				"overtimePartTimeUntil": "Extra hours up to {{full}}, then overtime"
-			}
+				"overtimePartTimeUntil": "Extra hours up to {{full}}, then overtime",
+				"atRate": "{{overtime}}, at {{times}}",
+				"nothingExtra": "{{overtime}}, nothing extra"
+			},
+			"paidAt": "Overtime is paid at {{times}}.",
+			"restDayAt": "Rest day work counts at {{times}}.",
+			"dayOffAt": "Day off work counts at {{times}}.",
+			"nothingExtra": "Hours past {{week}} a week earn nothing extra."
 		},
 		"dialog": {
 			"addTitle": "Add employment terms",
