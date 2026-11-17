@@ -395,6 +395,10 @@ describe("A person's employment terms", () => {
 		const dialog = await screen.findByRole("dialog", {
 			name: "Change employment terms",
 		});
+		await user.click(within(dialog).getByRole("button", { name: /^Terms/ }));
+		await user.click(
+			await screen.findByRole("option", { name: "Five-day week, 44 h" })
+		);
 		await user.click(
 			within(dialog).getByRole("button", { name: "Change terms" })
 		);
@@ -404,6 +408,64 @@ describe("A person's employment terms", () => {
 				"They already have a change on this date. Correct that entry instead."
 			)
 		).toBeVisible();
+	});
+
+	it("open with no terms chosen, their terms now said above, and ask for terms before sending", async () => {
+		const calls = stubApi(routes(EDITOR));
+		const user = userEvent.setup();
+		const card = await open(EDITING);
+
+		await user.click(
+			await within(card).findByRole("button", { name: "Change…" })
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Change employment terms",
+		});
+		expect(dialog).toHaveTextContent("Now: Six-day shift, 12 h");
+		expect(
+			within(dialog).getByRole("button", { name: /^Terms/ })
+		).toHaveTextContent("Choose terms");
+		await user.click(
+			within(dialog).getByRole("button", { name: "Change terms" })
+		);
+
+		expect(await within(dialog).findByText("Choose the terms.")).toBeVisible();
+		expect(
+			calls.some(
+				(call) => call.method === "POST" && call.path === MEMBER_TERMS_PATH
+			)
+		).toBe(false);
+	});
+
+	it("refuse a change to the terms they already hold from that date, and send nothing", async () => {
+		const calls = stubApi(routes(EDITOR));
+		const user = userEvent.setup();
+		const card = await open(EDITING);
+
+		await user.click(
+			await within(card).findByRole("button", { name: "Change…" })
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Change employment terms",
+		});
+		await user.click(within(dialog).getByRole("button", { name: /^Terms/ }));
+		await user.click(
+			await screen.findByRole("option", { name: "Six-day shift, 12 h" })
+		);
+		await user.click(
+			within(dialog).getByRole("button", { name: "Change terms" })
+		);
+
+		expect(
+			await within(dialog).findByText(
+				"They already hold these terms from that date. Choose different terms, or close this."
+			)
+		).toBeVisible();
+		expect(
+			calls.some(
+				(call) => call.method === "POST" && call.path === MEMBER_TERMS_PATH
+			)
+		).toBe(false);
 	});
 
 	it("list their history, cancel a change ahead, and correct an entry", async () => {

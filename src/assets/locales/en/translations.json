@@ -6150,7 +6150,9 @@
 			"firstBeforeNext": "Their first terms must start before their next change.",
 			"ownDayAboveWeek": "Hours a day can’t be more than hours a week.",
 			"ownWeekUnit": "hours a week",
-			"ownDayUnit": "hours a day"
+			"ownDayUnit": "hours a day",
+			"now": "Now: {{name}}",
+			"alreadyHeld": "They already hold these terms from that date. Choose different terms, or close this."
 		},
 		"history": {
 			"title": "Employment terms history",

@@ -6150,7 +6150,9 @@
 			"firstBeforeNext": "Sus primeras condiciones deben empezar antes de su siguiente cambio.",
 			"ownDayAboveWeek": "Las horas al día no pueden superar las horas a la semana.",
 			"ownWeekUnit": "horas a la semana",
-			"ownDayUnit": "horas al día"
+			"ownDayUnit": "horas al día",
+			"now": "Ahora: {{name}}",
+			"alreadyHeld": "Ya tiene estas condiciones desde esa fecha. Elige otras condiciones o cierra esto."
 		},
 		"history": {
 			"title": "Historial de condiciones de empleo",

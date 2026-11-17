@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { MEMBER_TERMS } from "@/features/employmentTerms/fixtures";
+import {
+	FIVE_DAY_WEEK,
+	MEMBER_TERMS,
+	SIX_DAY_SHIFT,
+} from "@/features/employmentTerms/fixtures";
 import {
 	allowedStart,
+	alreadyHeldFrom,
 	startRuleOf,
 } from "@/features/employmentTerms/memberTermsForm";
 
@@ -36,5 +41,37 @@ describe("startRuleOf and allowedStart", () => {
 		expect(allowedStart(rule, "2027-01-04")).toBe(true);
 		expect(allowedStart(rule, "2027-01-11")).toBe(true);
 		expect(allowedStart(rule, "2027-01-12")).toBe(false);
+	});
+});
+
+describe("alreadyHeldFrom", () => {
+	// Six-day shift since 1 Mar 2025, the Five-day week scheduled from Mon 4 Jan 2027.
+	const change = (
+		employmentTermsId: string,
+		effectiveFrom: string,
+		contractedWeekMinutes: number | null = null
+	): Parameters<typeof alreadyHeldFrom>[1] => ({
+		employmentTermsId,
+		effectiveFrom,
+		contractedWeekMinutes,
+		contractedDayMinutes: null,
+	});
+
+	it.each([
+		["their current terms from next Monday", change(SIX_DAY_SHIFT.id, "2026-11-23"), true],
+		["different terms from next Monday", change(FIVE_DAY_WEEK.id, "2026-11-23"), false],
+		["their current terms with their own hours", change(SIX_DAY_SHIFT.id, "2026-11-23", 1200), false],
+		["the terms of the change already scheduled, on its day", change(FIVE_DAY_WEEK.id, "2027-01-04"), true],
+		["the terms of the change already scheduled, after it", change(FIVE_DAY_WEEK.id, "2027-01-11"), true],
+		["the scheduled terms on a date before that change", change(FIVE_DAY_WEEK.id, "2026-12-28"), false],
+		["their current terms after the scheduled change", change(SIX_DAY_SHIFT.id, "2027-01-11"), false],
+	] as const)("given %s, says whether nothing changes", (_case, body, held) => {
+		expect(alreadyHeldFrom(MEMBER_TERMS.history, body)).toBe(held);
+	});
+
+	it("given_noHistory_when_givenTerms_then_itIsAChange", () => {
+		expect(alreadyHeldFrom([], change(SIX_DAY_SHIFT.id, "2026-11-23"))).toBe(
+			false
+		);
 	});
 });
