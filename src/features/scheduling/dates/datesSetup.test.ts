@@ -125,7 +125,8 @@ describe("planNotesOf", () => {
 	it("given_aPublishedWeek_when_noted_then_itsAskedDaysArePublishedAndNothingReplaced", () => {
 		expect(planNotesOf(datesPlanWithKeptWeekFixture())).toEqual({
 			publishedDays: [{ from: "2026-11-23", to: "2026-11-28" }],
-			replacedDays: [],
+			redoneDays: [],
+			restOnlyDays: [],
 			restDayCount: 0,
 		});
 	});
@@ -133,12 +134,13 @@ describe("planNotesOf", () => {
 	it("given_theOwnersExample_when_noted_then_wednesdayThursdayReplacedAndThreeRestDays", () => {
 		expect(planNotesOf(datesPlanRedoingFixture())).toEqual({
 			publishedDays: [],
-			replacedDays: [{ from: "2026-11-18", to: "2026-11-19" }],
+			redoneDays: [{ from: "2026-11-18", to: "2026-11-19" }],
+			restOnlyDays: [],
 			restDayCount: 3,
 		});
 	});
 
-	it("given_newDaysBeforeALaterPart_when_noted_then_theRestIsReplaced", () => {
+	it("given_newDaysBeforeALaterPart_when_noted_then_onlyItsRestIsScheduledAgain", () => {
 		const plan = datesPlanFixture();
 		const week = {
 			...plan.weeks[0]!,
@@ -158,7 +160,8 @@ describe("planNotesOf", () => {
 
 		expect(planNotesOf({ ...plan, weeks: [week] })).toEqual({
 			publishedDays: [],
-			replacedDays: [{ from: "2026-11-19", to: "2026-11-22" }],
+			redoneDays: [],
+			restOnlyDays: [{ from: "2026-11-19", to: "2026-11-22" }],
 			restDayCount: 4,
 		});
 	});

@@ -464,6 +464,36 @@ describe("MonthSetupStep", () => {
 			).toBeInTheDocument();
 		});
 
+		it("given_newDaysBeforeALaterPart_when_shown_then_saysItsDaysAreScheduledAgainAfterTheNewDays", () => {
+			const plan = datesPlanFixture();
+			const week = {
+				...plan.weeks[0]!,
+				rest: [
+					{
+						scheduleId: "s-2",
+						coveredFrom: "2026-11-23",
+						coveredTo: "2026-11-29",
+						state: "TO_REVIEW" as const,
+					},
+				],
+			};
+			render(
+				<Harness
+					dates={datesProp({ ...plan, weeks: [week] })}
+					defaultValues={DATES}
+				/>
+			);
+
+			expect(
+				screen.getByText(
+					/^Nov 23\s?–\s?29, 2026 are scheduled again after the new days are ready\.$/
+				)
+			).toBeInTheDocument();
+			expect(
+				screen.queryByText(/already have a schedule\. It stays/)
+			).toBeNull();
+		});
+
 		it("given_aRedoPlan_when_shown_then_saysWhichDaysStayWhichAreRedoneWithYourChoicesAndWhichWithTheWeeksOwn", () => {
 			render(
 				<Harness
@@ -490,7 +520,7 @@ describe("MonthSetupStep", () => {
 					/^Nov 20\s?–\s?22, 2026 scheduled again with the week’s own shifts and rules$/
 				)
 			).toBeInTheDocument();
-			expect(within(table).getByText("Redone")).toBeInTheDocument();
+			expect(within(table).getByText("To redo")).toBeInTheDocument();
 			expect(
 				screen.getByText(
 					"3 more days after them, scheduled again with their week’s own shifts and rules"
@@ -498,7 +528,7 @@ describe("MonthSetupStep", () => {
 			).toBeInTheDocument();
 			expect(
 				screen.getByText(
-					/^Nov 18\s?–\s?19, 2026 already have a schedule\. Generating replaces those days and the rest of their week; the current schedule stays until the new one is ready\.$/
+					/^Nov 18\s?–\s?19, 2026 already have a schedule\. It stays until the new days are ready\. Then they are replaced, and the rest of their week is scheduled again\. Published days are never touched\.$/
 				)
 			).toBeInTheDocument();
 		});

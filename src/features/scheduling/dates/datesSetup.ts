@@ -146,11 +146,13 @@ export const planRowOf = (week: DatesPlanWeek): PlanRow => {
 export type PlanNotes = {
 	/** The asked days that are published and stay as they are, a run per part. */
 	publishedDays: Array<DayRun>;
+	/** The asked days with a schedule that generating redoes, a run per part. */
+	redoneDays: Array<DayRun>;
 	/**
-	 * The days with a schedule that generating replaces, a run per part: each
-	 * week's redone days, or its rest days when it redoes none.
+	 * The rest days of the weeks that redo no asked day (new days before a
+	 * later part): scheduled again once the new days are ready, a run per part.
 	 */
-	replacedDays: Array<DayRun>;
+	restOnlyDays: Array<DayRun>;
 	/** How many days after the new days are scheduled again with their week's own shifts and rules. */
 	restDayCount: number;
 };
@@ -187,8 +189,9 @@ export const planNotesOf = (plan: DatesPlan): PlanNotes => ({
 			partDaysWithin(part, week.askedFrom, week.askedTo)
 		)
 	),
-	replacedDays: plan.weeks.flatMap((week) =>
-		(week.redone.length > 0 ? week.redone : week.rest).map(runOf)
+	redoneDays: plan.weeks.flatMap((week) => week.redone.map(runOf)),
+	restOnlyDays: plan.weeks.flatMap((week) =>
+		week.redone.length > 0 ? [] : week.rest.map(runOf)
 	),
 	restDayCount: dayCountOfRuns(
 		plan.weeks.flatMap((week) => week.rest.map(runOf))

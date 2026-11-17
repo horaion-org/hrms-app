@@ -131,9 +131,10 @@ const PLAN_BADGE_TONES: Record<PlanBadge, BadgeTone> = {
  * "What this creates": each week the dates touch, a line for each run of its
  * days saying whether they stay, are new, or are scheduled again with the
  * run's choices or the week's own; its days (generated days look covered,
- * others have no roster) and New, Redone or Kept. Then how many days are
+ * others have no roster) and New, To redo or Kept. Then how many days are
  * generated and how many more after them, the published days, the days with
- * a schedule that are replaced, and why the dates are refused, if they are.
+ * a schedule that are redone, the rest days scheduled again after new days,
+ * and why the dates are refused, if they are.
  */
 const DatesPlanRows = ({ plan }: { plan: DatesPlan }): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -216,11 +217,19 @@ const DatesPlanRows = ({ plan }: { plan: DatesPlan }): FunctionComponent => {
 					})}
 				</Callout>
 			)}
-			{notes.replacedDays.length > 0 && (
+			{notes.redoneDays.length > 0 && (
 				<Callout tone="warning">
 					{t("scheduling.dates.setup.redoNote", {
-						days: runsText(notes.replacedDays),
-						count: dayCountOfRuns(notes.replacedDays),
+						days: runsText(notes.redoneDays),
+						count: dayCountOfRuns(notes.redoneDays),
+					})}
+				</Callout>
+			)}
+			{notes.restOnlyDays.length > 0 && (
+				<Callout tone="warning">
+					{t("scheduling.dates.setup.restNote", {
+						days: runsText(notes.restOnlyDays),
+						count: dayCountOfRuns(notes.restOnlyDays),
 					})}
 				</Callout>
 			)}
