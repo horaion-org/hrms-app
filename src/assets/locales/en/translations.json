@@ -5429,7 +5429,7 @@
 				},
 				"chosen_one": "{{count}} week: {{ranges}}",
 				"chosen_other": "{{count}} weeks: {{ranges}}",
-				"startedNote": "{{week}} has already started. It is generated whole, Monday included.",
+				"startedNote": "{{week}} has already started. It is generated from today on: {{range}}.",
 				"rosterWaitingNote": "{{week}} has a roster waiting for review. Generating again replaces it.",
 				"rosterRejectedNote": "{{week}} has a rejected roster. Generating again replaces it.",
 				"skippedNote": "{{week}} is left out and has no roster. Hours worked that week don’t count towards this month’s overtime unless a roster covers it.",

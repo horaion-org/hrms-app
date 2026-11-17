@@ -5229,7 +5229,7 @@
 				},
 				"chosen_one": "{{count}} semana: {{ranges}}",
 				"chosen_other": "{{count}} semanas: {{ranges}}",
-				"startedNote": "{{week}} ya ha empezado. Se genera completa, lunes incluido.",
+				"startedNote": "{{week}} ya ha empezado. Se genera desde hoy: {{range}}.",
 				"rosterWaitingNote": "{{week}} tiene un horario pendiente de revisión. Generar de nuevo lo sustituye.",
 				"rosterRejectedNote": "{{week}} tiene un horario rechazado. Generar de nuevo lo sustituye.",
 				"skippedNote": "{{week}} queda fuera y no tiene horario. Las horas trabajadas esa semana no cuentan para las horas extra de este mes salvo que un horario la cubra.",

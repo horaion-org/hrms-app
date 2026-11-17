@@ -176,12 +176,17 @@ describe("MonthSetupStep", () => {
 		).toBeInTheDocument();
 	});
 
-	it("given_aTickedStartedWeek_when_shown_then_warnsItIsGeneratedWhole", () => {
-		render(<Harness weeks={weeksProp(novemberWeeks(), ["2026-11-16"])} />);
+	it("given_aTickedStartedWeek_when_shown_then_saysItIsGeneratedFromToday", () => {
+		render(
+			<Harness
+				dates={{ plan: undefined, pending: false, today: TODAY }}
+				weeks={weeksProp(novemberWeeks(), ["2026-11-16"])}
+			/>
+		);
 
 		expect(
 			screen.getByText(
-				"Mon, Nov 16 to Sun, Nov 22 has already started. It is generated whole, Monday included."
+				"Mon, Nov 16 to Sun, Nov 22 has already started. It is generated from today on: Tue, Nov 17 to Sun, Nov 22."
 			)
 		).toBeInTheDocument();
 	});

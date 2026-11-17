@@ -590,6 +590,12 @@ export const MonthSetupStep = ({
 								<Callout key={week.periodStart} tone="warning">
 									{t(`scheduling.months.setup.${note}Note`, {
 										week: weekRangeText(rangeOf(week), language, t),
+										// A started week is generated from today on (API ADR-0115).
+										range: weekRangeText(
+											{ start: today || week.periodStart, end: week.periodEnd },
+											language,
+											t
+										),
 									})}
 								</Callout>
 							))}
