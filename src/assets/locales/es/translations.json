@@ -1963,6 +1963,23 @@
 			}
 		},
 		"accessRoles": {
+			"defaults": {
+				"setFor": {
+					"COMPANY": "Todos en la empresa",
+					"unit": "Todos en {{place}}"
+				},
+				"appliesTo": {
+					"OWN_DEPARTMENT": "Su propio departamento",
+					"OWN_BRANCH": "Su propia sucursal"
+				},
+				"source": {
+					"COMPANY": "acceso predeterminado de la empresa",
+					"unit": "definido para {{place}}"
+				},
+				"through": "{{name}} ({{source}})",
+				"hiddenPlace": "un lugar que no puedes ver",
+				"unknownRole": "Un rol que no puedes ver"
+			},
 			"title": "Roles de acceso",
 			"caption": "Roles configurados",
 			"subtitle": "Decide qué puede gestionar cada persona y dónde.",

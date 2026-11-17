@@ -1,0 +1,130 @@
+import type { TFunction } from "i18next";
+import type {
+	AccessRole,
+	DefaultAccessRule,
+	MemberAccessRoleAssignment,
+} from "@/features/organisation/api";
+import type { PlaceRef } from "@/features/organisation/assignmentTargets";
+
+const key = "organisation.accessRoles.defaults";
+
+/** Where a person is filed: their Department and its Branch, both null when they have none. */
+export type HomePlace = {
+	branchId: string | null;
+	departmentId: string | null;
+};
+
+/** Names a place, as `placeLabels` does; undefined for one the reader can't see. */
+type PlaceLabel = (place: PlaceRef) => string | undefined;
+
+/**
+ * The defaults that reach a person filed in `home` (API ADR-0118): those
+ * set for the whole company, for their Branch and for their Department,
+ * which all add up. None without a Department: defaults reach people only
+ * through the Department they work in.
+ */
+export const defaultsReaching = (
+	rules: ReadonlyArray<DefaultAccessRule>,
+	home: HomePlace
+): Array<DefaultAccessRule> =>
+	home.departmentId === null
+		? []
+		: rules.filter(
+				(rule) =>
+					rule.setAt === "COMPANY" ||
+					(rule.setAt === "BRANCH" && rule.branchId === home.branchId) ||
+					(rule.setAt === "DEPARTMENT" &&
+						rule.departmentId === home.departmentId)
+			);
+
+/** The place a default is set for, named; a hidden one reads as such. */
+const placeOfRule = (
+	rule: DefaultAccessRule,
+	placeLabel: PlaceLabel,
+	t: TFunction
+): string => placeLabel(rule) ?? t(`${key}.hiddenPlace`);
+
+/** Whose people a default covers, in words: "Everyone in the company", "Everyone in Harbour Hotel". */
+export const defaultSetFor = (
+	rule: DefaultAccessRule,
+	placeLabel: PlaceLabel,
+	t: TFunction
+): string =>
+	rule.setAt === "COMPANY"
+		? t(`${key}.setFor.COMPANY`)
+		: t(`${key}.setFor.unit`, { place: placeOfRule(rule, placeLabel, t) });
+
+/** Where a default was set, as a person's access names it: "company default", "set for Housekeeping". */
+const defaultSource = (
+	rule: DefaultAccessRule,
+	placeLabel: PlaceLabel,
+	t: TFunction
+): string =>
+	rule.setAt === "COMPANY"
+		? t(`${key}.source.COMPANY`)
+		: t(`${key}.source.unit`, { place: placeOfRule(rule, placeLabel, t) });
+
+/** One default of the list in words: its role, whose people it covers, and where it reaches. */
+export type DefaultRuleText = {
+	role: string;
+	setFor: string;
+	appliesTo: string;
+};
+
+/** A default for the list; a role the reader's list lacks reads as unknown. */
+export const defaultRuleText = (
+	rule: DefaultAccessRule,
+	roles: ReadonlyArray<AccessRole>,
+	placeLabel: PlaceLabel,
+	t: TFunction
+): DefaultRuleText => ({
+	role:
+		roles.find((role) => role.accessRoleId === rule.accessRoleId)?.name ??
+		t(`${key}.unknownRole`),
+	setFor: defaultSetFor(rule, placeLabel, t),
+	appliesTo: t(`${key}.appliesTo.${rule.appliesTo}`),
+});
+
+/**
+ * A person's defaults as assignments, for `accessSummary` beside the roles
+ * given by hand: one per default that reaches them, at their own
+ * Department or their own Branch. Each comes with a copy of its role named
+ * for where it was set, e.g. "Staff (company default)", so the person's
+ * Access card says where it came from. A default whose role isn't in
+ * `roles` is left out.
+ */
+export const defaultAccessAssignments = (
+	rules: ReadonlyArray<DefaultAccessRule>,
+	home: HomePlace,
+	roles: ReadonlyArray<AccessRole>,
+	placeLabel: PlaceLabel,
+	t: TFunction
+): {
+	assignments: Array<MemberAccessRoleAssignment>;
+	roles: Array<AccessRole>;
+} => {
+	const reaching = defaultsReaching(rules, home).flatMap((rule) => {
+		const role = roles.find(
+			(candidate) => candidate.accessRoleId === rule.accessRoleId
+		);
+		return role ? [{ rule, role }] : [];
+	});
+	return {
+		assignments: reaching.map(({ rule }) => ({
+			accessRoleAssignmentId: `default:${rule.defaultAccessRuleId}`,
+			accessRoleId: `default:${rule.defaultAccessRuleId}`,
+			status: "ACTIVE",
+			branchId: rule.appliesTo === "OWN_BRANCH" ? home.branchId : null,
+			departmentId:
+				rule.appliesTo === "OWN_DEPARTMENT" ? home.departmentId : null,
+		})),
+		roles: reaching.map(({ rule, role }) => ({
+			...role,
+			accessRoleId: `default:${rule.defaultAccessRuleId}`,
+			name: t(`${key}.through`, {
+				name: role.name,
+				source: defaultSource(rule, placeLabel, t),
+			}),
+		})),
+	};
+};

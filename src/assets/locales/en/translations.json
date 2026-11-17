@@ -2056,6 +2056,23 @@
 			"systemRole": "System Role"
 		},
 		"accessRoles": {
+			"defaults": {
+				"setFor": {
+					"COMPANY": "Everyone in the company",
+					"unit": "Everyone in {{place}}"
+				},
+				"appliesTo": {
+					"OWN_DEPARTMENT": "Their own department",
+					"OWN_BRANCH": "Their own branch"
+				},
+				"source": {
+					"COMPANY": "company default",
+					"unit": "set for {{place}}"
+				},
+				"through": "{{name}} ({{source}})",
+				"hiddenPlace": "a place you can't see",
+				"unknownRole": "A role you can't see"
+			},
 			"title": "Access roles",
 			"caption": "Configured roles",
 			"subtitle": "Decide what people can manage, and where.",
