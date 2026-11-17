@@ -98,10 +98,10 @@ type TermsFormProps = {
 };
 
 /**
- * The terms form, in the approved design's order: Start from, the working
- * week (hours a day worked out), whether the Act's hour rules cover them,
- * overtime and its rates, the name, and More options for a description.
- * Beside it, "These terms in words" reads the form back at every keystroke.
+ * The terms form in three parts: the working week (`WorkingWeekSection`),
+ * pay for extra hours (`ExtraHoursPaySection`) and, beside them, what the
+ * terms mean (`TermsMeaningSection`). It holds the form, the starting point
+ * and the suggested name, and saves.
  */
 const TermsForm = ({
 	companyId,
@@ -307,12 +307,11 @@ const TermsForm = ({
 };
 
 /**
- * Adds or edits employment terms: "Start from" buttons (the API's presets)
- * that fill the form once, the working week, the Act's hour rules, overtime
- * and its rates, a name suggested from the answers until one is typed, and a
- * description under More options. "These terms in words" reads the form back
- * as it changes. Saving held terms with a different week asks how the change
- * applies (`ApplyChangeStep`). Mount when opened.
+ * Adds or edits employment terms: the working week (from a starting point,
+ * named from the answers until a name is typed), pay for extra hours, and
+ * what the terms mean, read back as the form changes. Saving held terms with
+ * a different week asks how the change applies (`ApplyChangeStep`). Mount
+ * when opened.
  */
 export const EmploymentTermsDialog = ({
 	companyId,
