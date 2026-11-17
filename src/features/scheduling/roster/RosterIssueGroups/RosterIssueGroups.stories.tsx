@@ -3,6 +3,7 @@ import { fn } from "storybook/test";
 import { Callout } from "@/components/ui/Callout";
 import { rosterIssuesFixture } from "@/features/scheduling/roster/rosterIssueFixtures";
 import { RosterIssueGroups } from "@/features/scheduling/roster/RosterIssueGroups";
+import "@/common/i18n";
 
 const meta = {
 	title: "Features/Scheduling/RosterIssueGroups",
