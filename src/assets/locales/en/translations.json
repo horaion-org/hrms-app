@@ -4665,7 +4665,9 @@
 				"failed": "We couldn’t save the decision. Try again.",
 				"approvalPending": "This roster is already waiting for approval. Reload the page to see where it stands.",
 				"noApprover": "A step of this department’s approval flow has nobody who can approve it. Ask an admin to change it in Settings › Approvals."
-			}
+			},
+			"shortShifts_one": "{{count}} shift is still short of people, and staff will see the roster as it is. Find cover for it from Issues, or publish as it is.",
+			"shortShifts_other": "{{count}} shifts are still short of people, and staff will see the roster as it is. Find cover for them from Issues, or publish as it is."
 		},
 		"startingContext": {
 			"title": "Before this week",

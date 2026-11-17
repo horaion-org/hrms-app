@@ -1248,6 +1248,61 @@ const generatedWith = (findings = generationFindingsFixture()): StubReply =>
 		})
 	);
 
+// Before any validation the generation's own gaps count; the warning never blocks publishing.
+it("given_aShiftStillShort_when_publishing_then_theDialogWarnsWithTheCountAndStillPublishes", async () => {
+	const calls = await openRoster({
+		...signedIn(["schedule:read", "schedule:publish"]),
+		...FROZEN_SETUP,
+		[`GET ${SCHEDULE_READ}`]: generatedWith(),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`POST ${SCHEDULE}/approval`]: ok(
+			generatedScheduleFixture({ status: "PUBLISHED" })
+		),
+	});
+	const user = userEvent.setup();
+
+	await user.click(
+		await screen.findByRole("button", { name: "Publish roster" })
+	);
+	const dialog = screen.getByRole("dialog", { name: "Publish this roster?" });
+	expect(dialog).toHaveTextContent(
+		"1 shift is still short of people, and staff will see the roster as it is. Find cover for it from Issues, or publish as it is."
+	);
+	await user.click(
+		within(dialog).getByRole("button", { name: "Publish roster" })
+	);
+
+	await vi.waitFor(() => {
+		expect(
+			calls.some(
+				(call) => call.method === "POST" && call.path === `${SCHEDULE}/approval`
+			)
+		).toBe(true);
+	});
+});
+
+it("given_noShiftShort_when_publishing_then_noWarning", async () => {
+	await openRoster({
+		...signedIn(["schedule:read", "schedule:publish"]),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({
+				status: "GENERATED",
+				generation: generationFixture({ findings: null }),
+			})
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+	});
+	const user = userEvent.setup();
+
+	await user.click(
+		await screen.findByRole("button", { name: "Publish roster" })
+	);
+
+	expect(
+		screen.getByRole("dialog", { name: "Publish this roster?" })
+	).not.toHaveTextContent(/still short/);
+});
+
 it("counts what the engine found on one Issues button and lists it in the side panel", async () => {
 	const calls = await openRoster({
 		...signedIn(["schedule:read", "shift:read", "constraint:read"]),

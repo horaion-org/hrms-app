@@ -11,6 +11,7 @@ import {
 	issuesOfGroup,
 	orderedIssues,
 	rosterIssues,
+	shortShiftCount,
 	type RosterIssueInput,
 } from "./rosterIssueGroups";
 
@@ -334,5 +335,39 @@ describe("orderedIssues", () => {
 
 	it("keeps one group's items only", () => {
 		expect(issuesOfGroup(issues, "notMet", "byDay")).toEqual([]);
+	});
+});
+
+describe("shortShiftCount", () => {
+	const sundayGap = staffingGapFixture({
+		conflictId: "validated-2",
+		date: "2026-10-18",
+		start: "2026-10-18T09:00",
+		end: "2026-10-18T15:00",
+	});
+
+	it("given_twoShiftsShortAndABrokenRule_when_counted_then_onlyTheShiftsCount", () => {
+		const issues = rosterIssues(
+			input({
+				gaps: [staffingGapFixture(), sundayGap],
+				brokenMusts: [brokenMust],
+			})
+		);
+
+		expect(shortShiftCount(issues)).toBe(2);
+	});
+
+	it("given_noGaps_when_counted_then_zero", () => {
+		expect(
+			shortShiftCount(rosterIssues(input({ brokenMusts: [brokenMust] })))
+		).toBe(0);
+	});
+
+	it("given_aGapWithNoShiftToCover_when_counted_then_itStillCounts", () => {
+		expect(
+			shortShiftCount(
+				rosterIssues(input({ gaps: [staffingGapFixture({ shiftUuids: [] })] }))
+			)
+		).toBe(1);
 	});
 });
