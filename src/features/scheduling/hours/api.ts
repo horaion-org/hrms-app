@@ -124,14 +124,21 @@ const memberWeekHoursSchema = z.object({
 /** One person's week on a roster, as the hours ledger classifies it. */
 export type MemberWeekHours = z.infer<typeof memberWeekHoursSchema>;
 
-const rosterHoursSchema = z.object({
-	weekStart: z.string(),
-	weekEnd: z.string(),
-	/** One row per person the roster stores a day of. */
-	members: z.array(memberWeekHoursSchema),
-	/** The rows added up. */
-	totals: memberWeekHoursSchema.omit({ memberProfileId: true }),
-});
+const rosterHoursSchema = z
+	.object({
+		weekStart: z.string(),
+		weekEnd: z.string(),
+		/** The first day counted: a later part's week counts its earlier parts too (API ADR-0113). Absent from an older API. */
+		countedFrom: z.string().nullish(),
+		/** One row per person the roster stores a day of. */
+		members: z.array(memberWeekHoursSchema),
+		/** The rows added up. */
+		totals: memberWeekHoursSchema.omit({ memberProfileId: true }),
+	})
+	.transform((hours) => ({
+		...hours,
+		countedFrom: hours.countedFrom ?? hours.weekStart,
+	}));
 
 /**
  * A roster's planned hours by person: the days it works each person and how

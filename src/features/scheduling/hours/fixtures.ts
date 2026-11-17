@@ -57,6 +57,7 @@ export const rosterHours = (
 ): RosterHours => ({
 	weekStart: "2026-11-30",
 	weekEnd: "2026-12-06",
+	countedFrom: "2026-11-30",
 	members,
 	totals: {
 		daysWorked: members.reduce((sum, member) => sum + member.daysWorked, 0),

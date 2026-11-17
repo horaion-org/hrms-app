@@ -5283,6 +5283,7 @@
 			"overtimeSummary": "Horas extra {{hours}}",
 			"empty": "Nadie tiene turnos esta semana.",
 			"note": "Horas previstas de este cuadrante, según las condiciones de empleo de cada persona esa semana. Normales: dentro de sus horas de contrato. Complementarias: horas de una persona a tiempo parcial por encima de su contrato. Horas extra: las que pasan de la jornada o la semana normal.",
+			"countsEarlierParts": "Cuenta la semana desde el {{from}}, con los días del horario anterior, para que las horas extra semanales coincidan con las reglas del cuadrante.",
 			"loading": "Cargando las horas…",
 			"loadFailed": "No se pudieron cargar las horas."
 		},

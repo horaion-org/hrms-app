@@ -88,4 +88,25 @@ describe("roster hours client", () => {
 		});
 		expect(read.totals.overtimeMinutes).toBe(1680);
 	});
+
+	it("reads the first day counted, the week's Monday from an API without it", async () => {
+		stubApi({
+			[`GET ${HOURS}`]: [
+				{
+					status: 200,
+					body: envelope({ ...rosterHours(), countedFrom: "2026-12-01" }),
+				},
+				{
+					status: 200,
+					body: envelope({ ...rosterHours(), countedFrom: undefined }),
+				},
+			],
+		});
+
+		const part = await fetchRosterHours("c-1", UNIT, "s-1");
+		const older = await fetchRosterHours("c-1", UNIT, "s-1");
+
+		expect(part.countedFrom).toBe("2026-12-01");
+		expect(older.countedFrom).toBe("2026-11-30");
+	});
 });

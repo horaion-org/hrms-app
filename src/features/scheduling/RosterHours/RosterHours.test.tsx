@@ -131,4 +131,32 @@ describe("RosterHours", () => {
 
 		expect(container).toBeEmptyDOMElement();
 	});
+
+	it("given_aLaterPart_when_shown_then_saysItCountsTheEarlierDays", () => {
+		render(
+			<RosterHours
+				assignments={scheduleAssignmentsFixture()}
+				coveredFrom="2026-12-03"
+				hours={{ status: "ready", hours: rosterHours() }}
+			/>
+		);
+
+		expect(
+			screen.getByText(
+				"Counts the week from Mon, Nov 30, with the days of the earlier schedule, so weekly overtime matches the roster’s rules."
+			)
+		).toBeInTheDocument();
+	});
+
+	it("given_aWholeWeek_when_shown_then_noLine", () => {
+		render(
+			<RosterHours
+				assignments={scheduleAssignmentsFixture()}
+				coveredFrom="2026-11-30"
+				hours={{ status: "ready", hours: rosterHours() }}
+			/>
+		);
+
+		expect(screen.queryByText(/^Counts the week from/)).toBeNull();
+	});
 });

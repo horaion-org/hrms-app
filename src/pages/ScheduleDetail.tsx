@@ -242,6 +242,7 @@ const RosterBody = ({
 			<RosterHours
 				assignments={assignments.items}
 				className="mt-8"
+				coveredFrom={roster.schedule.coveredFrom}
 				hours={hours}
 			/>
 		</>

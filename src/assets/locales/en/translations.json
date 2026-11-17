@@ -5483,6 +5483,7 @@
 			"overtimeSummary": "Overtime {{hours}}",
 			"empty": "Nobody is rostered this week.",
 			"note": "Planned hours in this roster, by each person’s employment terms that week. Normal: within their contracted hours. Extra: a part-timer’s hours above their contract. Overtime: hours past the normal day or week.",
+			"countsEarlierParts": "Counts the week from {{from}}, with the days of the earlier schedule, so weekly overtime matches the roster’s rules.",
 			"loading": "Loading hours…",
 			"loadFailed": "Couldn’t load the hours."
 		},
