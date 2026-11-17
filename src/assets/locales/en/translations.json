@@ -4506,7 +4506,8 @@
 				"forbidden": "The engine refused the request. Please contact support.",
 				"worker_failed": "Generating stopped before a roster was saved. Generate again.",
 				"worker_crashed": "Generating stopped before a roster was saved. Generate again.",
-				"engine_run_timed_out": "The scheduling engine didn’t finish this week’s roster in time, so generating was stopped. Generate again; if it keeps failing, contact support."
+				"engine_run_timed_out": "The scheduling engine didn’t finish this week’s roster in time, so generating was stopped. Generate again; if it keeps failing, contact support.",
+				"redone_days_changed": "The days this schedule redoes were published or started generating while it ran, so nothing changed. Generate it again, or delete it."
 			}
 		},
 		"findings": {
@@ -5584,9 +5585,10 @@
 		},
 		"dates": {
 			"refusal": {
-				"allTaken": "Every day from {{first}} to {{last}} already has a schedule. To redo a week, choose Month and tick it.",
-				"beforeRoster": "{{days}} come before {{scheduled}}, which already have a schedule. Days can only be added after them: choose a first day after {{last}}, or choose Month and tick that week.",
-				"draftInTheWay": "The week of {{week}} has a draft for {{days}}. Delete it from the month page, or choose dates that match it.",
+				"allTaken": "Every day from {{first}} to {{last}} is published, so nothing would change. Choose a first day after {{last}}.",
+				"beforeRoster": "{{days}} come before {{scheduled}}, which are published and stay as they are. Choose a first day after {{last}}.",
+				"draftInTheWay": "The week of {{week}} has a schedule for {{days}} with no roster yet. Open it from the month page to generate it, or delete it, then choose these dates again.",
+				"beingGenerated": "{{days}} are being generated right now. Wait until that finishes on the month page, then choose these dates again.",
 				"datesInvalid": "These dates can’t be scheduled any more. Go back to Setup and choose them again.",
 				"changed": "The days changed since Setup read them, so nothing was generated. Go back to Setup to see them as they are now.",
 				"unavailable": "You can’t schedule this department. Choose a department you schedule.",
@@ -5596,22 +5598,31 @@
 			"setup": {
 				"firstDay": "First day",
 				"lastDay": "Last day",
-				"hint": "Any weekday, up to {{max}} days. Days that already have a schedule are left as they are.",
+				"hint": "Any weekday, up to {{max}} days. Days that already have a schedule are scheduled again with your choices; published days stay as they are.",
 				"name": "Name",
 				"nameHint": "Optional. Shown on the weeks these dates create.",
 				"nameCounter": "{{count}}/{{max}}",
 				"creates": "What this creates",
 				"datesColumn": "Dates",
 				"daysColumn": "Days",
-				"wholeWeek": "The whole week",
-				"someDays_one": "{{count}} of 7 days",
-				"someDays_other": "{{count}} of 7 days",
-				"keptLine": "Already {{state}}, stays as it is",
+				"staysLine_one": "{{days}} stays as it is",
+				"staysLine_other": "{{days}} stay as they are",
+				"newLine": "{{days}} with your choices",
+				"redoneLine": "{{days}} scheduled again with your choices",
+				"weeksOwnLine": "{{days}} scheduled again with the week’s own shifts and rules",
 				"new": "New",
 				"kept": "Kept",
+				"redo": "To redo",
 				"summary_one": "{{count}} day to generate, {{range}}",
 				"summary_other": "{{count}} days to generate, {{range}}",
-				"keptNote": "{{days}} already has a schedule and stays as it is.",
+				"restSummary_one": "{{count}} more day after them, scheduled again with its week’s own shifts and rules",
+				"restSummary_other": "{{count}} more days after them, scheduled again with their week’s own shifts and rules",
+				"keptNote_one": "{{days}} is published and stays as it is.",
+				"keptNote_other": "{{days}} are published and stay as they are.",
+				"redoNote_one": "{{days}} already has a schedule. It stays until the new days are ready. Then it is replaced, and the rest of its week is scheduled again. Published days are never touched.",
+				"redoNote_other": "{{days}} already have a schedule. It stays until the new days are ready. Then they are replaced, and the rest of their week is scheduled again. Published days are never touched.",
+				"restNote_one": "{{days}} is scheduled again after the new days are ready.",
+				"restNote_other": "{{days}} are scheduled again after the new days are ready.",
 				"checking": "Checking these dates…",
 				"missing": "Choose a first day and a last day.",
 				"past": "Choose today ({{today}}) or a later first day. Days that have passed cannot be scheduled.",
@@ -5627,7 +5638,9 @@
 			"notInSchedule": "Not in this schedule",
 			"coversCallout": "This schedule covers {{covered}}. {{rest}} can be scheduled later.",
 			"remainingButton": "Schedule {{rest}}",
-			"otherPart": "{{days}} are in another schedule."
+			"otherPart": "{{days}} are in another schedule.",
+			"redoing": "This schedule redoes {{days}}. Until its roster is ready, the week’s current schedule keeps those days.",
+			"beingRedone": "{{days}} are being scheduled again. This roster keeps them until the new one is ready."
 		}
 	},
 	"colourSwatchPicker": {

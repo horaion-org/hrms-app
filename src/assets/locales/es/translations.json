@@ -4306,7 +4306,8 @@
 				"forbidden": "El motor rechazó la solicitud. Ponte en contacto con soporte.",
 				"worker_failed": "La generación se detuvo antes de guardar un cuadrante. Genera de nuevo.",
 				"worker_crashed": "La generación se detuvo antes de guardar un cuadrante. Genera de nuevo.",
-				"engine_run_timed_out": "El motor de planificación no terminó el cuadrante de esta semana a tiempo, así que se detuvo la generación. Genera de nuevo; si sigue fallando, contacta con soporte."
+				"engine_run_timed_out": "El motor de planificación no terminó el cuadrante de esta semana a tiempo, así que se detuvo la generación. Genera de nuevo; si sigue fallando, contacta con soporte.",
+				"redone_days_changed": "Los días que rehace este horario se publicaron o empezaron a generarse mientras se ejecutaba, así que no cambió nada. Vuelve a generarlo o elimínalo."
 			}
 		},
 		"findings": {
@@ -5384,9 +5385,10 @@
 		},
 		"dates": {
 			"refusal": {
-				"allTaken": "Todos los días del {{first}} al {{last}} ya tienen un horario. Para rehacer una semana, elige Mes y márcala.",
-				"beforeRoster": "{{days}} van antes de {{scheduled}}, que ya tienen un horario. Solo se pueden añadir días después: elige un primer día posterior al {{last}}, o elige Mes y marca esa semana.",
-				"draftInTheWay": "La semana del {{week}} tiene un borrador para {{days}}. Elimínalo desde la página del mes, o elige fechas que coincidan con él.",
+				"allTaken": "Todos los días del {{first}} al {{last}} están publicados, así que no cambiaría nada. Elige un primer día posterior al {{last}}.",
+				"beforeRoster": "{{days}} van antes de {{scheduled}}, que están publicados y se quedan como están. Elige un primer día posterior al {{last}}.",
+				"draftInTheWay": "La semana del {{week}} tiene un horario para {{days}} todavía sin cuadrante. Ábrelo desde la página del mes para generarlo, o elimínalo, y luego vuelve a elegir estas fechas.",
+				"beingGenerated": "{{days}} se están generando ahora mismo. Espera a que termine en la página del mes y luego vuelve a elegir estas fechas.",
 				"datesInvalid": "Ya no se pueden programar estas fechas. Vuelve a Configuración y elígelas de nuevo.",
 				"changed": "Los días cambiaron desde que Configuración los leyó, así que no se generó nada. Vuelve a Configuración para verlos como están ahora.",
 				"unavailable": "No puedes programar este departamento. Elige un departamento que programes.",
@@ -5396,22 +5398,31 @@
 			"setup": {
 				"firstDay": "Primer día",
 				"lastDay": "Último día",
-				"hint": "Cualquier día de la semana, hasta {{max}} días. Los días que ya tienen un horario se quedan como están.",
+				"hint": "Cualquier día de la semana, hasta {{max}} días. Los días que ya tienen un horario se vuelven a programar con tus opciones; los días publicados se quedan como están.",
 				"name": "Nombre",
 				"nameHint": "Opcional. Se muestra en las semanas que crean estas fechas.",
 				"nameCounter": "{{count}}/{{max}}",
 				"creates": "Qué se crea",
 				"datesColumn": "Fechas",
 				"daysColumn": "Días",
-				"wholeWeek": "La semana completa",
-				"someDays_one": "{{count}} de 7 días",
-				"someDays_other": "{{count}} de 7 días",
-				"keptLine": "Ya {{state}}, se queda como está",
+				"staysLine_one": "{{days}} se queda como está",
+				"staysLine_other": "{{days}} se quedan como están",
+				"newLine": "{{days}} con tus opciones",
+				"redoneLine": "{{days}} se vuelven a programar con tus opciones",
+				"weeksOwnLine": "{{days}} se vuelven a programar con los turnos y reglas de su semana",
 				"new": "Nueva",
 				"kept": "Se mantiene",
+				"redo": "Por rehacer",
 				"summary_one": "{{count}} día por generar, {{range}}",
 				"summary_other": "{{count}} días por generar, {{range}}",
-				"keptNote": "{{days}} ya tiene un horario y se queda como está.",
+				"restSummary_one": "{{count}} día más después, que se vuelve a programar con los turnos y reglas de su semana",
+				"restSummary_other": "{{count}} días más después, que se vuelven a programar con los turnos y reglas de su semana",
+				"keptNote_one": "{{days}} está publicado y se queda como está.",
+				"keptNote_other": "{{days}} están publicados y se quedan como están.",
+				"redoNote_one": "{{days}} ya tiene un horario. Se mantiene hasta que los nuevos días estén listos. Entonces se reemplaza, y el resto de su semana se vuelve a programar. Los días publicados nunca se tocan.",
+				"redoNote_other": "{{days}} ya tienen un horario. Se mantiene hasta que los nuevos días estén listos. Entonces se reemplazan, y el resto de su semana se vuelve a programar. Los días publicados nunca se tocan.",
+				"restNote_one": "{{days}} se vuelve a programar cuando los nuevos días estén listos.",
+				"restNote_other": "{{days}} se vuelven a programar cuando los nuevos días estén listos.",
 				"checking": "Comprobando estas fechas…",
 				"missing": "Elige un primer día y un último día.",
 				"past": "Elige hoy ({{today}}) o un primer día posterior. Los días que ya pasaron no se pueden programar.",
@@ -5427,7 +5438,9 @@
 			"notInSchedule": "No está en este horario",
 			"coversCallout": "Este horario cubre {{covered}}. {{rest}} se puede programar más adelante.",
 			"remainingButton": "Programar {{rest}}",
-			"otherPart": "{{days}} están en otro horario."
+			"otherPart": "{{days}} están en otro horario.",
+			"redoing": "Este horario rehace {{days}}. Hasta que su cuadrante esté listo, el horario actual de la semana conserva esos días.",
+			"beingRedone": "{{days}} se están volviendo a programar. Este cuadrante los conserva hasta que el nuevo esté listo."
 		}
 	},
 	"workspace": {

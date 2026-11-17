@@ -395,13 +395,14 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 		)
 	);
 	// "Before this week" asks unless a roster covers the day before the first generated day: in the week
-	// before, earlier in a started week, or a part kept earlier in a dates run's first week.
+	// before, earlier in a started week, or a part kept earlier in a dates run's first week. The kept parts
+	// come first: cut to the days that stay, they name what carries over when the dates redo a wider part.
 	const partsBeforeStart = [
+		...(datesStart?.kept ?? []),
 		...[
 			...(monthBefore.data?.weeks ?? []),
 			...(scheduleMonth.data?.weeks ?? []),
 		].flatMap((week) => week.parts),
-		...(datesStart?.kept ?? []),
 	];
 	const previousOfStart: PreviousWeek =
 		firstGeneratedDay === undefined
@@ -681,6 +682,15 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			setProblem(scheduleRefusalMessage(error, true, t));
 		}
 	};
+	// Dates whose first new days already have a schedule redo them (API ADR-0129): no draft can be saved over
+	// scheduled days, so "Before this week" is not offered; the calm carried line still shows when it applies.
+	const datesRedoStart = (datesStart?.redone.length ?? 0) > 0;
+	const showsDatesStart = !datesRedoStart || previousOfStart.kind === "carried";
+	const mayAddDaysBefore =
+		!datesRedoStart &&
+		allowedHere("schedule:create") &&
+		allowedHere("schedule:update") &&
+		everything !== undefined;
 	const datesStartingPoint =
 		!unit || !datesStart ? undefined : datesDraftId !== "" ? (
 			<StartingContextSection
@@ -693,16 +703,15 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 				showsHours={false}
 				unit={unit}
 			/>
-		) : datesStartOnMonday && monthBefore.isPending ? undefined : (
+		) : (datesStartOnMonday && monthBefore.isPending) ||
+		  !showsDatesStart ? undefined : (
 			<StartingContextCallout
 				adding={scheduleActions.create.isPending}
 				enteredCount={0}
 				previous={previousOfStart}
 				unknownDays={daysBeforeStart && datesIn(daysBeforeStart)}
 				onAdd={
-					allowedHere("schedule:create") &&
-					allowedHere("schedule:update") &&
-					everything
+					mayAddDaysBefore
 						? (): void => {
 								void saveDatesStart();
 							}

@@ -50,6 +50,8 @@ const weekPartSchema = z.object({
 	coveredFrom: z.string(),
 	coveredTo: z.string(),
 	state: weekStateSchema,
+	/** A redo part (API ADR-0129): until its roster is ready, the week's other parts keep the days it redoes. */
+	redoing: z.boolean().default(false),
 });
 
 /** One schedule of a week, by the days it covers. */

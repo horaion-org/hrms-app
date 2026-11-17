@@ -272,6 +272,7 @@ describe("WeekCard", () => {
 			named: false,
 			coveredFrom: "2026-11-23",
 			coveredTo: "2026-11-25",
+			redoing: false,
 		};
 
 		it("given_aPartWeek_when_shown_then_saysWhichDaysItCovers", async () => {
@@ -290,6 +291,7 @@ describe("WeekCard", () => {
 							coveredFrom: "2026-11-19",
 							coveredTo: "2026-11-22",
 							state: "TO_REVIEW",
+							redoing: false,
 						},
 					],
 				})

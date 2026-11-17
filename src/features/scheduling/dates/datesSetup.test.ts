@@ -6,12 +6,16 @@ import {
 	datesProblemOf,
 	maxLastDayOf,
 	namedSpansOf,
+	partRedoOf,
+	planNotesOf,
 	planRowOf,
 	previousBefore,
 	rosterPartBefore,
 } from "@/features/scheduling/dates/datesSetup";
+import type { PartDays } from "@/features/scheduling/dates/api";
 import {
 	datesPlanFixture,
+	datesPlanRedoingFixture,
 	datesPlanWithKeptWeekFixture,
 } from "@/features/scheduling/dates/fixtures";
 import type { WeekPart } from "@/features/scheduling/months/api";
@@ -52,10 +56,56 @@ describe("planRowOf", () => {
 		]);
 		expect(row).toMatchObject({
 			badge: "new",
-			newDayCount: 4,
 			asked: { start: "2026-11-19", end: "2026-11-22" },
-			keptState: undefined,
+			lines: [{ kind: "new", days: { from: "2026-11-19", to: "2026-11-22" } }],
 		});
+	});
+
+	it("given_aMonthGeneratedAndWednesdayToThursdayAsked_when_laidOut_then_mondayTuesdayStayWednesdayThursdayRedoneFridayToSundayWeeksOwn", () => {
+		const row = planRowOf(datesPlanRedoingFixture().weeks[0]!);
+
+		expect(row.badge).toBe("redo");
+		expect(row.lines).toEqual([
+			{ kind: "stays", days: { from: "2026-11-16", to: "2026-11-17" } },
+			{ kind: "redone", days: { from: "2026-11-18", to: "2026-11-19" } },
+			{ kind: "weeksOwn", days: { from: "2026-11-20", to: "2026-11-22" } },
+		]);
+		expect(row.days.map((day) => day.covered)).toEqual([
+			false,
+			false,
+			true,
+			true,
+			true,
+			true,
+			true,
+		]);
+	});
+
+	it("given_newAndRedoneDaysInOneWeek_when_laidOut_then_oneLineEach", () => {
+		const part = (coveredFrom: string, coveredTo: string): PartDays => ({
+			scheduleId: "s-2",
+			coveredFrom,
+			coveredTo,
+			state: "TO_REVIEW",
+		});
+		const [week] = datesPlanFixture().weeks;
+
+		const row = planRowOf({
+			...week!,
+			askedFrom: "2026-11-16",
+			askedTo: "2026-11-21",
+			newFrom: "2026-11-16",
+			newTo: "2026-11-21",
+			redone: [part("2026-11-19", "2026-11-21")],
+			rest: [part("2026-11-22", "2026-11-22")],
+		});
+
+		expect(row.lines).toEqual([
+			{ kind: "new", days: { from: "2026-11-16", to: "2026-11-18" } },
+			{ kind: "redone", days: { from: "2026-11-19", to: "2026-11-21" } },
+			{ kind: "weeksOwn", days: { from: "2026-11-22", to: "2026-11-22" } },
+		]);
+		expect(row.days.every((day) => day.covered)).toBe(true);
 	});
 
 	it("given_aPublishedWeek_when_laidOut_then_keptWithItsStateAndNoNewDay", () => {
@@ -63,10 +113,57 @@ describe("planRowOf", () => {
 
 		expect(row).toMatchObject({
 			badge: "kept",
-			newDayCount: 0,
-			keptState: "PUBLISHED",
+			lines: [
+				{ kind: "stays", days: { from: "2026-11-23", to: "2026-11-29" } },
+			],
 		});
 		expect(row.days.every((day) => !day.covered)).toBe(true);
+	});
+});
+
+describe("planNotesOf", () => {
+	it("given_aPublishedWeek_when_noted_then_itsAskedDaysArePublishedAndNothingReplaced", () => {
+		expect(planNotesOf(datesPlanWithKeptWeekFixture())).toEqual({
+			publishedDays: [{ from: "2026-11-23", to: "2026-11-28" }],
+			redoneDays: [],
+			restOnlyDays: [],
+			restDayCount: 0,
+		});
+	});
+
+	it("given_theOwnersExample_when_noted_then_wednesdayThursdayReplacedAndThreeRestDays", () => {
+		expect(planNotesOf(datesPlanRedoingFixture())).toEqual({
+			publishedDays: [],
+			redoneDays: [{ from: "2026-11-18", to: "2026-11-19" }],
+			restOnlyDays: [],
+			restDayCount: 3,
+		});
+	});
+
+	it("given_newDaysBeforeALaterPart_when_noted_then_onlyItsRestIsScheduledAgain", () => {
+		const plan = datesPlanFixture();
+		const week = {
+			...plan.weeks[0]!,
+			askedFrom: "2026-11-16",
+			askedTo: "2026-11-18",
+			newFrom: "2026-11-16",
+			newTo: "2026-11-18",
+			rest: [
+				{
+					scheduleId: "s-2",
+					coveredFrom: "2026-11-19",
+					coveredTo: "2026-11-22",
+					state: "TO_REVIEW" as const,
+				},
+			],
+		};
+
+		expect(planNotesOf({ ...plan, weeks: [week] })).toEqual({
+			publishedDays: [],
+			redoneDays: [],
+			restOnlyDays: [{ from: "2026-11-19", to: "2026-11-22" }],
+			restDayCount: 4,
+		});
 	});
 });
 
@@ -78,6 +175,7 @@ describe("namedSpansOf", () => {
 		coveredFrom: "2026-11-19",
 		coveredTo: "2026-11-22",
 		state: "TO_REVIEW",
+		redoing: false,
 		...overrides,
 	});
 
@@ -143,6 +241,7 @@ describe("rosterPartBefore and previousBefore", () => {
 		coveredFrom: "2026-11-09",
 		coveredTo: "2026-11-15",
 		state: "PUBLISHED",
+		redoing: false,
 		...overrides,
 	});
 
@@ -186,6 +285,49 @@ describe("rosterPartBefore and previousBefore", () => {
 	});
 });
 
+describe("partRedoOf", () => {
+	const wholeWeek: WeekPart = {
+		scheduleId: "s-1",
+		name: "Week of 2026-11-16",
+		named: false,
+		coveredFrom: "2026-11-16",
+		coveredTo: "2026-11-22",
+		state: "TO_REVIEW",
+		redoing: false,
+	};
+	const redo: WeekPart = {
+		...wholeWeek,
+		scheduleId: "s-2",
+		coveredFrom: "2026-11-18",
+		coveredTo: "2026-11-19",
+		state: "GENERATING",
+		redoing: true,
+	};
+	const WEDNESDAY_TO_THURSDAY = { from: "2026-11-18", to: "2026-11-19" };
+
+	it("given_aRedoPart_when_asked_then_itRedoesItsOwnDays", () => {
+		expect(partRedoOf(redo, [wholeWeek, redo])).toEqual({
+			kind: "redoing",
+			days: WEDNESDAY_TO_THURSDAY,
+		});
+	});
+
+	it("given_aPartARedoOverlaps_when_asked_then_theRedoPartsDaysAreBeingRedone", () => {
+		expect(partRedoOf(wholeWeek, [wholeWeek, redo])).toEqual({
+			kind: "beingRedone",
+			days: WEDNESDAY_TO_THURSDAY,
+		});
+	});
+
+	it("given_aRedoPartElsewhereInTheWeek_when_asked_then_none", () => {
+		const mondayToTuesday = { ...wholeWeek, coveredTo: "2026-11-17" };
+
+		expect(partRedoOf(mondayToTuesday, [mondayToTuesday, redo])).toBe(
+			undefined
+		);
+	});
+});
+
 describe("daysAroundPart", () => {
 	const WEEK = { periodStart: "2026-10-12", periodEnd: "2026-10-18" };
 
@@ -199,6 +341,32 @@ describe("daysAroundPart", () => {
 			before: undefined,
 			after: { from: "2026-10-18", to: "2026-10-18" },
 			afterTaken: false,
+		});
+	});
+
+	it("given_aRedoPartInsideAWiderPart_when_asked_then_daysAfterAreTaken", () => {
+		const wholeWeek: WeekPart = {
+			scheduleId: "s-1",
+			name: "Week of 2026-10-12",
+			named: false,
+			coveredFrom: "2026-10-12",
+			coveredTo: "2026-10-18",
+			state: "TO_REVIEW",
+			redoing: false,
+		};
+		const redo: WeekPart = {
+			...wholeWeek,
+			scheduleId: "s-2",
+			coveredFrom: "2026-10-14",
+			coveredTo: "2026-10-15",
+			state: "GENERATING",
+			redoing: true,
+		};
+
+		expect(daysAroundPart({ ...WEEK, ...redo }, [wholeWeek, redo])).toEqual({
+			before: { from: "2026-10-12", to: "2026-10-13" },
+			after: { from: "2026-10-16", to: "2026-10-18" },
+			afterTaken: true,
 		});
 	});
 

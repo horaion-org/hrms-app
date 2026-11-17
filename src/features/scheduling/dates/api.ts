@@ -30,27 +30,35 @@ const datesWeekActionSchema = z
 	.enum(["CREATE_AND_GENERATE", "GENERATE", "KEEP", "UNKNOWN"])
 	.catch("UNKNOWN");
 
+/** A part of a week that already has a schedule, cut to the days one list of the week names. */
+const partDaysSchema = z.object({
+	scheduleId: z.string(),
+	coveredFrom: z.string(),
+	coveredTo: z.string(),
+	state: weekStateSchema,
+});
+
+/** A scheduled part's days that one list of a plan week names. */
+export type PartDays = z.infer<typeof partDaysSchema>;
+
 const datesPlanWeekSchema = z.object({
 	periodStart: z.string(),
 	periodEnd: z.string(),
 	/** The asked days that fall in this week. */
 	askedFrom: z.string(),
 	askedTo: z.string(),
-	/** The asked days no schedule covers yet, or null when there are none. */
+	/** The asked days generated with the run's choices, or null when every asked day is published. */
 	newFrom: z.string().nullable(),
 	newTo: z.string().nullable(),
 	action: datesWeekActionSchema,
 	/** The draft covering exactly the new days, which the run generates (GENERATE); otherwise null. */
 	draftId: z.string().nullable(),
-	/** The week's schedules that already cover asked days and stay as they are. */
-	kept: z.array(
-		z.object({
-			scheduleId: z.string(),
-			coveredFrom: z.string(),
-			coveredTo: z.string(),
-			state: weekStateSchema,
-		})
-	),
+	/** The week's scheduled parts, each cut to its days that stay as they are (API ADR-0129). */
+	kept: z.array(partDaysSchema),
+	/** The parts whose days among the new days are scheduled again with the run's choices; absent from an older API. */
+	redone: z.array(partDaysSchema).default([]),
+	/** The parts whose days after the new days, to the Sunday, are scheduled again with their own shifts and rules. */
+	rest: z.array(partDaysSchema).default([]),
 });
 
 /** One week the dates touch, and what generating them does with it. */
@@ -62,7 +70,7 @@ export const datesPlanSchema = z.object({
 	departmentId: z.string(),
 	/** The branch's IANA time zone, whose today the first day is checked against. */
 	timeZone: z.string(),
-	/** How many asked days no schedule covers yet. */
+	/** How many days the run generates with its choices. */
 	newDays: z.number(),
 	weeks: z.array(datesPlanWeekSchema),
 	/** The first new day's earlier days of its week that no schedule covers, or null. */
@@ -70,7 +78,11 @@ export const datesPlanSchema = z.object({
 	/** Why generating would be refused, or null; the weeks are listed either way. */
 	refusal: z
 		.object({
-			/** SCHEDULE_DAYS_ALL_TAKEN, SCHEDULE_DAYS_BEFORE_ROSTER or SCHEDULE_WEEK_TAKEN. */
+			/**
+			 * SCHEDULE_DAYS_ALL_TAKEN (every asked day published), SCHEDULE_DAYS_BEFORE_ROSTER (days to redo
+			 * before published days), SCHEDULE_WEEK_TAKEN (a schedule with no roster in the way) or
+			 * SCHEDULE_DAYS_BEING_GENERATED (days to redo being generated).
+			 */
 			code: z.string(),
 			days: daysSchema,
 			scheduledDays: daysSchema.nullable(),

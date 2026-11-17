@@ -106,6 +106,10 @@ _Avoid_: Self-service data, personal data, me data
 Something a Department's schedules can be held to, such as "Staff on Front desk AM, counting Front desk staff, must total at least 2". Each is of one fixed type, which decides the values it takes, and is a Must or a Should (a few types are always one of them); it is active or inactive, and only an active one can be applied. A draft schedule ticks the constraints it applies, and generating it keeps a copy of each as it was then. The UI, the code and the API all call it a constraint.
 _Avoid_: Rule, scheduling rule, condition, priority
 
+**Redo part**:
+A part of a week that a schedule by dates creates over days that already have a schedule. It is generated with the run's choices; until its roster is ready, the week's current schedule keeps those days. Once it is ready, the days before it stay as they were and the rest of the week is scheduled again with its own shifts and rules. Published days are never redone.
+_Avoid_: Override, replacement schedule
+
 ## Leave
 
 **Leave request**:

@@ -1,11 +1,11 @@
 import dayjs from "dayjs";
 import { daysOf, mondayOf } from "@/common/weeks";
-import type { DatesPlanWeek, DayRun } from "@/features/scheduling/dates/api";
 import type {
-	MonthWeek,
-	WeekPart,
-	WeekState,
-} from "@/features/scheduling/months/api";
+	DatesPlan,
+	DatesPlanWeek,
+	DayRun,
+} from "@/features/scheduling/dates/api";
+import type { MonthWeek, WeekPart } from "@/features/scheduling/months/api";
 import { hasRoster } from "@/features/scheduling/months/weekStateLooks";
 import type { PreviousWeek } from "@/features/scheduling/startingContext/startingGrid";
 
@@ -47,19 +47,38 @@ export const datesProblemOf = (
 	return undefined;
 };
 
-/** One week of "What this creates": its asked days, how its seven days look, and its badge. */
+/**
+ * What generating does with a run of a week's days (API ADR-0129): they stay
+ * as they are, are new with the run's choices, already have a schedule and are
+ * scheduled again with the run's choices, or are scheduled again with the
+ * week's own shifts and rules.
+ */
+export type PlanLineKind = "stays" | "new" | "redone" | "weeksOwn";
+
+/** One line of a week in "What this creates": a run of its days and what generating does with them. */
+export type PlanLine = { kind: PlanLineKind; days: DayRun };
+
+/** A week's badge: new days only, days already scheduled redone, or nothing generated. */
+export type PlanBadge = "new" | "redo" | "kept";
+
+/** One week of "What this creates": its asked days, how its seven days look, its lines and its badge. */
 export type PlanRow = {
 	periodStart: string;
 	/** The asked days of this week. */
 	asked: { start: string; end: string };
-	/** Seven days, Monday first: a new day looks covered, any other has no roster. */
+	/** Seven days, Monday first: a day generated (new or scheduled again) looks covered, any other has no roster. */
 	days: MonthWeek["days"];
-	badge: "new" | "kept";
-	/** How many of the week's days are new; 7 is the whole week. */
-	newDayCount: number;
-	/** The state of the schedule kept on the asked days, for a week with nothing new. */
-	keptState: WeekState | undefined;
+	/** The week's days the run touches, in day order: consecutive days treated alike make one line. */
+	lines: Array<PlanLine>;
+	badge: PlanBadge;
 };
+
+/** The day after `date`. */
+const dayAfter = (date: string): string =>
+	dayjs(date).add(1, "day").format(iso);
+
+/** A schedule's days and state: a month read's part, or a dates plan's kept part. */
+type PartDays = Pick<WeekPart, "coveredFrom" | "coveredTo" | "state">;
 
 /** Whether `date` lies in the run of days from `from` to `to`. */
 const isWithin = (
@@ -68,30 +87,119 @@ const isWithin = (
 	to: string | null
 ): boolean => from !== null && to !== null && date >= from && date <= to;
 
+/** Whether any of `parts` covers `date`. */
+const coversDate = (parts: ReadonlyArray<PartDays>, date: string): boolean =>
+	parts.some((part) => isWithin(date, part.coveredFrom, part.coveredTo));
+
+/** What generating does with one day of a plan week, or undefined when it leaves the day out. */
+const lineKindOf = (
+	week: DatesPlanWeek,
+	date: string
+): PlanLineKind | undefined => {
+	if (coversDate(week.kept, date)) return "stays";
+	if (isWithin(date, week.newFrom, week.newTo))
+		return coversDate(week.redone, date) ? "redone" : "new";
+	if (coversDate(week.rest, date)) return "weeksOwn";
+	return undefined;
+};
+
+/** A plan week's days as lines, in day order: consecutive days of one kind make one line. */
+const planLinesOf = (week: DatesPlanWeek): Array<PlanLine> => {
+	const lines: Array<PlanLine> = [];
+	for (const date of daysOf(week.periodStart)) {
+		const kind = lineKindOf(week, date);
+		if (kind === undefined) continue;
+		const last = lines[lines.length - 1];
+		if (last && last.kind === kind && dayAfter(last.days.to) === date)
+			last.days.to = date;
+		else lines.push({ kind, days: { from: date, to: date } });
+	}
+	return lines;
+};
+
+/** The badge of a plan week: Redo when it schedules again days that have a schedule. */
+const planBadgeOf = (week: DatesPlanWeek): PlanBadge => {
+	if (week.redone.length > 0 || week.rest.length > 0) return "redo";
+	return week.newFrom === null ? "kept" : "new";
+};
+
 /** One plan week as a row of "What this creates" (no fourth "kept" look: kept days have no roster mark). */
 export const planRowOf = (week: DatesPlanWeek): PlanRow => {
-	const days = daysOf(week.periodStart).map((date) => ({
-		date,
-		shortShifts: 0,
-		covered: isWithin(date, week.newFrom, week.newTo),
-	}));
-	const newDayCount = days.filter((day) => day.covered).length;
+	const days = daysOf(week.periodStart).map((date) => {
+		const kind = lineKindOf(week, date);
+		return {
+			date,
+			shortShifts: 0,
+			covered: kind !== undefined && kind !== "stays",
+		};
+	});
 	return {
 		periodStart: week.periodStart,
 		asked: { start: week.askedFrom, end: week.askedTo },
 		days,
-		badge: newDayCount > 0 ? "new" : "kept",
-		newDayCount,
-		keptState: newDayCount > 0 ? undefined : week.kept[0]?.state,
+		lines: planLinesOf(week),
+		badge: planBadgeOf(week),
 	};
 };
 
+/** What the notes under "What this creates" name, across the plan's weeks. */
+export type PlanNotes = {
+	/** The asked days that are published and stay as they are, a run per part. */
+	publishedDays: Array<DayRun>;
+	/** The asked days with a schedule that generating redoes, a run per part. */
+	redoneDays: Array<DayRun>;
+	/**
+	 * The rest days of the weeks that redo no asked day (new days before a
+	 * later part): scheduled again once the new days are ready, a run per part.
+	 */
+	restOnlyDays: Array<DayRun>;
+	/** How many days after the new days are scheduled again with their week's own shifts and rules. */
+	restDayCount: number;
+};
+
+/** A part's days as a run. */
+const runOf = (part: PartDays): DayRun => ({
+	from: part.coveredFrom,
+	to: part.coveredTo,
+});
+
+/** A part's days from `from` to `to`, or none when it has no day there. */
+const partDaysWithin = (
+	part: PartDays,
+	from: string,
+	to: string
+): Array<DayRun> => {
+	const first = part.coveredFrom > from ? part.coveredFrom : from;
+	const last = part.coveredTo < to ? part.coveredTo : to;
+	return first <= last ? [{ from: first, to: last }] : [];
+};
+
+/** How many days the runs hold together. */
+export const dayCountOfRuns = (runs: ReadonlyArray<DayRun>): number =>
+	runs.reduce((total, run) => total + dayCountOf(run.from, run.to), 0);
+
+/**
+ * The notes under "What this creates". A week's kept days among its asked
+ * days are published: its new days start at the first asked day that is not
+ * (API ADR-0129).
+ */
+export const planNotesOf = (plan: DatesPlan): PlanNotes => ({
+	publishedDays: plan.weeks.flatMap((week) =>
+		week.kept.flatMap((part) =>
+			partDaysWithin(part, week.askedFrom, week.askedTo)
+		)
+	),
+	redoneDays: plan.weeks.flatMap((week) => week.redone.map(runOf)),
+	restOnlyDays: plan.weeks.flatMap((week) =>
+		week.redone.length > 0 ? [] : week.rest.map(runOf)
+	),
+	restDayCount: dayCountOfRuns(
+		plan.weeks.flatMap((week) => week.rest.map(runOf))
+	),
+});
+
 /** A named schedule's days across touching parts of the weeks shown. */
 export type NamedSpan = { name: string; from: string; to: string };
-
-/** The day after `date`. */
-const dayAfter = (date: string): string =>
-	dayjs(date).add(1, "day").format(iso);
 
 /**
  * The named schedules among `parts`, in day order: touching parts with a name
@@ -160,8 +268,32 @@ export const daysAroundPart = (
 		schedule.coveredTo < schedule.periodEnd
 			? { from: dayAfter(schedule.coveredTo), to: schedule.periodEnd }
 			: undefined,
-	afterTaken: parts.some((part) => part.coveredFrom > schedule.coveredTo),
+	// A redo part lies inside a wider part, which still holds the days after it until the redo's roster is ready.
+	afterTaken: parts.some((part) => part.coveredTo > schedule.coveredTo),
 });
+
+/** What a part's page says of a redo part in its week (API ADR-0129): this part is one, or one redoes its days. */
+export type PartRedo = { kind: "redoing" | "beingRedone"; days: DayRun };
+
+/**
+ * Whether a redo part touches this part (`parts`, from the month read): this
+ * part is a redo part, with its days, or else a redo part of the week
+ * overlaps it, with that part's days; none otherwise.
+ */
+export const partRedoOf = (
+	schedule: Pick<WeekPart, "scheduleId" | "coveredFrom" | "coveredTo">,
+	parts: ReadonlyArray<WeekPart>
+): PartRedo | undefined => {
+	const own = parts.find((part) => part.scheduleId === schedule.scheduleId);
+	if (own?.redoing) return { kind: "redoing", days: runOf(own) };
+	const redo = parts.find(
+		(part) =>
+			part.redoing &&
+			part.coveredFrom <= schedule.coveredTo &&
+			part.coveredTo >= schedule.coveredFrom
+	);
+	return redo && { kind: "beingRedone", days: runOf(redo) };
+};
 
 /**
  * The days of a part's week before its first generated day: Monday to the
@@ -173,9 +305,6 @@ export const daysBeforeOf = (
 	firstDay: string
 ): DayRun | undefined =>
 	firstDay > monday ? { from: monday, to: dayBefore(firstDay) } : undefined;
-
-/** A schedule's days and state: a month read's part, or a dates plan's kept part. */
-type PartDays = Pick<WeekPart, "coveredFrom" | "coveredTo" | "state">;
 
 /**
  * The part with a roster that covers the day before a run's first generated

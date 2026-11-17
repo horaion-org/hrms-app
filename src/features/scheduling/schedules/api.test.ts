@@ -1254,6 +1254,11 @@ describe("schedule refusals", () => {
 			/^The days changed since Setup read them/,
 		],
 		[409, "SCHEDULE_WEEK_TAKEN", /^The days changed since Setup read them/],
+		[
+			409,
+			"SCHEDULE_DAYS_BEING_GENERATED",
+			/^The days changed since Setup read them/,
+		],
 		[403, "FORBIDDEN", /^You don’t have permission to generate schedules/],
 	])(
 		"words a %i %s dates generation refusal with what to do",
@@ -1264,7 +1269,6 @@ describe("schedule refusals", () => {
 
 	it("words the plan's refusals with their days and what to do", () => {
 		const days = { from: "2026-11-19", to: "2026-11-22" };
-		const scheduled = { from: "2026-11-23", to: "2026-11-29" };
 
 		expect(
 			datesRefusalText(
@@ -1273,16 +1277,7 @@ describe("schedule refusals", () => {
 				"en-GB"
 			)
 		).toBe(
-			"Every day from Thu 19 Nov to Sun 22 Nov already has a schedule. To redo a week, choose Month and tick it."
-		);
-		expect(
-			datesRefusalText(
-				{ code: "SCHEDULE_DAYS_BEFORE_ROSTER", days, scheduledDays: scheduled },
-				t,
-				"en-GB"
-			)
-		).toMatch(
-			/^19\s?–\s?22 Nov 2026 come before 23\s?–\s?29 Nov 2026, which already have a schedule\. Days can only be added after them: choose a first day after Sun 29 Nov, or choose Month and tick that week\.$/
+			"Every day from Thu 19 Nov to Sun 22 Nov is published, so nothing would change. Choose a first day after Sun 22 Nov."
 		);
 		expect(
 			datesRefusalText(
@@ -1295,7 +1290,39 @@ describe("schedule refusals", () => {
 				"en-GB"
 			)
 		).toMatch(
-			/^The week of 16\s?–\s?22 Nov 2026 has a draft for 18\s?–\s?20 Nov 2026\. Delete it from the month page, or choose dates that match it\.$/
+			/^The week of 16\s?–\s?22 Nov 2026 has a schedule for 18\s?–\s?20 Nov 2026 with no roster yet\. Open it from the month page to generate it, or delete it, then choose these dates again\.$/
+		);
+	});
+
+	it("given_beforeRoster_when_worded_then_saysPublished", () => {
+		expect(
+			datesRefusalText(
+				{
+					code: "SCHEDULE_DAYS_BEFORE_ROSTER",
+					days: { from: "2026-11-19", to: "2026-11-22" },
+					scheduledDays: { from: "2026-11-23", to: "2026-11-29" },
+				},
+				t,
+				"en-GB"
+			)
+		).toMatch(
+			/^19\s?–\s?22 Nov 2026 come before 23\s?–\s?29 Nov 2026, which are published and stay as they are\. Choose a first day after Sun 29 Nov\.$/
+		);
+	});
+
+	it("given_daysBeingGenerated_when_worded_then_saysWaitThenChooseAgain", () => {
+		expect(
+			datesRefusalText(
+				{
+					code: "SCHEDULE_DAYS_BEING_GENERATED",
+					days: { from: "2026-11-18", to: "2026-11-19" },
+					scheduledDays: null,
+				},
+				t,
+				"en-GB"
+			)
+		).toMatch(
+			/^18\s?–\s?19 Nov 2026 are being generated right now\. Wait until that finishes on the month page, then choose these dates again\.$/
 		);
 	});
 

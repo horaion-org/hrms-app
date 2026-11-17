@@ -1,6 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import type { DayRun } from "@/features/scheduling/dates/api";
-import { daysAroundPart } from "@/features/scheduling/dates/datesSetup";
+import {
+	daysAroundPart,
+	partRedoOf,
+} from "@/features/scheduling/dates/datesSetup";
 import { SCHEDULE_CREATE_KEYS } from "@/features/workspace/permissionKeys";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
@@ -485,20 +488,27 @@ const ApiSchedule = ({
 	).data;
 	const publishNoteId = useId();
 	// A part of its week (API ADR-0113): the week's other days, and a way to schedule the days after it.
+	const weekParts =
+		state.status === "ready"
+			? (scheduleMonth?.weeks.find(
+					(week) => week.periodStart === state.schedule.periodStart
+				)?.parts ?? [])
+			: [];
 	const around =
 		state.status === "ready"
-			? daysAroundPart(
-					state.schedule,
-					scheduleMonth?.weeks.find(
-						(week) => week.periodStart === state.schedule.periodStart
-					)?.parts ?? []
-				)
+			? daysAroundPart(state.schedule, weekParts)
+			: undefined;
+	// A redo part in the week (API ADR-0129): this schedule is one, or one redoes some of its days.
+	const redo =
+		state.status === "ready"
+			? partRedoOf(state.schedule, weekParts)
 			: undefined;
 	const daysText = (days: DayRun): string =>
 		formatPeriod({ start: days.from, end: days.to }, formattingLocale(i18n));
 	const remaining =
 		around?.after && !around.afterTaken ? around.after : undefined;
 	const partLines = [
+		redo && t(`scheduling.roster.${redo.kind}`, { days: daysText(redo.days) }),
 		around?.before &&
 			t("scheduling.roster.otherPart", { days: daysText(around.before) }),
 		around?.after &&

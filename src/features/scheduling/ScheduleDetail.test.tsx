@@ -390,10 +390,16 @@ describe("a schedule covering part of its week", () => {
 		name: "Week of 2026-10-12",
 		named: false,
 		state: "TO_REVIEW" as const,
+		redoing: false,
 	};
 	const partRoutes = (
 		permissions: Array<string>,
-		parts: Array<{ scheduleId: string; coveredFrom: string; coveredTo: string }>
+		parts: Array<{
+			scheduleId: string;
+			coveredFrom: string;
+			coveredTo: string;
+			redoing?: boolean;
+		}>
 	): Routes => ({
 		...signedIn(permissions),
 		[`GET ${SCHEDULE_READ}`]: ok(
@@ -472,6 +478,33 @@ describe("a schedule covering part of its week", () => {
 			await screen.findByText("Oct 18, 2026 are in another schedule.")
 		).toBeInTheDocument();
 		expect(screen.queryByRole("link", { name: /^Schedule Oct/ })).toBeNull();
+	});
+
+	it("given_aRedoPartOverThisWeek_when_shown_then_saysTheseDaysAreBeingScheduledAgain", async () => {
+		await openRoster(
+			partRoutes(
+				["schedule:read"],
+				[
+					{
+						scheduleId: "s-1",
+						coveredFrom: "2026-10-12",
+						coveredTo: "2026-10-17",
+					},
+					{
+						scheduleId: "s-2",
+						coveredFrom: "2026-10-14",
+						coveredTo: "2026-10-15",
+						redoing: true,
+					},
+				]
+			)
+		);
+
+		expect(
+			await screen.findByText(
+				/^Oct 14\s?–\s?15, 2026 are being scheduled again\. This roster keeps them until the new one is ready\.$/
+			)
+		).toBeInTheDocument();
 	});
 });
 

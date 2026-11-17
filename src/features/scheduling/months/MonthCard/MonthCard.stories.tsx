@@ -91,6 +91,7 @@ export const NamedDatesSchedule: Story = {
 											? "2026-11-22"
 											: "2026-11-28",
 									state: "TENTATIVE",
+									redoing: false,
 								},
 							],
 						}

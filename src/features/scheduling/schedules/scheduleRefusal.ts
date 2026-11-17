@@ -46,6 +46,7 @@ export const SCHEDULE_REFUSAL_CODES = {
 	datesInvalid: "400 SCHEDULE_DATES_INVALID",
 	daysAllTaken: "409 SCHEDULE_DAYS_ALL_TAKEN",
 	daysBeforeRoster: "409 SCHEDULE_DAYS_BEFORE_ROSTER",
+	daysBeingGenerated: "409 SCHEDULE_DAYS_BEING_GENERATED",
 	coveredDaysInvalid: "400 SCHEDULE_COVERED_DAYS_INVALID",
 } as const;
 
@@ -289,6 +290,7 @@ export const datesGenerationRefusal = (
 				[codes.datesInvalid]: t(`${key}.datesInvalid`),
 				[codes.daysAllTaken]: t(`${key}.changed`),
 				[codes.daysBeforeRoster]: t(`${key}.changed`),
+				[codes.daysBeingGenerated]: t(`${key}.changed`),
 				[codes.weekTaken]: t(`${key}.changed`),
 				[codes.weekChoiceMissing]: t(
 					"scheduling.months.generate.choiceMissing"
@@ -307,8 +309,9 @@ const daysText = (days: DayRun, language: string): string =>
 
 /**
  * Why the dates plan refuses the dates, worded with its days: every day
- * taken, days before a week's schedule, or a draft in the way. A code the
- * app doesn't know reads as the plain failure.
+ * published, days to redo before published days, a schedule with no roster
+ * in the way, or days being generated (API ADR-0129). A code the app doesn't
+ * know reads as the plain failure.
  */
 export const datesRefusalText = (
 	refusal: DatesRefusal,
@@ -332,6 +335,10 @@ export const datesRefusalText = (
 		return t(`${key}.draftInTheWay`, {
 			week: formatPeriod(periodStartingOn(mondayOf(scheduled.from)), language),
 			days: daysText(scheduled, language),
+		});
+	if (refusal.code === errorCodeOf(codes.daysBeingGenerated))
+		return t(`${key}.beingGenerated`, {
+			days: daysText(refusal.days, language),
 		});
 	return t(`${key}.failed`);
 };
