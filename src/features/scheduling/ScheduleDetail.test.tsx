@@ -1321,13 +1321,13 @@ it("counts what the engine found on one Issues button and lists it in the side p
 		"Shift Breakfast Prep: no employee holds an eligible role."
 	);
 	expect(information).toHaveTextContent(
-		"Chen WeiSun, Oct 18Chen Wei covers the Sunday swing alone."
+		"Chen Wei · Sun, Oct 18Chen Wei covers the Sunday swing alone."
 	);
 	const mustFix = within(panel)
 		.getByRole("button", { name: "Must fix, 2" })
 		.closest("section");
 	expect(mustFix).toHaveTextContent(
-		"Front Desk Staff shortSat, Oct 17 · 09:00–15:001 person short · Morning cover"
+		"1 Front Desk Staff short · Sat, Oct 17 · 09:00–15:00Not enough people on this shift. Find someone to cover it. Rule: Morning cover"
 	);
 	expect(mustFix).toHaveTextContent(
 		"Ben OngBen Ong works more than five days in a row."
@@ -1394,7 +1394,9 @@ it("names findings without reading the setup it can't see", async () => {
 	await user.click(await screen.findByRole("button", { name: /^Issues: / }));
 
 	const panel = screen.getByRole("complementary", { name: "Issues" });
-	expect(panel).toHaveTextContent("1 person short · People on a shift");
+	expect(panel).toHaveTextContent(
+		"Not enough people on this shift. Find someone to cover it. Rule: People on a shift"
+	);
 	expect(panel).toHaveTextContent(
 		"No one in this schedule can take one of its shifts."
 	);
@@ -1511,9 +1513,13 @@ it("lists where members started the week, and that it changed since, under Issue
 	expect(within(panel).getAllByText(/in a row before this week/)).toHaveLength(
 		1
 	);
+	// The week before having changed is one row: a title, then what it means and what to do.
+	expect(
+		within(panel).getByText("1 person’s days before this week changed")
+	).toBeInTheDocument();
 	expect(
 		within(panel).getByText(
-			/^1 person’s days before this week changed after this roster was generated, so what it says about the week before is what was known then\. To plan from the days as they are now, regenerate the month from its page\.$/
+			"This roster was generated from what was known then. To plan from the days as they are now, regenerate the month from its page."
 		)
 	).toBeInTheDocument();
 	expect(within(roster).queryByText(/in a row before this week/)).toBeNull();

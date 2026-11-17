@@ -15,7 +15,11 @@ export type IssueRowProps = {
 	onFindCover?: (gap: CoverGapRequest) => void;
 };
 
-/** Person first, then the day and time and the rule, with its one action on the right. */
+/**
+ * One fact on two lines, its one action on the right. First, who or what,
+ * then the day and time: "1 Concierge short · Mon, 23 Nov · 07:00–15:00".
+ * Second, in grey: why it is listed and what to do, the rule last.
+ */
 export const IssueRow = ({
 	issue,
 	language,
@@ -30,8 +34,8 @@ export const IssueRow = ({
 	]
 		.filter((part): part is string => part !== undefined)
 		.join(" · ");
-	// An item with no day has no "when" line, so its hint takes that line.
-	const secondLine = when || issue.hint;
+	const headline = when ? `${issue.who} · ${when}` : issue.who;
+	const reason = issue.hint ? `${issue.rule} ${issue.hint}` : issue.rule;
 	const findCover =
 		action.kind === "findCover" && onFindCover
 			? (): void => {
@@ -49,16 +53,11 @@ export const IssueRow = ({
 	return (
 		<li className="flex items-start justify-between gap-3 py-2">
 			<div className="flex min-w-0 flex-col">
-				<span className="text-sm font-semibold text-neutral-900">
-					{issue.who}
-				</span>
-				{secondLine ? (
-					<span className="text-sm text-neutral-700">{secondLine}</span>
-				) : null}
-				<span className="text-sm text-neutral-700">{issue.rule}</span>
+				<span className="text-sm font-medium text-neutral-900">{headline}</span>
+				<span className="text-sm text-neutral-700">{reason}</span>
 			</div>
 			{act ? (
-				<Button variant="textlink" onClick={act}>
+				<Button className="shrink-0" variant="textlink" onClick={act}>
 					{t(
 						findCover ? "scheduling.cover.findCover" : "scheduling.issues.show"
 					)}

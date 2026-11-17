@@ -15,7 +15,7 @@ export const rosterIssueFixture = (
 	memberProfileId: "mp-1",
 	day: "2026-10-14",
 	time: null,
-	rule: "Rest between shifts",
+	rule: "A rule that must hold is broken here. Change this day by hand, then validate again. Rule: Rest between shifts",
 	action: { kind: "show" },
 	...overrides,
 });
@@ -24,11 +24,11 @@ export const rosterIssueFixture = (
 export const rosterIssuesFixture = (): Array<RosterIssue> => [
 	rosterIssueFixture({
 		key: "gap|1",
-		who: "Front Desk Staff short",
+		who: "1 Front Desk Staff short",
 		memberProfileId: null,
 		day: "2026-10-17",
 		time: "09:00–15:00",
-		rule: "1 person short",
+		rule: "Not enough people on this shift. Find someone to cover it. Rule: Early front desk",
 		action: {
 			kind: "findCover",
 			gap: { shiftId: "front-desk-am", day: "2026-10-17" },
@@ -41,14 +41,14 @@ export const rosterIssuesFixture = (): Array<RosterIssue> => [
 		who: "Ben Ortiz",
 		memberProfileId: "mp-2",
 		day: null,
-		rule: "Weekends off",
+		rule: "Asked for if possible, and this roster could not meet it. Rule: Weekends off",
 	}),
 	rosterIssueFixture({
 		key: "note|holiday",
 		group: "forInformation",
-		who: "Roster note",
+		who: "5 people’s days before this week changed",
 		memberProfileId: null,
 		day: null,
-		rule: "Public holiday on Monday",
+		rule: "This roster was generated from what was known then. To plan from the days as they are now, regenerate the month from its page.",
 	}),
 ];

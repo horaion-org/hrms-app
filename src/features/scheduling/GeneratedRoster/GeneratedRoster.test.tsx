@@ -355,11 +355,13 @@ describe("GeneratedRoster", () => {
 		expect(screen.queryByRole("note")).toBeNull();
 		await user.click(screen.getByRole("button", { name: /^Issues: / }));
 		const panel = screen.getByRole("complementary", { name: "Issues" });
+		expect(panel).toHaveTextContent("2 people’s days before this week changed");
 		expect(panel).toHaveTextContent(
-			"2 people’s days before this week changed after this roster was generated, so what it says about the week before is what was known then."
+			"This roster was generated from what was known then."
 		);
+		expect(panel).toHaveTextContent("These notes are from generation");
 		expect(panel).toHaveTextContent(
-			"These notes are from generation. Changes made by hand since aren’t reflected."
+			"Changes made by hand since aren’t reflected."
 		);
 		await user.click(
 			screen.getByRole("button", { name: "Changed by hand: 1 day" })
@@ -635,12 +637,12 @@ describe("GeneratedRoster", () => {
 			expect(
 				within(panel).getByRole("button", { name: /^Must fix/ })
 			).toBeVisible();
-			expect(within(panel).getByText("Twelve hours a day")).toBeVisible();
 			expect(
-				within(panel).getByText(
-					"Validated: the schedule breaks Twelve hours a day."
-				)
+				within(panel).getByText(/Rule: Twelve hours a day/)
 			).toBeVisible();
+			expect(within(panel).getByRole("note")).toHaveTextContent(
+				"Validated: 1 rule broken"
+			);
 		});
 
 		it("given_aValidationThatSaysWho_when_issuesOpens_then_mustsByPersonAndDayAndIfPossibleApartAndUncounted", async () => {
@@ -777,8 +779,8 @@ describe("GeneratedRoster", () => {
 
 			expect(ask).toHaveBeenCalledOnce();
 			const panel = screen.getByRole("complementary", { name: "Issues" });
-			expect(panel).toHaveTextContent(
-				"The schedule has changed since this list was made. Validate it to refresh the list."
+			expect(within(panel).getByRole("note")).toHaveTextContent(
+				"Changed since this list was made"
 			);
 			await user.click(
 				within(panel).getByRole("button", { name: "Validate schedule" })
