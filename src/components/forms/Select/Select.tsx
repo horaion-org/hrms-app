@@ -61,13 +61,15 @@ export type SelectProps = SharedProps &
 				 */
 				selectAllLabel?: string;
 				/**
-				 * Makes each group of several options a header row that chooses or
-				 * clears every available option of that group at once, as the
-				 * select-all row does for all of them. A group of one option is that
-				 * option's row alone, its group named after the label.
+				 * Offers a row of group chips above the options, one per group with
+				 * an available option, each choosing or clearing every available
+				 * option of its group at once, as the select-all row does for all of
+				 * them. The options are then one flat list, each named with its group.
 				 */
 				wholeGroups?: boolean;
-				/** The muted text after a whole-group header, from its option count, e.g. "2 shifts"; none without it. */
+				/** The small muted heading over the group chips, e.g. "Shift groups"; none without it. */
+				groupsLabel?: string;
+				/** The muted text after a group chip's name, from its option count, e.g. "2 shifts"; shown for a group of several only. */
 				groupCountText?: (count: number) => string;
 		  }
 	);
@@ -75,7 +77,7 @@ export type SelectProps = SharedProps &
 /** The value of the select-all row; never reported, never submitted. */
 const SELECT_ALL = "\u0000select-all";
 
-/** The value of a whole-group row is this prefix and the group; never reported, never submitted. */
+/** The value of a group chip is this prefix and the group; never reported, never submitted. */
 const WHOLE_GROUP = "\u0000group:";
 
 /** How many of some options are chosen: every one, some of them, or none. */
@@ -93,6 +95,28 @@ const chosenStateOf = (
 	return chosenCount > 0 ? "some" : "none";
 };
 
+/** A group chip's chosen state, as its aria-checked value: a chip is an option, which may be half checked. */
+const groupChipChecked: Record<ChosenState, "true" | "mixed" | "false"> = {
+	all: "true",
+	some: "mixed",
+	none: "false",
+};
+
+/** A group chip's look: filled when its whole group is chosen, outlined in the chosen colour when some is, neutral when none is. */
+const groupChipClasses: Record<ChosenState, string> = {
+	all: "border-ink-blue-700 bg-ink-blue-700 text-white",
+	some: "border-ink-blue-700 bg-white text-ink-blue-900",
+	none: "border-neutral-400 bg-white text-neutral-800",
+};
+
+/** The groups that have an available option, each once, in the order they first appear. */
+const choosableGroupsOf = (options: Array<SelectOption>): Array<string> =>
+	[...new Set(options.map((option) => option.group))].filter(
+		(group): group is string =>
+			group !== undefined &&
+			options.some((option) => option.group === group && !option.disabled)
+	);
+
 /** A run of consecutive options sharing one heading, or none. */
 type OptionRun = { group: string | undefined; options: Array<SelectOption> };
 
@@ -105,7 +129,7 @@ const optionRuns = (options: Array<SelectOption>): Array<OptionRun> =>
 		return runs;
 	}, []);
 
-/** An option's group, to name after its label in a one-option group; none when it only repeats the label. */
+/** An option's group, to name after its label in whole-groups mode; none when it only repeats the label. */
 const groupNoteOf = (option: SelectOption): string | undefined =>
 	option.group !== undefined &&
 	option.group.trim().toLowerCase() !== option.label.trim().toLowerCase()
@@ -135,13 +159,6 @@ const RowText = ({
 		</span>
 	);
 
-/** Whether a run is a group of several options, which whole-groups mode lists under a header row. */
-const isGroupOfSeveral = (run: OptionRun | undefined): boolean =>
-	run?.group !== undefined && run.options.length > 1;
-
-/** The line above a run in whole-groups mode: between a group of several and its neighbours, not above the first run. */
-const dividerClasses = "border-t border-neutral-300";
-
 const statusFocusClasses =
 	"focus:outline-2 focus:outline-solid focus:outline-offset-2 focus:outline-ink-blue-500";
 
@@ -170,9 +187,10 @@ export const Select = (props: SelectProps): FunctionComponent => {
 	} = props;
 	const selectAllLabel = props.multiple ? props.selectAllLabel : undefined;
 	const wholeGroups = props.multiple === true && props.wholeGroups === true;
+	const groupsLabel = props.multiple ? props.groupsLabel : undefined;
 	const groupCountText = props.multiple ? props.groupCountText : undefined;
-	// With a select-all or whole-group row the Select keeps its own value, so
-	// the row can set many options at once even when the caller gave only a default.
+	// With a select-all row or group chips the Select keeps its own value, so
+	// they can set many options at once even when the caller gave only a default.
 	const keepsOwnValue = selectAllLabel !== undefined || wholeGroups;
 	const [own, setOwn] = useState<Array<string>>(() =>
 		Array.isArray(defaultValue) ? defaultValue : []
@@ -181,13 +199,16 @@ export const Select = (props: SelectProps): FunctionComponent => {
 	const chosenValues = Array.isArray(current) ? current : [];
 	const available = options.filter((option) => !option.disabled);
 	const availableState = chosenStateOf(available, chosenValues);
+	const choosableGroups = wholeGroups ? choosableGroupsOf(options) : [];
+	const groupsLabelId =
+		groupsLabel === undefined ? undefined : `${groupId}-groups`;
 	/** Whether every, some or none of a group's available options are chosen. */
 	const groupState = (group: string): ChosenState =>
 		chosenStateOf(
 			available.filter((option) => option.group === group),
 			chosenValues
 		);
-	/** The values after a whole-group row: its available options all chosen, or all cleared when they already were. */
+	/** The values after a group chip: its available options all chosen, or all cleared when they already were. */
 	const toggledGroup = (group: string): Array<string> => {
 		const clearing = groupState(group) === "all";
 		return options
@@ -206,18 +227,48 @@ export const Select = (props: SelectProps): FunctionComponent => {
 		) : (
 			<CheckboxIcon className="size-5 text-neutral-400" />
 		);
-	/** An option's row: indented under its group's header, or with its group named after the label. */
-	const renderOption = (
-		option: SelectOption,
-		{ indented = false, note }: { indented?: boolean; note?: string } = {}
-	): ReactNode => (
+	/**
+	 * A group's chip: a pill option that chooses or clears the group's available
+	 * options, with its count for a group of several and a tick when all are chosen.
+	 */
+	const renderGroupChip = (group: string): ReactNode => {
+		const memberCount = options.filter(
+			(option) => option.group === group
+		).length;
+		const countText =
+			memberCount > 1 ? groupCountText?.(memberCount) : undefined;
+		const state = groupState(group);
+		return (
+			<ListboxOption
+				key={group}
+				aria-checked={groupChipChecked[state]}
+				aria-label={t("select.wholeGroup", { group })}
+				value={`${WHOLE_GROUP}${group}`}
+				className={joinClassNames(
+					"inline-flex min-h-8 max-w-full cursor-pointer items-center gap-1 rounded-full border px-3 text-sm font-medium select-none pointer-coarse:min-h-11 data-focus:outline-2 data-focus:outline-offset-2 data-focus:outline-ink-blue-500",
+					groupChipClasses[state]
+				)}
+			>
+				{state === "all" && <TickIcon className="size-4 shrink-0" />}
+				<span className="min-w-0 truncate">{group}</span>
+				{/* The space keeps the name and count apart in the chip's text. */}
+				{countText !== undefined && (
+					<>
+						{" "}
+						<span className="shrink-0 font-normal">{countText}</span>
+					</>
+				)}
+			</ListboxOption>
+		);
+	};
+	/** An option's row, with any note, such as its group, muted after the label. */
+	const renderOption = (option: SelectOption, note?: string): ReactNode => (
 		<ListboxOption
 			key={option.value}
 			disabled={option.disabled}
 			value={option.value}
 			className={joinClassNames(
-				"flex h-10 items-center justify-between gap-3 text-sm select-none pointer-coarse:min-h-11",
-				indented ? "pr-4 pl-8" : "px-4",
+				"flex h-10 items-center justify-between gap-3 px-4 text-sm select-none pointer-coarse:min-h-11",
 				option.disabled
 					? "cursor-not-allowed text-neutral-500"
 					: "cursor-pointer text-neutral-800 data-focus:bg-neutral-100"
@@ -377,72 +428,51 @@ export const Select = (props: SelectProps): FunctionComponent => {
 									</span>
 								</ListboxOption>
 							)}
-							{optionRuns(options).map((run, index, runs) => {
-								const key = `run-${String(index)}`;
-								const headingId = `${groupId}-${String(index)}`;
-								const divider =
-									wholeGroups &&
-									index > 0 &&
-									(isGroupOfSeveral(run) || isGroupOfSeveral(runs[index - 1]))
-										? dividerClasses
-										: undefined;
-								if (wholeGroups && !isGroupOfSeveral(run))
-									return (
-										<div key={key} className={divider}>
-											{run.options.map((option) =>
-												renderOption(option, { note: groupNoteOf(option) })
-											)}
+							{/* contain-inline-size: the chips wrap within the width the rows set and never widen the panel. */}
+							{wholeGroups && choosableGroups.length > 0 && (
+								<div
+									aria-labelledby={groupsLabelId}
+									className="mb-1 border-b border-neutral-300 px-4 pt-1 pb-3 contain-inline-size"
+									role="group"
+								>
+									{groupsLabel !== undefined && (
+										<div
+											className="pb-2 text-xs font-medium text-neutral-600"
+											id={groupsLabelId}
+										>
+											{groupsLabel}
 										</div>
-									);
-								if (run.group === undefined)
-									return (
-										<Fragment key={key}>
-											{run.options.map((option) => renderOption(option))}
-										</Fragment>
-									);
-								return (
-									<div
-										key={key}
-										aria-labelledby={headingId}
-										className={divider}
-										role="group"
-									>
-										{wholeGroups ? (
-											<ListboxOption
-												className="flex h-10 cursor-pointer items-center justify-between gap-3 bg-neutral-50 px-4 text-sm font-semibold text-neutral-900 select-none data-focus:bg-neutral-100"
-												id={headingId}
-												value={`${WHOLE_GROUP}${run.group}`}
-												aria-label={t("select.wholeGroup", {
-													group: run.group,
-												})}
-												disabled={
-													!available.some(
-														(option) => option.group === run.group
-													)
-												}
-											>
-												<RowText
-													note={groupCountText?.(run.options.length)}
-													text={run.group}
-												/>
-												<span className="size-5 shrink-0">
-													{stateIcon(groupState(run.group))}
-												</span>
-											</ListboxOption>
-										) : (
-											<div
-												className="px-4 pt-2 pb-1 text-xs font-semibold tracking-wide text-neutral-700 uppercase"
-												id={headingId}
-											>
-												{run.group}
-											</div>
-										)}
-										{run.options.map((option) =>
-											renderOption(option, { indented: wholeGroups })
-										)}
+									)}
+									<div className="flex flex-wrap gap-2">
+										{choosableGroups.map(renderGroupChip)}
 									</div>
-								);
-							})}
+								</div>
+							)}
+							{wholeGroups
+								? options.map((option) =>
+										renderOption(option, groupNoteOf(option))
+									)
+								: optionRuns(options).map((run, index) => {
+										const key = `run-${String(index)}`;
+										const headingId = `${groupId}-${String(index)}`;
+										if (run.group === undefined)
+											return (
+												<Fragment key={key}>
+													{run.options.map((option) => renderOption(option))}
+												</Fragment>
+											);
+										return (
+											<div key={key} aria-labelledby={headingId} role="group">
+												<div
+													className="px-4 pt-2 pb-1 text-xs font-semibold tracking-wide text-neutral-700 uppercase"
+													id={headingId}
+												>
+													{run.group}
+												</div>
+												{run.options.map((option) => renderOption(option))}
+											</div>
+										);
+									})}
 						</ListboxOptions>
 					</>
 				);
