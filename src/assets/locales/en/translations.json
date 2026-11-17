@@ -5052,6 +5052,7 @@
 				"loading": "Asking the engine…",
 				"none": "The engine found no way to fill this.",
 				"fills": "Fills the gap",
+				"fillsPart": "Fills part of the gap",
 				"cannotFill": "Can’t fill the gap",
 				"reason": "The engine’s reason",
 				"warnings": "The engine also notes",
@@ -5059,6 +5060,7 @@
 				"unknownShift": "a shift",
 				"leftShort_one": "Still {{count}} short {{times}}",
 				"leftShort_other": "Still {{count}} short {{times}}",
+				"leftShortNext": "After applying it, find cover again for the hours still short.",
 				"move": {
 					"REASSIGN": "Move {{name}} from {{fromShift}} {{fromDay}} to {{shift}} {{day}}",
 					"CALL_IN": "Call in {{name}} for {{shift}} {{day}}",

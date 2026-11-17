@@ -93,6 +93,18 @@ export const feasibleRepair = (
 	...overrides,
 });
 
+/**
+ * Chen's stretch after the swing shift fills the gap's last two hours,
+ * 13:00 to 15:00; 09:00 to 13:00 is still one short (the engine's ADR-0036).
+ */
+export const partStretchRepair = (): RepairOption =>
+	feasibleRepair([stretchMove()], {
+		kind: "overtime_stretch",
+		workingTimeRulesChecked: true,
+		leftShort: [{ start: "2026-10-17T09:00:00", end: "2026-10-17T13:00:00" }],
+		leftShortBy: 1,
+	});
+
 /** The engine's honest no for a staffing gap as generated. */
 export const infeasibleRepair = (): RepairOption => ({
 	feasible: false,

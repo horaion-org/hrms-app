@@ -8,6 +8,7 @@ import {
 	callInMove,
 	feasibleRepair,
 	infeasibleRepair,
+	partStretchRepair,
 	reassignMove,
 	stretchMove,
 } from "@/features/scheduling/cover/engineRepairFixtures";
@@ -222,6 +223,28 @@ describe("EngineRepairOptions", () => {
 				"The app can’t apply this one: make it by hand on the roster."
 			)
 		).toBeNull();
+	});
+
+	it("heads a stretch that leaves hours short 'Fills part of the gap' and says to find cover again", () => {
+		render(
+			<EngineRepairOptions
+				names={names}
+				repair={{
+					status: "ready",
+					options: [partStretchRepair()],
+					ask: vi.fn(),
+				}}
+			/>
+		);
+
+		expect(screen.getByText("Fills part of the gap")).toBeInTheDocument();
+		expect(screen.queryByText("Fills the gap")).toBeNull();
+		expect(screen.getByText("Still 1 short 09:00 – 13:00")).toBeInTheDocument();
+		expect(
+			screen.getByText(
+				"After applying it, find cover again for the hours still short."
+			)
+		).toBeInTheDocument();
 	});
 
 	it("shows a feasible option the app cannot apply with its moves and the by-hand line, an infeasible one with its reason only", () => {

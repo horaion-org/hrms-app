@@ -4,6 +4,7 @@ import {
 	callInMove,
 	feasibleRepair,
 	infeasibleRepair,
+	partStretchRepair,
 	reassignMove,
 	stretchMove,
 } from "@/features/scheduling/cover/engineRepairFixtures";
@@ -65,6 +66,13 @@ export const OvertimeStretch: Story = {
 			],
 			ask: fn(),
 		},
+	},
+};
+
+/** Chen's stretch fills the gap's last two hours; the rest is still short, and the panel says what to do. */
+export const PartialStretch: Story = {
+	args: {
+		repair: { status: "ready", options: [partStretchRepair()], ask: fn() },
 	},
 };
 

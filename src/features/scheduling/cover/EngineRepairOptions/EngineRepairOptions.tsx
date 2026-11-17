@@ -10,8 +10,10 @@ import { extraHoursLine } from "@/features/scheduling/cover/engineRepairHours";
 import { NotAssignedList } from "@/features/scheduling/cover/NotAssignedList";
 import {
 	leftShortLine,
+	leftShortNextLine,
 	RETRYABLE_REPAIR_REFUSALS,
 	moveLine,
+	optionHeadingKey,
 	type RepairNames,
 } from "@/features/scheduling/cover/engineRepairWords";
 import type { EngineRepairState } from "@/features/scheduling/cover/useEngineRepair";
@@ -47,11 +49,12 @@ const OptionItem = ({
 }): FunctionComponent => {
 	const { t } = useTranslation();
 	const leftShort = leftShortLine(option, t);
+	const leftShortNext = leftShortNextLine(option, t);
 	const cells = repairCells(option);
 	return (
 		<li className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0">
 			<p className="font-semibold text-neutral-900">
-				{t(option.feasible ? `${key}.fills` : `${key}.cannotFill`)}
+				{t(`${key}.${optionHeadingKey(option)}`)}
 			</p>
 			{option.moves.length > 0 && (
 				<ul className="flex flex-col gap-1 text-neutral-800">
@@ -66,6 +69,7 @@ const OptionItem = ({
 				<p className="text-neutral-800">{extraHoursLine(option, names, t)}</p>
 			)}
 			{leftShort && <p className="text-neutral-700">{leftShort}</p>}
+			{leftShortNext && <p className="text-neutral-700">{leftShortNext}</p>}
 			{!option.feasible && option.infeasibleReason && (
 				<Quote caption={t(`${key}.reason`)}>{option.infeasibleReason}</Quote>
 			)}

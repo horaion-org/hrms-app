@@ -4852,6 +4852,7 @@
 				"loading": "Preguntando al motor…",
 				"none": "El motor no encontró forma de cubrirlo.",
 				"fills": "Cubre el hueco",
+				"fillsPart": "Cubre parte del hueco",
 				"cannotFill": "No puede cubrir el hueco",
 				"reason": "El motivo del motor",
 				"warnings": "El motor también indica",
@@ -4859,6 +4860,7 @@
 				"unknownShift": "un turno",
 				"leftShort_one": "Aún falta {{count}} {{times}}",
 				"leftShort_other": "Aún faltan {{count}} {{times}}",
+				"leftShortNext": "Después de aplicarlo, vuelve a buscar cobertura para las horas que aún faltan.",
 				"move": {
 					"REASSIGN": "Mover a {{name}} de {{fromShift}} {{fromDay}} a {{shift}} {{day}}",
 					"CALL_IN": "Llamar a {{name}} para {{shift}} {{day}}",

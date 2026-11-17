@@ -144,6 +144,31 @@ const spanText = (span: RepairSpan, t: TFunction): string =>
 		end: clockTime(span.end),
 	});
 
+/**
+ * An option's heading: "Fills the gap", "Fills part of the gap" when it
+ * leaves some hours short (a stretch often does, the engine's ADR-0036), or
+ * "Can’t fill the gap" for the engine's honest no. Pure.
+ */
+export const optionHeadingKey = (
+	option: RepairOption
+): "fills" | "fillsPart" | "cannotFill" => {
+	if (!option.feasible) return "cannotFill";
+	return option.leftShort.length > 0 ? "fillsPart" : "fills";
+};
+
+/**
+ * What to do about the hours an option offered still leaves short: "After
+ * applying it, find cover again for the hours still short."; nothing when it
+ * fills the gap or cannot be applied.
+ */
+export const leftShortNextLine = (
+	option: RepairOption,
+	t: TFunction
+): string | undefined =>
+	option.feasible && option.leftShort.length > 0
+		? t(`${key}.leftShortNext`)
+		: undefined;
+
 /** What an option still leaves short: "Still 1 short 07:00 – 09:00"; nothing when it fills the gap. */
 export const leftShortLine = (
 	option: RepairOption,
