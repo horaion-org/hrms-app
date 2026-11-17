@@ -2,7 +2,7 @@ import { QueryClient } from "@tanstack/react-query";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import { storyProviders } from "@/features/organisation/storyApi";
-import { PublishScheduleDialog } from "@/features/scheduling/PublishScheduleDialog";
+import { PublishScheduleDialog } from "@/features/scheduling/schedules/PublishScheduleDialog";
 import { generatedScheduleFixture } from "@/features/scheduling/schedules/fixtures";
 
 const client = new QueryClient({

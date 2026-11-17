@@ -40,7 +40,7 @@ import { formatPeriod } from "@/features/scheduling/periods";
 import {
 	PublishScheduleDialog,
 	publishModeOf,
-} from "@/features/scheduling/PublishScheduleDialog";
+} from "@/features/scheduling/schedules/PublishScheduleDialog";
 import { hasRosterHours } from "@/features/scheduling/hours/rosterHoursRows";
 import {
 	useRosterHours,
@@ -48,8 +48,8 @@ import {
 } from "@/features/scheduling/hours/useRosterHours";
 import { useRosterPreferenceOutcomes } from "@/features/scheduling/preferenceOutcomes/usePreferenceOutcomes";
 import { RegenerateMonthDialog } from "@/features/scheduling/months/RegenerateMonthDialog";
-import { RejectedRosterCallout } from "@/features/scheduling/RejectedRosterCallout";
-import { RejectScheduleDialog } from "@/features/scheduling/RejectScheduleDialog";
+import { RejectedRosterCallout } from "@/features/scheduling/schedules/RejectedRosterCallout";
+import { RejectScheduleDialog } from "@/features/scheduling/schedules/RejectScheduleDialog";
 import {
 	publishedRosterOtherThan,
 	publishedWeekQuery,
@@ -66,7 +66,7 @@ import { coverOffersQuery } from "@/features/scheduling/coverOffers/api";
 import { rosterChangeShiftsQuery } from "@/features/scheduling/rosterChanges/api";
 import type { RosterChangeTarget } from "@/features/scheduling/rosterChanges/useRosterChangeActions";
 import { generationFailure } from "@/features/scheduling/roster/generationFailure";
-import { ScheduleMenu } from "@/features/scheduling/ScheduleMenu";
+import { ScheduleMenu } from "@/features/scheduling/schedules/ScheduleMenu";
 import {
 	decidable,
 	GENERATION_POLL_INTERVAL_MS,
@@ -101,7 +101,7 @@ import {
 } from "@/features/scheduling/schedules/useScheduleAssignments";
 import { useScheduleConstraints } from "@/features/scheduling/schedules/useScheduleConstraints";
 import { useScheduleShifts } from "@/features/scheduling/schedules/useScheduleShifts";
-import { WithdrawApprovalDialog } from "@/features/scheduling/WithdrawApprovalDialog";
+import { WithdrawApprovalDialog } from "@/features/scheduling/schedules/WithdrawApprovalDialog";
 import {
 	startingContextQuery,
 	type StartingContext,

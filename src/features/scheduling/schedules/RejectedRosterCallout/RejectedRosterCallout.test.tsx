@@ -3,7 +3,7 @@ import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it } from "vitest";
 import en from "@/assets/locales/en/translations.json";
-import { RejectedRosterCallout } from "@/features/scheduling/RejectedRosterCallout";
+import { RejectedRosterCallout } from "@/features/scheduling/schedules/RejectedRosterCallout";
 import { generatedScheduleFixture } from "@/features/scheduling/schedules/fixtures";
 
 beforeAll(async () => {

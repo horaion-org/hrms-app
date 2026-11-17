@@ -4,7 +4,7 @@ import { expect, userEvent, within } from "storybook/test";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import { storyProviders } from "@/features/organisation/storyApi";
 import { storyCompany } from "@/features/people/storyCompany";
-import { ScheduleMenu } from "@/features/scheduling/ScheduleMenu";
+import { ScheduleMenu } from "@/features/scheduling/schedules/ScheduleMenu";
 import { generatedScheduleFixture } from "@/features/scheduling/schedules/fixtures";
 
 const COMPANY = "story-company";

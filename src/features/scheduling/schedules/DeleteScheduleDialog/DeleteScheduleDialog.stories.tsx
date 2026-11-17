@@ -2,7 +2,7 @@ import { QueryClient } from "@tanstack/react-query";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import { storyProviders } from "@/features/organisation/storyApi";
-import { RejectScheduleDialog } from "@/features/scheduling/RejectScheduleDialog";
+import { DeleteScheduleDialog } from "@/features/scheduling/schedules/DeleteScheduleDialog";
 import { generatedScheduleFixture } from "@/features/scheduling/schedules/fixtures";
 
 const client = new QueryClient({
@@ -10,27 +10,27 @@ const client = new QueryClient({
 });
 
 const meta = {
-	title: "Features/Scheduling/RejectScheduleDialog",
-	component: RejectScheduleDialog,
+	title: "Features/Scheduling/DeleteScheduleDialog",
+	component: DeleteScheduleDialog,
 	args: {
 		companyId: "story-company",
 		schedule: generatedScheduleFixture({ status: "GENERATED" }),
 		onClose: fn(),
+		onDeleted: fn(),
 	},
 	decorators: [storyProviders(client)],
-} satisfies Meta<typeof RejectScheduleDialog>;
+} satisfies Meta<typeof DeleteScheduleDialog>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** The reason is required; confirming without one says so on the field. */
-export const Default: Story = {};
+/** Names the department and week, and asks in red. */
+export const Generated: Story = {};
 
-/** Withdrawing a published roster's publication: the remark everyone on it reads is required. */
-export const WithdrawPublication: Story = {
+/** While a run is open the schedule can't be deleted yet, so confirming is held back. */
+export const BeingGenerated: Story = {
 	args: {
-		decision: "withdraw",
-		schedule: generatedScheduleFixture({ status: "PUBLISHED" }),
+		schedule: generatedScheduleFixture({ status: "GENERATION_REQUESTED" }),
 	},
 };

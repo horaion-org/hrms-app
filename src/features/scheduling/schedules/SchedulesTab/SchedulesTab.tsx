@@ -24,13 +24,13 @@ import {
 	summaryRange,
 } from "@/features/scheduling/months/monthWeeks";
 import { formatPeriod } from "@/features/scheduling/periods";
-import { ScheduleMenu } from "@/features/scheduling/ScheduleMenu";
+import { ScheduleMenu } from "@/features/scheduling/schedules/ScheduleMenu";
 import type { Schedule } from "@/features/scheduling/schedules/api";
 import { statusLabelKey } from "@/features/scheduling/schedules/publishOrder";
 import { scheduleStatusTones } from "@/features/scheduling/schedules/scheduleStatusTones";
 import { scheduleViewLink } from "@/features/scheduling/schedules/scheduleViewLink";
 import { useSchedules } from "@/features/scheduling/schedules/useSchedules";
-import { schedulingNoticeFrom } from "@/features/scheduling/schedulingNotice";
+import { schedulingNoticeFrom } from "@/features/scheduling/schedules/schedulingNotice";
 import { Can } from "@/features/workspace/Can";
 import { DepartmentFilter } from "@/features/workspace/DepartmentFilter";
 import { departmentChips } from "@/features/workspace/filterChips";

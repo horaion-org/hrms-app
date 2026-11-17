@@ -3,7 +3,7 @@ import type {
 	ApprovalStanding,
 	OpenStep,
 } from "@/features/approvals/approvalStanding";
-import { publishModeOf } from "@/features/scheduling/PublishScheduleDialog/publishMode";
+import { publishModeOf } from "@/features/scheduling/schedules/PublishScheduleDialog/publishMode";
 
 /** The first of a submission's three steps. */
 const FIRST_STEP: OpenStep = {

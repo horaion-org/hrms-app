@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { RejectedRosterCallout } from "@/features/scheduling/RejectedRosterCallout";
+import { RejectedRosterCallout } from "@/features/scheduling/schedules/RejectedRosterCallout";
 import { generatedScheduleFixture } from "@/features/scheduling/schedules/fixtures";
 import "@/common/i18n";
 

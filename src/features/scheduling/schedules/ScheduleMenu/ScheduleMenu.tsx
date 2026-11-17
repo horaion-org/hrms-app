@@ -6,7 +6,7 @@ import { saveFile } from "@/common/saveFile";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { OverflowMenu, OverflowMenuItem } from "@/components/ui/OverflowMenu";
-import { DeleteScheduleDialog } from "@/features/scheduling/DeleteScheduleDialog";
+import { DeleteScheduleDialog } from "@/features/scheduling/schedules/DeleteScheduleDialog";
 import {
 	deletable,
 	exportRoster,

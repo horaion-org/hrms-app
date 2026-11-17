@@ -8,7 +8,7 @@ import { APPROVAL_COMMENT_MAX_LENGTH } from "@/features/approvals/api";
 import { approvalDecisionRefusal } from "@/features/approvals/approvalRefusal";
 import { stepSummary } from "@/features/approvals/approvalStanding";
 import { useApprovalDecisionActions } from "@/features/approvals/useApprovalActions";
-import type { PublishMode } from "@/features/scheduling/PublishScheduleDialog/publishMode";
+import type { PublishMode } from "@/features/scheduling/schedules/PublishScheduleDialog/publishMode";
 import type { Schedule } from "@/features/scheduling/schedules/api";
 import { decisionRefusal } from "@/features/scheduling/schedules/scheduleRefusal";
 import {

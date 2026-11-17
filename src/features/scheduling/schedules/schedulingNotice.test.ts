@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
 	schedulingNoticeFrom,
 	withSchedulingNotice,
-} from "@/features/scheduling/schedulingNotice";
+} from "@/features/scheduling/schedules/schedulingNotice";
 
 describe("schedulingNotice", () => {
 	it("given_aNoticeCarried_when_read_then_returnsItAndKeepsTheRestOfTheState", () => {

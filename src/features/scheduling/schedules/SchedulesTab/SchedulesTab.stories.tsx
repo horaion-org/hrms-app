@@ -6,7 +6,7 @@ import { storyCompany } from "@/features/people/storyCompany";
 import { scheduleMonthSummariesKey } from "@/features/scheduling/months/api";
 import { monthSummaryFixture } from "@/features/scheduling/months/fixtures";
 import { summaryRange } from "@/features/scheduling/months/monthWeeks";
-import { SchedulesTab } from "@/features/scheduling/SchedulesTab";
+import { SchedulesTab } from "@/features/scheduling/schedules/SchedulesTab";
 import { schedulesInUnitsKey } from "@/features/scheduling/schedules/api";
 import {
 	generatedScheduleFixture,

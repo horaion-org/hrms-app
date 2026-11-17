@@ -33,7 +33,7 @@ const ALLOWED_LOOSE_CODES = [
 	"src/features/employmentTerms/BulkChangeEmploymentTermsDialog/BulkChangeEmploymentTermsDialog.tsx",
 	"src/features/people/notes.ts",
 	"src/features/people/skills.ts",
-	"src/features/scheduling/ScheduleMenu/ScheduleMenu.tsx",
+	"src/features/scheduling/schedules/ScheduleMenu/ScheduleMenu.tsx",
 	"src/features/scheduling/cover/engineRepairWords.ts",
 	"src/features/scheduling/rulesCheck/rosterRulesCheckWords.ts",
 	"src/features/settings/DataSettings/DataSettings.tsx",
