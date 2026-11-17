@@ -1,4 +1,5 @@
 import dayjs from "dayjs";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import type {
 	DatesPlan,
 	DatesPlanWeek,
@@ -17,9 +18,6 @@ import type {
  * whose roster may carry over. Dates are ISO strings ("YYYY-MM-DD"). The API
  * decides what a run generates; this only reads the month and the dates plan.
  */
-
-/** The ISO day format the month and dates reads use. */
-const ISO_DAY = "YYYY-MM-DD";
 
 /** What the month wizard knows when it works out where a run starts. */
 export type RunStartFacts = {
@@ -97,7 +95,8 @@ export const runStartOf = ({
 			: monthDaysBeforeStart(startingWeek, startedWeekFrom),
 		firstMonday,
 		weekBefore:
-			firstMonday && dayjs(firstMonday).subtract(1, "week").format(ISO_DAY),
+			firstMonday &&
+			dayjs(firstMonday).subtract(1, "week").format(ISO_DATE_FORMAT),
 		datesStartOnMonday:
 			datesStart !== undefined && datesStart.newFrom === datesStart.periodStart,
 		datesRedoStart: (datesStart?.redone.length ?? 0) > 0,

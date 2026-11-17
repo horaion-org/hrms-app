@@ -1,4 +1,5 @@
 import dayjs from "dayjs";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import { daysOf, mondayOf } from "@/common/weeks";
 import type {
 	DatesPlan,
@@ -22,13 +23,11 @@ import type { WeekChoiceIds } from "@/features/scheduling/weekChoice";
 /** The most days one schedule by dates covers (API ADR-0114). */
 export const MAX_DAYS_BY_DATES = 31;
 
-const iso = "YYYY-MM-DD";
-
 /** The last day a schedule starting on `firstDay` may reach. */
 export const maxLastDayOf = (firstDay: string): string =>
 	dayjs(firstDay)
 		.add(MAX_DAYS_BY_DATES - 1, "day")
-		.format(iso);
+		.format(ISO_DATE_FORMAT);
 
 /** How many days from `firstDay` to `lastDay`, both included. */
 export const dayCountOf = (firstDay: string, lastDay: string): number =>
@@ -78,7 +77,7 @@ export type PlanRow = {
 
 /** The day after `date`. */
 const dayAfter = (date: string): string =>
-	dayjs(date).add(1, "day").format(iso);
+	dayjs(date).add(1, "day").format(ISO_DATE_FORMAT);
 
 /** A schedule's days and state: a month read's part, or a dates plan's kept part. */
 type PartDays = Pick<WeekPart, "coveredFrom" | "coveredTo" | "state">;
@@ -234,7 +233,7 @@ export const namedSpansOf = (
 
 /** The day before `date`. */
 const dayBefore = (date: string): string =>
-	dayjs(date).subtract(1, "day").format(iso);
+	dayjs(date).subtract(1, "day").format(ISO_DATE_FORMAT);
 
 /** A part of a week, by its days. */
 type CoveredWeek = {
@@ -350,7 +349,7 @@ export const previousBefore = (
 /** Every date of a run of days, in order. */
 export const datesIn = (days: DayRun): Array<string> =>
 	Array.from({ length: dayCountOf(days.from, days.to) }, (_, offset) =>
-		dayjs(days.from).add(offset, "day").format(iso)
+		dayjs(days.from).add(offset, "day").format(ISO_DATE_FORMAT)
 	);
 
 /** The Setup fields a dates run sends: its days, the name it may give, and whether leave counts. */
