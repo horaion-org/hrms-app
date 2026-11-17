@@ -162,6 +162,55 @@ it("confirms an approval with an optional trimmed comment and returns to review 
 	);
 });
 
+/**
+ * Presses a button as a browser does: React redraws before the browser runs
+ * the button's own action, so a button redrawn in place as an enabled submit
+ * submits its form with the same press.
+ */
+const pressAsBrowser = async (
+	user: ReturnType<typeof userEvent.setup>,
+	button: HTMLElement
+): Promise<void> => {
+	await user.click(button);
+	if (
+		button instanceof HTMLButtonElement &&
+		button.isConnected &&
+		button.type === "submit" &&
+		!button.disabled
+	)
+		button.form?.requestSubmit();
+};
+
+it("opens each decision's confirmation step on its first press without deciding, and decides only on Confirm", async () => {
+	const user = userEvent.setup();
+	const onApprove = vi.fn<LeaveReview["onApprove"]>();
+	const onReject = vi.fn<LeaveReview["onReject"]>();
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				request={pending}
+				review={reviewWith({ onApprove, onReject })}
+				today={BEFORE_THE_LEAVE}
+				onClose={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	await pressAsBrowser(user, screen.getByRole("button", { name: "Approve" }));
+	expect(onApprove).not.toHaveBeenCalled();
+	expect(
+		screen.getByRole("textbox", { name: "Comment (optional)" })
+	).toBeInTheDocument();
+	await user.click(screen.getByRole("button", { name: "Confirm approval" }));
+	expect(onApprove).toHaveBeenCalledOnce();
+	await user.click(screen.getByRole("button", { name: "Cancel" }));
+	await pressAsBrowser(user, screen.getByRole("button", { name: "Reject" }));
+	expect(onReject).not.toHaveBeenCalled();
+	expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+	expect(
+		screen.getByRole("textbox", { name: "Reason for rejection" })
+	).toBeInTheDocument();
+});
+
 it("asks for a comment before approving leave that started before today, then sends it", async () => {
 	const user = userEvent.setup();
 	const onApprove = vi.fn<LeaveReview["onApprove"]>();
