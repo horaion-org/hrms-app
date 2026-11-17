@@ -95,15 +95,17 @@ export const ChangeEmploymentTermsDialog = ({
 				termsOf: (id): EmploymentTerms | undefined =>
 					findTerms(activeTerms, id),
 				startRule,
+				// A correction rewrites an entry in place, so only a new change is compared.
+				history: correcting ? [] : current.history,
 			}),
-		[t, activeTerms, startRule]
+		[t, activeTerms, startRule, correcting, current.history]
 	);
 	const form = useForm<MemberTermsFormValues>({
 		resolver: zodResolver(schema),
 		defaultValues: memberTermsFormValuesOf(
+			// A new change starts with no terms chosen: their current terms would change nothing.
 			correcting ?? {
-				termsId:
-					current.inForce?.basis === "ASSIGNED" ? current.inForce.termsId : "",
+				termsId: "",
 				effectiveFrom:
 					startRule.kind === "anyDay"
 						? (person.hireDate ?? today)
@@ -231,6 +233,11 @@ export const ChangeEmploymentTermsDialog = ({
 				})(event)
 			}
 		>
+			{!correcting && current.inForce && (
+				<p className="text-sm text-neutral-800">
+					{t(`${key}.now`, { name: current.inForce.name })}
+				</p>
+			)}
 			<FormRow
 				htmlFor={idOf("termsId")}
 				label={t(`${key}.terms`)}
