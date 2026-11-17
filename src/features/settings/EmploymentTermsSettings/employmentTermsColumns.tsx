@@ -10,8 +10,7 @@ import type {
 } from "@/features/employmentTerms/api";
 import {
 	isPartTimeWeek,
-	overtimeShort,
-	weekLines,
+	termsSentence,
 } from "@/features/employmentTerms/summary";
 import { actionsColumn } from "@/features/organisation/listColumns";
 import { ALL_BRANCHES } from "@/features/workspace/unitSelection";
@@ -50,9 +49,9 @@ const statusCell = (terms: TermsOverviewItem, t: TFunction): ReactNode => (
 );
 
 /**
- * The terms in full, so the list reads in the width Settings gives it: the
- * name with a pill for shift work or part-time, the week and rest day on one
- * line, when overtime starts on the next, then the description.
+ * The terms in full, as a sentence (the approved design's list): the name
+ * with a pill for part-time or for terms outside the Act's hour rules, the
+ * terms' sentence with its overtime rate, then the description.
  */
 const termsCell = (
 	terms: TermsOverviewItem,
@@ -63,7 +62,6 @@ const termsCell = (
 		terms.weekMinutes,
 		presets?.partTimeBelowMinutes ?? null
 	);
-	const overtime = overtimeShort(terms, presets, t);
 	return (
 		<span className="flex flex-col gap-1">
 			<span className="flex flex-wrap items-center gap-2">
@@ -71,13 +69,11 @@ const termsCell = (
 				{partTime && (
 					<Badge>{t("employmentTerms.dialog.partTimeBadge")}</Badge>
 				)}
+				{!terms.hoursLimitsApply && <Badge>{t(`${key}.notCovered`)}</Badge>}
 			</span>
 			<span className="font-normal text-neutral-900">
-				{weekLines(terms, presets, t).join(" · ")}
+				{termsSentence(terms, presets, t)}
 			</span>
-			{overtime && (
-				<span className="font-normal text-neutral-800">{overtime}</span>
-			)}
 			{terms.description && (
 				<span className="font-normal text-neutral-700">
 					{terms.description}

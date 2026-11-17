@@ -28,7 +28,9 @@ import { renderAuthApp } from "@/features/auth/testing";
 import {
 	FIVE_DAY_WEEK,
 	overviewResponse,
+	PART_TIME_20,
 	SIX_DAY_SHIFT,
+	STANDARD_WEEK,
 	TERMS_OVERVIEW_RESPONSE,
 	TERMS_PRESETS,
 } from "@/features/employmentTerms/fixtures";
@@ -92,14 +94,7 @@ describe("EmploymentTermsSettings", () => {
 
 		const rows = await table(panel);
 		const standard = within(rows).getByRole("row", { name: /Standard week/ });
-		expect(standard).toHaveTextContent("44 h over 6 days");
-		expect(standard).toHaveTextContent("Roster picks the rest day");
-		expect(standard).toHaveTextContent("Overtime after 44 h a week");
-		expect(standard).toHaveTextContent("Default");
-		// Part-time says so beside the name, with how overtime counts.
-		const partTime = within(rows).getByRole("row", { name: /Part-time, 20 h/ });
-		expect(within(partTime).getByText("Part-time")).toBeVisible();
-		expect(partTime).toHaveTextContent("Extra hours up to 44 h, then overtime");
+		expect(standard).toHaveTextContent("picked by the roster");
 		expect(
 			within(rows).getByRole("row", { name: /Six-day shift/ })
 		).toHaveTextContent("41 people+2 from a later date");
@@ -109,6 +104,56 @@ describe("EmploymentTermsSettings", () => {
 			within(panel).getByRole("link", { name: "Work policy" })
 		).toHaveAttribute("href", "/settings?section=scheduling");
 	});
+
+	it("given_terms_when_listed_then_eachRowIsASentenceWithItsRate", async () => {
+		stubApi(
+			routes(READ_AND_UPDATE, {
+				[`GET ${TERMS}/overview`]: {
+					status: 200,
+					body: envelope(
+						overviewResponse([
+							{ ...STANDARD_WEEK, dayMinutes: 440 },
+							PART_TIME_20,
+							{
+								...FIVE_DAY_WEEK,
+								hoursLimitsApply: false,
+								extraHoursPaidAs: "NOTHING",
+							},
+						])
+					),
+				},
+			})
+		);
+		const rows = await table(await open());
+
+		expect(
+			within(rows).getByRole("row", { name: /Standard week/ })
+		).toHaveTextContent(
+			"Full-time, 6 days a week, 44 h (7 h 20 min a day). Rest day: a different day each week, picked by the roster. Overtime after 44 h in a week, paid at 1.5 times."
+		);
+		const partTime = within(rows).getByRole("row", { name: /Part-time, 20 h/ });
+		expect(within(partTime).getByText("Part-time")).toBeVisible();
+		expect(partTime).toHaveTextContent(
+			"Extra hours are paid at the normal rate up to 44 h a week, then at 1.5 times."
+		);
+		const managers = within(rows).getByRole("row", { name: /Five-day week/ });
+		expect(
+			within(managers).getByText("Not under the Act’s hour rules")
+		).toBeVisible();
+		expect(managers).toHaveTextContent(
+			"Hours past 44 h a week earn nothing extra."
+		);
+	});
+
+	it("given_theDefault_when_listed_then_badgeSaysNewPeopleGetThese", async () => {
+		stubApi(routes(READ_AND_UPDATE));
+		const rows = await table(await open());
+
+		expect(
+			within(rows).getByRole("row", { name: /Standard week/ })
+		).toHaveTextContent("New people get these");
+	});
+
 
 	it("links each count to the People list filtered to those terms, across every Branch", async () => {
 		stubApi(
@@ -949,16 +994,16 @@ describe("EmploymentTermsSettings", () => {
 			})
 		);
 		await user.click(
-			await screen.findByRole("menuitem", { name: "Make default" })
+			await screen.findByRole("menuitem", { name: "Give these to new people" })
 		);
 		const confirm = await screen.findByRole("dialog", {
-			name: "Make Five-day week, 44 h the default?",
+			name: "Give Five-day week, 44 h to new people?",
 		});
 		expect(confirm).toHaveTextContent(
 			"New people get Five-day week, 44 h unless you choose other terms when you add them. Nobody’s current terms change."
 		);
 		await user.click(
-			within(confirm).getByRole("button", { name: "Make default" })
+			within(confirm).getByRole("button", { name: "Give to new people" })
 		);
 
 		expect(

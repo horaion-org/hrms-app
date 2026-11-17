@@ -5791,7 +5791,7 @@
 			"label": "Condiciones de empleo",
 			"terms": "Condiciones",
 			"people": "Personas",
-			"default": "Predeterminadas",
+			"default": "Las personas nuevas reciben estas",
 			"peopleCount_one": "{{count}} persona",
 			"peopleCount_other": "{{count}} personas",
 			"scheduledCount_one": "+{{count}} desde una fecha posterior",
@@ -5802,7 +5802,7 @@
 			"hidden": "No tienes acceso a las condiciones de empleo.",
 			"menu": {
 				"changeFromDate": "Cambiar desde una fecha…",
-				"makeDefault": "Hacer predeterminadas"
+				"makeDefault": "Dárselas a las personas nuevas"
 			},
 			"toast": {
 				"added": "Condiciones de empleo añadidas",
@@ -5817,8 +5817,8 @@
 				"ownHoursCleared_other": "Se borraron las horas propias de {{count}} personas cuyas horas superaban la nueva semana."
 			},
 			"makeDefault": {
-				"title": "¿Hacer {{name}} las predeterminadas?",
-				"confirm": "Hacer predeterminadas",
+				"title": "¿Dar {{name}} a las personas nuevas?",
+				"confirm": "Dar a las personas nuevas",
 				"description": "Las personas nuevas reciben {{name}} salvo que elijas otras condiciones al añadirlas. Las condiciones actuales de nadie cambian."
 			},
 			"status": {
@@ -5846,7 +5846,8 @@
 				"held": "Hay personas que han tenido estas condiciones, así que no se pueden eliminar. Desactívalas.",
 				"inactive": "Estas condiciones están inactivas. Actívalas primero."
 			},
-			"peopleLink": "Ver las personas con {{name}}"
+			"peopleLink": "Ver las personas con {{name}}",
+			"notCovered": "Fuera de las normas de horario de la Ley"
 		},
 		"summary": {
 			"weekOnly": "Trabaja {{week}} a la semana; los días varían.",

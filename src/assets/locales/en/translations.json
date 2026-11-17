@@ -5791,7 +5791,7 @@
 			"label": "Employment terms",
 			"terms": "Terms",
 			"people": "People",
-			"default": "Default",
+			"default": "New people get these",
 			"peopleCount_one": "{{count}} person",
 			"peopleCount_other": "{{count}} people",
 			"scheduledCount_one": "+{{count}} from a later date",
@@ -5802,7 +5802,7 @@
 			"hidden": "You don’t have access to employment terms.",
 			"menu": {
 				"changeFromDate": "Change from a date…",
-				"makeDefault": "Make default"
+				"makeDefault": "Give these to new people"
 			},
 			"toast": {
 				"added": "Employment terms added",
@@ -5817,8 +5817,8 @@
 				"ownHoursCleared_other": "Own hours were cleared for {{count}} people whose hours were above the new week."
 			},
 			"makeDefault": {
-				"title": "Make {{name}} the default?",
-				"confirm": "Make default",
+				"title": "Give {{name}} to new people?",
+				"confirm": "Give to new people",
 				"description": "New people get {{name}} unless you choose other terms when you add them. Nobody’s current terms change."
 			},
 			"status": {
@@ -5846,7 +5846,8 @@
 				"held": "People have had these terms, so they can’t be deleted. Deactivate them instead.",
 				"inactive": "These terms are inactive. Activate them first."
 			},
-			"peopleLink": "Show the people on {{name}}"
+			"peopleLink": "Show the people on {{name}}",
+			"notCovered": "Not under the Act’s hour rules"
 		},
 		"summary": {
 			"weekOnly": "Works {{week}} a week; the days vary.",
