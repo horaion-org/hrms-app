@@ -5638,7 +5638,14 @@
 			"notInSchedule": "Not in this schedule",
 			"coversCallout": "This schedule covers {{covered}}. {{rest}} can be scheduled later.",
 			"remainingButton": "Schedule {{rest}}",
-			"otherPart": "{{days}} are in another schedule.",
+			"otherPart_one": "{{days}} is in another schedule.",
+			"otherPart_other": "{{days}} are in another schedule.",
+			"openOtherPart": "Open {{days}}",
+			"noneBefore_one": "{{days}} has no schedule.",
+			"noneBefore_other": "{{days}} have no schedule.",
+			"passedBefore_one": "{{days}} has passed and has no schedule.",
+			"passedBefore_other": "{{days}} have passed and have no schedule.",
+			"schedulesThisWeek": "Schedules this week",
 			"redoing": "This schedule redoes {{days}}. Until its roster is ready, the week’s current schedule keeps those days.",
 			"beingRedone": "{{days}} are being scheduled again. This roster keeps them until the new one is ready."
 		}

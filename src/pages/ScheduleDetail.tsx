@@ -1,8 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
-import type { DayRun } from "@/features/scheduling/dates/api";
 import {
-	daysAroundPart,
 	partRedoOf,
+	weekRunsAround,
 } from "@/features/scheduling/dates/datesSetup";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
@@ -84,6 +83,8 @@ import {
 	publishWaitsFor,
 } from "@/features/scheduling/schedules/publishOrder";
 import { partLinesOf } from "@/features/scheduling/schedules/partLines";
+import { WeekPartsCallout } from "@/features/scheduling/schedules/WeekPartsCallout";
+import { isoDateIn } from "@/features/scheduling/roster/roster";
 import { scheduleDetailItems } from "@/features/scheduling/schedules/scheduleDetails";
 import {
 	rosterShown,
@@ -490,24 +491,27 @@ const ApiSchedule = ({
 		leave: permissions.mayHandleLeave ? { viewerMembershipId } : undefined,
 	});
 	const schedule = state.schedule;
-	// A part of its week (API ADR-0113): the week's other days, and a way to schedule the days after it.
+	// A part of its week (API ADR-0113): what holds the week's other days.
 	const weekParts =
 		scheduleMonth?.weeks.find(
 			(week) => week.periodStart === schedule.periodStart
 		)?.parts ?? [];
-	const around = daysAroundPart(schedule, weekParts);
-	const remaining =
-		around.after && !around.afterTaken ? around.after : undefined;
-	const daysText = (days: DayRun): string =>
-		formatPeriod({ start: days.from, end: days.to }, formattingLocale(i18n));
 	const partLines = partLinesOf(
 		{
 			covered: { from: schedule.coveredFrom, to: schedule.coveredTo },
-			around,
+			// Said once the month read names the week's parts, never guessed before it.
+			runs: scheduleMonth
+				? weekRunsAround(
+						schedule,
+						weekParts,
+						isoDateIn(schedule.timeZone, new Date())
+					)
+				: [],
 			// A redo part in the week (API ADR-0129): this schedule is one, or one redoes some of its days.
 			redo: partRedoOf(schedule, weekParts),
 		},
-		daysText,
+		(days) =>
+			formatPeriod({ start: days.from, end: days.to }, formattingLocale(i18n)),
 		t
 	);
 	const noticeFacts = scheduleNoticeFactsOf(schedule, {
@@ -737,33 +741,12 @@ const ApiSchedule = ({
 					{notices[notice]}
 				</div>
 			))}
-			{partLines.length > 0 && (
-				<Callout className="mt-6">
-					{partLines.map((line) => (
-						<span key={line} className="block">
-							{line}
-						</span>
-					))}
-					{remaining && permissions.mayCreateHere && (
-						<Button
-							className="mt-2"
-							size="sm"
-							to="/scheduling/new"
-							variant="secondary"
-							search={{
-								department: schedule.departmentId,
-								for: "dates",
-								firstDay: remaining.from,
-								lastDay: remaining.to,
-							}}
-						>
-							{t("scheduling.roster.remainingButton", {
-								rest: daysText(remaining),
-							})}
-						</Button>
-					)}
-				</Callout>
-			)}
+			<WeekPartsCallout
+				className="mt-6"
+				departmentId={schedule.departmentId}
+				lines={partLines}
+				mayCreateHere={permissions.mayCreateHere}
+			/>
 			{rosterShown(noticeFacts) && (
 				<RosterBody
 					approval={trail}

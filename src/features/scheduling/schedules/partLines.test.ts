@@ -1,65 +1,96 @@
 import type { TFunction } from "i18next";
 import { describe, expect, it } from "vitest";
 import type { DayRun } from "@/features/scheduling/dates/api";
+import type { WeekRun } from "@/features/scheduling/dates/datesSetup";
 import {
 	partLinesOf,
+	type PartLine,
 	type PartLinesSource,
 } from "@/features/scheduling/schedules/partLines";
 
 /** Echoes the key and its values, so the lines can be read without copy. */
-const t = ((key: string, values?: Record<string, string>) =>
+const t = ((key: string, values?: Record<string, string | number>) =>
 	values ? `${key}(${Object.values(values).join("|")})` : key) as TFunction;
 const formatDays = ({ from, to }: DayRun): string => `${from}..${to}`;
 
-/** A part covering Wednesday to Friday of the week of 12 October. */
+/** A part covering Wednesday to Friday of the week of 15 February 2027. */
 const MIDWEEK: PartLinesSource = {
-	covered: { from: "2026-10-14", to: "2026-10-16" },
-	around: { before: undefined, after: undefined, afterTaken: false },
+	covered: { from: "2027-02-17", to: "2027-02-19" },
+	runs: [],
 	redo: undefined,
 };
-const BEFORE: DayRun = { from: "2026-10-12", to: "2026-10-13" };
-const AFTER: DayRun = { from: "2026-10-17", to: "2026-10-18" };
+const MONDAY_TUESDAY: DayRun = { from: "2027-02-15", to: "2027-02-16" };
+const WEEKEND: DayRun = { from: "2027-02-20", to: "2027-02-21" };
+const WEEKEND_PART = { scheduleId: "s-2", state: "TO_REVIEW" } as const;
 
 describe("partLinesOf", () => {
-	it.each<[string, Partial<PartLinesSource>, Array<string>]>([
+	it.each<[string, Partial<PartLinesSource>, Array<PartLine>]>([
 		["a whole week with no redo", {}, []],
 		[
-			"days before held by another part",
-			{ around: { before: BEFORE, after: undefined, afterTaken: false } },
-			["scheduling.roster.otherPart(2026-10-12..2026-10-13)"],
+			"days before that no schedule holds",
+			{ runs: [{ kind: "noneBefore", days: MONDAY_TUESDAY }] },
+			[{ text: "scheduling.roster.noneBefore(2027-02-15..2027-02-16|2)" }],
+		],
+		[
+			"days before that have passed with no schedule",
+			{ runs: [{ kind: "passedBefore", days: MONDAY_TUESDAY }] },
+			[{ text: "scheduling.roster.passedBefore(2027-02-15..2027-02-16|2)" }],
 		],
 		[
 			"days after still to schedule",
-			{ around: { before: undefined, after: AFTER, afterTaken: false } },
+			{ runs: [{ kind: "noneAfter", days: WEEKEND }] },
 			[
-				"scheduling.roster.coversCallout(2026-10-14..2026-10-16|2026-10-17..2026-10-18)",
+				{
+					text: "scheduling.roster.coversCallout(2027-02-17..2027-02-19|2027-02-20..2027-02-21)",
+					action: {
+						kind: "scheduleDays",
+						days: WEEKEND,
+						label: "scheduling.roster.remainingButton(2027-02-20..2027-02-21)",
+					},
+				},
 			],
 		],
 		[
-			"days after held by a later part",
-			{ around: { before: undefined, after: AFTER, afterTaken: true } },
-			["scheduling.roster.otherPart(2026-10-17..2026-10-18)"],
-		],
-		[
-			"a redo part, then the days on either side",
-			{
-				redo: { kind: "beingRedone", days: AFTER },
-				around: { before: BEFORE, after: AFTER, afterTaken: true },
-			},
+			"days another part holds",
+			{ runs: [{ kind: "otherPart", days: WEEKEND, part: WEEKEND_PART }] },
 			[
-				"scheduling.roster.beingRedone(2026-10-17..2026-10-18)",
-				"scheduling.roster.otherPart(2026-10-12..2026-10-13)",
-				"scheduling.roster.otherPart(2026-10-17..2026-10-18)",
+				{
+					text: "scheduling.roster.otherPart(2027-02-20..2027-02-21|2)",
+					action: {
+						kind: "openSchedule",
+						part: WEEKEND_PART,
+						label: "scheduling.roster.openOtherPart(2027-02-20..2027-02-21)",
+					},
+				},
 			],
 		],
 		[
 			"this part redoing days",
 			{ redo: { kind: "redoing", days: MIDWEEK.covered } },
-			["scheduling.roster.redoing(2026-10-14..2026-10-16)"],
+			[{ text: "scheduling.roster.redoing(2027-02-17..2027-02-19)" }],
 		],
 	])("says for %s", (_, overrides, lines) => {
 		expect(partLinesOf({ ...MIDWEEK, ...overrides }, formatDays, t)).toEqual(
 			lines
 		);
+	});
+
+	it("given_aRedoAndRunsOnBothSides_when_said_then_theRedoFirstThenTheRunsInDayOrder", () => {
+		const runs: Array<WeekRun> = [
+			{ kind: "noneBefore", days: MONDAY_TUESDAY },
+			{ kind: "otherPart", days: WEEKEND, part: WEEKEND_PART },
+		];
+
+		expect(
+			partLinesOf(
+				{ ...MIDWEEK, runs, redo: { kind: "beingRedone", days: WEEKEND } },
+				formatDays,
+				t
+			).map((line) => line.text)
+		).toEqual([
+			"scheduling.roster.beingRedone(2027-02-20..2027-02-21)",
+			"scheduling.roster.noneBefore(2027-02-15..2027-02-16|2)",
+			"scheduling.roster.otherPart(2027-02-20..2027-02-21|2)",
+		]);
 	});
 });

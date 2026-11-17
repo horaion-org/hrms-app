@@ -5438,7 +5438,14 @@
 			"notInSchedule": "No está en este horario",
 			"coversCallout": "Este horario cubre {{covered}}. {{rest}} se puede programar más adelante.",
 			"remainingButton": "Programar {{rest}}",
-			"otherPart": "{{days}} están en otro horario.",
+			"otherPart_one": "{{days}} está en otro horario.",
+			"otherPart_other": "{{days}} están en otro horario.",
+			"openOtherPart": "Abrir {{days}}",
+			"noneBefore_one": "{{days}} no tiene horario.",
+			"noneBefore_other": "{{days}} no tienen horario.",
+			"passedBefore_one": "{{days}} ya pasó y no tiene horario.",
+			"passedBefore_other": "{{days}} ya pasaron y no tienen horario.",
+			"schedulesThisWeek": "Horarios de esta semana",
 			"redoing": "Este horario rehace {{days}}. Hasta que su cuadrante esté listo, el horario actual de la semana conserva esos días.",
 			"beingRedone": "{{days}} se están volviendo a programar. Este cuadrante los conserva hasta que el nuevo esté listo."
 		}

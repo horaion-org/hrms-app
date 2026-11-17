@@ -7,6 +7,7 @@ import {
 import {
 	rosterWeekLink,
 	rosterWeeksOf,
+	weekScheduleLink,
 } from "@/features/scheduling/months/rosterWeeks";
 
 // Kitchen's November: s-1 published, s-2 to review, s-3 and s-4 tentative, 30 Nov without a schedule.
@@ -70,5 +71,23 @@ describe("rosterWeekLink", () => {
 
 	it("given_aWeekWithoutASchedule_when_chosen_then_nowhere", () => {
 		expect(rosterWeekLink(NOVEMBER, "2026-11-30")).toBeUndefined();
+	});
+});
+
+describe("weekScheduleLink", () => {
+	it.each([
+		[
+			"TO_REVIEW",
+			{ to: "/scheduling/$scheduleId", params: { scheduleId: "s-1" } },
+		],
+		[
+			"DRAFT",
+			{
+				to: "/scheduling/new",
+				search: { step: "setup", scheduleId: "s-1", departmentId: "d-1" },
+			},
+		],
+	] as const)("given_a%sSchedule_when_opened_then_goesThere", (state, link) => {
+		expect(weekScheduleLink({ scheduleId: "s-1", state }, "d-1")).toEqual(link);
 	});
 });

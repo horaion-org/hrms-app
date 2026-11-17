@@ -235,44 +235,86 @@ export const namedSpansOf = (
 const dayBefore = (date: string): string =>
 	dayjs(date).subtract(1, "day").format(ISO_DATE_FORMAT);
 
-/** A part of a week, by its days. */
-type CoveredWeek = {
+/** The part a roster page shows, by its id, its week's Monday and its days. */
+type ShownPart = Pick<WeekPart, "scheduleId" | "coveredFrom" | "coveredTo"> & {
 	periodStart: string;
-	periodEnd: string;
-	coveredFrom: string;
-	coveredTo: string;
-};
-
-/** The days of a part's week around it: before it (another part's), and after it, still free or another part's. */
-export type DaysAroundPart = {
-	/** The week's days before this part, which another part holds. */
-	before: DayRun | undefined;
-	/** The week's days after this part. */
-	after: DayRun | undefined;
-	/** Whether a later part already holds the days after. */
-	afterTaken: boolean;
 };
 
 /**
- * What a part says of its week's other days: the days before it, and the
- * days after it, which "Schedule the remaining days" offers while no later
- * part of the week (`parts`, from the month read) holds them.
+ * What holds a run of a week's days outside the shown part: another part
+ * (with its schedule id and state), or none, after the part or before it,
+ * those before it told apart once they have passed in the branch's time.
  */
-export const daysAroundPart = (
-	schedule: CoveredWeek,
-	parts: ReadonlyArray<WeekPart>
-): DaysAroundPart => ({
-	before:
-		schedule.coveredFrom > schedule.periodStart
-			? { from: schedule.periodStart, to: dayBefore(schedule.coveredFrom) }
-			: undefined,
-	after:
-		schedule.coveredTo < schedule.periodEnd
-			? { from: dayAfter(schedule.coveredTo), to: schedule.periodEnd }
-			: undefined,
-	// A redo part lies inside a wider part, which still holds the days after it until the redo's roster is ready.
-	afterTaken: parts.some((part) => part.coveredTo > schedule.coveredTo),
-});
+export type WeekRun =
+	| {
+			kind: "otherPart";
+			days: DayRun;
+			part: Pick<WeekPart, "scheduleId" | "state">;
+	  }
+	| { kind: "noneAfter" | "noneBefore" | "passedBefore"; days: DayRun };
+
+/** What holds one day outside the shown part, without its days. */
+type DayHolder =
+	| { kind: "otherPart"; part: WeekPart }
+	| { kind: "noneAfter" | "noneBefore" | "passedBefore" };
+
+/**
+ * What holds `date`: another part covering it, the one keeping its days
+ * first (a redo part only holds days no other part keeps), or none.
+ */
+const holderOf = (
+	date: string,
+	shown: ShownPart,
+	parts: ReadonlyArray<WeekPart>,
+	today: string
+): DayHolder => {
+	const others = parts.filter(
+		(part) =>
+			part.scheduleId !== shown.scheduleId &&
+			isWithin(date, part.coveredFrom, part.coveredTo)
+	);
+	const part = others.find((other) => !other.redoing) ?? others[0];
+	if (part) return { kind: "otherPart", part };
+	if (date > shown.coveredTo) return { kind: "noneAfter" };
+	return date < today ? { kind: "passedBefore" } : { kind: "noneBefore" };
+};
+
+/** Whether two days' holders are the same: the same kind, and the same part for another part's days. */
+const sameHolder = (run: WeekRun, holder: DayHolder): boolean =>
+	run.kind === holder.kind &&
+	(run.kind !== "otherPart" ||
+		(holder.kind === "otherPart" &&
+			run.part.scheduleId === holder.part.scheduleId));
+
+/** A run of one day, held by `holder`. */
+const runOfDay = (date: string, holder: DayHolder): WeekRun => {
+	const days = { from: date, to: date };
+	if (holder.kind !== "otherPart") return { kind: holder.kind, days };
+	const { scheduleId, state } = holder.part;
+	return { kind: "otherPart", days, part: { scheduleId, state } };
+};
+
+/**
+ * The days of the shown part's week outside it, in day order, as runs of
+ * consecutive days with the same holder (`parts`, from the month read;
+ * `today`, the branch's today as an ISO date).
+ */
+export const weekRunsAround = (
+	shown: ShownPart,
+	parts: ReadonlyArray<WeekPart>,
+	today: string
+): Array<WeekRun> => {
+	const runs: Array<WeekRun> = [];
+	for (const date of daysOf(shown.periodStart)) {
+		if (isWithin(date, shown.coveredFrom, shown.coveredTo)) continue;
+		const holder = holderOf(date, shown, parts, today);
+		const last = runs[runs.length - 1];
+		if (last && sameHolder(last, holder) && dayAfter(last.days.to) === date)
+			last.days.to = date;
+		else runs.push(runOfDay(date, holder));
+	}
+	return runs;
+};
 
 /** What a part's page says of a redo part in its week (API ADR-0129): this part is one, or one redoes its days. */
 export type PartRedo = { kind: "redoing" | "beingRedone"; days: DayRun };
