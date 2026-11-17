@@ -4773,7 +4773,8 @@
 			"fromGeneration": {
 				"title": "These notes are from generation",
 				"detail": "Changes made by hand since aren’t reflected. Validate the schedule to bring them up to date."
-			}
+			},
+			"ruleSentence": "{{sentence}} Rule: {{rule}}"
 		},
 		"rosterMarkers": {
 			"leaveRequested": "Leave requested",

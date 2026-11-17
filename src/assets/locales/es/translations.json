@@ -4573,7 +4573,8 @@
 			"fromGeneration": {
 				"title": "Estas notas son de la generación",
 				"detail": "No reflejan los cambios hechos a mano desde entonces. Valida el cuadrante para actualizarlas."
-			}
+			},
+			"ruleSentence": "{{sentence}} Regla: {{rule}}"
 		},
 		"rosterMarkers": {
 			"leaveRequested": "Permiso solicitado",

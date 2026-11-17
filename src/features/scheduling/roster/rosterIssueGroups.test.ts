@@ -88,6 +88,44 @@ describe("rosterIssues", () => {
 		]);
 	});
 
+	it("says what the engine found for a person and day, then the rule, not the generic reason", () => {
+		const [mustFix, notMet] = rosterIssues(
+			input({
+				brokenMusts: [
+					ruleFixture({
+						constraintName: "Most days a week",
+						violations: [
+							{
+								employeeId: "mp-1",
+								date: "2026-10-18",
+								messages: ["7 days worked in the week, at most 6."],
+							},
+						],
+					}),
+				],
+				notMet: [
+					ruleFixture({
+						constraintName: "Weekends off",
+						violations: [
+							{
+								employeeId: "mp-2",
+								date: "2026-10-17",
+								messages: ["Works Saturday."],
+							},
+						],
+					}),
+				],
+			})
+		);
+
+		expect(mustFix?.rule).toBe(
+			"scheduling.issues.ruleSentence(7 days worked in the week, at most 6.|Most days a week)"
+		);
+		expect(notMet?.rule).toBe(
+			"scheduling.issues.ruleSentence(Works Saturday.|Weekends off)"
+		);
+	});
+
 	it("says a rule asked if possible was not met, naming the rule last", () => {
 		const [issue] = rosterIssues(
 			input({ notMet: [ruleFixture({ constraintName: "Weekends off" })] })

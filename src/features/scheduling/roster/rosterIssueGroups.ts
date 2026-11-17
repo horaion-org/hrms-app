@@ -131,15 +131,28 @@ const RULE_REASON_KEYS = {
 	notMet: "scheduling.issues.notMetRule",
 } as const;
 
+/**
+ * Why a rule's item is listed: the engine's own sentences about that person
+ * and day, then the rule's name; the generic reason only when it sent none.
+ */
+const ruleReason = (
+	group: "mustFix" | "notMet",
+	ruleName: string,
+	messages: ReadonlyArray<string>,
+	t: TFunction
+): string =>
+	messages.length > 0
+		? t(`${key}.ruleSentence`, { sentence: messages.join(" "), rule: ruleName })
+		: t(RULE_REASON_KEYS[group], { rule: ruleName });
+
 /** One item per person and day a rule names, or one for the whole roster when it names none. */
 const ruleIssues = (
 	rule: BrokenRule,
 	group: "mustFix" | "notMet",
 	{ memberNames, t }: RosterIssueInput
 ): Array<RosterIssue> => {
-	const reason = t(RULE_REASON_KEYS[group], {
-		rule: brokenRuleLabel(rule, t),
-	});
+	const ruleName = brokenRuleLabel(rule, t);
+	const reason = ruleReason(group, ruleName, [], t);
 	const violations = rule.violations ?? [];
 	if (violations.length === 0) {
 		return [
@@ -157,7 +170,7 @@ const ruleIssues = (
 		];
 	}
 	return violations.map((violation) => ({
-		key: `${group}|${rule.rule}|${reason}|${violation.employeeId ?? ""}|${violation.date ?? ""}`,
+		key: `${group}|${rule.rule}|${ruleName}|${violation.employeeId ?? ""}|${violation.date ?? ""}`,
 		group,
 		who: violation.employeeId
 			? (memberNames.get(violation.employeeId) ??
@@ -166,7 +179,7 @@ const ruleIssues = (
 		memberProfileId: violation.employeeId,
 		day: violation.date,
 		time: null,
-		rule: reason,
+		rule: ruleReason(group, ruleName, violation.messages, t),
 		hint: hintWithoutPlace(violation.employeeId, violation.date, t),
 		action: { kind: "show" },
 	}));
