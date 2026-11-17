@@ -1,4 +1,9 @@
 import { screen, waitFor } from "@testing-library/react";
+import {
+	DEFAULT_PAY,
+	MEMBER_TERMS,
+	timeOffBalanceFixture,
+} from "@/features/employmentTerms/fixtures";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
@@ -21,6 +26,8 @@ const REFRESH = "POST /api/v1/public/sessions/refreshes";
 const ME = "GET /api/v1/me";
 const WORKSPACE = "GET /api/v1/me/workspace";
 const MY_PROFILE = "GET /api/v1/companies/c-1/me/profile";
+const MY_TERMS = "GET /api/v1/companies/c-1/me/employment-terms";
+const MY_TIME_OFF = "GET /api/v1/companies/c-1/me/time-off-balance";
 
 let app: OpenedApp | undefined;
 
@@ -111,6 +118,33 @@ describe("My profile", () => {
 		expect(
 			screen.queryByRole("button", { name: /More actions/ })
 		).not.toBeInTheDocument();
+	});
+
+	it("given_timeOffTerms_when_opened_then_showsTheTimeOffEarned", async () => {
+		stubApi({
+			...routes({ status: 200, body: envelope(profile) }),
+			[MY_TERMS]: {
+				status: 200,
+				body: envelope({
+					...MEMBER_TERMS,
+					history: [],
+					inForce: {
+						...MEMBER_TERMS.inForce,
+						hoursLimitsApply: false,
+						pay: { ...DEFAULT_PAY, extraHoursPaidAs: "TIME_OFF" },
+					},
+				}),
+			},
+			[MY_TIME_OFF]: { status: 200, body: envelope(timeOffBalanceFixture()) },
+		});
+		await open("/me/profile");
+
+		const card = await screen.findByRole("region", {
+			name: /Employment information/,
+		});
+		await waitFor(() => {
+			expect(card).toHaveTextContent("Time off earned4 hHistory");
+		});
 	});
 
 	it("explains a profile that could not be read", async () => {

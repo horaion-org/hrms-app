@@ -5934,7 +5934,7 @@
 				"RATE": "Pagadas a una tarifa",
 				"RATEDescription": "Indica la tarifa arriba.",
 				"TIME_OFF": "Tiempo libre en su lugar",
-				"TIME_OFFDescription": "{{time}} libre por cada hora extra trabajada. Las horas extra no se pagan: se suman a un saldo que se recupera como Libre por compensación.",
+				"TIME_OFFDescription": "{{time}} libre por cada hora extra trabajada. Las horas extra no se pagan: se suman a un saldo que se recupera como Día libre compensatorio.",
 				"NOTHING": "Nada adicional",
 				"NOTHINGDescription": "Las horas extra forman parte del puesto."
 			},
@@ -6209,6 +6209,21 @@
 				"OFF": "No trabaja",
 				"REST": "Día de descanso"
 			}
+		},
+		"timeOff": {
+			"label": "Tiempo libre ganado",
+			"history": "Historial",
+			"historyTitle": "Tiempo libre ganado",
+			"historyDescription": "Cada semana en que {{name}} ganó tiempo libre, y cada Día libre compensatorio tomado de él, de la más antigua a la más reciente.",
+			"close": "Cerrar",
+			"whenColumn": "Cuándo",
+			"whatColumn": "Qué",
+			"timeColumn": "Tiempo libre",
+			"weekOf": "Semana del {{date}}",
+			"earnedBy": "Ganado con horas extra",
+			"takenAs": "Tomado como Día libre compensatorio",
+			"earned": "+{{time}}",
+			"taken": "−{{time}}"
 		}
 	},
 	"reports": {

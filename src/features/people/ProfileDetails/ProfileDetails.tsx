@@ -32,6 +32,8 @@ export type ProfileDetailsProps = {
 	systemRoles?: string;
 	/** Their employment terms (`EmploymentTermsRow`); the row is left out when not given. */
 	employmentTerms?: ReactNode;
+	/** Their time off earned (`TimeOffEarnedRow`); the row is left out when not given. */
+	timeOffEarned?: ReactNode;
 	/**
 	 * Where their system roles give them permissions, one row per place the
 	 * reader can see, or why that isn't shown (loading, failed). The Access
@@ -89,6 +91,7 @@ export const ProfileDetails = ({
 	profile,
 	systemRoles,
 	employmentTerms,
+	timeOffEarned,
 	access,
 	className,
 }: ProfileDetailsProps): FunctionComponent => {
@@ -157,6 +160,14 @@ export const ProfileDetails = ({
 					? []
 					: [
 							{ label: t("employmentTerms.row.label"), value: employmentTerms },
+						]),
+				...(timeOffEarned === undefined
+					? []
+					: [
+							{
+								label: t("employmentTerms.timeOff.label"),
+								value: timeOffEarned,
+							},
 						]),
 				{ label: t(`${key}.hireDate`), value: date(profile.hireDate) },
 				{

@@ -6209,6 +6209,21 @@
 				"OFF": "Not working",
 				"REST": "Rest day"
 			}
+		},
+		"timeOff": {
+			"label": "Time off earned",
+			"history": "History",
+			"historyTitle": "Time off earned",
+			"historyDescription": "Every week that earned {{name}} time off, and every Off in lieu taken from it, oldest first.",
+			"close": "Close",
+			"whenColumn": "When",
+			"whatColumn": "What",
+			"timeColumn": "Time off",
+			"weekOf": "Week of {{date}}",
+			"earnedBy": "Earned by extra hours",
+			"takenAs": "Taken as Off in lieu",
+			"earned": "+{{time}}",
+			"taken": "−{{time}}"
 		}
 	},
 	"reports": {

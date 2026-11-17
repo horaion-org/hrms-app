@@ -1,3 +1,4 @@
+import type { TimeOffBalance } from "@/features/employmentTerms/timeOffBalance";
 import type {
 	EmploymentTerms,
 	PayFields,
@@ -268,3 +269,20 @@ export const MEMBER_ON_STANDARD: MemberTerms = {
 	],
 	reference: REFERENCE,
 };
+
+/** Mei's time off (the design's example): 4 h earned the week of 16 Nov 2026, then a half day of Off in lieu taken. */
+export const timeOffBalanceFixture = (
+	overrides: Partial<TimeOffBalance> = {}
+): TimeOffBalance => ({
+	balanceMinutes: 240,
+	entries: [
+		{ kind: "EARNED", weekStart: "2026-11-16", minutes: 480 },
+		{
+			kind: "TAKEN",
+			leaveRequestId: "lr-1",
+			date: "2026-11-27",
+			minutes: -240,
+		},
+	],
+	...overrides,
+});
