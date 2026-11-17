@@ -8,6 +8,7 @@ import type { SchedulePeriod } from "@/features/scheduling/periods";
 import {
 	stretchedTimes,
 	stretchMinutes,
+	stretchSpans,
 } from "@/features/scheduling/roster/shiftStretch";
 import {
 	hoursFromMinutes,
@@ -41,6 +42,11 @@ export type RosterShiftCell = {
 	 * API's ADR-0110); absent when the day is worked as its shift is.
 	 */
 	stretchMinutes?: number;
+	/**
+	 * The stretch's own times, one per side it is worked on (`stretchSpans`);
+	 * absent when the day is worked as its shift is.
+	 */
+	stretchTimes?: ReadonlyArray<WorkedTime>;
 	/** As frozen with the shift. */
 	unpaidBreakMinutes: number;
 	carriesOvertime: boolean;
@@ -176,8 +182,8 @@ const offCellOf = (assignment: ScheduleAssignment): RosterDayWithoutShift => {
 const workedPiecesOf = ({
 	workedTimes,
 }: Pick<ScheduleAssignment, "workedTimes">):
-	| ReadonlyArray<WorkedTime>
-	| undefined => (workedTimes?.length ? workedTimes : undefined);
+	ReadonlyArray<WorkedTime> | undefined =>
+	workedTimes?.length ? workedTimes : undefined;
 
 /** The day's note, or nothing on a day with nothing to add. */
 const noteOf = (assignment: ScheduleAssignment): RosterDayNote | undefined => {
@@ -230,6 +236,10 @@ const cellOf = (assignment: ScheduleAssignment): RosterCell => {
 		assignment.stretch
 	);
 	const stretch = stretchMinutes(assignment.stretch);
+	const stretchTimes = stretchSpans(
+		{ start: assignment.shift.startTime, end: assignment.shift.endTime },
+		assignment.stretch
+	);
 	return {
 		kind: "shift",
 		assignmentId: assignment.assignmentId,
@@ -242,7 +252,7 @@ const cellOf = (assignment: ScheduleAssignment): RosterCell => {
 		unpaidBreakMinutes: assignment.shift.unpaidBreakMinutes,
 		carriesOvertime: assignment.shift.carriesOvertime,
 		role: assignment.jobTitle?.name ?? "",
-		...(stretch > 0 ? { stretchMinutes: stretch } : {}),
+		...(stretch > 0 ? { stretchMinutes: stretch, stretchTimes } : {}),
 		...(workedTimes ? { workedTimes } : {}),
 		...(note ? { note } : {}),
 	};

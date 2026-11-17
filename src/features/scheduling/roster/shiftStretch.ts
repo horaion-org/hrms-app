@@ -29,3 +29,29 @@ export const stretchedTimes = (
 export const stretchMinutes = (
 	stretch: ShiftStretch | null | undefined
 ): number => (stretch ? stretch.beforeMinutes + stretch.afterMinutes : 0);
+
+/**
+ * The stretch's own times, one span per side it is worked on: before the
+ * shift, "05:00"–"06:00", then after it, "14:00"–"16:00". None without a
+ * stretch. A span may run past midnight, as a day's times do.
+ */
+export const stretchSpans = (
+	shift: DayTimes,
+	stretch: ShiftStretch | null | undefined
+): Array<DayTimes> => {
+	if (!stretch) return [];
+	const start = minutesOfDay(shift.start);
+	const end = minutesOfDay(shift.end);
+	const spans: Array<DayTimes> = [];
+	if (stretch.beforeMinutes > 0)
+		spans.push({
+			start: timeOfDay(start - stretch.beforeMinutes + MINUTES_PER_DAY),
+			end: shift.start,
+		});
+	if (stretch.afterMinutes > 0)
+		spans.push({
+			start: shift.end,
+			end: timeOfDay(end + stretch.afterMinutes),
+		});
+	return spans;
+};

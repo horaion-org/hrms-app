@@ -66,3 +66,22 @@ export const OwnLeaveRequested: Story = {
 
 /** Beside an open panel: the time alone, at the height of an Off or Leave tile. */
 export const Compact: Story = { args: { compact: true, mark: "issue" } };
+
+/** Stretched into overtime an hour before and two after: a warning pill per side, as v1 showed an applied stretch. */
+export const StretchedIntoOvertime: Story = {
+	args: {
+		shift: {
+			...meta.args.shift,
+			start: "08:00",
+			end: "17:00",
+			stretchMinutes: 180,
+			stretchTimes: [
+				{ start: "08:00", end: "09:00" },
+				{ start: "15:00", end: "17:00" },
+			],
+		},
+		timeRange: "08:00 – 17:00",
+		status: "Stretched 3 h into overtime",
+		label: "Aisha Rahman, Mon 08:00 – 17:00, Stretched 3 h into overtime",
+	},
+};

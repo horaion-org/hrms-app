@@ -4754,7 +4754,8 @@
 			"partDayOff": "Off {{time}}",
 			"partGapNeedsCover": "{{time}} needs cover",
 			"partGap": "Short {{time}}: {{name}} is on leave",
-			"stretched": "Stretched {{hours}} h into overtime"
+			"stretched": "Stretched {{hours}} h into overtime",
+			"overtimePill": "+OT {{time}}"
 		},
 		"rosterEdit": {
 			"title": "{{name}} · {{date}}",

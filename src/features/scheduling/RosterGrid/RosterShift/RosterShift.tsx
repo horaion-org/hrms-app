@@ -1,10 +1,12 @@
 import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
+import { Badge } from "@/components/ui/Badge";
 import type { RosterShiftCell } from "@/features/scheduling/roster/roster";
 import {
 	CELL_MARK_TITLE_KEYS,
 	type CellMark,
+	overtimePills,
 } from "@/features/scheduling/roster/rosterMarks";
 import {
 	cellMarkLooks,
@@ -35,9 +37,11 @@ export type RosterShiftProps = {
  * full, as a manager reads it first, then its name and, when it says
  * something the row header doesn't, its role, then its status; each may be
  * cut short in a narrow cell (the label names the day in full, and the
- * status shows whole on hover). Beside an open panel it
- * shows its time only. Its one mark sits in its top-right corner. Choosing
- * it shows its details.
+ * status shows whole on hover). A shift stretched into overtime shows a
+ * warning pill per side under them, "+OT 21:00 – 23:00", as v1 marked an
+ * applied stretch; the status already says it for assistive tech. Beside an
+ * open panel it shows its time only. Its one mark sits in its top-right
+ * corner. Choosing it shows its details.
  */
 export const RosterShift = ({
 	shift,
@@ -51,6 +55,7 @@ export const RosterShift = ({
 	compact = false,
 }: RosterShiftProps): FunctionComponent => {
 	const { t } = useTranslation();
+	const pills = overtimePills(shift, t);
 	return (
 		<button
 			aria-label={label}
@@ -84,6 +89,15 @@ export const RosterShift = ({
 						// Cut short in a narrow cell; hovering shows it whole, as the mark's title does.
 						<span className="block truncate" title={status}>
 							{status}
+						</span>
+					)}
+					{pills.length > 0 && (
+						<span aria-hidden="true" className="mt-1 flex flex-wrap gap-1">
+							{pills.map((pill) => (
+								<Badge key={pill} compact tone="warning">
+									{pill}
+								</Badge>
+							))}
 						</span>
 					)}
 				</>

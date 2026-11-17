@@ -30,6 +30,7 @@ import {
 	issuesOfHeader,
 	rowIssueCount,
 	saidApartBy,
+	overtimePills,
 	shiftStatus,
 	showsRole,
 	tileStatus,
@@ -525,6 +526,22 @@ describe("shiftStatus", () => {
 		expect(shiftStatus(mondayOf(stretched), false, t)).toBe(
 			"Stretched 2 h into overtime"
 		);
+	});
+
+	it("given_aStretchedShift_when_marked_then_aPillPerSideWithItsTimes", () => {
+		const stretched = {
+			...scheduleAssignmentsFixture()[0]!,
+			dayType: null,
+			stretch: { beforeMinutes: 60, afterMinutes: 60 },
+		};
+
+		expect(overtimePills(mondayOf(stretched), t)).toEqual([
+			"+OT 08:00 – 09:00",
+			"+OT 15:00 – 16:00",
+		]);
+		expect(
+			overtimePills(mondayOf(scheduleAssignmentsFixture()[0]!), t)
+		).toEqual([]);
 	});
 
 	it("given_aStretchedShiftOnARestDay_when_worded_then_saysBothTheRestDayAndTheStretch", () => {

@@ -1,6 +1,9 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { createInstance } from "i18next";
+import { initReactI18next } from "react-i18next";
+import { beforeAll, describe, expect, it, vi } from "vitest";
+import en from "@/assets/locales/en/translations.json";
 import { RosterShift } from "@/features/scheduling/RosterGrid";
 import type { RosterShiftCell } from "@/features/scheduling/roster/roster";
 
@@ -17,6 +20,12 @@ const assignment: RosterShiftCell = {
 	carriesOvertime: false,
 	role: "Front Desk Lead",
 };
+
+beforeAll(async () => {
+	await createInstance()
+		.use(initReactI18next)
+		.init({ lng: "en", resources: { en: { translation: en } } });
+});
 
 describe("RosterShift", () => {
 	it("given_aGeneratedShift_when_rendered_then_isNamedAndColouredByItsShift", async () => {
@@ -45,6 +54,45 @@ describe("RosterShift", () => {
 		});
 		await user.click(button);
 		expect(onSelect).toHaveBeenCalled();
+	});
+
+	it("given_aStretchedShift_when_rendered_then_showsAnOvertimePillPerSide", () => {
+		render(
+			<RosterShift
+				label="Aisha Rahman, Mon 08:00 – 17:00, Stretched 3 h into overtime"
+				selected={false}
+				status="Stretched 3 h into overtime"
+				timeRange="08:00 – 17:00"
+				shift={{
+					...assignment,
+					start: "08:00",
+					end: "17:00",
+					stretchMinutes: 180,
+					stretchTimes: [
+						{ start: "08:00", end: "09:00" },
+						{ start: "15:00", end: "17:00" },
+					],
+				}}
+				onSelect={vi.fn()}
+			/>
+		);
+
+		expect(screen.getByText("+OT 08:00 – 09:00")).toBeInTheDocument();
+		expect(screen.getByText("+OT 15:00 – 17:00")).toBeInTheDocument();
+	});
+
+	it("given_aShiftWorkedAsItIs_when_rendered_then_showsNoOvertimePill", () => {
+		render(
+			<RosterShift
+				label="Aisha Rahman, Mon 09:00 – 15:00"
+				selected={false}
+				shift={assignment}
+				timeRange="09:00 – 15:00"
+				onSelect={vi.fn()}
+			/>
+		);
+
+		expect(screen.queryByText(/\+OT/)).toBeNull();
 	});
 
 	it("given_aNarrowCell_when_rendered_then_showsTheTimeFirstAndNeverCutsItShort", () => {

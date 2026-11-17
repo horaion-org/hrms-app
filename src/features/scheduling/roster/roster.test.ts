@@ -305,7 +305,9 @@ describe("shifts stretched into overtime", () => {
 			start: "09:00",
 			end: "17:00",
 			stretchMinutes: 120,
+			stretchTimes: [{ start: "15:00", end: "17:00" }],
 		});
+		expect(plainRow!.days["2026-10-12"]).not.toHaveProperty("stretchTimes");
 		expect(hoursInDays(row!, ["2026-10-12"])).toBe(
 			hoursInDays(plainRow!, ["2026-10-12"]) + 2
 		);

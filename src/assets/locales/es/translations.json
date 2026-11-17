@@ -4554,7 +4554,8 @@
 			"partDayOff": "Libre {{time}}",
 			"partGapNeedsCover": "{{time}} necesita cobertura",
 			"partGap": "Falta {{time}}: {{name}} está de permiso",
-			"stretched": "Ampliado {{hours}} h con horas extra"
+			"stretched": "Ampliado {{hours}} h con horas extra",
+			"overtimePill": "+HE {{time}}"
 		},
 		"rosterEdit": {
 			"title": "{{name}} · {{date}}",

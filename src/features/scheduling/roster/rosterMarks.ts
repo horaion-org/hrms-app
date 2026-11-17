@@ -1,6 +1,7 @@
 import type { TFunction } from "i18next";
 import { timeRangeText } from "@/features/leave/dayPortion";
 import { dayTypeInSentence } from "@/features/scheduling/dayTypes";
+import { formatTimeRange } from "@/features/scheduling/formatShift";
 import {
 	findingWeight,
 	strongestTone,
@@ -348,6 +349,21 @@ export const shiftStatus = (
 		time: timeRangeText(off.start, off.end, t),
 	});
 };
+
+/**
+ * The pills of a shift stretched into overtime (the API's ADR-0110), one per
+ * side, as v1 marked an applied stretch: "+OT 21:00 – 23:00". None without a
+ * stretch. Pure.
+ */
+export const overtimePills = (
+	cell: Pick<RosterShiftCell, "stretchTimes">,
+	t: TFunction
+): Array<string> =>
+	(cell.stretchTimes ?? []).map((span) =>
+		t("scheduling.rosterMarkers.overtimePill", {
+			time: formatTimeRange({ startTime: span.start, endTime: span.end }, t),
+		})
+	);
 
 /** Which header opened the Issues panel: one member's row, or one day. */
 export type IssuesAbout =
