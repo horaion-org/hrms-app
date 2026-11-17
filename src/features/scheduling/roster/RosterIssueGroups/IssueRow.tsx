@@ -35,7 +35,6 @@ export const IssueRow = ({
 		.filter((part): part is string => part !== undefined)
 		.join(" · ");
 	const headline = when ? `${issue.who} · ${when}` : issue.who;
-	const reason = issue.hint ? `${issue.rule} ${issue.hint}` : issue.rule;
 	const findCover =
 		action.kind === "findCover" && onFindCover
 			? (): void => {
@@ -54,7 +53,7 @@ export const IssueRow = ({
 		<li className="flex items-start justify-between gap-3 py-2">
 			<div className="flex min-w-0 flex-col">
 				<span className="text-sm font-medium text-neutral-900">{headline}</span>
-				<span className="text-sm text-neutral-700">{reason}</span>
+				<span className="text-sm text-neutral-700">{issue.rule}</span>
 			</div>
 			{act ? (
 				<Button className="shrink-0" variant="textlink" onClick={act}>

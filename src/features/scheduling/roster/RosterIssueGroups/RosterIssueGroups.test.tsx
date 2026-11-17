@@ -129,24 +129,23 @@ describe("RosterIssueGroups", () => {
 		expect(onShow).toHaveBeenCalledOnce();
 	});
 
-	it("puts the hint of an item with no person and no day after its reason", () => {
+	it("draws an item with no day as its name alone, then its reason", () => {
 		render(
 			<RosterIssueGroups
 				issues={[
 					rosterIssueFixture({
-						who: copy.wholeRoster,
+						who: "Weekends off",
 						memberProfileId: null,
 						day: null,
-						rule: "Rule: Weekends off",
-						hint: copy.ruleWithoutPlace,
+						rule: copy.notMetSomewhere,
 					}),
 				]}
 			/>
 		);
 
-		expect(
-			screen.getByText(`Rule: Weekends off ${copy.ruleWithoutPlace}`)
-		).toBeInTheDocument();
+		const row = screen.getByRole("listitem");
+		expect(within(row).getByText("Weekends off")).toHaveClass("font-medium");
+		expect(within(row).getByText(copy.notMetSomewhere)).toBeInTheDocument();
 	});
 
 	it("shows the validation card and no group when there are no issues", () => {

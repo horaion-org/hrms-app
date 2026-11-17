@@ -641,7 +641,7 @@ describe("GeneratedRoster", () => {
 			expect(
 				within(panel).getByRole("button", { name: /^Must fix/ })
 			).toBeVisible();
-			expect(within(panel).getByText(/Rule: Twelve hours a day/)).toBeVisible();
+			expect(within(panel).getByText("Twelve hours a day")).toBeVisible();
 			expect(within(panel).getByRole("note")).toHaveTextContent(
 				"Validated: 1 rule broken"
 			);

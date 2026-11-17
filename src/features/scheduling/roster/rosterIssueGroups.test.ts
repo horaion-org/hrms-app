@@ -129,13 +129,22 @@ describe("rosterIssues", () => {
 
 	it("says a rule asked if possible was not met, naming the rule last", () => {
 		const [issue] = rosterIssues(
-			input({ notMet: [ruleFixture({ constraintName: "Weekends off" })] })
+			input({
+				notMet: [
+					ruleFixture({
+						constraintName: "Weekends off",
+						violations: [
+							{ employeeId: "mp-2", date: "2026-10-17", messages: [] },
+						],
+					}),
+				],
+			})
 		);
 
 		expect(issue?.rule).toBe("scheduling.issues.notMetRule(Weekends off)");
 	});
 
-	it("lists a rule naming no one once, for the whole roster", () => {
+	it("lists a rule naming no one once, by the rule's name", () => {
 		const issues = rosterIssues(
 			input({ notMet: [ruleFixture({ constraintName: "Weekends off" })] })
 		);
@@ -143,12 +152,13 @@ describe("rosterIssues", () => {
 		expect(issues).toHaveLength(1);
 		expect(issues[0]).toMatchObject({
 			group: "notMet",
-			who: "scheduling.issues.wholeRoster",
+			who: "Weekends off",
 			day: null,
+			rule: "scheduling.issues.notMetSomewhere",
 		});
 	});
 
-	it("words a rule the engine named with no violations, and says what to do", () => {
+	it("words a rule the engine named with no violations, saying in one line it could not say where", () => {
 		const [issue] = rosterIssues(
 			input({
 				brokenMusts: [
@@ -158,13 +168,12 @@ describe("rosterIssues", () => {
 		);
 
 		expect(issue).toMatchObject({
-			who: "scheduling.issues.wholeRoster",
-			rule: "scheduling.issues.brokenMust(scheduling.rulesCheck.rule.impossible_shift_assignment_is_zero)",
-			hint: "scheduling.issues.ruleWithoutPlace",
+			who: "scheduling.rulesCheck.rule.impossible_shift_assignment_is_zero",
+			rule: "scheduling.issues.brokenSomewhere",
 		});
 	});
 
-	it("names the person and day of the same rule when the engine sends violations, with no hint", () => {
+	it("names the person and day of the same rule when the engine sends violations", () => {
 		const [issue] = rosterIssues(
 			input({
 				brokenMusts: [
@@ -183,16 +192,20 @@ describe("rosterIssues", () => {
 			day: "2026-10-14",
 			rule: "scheduling.issues.brokenMust(scheduling.rulesCheck.rule.impossible_shift_assignment_is_zero)",
 		});
-		expect(issue?.hint).toBeUndefined();
 	});
 
-	it("gives the hint only to an item with no person and no day", () => {
+	it("leads with the rule's name only for an item with no person and no day, with the engine's sentence when sent", () => {
 		const issues = rosterIssues(
 			input({
 				brokenMusts: [
 					ruleFixture({
+						constraintName: "Most hours a day",
 						violations: [
-							{ employeeId: null, date: null, messages: [] },
+							{
+								employeeId: null,
+								date: null,
+								messages: ["Too few rest days."],
+							},
 							{ employeeId: "mp-1", date: null, messages: [] },
 							{ employeeId: null, date: "2026-10-14", messages: [] },
 						],
@@ -201,10 +214,13 @@ describe("rosterIssues", () => {
 			})
 		);
 
-		expect(issues.map((issue) => issue.hint)).toEqual([
-			"scheduling.issues.ruleWithoutPlace",
-			undefined,
-			undefined,
+		expect(issues.map((issue) => [issue.who, issue.rule])).toEqual([
+			["Most hours a day", "Too few rest days."],
+			["Aisha Rahman", "scheduling.issues.brokenMust(Most hours a day)"],
+			[
+				"scheduling.issues.wholeRoster",
+				"scheduling.issues.brokenMust(Most hours a day)",
+			],
 		]);
 	});
 

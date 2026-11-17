@@ -161,12 +161,10 @@ describe("issuesOfRoster", () => {
 		);
 
 		expect(issues.map((issue) => [issue.group, issue.who])).toEqual([
-			["mustFix", "scheduling.issues.wholeRoster"],
-			["notMet", "scheduling.issues.wholeRoster"],
+			["mustFix", "scheduling.rulesCheck.unnamedRule"],
+			["notMet", "Weekends off"],
 		]);
-		expect(issues[0]?.rule).toBe(
-			"scheduling.issues.brokenMust(scheduling.rulesCheck.unnamedRule)"
-		);
+		expect(issues[0]?.rule).toBe("scheduling.issues.brokenSomewhere");
 	});
 
 	it("lists a generation error marked if possible as not met, and any other as to fix", () => {

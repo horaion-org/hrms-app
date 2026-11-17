@@ -4548,7 +4548,6 @@
 			},
 			"unknownJob": "un puesto",
 			"wholeRoster": "Todo el cuadrante",
-			"ruleWithoutPlace": "El motor no pudo indicar a quién ni qué día. Revise los cambios hechos a mano desde que se generó este cuadrante, o vuelva a validar.",
 			"summary": {
 				"mustFix_one": "{{count}} por corregir",
 				"mustFix_other": "{{count}} por corregir",
@@ -4573,7 +4572,9 @@
 				"detail": "No reflejan los cambios hechos a mano desde entonces. Valida el cuadrante para actualizarlas."
 			},
 			"ruleSentence": "{{sentence}} Regla: {{rule}}",
-			"ruleOnly": "Regla: {{rule}}"
+			"ruleOnly": "Regla: {{rule}}",
+			"brokenSomewhere": "Se incumple, pero el motor no pudo indicar a quién ni qué día.",
+			"notMetSomewhere": "No se cumplió, pero el motor no pudo indicar a quién ni qué día."
 		},
 		"rosterMarkers": {
 			"leaveRequested": "Permiso solicitado",

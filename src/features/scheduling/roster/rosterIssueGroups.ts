@@ -44,8 +44,6 @@ export type RosterIssue = {
 	time: string | null;
 	/** Why it is listed and, where there is something to do, what to do, the rule's name last. */
 	rule: string;
-	/** What to do when the item names no person and no day, shown where the day would be. */
-	hint?: string;
 	action: IssueAction;
 };
 
@@ -114,20 +112,16 @@ const gapIssue = (
 	};
 };
 
-/** What to do about a rule the engine could not place: a hint only when it names no person and no day. */
-const hintWithoutPlace = (
-	employeeId: string | null,
-	date: string | null,
-	t: TFunction
-): string | undefined =>
-	employeeId === null && date === null
-		? t(`${key}.ruleWithoutPlace`)
-		: undefined;
-
 /** Why a rule's item is listed: a must broken, or a rule asked "if possible" not met. */
 const RULE_REASON_KEYS = {
 	mustFix: "scheduling.issues.brokenMust",
 	notMet: "scheduling.issues.notMetRule",
+} as const;
+
+/** The same, for a rule the engine could not place on a person or a day. */
+const PLACELESS_REASON_KEYS = {
+	mustFix: "scheduling.issues.brokenSomewhere",
+	notMet: "scheduling.issues.notMetSomewhere",
 } as const;
 
 /**
@@ -144,44 +138,55 @@ const ruleReason = (
 		? t(`${key}.ruleSentence`, { sentence: messages.join(" "), rule: ruleName })
 		: t(RULE_REASON_KEYS[group], { rule: ruleName });
 
-/** One item per person and day a rule names, or one for the whole roster when it names none. */
+/**
+ * A rule that names no person and no day: the rule's name first, then the
+ * engine's sentences, or one short line saying it could not say where.
+ */
+const placelessRuleIssue = (
+	rule: BrokenRule,
+	group: "mustFix" | "notMet",
+	ruleName: string,
+	messages: ReadonlyArray<string>,
+	t: TFunction
+): RosterIssue => ({
+	key: `${group}|${rule.rule}|${ruleName}|${messages.join(" ")}`,
+	group,
+	who: ruleName,
+	memberProfileId: null,
+	day: null,
+	time: null,
+	rule:
+		messages.length > 0 ? messages.join(" ") : t(PLACELESS_REASON_KEYS[group]),
+	action: { kind: "show" },
+});
+
+/** One item per person and day a rule names, or one by the rule's name when it names neither. */
 const ruleIssues = (
 	rule: BrokenRule,
 	group: "mustFix" | "notMet",
 	{ memberNames, t }: RosterIssueInput
 ): Array<RosterIssue> => {
 	const ruleName = brokenRuleLabel(rule, t);
-	const reason = ruleReason(group, ruleName, [], t);
 	const violations = rule.violations ?? [];
-	if (violations.length === 0) {
-		return [
-			{
-				key: `${group}|${rule.rule}|${reason}`,
-				group,
-				who: t(`${key}.wholeRoster`),
-				memberProfileId: null,
-				day: null,
-				time: null,
-				rule: reason,
-				hint: hintWithoutPlace(null, null, t),
-				action: { kind: "show" },
-			},
-		];
-	}
-	return violations.map((violation) => ({
-		key: `${group}|${rule.rule}|${ruleName}|${violation.employeeId ?? ""}|${violation.date ?? ""}`,
-		group,
-		who: violation.employeeId
-			? (memberNames.get(violation.employeeId) ??
-				t("scheduling.detail.formerMember"))
-			: t(`${key}.wholeRoster`),
-		memberProfileId: violation.employeeId,
-		day: violation.date,
-		time: null,
-		rule: ruleReason(group, ruleName, violation.messages, t),
-		hint: hintWithoutPlace(violation.employeeId, violation.date, t),
-		action: { kind: "show" },
-	}));
+	if (violations.length === 0)
+		return [placelessRuleIssue(rule, group, ruleName, [], t)];
+	return violations.map((violation) => {
+		if (violation.employeeId === null && violation.date === null)
+			return placelessRuleIssue(rule, group, ruleName, violation.messages, t);
+		return {
+			key: `${group}|${rule.rule}|${ruleName}|${violation.employeeId ?? ""}|${violation.date ?? ""}`,
+			group,
+			who: violation.employeeId
+				? (memberNames.get(violation.employeeId) ??
+					t("scheduling.detail.formerMember"))
+				: t(`${key}.wholeRoster`),
+			memberProfileId: violation.employeeId,
+			day: violation.date,
+			time: null,
+			rule: ruleReason(group, ruleName, violation.messages, t),
+			action: { kind: "show" },
+		};
+	});
 };
 
 const noteIssue = ({ title, detail }: IssueNote): RosterIssue => ({
