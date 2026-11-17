@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import type { FunctionComponent } from "@/common/types";
 import { RosterShift } from "@/features/scheduling/RosterGrid";
+import "@/common/i18n";
 
 const meta = {
 	title: "Features/Scheduling/RosterGrid/RosterShift",
