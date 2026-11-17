@@ -4499,7 +4499,8 @@
 			"save": "Guardar días",
 			"invalid": "No se pudo guardar un día. Comprueba que su turno sigue en uso e inténtalo de nuevo.",
 			"notDraft": "Este horario ya se generó, así que su punto de partida ya no puede cambiar.",
-			"failed": "No se pudieron guardar los días. Inténtalo de nuevo."
+			"failed": "No se pudieron guardar los días. Inténtalo de nuevo.",
+			"unknownDays": "Horaion no sabe qué trabajó cada persona el {{days}}."
 		},
 		"openingHours": {
 			"title": "Horas ya trabajadas este mes (del {{from}} al {{to}})",

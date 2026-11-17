@@ -5,7 +5,11 @@ import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { formatPeriod } from "@/features/scheduling/periods";
-import type { PreviousWeek } from "@/features/scheduling/startingContext/startingGrid";
+import {
+	unknownBeforeOf,
+	type PreviousWeek,
+	type UnknownBefore,
+} from "@/features/scheduling/startingContext/startingGrid";
 
 export type StartingContextCalloutProps = {
 	/**
@@ -21,6 +25,12 @@ export type StartingContextCalloutProps = {
 	 * when no roster comes before them.
 	 */
 	unknownDays?: ReadonlyArray<string>;
+	/**
+	 * The roster before the first of `unknownDays`, when it differs from
+	 * `previous` (an earlier part of this week, or the week before); with it,
+	 * the notice adds "or the week before" only when that is unknown too.
+	 */
+	previousOfUnknownDays?: PreviousWeek;
 	/** Opens the week-before grid; left out when the draft can't be changed. */
 	onAdd?: () => void;
 	/** The button waits while `onAdd`'s own work is under way, such as the month page saving its first week. */
@@ -29,6 +39,25 @@ export type StartingContextCalloutProps = {
 };
 
 const key = "scheduling.startingContext";
+
+/** The warning's line for what is unknown, with nothing entered and no roster before the first generated day. */
+const UNKNOWN_LINES = {
+	daysOfThisWeek: {
+		line: `${key}.unknownDays`,
+		risk: `${key}.unknownDaysRisk`,
+	},
+	weekBefore: {
+		line: `${key}.unknownLastWeek`,
+		risk: `${key}.unknownLastWeekRisk`,
+	},
+	both: {
+		line: `${key}.unknownDaysAndLastWeek`,
+		risk: `${key}.unknownDaysRisk`,
+	},
+} as const satisfies Record<
+	Exclude<UnknownBefore, "nothing">,
+	{ line: string; risk: string }
+>;
 
 /**
  * The line on the Generate step about the week before the period. With no
@@ -45,6 +74,7 @@ export const StartingContextCallout = ({
 	previous,
 	enteredCount,
 	unknownDays = [],
+	previousOfUnknownDays = previous,
 	onAdd,
 	adding = false,
 	className,
@@ -71,18 +101,15 @@ export const StartingContextCallout = ({
 	);
 	const daysUnknown = unknownDays.length > 0;
 
-	if (previous.kind === "none" && enteredCount === 0)
+	const unknown = unknownBeforeOf(unknownDays, previousOfUnknownDays);
+	if (previous.kind === "none" && enteredCount === 0 && unknown !== "nothing")
 		return (
 			<Callout className={className} tone="warning">
 				<span className="block">
-					{daysUnknown
-						? t(`${key}.unknownDaysAndLastWeek`, { days })
-						: t(`${key}.unknownLastWeek`)}
+					{t(UNKNOWN_LINES[unknown].line, { days })}
 				</span>
 				<span className="mt-1 block font-normal">
-					{daysUnknown
-						? t(`${key}.unknownDaysRisk`)
-						: t(`${key}.unknownLastWeekRisk`)}
+					{t(UNKNOWN_LINES[unknown].risk)}
 				</span>
 				{shiftsButton(t(`${key}.addShifts`))}
 			</Callout>

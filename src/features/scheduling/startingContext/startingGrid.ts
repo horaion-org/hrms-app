@@ -25,6 +25,25 @@ export type PreviousWeek =
 			days?: { from: string; to: string };
 	  };
 
+/** What "Before this week" says is unknown: nothing, only this week's days, only the week before, or both. */
+export type UnknownBefore =
+	"nothing" | "daysOfThisWeek" | "weekBefore" | "both";
+
+/**
+ * What is unknown before a run's first generated day, from this week's days
+ * still unknown and whether a roster covers the day before the first of them
+ * (before the first generated day when none is unknown): an earlier part of
+ * this week, or the week before. Pure.
+ */
+export const unknownBeforeOf = (
+	unknownDays: ReadonlyArray<string>,
+	rosterBefore: PreviousWeek
+): UnknownBefore => {
+	const rostered = rosterBefore.kind === "carried";
+	if (unknownDays.length === 0) return rostered ? "nothing" : "weekBefore";
+	return rostered ? "daysOfThisWeek" : "both";
+};
+
 /** How the dialog splits the days before the period: the nearer week, and any earlier days. */
 export type SplitDays = { earlier: Array<string>; nearer: Array<string> };
 

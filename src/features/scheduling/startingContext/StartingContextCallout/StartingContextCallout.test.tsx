@@ -127,4 +127,29 @@ describe("StartingContextCallout", () => {
 		);
 		expect(screen.queryByRole("button")).not.toBeInTheDocument();
 	});
+
+	// The tester's case: a dates run from Thursday after Mon and Tue were rostered; only Wednesday is unknown.
+	it("given_unknownDaysAfterAnEarlierRosteredPart_when_shown_then_namesOnlyThoseDays", () => {
+		render(
+			<I18nextProvider i18n={authTestI18n}>
+				<StartingContextCallout
+					enteredCount={0}
+					previous={{ kind: "none" }}
+					unknownDays={["2027-07-07"]}
+					previousOfUnknownDays={{
+						kind: "carried",
+						periodStart: "2027-07-05",
+						uncovered: 0,
+						days: { from: "2027-07-05", to: "2027-07-06" },
+					}}
+				/>
+			</I18nextProvider>
+		);
+
+		const note = screen.getByRole("note");
+		expect(note).toHaveTextContent(
+			/^Horaion doesn’t know what people worked on Wed, Jul 7\.Mark any rest days/
+		);
+		expect(note).not.toHaveTextContent("the week before");
+	});
 });

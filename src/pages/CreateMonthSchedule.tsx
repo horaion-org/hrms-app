@@ -301,6 +301,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 		datesStart,
 		firstGeneratedDay,
 		daysBeforeStart,
+		firstMonday,
 		weekBefore,
 		datesStartOnMonday,
 		datesRedoStart,
@@ -345,18 +346,25 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			departmentId,
 			weekBefore ? monthOf(weekBefore) : month,
 			unit !== undefined &&
-				(byDates ? datesStartOnMonday : startingWeek?.state === "NOT_GENERATED")
+				(byDates
+					? datesStartOnMonday || daysBeforeStart?.from === firstMonday
+					: startingWeek?.state === "NOT_GENERATED")
 		)
 	);
 	// "Before this week" asks unless a roster covers the day before the first generated day: in the week
 	// before, earlier in a started week, or a part kept earlier in a dates run's first week.
+	const partsBefore = partsBeforeStartOf(
+		datesStart,
+		monthBefore.data,
+		scheduleMonth.data
+	);
 	const previousOfStart: PreviousWeek =
 		firstGeneratedDay === undefined
 			? { kind: "none" }
-			: previousBefore(
-					firstGeneratedDay,
-					partsBeforeStartOf(datesStart, monthBefore.data, scheduleMonth.data)
-				);
+			: previousBefore(firstGeneratedDay, partsBefore);
+	// The roster before the first unknown day decides whether "or the week before" is said too.
+	const previousOfUnknownDays =
+		daysBeforeStart && previousBefore(daysBeforeStart.from, partsBefore);
 	const mayGenerate = allowedHere("schedule:generate");
 	// A dates run's panel checks the first day's month (its leave counts that month).
 	const checkMonth = byDates ? monthOf(datesChoice.firstDay) : month;
@@ -518,6 +526,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 					adding={scheduleActions.create.isPending}
 					enteredCount={0}
 					previous={previousOfStart}
+					previousOfUnknownDays={previousOfUnknownDays}
 					unknownDays={daysBeforeStart && datesIn(daysBeforeStart)}
 					onAdd={addToWeek(startingWeek, "days")}
 				/>
@@ -616,6 +625,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 				adding={scheduleActions.create.isPending}
 				enteredCount={0}
 				previous={previousOfStart}
+				previousOfUnknownDays={previousOfUnknownDays}
 				unknownDays={daysBeforeStart && datesIn(daysBeforeStart)}
 				onAdd={
 					mayAddDaysBefore

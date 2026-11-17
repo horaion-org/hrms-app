@@ -21,7 +21,9 @@ import {
 	runsByMember,
 	splitDays,
 	unansweredDays,
+	unknownBeforeOf,
 	withCell,
+	type PreviousWeek,
 } from "@/features/scheduling/startingContext/startingGrid";
 
 describe("startingGrid", () => {
@@ -228,4 +230,58 @@ describe("unansweredDays", () => {
 			unansweredDays(answered, { from: "2026-11-06", to: "2026-11-08" })
 		).toEqual(["2026-11-06", "2026-11-07"]);
 	});
+});
+
+describe("unknownBeforeOf", () => {
+	const NONE: PreviousWeek = { kind: "none" };
+	const WEEK_ROSTERED: PreviousWeek = {
+		kind: "carried",
+		periodStart: "2027-06-28",
+		uncovered: 0,
+	};
+	const MONDAY_TUESDAY_ROSTERED: PreviousWeek = {
+		kind: "carried",
+		periodStart: "2027-07-05",
+		uncovered: 0,
+		days: { from: "2027-07-05", to: "2027-07-06" },
+	};
+
+	it.each([
+		{
+			case: "nothing unknown after a rostered week",
+			unknownDays: [],
+			rosterBefore: WEEK_ROSTERED,
+			expected: "nothing",
+		},
+		{
+			case: "a Monday start with nothing before",
+			unknownDays: [],
+			rosterBefore: NONE,
+			expected: "weekBefore",
+		},
+		{
+			case: "Mon and Tue unknown after a rostered week",
+			unknownDays: ["2027-07-05", "2027-07-06"],
+			rosterBefore: WEEK_ROSTERED,
+			expected: "daysOfThisWeek",
+		},
+		{
+			case: "a Wednesday start with nothing before",
+			unknownDays: ["2027-07-05", "2027-07-06"],
+			rosterBefore: NONE,
+			expected: "both",
+		},
+		// The tester's case: from Thursday, Mon and Tue rostered as a part, the week before rostered.
+		{
+			case: "only Wednesday unknown after Mon and Tue rostered",
+			unknownDays: ["2027-07-07"],
+			rosterBefore: MONDAY_TUESDAY_ROSTERED,
+			expected: "daysOfThisWeek",
+		},
+	] as const)(
+		"given_$case_when_decided_then_$expected",
+		({ unknownDays, rosterBefore, expected }) => {
+			expect(unknownBeforeOf(unknownDays, rosterBefore)).toBe(expected);
+		}
+	);
 });

@@ -4699,7 +4699,8 @@
 			"save": "Save days",
 			"invalid": "A day couldn’t be saved. Check that its shift is still in use, then try again.",
 			"notDraft": "This schedule has already been generated, so its starting point can no longer change.",
-			"failed": "The days couldn’t be saved. Try again."
+			"failed": "The days couldn’t be saved. Try again.",
+			"unknownDays": "Horaion doesn’t know what people worked on {{days}}."
 		},
 		"openingHours": {
 			"title": "Hours already worked this month ({{from}} to {{to}})",
