@@ -1458,7 +1458,17 @@ describe("Create schedules for a month: where everyone starts", () => {
 				...december,
 				weeks: december.weeks.map((week) =>
 					week.periodStart === "2026-12-14"
-						? { ...week, state: "TO_REVIEW", scheduleId: "s-14" }
+						? {
+								...week,
+								state: "TO_REVIEW",
+								scheduleId: "s-14",
+								parts: [
+									{
+										...publishedPart("s-14", "2026-12-14", "2026-12-20"),
+										state: "TO_REVIEW",
+									},
+								],
+							}
 						: week
 				),
 			}),
@@ -1467,6 +1477,32 @@ describe("Create schedules for a month: where everyone starts", () => {
 		expect(await screen.findByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeVisible();
 		expect(screen.getAllByText(LAST_WEEKS_DAYS_UNKNOWN)).toHaveLength(1);
 		expect(screen.queryByText(/^Dec 21\s?–\s?27$/)).toBeNull();
+	});
+
+	it("given_anUntickedWeekRosteredOnlyToWednesday_when_onSetup_then_theNextTickedWeekIsAskedUnderItsDates", async () => {
+		const december = ungeneratedMonthFixture();
+		await open(NEW_DECEMBER, {
+			[`GET ${DECEMBER}`]: reply({
+				...december,
+				weeks: december.weeks.map((week) =>
+					week.periodStart === "2026-12-14"
+						? {
+								...week,
+								state: "PUBLISHED",
+								scheduleId: "s-14",
+								includedInMonthGeneration: false,
+								parts: [publishedPart("s-14", "2026-12-14", "2026-12-16")],
+							}
+						: week
+				),
+			}),
+		});
+
+		const gapWeek = await vi.waitFor(() => weekBlock(/^Dec 21\s?–\s?27$/));
+		expect(within(gapWeek).getByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeVisible();
+		expect(
+			within(gapWeek).getByRole("button", { name: "Add last week’s shifts" })
+		).toBeVisible();
 	});
 
 	it("given_consecutiveTickedWeeks_when_onSetup_then_asksOnlyForTheFirst", async () => {

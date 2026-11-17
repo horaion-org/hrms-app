@@ -242,22 +242,48 @@ describe("startingWeekOf", () => {
 });
 
 /** Kitchen's December with the given states by Monday; a generating week is not covered, as the API says. */
+/** December with the given weeks in `states`, each held by one whole-week part as the API lists it, or by `parts`. */
 const decemberWith = (
-	states: Record<string, MonthWeek["state"]>
+	states: Record<string, MonthWeek["state"]>,
+	parts: Record<string, MonthWeek["parts"]> = {}
 ): ReturnType<typeof ungeneratedMonthFixture> => {
 	const month = ungeneratedMonthFixture();
 	return {
 		...month,
 		weeks: month.weeks.map((week) => {
-			const state = states[week.periodStart] ?? week.state;
+			const state = states[week.periodStart];
+			if (state === undefined) return week;
 			return {
 				...week,
 				state,
 				includedInMonthGeneration: state !== "GENERATING",
+				parts: parts[week.periodStart] ?? [
+					{
+						scheduleId: `s-${week.periodStart}`,
+						name: `Week of ${week.periodStart}`,
+						named: false,
+						coveredFrom: week.periodStart,
+						coveredTo: week.periodEnd,
+						state,
+					},
+				],
 			};
 		}),
 	};
 };
+
+/** A published part of the week of 14 Dec, from `coveredFrom` to `coveredTo`. */
+const partOf14 = (
+	coveredFrom: string,
+	coveredTo: string
+): MonthWeek["parts"][number] => ({
+	scheduleId: "s-part",
+	name: "Week of 2026-12-14",
+	named: false,
+	coveredFrom,
+	coveredTo,
+	state: "PUBLISHED",
+});
 
 const mondaysOf = (weeks: Array<MonthWeek>): Array<string> =>
 	weeks.map((week) => week.periodStart);
@@ -330,6 +356,28 @@ describe("chosen weeks", () => {
 
 	it("given_aChosenWeekAfterAGeneratingWeek_when_startingWeeksOf_then_notIncluded", () => {
 		const month = decemberWith({ "2026-12-14": "GENERATING" });
+
+		expect(
+			mondaysOf(startingWeeksOf(month, ["2026-12-07", "2026-12-21"]))
+		).toEqual(["2026-12-07"]);
+	});
+
+	it("given_aGapWeekRosteredOnlyToWednesday_when_startingWeeksOf_then_theNextChosenWeekIsAsked", () => {
+		const month = decemberWith(
+			{ "2026-12-14": "PUBLISHED" },
+			{ "2026-12-14": [partOf14("2026-12-14", "2026-12-16")] }
+		);
+
+		expect(
+			mondaysOf(startingWeeksOf(month, ["2026-12-07", "2026-12-21"]))
+		).toEqual(["2026-12-07", "2026-12-21"]);
+	});
+
+	it("given_aGapWeekWithAPartRosteredToSunday_when_startingWeeksOf_then_theNextChosenWeekCarriesOn", () => {
+		const month = decemberWith(
+			{ "2026-12-14": "PUBLISHED" },
+			{ "2026-12-14": [partOf14("2026-12-17", "2026-12-20")] }
+		);
 
 		expect(
 			mondaysOf(startingWeeksOf(month, ["2026-12-07", "2026-12-21"]))
