@@ -120,6 +120,7 @@ describe("issuesOfRoster", () => {
 			["mustFix", "scheduling.issues.wholeRoster"],
 			["notMet", "scheduling.issues.wholeRoster"],
 		]);
+		expect(issues[0]?.rule).toBe("scheduling.rulesCheck.brokenUnnamed");
 	});
 
 	it("lists a generation error marked if possible as not met, and any other as to fix", () => {
