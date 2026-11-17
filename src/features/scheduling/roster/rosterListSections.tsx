@@ -21,7 +21,10 @@ import {
 	daysToDecideItems,
 	leaveAndCoverItems,
 } from "@/features/scheduling/roster/rosterPanels";
-import type { RosterIssue } from "@/features/scheduling/roster/rosterIssueGroups";
+import type {
+	IssueNote,
+	RosterIssue,
+} from "@/features/scheduling/roster/rosterIssueGroups";
 import { RosterIssueGroups } from "@/features/scheduling/roster/RosterIssueGroups";
 import type { RosterPanel } from "@/features/scheduling/roster/rosterSearch";
 import type { RosterView } from "@/features/scheduling/roster/rosterView";
@@ -85,9 +88,10 @@ export type RosterListInput = {
 };
 
 /**
- * One line each, said above the findings in the Issues panel. That the
- * notes are from generation is said only where Validate schedule is not
- * there to say how the list stands (it would contradict "Validated").
+ * The notes about the whole list, each a row under More information: that
+ * the days before this week changed, and that the notes are from
+ * generation, said only where Validate schedule is not there to say how
+ * the list stands (it would contradict "Validated").
  */
 export const issueNoteLines = ({
 	roster: { findings, editedDays },
@@ -97,16 +101,24 @@ export const issueNoteLines = ({
 }: Pick<
 	RosterListInput,
 	"roster" | "membersWithChangedStart" | "validationNote" | "t"
->): Array<string> => [
+>): Array<IssueNote> => [
 	...(membersWithChangedStart > 0
 		? [
-				t("scheduling.startingContext.stale", {
-					count: membersWithChangedStart,
-				}),
+				{
+					title: t("scheduling.issues.startChanged.title", {
+						count: membersWithChangedStart,
+					}),
+					detail: t("scheduling.issues.startChanged.detail"),
+				},
 			]
 		: []),
 	...(findings && editedDays.size > 0 && !validationNote
-		? [t("scheduling.rosterEdit.findingsOutOfDate")]
+		? [
+				{
+					title: t("scheduling.issues.fromGeneration.title"),
+					detail: t("scheduling.issues.fromGeneration.detail"),
+				},
+			]
 		: []),
 ];
 

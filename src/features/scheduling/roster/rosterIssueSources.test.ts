@@ -77,6 +77,7 @@ describe("issuesOfRoster", () => {
 			day: "2026-10-12",
 			action: { kind: "findCover", gap: { shiftId, day: "2026-10-12" } },
 		});
+		expect(issues[0]?.rule).toMatch(/^scheduling\.issues\.leaveShort\(/);
 	});
 
 	it("lists a day to decide as to fix", () => {
@@ -96,13 +97,21 @@ describe("issuesOfRoster", () => {
 		const issues = issuesOfRoster(
 			input({
 				startingRuns: new Map([["mp-1", 3]]),
-				noteLines: ["The week before changed"],
+				noteLines: [
+					{ title: "5 people's days changed", detail: "Regenerate to plan" },
+				],
 			})
 		);
 
-		expect(issues.map((issue) => issue.group)).toEqual([
-			"forInformation",
-			"forInformation",
+		expect(
+			issues.map((issue) => [issue.group, issue.who, issue.rule])
+		).toEqual([
+			[
+				"forInformation",
+				"Aisha Rahman",
+				"scheduling.detail.workedInARow(Aisha Rahman|3)",
+			],
+			["forInformation", "5 people's days changed", "Regenerate to plan"],
 		]);
 	});
 
@@ -120,7 +129,9 @@ describe("issuesOfRoster", () => {
 			["mustFix", "scheduling.issues.wholeRoster"],
 			["notMet", "scheduling.issues.wholeRoster"],
 		]);
-		expect(issues[0]?.rule).toBe("scheduling.rulesCheck.brokenUnnamed");
+		expect(issues[0]?.rule).toBe(
+			"scheduling.issues.brokenMust(scheduling.rulesCheck.unnamedRule)"
+		);
 	});
 
 	it("lists a generation error marked if possible as not met, and any other as to fix", () => {

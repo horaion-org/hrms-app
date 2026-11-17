@@ -6,7 +6,7 @@ import {
 } from "@/features/scheduling/rulesCheck/fixtures";
 import {
 	issueCounts,
-	issueSummary,
+	issueSummaryParts,
 	issuesOfGroup,
 	orderedIssues,
 	rosterIssues,
@@ -48,7 +48,7 @@ describe("rosterIssues", () => {
 
 		expect(issue).toMatchObject({
 			group: "mustFix",
-			who: "scheduling.issues.jobShort(Front Desk Staff)",
+			who: "scheduling.issues.jobShort(1|Front Desk Staff)",
 			day: "2026-10-17",
 			time: "09:00–15:00",
 			action: {
@@ -67,15 +67,33 @@ describe("rosterIssues", () => {
 		expect(issue?.action).toEqual({ kind: "show" });
 	});
 
-	it("lists each person and day a broken must names, to fix, by the rule's name", () => {
+	it("lists each person and day a broken must names, to fix, saying a must is broken and naming the rule last", () => {
 		const issues = rosterIssues(input({ brokenMusts: [brokenMust] }));
 
 		expect(
 			issues.map((issue) => [issue.group, issue.who, issue.day, issue.rule])
 		).toEqual([
-			["mustFix", "Ben Ortiz", "2026-10-14", "Rest between shifts"],
-			["mustFix", "Aisha Rahman", "2026-10-15", "Rest between shifts"],
+			[
+				"mustFix",
+				"Ben Ortiz",
+				"2026-10-14",
+				"scheduling.issues.brokenMust(Rest between shifts)",
+			],
+			[
+				"mustFix",
+				"Aisha Rahman",
+				"2026-10-15",
+				"scheduling.issues.brokenMust(Rest between shifts)",
+			],
 		]);
+	});
+
+	it("says a rule asked if possible was not met, naming the rule last", () => {
+		const [issue] = rosterIssues(
+			input({ notMet: [ruleFixture({ constraintName: "Weekends off" })] })
+		);
+
+		expect(issue?.rule).toBe("scheduling.issues.notMetRule(Weekends off)");
 	});
 
 	it("lists a rule naming no one once, for the whole roster", () => {
@@ -102,7 +120,7 @@ describe("rosterIssues", () => {
 
 		expect(issue).toMatchObject({
 			who: "scheduling.issues.wholeRoster",
-			rule: "scheduling.rulesCheck.rule.impossible_shift_assignment_is_zero",
+			rule: "scheduling.issues.brokenMust(scheduling.rulesCheck.rule.impossible_shift_assignment_is_zero)",
 			hint: "scheduling.issues.ruleWithoutPlace",
 		});
 	});
@@ -124,7 +142,7 @@ describe("rosterIssues", () => {
 		expect(issue).toMatchObject({
 			who: "Aisha Rahman",
 			day: "2026-10-14",
-			rule: "scheduling.rulesCheck.rule.impossible_shift_assignment_is_zero",
+			rule: "scheduling.issues.brokenMust(scheduling.rulesCheck.rule.impossible_shift_assignment_is_zero)",
 		});
 		expect(issue?.hint).toBeUndefined();
 	});
@@ -156,7 +174,10 @@ describe("rosterIssues", () => {
 			input({
 				brokenMusts: [brokenMust, brokenMust],
 				gaps: [staffingGapFixture(), staffingGapFixture()],
-				notes: ["Public holiday on Monday", "Public holiday on Monday"],
+				notes: [
+					{ title: "Roster note", detail: "Public holiday on Monday" },
+					{ title: "Roster note", detail: "Public holiday on Monday" },
+				],
 			})
 		);
 
@@ -168,17 +189,32 @@ describe("rosterIssues", () => {
 	});
 });
 
-describe("issueSummary", () => {
-	it("says each group with items, leaving out the empty ones", () => {
-		expect(issueSummary({ mustFix: 3, notMet: 0, forInformation: 1 }, t)).toBe(
-			"scheduling.issues.summary.mustFix(3) · scheduling.issues.summary.forInformation(1)"
-		);
+describe("issueSummaryParts", () => {
+	it("counts every group in order when each has items", () => {
+		expect(
+			issueSummaryParts({ mustFix: 6, notMet: 1, forInformation: 3 }, t)
+		).toEqual([
+			{ group: "mustFix", text: "scheduling.issues.summary.mustFix(6)" },
+			{ group: "notMet", text: "scheduling.issues.summary.notMet(1)" },
+			{
+				group: "forInformation",
+				text: "scheduling.issues.summary.forInformation(3)",
+			},
+		]);
 	});
 
-	it("is empty when nothing is wrong", () => {
-		expect(issueSummary({ mustFix: 0, notMet: 0, forInformation: 0 }, t)).toBe(
-			""
-		);
+	it("leaves out a group with nothing in it", () => {
+		expect(
+			issueSummaryParts({ mustFix: 3, notMet: 0, forInformation: 1 }, t).map(
+				(part) => part.group
+			)
+		).toEqual(["mustFix", "forInformation"]);
+	});
+
+	it("has no part when nothing is wrong", () => {
+		expect(
+			issueSummaryParts({ mustFix: 0, notMet: 0, forInformation: 0 }, t)
+		).toEqual([]);
 	});
 });
 
@@ -192,7 +228,7 @@ describe("orderedIssues", () => {
 			[
 				"Aisha Rahman",
 				"Ben Ortiz",
-				"scheduling.issues.jobShort(Front Desk Staff)",
+				"scheduling.issues.jobShort(1|Front Desk Staff)",
 			]
 		);
 	});

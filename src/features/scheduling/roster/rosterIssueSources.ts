@@ -5,6 +5,7 @@ import { diagnosticSentence } from "@/features/scheduling/roster/findings/diagno
 import {
 	gapIssueKey,
 	rosterIssues,
+	type IssueNote,
 	type RosterIssue,
 } from "@/features/scheduling/roster/rosterIssueGroups";
 import type { RosterView } from "@/features/scheduling/roster/rosterView";
@@ -38,20 +39,20 @@ export type RosterIssueSourceInput = {
 	check: RosterRulesCheck | undefined;
 	/** The working days in a row each member brought into the period. */
 	startingRuns?: ReadonlyMap<string, number>;
-	/** Lines said above the list, such as the week before having changed. */
-	noteLines: ReadonlyArray<string>;
+	/** Notes about the whole list, such as the week before having changed. */
+	noteLines: ReadonlyArray<IssueNote>;
 	t: TFunction;
 	/** The locale dates are written in (`formattingLocale`). */
 	language: string;
 };
 
-/** A broken roster whose rules the engine did not name, listed once for the whole roster, as "This roster breaks a working-time rule." */
-const unnamedRule = (t: TFunction): BrokenRule => ({
+/** A broken roster whose rules the engine did not name, listed once for the whole roster under the app's name for an unnamed rule. */
+const UNNAMED_RULE: BrokenRule = {
 	rule: "unnamed",
 	constraintId: null,
-	constraintName: t("scheduling.rulesCheck.brokenUnnamed"),
+	constraintName: null,
 	violations: null,
-});
+};
 
 /**
  * How the engine starts each message of a rule asked "if possible" that gave
@@ -112,7 +113,10 @@ const leaveAndCoverIssue = (
 			row.uncoveredFrom && row.uncoveredTo
 				? timeRangeText(row.uncoveredFrom, row.uncoveredTo, t)
 				: null,
-		rule: t("scheduling.rosterMarkers.needsCover", { shift: shift.name }),
+		rule: t("scheduling.issues.leaveShort", {
+			name: base.who,
+			shift: shift.name,
+		}),
 		action: {
 			kind: "findCover",
 			gap: { shiftId: shift.shiftId, day: row.day },
@@ -211,23 +215,23 @@ const setupNotes = ({
 	roster: { findings, names },
 	t,
 	language,
-}: RosterIssueSourceInput): Array<string> =>
-	(findings?.diagnostics ?? []).map(
-		(diagnostic) =>
+}: RosterIssueSourceInput): Array<IssueNote> =>
+	(findings?.diagnostics ?? []).map((diagnostic) => ({
+		title: t("scheduling.issues.rosterNote"),
+		detail:
 			(names &&
 				diagnosticSentence(diagnostic, names, t, (date) =>
 					formatDay(date, language)
 				)) ??
-			diagnostic.message
-	);
+			diagnostic.message,
+	}));
 
 /** The musts the check found broken: its named rules, or one for the whole roster when it named none. */
 const brokenMustsOf = (
-	check: RosterRulesCheck | undefined,
-	t: TFunction
+	check: RosterRulesCheck | undefined
 ): Array<BrokenRule> => {
 	if (check?.status !== "BROKEN") return [];
-	return check.brokenRules.length > 0 ? check.brokenRules : [unnamedRule(t)];
+	return check.brokenRules.length > 0 ? check.brokenRules : [UNNAMED_RULE];
 };
 
 /**
@@ -245,7 +249,7 @@ export const issuesOfRoster = (
 		gaps: (roster.findings?.conflicts ?? []).filter(
 			(conflict) => conflict.employeeUuid === null
 		),
-		brokenMusts: brokenMustsOf(check, t),
+		brokenMusts: brokenMustsOf(check),
 		notMet: check?.notMet ?? [],
 		notes: [...noteLines, ...setupNotes(input)],
 		memberNames: roster.names?.members ?? new Map<string, string>(),

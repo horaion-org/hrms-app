@@ -30,11 +30,11 @@ export const GROUPS_STARTING_CLOSED: ReadonlyArray<IssueGroup> = [
 export type IssueAction =
 	{ kind: "show" } | { kind: "findCover"; gap: CoverGapRequest };
 
-/** One line of the Issues tab. */
+/** One row of the Issues tab: who or what and when on its first line, why and what to do on its second. */
 export type RosterIssue = {
 	key: string;
 	group: IssueGroup;
-	/** The person's name, "<job title> short", or "Whole roster" for a rule naming no one. */
+	/** The person's name, "1 <job title> short", a note's title, or "Whole roster" for a rule naming no one. */
 	who: string;
 	/** The member it is about, when it names one. */
 	memberProfileId: string | null;
@@ -42,12 +42,15 @@ export type RosterIssue = {
 	day: string | null;
 	/** "09:00–15:00" for a shift short, otherwise null. */
 	time: string | null;
-	/** The rule, in plain words. */
+	/** Why it is listed and, where there is something to do, what to do, the rule's name last. */
 	rule: string;
 	/** What to do when the item names no person and no day, shown where the day would be. */
 	hint?: string;
 	action: IssueAction;
 };
+
+/** A note with nothing to fix: a short title, then what it means and what to do. */
+export type IssueNote = { title: string; detail: string };
 
 /** What the Issues groups are built from: today's panel inputs. */
 export type RosterIssueInput = {
@@ -58,7 +61,7 @@ export type RosterIssueInput = {
 	/** The rules asked "if possible" that were not met. */
 	notMet: ReadonlyArray<BrokenRule>;
 	/** Roster notes with nothing to fix, already in words. */
-	notes: ReadonlyArray<string>;
+	notes: ReadonlyArray<IssueNote>;
 	/**
 	 * Items already built from the roster's other lists (days to decide,
 	 * leave and cover, starting points), listed first so a shift short
@@ -92,6 +95,7 @@ const gapIssue = (
 		key: gapIssueKey(shiftId, gap.date) ?? `gap|${gap.conflictId}`,
 		group: "mustFix",
 		who: t(`${key}.jobShort`, {
+			count: gap.missing,
 			job: roleNames.get(gap.roleUuid) ?? t(`${key}.unknownJob`),
 		}),
 		memberProfileId: null,
@@ -121,31 +125,39 @@ const hintWithoutPlace = (
 		? t(`${key}.ruleWithoutPlace`)
 		: undefined;
 
+/** Why a rule's item is listed: a must broken, or a rule asked "if possible" not met. */
+const RULE_REASON_KEYS: Record<"mustFix" | "notMet", string> = {
+	mustFix: `${key}.brokenMust`,
+	notMet: `${key}.notMetRule`,
+};
+
 /** One item per person and day a rule names, or one for the whole roster when it names none. */
 const ruleIssues = (
 	rule: BrokenRule,
-	group: IssueGroup,
+	group: "mustFix" | "notMet",
 	{ memberNames, t }: RosterIssueInput
 ): Array<RosterIssue> => {
-	const label = brokenRuleLabel(rule, t);
+	const reason = t(RULE_REASON_KEYS[group], {
+		rule: brokenRuleLabel(rule, t),
+	});
 	const violations = rule.violations ?? [];
 	if (violations.length === 0) {
 		return [
 			{
-				key: `${group}|${rule.rule}|${label}`,
+				key: `${group}|${rule.rule}|${reason}`,
 				group,
 				who: t(`${key}.wholeRoster`),
 				memberProfileId: null,
 				day: null,
 				time: null,
-				rule: label,
+				rule: reason,
 				hint: hintWithoutPlace(null, null, t),
 				action: { kind: "show" },
 			},
 		];
 	}
 	return violations.map((violation) => ({
-		key: `${group}|${rule.rule}|${label}|${violation.employeeId ?? ""}|${violation.date ?? ""}`,
+		key: `${group}|${rule.rule}|${reason}|${violation.employeeId ?? ""}|${violation.date ?? ""}`,
 		group,
 		who: violation.employeeId
 			? (memberNames.get(violation.employeeId) ??
@@ -154,20 +166,20 @@ const ruleIssues = (
 		memberProfileId: violation.employeeId,
 		day: violation.date,
 		time: null,
-		rule: label,
+		rule: reason,
 		hint: hintWithoutPlace(violation.employeeId, violation.date, t),
 		action: { kind: "show" },
 	}));
 };
 
-const noteIssue = (note: string, t: TFunction): RosterIssue => ({
-	key: `note|${note}`,
+const noteIssue = ({ title, detail }: IssueNote): RosterIssue => ({
+	key: `note|${title}|${detail}`,
 	group: "forInformation",
-	who: t(`${key}.rosterNote`),
+	who: title,
 	memberProfileId: null,
 	day: null,
 	time: null,
-	rule: note,
+	rule: detail,
 	action: { kind: "show" },
 });
 
@@ -188,7 +200,7 @@ export const rosterIssues = (input: RosterIssueInput): Array<RosterIssue> =>
 		...input.gaps.map((gap) => gapIssue(gap, input)),
 		...input.brokenMusts.flatMap((rule) => ruleIssues(rule, "mustFix", input)),
 		...input.notMet.flatMap((rule) => ruleIssues(rule, "notMet", input)),
-		...input.notes.map((note) => noteIssue(note, input.t)),
+		...input.notes.map(noteIssue),
 	]);
 
 /** How many items each group holds. */
@@ -201,14 +213,18 @@ export const issueCounts = (
 		.length,
 });
 
-/** "3 to fix · 2 could not be met · 1 for information", leaving out empty groups; empty when none. */
-export const issueSummary = (
+/** One part of the Issues summary line, drawn in its group's tone. */
+export type IssueSummaryPart = { group: IssueGroup; text: string };
+
+/** "3 to fix", "2 could not be met", "1 for information": one part per group with items, none when all are empty. */
+export const issueSummaryParts = (
 	counts: Record<IssueGroup, number>,
 	t: TFunction
-): string =>
-	ISSUE_GROUPS.filter((group) => counts[group] > 0)
-		.map((group) => t(`${key}.summary.${group}`, { count: counts[group] }))
-		.join(" · ");
+): Array<IssueSummaryPart> =>
+	ISSUE_GROUPS.filter((group) => counts[group] > 0).map((group) => ({
+		group,
+		text: t(`${key}.summary.${group}`, { count: counts[group] }),
+	}));
 
 /** Orders items by person or by day. */
 export type IssueOrder = "byPerson" | "byDay";

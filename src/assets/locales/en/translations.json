@@ -4734,15 +4734,18 @@
 			"save": "Save hours"
 		},
 		"issues": {
-			"shortOnRule_one": "{{count}} person short · {{rule}}",
-			"shortOnRule_other": "{{count}} people short · {{rule}}",
+			"shortOnRule_one": "Not enough people on this shift. Find someone to cover it. Rule: {{rule}}",
+			"shortOnRule_other": "Not enough people on this shift. Find {{count}} people to cover it. Rule: {{rule}}",
 			"conflict": "A clash on this day",
 			"weekBarLabel": "Issues: {{count}} to fix, {{notMet}} could not be met",
 			"groupLabel": "{{group}}, {{count}}",
 			"show": "Show",
 			"nothingWrong": "Nothing to fix: every shift is covered and every rule holds.",
 			"orderLabel": "Order issues",
-			"order": { "byPerson": "By person", "byDay": "By day" },
+			"order": {
+				"byPerson": "By person",
+				"byDay": "By day"
+			},
 			"groups": {
 				"mustFix": "Must fix",
 				"notMet": "Could not be met",
@@ -4760,6 +4763,21 @@
 				"notMet_other": "{{count}} could not be met",
 				"forInformation_one": "{{count}} for information",
 				"forInformation_other": "{{count}} for information"
+			},
+			"jobShort_one": "{{count}} {{job}} short",
+			"jobShort_other": "{{count}} {{job}} short",
+			"brokenMust": "A rule that must hold is broken here. Change this day by hand, then validate again. Rule: {{rule}}",
+			"notMetRule": "Asked for if possible, and this roster could not meet it. Rule: {{rule}}",
+			"leaveShort": "{{name}} is on leave, so {{shift}} is short. Find someone to cover it.",
+			"nothingToFix": "Nothing to fix this week",
+			"startChanged": {
+				"title_one": "{{count}} person’s days before this week changed",
+				"title_other": "{{count}} people’s days before this week changed",
+				"detail": "This roster was generated from what was known then. To plan from the days as they are now, regenerate the month from its page."
+			},
+			"fromGeneration": {
+				"title": "These notes are from generation",
+				"detail": "Changes made by hand since aren’t reflected. Validate the schedule to bring them up to date."
 			}
 		},
 		"rosterMarkers": {

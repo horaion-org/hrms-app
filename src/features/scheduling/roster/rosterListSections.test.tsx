@@ -131,7 +131,10 @@ describe("rosterListSections", () => {
 describe("issueNoteLines", () => {
 	it("given_changedStartsAndNoFindings_when_said_then_saysOnlyTheChangedStarts", () => {
 		expect(issueNoteLines(inputOf({ membersWithChangedStart: 2 }))).toEqual([
-			"scheduling.startingContext.stale(2)",
+			{
+				title: "scheduling.issues.startChanged.title(2)",
+				detail: "scheduling.issues.startChanged.detail",
+			},
 		]);
 	});
 
@@ -170,7 +173,10 @@ describe("issueNoteLines", () => {
 		};
 
 		expect(issueNoteLines(withFindings({}))).toEqual([
-			"scheduling.rosterEdit.findingsOutOfDate",
+			{
+				title: "scheduling.issues.fromGeneration.title",
+				detail: "scheduling.issues.fromGeneration.detail",
+			},
 		]);
 		expect(
 			issueNoteLines(withFindings({ validationNote: <p>Validated</p> }))
