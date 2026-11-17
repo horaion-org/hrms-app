@@ -4518,7 +4518,8 @@
 			"save": "Guardar días",
 			"invalid": "No se pudo guardar un día. Comprueba que su turno sigue en uso e inténtalo de nuevo.",
 			"notDraft": "Este horario ya se generó, así que su punto de partida ya no puede cambiar.",
-			"failed": "No se pudieron guardar los días. Inténtalo de nuevo."
+			"failed": "No se pudieron guardar los días. Inténtalo de nuevo.",
+			"unknownDays": "Horaion no sabe qué trabajó cada persona el {{days}}."
 		},
 		"openingHours": {
 			"title": "Horas ya trabajadas este mes (del {{from}} al {{to}})",
@@ -5468,7 +5469,9 @@
 			"passedBefore_other": "{{days}} ya pasaron y no tienen horario.",
 			"schedulesThisWeek": "Horarios de esta semana",
 			"redoing": "Este horario rehace {{days}}. Hasta que su cuadrante esté listo, el horario actual de la semana conserva esos días.",
-			"beingRedone": "{{days}} se están volviendo a programar. Este cuadrante los conserva hasta que el nuevo esté listo."
+			"beingRedone": "{{days}} se están volviendo a programar. Este cuadrante los conserva hasta que el nuevo esté listo.",
+			"noneBeforePublished_one": "{{days}} no tiene horario. Va antes de días publicados, así que no se puede programar ahora.",
+			"noneBeforePublished_other": "{{days}} no tienen horario. Van antes de días publicados, así que no se pueden programar ahora."
 		}
 	},
 	"workspace": {

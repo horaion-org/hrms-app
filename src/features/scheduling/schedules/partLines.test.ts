@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { DayRun } from "@/features/scheduling/dates/api";
 import type { WeekRun } from "@/features/scheduling/dates/datesSetup";
 import {
+	firstPublishedDayOf,
 	partLinesOf,
 	type PartLine,
 	type PartLinesSource,
@@ -27,9 +28,47 @@ describe("partLinesOf", () => {
 	it.each<[string, Partial<PartLinesSource>, Array<PartLine>]>([
 		["a whole week with no redo", {}, []],
 		[
-			"days before that no schedule holds",
+			"days before an unpublished part, still to come",
 			{ runs: [{ kind: "noneBefore", days: MONDAY_TUESDAY }] },
-			[{ text: "scheduling.roster.noneBefore(2027-02-15..2027-02-16|2)" }],
+			[
+				{
+					text: "scheduling.roster.noneBefore(2027-02-15..2027-02-16|2)",
+					action: {
+						kind: "scheduleDays",
+						days: MONDAY_TUESDAY,
+						label: "scheduling.roster.remainingButton(2027-02-15..2027-02-16)",
+					},
+				},
+			],
+		],
+		[
+			"days before a published part",
+			{
+				runs: [{ kind: "noneBefore", days: MONDAY_TUESDAY }],
+				firstPublishedDay: "2027-02-17",
+			},
+			[
+				{
+					text: "scheduling.roster.noneBeforePublished(2027-02-15..2027-02-16|2)",
+				},
+			],
+		],
+		[
+			"days after a published part, before this one",
+			{
+				runs: [{ kind: "noneBefore", days: MONDAY_TUESDAY }],
+				firstPublishedDay: "2027-02-15",
+			},
+			[
+				{
+					text: "scheduling.roster.noneBefore(2027-02-15..2027-02-16|2)",
+					action: {
+						kind: "scheduleDays",
+						days: MONDAY_TUESDAY,
+						label: "scheduling.roster.remainingButton(2027-02-15..2027-02-16)",
+					},
+				},
+			],
 		],
 		[
 			"days before that have passed with no schedule",
@@ -92,5 +131,26 @@ describe("partLinesOf", () => {
 			"scheduling.roster.noneBefore(2027-02-15..2027-02-16|2)",
 			"scheduling.roster.otherPart(2027-02-20..2027-02-21|2)",
 		]);
+	});
+});
+
+describe("firstPublishedDayOf", () => {
+	it.each([
+		{
+			case: "no part published",
+			parts: [{ state: "TO_REVIEW", coveredFrom: "2027-02-15" }],
+			expected: undefined,
+		},
+		{
+			case: "two published parts",
+			parts: [
+				{ state: "PUBLISHED", coveredFrom: "2027-02-19" },
+				{ state: "TO_REVIEW", coveredFrom: "2027-02-15" },
+				{ state: "PUBLISHED", coveredFrom: "2027-02-17" },
+			],
+			expected: "2027-02-17",
+		},
+	] as const)("given_$case_when_read_then_$expected", ({ parts, expected }) => {
+		expect(firstPublishedDayOf(parts)).toBe(expected);
 	});
 });

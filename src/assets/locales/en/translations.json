@@ -4718,7 +4718,8 @@
 			"save": "Save days",
 			"invalid": "A day couldn’t be saved. Check that its shift is still in use, then try again.",
 			"notDraft": "This schedule has already been generated, so its starting point can no longer change.",
-			"failed": "The days couldn’t be saved. Try again."
+			"failed": "The days couldn’t be saved. Try again.",
+			"unknownDays": "Horaion doesn’t know what people worked on {{days}}."
 		},
 		"openingHours": {
 			"title": "Hours already worked this month ({{from}} to {{to}})",
@@ -5668,7 +5669,9 @@
 			"passedBefore_other": "{{days}} have passed and have no schedule.",
 			"schedulesThisWeek": "Schedules this week",
 			"redoing": "This schedule redoes {{days}}. Until its roster is ready, the week’s current schedule keeps those days.",
-			"beingRedone": "{{days}} are being scheduled again. This roster keeps them until the new one is ready."
+			"beingRedone": "{{days}} are being scheduled again. This roster keeps them until the new one is ready.",
+			"noneBeforePublished_one": "{{days}} has no schedule. It comes before published days, so it can’t be scheduled now.",
+			"noneBeforePublished_other": "{{days}} have no schedule. They come before published days, so they can’t be scheduled now."
 		}
 	},
 	"colourSwatchPicker": {
