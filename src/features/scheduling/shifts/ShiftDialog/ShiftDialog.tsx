@@ -18,7 +18,7 @@ import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit
 import {
 	paidShiftHours,
 	shiftMinutes,
-} from "@/features/scheduling/scheduleDraft";
+} from "@/features/scheduling/shifts/shiftHours";
 import type { ScheduleShift } from "@/features/scheduling/schedules/api";
 import {
 	SetupDepartmentField,

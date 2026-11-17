@@ -1,5 +1,5 @@
 import { MINUTES_PER_DAY, minutesOfDay } from "@/common/timeOfDay";
-import { shiftMinutes } from "@/features/scheduling/scheduleDraft";
+import { shiftMinutes } from "@/features/scheduling/shifts/shiftHours";
 import type { ScheduleShift } from "@/features/scheduling/schedules/api";
 
 /** What the day axis reads of a shift. */

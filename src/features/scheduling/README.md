@@ -45,6 +45,9 @@ ways; `scripts/check-feature-cycles.mjs` lists the pairs that still do, and that
   department).
 - `shifts/shiftRefusal.ts` — the shifts API's codes to frontend-owned copy, on a field or as one message.
 - `shifts/shiftColours.ts` — the twenty colours a shift may be given, in the picker's order.
+- `shifts/shiftHours.ts` — a shift's length (`shiftMinutes`, `shiftHours`, past midnight), its paid minutes and hours
+  less the unpaid break (`paidShiftMinutes`, `paidShiftHours`), minutes as hours to two places (`hoursFromMinutes`,
+  sum first and round once) and `isWeekdays` (Monday to Friday exactly).
 - `shifts/fixtures.ts` — API-shaped rows for stories and tests: draft s-1's shifts (`INCLUDED_SHIFT_IDS` ticked),
   a generated schedule's frozen copies, a live shift and the role options.
 - `shifts/ShiftDialog` — add or change one of the department's shifts: name, group (`Combobox` with its create row;

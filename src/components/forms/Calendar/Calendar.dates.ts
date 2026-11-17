@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import "dayjs/locale/es";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import {
 	calendarWeekCount,
 	calendarWeekLength,
@@ -20,7 +21,6 @@ type CalendarDay = {
 
 type Weekday = { label: string; shortLabel: string; weekend: boolean };
 
-const isoFormat = "YYYY-MM-DD";
 const localeFor = (language: string): string =>
 	language.split("-")[0] === "es" ? "es" : "en";
 
@@ -59,7 +59,8 @@ export const rangePosition = (
 	return "middle";
 };
 
-export const todayDate = (now: number): IsoDate => dayjs(now).format(isoFormat);
+export const todayDate = (now: number): IsoDate =>
+	dayjs(now).format(ISO_DATE_FORMAT);
 
 export const initialFocusDate = (
 	month: IsoDate,
@@ -70,13 +71,14 @@ export const initialFocusDate = (
 	const first = dayjs(month).startOf("month");
 	const start = first.subtract((first.day() + 6) % calendarWeekLength, "day");
 	const end = start.add(calendarWeekCount * calendarWeekLength - 1, "day");
-	return today >= start.format(isoFormat) && today <= end.format(isoFormat)
+	return today >= start.format(ISO_DATE_FORMAT) &&
+		today <= end.format(ISO_DATE_FORMAT)
 		? today
-		: first.format(isoFormat);
+		: first.format(ISO_DATE_FORMAT);
 };
 
 export const pageMonth = (month: IsoDate, direction: -1 | 1): IsoDate =>
-	dayjs(month).startOf("month").add(direction, "month").format(isoFormat);
+	dayjs(month).startOf("month").add(direction, "month").format(ISO_DATE_FORMAT);
 
 const yearBlockLength = 12;
 const yearBlockAnchor = 2015;
@@ -113,8 +115,8 @@ export const isPeriodAvailable = (
 			? first.add(yearBlockLength - 1, "year").endOf("year")
 			: first.endOf(period);
 	return (
-		(!minDate || last.format(isoFormat) >= minDate) &&
-		(!maxDate || first.format(isoFormat) <= maxDate)
+		(!minDate || last.format(ISO_DATE_FORMAT) >= minDate) &&
+		(!maxDate || first.format(ISO_DATE_FORMAT) <= maxDate)
 	);
 };
 
@@ -137,21 +139,21 @@ export const keyboardDate = (
 	const pageSize = view === "years" ? yearBlockLength : 1;
 	switch (key) {
 		case "ArrowLeft":
-			return current.subtract(1, unit).format(isoFormat);
+			return current.subtract(1, unit).format(ISO_DATE_FORMAT);
 		case "ArrowRight":
-			return current.add(1, unit).format(isoFormat);
+			return current.add(1, unit).format(ISO_DATE_FORMAT);
 		case "ArrowUp":
-			return current.subtract(columns, unit).format(isoFormat);
+			return current.subtract(columns, unit).format(ISO_DATE_FORMAT);
 		case "ArrowDown":
-			return current.add(columns, unit).format(isoFormat);
+			return current.add(columns, unit).format(ISO_DATE_FORMAT);
 		case "Home":
-			return current.subtract(column, unit).format(isoFormat);
+			return current.subtract(column, unit).format(ISO_DATE_FORMAT);
 		case "End":
-			return current.add(columns - 1 - column, unit).format(isoFormat);
+			return current.add(columns - 1 - column, unit).format(ISO_DATE_FORMAT);
 		case "PageUp":
-			return current.subtract(pageSize, pageUnit).format(isoFormat);
+			return current.subtract(pageSize, pageUnit).format(ISO_DATE_FORMAT);
 		case "PageDown":
-			return current.add(pageSize, pageUnit).format(isoFormat);
+			return current.add(pageSize, pageUnit).format(ISO_DATE_FORMAT);
 		default:
 			return null;
 	}
@@ -166,10 +168,10 @@ export const focusInPeriod = (
 	const current = dayjs(date);
 	const target = dayjs(period);
 	return view === "years"
-		? current.year(target.year()).format(isoFormat)
+		? current.year(target.year()).format(ISO_DATE_FORMAT)
 		: target
 				.date(Math.min(current.date(), target.daysInMonth()))
-				.format(isoFormat);
+				.format(ISO_DATE_FORMAT);
 };
 
 export const monthTitle = (month: IsoDate, language: string): string =>
@@ -179,13 +181,13 @@ export const yearTitle = (month: IsoDate, language: string): string =>
 	dayjs(month).locale(localeFor(language)).format("YYYY");
 
 export const pageYear = (month: IsoDate, years: number): IsoDate =>
-	dayjs(month).startOf("month").add(years, "year").format(isoFormat);
+	dayjs(month).startOf("month").add(years, "year").format(ISO_DATE_FORMAT);
 
 type CalendarPeriod = { date: IsoDate; label: string; shortLabel: string };
 
 export const yearBlockTitle = (month: IsoDate, language: string): string => {
 	const first = dayjs(month).startOf("year").year(yearBlockStart(month));
-	return `${yearTitle(first.format(isoFormat), language)} - ${yearTitle(first.add(yearBlockLength - 1, "year").format(isoFormat), language)}`;
+	return `${yearTitle(first.format(ISO_DATE_FORMAT), language)} - ${yearTitle(first.add(yearBlockLength - 1, "year").format(ISO_DATE_FORMAT), language)}`;
 };
 
 export const pageYearBlock = (month: IsoDate, direction: -1 | 1): IsoDate =>
@@ -203,7 +205,7 @@ export const yearRows = (
 		Array.from({ length: 4 }, (_, column) => {
 			const date = first.add(row * 4 + column, "year");
 			return {
-				date: date.format(isoFormat),
+				date: date.format(ISO_DATE_FORMAT),
 				label: date.format("YYYY"),
 				shortLabel: date.format("YYYY"),
 			};
@@ -220,7 +222,7 @@ export const monthRows = (
 		Array.from({ length: 4 }, (_, column) => {
 			const date = first.add(row * 4 + column, "month");
 			return {
-				date: date.format(isoFormat),
+				date: date.format(ISO_DATE_FORMAT),
 				label: date.format("MMMM"),
 				shortLabel: date.format("MMM"),
 			};
@@ -239,7 +241,7 @@ export const dayWeeks = (
 		Array.from({ length: calendarWeekLength }, (_, weekday) => {
 			const date = start.add(week * calendarWeekLength + weekday, "day");
 			return {
-				date: date.format(isoFormat),
+				date: date.format(ISO_DATE_FORMAT),
 				label: date.format("dddd, D MMMM YYYY"),
 				day: date.format("D"),
 				weekend: weekday >= 5,

@@ -1,4 +1,5 @@
 import dayjs from "dayjs";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import type { BadgeTone } from "@/components/ui/Badge";
 import type {
 	ScheduleMonthSummary,
@@ -47,10 +48,8 @@ type TickRule = Pick<
 	"look" | "canTick" | "tickedByDefault" | "note"
 >;
 
-const ISO_DATE = "YYYY-MM-DD";
-
 const sundayOf = (monday: string): string =>
-	dayjs(monday).add(6, "day").format(ISO_DATE);
+	dayjs(monday).add(6, "day").format(ISO_DATE_FORMAT);
 
 const locked = (look: WeekLook): TickRule => ({
 	look,
@@ -162,7 +161,7 @@ export const tickedRangesOf = (
 		const last = ranges[ranges.length - 1];
 		const touchesLast =
 			last !== undefined &&
-			dayjs(last.end).add(1, "day").format(ISO_DATE) === monday;
+			dayjs(last.end).add(1, "day").format(ISO_DATE_FORMAT) === monday;
 		if (touchesLast) last.end = sundayOf(monday);
 		else ranges.push({ start: monday, end: sundayOf(monday) });
 	}
