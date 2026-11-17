@@ -1964,6 +1964,12 @@
 		},
 		"accessRoles": {
 			"defaults": {
+				"toast": {
+					"added": "Acceso predeterminado añadido.",
+					"removed": "Acceso predeterminado quitado.",
+					"given": "Acceso predeterminado dado.",
+					"stopped": "Acceso predeterminado detenido."
+				},
 				"setFor": {
 					"COMPANY": "Todos en la empresa",
 					"unit": "Todos en {{place}}"

@@ -2057,6 +2057,12 @@
 		},
 		"accessRoles": {
 			"defaults": {
+				"toast": {
+					"added": "Default access added.",
+					"removed": "Default access removed.",
+					"given": "Default access given.",
+					"stopped": "Default access stopped."
+				},
 				"setFor": {
 					"COMPANY": "Everyone in the company",
 					"unit": "Everyone in {{place}}"
