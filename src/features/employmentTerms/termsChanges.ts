@@ -1,5 +1,6 @@
 import type { TFunction } from "i18next";
 import dayjs from "dayjs";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import { formatDate, type IsoDate } from "@/components/forms/Calendar";
 import type {
 	EmploymentTermsBody,
@@ -48,7 +49,7 @@ export const isMonday = (date: IsoDate): boolean => dayjs(date).day() === 1;
 export const nextMonday = (today: IsoDate): IsoDate => {
 	const day = dayjs(today);
 	const ahead = (8 - day.day()) % 7 || 7;
-	return day.add(ahead, "day").format("YYYY-MM-DD");
+	return day.add(ahead, "day").format(ISO_DATE_FORMAT);
 };
 
 /**

@@ -1,4 +1,5 @@
 import dayjs from "dayjs";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import type { OpeningBalances } from "@/features/scheduling/hours/api";
 import type {
 	MonthWeek,
@@ -19,7 +20,7 @@ export const unknownOpeningCount = (openings: OpeningBalances): number =>
 
 /** The last day an opening covers: the day before the roster's first. */
 export const lastDayBefore = (asOf: string): string =>
-	dayjs(asOf).subtract(1, "day").format("YYYY-MM-DD");
+	dayjs(asOf).subtract(1, "day").format(ISO_DATE_FORMAT);
 
 /** Whether a roster starting on this day has days of its month before it (the API's `applies`). */
 export const startsAfterFirst = (periodStart: string): boolean =>
