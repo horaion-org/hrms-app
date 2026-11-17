@@ -87,7 +87,8 @@ describe("ValidationNote", () => {
 	it("says the list is out of date, with Validate schedule right there", async () => {
 		const ask = show("outOfDate");
 
-		expect(screen.getByText(copy.outOfDate)).toBeInTheDocument();
+		expect(screen.getByRole("note")).toHaveTextContent(copy.outOfDate);
+		expect(screen.getByRole("note")).toHaveClass("bg-ink-blue-50");
 		await userEvent.click(screen.getByRole("button", { name: copy.check }));
 		expect(ask).toHaveBeenCalledOnce();
 	});
@@ -104,10 +105,11 @@ describe("ValidationNote", () => {
 		expect(screen.getByText(copy.staffingUnchecked)).toBeInTheDocument();
 	});
 
-	it("says the list is the schedule as it stands once validated", () => {
+	it("says no rule is broken once validated, in the success tone", () => {
 		show("current", { last: { revision: 1, check: rulesCheckFixture() } });
 
-		expect(screen.getByText(copy.validated)).toBeInTheDocument();
+		expect(screen.getByRole("note")).toHaveTextContent(copy.validated);
+		expect(screen.getByRole("note")).toHaveClass("bg-success-50");
 	});
 
 	it("says a check that ran out of time may be incomplete, and validates again", async () => {
@@ -119,6 +121,7 @@ describe("ValidationNote", () => {
 		});
 
 		expect(screen.getByText(copy.mayBeShort)).toBeVisible();
+		expect(screen.getByRole("note")).toHaveClass("bg-warning-50");
 		await userEvent.click(
 			screen.getByRole("button", { name: copy.validateAgain })
 		);
@@ -126,19 +129,36 @@ describe("ValidationNote", () => {
 		expect(ask).toHaveBeenCalledOnce();
 	});
 
-	it("names the rules a broken schedule breaks", () => {
+	it("counts the rules a broken schedule breaks, in the error tone", () => {
 		show("current", {
 			last: {
 				revision: 1,
 				check: rulesCheckFixture({
 					status: "BROKEN",
-					brokenRules: [ruleFixture({ constraintName: "Twelve hours a day" })],
+					brokenRules: [
+						ruleFixture({ constraintName: "Twelve hours a day" }),
+						ruleFixture({ constraintName: "Rest between shifts" }),
+					],
 				}),
 			},
 		});
 
-		expect(
-			screen.getByText("Validated: the schedule breaks Twelve hours a day.")
-		).toBeVisible();
+		expect(screen.getByRole("note")).toHaveTextContent(
+			"Validated: 2 rules broken"
+		);
+		expect(screen.getByRole("note")).toHaveClass("bg-error-50");
+	});
+
+	it("counts a broken schedule with no rule named as one rule broken", () => {
+		show("current", {
+			last: {
+				revision: 1,
+				check: rulesCheckFixture({ status: "BROKEN", brokenRules: [] }),
+			},
+		});
+
+		expect(screen.getByRole("note")).toHaveTextContent(
+			"Validated: 1 rule broken"
+		);
 	});
 });

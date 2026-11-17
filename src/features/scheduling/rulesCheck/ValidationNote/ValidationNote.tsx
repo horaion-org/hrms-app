@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import type { ValidationStanding } from "@/features/scheduling/rulesCheck/issuesFromValidation";
 import {
-	brokenRuleLabel,
+	brokenRuleCount,
 	RETRYABLE_CHECK_REFUSALS,
 } from "@/features/scheduling/rulesCheck/rosterRulesCheckWords";
 import type { RosterValidation } from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
@@ -19,12 +19,13 @@ export type ValidationNoteProps = {
 const key = "scheduling.rulesCheck";
 
 /**
- * The one line at the head of Issues that says how the list stands: being
- * validated; refused (Try again when the engine failed or took too long); out of date since
- * the schedule changed, with Validate schedule right there; may be incomplete,
- * with Validate again; broken, naming the rules; validated, with what the
- * engine could not check, or that it holds. Nothing
- * while the list is still the generation's and nothing has changed.
+ * The status card at the head of Issues, one short sentence in its own tone:
+ * out of date since the schedule changed (info, with Validate schedule); may
+ * be incomplete (warning, with Validate again); broken, counting the rules
+ * (error; the rules themselves are rows below); what the engine could not
+ * check (info); or holds (success). While validating or refused, a line
+ * saying so. Nothing while the list is still the generation's and nothing
+ * has changed.
  */
 export const ValidationNote = ({
 	standing,
@@ -52,7 +53,7 @@ export const ValidationNote = ({
 		);
 	if (standing === "outOfDate")
 		return (
-			<Callout tone="warning">
+			<Callout tone="info">
 				<span className="block">{t(`${key}.outOfDate`)}</span>
 				<Button
 					className="mt-2"
@@ -81,19 +82,12 @@ export const ValidationNote = ({
 				</Button>
 			</Callout>
 		);
-	// Broken: the card names the rules, so the reason is read before the list.
+	// Broken: the card counts the rules; each one is a row under Must fix. A roster
+	// broken with no rule named counts as one, listed for the whole roster.
 	if (check.status === "BROKEN")
 		return (
 			<Callout tone="error">
-				{check.brokenRules.length > 0
-					? t(`${key}.brokenNamed`, {
-							rules: t("scheduling.constraints.list", {
-								items: check.brokenRules.map((rule) =>
-									brokenRuleLabel(rule, t)
-								),
-							}),
-						})
-					: t(`${key}.brokenUnnamed`)}
+				{t(`${key}.brokenCount`, { count: brokenRuleCount(check) })}
 			</Callout>
 		);
 	const lines = [
@@ -110,5 +104,5 @@ export const ValidationNote = ({
 				))}
 			</Callout>
 		);
-	return <p className="text-neutral-700">{t(`${key}.validated`)}</p>;
+	return <Callout tone="success">{t(`${key}.validated`)}</Callout>;
 };

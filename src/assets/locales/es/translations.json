@@ -5361,9 +5361,9 @@
 			"allClear": "Validar cuadrante: sin avisos",
 			"staffingUnchecked": "No se pudo comprobar el personal; los turnos con falta de personal de abajo son los anteriores.",
 			"brokenRulesTitle": "Reglas de tiempo de trabajo incumplidas",
-			"outOfDate": "El cuadrante ha cambiado desde que se hizo esta lista. Valídalo para actualizarla.",
+			"outOfDate": "Ha cambiado desde que se hizo esta lista",
 			"rulesUnchecked": "No se pudieron comprobar las reglas de tiempo de trabajo; la lista de abajo es la anterior.",
-			"validated": "Validado: esta lista es el cuadrante tal como está.",
+			"validated": "Validado: no se incumple ninguna regla",
 			"mayBeShort": "La comprobación se quedó sin tiempo, así que esta lista puede estar incompleta.",
 			"validateAgain": "Validar de nuevo",
 			"notMet": {
@@ -5371,7 +5371,9 @@
 				"title_other": "Si es posible, no cumplidas ({{count}})",
 				"place": "{{person}} · {{day}}",
 				"line": "{{place}}: «{{message}}»"
-			}
+			},
+			"brokenCount_one": "Validado: se incumple {{count}} regla",
+			"brokenCount_other": "Validado: se incumplen {{count}} reglas"
 		},
 		"dates": {
 			"refusal": {

@@ -5561,9 +5561,9 @@
 			"allClear": "Validate schedule: no issues found",
 			"staffingUnchecked": "Staffing could not be checked; the shifts left short below are from before.",
 			"brokenRulesTitle": "Working-time rules broken",
-			"outOfDate": "The schedule has changed since this list was made. Validate it to refresh the list.",
+			"outOfDate": "Changed since this list was made",
 			"rulesUnchecked": "The working-time rules could not be checked; the list below is from before.",
-			"validated": "Validated: this list is the schedule as it stands.",
+			"validated": "Validated: no rule broken",
 			"mayBeShort": "The check ran out of time, so this list may be incomplete.",
 			"validateAgain": "Validate again",
 			"notMet": {
@@ -5571,7 +5571,9 @@
 				"title_other": "If possible, not met ({{count}})",
 				"place": "{{person}} · {{day}}",
 				"line": "{{place}}: “{{message}}”"
-			}
+			},
+			"brokenCount_one": "Validated: {{count}} rule broken",
+			"brokenCount_other": "Validated: {{count}} rules broken"
 		},
 		"dates": {
 			"refusal": {
