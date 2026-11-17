@@ -4022,7 +4022,7 @@
 			"coverage": "Cobertura",
 			"coverageValue": "{{value}} %",
 			"nextTitle": "¿Qué pasa después?",
-			"nextOptimise": "Generaremos un horario optimizado a partir de tus turnos, restricciones y previsión.",
+			"nextOptimise": "Generaremos un horario optimizado a partir de tus turnos y restricciones.",
 			"nextBalance": "El horario equilibrará la cobertura, las restricciones y la disponibilidad del personal.",
 			"nextReview": "Podrás revisarlo y hacer cualquier ajuste después de generarlo.",
 			"note": "La generación puede tardar unos momentos. Cuantas más restricciones y datos, más puede tardar.",
