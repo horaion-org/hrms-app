@@ -4695,9 +4695,7 @@
 			"save": "Save days",
 			"invalid": "A day couldn’t be saved. Check that its shift is still in use, then try again.",
 			"notDraft": "This schedule has already been generated, so its starting point can no longer change.",
-			"failed": "The days couldn’t be saved. Try again.",
-			"stale_one": "{{count}} person’s days before this week changed after this roster was generated, so what it says about the week before is what was known then. To plan from the days as they are now, regenerate the month from its page.",
-			"stale_other": "{{count}} people’s days before this week changed after this roster was generated, so what it says about the week before is what was known then. To plan from the days as they are now, regenerate the month from its page."
+			"failed": "The days couldn’t be saved. Try again."
 		},
 		"openingHours": {
 			"title": "Hours already worked this month ({{from}} to {{to}})",
@@ -4740,7 +4738,6 @@
 			"weekBarLabel": "Issues: {{count}} to fix, {{notMet}} could not be met",
 			"groupLabel": "{{group}}, {{count}}",
 			"show": "Show",
-			"nothingWrong": "Nothing to fix: every shift is covered and every rule holds.",
 			"orderLabel": "Order issues",
 			"order": {
 				"byPerson": "By person",
@@ -4751,7 +4748,6 @@
 				"notMet": "Could not be met",
 				"forInformation": "More information"
 			},
-			"jobShort": "{{job}} short",
 			"unknownJob": "A job title",
 			"wholeRoster": "Whole roster",
 			"ruleWithoutPlace": "The engine could not say who or which day. Check the changes made by hand since this roster was generated, or validate again.",
@@ -4878,7 +4874,6 @@
 			"lastChange": "Last change: {{summary}}",
 			"summaryOne": "{{name}}, {{date}}",
 			"summarySwap": "{{first}} ⇄ {{second}}, {{date}}",
-			"findingsOutOfDate": "These notes are from generation. Changes made by hand since aren’t reflected.",
 			"edited": "{{label}}, changed",
 			"editedCell": "Changed",
 			"previewing_one": "Previewing: {{count}} day changes",
@@ -5525,7 +5520,6 @@
 			"loadFailed": "Couldn’t load the hours."
 		},
 		"rulesCheck": {
-			"brokenNamed": "Validated: the schedule breaks {{rules}}.",
 			"check": "Validate schedule",
 			"loading": "Validating the schedule…",
 			"brokenUnnamed": "This roster breaks a working-time rule.",

@@ -4495,9 +4495,7 @@
 			"save": "Guardar días",
 			"invalid": "No se pudo guardar un día. Comprueba que su turno sigue en uso e inténtalo de nuevo.",
 			"notDraft": "Este horario ya se generó, así que su punto de partida ya no puede cambiar.",
-			"failed": "No se pudieron guardar los días. Inténtalo de nuevo.",
-			"stale_one": "Los días de {{count}} persona antes de esta semana cambiaron después de generar este cuadrante, así que lo que dice de la semana anterior es lo que se sabía entonces. Para planificar con los días actuales, regenera el mes desde su página.",
-			"stale_other": "Los días de {{count}} personas antes de esta semana cambiaron después de generar este cuadrante, así que lo que dice de la semana anterior es lo que se sabía entonces. Para planificar con los días actuales, regenera el mes desde su página."
+			"failed": "No se pudieron guardar los días. Inténtalo de nuevo."
 		},
 		"openingHours": {
 			"title": "Horas ya trabajadas este mes (del {{from}} al {{to}})",
@@ -4540,7 +4538,6 @@
 			"weekBarLabel": "Incidencias: {{count}} por corregir, {{notMet}} no se pudieron cumplir",
 			"groupLabel": "{{group}}, {{count}}",
 			"show": "Mostrar",
-			"nothingWrong": "Nada que corregir: todos los turnos están cubiertos y se cumplen todas las reglas.",
 			"orderLabel": "Ordenar incidencias",
 			"order": {
 				"byPerson": "Por persona",
@@ -4551,7 +4548,6 @@
 				"notMet": "No se pudo cumplir",
 				"forInformation": "Más información"
 			},
-			"jobShort": "Falta {{job}}",
 			"unknownJob": "un puesto",
 			"wholeRoster": "Todo el cuadrante",
 			"ruleWithoutPlace": "El motor no pudo indicar a quién ni qué día. Revise los cambios hechos a mano desde que se generó este cuadrante, o vuelva a validar.",
@@ -4678,7 +4674,6 @@
 			"lastChange": "Último cambio: {{summary}}",
 			"summaryOne": "{{name}}, {{date}}",
 			"summarySwap": "{{first}} ⇄ {{second}}, {{date}}",
-			"findingsOutOfDate": "Estas notas son de la generación. No reflejan los cambios hechos a mano después.",
 			"edited": "{{label}}, cambiado",
 			"editedCell": "Cambiado",
 			"previewing_one": "Vista previa: cambia {{count}} día",
@@ -5325,7 +5320,6 @@
 			"loadFailed": "No se pudieron cargar las horas."
 		},
 		"rulesCheck": {
-			"brokenNamed": "Validado: el cuadrante incumple {{rules}}.",
 			"check": "Validar cuadrante",
 			"loading": "Validando el cuadrante…",
 			"brokenUnnamed": "Este cuadrante incumple una regla de tiempo de trabajo.",
