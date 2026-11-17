@@ -32,8 +32,6 @@ export const WithValidationCard: Story = {
 export const NothingWrong: Story = {
 	args: {
 		issues: [],
-		validationNote: (
-			<Callout tone="success">Validated: no rule broken</Callout>
-		),
+		validationNote: <Callout tone="success">Validated: no rule broken</Callout>,
 	},
 };

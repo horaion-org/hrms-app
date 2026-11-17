@@ -94,7 +94,9 @@ describe("RosterIssueGroups", () => {
 
 		const row = screen.getByRole("listitem");
 		expect(
-			within(row).getByText(/^1 Front Desk Staff short · Sat.*17.* · 09:00–15:00$/)
+			within(row).getByText(
+				/^1 Front Desk Staff short · Sat.*17.* · 09:00–15:00$/
+			)
 		).toHaveClass("font-medium");
 		expect(
 			within(row).getByText(
@@ -150,9 +152,7 @@ describe("RosterIssueGroups", () => {
 	});
 
 	it("shows the validation card and no group when there are no issues", () => {
-		render(
-			<RosterIssueGroups issues={[]} validationNote={<p>Validated</p>} />
-		);
+		render(<RosterIssueGroups issues={[]} validationNote={<p>Validated</p>} />);
 
 		expect(screen.getByText("Validated")).toBeInTheDocument();
 		expect(screen.queryByRole("button")).not.toBeInTheDocument();

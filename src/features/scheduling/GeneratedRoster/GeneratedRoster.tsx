@@ -349,8 +349,8 @@ export const GeneratedRoster = ({
 								{/* Issues counts what is to fix, and beside it in amber what could not be met. */}
 								<CountBadge
 									aria-hidden="true"
-									tone="inactive"
 									count={panel === "issues" ? counts.mustFix : count}
+									tone="inactive"
 								/>
 								{panel === "issues" && (
 									<CountBadge

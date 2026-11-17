@@ -103,16 +103,16 @@ describe("issuesOfRoster", () => {
 			})
 		);
 
-		expect(
-			issues.map((issue) => [issue.group, issue.who, issue.rule])
-		).toEqual([
+		expect(issues.map((issue) => [issue.group, issue.who, issue.rule])).toEqual(
 			[
-				"forInformation",
-				"Aisha Rahman",
-				"scheduling.detail.workedInARow(Aisha Rahman|3)",
-			],
-			["forInformation", "5 people's days changed", "Regenerate to plan"],
-		]);
+				[
+					"forInformation",
+					"Aisha Rahman",
+					"scheduling.detail.workedInARow(Aisha Rahman|3)",
+				],
+				["forInformation", "5 people's days changed", "Regenerate to plan"],
+			]
+		);
 	});
 
 	it("lists a broken roster with no rule named once, and the rules not met apart", () => {

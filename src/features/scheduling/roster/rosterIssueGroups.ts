@@ -126,10 +126,10 @@ const hintWithoutPlace = (
 		: undefined;
 
 /** Why a rule's item is listed: a must broken, or a rule asked "if possible" not met. */
-const RULE_REASON_KEYS: Record<"mustFix" | "notMet", string> = {
-	mustFix: `${key}.brokenMust`,
-	notMet: `${key}.notMetRule`,
-};
+const RULE_REASON_KEYS = {
+	mustFix: "scheduling.issues.brokenMust",
+	notMet: "scheduling.issues.notMetRule",
+} as const;
 
 /** One item per person and day a rule names, or one for the whole roster when it names none. */
 const ruleIssues = (

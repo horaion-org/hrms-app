@@ -637,9 +637,7 @@ describe("GeneratedRoster", () => {
 			expect(
 				within(panel).getByRole("button", { name: /^Must fix/ })
 			).toBeVisible();
-			expect(
-				within(panel).getByText(/Rule: Twelve hours a day/)
-			).toBeVisible();
+			expect(within(panel).getByText(/Rule: Twelve hours a day/)).toBeVisible();
 			expect(within(panel).getByRole("note")).toHaveTextContent(
 				"Validated: 1 rule broken"
 			);
@@ -764,9 +762,9 @@ describe("GeneratedRoster", () => {
 			expect(toFix).toBeGreaterThan(0);
 			expect(notMet).toBeGreaterThan(0);
 			expect(issues).toHaveTextContent(new RegExp(`^Issues${toFix}${notMet}$`));
-			expect(within(issues).getAllByText(String(notMet)).at(-1)).toHaveClass(
-				"bg-warning-100"
-			);
+			// The amber count is the button's last.
+			const counts = within(issues).getAllByText(String(notMet));
+			expect(counts[counts.length - 1]).toHaveClass("bg-warning-100");
 		});
 
 		it("given_aValidationOfAnEarlierRevision_when_issuesOpens_then_itValidatesAndSaysTheListIsOutOfDateWithTheAction", async () => {
