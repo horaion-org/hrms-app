@@ -246,16 +246,9 @@ const termsInForceSchema = weekFieldsSchema
 /** The terms a person works on today. */
 export type TermsInForce = z.infer<typeof termsInForceSchema>;
 
-const mismatchSchema = z.object({
-	employmentType: z.string(),
-	effectiveWeekMinutes: z.number().int(),
-});
-
 const memberTermsSchema = z.object({
 	/** Null only when the company has no Default, which never happens once set up. */
 	inForce: termsInForceSchema.nullable().catch(null),
-	/** Their Employment type disagrees with the terms' week (part-time vs full-time); `/me` has none. */
-	mismatch: mismatchSchema.nullable().catch(null),
 	/** Newest first, the first entry last; `/me` has none. */
 	history: z.array(historyEntrySchema).catch([]),
 	/** What the terms are read against; absent from an older API. */

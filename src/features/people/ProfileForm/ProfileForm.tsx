@@ -101,11 +101,8 @@ export type ProfileFormProps = {
 	) => Promise<void>;
 	/** Leaves without saving; when editing, after asking if anything changed. */
 	onCancel: () => void;
-	/**
-	 * A further Employment card row, such as Add employee's employment terms,
-	 * given the Employment type chosen so far (empty when none).
-	 */
-	employmentTermsField?: (employmentType: string) => ReactNode;
+	/** A further Employment card row, such as Add employee's employment terms. */
+	employmentTermsField?: ReactNode;
 	className?: string;
 } & (
 	| {
@@ -184,9 +181,9 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 		PROFILE_FIELDS,
 		NOTHING
 	);
-	const [departmentId, hireDate, employmentType] = useWatch({
+	const [departmentId, hireDate] = useWatch({
 		control,
-		name: ["departmentId", "hireDate", "employmentType"],
+		name: ["departmentId", "hireDate"],
 	});
 
 	// The Departments the selector offers, to find the chosen one's Branch and country.
@@ -592,7 +589,7 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 								)}
 							/>
 						</FormRow>
-						{employmentTermsField?.(employmentType)}
+						{employmentTermsField}
 						{date("hireDate", t(`${key}.hireDate`), {})}
 						{date(
 							"probationEndDate",

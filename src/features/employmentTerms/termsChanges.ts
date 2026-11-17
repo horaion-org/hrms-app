@@ -7,7 +7,6 @@ import type {
 	WeekFields,
 } from "@/features/employmentTerms/api";
 import { durationShort } from "@/features/employmentTerms/hours";
-import { isPartTimeWeek } from "@/features/employmentTerms/summary";
 
 /** The fields that change how hours are counted; name and description never do. */
 const WEEK_FIELDS: ReadonlyArray<keyof EmploymentTermsBody & keyof WeekFields> =
@@ -69,26 +68,4 @@ export const successorNameOf = (
 		name: currentName,
 		date: formatDate(fromDate, language),
 	});
-};
-
-/**
- * A part-time Employment type on terms that are not part-time, or the
- * reverse: worth a warning, never a refusal. Their own week counts when they
- * have one. Nothing is said when the company has no part-time line.
- */
-export const partTimeMismatch = (
-	employmentType: string | null,
-	termsWeekMinutes: number,
-	contractedWeekMinutes: number | null,
-	partTimeBelowMinutes: number | null
-): "partTimeOnFullTerms" | "fullTimeOnPartTerms" | undefined => {
-	if (partTimeBelowMinutes === null) return undefined;
-	const partTerms = isPartTimeWeek(
-		contractedWeekMinutes ?? termsWeekMinutes,
-		partTimeBelowMinutes
-	);
-	if (employmentType === "PART_TIME" && !partTerms)
-		return "partTimeOnFullTerms";
-	if (employmentType === "FULL_TIME" && partTerms) return "fullTimeOnPartTerms";
-	return undefined;
 };

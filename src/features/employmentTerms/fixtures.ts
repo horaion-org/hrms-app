@@ -206,7 +206,6 @@ export const MEMBER_TERMS: MemberTerms = {
 		contractedDayMinutes: null,
 		since: "2025-03-01",
 	},
-	mismatch: null,
 	history: [
 		{
 			id: "entry-upcoming",
@@ -253,7 +252,6 @@ export const MEMBER_ON_STANDARD: MemberTerms = {
 		contractedDayMinutes: null,
 		since: "2024-06-03",
 	},
-	mismatch: null,
 	history: [
 		{
 			id: "entry-backfill",

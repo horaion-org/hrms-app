@@ -1,5 +1,5 @@
 import { useNavigate } from "@tanstack/react-router";
-import { useId, type ReactNode } from "react";
+import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
@@ -100,28 +100,26 @@ export const PersonProfileEdit = ({
 					),
 				}}
 				employmentTermsField={
-					access.can("member_employment_terms:read", personScope(profile))
-						? (): ReactNode => (
-								<FormRow
-									fieldWidth={PROFILE_FIELD_WIDTH}
-									htmlFor={termsId}
-									label={t("people.form.employmentTerms")}
-								>
-									{/* Not a form control: the row is a group the label names, so a screen reader announces it. */}
-									<div
-										aria-labelledby={formRowIds(termsId).labelId}
-										id={termsId}
-										role="group"
-									>
-										<EmploymentTermsRow
-											editing
-											companyId={companyId}
-											profile={profile}
-										/>
-									</div>
-								</FormRow>
-							)
-						: undefined
+					access.can("member_employment_terms:read", personScope(profile)) ? (
+						<FormRow
+							fieldWidth={PROFILE_FIELD_WIDTH}
+							htmlFor={termsId}
+							label={t("people.form.employmentTerms")}
+						>
+							{/* Not a form control: the row is a group the label names, so a screen reader announces it. */}
+							<div
+								aria-labelledby={formRowIds(termsId).labelId}
+								id={termsId}
+								role="group"
+							>
+								<EmploymentTermsRow
+									editing
+									companyId={companyId}
+									profile={profile}
+								/>
+							</div>
+						</FormRow>
+					) : undefined
 				}
 				onSubmit={save}
 				onCancel={() => {

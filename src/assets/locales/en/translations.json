@@ -6013,10 +6013,6 @@
 			"viewTerms": "View {{name}} in Settings",
 			"loading": "Loading…",
 			"failed": "We couldn’t load their employment terms.",
-			"mismatch": {
-				"partTimeOnFullTerms": "Their employment type is Part-time, but these terms aren’t part-time ({{week}} a week). Everyone already in Horaion started on the default terms: give them part-time terms, or change their employment type.",
-				"fullTimeOnPartTerms": "Their employment type is Full-time, but these terms are part-time ({{week}} a week). Check one of them."
-			},
 			"selfUnavailable": "Your employment terms aren’t available yet.",
 			"selfOwnHours": "Your contracted hours: {{week}} a week"
 		},

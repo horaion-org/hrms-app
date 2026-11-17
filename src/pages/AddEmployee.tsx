@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { EMPTY_PROFILE } from "@/features/people/profileFormSchema";
@@ -72,17 +72,14 @@ export const AddEmployee = (): FunctionComponent => {
 				initial={EMPTY_PROFILE}
 				title={t("people.form.title")}
 				employmentTermsField={
-					terms.data && terms.data.terms.length > 0
-						? (employmentType: string): ReactNode => (
-								<EmploymentTermsField
-									employmentType={employmentType}
-									reference={terms.data.reference}
-									terms={terms.data.terms}
-									value={termsId}
-									onChange={setChosenTermsId}
-								/>
-							)
-						: undefined
+					terms.data && terms.data.terms.length > 0 ? (
+						<EmploymentTermsField
+							reference={terms.data.reference}
+							terms={terms.data.terms}
+							value={termsId}
+							onChange={setChosenTermsId}
+						/>
+					) : undefined
 				}
 				onCancel={() => {
 					void navigate({ to: "/people" });

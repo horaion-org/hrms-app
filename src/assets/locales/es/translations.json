@@ -6013,10 +6013,6 @@
 			"viewTerms": "Ver {{name}} en Configuración",
 			"loading": "Cargando…",
 			"failed": "No pudimos cargar sus condiciones de empleo.",
-			"mismatch": {
-				"partTimeOnFullTerms": "Su tipo de empleo es Tiempo parcial, pero estas condiciones no son de tiempo parcial ({{week}} a la semana). Todas las personas que ya estaban en Horaion empezaron con las condiciones predeterminadas: dale condiciones de tiempo parcial o cambia su tipo de empleo.",
-				"fullTimeOnPartTerms": "Su tipo de empleo es Tiempo completo, pero estas condiciones son de tiempo parcial ({{week}} a la semana). Revisa uno de los dos."
-			},
 			"selfUnavailable": "Tus condiciones de empleo aún no están disponibles.",
 			"selfOwnHours": "Tus horas de contrato: {{week}} a la semana"
 		},

@@ -29,10 +29,7 @@ import {
 } from "@/features/employmentTerms/memberTermsForm";
 import { memberTermsRefusal } from "@/features/employmentTerms/refusals";
 import { termsSentence } from "@/features/employmentTerms/summary";
-import {
-	nextMonday,
-	partTimeMismatch,
-} from "@/features/employmentTerms/termsChanges";
+import { nextMonday } from "@/features/employmentTerms/termsChanges";
 import { useMemberTermsActions } from "@/features/employmentTerms/useMemberTermsActions";
 import { CreateFormDialog } from "@/features/organisation/CreateFormDialog";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
@@ -129,15 +126,6 @@ export const ChangeEmploymentTermsDialog = ({
 	const values = useWatch({ control }) as MemberTermsFormValues;
 	const submit = useCreateFormSubmit(form, FIELDS, onClose);
 	const chosen = findTerms(activeTerms, values.termsId);
-	const own = memberTermsBodyOf(values);
-	const mismatch = chosen
-		? partTimeMismatch(
-				person.employmentType,
-				chosen.weekMinutes,
-				own.contractedWeekMinutes,
-				reference?.partTimeBelowMinutes ?? null
-			)
-		: undefined;
 	const title = correcting
 		? t(`${key}.correctTitle`)
 		: current.inForce?.basis === "ASSIGNED"
@@ -340,16 +328,6 @@ export const ChangeEmploymentTermsDialog = ({
 					)}
 				</div>
 			</Disclosure>
-			{mismatch && chosen && (
-				<Callout tone="warning">
-					{t(`employmentTerms.row.mismatch.${mismatch}`, {
-						week: durationShort(
-							own.contractedWeekMinutes ?? chosen.weekMinutes,
-							t
-						),
-					})}
-				</Callout>
-			)}
 		</CreateFormDialog>
 	);
 };

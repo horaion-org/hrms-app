@@ -5,7 +5,6 @@ import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { formatDate } from "@/components/forms/Calendar";
 import { Button } from "@/components/ui/Button";
-import { Callout } from "@/components/ui/Callout";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Toast } from "@/components/ui/Toast";
 import {
@@ -169,18 +168,6 @@ export const EmploymentTermsRow = ({
 				</span>
 			)}
 			<span className="contents" onSubmit={keepSubmitInside}>
-				{current.mismatch && (
-					<Callout className="mt-1" tone="warning">
-						{t(
-							current.mismatch.employmentType === "PART_TIME"
-								? `${key}.mismatch.partTimeOnFullTerms`
-								: `${key}.mismatch.fullTimeOnPartTerms`,
-							{
-								week: durationShort(current.mismatch.effectiveWeekMinutes, t),
-							}
-						)}
-					</Callout>
-				)}
 				{(open?.kind === "change" || open?.kind === "correct") && (
 					<ChangeEmploymentTermsDialog
 						companyId={companyId}

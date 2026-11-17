@@ -181,6 +181,24 @@ describe("A person's employment terms", () => {
 		expect(within(card).getByRole("button", { name: "History" })).toBeVisible();
 	});
 
+	it("given_anyTerms_when_shown_then_noMismatchCallout", async () => {
+		// An API before full-time or part-time followed the terms still sends a mismatch: it is not shown.
+		stubApi(
+			routes(CHANGER, {
+				status: 200,
+				body: envelope({
+					...MEMBER_TERMS,
+					mismatch: { employmentType: "PART_TIME", effectiveWeekMinutes: 2640 },
+				}),
+			})
+		);
+		const card = await open();
+
+		await within(card).findByRole("button", { name: "History" });
+		expect(card).not.toHaveTextContent("Their employment type");
+		expect(within(card).queryByRole("note")).toBeNull();
+	});
+
 	it("offer Change… under Edit profile, with the change ahead said there too", async () => {
 		stubApi(routes(EDITOR));
 		const card = await open(EDITING);
@@ -287,7 +305,7 @@ describe("A person's employment terms", () => {
 		expect(card).not.toHaveTextContent("Part-time, 20 h");
 	});
 
-	it("change from a Monday, with contracted hours, and warn of a mismatch", async () => {
+	it("change from a Monday, with contracted hours, and no employment type mismatch", async () => {
 		const calls = stubApi(
 			routes(EDITOR, undefined, {
 				[`POST ${MEMBER_TERMS_PATH}`]: {
@@ -331,9 +349,8 @@ describe("A person's employment terms", () => {
 			within(dialog).getByLabelText("Contracted hours a week"),
 			"20"
 		);
-		expect(dialog).toHaveTextContent(
-			"Their employment type is Full-time, but these terms are part-time (20 h a week)."
-		);
+		// Full-time or part-time follows the terms, so nothing is compared with an employment type.
+		expect(dialog).not.toHaveTextContent("Their employment type");
 		await user.click(
 			within(dialog).getByRole("button", { name: "Change terms" })
 		);
