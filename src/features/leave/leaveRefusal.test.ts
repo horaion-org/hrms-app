@@ -51,6 +51,15 @@ describe("applyRefusal", () => {
 		});
 	});
 
+	it("given_offInLieuBeyondTheBalance_when_refused_then_saysWhatToDoOnTheType", () => {
+		expect(applyRefusal(problem(409, "TIME_OFF_BALANCE_SHORT"), t)).toEqual({
+			fields: {
+				type: "There isn’t enough time off earned for this leave. Choose fewer days, a shorter duration or another leave type.",
+			},
+			refreshMembers: false,
+		});
+	});
+
 	it("puts a part day over several dates on the end date", () => {
 		expect(
 			applyRefusal(problem(400, "INVALID_LEAVE_DURATION", ["endDate"]), t)

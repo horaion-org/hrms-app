@@ -15,9 +15,11 @@ import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, problemReply, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { rosteredDaysQuery } from "@/features/leave/api";
+import { timeOffBalanceFixture } from "@/features/employmentTerms/fixtures";
 import {
 	LEAVE_DURATION_OPTION_FIXTURES,
 	LEAVE_TYPE_FIXTURES,
+	leaveTypeFixture,
 } from "@/features/leave/fixtures";
 import { LeaveApplyForm } from "./LeaveApplyForm";
 import * as stories from "./LeaveApplyForm.stories";
@@ -521,4 +523,62 @@ it("given_aDurationWithNoShiftThatDay_when_theRosterIsRead_then_itSendsTheChoice
 			})
 		).toBe(true);
 	});
+});
+
+it("given_offInLieu_when_chosen_then_balanceShown", async () => {
+	stubApi({
+		[OWN_ROSTERED_DAYS]: { status: 200, body: envelope([]) },
+		[OWN_LEAVE_OPTIONS]: optionsReply([
+			leaveTypeFixture({
+				code: "OFF_IN_LIEU",
+				name: "Off in lieu",
+				grantKind: "EARNED",
+			}),
+		]),
+		"GET /api/v1/companies/c-1/me/time-off-balance": {
+			status: 200,
+			body: envelope(timeOffBalanceFixture()),
+		},
+	});
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveApplyForm
+				busy={false}
+				companyId="c-1"
+				onClose={vi.fn()}
+				onCreate={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+
+	expect(
+		await screen.findByText("4 h of time off earned to take as Off in lieu.")
+	).toBeInTheDocument();
+});
+
+it("given_annualLeave_when_chosen_then_noBalance", async () => {
+	const calls = stubApi({
+		[OWN_ROSTERED_DAYS]: { status: 200, body: envelope([]) },
+		[OWN_LEAVE_OPTIONS]: optionsReply(),
+	});
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveApplyForm
+				busy={false}
+				companyId="c-1"
+				onClose={vi.fn()}
+				onCreate={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+
+	await waitFor(() => {
+		expect(
+			screen.getByRole("button", { name: "Submit request" })
+		).toBeEnabled();
+	});
+	expect(screen.queryByText(/of time off earned/)).toBeNull();
+	expect(calls.some((call) => call.path.endsWith("/time-off-balance"))).toBe(
+		false
+	);
 });

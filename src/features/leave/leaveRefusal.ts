@@ -47,6 +47,8 @@ export const LEAVE_REFUSAL_CODES = {
 	invalidRemark: "400 INVALID_LEAVE_REMARK",
 	/** The request waits on an approval flow, so it is decided on its open step, not in one review. */
 	approvalPending: "409 LEAVE_APPROVAL_PENDING",
+	/** Off in lieu asks for more time off than the person has earned (API ADR-0126). */
+	timeOffShort: "409 TIME_OFF_BALANCE_SHORT",
 	/**
 	 * A part day broke a rule: it is one date, a duration or two times, of a
 	 * type that can be taken in part days. The field it names says which.
@@ -120,6 +122,10 @@ export const applyRefusal = (
 				message: t(`${key}.reasonRequired`),
 			},
 			[codes.typeNotAvailable]: type,
+			[codes.timeOffShort]: {
+				field: "type",
+				message: t(`${key}.timeOffShort`),
+			},
 			[codes.durationNotAvailable]: {
 				field: "duration",
 				message: t(`${key}.durationNotAvailable`),

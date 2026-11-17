@@ -505,6 +505,9 @@ export const Leave = (): FunctionComponent => {
 							? {
 									busy: applying,
 									employees: dialog.mode === "applyOwn" ? undefined : employees,
+									readsTimeOff: access.canAnywhere(
+										"member_employment_terms:read"
+									),
 									refusal,
 									onCreate: create,
 								}

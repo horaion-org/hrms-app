@@ -205,7 +205,8 @@
 			"durationNotAvailable": "Esa duración ya no se aplica; elige otra.",
 			"durationRejected": "Este tipo de permiso no se puede tomar por partes del día, o hay que revisar el horario. Vuelve a elegir.",
 			"partDayOneDate": "Un permiso por parte del día es para una sola fecha. Elige la misma fecha de inicio y de fin.",
-			"partDayChange": "Un permiso por parte del día se queda en una sola fecha, con un tipo de permiso que se pueda tomar por partes del día."
+			"partDayChange": "Un permiso por parte del día se queda en una sola fecha, con un tipo de permiso que se pueda tomar por partes del día.",
+			"timeOffShort": "No hay suficiente tiempo libre ganado para esta ausencia. Elige menos días, una duración más corta u otro tipo de ausencia."
 		},
 		"myLeave": "Mis ausencias",
 		"teamRequests": "Solicitudes del equipo",
@@ -274,6 +275,7 @@
 		},
 		"choosePersonFirst": "Primero elige a una persona",
 		"noTypesApply": "Aún no hay tipos de permiso para {{name}}. Un administrador puede configurarlos en Ajustes › Permisos.",
+		"timeOffBalance": "{{balance}} de tiempo libre ganado para tomar como Día libre compensatorio.",
 		"noTypesApplyOwn": "Aún no hay tipos de permiso para ti. Un administrador puede configurarlos en Ajustes › Permisos.",
 		"portion": {
 			"fullDay": "Día completo",

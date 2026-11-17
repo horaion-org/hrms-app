@@ -205,7 +205,8 @@
 			"durationNotAvailable": "That duration no longer applies; choose another.",
 			"durationRejected": "This leave type can’t be taken for part of a day, or the times need another look. Choose again.",
 			"partDayOneDate": "Leave for part of a day is for one date. Choose the same start and end date.",
-			"partDayChange": "Leave for part of a day stays on one date, with a leave type that can be taken in part days."
+			"partDayChange": "Leave for part of a day stays on one date, with a leave type that can be taken in part days.",
+			"timeOffShort": "There isn’t enough time off earned for this leave. Choose fewer days, a shorter duration or another leave type."
 		},
 		"myLeave": "My leave",
 		"teamRequests": "Team requests",
@@ -274,6 +275,7 @@
 		},
 		"choosePersonFirst": "Choose a person first",
 		"noTypesApply": "No leave types apply to {{name}} yet. An admin can set them in Settings › Leave.",
+		"timeOffBalance": "{{balance}} of time off earned to take as Off in lieu.",
 		"noTypesApplyOwn": "No leave types apply to you yet. An admin can set them in Settings › Leave.",
 		"portion": {
 			"fullDay": "Full day",

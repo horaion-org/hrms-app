@@ -30,6 +30,11 @@ import {
 import { durationText, minutesBetween } from "@/features/leave/leaveLength";
 import type { ApplyField } from "@/features/leave/leaveRefusal";
 import { leaveTypeOptions } from "@/features/leave/leaveTypeOptions";
+import { durationShort } from "@/features/employmentTerms/hours";
+import {
+	memberTimeOffBalanceQuery,
+	myTimeOffBalanceQuery,
+} from "@/features/employmentTerms/timeOffBalance";
 import type { LeaveRequestBody } from "@/features/leave/types";
 import { RosteredDaysNotice } from "../RosteredDaysNotice";
 
@@ -54,6 +59,11 @@ export type LeaveApplyFormProps = {
 	recording?: boolean;
 	/** Who leave may be applied for; left out when the caller applies for themself. */
 	employees?: ApplyEmployees;
+	/**
+	 * The caller may read the chosen person's time off earned
+	 * (`member_employment_terms:read`); their own is always read.
+	 */
+	readsTimeOff?: boolean;
 	/** While the application is being sent. */
 	busy: boolean;
 	/** Why the last application was refused: on a field, or as the form's alert. */
@@ -83,6 +93,7 @@ export const LeaveApplyForm = ({
 	companyId,
 	recording = false,
 	employees,
+	readsTimeOff = false,
 	busy,
 	refusal,
 	onClose,
@@ -126,6 +137,19 @@ export const LeaveApplyForm = ({
 	const chosenLeaveType = leaveTypes.find(
 		(leaveType) => leaveType.code === typeCode
 	);
+	// Off in lieu draws on the time off a person earned (API ADR-0126): the form says how much is left.
+	const earnedType = chosenLeaveType?.grantKind === "EARNED";
+	const ownTimeOff = useQuery(
+		myTimeOffBalanceQuery(companyId ?? "", own && earnedType && optionsReadable)
+	).data;
+	const memberTimeOff = useQuery(
+		memberTimeOffBalanceQuery(
+			companyId ?? "",
+			chosen?.membershipId ?? "",
+			!own && earnedType && optionsReadable && readsTimeOff
+		)
+	).data;
+	const timeOffBalance = own ? ownTimeOff : memberTimeOff;
 	const remarksRequired =
 		recording || (chosenLeaveType?.requiresReason ?? false);
 	const typeAllowsPartDays = chosenLeaveType?.allowsPartDays ?? false;
@@ -319,6 +343,13 @@ export const LeaveApplyForm = ({
 							role="alert"
 						>
 							{fields.type}
+						</p>
+					)}
+					{earnedType && timeOffBalance && (
+						<p className="text-sm text-neutral-700">
+							{t("leave.timeOffBalance", {
+								balance: durationShort(timeOffBalance.balanceMinutes, t),
+							})}
 						</p>
 					)}
 				</div>
