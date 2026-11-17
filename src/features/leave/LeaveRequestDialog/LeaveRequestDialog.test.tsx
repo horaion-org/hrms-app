@@ -95,6 +95,26 @@ const employees = {
 	],
 };
 
+it("says under an empty rejection reason what to enter, not the browser's bubble", async () => {
+	const user = userEvent.setup();
+	const onReject = vi.fn();
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				mode="reject"
+				request={pending}
+				review={reviewWith({ onReject })}
+				onClose={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	const reason = screen.getByRole("textbox", { name: "Reason for rejection" });
+	expect(reason.closest("form")).toHaveAttribute("novalidate");
+	await user.click(screen.getByRole("button", { name: "Confirm rejection" }));
+	expect(onReject).not.toHaveBeenCalled();
+	expect(reason).toHaveAccessibleDescription("Enter a reason for rejection.");
+});
+
 it("requires a meaningful rejection reason and returns to review when cancelled", async () => {
 	const user = userEvent.setup();
 	const onReject = vi.fn();
@@ -529,6 +549,7 @@ it("asks for a reason when the chosen leave type requires one, and sends it as r
 	await user.click(screen.getByRole("option", { name: "Other" }));
 	const reason = screen.getByRole("textbox", { name: "Reason" });
 	expect(reason).toBeRequired();
+	expect(reason.closest("form")).toHaveAttribute("novalidate");
 	expect(reason).toHaveAttribute("placeholder", "What is this leave for?");
 	expect(reason).toHaveAccessibleDescription(
 		"Say what this leave is for. Reviewers of this request can read it."

@@ -151,6 +151,7 @@
 		"leaveReason": "Motivo",
 		"leaveReasonPlaceholder": "¿Para qué es este permiso?",
 		"leaveReasonHint": "Indica para qué es este permiso. Quien revise esta solicitud puede leerlo.",
+		"remarkRequired": "Escribe un comentario que diga por qué se registra este permiso. La persona empleada lo verá.",
 		"leaveReasonRequired": "Indica para qué es este permiso.",
 		"noRemarks": "Sin observaciones",
 		"approve": "Aprobar",

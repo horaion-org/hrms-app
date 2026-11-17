@@ -151,6 +151,7 @@
 		"leaveReason": "Reason",
 		"leaveReasonPlaceholder": "What is this leave for?",
 		"leaveReasonHint": "Say what this leave is for. Reviewers of this request can read it.",
+		"remarkRequired": "Enter a remark that says why this leave is recorded. The employee will see it.",
 		"leaveReasonRequired": "Enter what this leave is for.",
 		"noRemarks": "No remarks",
 		"approve": "Approve",
