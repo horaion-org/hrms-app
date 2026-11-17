@@ -127,7 +127,7 @@ const openRoster = async (
 
 /** October as the month read answers it: this roster's week, in `state`, the one week a run covers. */
 const octoberRead = (
-	state: "TO_REVIEW" | "TENTATIVE" | "FAILED" | "REJECTED" = "TO_REVIEW",
+	state: "TO_REVIEW" | "FAILED" | "REJECTED" = "TO_REVIEW",
 	handChangedDays = 0
 ): Routes => ({
 	[`GET ${OCTOBER_MONTH}`]: ok(
@@ -2276,7 +2276,7 @@ describe("the roster in its month", () => {
 				monthWeekFixture({
 					periodStart: "2026-10-19",
 					periodEnd: "2026-10-25",
-					state: "TENTATIVE",
+					state: "TO_REVIEW",
 					scheduleId: "s-2",
 				}),
 				monthWeekFixture({
@@ -2297,17 +2297,6 @@ describe("the roster in its month", () => {
 			day: dayjs(row.day).add(days, "day").format("YYYY-MM-DD"),
 		}));
 	};
-	const heldUp = (): ReturnType<typeof generatedScheduleFixture> => {
-		const schedule = generatedScheduleFixture({ status: "GENERATED" });
-		return {
-			...schedule,
-			publication: {
-				...schedule.publication,
-				waitingForWeek: { periodStart: "2026-10-05", periodEnd: "2026-10-11" },
-			},
-		};
-	};
-
 	it("goes back to its month and steps to another week of it, the arrows staying in the month", async () => {
 		const calls = await openRoster({
 			...signedIn(),
@@ -2347,11 +2336,11 @@ describe("the roster in its month", () => {
 		await user.click(screen.getByRole("button", { name: "Next week" }));
 
 		await waitFor(() => {
-			expect(screen.getByRole("button", { name: "Week" })).toHaveTextContent(
-				"· Tentative"
-			);
+			expect(app?.router.state.location.pathname).toBe("/scheduling/s-2");
 		});
-		expect(app?.router.state.location.pathname).toBe("/scheduling/s-2");
+		expect(screen.getByRole("button", { name: "Week" })).toHaveTextContent(
+			"· To review"
+		);
 		// The month's last week has no schedule, so this is as far as the arrow goes.
 		expect(screen.getByRole("button", { name: "Next week" })).toBeDisabled();
 	});
@@ -2385,25 +2374,43 @@ describe("the roster in its month", () => {
 		).toBeDisabled();
 	});
 
-	it("reads Tentative, says it isn't published and holds Publish until the earlier week is published", async () => {
+	// Each schedule is published on its own (API ADR-0130): an earlier week still to review holds nothing up.
+	it("offers Publish on a generated week whose earlier week is generated and unpublished, not marked as waiting", async () => {
+		const unpublishedEarlierWeek = {
+			periodStart: "2026-10-05",
+			periodEnd: "2026-10-11",
+			state: "TO_REVIEW" as const,
+			scheduleId: "s-0",
+		};
+		const october = scheduleMonthFixture({
+			month: "2026-10",
+			departmentName: "Front Office",
+			weeks: [
+				monthWeekFixture(unpublishedEarlierWeek),
+				monthWeekFixture({
+					periodStart: "2026-10-12",
+					periodEnd: "2026-10-18",
+					state: "TO_REVIEW",
+					scheduleId: "s-1",
+				}),
+			],
+		});
 		await openRoster({
 			...signedIn(["schedule:read", "schedule:publish"]),
-			[`GET ${SCHEDULE_READ}`]: ok(heldUp()),
+			[`GET ${SCHEDULE_READ}`]: ok(
+				generatedScheduleFixture({ status: "GENERATED" })
+			),
 			[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
-			[`GET ${OCTOBER}`]: ok(october({ state: "TENTATIVE" })),
+			[`GET ${OCTOBER}`]: ok(october),
 		});
 
 		const publish = await screen.findByRole("button", {
 			name: "Publish roster",
 		});
-		expect(publish).toBeDisabled();
-		expect(publish).toHaveAccessibleDescription(
-			/^Publish Oct 5\s?–\s?11, 2026 first\. Weeks are published in order\.$/
-		);
-		expect(screen.getByText("Tentative")).toBeInTheDocument();
-		expect(screen.getByRole("note")).toHaveTextContent(
-			"Not published. Staff can’t see this week."
-		);
+		expect(publish).toBeEnabled();
+		expect(publish).not.toHaveAccessibleDescription();
+		expect(screen.getByText("To review")).toBeInTheDocument();
+		expect(screen.queryByText(/first\./)).toBeNull();
 	});
 
 	it("offers Publish on the week under review", async () => {
@@ -2422,7 +2429,7 @@ describe("the roster in its month", () => {
 		expect(screen.getByText("To review")).toBeInTheDocument();
 	});
 
-	it("shows neither the note nor a held Publish on a published week", async () => {
+	it("shows no unpublished note on a published week", async () => {
 		await openRoster({
 			...signedIn(["schedule:read", "schedule:publish"]),
 			[`GET ${SCHEDULE_READ}`]: ok(
@@ -2436,7 +2443,6 @@ describe("the roster in its month", () => {
 			await screen.findByRole("row", { name: /Aisha Rahman/ })
 		).toBeInTheDocument();
 		expect(screen.queryByText("Not published.")).toBeNull();
-		expect(screen.queryByText(/Weeks are published in order/)).toBeNull();
 	});
 });
 

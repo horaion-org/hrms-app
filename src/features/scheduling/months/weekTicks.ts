@@ -84,7 +84,7 @@ const tickRuleOf = (
 	const open = week.includedInMonthGeneration ?? periodEnd >= today;
 	if (!open) return locked("OVER");
 	if (week.state === "UNKNOWN") return locked("UNKNOWN");
-	if (week.state === "TO_REVIEW" || week.state === "TENTATIVE")
+	if (week.state === "TO_REVIEW")
 		return untickedWithNote(week.state, "rosterWaiting");
 	if (week.state === "REJECTED")
 		return untickedWithNote("REJECTED", "rosterRejected");

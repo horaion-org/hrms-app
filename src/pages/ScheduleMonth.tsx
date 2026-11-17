@@ -24,7 +24,6 @@ import {
 import {
 	monthGenerationCheckQuery,
 	scheduleMonthQuery,
-	scheduleMonthSummariesQuery,
 	type MonthGeneration,
 	type MonthWeek,
 	type ScheduleMonth,
@@ -58,10 +57,7 @@ import {
 	formatWeekDates,
 	monthOf,
 	shiftMonth,
-	summaryRange,
-	waitingWeekBefore,
 } from "@/features/scheduling/months/monthWeeks";
-import { formatPeriod, periodStartingOn } from "@/features/scheduling/periods";
 import {
 	stateCountsLine,
 	weekChangedRefusal,
@@ -204,65 +200,6 @@ const CrossingWeekLine = ({
 	);
 };
 
-/**
- * Why a month's weeks are all tentative when the week holding them back is
- * in an earlier month: that week, linked to its month. Read from the
- * Department's month summaries, from this week's month to the month before.
- */
-const WaitingWeekLine = ({
-	month,
-	department,
-	weeks,
-}: {
-	month: string;
-	department: string;
-	weeks: ScheduleMonth["weeks"];
-}): FunctionComponent => {
-	const companyId = useCurrentCompanyId();
-	const { i18n } = useTranslation();
-	// Only when nothing here can be reviewed: the waiting week is earlier.
-	const heldBack =
-		weeks.some((week) => week.state === "TENTATIVE") &&
-		!weeks.some((week) => week.state === "TO_REVIEW");
-	const [today] = useState(() => new Date());
-	const range = { from: summaryRange(today).from, to: shiftMonth(month, -1) };
-	const summaries = useQuery(
-		scheduleMonthSummariesQuery(
-			companyId,
-			{ departmentId: department },
-			range,
-			heldBack && range.from <= range.to
-		)
-	);
-	const waitingWeek =
-		heldBack && summaries.data
-			? waitingWeekBefore(summaries.data, month)
-			: undefined;
-	if (!waitingWeek) return null;
-	return (
-		<p className="text-sm text-neutral-800">
-			<Trans
-				i18nKey={`${key}.waitingWeek`}
-				components={[
-					<Button
-						key="week"
-						params={{ month: monthOf(waitingWeek) }}
-						search={{ department }}
-						to="/scheduling/months/$month"
-						variant="textlink"
-					/>,
-				]}
-				values={{
-					week: formatPeriod(
-						periodStartingOn(waitingWeek),
-						formattingLocale(i18n)
-					),
-				}}
-			/>
-		</p>
-	);
-};
-
 /** The two day marks and what publishing means for staff. */
 const Legend = (): FunctionComponent => {
 	const { t } = useTranslation();
@@ -278,7 +215,6 @@ const Legend = (): FunctionComponent => {
 					{t(`${key}.legendShort`)}
 				</li>
 			</ul>
-			<p>{t(`${key}.legendTentative`)}</p>
 			<p>{t(`${key}.footnote`)}</p>
 		</div>
 	);
@@ -441,7 +377,6 @@ const MonthContent = ({
 				</div>
 			</header>
 			<CrossingWeekLine department={departmentId} month={month} />
-			<WaitingWeekLine department={departmentId} month={month} weeks={weeks} />
 			{openingWeek && openingScheduleId !== "" && (
 				<OpeningHoursSection
 					canEdit={mayChangeHours}

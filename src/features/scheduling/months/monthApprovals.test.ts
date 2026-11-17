@@ -3,7 +3,7 @@ import { approvalInstanceFixture } from "@/features/approvals/fixtures";
 import { monthSummaryFixture } from "@/features/scheduling/months/fixtures";
 import { weekWaitingOnMe } from "@/features/scheduling/months/monthApprovals";
 
-// Kitchen's November: s-1 published 2 Nov, s-2 to review 9 Nov, s-3 and s-4 tentative, 30 Nov without a schedule.
+// Kitchen's November: s-1 published 2 Nov, s-2 to review 9 Nov, s-3 and s-4 to review, 30 Nov without a schedule.
 const NOVEMBER = monthSummaryFixture();
 
 describe("weekWaitingOnMe", () => {

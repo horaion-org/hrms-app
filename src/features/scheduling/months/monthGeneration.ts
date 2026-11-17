@@ -207,7 +207,6 @@ export const startingWeekOf = (
 const STATES_WITH_A_ROSTER: ReadonlyArray<WeekState> = [
 	"PUBLISHED",
 	"TO_REVIEW",
-	"TENTATIVE",
 	"GENERATING",
 ];
 

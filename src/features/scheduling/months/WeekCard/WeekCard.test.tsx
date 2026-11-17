@@ -298,7 +298,7 @@ describe("WeekCard", () => {
 				monthWeekFixture({
 					periodStart: "2027-02-15",
 					periodEnd: "2027-02-21",
-					state: "TENTATIVE",
+					state: "TO_REVIEW",
 					scheduleId: "s-2",
 					coveredFrom: "2027-02-20",
 					coveredTo: "2027-02-21",
@@ -319,7 +319,7 @@ describe("WeekCard", () => {
 					name: /Sat, Feb 20\s?–\s?Sun, Feb 21/,
 				})
 			).toHaveAttribute("href", "/scheduling/s-2");
-			expect(within(parts).getByText("To review")).toBeInTheDocument();
+			expect(within(parts).getAllByText("To review")).toHaveLength(2);
 			expect(card).not.toHaveTextContent(/Covers/);
 			expect(
 				within(card).queryByRole("link", { name: /^(Open|Review) Feb 15/ })

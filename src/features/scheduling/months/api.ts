@@ -25,7 +25,6 @@ export const weekStateSchema = z
 	.enum([
 		"PUBLISHED",
 		"TO_REVIEW",
-		"TENTATIVE",
 		"GENERATING",
 		"FAILED",
 		"REJECTED",
@@ -36,8 +35,9 @@ export const weekStateSchema = z
 	.catch("UNKNOWN");
 
 /**
- * What the manager sees of one week: TO_REVIEW is the Department's earliest
- * generated week awaiting a decision, TENTATIVE a generated week after it.
+ * What the manager sees of one week: TO_REVIEW is any generated week awaiting
+ * its decision. Each schedule is published on its own (API ADR-0130), so an
+ * older API's TENTATIVE reads as UNKNOWN.
  */
 export type WeekState = z.infer<typeof weekStateSchema>;
 

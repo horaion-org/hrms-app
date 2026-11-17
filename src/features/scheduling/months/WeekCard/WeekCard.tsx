@@ -68,7 +68,7 @@ const coversLineOf = (
  * its setup, any other its roster), none on a week not generated yet. A week
  * of several schedules lists each by its days and state, each opening its
  * own roster, in place of the one action. A
- * tentative or missing week has a dashed frame: it is not final. A failed
+ * week not generated has a dashed frame: it is not final. A failed
  * week says why, and so does a week whose regeneration failed and that shows
  * its earlier roster; a week the last month run refused, or one a month run took
  * out of its queue, says why too (the last run's refusal first); a week whose
@@ -92,7 +92,7 @@ export const WeekCard = ({
 	const action = weekAction(week);
 	const shortShifts = week.days.reduce((sum, day) => sum + day.shortShifts, 0);
 	const handChangedDays = week.handChangedDays ?? 0;
-	const dashed = week.state === "TENTATIVE" || week.state === "NOT_GENERATED";
+	const dashed = week.state === "NOT_GENERATED";
 	const datesOf = (from: string, to: string): string =>
 		formatWeekDates({ start: from, end: to }, formattingLocale(i18n));
 	const severalParts = listsWeekParts(week.parts);

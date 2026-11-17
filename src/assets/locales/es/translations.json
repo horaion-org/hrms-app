@@ -4462,8 +4462,7 @@
 				"forbidden": "Ya no tienes permiso para publicar o rechazar este cuadrante.",
 				"failed": "No pudimos guardar la decisión. Inténtalo de nuevo.",
 				"approvalPending": "Este cuadrante ya está pendiente de aprobación. Vuelve a cargar la página para ver en qué punto está.",
-				"noApprover": "Un paso del flujo de aprobación de este departamento no tiene a nadie que pueda aprobarlo. Pide a un administrador que lo cambie en Ajustes › Aprobaciones.",
-				"earlierWeekUnpublished": "Publica primero la semana anterior. Las semanas se publican en orden."
+				"noApprover": "Un paso del flujo de aprobación de este departamento no tiene a nadie que pueda aprobarlo. Pide a un administrador que lo cambie en Ajustes › Aprobaciones."
 			}
 		},
 		"startingContext": {
@@ -5111,7 +5110,6 @@
 			"states": {
 				"PUBLISHED": "Publicado",
 				"TO_REVIEW": "Por revisar",
-				"TENTATIVE": "Provisional",
 				"GENERATING": "Generando",
 				"FAILED": "Fallida",
 				"REJECTED": "Rechazado",
@@ -5147,8 +5145,6 @@
 				"PUBLISHED_other": "{{count}} publicadas",
 				"TO_REVIEW_one": "{{count}} por revisar",
 				"TO_REVIEW_other": "{{count}} por revisar",
-				"TENTATIVE_one": "{{count}} provisional",
-				"TENTATIVE_other": "{{count}} provisionales",
 				"GENERATING_one": "{{count}} generándose",
 				"GENERATING_other": "{{count}} generándose",
 				"FAILED_one": "{{count}} fallida",
@@ -5170,17 +5166,14 @@
 				"noSchedule": "Ninguna semana de {{month}} tiene horario todavía.",
 				"legendCovered": "Todos los turnos cubiertos",
 				"legendShort": "Falta personal en un turno",
-				"legendTentative": "Provisional: generada, a la espera de que se publique una semana anterior.",
-				"footnote": "El personal solo ve una semana después de publicarla. Las semanas se publican en orden.",
+				"footnote": "El personal solo ve una semana después de publicarla.",
 				"loading": "Cargando el mes…",
 				"loadFailed": "No pudimos cargar este mes. Inténtalo de nuevo.",
-				"unavailable": "Este mes no existe o no tienes permiso para verlo.",
-				"waitingWeek": "Estas semanas esperan a que <0>{{week}}</0> se publique primero."
+				"unavailable": "Este mes no existe o no tienes permiso para verlo."
 			},
 			"waitingOnYou": "Semana del {{week}}: pendiente de ti · paso {{step}} de {{total}} ({{label}})",
 			"hints": {
-				"toReview": "La semana del {{week}} espera tu revisión.",
-				"generatedAhead": "Generado por adelantado. Primero va {{month}}."
+				"toReview": "La semana del {{week}} espera tu revisión."
 			},
 			"tabFailed": "No pudimos cargar los meses. Inténtalo de nuevo.",
 			"tabLoading": "Cargando los meses…",
@@ -5189,7 +5182,6 @@
 			"tabEmptyFiltered": "Ningún mes próximo coincide con tu búsqueda o tus filtros.",
 			"roster": {
 				"unpublished": "<0>Sin publicar.</0> El personal no puede ver esta semana.",
-				"publishFirst": "Publica primero {{week}}. Las semanas se publican en orden.",
 				"weekWithState": "{{week}} · {{state}}"
 			},
 			"generate": {

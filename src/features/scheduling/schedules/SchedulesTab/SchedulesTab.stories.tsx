@@ -65,7 +65,7 @@ const meta = {
 					weeks: [
 						{
 							periodStart: "2026-12-07",
-							state: "TENTATIVE",
+							state: "TO_REVIEW",
 							scheduleId: "s-6",
 						},
 						{

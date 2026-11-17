@@ -42,7 +42,7 @@ export const monthWeekFixture = (
 	...overrides,
 });
 
-/** Kitchen's November: published, to review, two tentative, and one not generated. */
+/** Kitchen's November: published, three to review, and one not generated. */
 export const scheduleMonthFixture = (
 	overrides: Partial<ScheduleMonth> = {}
 ): ScheduleMonth => ({
@@ -64,14 +64,14 @@ export const scheduleMonthFixture = (
 		monthWeekFixture({
 			periodStart: "2026-11-16",
 			periodEnd: "2026-11-22",
-			state: "TENTATIVE",
+			state: "TO_REVIEW",
 			scheduleId: "s-3",
 			days: coverDays("2026-11-16"),
 		}),
 		monthWeekFixture({
 			periodStart: "2026-11-23",
 			periodEnd: "2026-11-29",
-			state: "TENTATIVE",
+			state: "TO_REVIEW",
 			scheduleId: "s-4",
 			days: coverDays("2026-11-23"),
 		}),
@@ -174,7 +174,7 @@ export const twoPartWeekFixture = (): Array<WeekPart> => [
 		named: false,
 		coveredFrom: "2027-02-20",
 		coveredTo: "2027-02-21",
-		state: "TENTATIVE",
+		state: "TO_REVIEW",
 		redoing: false,
 	},
 ];

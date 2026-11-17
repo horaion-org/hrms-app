@@ -34,9 +34,6 @@ export const ToReviewWithAShortDayAndAHandChange: Story = {
 		}),
 	},
 };
-export const Tentative: Story = {
-	args: { week: monthWeekFixture({ state: "TENTATIVE" }) },
-};
 export const Generating: Story = {
 	args: { week: monthWeekFixture({ state: "GENERATING", ...noRoster }) },
 };
@@ -120,7 +117,7 @@ export const TwoSchedules: Story = {
 		week: monthWeekFixture({
 			periodStart: "2027-02-15",
 			periodEnd: "2027-02-21",
-			state: "TENTATIVE",
+			state: "TO_REVIEW",
 			scheduleId: "s-2",
 			coveredFrom: "2027-02-20",
 			coveredTo: "2027-02-21",

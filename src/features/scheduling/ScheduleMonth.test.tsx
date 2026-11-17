@@ -24,7 +24,6 @@ import {
 import {
 	monthGenerationCheckFixture,
 	monthGenerationFixture,
-	monthSummaryFixture,
 	monthWeekFixture,
 	scheduleMonthFixture,
 	twoPartWeekFixture,
@@ -104,9 +103,7 @@ it("given_novemberOfKitchen_when_opened_then_fiveWeekCardsInMondayOrderWithTheir
 	]);
 	expect(within(cards[1]!).getByText("To review")).toBeInTheDocument();
 	expect(
-		screen.getByText(
-			"5 weeks, Nov 2 to Dec 6. 1 published · 1 to review · 2 tentative."
-		)
+		screen.getByText("5 weeks, Nov 2 to Dec 6. 1 published · 3 to review.")
 	).toBeInTheDocument();
 	expect(calls.find((call) => call.path === `${MONTHS}/2026-11`)?.search).toBe(
 		"departmentId=d-1"
@@ -124,7 +121,7 @@ it("given_aWeekOfTwoSchedules_when_shown_then_itsCardListsBothEachOpeningItsOwnR
 						monthWeekFixture({
 							periodStart: "2027-02-15",
 							periodEnd: "2027-02-21",
-							state: "TENTATIVE",
+							state: "TO_REVIEW",
 							scheduleId: "s-2",
 							coveredFrom: "2027-02-20",
 							coveredTo: "2027-02-21",
@@ -156,27 +153,30 @@ it("given_aWeekOfTwoSchedules_when_shown_then_itsCardListsBothEachOpeningItsOwnR
 	]);
 });
 
-it("given_aMonth_when_opened_then_theLegendExplainsTentative", async () => {
+it("given_aMonth_when_opened_then_theFootnoteSaysOnlyThatStaffSeePublishedWeeks", async () => {
 	await openMonth({
 		...signedIn(),
 		[`GET ${MONTHS}/2026-11`]: ok(scheduleMonthFixture()),
 	});
 
 	expect(
-		await screen.findByText(
-			"Tentative: generated, and waits for an earlier week to be published."
-		)
+		await screen.findByText("Staff see a week only after it is published.")
 	).toBeInTheDocument();
+	expect(screen.queryByText(/in order|Tentative/)).toBeNull();
 });
 
-it("given_theWeekUnderReview_when_shown_then_reviewLinksToItsRoster", async () => {
+it("given_weeksToReview_when_shown_then_eachReviewLinksToItsOwnRoster", async () => {
 	await openMonth({
 		...signedIn(),
 		[`GET ${MONTHS}/2026-11`]: ok(scheduleMonthFixture()),
 	});
 
-	const review = await screen.findByRole("link", { name: /^Review/ });
-	expect(review).toHaveAttribute("href", "/scheduling/s-2");
+	const reviews = await screen.findAllByRole("link", { name: /^Review/ });
+	expect(reviews.map((review) => review.getAttribute("href"))).toEqual([
+		"/scheduling/s-2",
+		"/scheduling/s-3",
+		"/scheduling/s-4",
+	]);
 });
 
 it("given_theMonthSteps_when_nextIsChosen_then_decemberOfTheSameDepartmentIsRead", async () => {
@@ -524,7 +524,7 @@ it("given_aFailedWeekAndStoppedWeeks_when_tryAgain_then_postsExactlyThoseWeeks",
 it("given_aStoppedWeekChangedByHand_when_tryAgain_then_asksFirstAndPostsThoseWeeksOnConfirm", async () => {
 	const user = userEvent.setup();
 	const stopped = {
-		state: "TENTATIVE" as const,
+		state: "TO_REVIEW" as const,
 		queueRefusal: { code: "EARLIER_WEEK_FAILED", at: "2026-11-17T09:20:00Z" },
 	};
 	const december = ungeneratedMonthFixture();
@@ -633,7 +633,7 @@ it("given_aCoveredWeekChangedByHand_when_generated_then_asksFirstAndPostsOnConfi
 			index === 0
 				? {
 						...week,
-						state: "TENTATIVE" as const,
+						state: "TO_REVIEW" as const,
 						scheduleId: "s-7",
 						handChangedDays: 1,
 					}
@@ -677,7 +677,7 @@ describe("regenerating a month whose weeks all have a roster", () => {
 	const generatedDecember = ungeneratedMonthFixture({
 		weeks: ungeneratedMonthFixture().weeks.map((week, index) => ({
 			...week,
-			state: "TENTATIVE" as const,
+			state: "TO_REVIEW" as const,
 			scheduleId: `s-${index + 10}`,
 		})),
 	});
@@ -729,57 +729,39 @@ describe("regenerating a month whose weeks all have a roster", () => {
 	});
 });
 
-describe("a month held back by an earlier month's week", () => {
-	const tentativeDecember = ungeneratedMonthFixture({
-		weeks: ungeneratedMonthFixture().weeks.map((week, index) => ({
-			...week,
-			state: "TENTATIVE" as const,
-			scheduleId: `s-${index + 10}`,
-		})),
-	});
-	const novemberToReview = monthSummaryFixture({
-		month: "2026-11",
-		weeks: [
-			{ periodStart: "2026-11-16", state: "TO_REVIEW", scheduleId: "s-2" },
-		],
-	});
-
-	it("given_everyWeekTentativeAndAWeekToReviewInNovember_when_opened_then_saysWhichWeekTheyWaitFor", async () => {
-		// Thursday 12 Nov 2026: the summaries are read from November.
-		vi.useFakeTimers({ toFake: ["Date"], now: new Date(2026, 10, 12) });
-		const calls = await openMonth(
-			{
-				...signedIn(),
-				[`GET ${DECEMBER}`]: ok(tentativeDecember),
-				[`GET ${MONTHS}`]: ok([novemberToReview]),
-			},
-			"/scheduling/months/2026-12?department=d-1"
-		);
-
-		const line = await screen.findByText(/These weeks wait for/);
-		expect(line).toHaveTextContent(
-			/^These weeks wait for Nov 16\s?–\s?22, 2026 to be published first\.$/
-		);
-		expect(within(line).getByRole("link")).toHaveAttribute(
-			"href",
-			"/scheduling/months/2026-11?department=d-1"
-		);
-		expect(calls.find((call) => call.path === MONTHS)?.search).toBe(
-			"from=2026-11&to=2026-11&departmentId=d-1"
-		);
-	});
-
-	it("given_aWeekToReviewInTheMonthItself_when_opened_then_noWaitingLineAndNoSummaryRead", async () => {
+// Each schedule is published on its own (API ADR-0130): no week waits for another.
+describe("a generated week after an earlier week still to review", () => {
+	it("given_twoWeeksToReview_when_opened_then_eachReadsToReviewAndOffersReview_andNothingWaits", async () => {
 		const calls = await openMonth({
 			...signedIn(),
-			[`GET ${MONTHS}/2026-11`]: ok(scheduleMonthFixture()),
+			[`GET ${MONTHS}/2026-11`]: ok(
+				scheduleMonthFixture({
+					weeks: [
+						monthWeekFixture({
+							periodStart: "2026-11-09",
+							periodEnd: "2026-11-15",
+							state: "TO_REVIEW",
+							scheduleId: "s-2",
+						}),
+						monthWeekFixture({
+							periodStart: "2026-11-16",
+							periodEnd: "2026-11-22",
+							state: "TO_REVIEW",
+							scheduleId: "s-3",
+						}),
+					],
+				})
+			),
 		});
 
-		await screen.findByRole("heading", {
-			level: 1,
-			name: "Kitchen · November 2026",
+		const later = await screen.findByRole("region", {
+			name: /^Nov 16\s?–\s?22$/,
 		});
-		expect(screen.queryByText(/These weeks wait for/)).toBeNull();
+		expect(within(later).getByText("To review")).toBeInTheDocument();
+		expect(
+			within(later).getByRole("link", { name: /^Review Nov 16\s?–\s?22$/ })
+		).toHaveAttribute("href", "/scheduling/s-3");
+		expect(screen.queryByText(/wait for|Tentative/)).toBeNull();
 		expect(calls.some((call) => call.path === MONTHS)).toBe(false);
 	});
 });
@@ -789,7 +771,7 @@ describe("the hours worked this month before its first scheduled week", () => {
 	const generatedDecember = ungeneratedMonthFixture({
 		weeks: ungeneratedMonthFixture().weeks.map((week, index) => ({
 			...week,
-			state: "TENTATIVE" as const,
+			state: "TO_REVIEW" as const,
 			scheduleId: `s-${index + 10}`,
 		})),
 	});

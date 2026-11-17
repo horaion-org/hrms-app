@@ -125,42 +125,6 @@ export const crossingWeekOf = (month: string): SchedulePeriod | undefined => {
 	};
 };
 
-/**
- * For a month with tentative weeks, the earlier month whose week is under
- * review for the same Department, which comes first; undefined otherwise.
- */
-export const earlierReviewMonth = (
-	summaries: ReadonlyArray<ScheduleMonthSummary>,
-	summary: ScheduleMonthSummary
-): string | undefined => {
-	if (!summary.weeks.some((week) => week.state === "TENTATIVE"))
-		return undefined;
-	const reviewing = summaries.find(
-		(candidate) =>
-			candidate.departmentId === summary.departmentId &&
-			candidate.weeks.some((week) => week.state === "TO_REVIEW")
-	);
-	return reviewing && reviewing.month < summary.month
-		? reviewing.month
-		: undefined;
-};
-
-/**
- * The week an earlier month holds this month's weeks back with: the earliest
- * week to review in a month before `month`, as the publish-in-order rule
- * counts it; none when no earlier month has one.
- */
-export const waitingWeekBefore = (
-	summaries: ReadonlyArray<ScheduleMonthSummary>,
-	month: string
-): string | undefined =>
-	summaries
-		.filter((summary) => summary.month < month)
-		.flatMap((summary) => summary.weeks)
-		.filter((week) => week.state === "TO_REVIEW")
-		.map((week) => week.periodStart)
-		.sort()[0];
-
 /** The summaries grouped by month, earliest first; within a month, in the API's order (Branch, then Department). */
 export const summariesByMonth = (
 	summaries: ReadonlyArray<ScheduleMonthSummary>

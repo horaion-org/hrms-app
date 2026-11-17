@@ -16,7 +16,7 @@ describe("stateCountsLine", () => {
 		expect(
 			stateCountsLine(
 				[
-					{ state: "TENTATIVE" },
+					{ state: "TO_REVIEW" },
 					{ state: "PUBLISHED" },
 					{ state: "PUBLISHED" },
 					{ state: "TO_REVIEW" },
@@ -25,7 +25,7 @@ describe("stateCountsLine", () => {
 				],
 				authTestI18n.t
 			)
-		).toBe("2 published · 1 to review · 1 tentative · 1 draft");
+		).toBe("2 published · 2 to review · 1 draft");
 	});
 
 	it("given_onlyWeeksNotGeneratedYet_when_said_then_nothing", () => {

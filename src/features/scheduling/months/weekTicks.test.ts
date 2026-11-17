@@ -83,7 +83,7 @@ describe("tickableWeekOf", () => {
 		});
 	});
 
-	it.each(["TO_REVIEW", "TENTATIVE"] as const)(
+	it.each(["TO_REVIEW", "TO_REVIEW"] as const)(
 		"given_a%sWeek_when_read_then_tickableButUntickedWithTheRosterNote",
 		(state) => {
 			expect(
@@ -234,8 +234,8 @@ describe("defaultMonthOf", () => {
 				{ periodStart: "2026-11-02", state: "PUBLISHED", scheduleId: "s-1" },
 				{ periodStart: "2026-11-09", state: "PUBLISHED", scheduleId: "s-2" },
 				{ periodStart: STARTED_MONDAY, state: "TO_REVIEW", scheduleId: "s-3" },
-				{ periodStart: NEXT_MONDAY, state: "TENTATIVE", scheduleId: "s-4" },
-				{ periodStart: "2026-11-30", state: "TENTATIVE", scheduleId: "s-5" },
+				{ periodStart: NEXT_MONDAY, state: "TO_REVIEW", scheduleId: "s-4" },
+				{ periodStart: "2026-11-30", state: "TO_REVIEW", scheduleId: "s-5" },
 			],
 		});
 

@@ -23,7 +23,6 @@ import type { WeekChoiceIds } from "@/features/scheduling/weekChoice";
 const COUNTED_STATES: ReadonlyArray<Exclude<WeekState, "NOT_GENERATED">> = [
 	"PUBLISHED",
 	"TO_REVIEW",
-	"TENTATIVE",
 	"GENERATING",
 	"FAILED",
 	"REJECTED",
@@ -31,7 +30,7 @@ const COUNTED_STATES: ReadonlyArray<Exclude<WeekState, "NOT_GENERATED">> = [
 	"UNKNOWN",
 ];
 
-/** The month's weeks counted by state as one line, e.g. "2 published · 1 to review · 2 tentative". */
+/** The month's weeks counted by state as one line, e.g. "2 published · 3 to review". */
 export const stateCountsLine = (
 	weeks: ReadonlyArray<{ state: WeekState }>,
 	t: TFunction

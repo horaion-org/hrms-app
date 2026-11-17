@@ -13,7 +13,6 @@ import type { MonthWeek, WeekState } from "@/features/scheduling/months/api";
 export const weekStateTones: Record<WeekState, BadgeTone> = {
 	PUBLISHED: "success",
 	TO_REVIEW: "warning",
-	TENTATIVE: "neutral",
 	GENERATING: "warning",
 	FAILED: "error",
 	REJECTED: "error",
@@ -22,11 +21,7 @@ export const weekStateTones: Record<WeekState, BadgeTone> = {
 	UNKNOWN: "neutral",
 };
 
-const ROSTER_STATES: ReadonlyArray<WeekState> = [
-	"PUBLISHED",
-	"TO_REVIEW",
-	"TENTATIVE",
-];
+const ROSTER_STATES: ReadonlyArray<WeekState> = ["PUBLISHED", "TO_REVIEW"];
 
 /** Whether a week has a roster to summarise (day marks, cover text, days changed by hand). */
 export const hasRoster = (state: WeekState): boolean =>

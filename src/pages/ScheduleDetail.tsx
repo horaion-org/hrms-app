@@ -4,7 +4,7 @@ import {
 	weekRunsAround,
 } from "@/features/scheduling/dates/datesSetup";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import type { DepartmentPath } from "@/common/companyPath";
 import { dateTimeFormatIn } from "@/common/dateTimeFormatIn";
@@ -79,10 +79,6 @@ import {
 	scheduleActions,
 	type ScheduleActionId,
 } from "@/features/scheduling/schedules/scheduleActions";
-import {
-	actionWaitsForEarlierWeek,
-	publishWaitsFor,
-} from "@/features/scheduling/schedules/publishOrder";
 import { partLinesOf } from "@/features/scheduling/schedules/partLines";
 import { WeekPartsCallout } from "@/features/scheduling/schedules/WeekPartsCallout";
 import { WeekPartLinks } from "@/features/scheduling/months/WeekPartLinks";
@@ -455,7 +451,6 @@ const ApiSchedule = ({
 			permissions.mayRead
 		)
 	).data;
-	const publishNoteId = useId();
 	const monthName = month ? formatMonthName(month, formattingLocale(i18n)) : "";
 	if (state.status !== "ready")
 		return (
@@ -622,12 +617,6 @@ const ApiSchedule = ({
 			</Callout>
 		),
 	};
-	// Weeks are published in order: Publish (and Submit, and the last step's Approve) waits for an earlier week.
-	const waitsFor = publishWaitsFor(schedule);
-	const primaryWaits =
-		primary !== undefined &&
-		waitsFor !== undefined &&
-		actionWaitsForEarlierWeek(primary.id);
 	const departmentWeeks = scheduleMonth && {
 		weeks: rosterWeeksOf(scheduleMonth, t),
 		onWeekChange: (week: string): void => {
@@ -653,23 +642,11 @@ const ApiSchedule = ({
 						{primary && (
 							<div className="flex flex-col items-end gap-2 max-sm:order-last max-sm:w-full">
 								<Button
-									aria-describedby={primaryWaits ? publishNoteId : undefined}
 									className="max-sm:w-full"
-									disabled={primaryWaits}
 									onClick={runAction[primary.id]}
 								>
 									{t(primary.labelKey, { month: monthName })}
 								</Button>
-								{primaryWaits && (
-									<p
-										className="text-right text-sm text-neutral-700 max-sm:text-left"
-										id={publishNoteId}
-									>
-										{t("scheduling.months.roster.publishFirst", {
-											week: formatPeriod(waitsFor, formattingLocale(i18n)),
-										})}
-									</p>
-								)}
 							</div>
 						)}
 						<ScheduleMenu

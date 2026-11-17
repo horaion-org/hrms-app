@@ -43,8 +43,7 @@ describe("WeekPartLinks", () => {
 		expect(
 			within(row).getByRole("link", { name: /Sat, Feb 20\s?–\s?Sun, Feb 21/ })
 		).toHaveAttribute("href", "/scheduling/s-2");
-		expect(within(row).getByText("To review")).toBeInTheDocument();
-		expect(within(row).getByText("Tentative")).toBeInTheDocument();
+		expect(within(row).getAllByText("To review")).toHaveLength(2);
 	});
 
 	it("given_noneOpen_when_rendered_then_eachPartLinksItsOwnRosterInDayOrder", async () => {

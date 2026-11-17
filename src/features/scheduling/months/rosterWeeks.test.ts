@@ -12,7 +12,7 @@ import {
 	weekScheduleLink,
 } from "@/features/scheduling/months/rosterWeeks";
 
-// Kitchen's November: s-1 published, s-2 to review, s-3 and s-4 tentative, 30 Nov without a schedule.
+// Kitchen's November: s-1 published, s-2 to review, s-3 and s-4 to review, 30 Nov without a schedule.
 const NOVEMBER = scheduleMonthFixture();
 
 describe("rosterWeeksOf", () => {
@@ -33,13 +33,13 @@ describe("rosterWeeksOf", () => {
 			{
 				start: "2026-11-16",
 				end: "2026-11-22",
-				state: "Tentative",
+				state: "To review",
 				disabled: false,
 			},
 			{
 				start: "2026-11-23",
 				end: "2026-11-29",
-				state: "Tentative",
+				state: "To review",
 				disabled: false,
 			},
 			{

@@ -23,7 +23,7 @@ const NOVEMBER_WEEKS = [
 	["2026-11-30", "2026-12-06"],
 ] as const;
 
-/** November with every week tentative and covered, but for what `changes` sets by Monday. */
+/** November with every week to review and covered, but for what `changes` sets by Monday. */
 const november = (
 	changes: Record<string, Partial<MonthWeek>> = {}
 ): ReturnType<typeof scheduleMonthFixture> =>
@@ -32,7 +32,7 @@ const november = (
 			monthWeekFixture({
 				periodStart,
 				periodEnd,
-				state: "TENTATIVE",
+				state: "TO_REVIEW",
 				scheduleId: `s-${index + 1}`,
 				includedInMonthGeneration: true,
 				...changes[periodStart],

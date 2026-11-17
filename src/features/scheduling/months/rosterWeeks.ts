@@ -14,7 +14,7 @@ import {
  * schedule's month, the same weeks as the month page its back link goes to.
  */
 
-/** The month's weeks as the week bar lists them: "16 – 22 Nov 2026 · Tentative", disabled without a schedule. */
+/** The month's weeks as the week bar lists them: "16 – 22 Nov 2026 · To review", disabled without a schedule. */
 export const rosterWeeksOf = (
 	month: ScheduleMonth,
 	t: TFunction

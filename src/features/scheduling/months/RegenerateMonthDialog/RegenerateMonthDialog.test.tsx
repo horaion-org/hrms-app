@@ -40,7 +40,7 @@ const STAFFING = constraintFixture({
 	requiresPeople: true,
 });
 
-/** November with every week tentative and covered, but for what `changes` sets by Monday. */
+/** November with every week to review and covered, but for what `changes` sets by Monday. */
 const november = (
 	changes: Record<string, Partial<MonthWeek>> = {}
 ): ReturnType<typeof scheduleMonthFixture> =>
@@ -49,7 +49,7 @@ const november = (
 			monthWeekFixture({
 				periodStart,
 				periodEnd,
-				state: "TENTATIVE",
+				state: "TO_REVIEW",
 				scheduleId: `s-${index + 1}`,
 				includedInMonthGeneration: true,
 				...changes[periodStart],

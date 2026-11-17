@@ -4662,8 +4662,7 @@
 				"forbidden": "You no longer have permission to publish or reject this roster.",
 				"failed": "We couldn’t save the decision. Try again.",
 				"approvalPending": "This roster is already waiting for approval. Reload the page to see where it stands.",
-				"noApprover": "A step of this department’s approval flow has nobody who can approve it. Ask an admin to change it in Settings › Approvals.",
-				"earlierWeekUnpublished": "Publish the earlier week first. Weeks are published in order."
+				"noApprover": "A step of this department’s approval flow has nobody who can approve it. Ask an admin to change it in Settings › Approvals."
 			}
 		},
 		"startingContext": {
@@ -5311,7 +5310,6 @@
 			"states": {
 				"PUBLISHED": "Published",
 				"TO_REVIEW": "To review",
-				"TENTATIVE": "Tentative",
 				"GENERATING": "Generating",
 				"FAILED": "Generation failed",
 				"REJECTED": "Rejected",
@@ -5347,8 +5345,6 @@
 				"PUBLISHED_other": "{{count}} published",
 				"TO_REVIEW_one": "{{count}} to review",
 				"TO_REVIEW_other": "{{count}} to review",
-				"TENTATIVE_one": "{{count}} tentative",
-				"TENTATIVE_other": "{{count}} tentative",
 				"GENERATING_one": "{{count}} generating",
 				"GENERATING_other": "{{count}} generating",
 				"FAILED_one": "{{count}} failed",
@@ -5370,17 +5366,14 @@
 				"noSchedule": "No week of {{month}} has a schedule yet.",
 				"legendCovered": "Every shift covered",
 				"legendShort": "A shift is short",
-				"legendTentative": "Tentative: generated, and waits for an earlier week to be published.",
-				"footnote": "Staff see a week only after it is published. Weeks are published in order.",
+				"footnote": "Staff see a week only after it is published.",
 				"loading": "Loading the month…",
 				"loadFailed": "This month could not be loaded. Please try again.",
-				"unavailable": "This month doesn’t exist or you don’t have permission to see it.",
-				"waitingWeek": "These weeks wait for <0>{{week}}</0> to be published first."
+				"unavailable": "This month doesn’t exist or you don’t have permission to see it."
 			},
 			"waitingOnYou": "Week of {{week}}: waiting on you · step {{step}} of {{total}} ({{label}})",
 			"hints": {
-				"toReview": "Week of {{week}} is waiting for your review.",
-				"generatedAhead": "Generated ahead. {{month}} comes first."
+				"toReview": "Week of {{week}} is waiting for your review."
 			},
 			"tabFailed": "The months couldn’t be loaded. Please try again.",
 			"tabLoading": "Loading the months…",
@@ -5389,7 +5382,6 @@
 			"tabEmptyFiltered": "No upcoming month matches your search or filters.",
 			"roster": {
 				"unpublished": "<0>Not published.</0> Staff can’t see this week.",
-				"publishFirst": "Publish {{week}} first. Weeks are published in order.",
 				"weekWithState": "{{week}} · {{state}}"
 			},
 			"generate": {
