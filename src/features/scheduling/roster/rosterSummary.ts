@@ -101,12 +101,13 @@ type IssueSource = {
 };
 
 /**
- * What "Issues n" counts, the one definition of that number: every roster
- * note the engine left (each conflict, each error message and each day's
- * message), every setup issue (each diagnostic), and one for starting
+ * Whether Issues has anything to list, so its week bar button shows: every
+ * roster note the engine left (each conflict, each error message and each
+ * day's message), every setup issue (each diagnostic), and one for starting
  * points that changed since generation, each day whose leave or cover the
- * roster marks, and each day a manager must decide. A note that only qualifies the
- * others ("these notes are from generation") is shown but not counted.
+ * roster marks, and each day a manager must decide. The number on the
+ * button is not this sum but the Must fix count (`issueCounts`), with the
+ * Could not be met count beside it.
  */
 export const ISSUE_SOURCES: ReadonlyArray<IssueSource> = [
 	{ key: "rosterNotes", count: ({ findings }) => findings?.roster ?? 0 },
@@ -123,7 +124,7 @@ export const ISSUE_SOURCES: ReadonlyArray<IssueSource> = [
 	{ key: "daysToDecide", count: ({ daysToDecide }) => daysToDecide },
 ];
 
-/** The Issues count: the sum of `ISSUE_SOURCES`. */
+/** How much Issues has to list: the sum of `ISSUE_SOURCES`; above zero, its button shows. */
 export const issueCount = (facts: IssueFacts): number =>
 	ISSUE_SOURCES.reduce((total, source) => total + source.count(facts), 0);
 

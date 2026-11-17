@@ -725,7 +725,7 @@ describe("GeneratedRoster", () => {
 			expect(notMet).toHaveTextContent(/Ben Ong/);
 		});
 
-		it("given_issuesToFixAndNotMet_when_shown_then_theIssuesButtonShowsOneCountTheirSum", () => {
+		it("given_issuesToFixAndNotMet_when_shown_then_theIssuesButtonCountsToFixThenNotMetInAmber", () => {
 			const check = rulesCheckFixture({
 				status: "BROKEN",
 				notMet: [
@@ -756,13 +756,17 @@ describe("GeneratedRoster", () => {
 				last: { revision: 1, check },
 			});
 
-			// The label names both groups ("Issues: 1 to fix, 1 could not be met"); the badge shows their sum.
+			// The label names both groups ("Issues: 1 to fix, 1 could not be met"); one badge each, to fix first.
 			const issues = screen.getByRole("button", { name: /^Issues: / });
 			const [toFix = 0, notMet = 0] = (
 				issues.getAttribute("aria-label")?.match(/\d+/g) ?? []
 			).map(Number);
+			expect(toFix).toBeGreaterThan(0);
 			expect(notMet).toBeGreaterThan(0);
-			expect(issues).toHaveTextContent(new RegExp(`^Issues${toFix + notMet}$`));
+			expect(issues).toHaveTextContent(new RegExp(`^Issues${toFix}${notMet}$`));
+			expect(within(issues).getAllByText(String(notMet)).at(-1)).toHaveClass(
+				"bg-warning-100"
+			);
 		});
 
 		it("given_aValidationOfAnEarlierRevision_when_issuesOpens_then_itValidatesAndSaysTheListIsOutOfDateWithTheAction", async () => {

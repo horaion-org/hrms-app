@@ -346,14 +346,19 @@ export const GeneratedRoster = ({
 								}}
 							>
 								{t(ROSTER_SIDE_LISTS[panel].titleKey)}
-								{/* Issues counts both groups; its panel's headings tell them apart. */}
+								{/* Issues counts what is to fix, and beside it in amber what could not be met. */}
 								<CountBadge
 									aria-hidden="true"
 									tone="inactive"
-									count={
-										panel === "issues" ? counts.mustFix + counts.notMet : count
-									}
+									count={panel === "issues" ? counts.mustFix : count}
 								/>
+								{panel === "issues" && (
+									<CountBadge
+										aria-hidden="true"
+										count={counts.notMet}
+										tone="warning"
+									/>
+								)}
 							</Button>
 						))}
 						{validation && (
