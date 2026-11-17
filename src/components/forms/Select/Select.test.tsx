@@ -945,6 +945,89 @@ describe("Select", () => {
 		);
 	});
 
+	/** Whole-group shifts: two groups of one, one of them named as its shift, and a group of two. */
+	const shiftOptions = [
+		{ value: "morning", label: "Morning", group: "Day" },
+		{ value: "early", label: "Early", group: " early " },
+		{ value: "late-a", label: "Late A", group: "Late" },
+		{ value: "late-b", label: "Late B", group: "Late" },
+	];
+
+	it("lists a group of one as its option's row alone, naming the group only when it differs from the label", async () => {
+		const user = userEvent.setup();
+		const onChange = vi.fn();
+		render(
+			<Select
+				multiple
+				wholeGroups
+				aria-label="Shifts"
+				options={shiftOptions}
+				onChange={onChange}
+			/>
+		);
+		await user.click(screen.getByRole("button", { name: "Shifts" }));
+
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual(["Morning Day", "Early", "Late", "Late A", "Late B"]);
+		expect(
+			screen.queryByRole("option", { name: /^Whole group: Day/ })
+		).toBeNull();
+		expect(screen.getByText("Day")).toHaveClass("text-neutral-600");
+
+		await user.click(screen.getByRole("option", { name: "Morning Day" }));
+		expect(onChange).toHaveBeenLastCalledWith(["morning"]);
+	});
+
+	it("heads a group of several with a bold tinted row, its options indented beneath it and a line between it and its neighbours", async () => {
+		const user = userEvent.setup();
+		render(
+			<Select multiple wholeGroups aria-label="Shifts" options={shiftOptions} />
+		);
+		await user.click(screen.getByRole("button", { name: "Shifts" }));
+
+		const header = screen.getByRole("option", { name: "Whole group: Late" });
+		expect(header).toHaveClass("bg-neutral-50", "font-semibold", "text-sm");
+		expect(header).not.toHaveClass("uppercase");
+		expect(screen.getByRole("option", { name: "Late A" })).toHaveClass("pl-8");
+		expect(screen.getByRole("option", { name: "Early" })).toHaveClass("px-4");
+		expect(
+			screen.getByRole("group", { name: "Whole group: Late" })
+		).toHaveClass("border-t");
+		// Two groups of one in a row share their block: no line between them.
+		expect(
+			screen.getByRole("option", { name: "Morning Day" }).parentElement
+		).not.toHaveClass("border-t");
+		expect(
+			screen.getByRole("option", { name: "Early" }).parentElement
+		).not.toHaveClass("border-t");
+	});
+
+	it("names a group of several's count with the caller's words, and none without them", async () => {
+		const user = userEvent.setup();
+		const { rerender } = render(
+			<Select
+				multiple
+				wholeGroups
+				aria-label="Shifts"
+				groupCountText={(count) => `${String(count)} shifts`}
+				options={shiftOptions}
+			/>
+		);
+		await user.click(screen.getByRole("button", { name: "Shifts" }));
+
+		expect(
+			screen.getByRole("option", { name: "Whole group: Late" })
+		).toHaveTextContent("Late 2 shifts");
+
+		rerender(
+			<Select multiple wholeGroups aria-label="Shifts" options={shiftOptions} />
+		);
+		expect(
+			screen.getByRole("option", { name: "Whole group: Late" }).textContent
+		).toBe("Late");
+	});
+
 	it("lists a group's heading as a plain label when whole groups aren't offered", async () => {
 		const user = userEvent.setup();
 		render(
@@ -960,6 +1043,16 @@ describe("Select", () => {
 			screen.getAllByRole("option").map((option) => option.textContent)
 		).toEqual(["Early"]);
 		expect(screen.getByRole("group", { name: "Morning" })).toBeVisible();
+		// The plain heading and its rows look as they always have.
+		expect(screen.getByText("Morning")).toHaveClass(
+			"text-xs",
+			"uppercase",
+			"text-neutral-700"
+		);
+		expect(screen.getByRole("option", { name: "Early" })).toHaveClass("px-4");
+		expect(screen.getByRole("group", { name: "Morning" })).not.toHaveClass(
+			"border-t"
+		);
 	});
 
 	it("reaches the select-all row with the keyboard and keeps a controlled value until the caller updates it", async () => {

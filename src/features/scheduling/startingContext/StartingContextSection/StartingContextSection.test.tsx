@@ -34,7 +34,8 @@ afterEach(() => {
 
 const show = (
 	openOnStart?: StartingPointDialog,
-	showsHours?: boolean
+	showsHours?: boolean,
+	daysBefore?: { from: string; to: string }
 ): void => {
 	const client = new QueryClient({
 		defaultOptions: { queries: { retry: false } },
@@ -45,6 +46,7 @@ const show = (
 				<StartingContextSection
 					canEdit
 					companyId="c-1"
+					daysBefore={daysBefore}
 					nonWorkingDayTypes={[]}
 					openOnStart={openOnStart}
 					scheduleId="s-1"
@@ -93,6 +95,17 @@ describe("StartingContextSection", () => {
 		expect(
 			calls.some((call) => call.path === `${SCHEDULE}/opening-balances`)
 		).toBe(false);
+	});
+
+	it("given_daysBeforeTheFirstGeneratedDay_when_shown_then_theNoticeNamesThoseStillUnknown", async () => {
+		stubApi(reads);
+		show(undefined, false, { from: "2026-11-07", to: "2026-11-08" });
+
+		expect(
+			await screen.findByText(
+				"Still unknown for some people: Sat, Nov 7 and Sun, Nov 8. Left unknown, they count as days nobody worked."
+			)
+		).toBeVisible();
 	});
 
 	it("given_openOnStartDays_when_theDraftIsRead_then_theGridOfDaysOpens", async () => {

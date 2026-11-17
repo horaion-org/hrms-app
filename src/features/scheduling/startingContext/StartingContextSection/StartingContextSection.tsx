@@ -5,6 +5,7 @@ import type { DepartmentPath } from "@/common/companyPath";
 import { joinClassNames } from "@/common/joinClassNames";
 import { ApiProblemError } from "@/common/problem";
 import type { FunctionComponent } from "@/common/types";
+import type { DayRun } from "@/features/scheduling/dates/api";
 import { OpeningHoursSection } from "@/features/scheduling/hours/OpeningHoursSection";
 import {
 	saveStartingDays,
@@ -18,6 +19,7 @@ import {
 	enteredMemberCount,
 	previousWeekOf,
 	initialEntries,
+	unansweredDays,
 } from "@/features/scheduling/startingContext/startingGrid";
 
 /** Which dialog to open once the draft has been read: last week's days, or the hours worked this month. */
@@ -39,6 +41,8 @@ export type StartingContextSectionProps = {
 	 * entered on its first week.
 	 */
 	showsHours?: boolean;
+	/** This week's days before its first generated day, when it has begun; the notice names those still unknown. */
+	daysBefore?: DayRun;
 	className?: string;
 };
 
@@ -77,6 +81,7 @@ export const StartingContextSection = ({
 	canEdit,
 	openOnStart,
 	showsHours = true,
+	daysBefore,
 	className,
 }: StartingContextSectionProps): FunctionComponent => {
 	const { t } = useTranslation();
@@ -108,6 +113,7 @@ export const StartingContextSection = ({
 			<StartingContextCallout
 				enteredCount={enteredMemberCount(initialEntries(week.data))}
 				previous={previousWeekOf(week.data)}
+				unknownDays={daysBefore && unansweredDays(week.data, daysBefore)}
 				onAdd={
 					canEdit
 						? (): void => {

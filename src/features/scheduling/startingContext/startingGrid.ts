@@ -17,7 +17,13 @@ export type Entries = Record<string, Record<string, CellValue>>;
 /** How the Generate step speaks of the week before. */
 export type PreviousWeek =
 	| { kind: "none" }
-	| { kind: "carried"; periodStart: string; uncovered: number };
+	| {
+			kind: "carried";
+			periodStart: string;
+			uncovered: number;
+			/** The days of a roster part shorter than its week, which carries over instead of a whole week. */
+			days?: { from: string; to: string };
+	  };
 
 /** How the dialog splits the days before the period: the nearer week, and any earlier days. */
 export type SplitDays = { earlier: Array<string>; nearer: Array<string> };

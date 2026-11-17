@@ -115,17 +115,23 @@ export const Grouped: Story = {
 	},
 };
 
-/** A multiple Select whose group headings each choose or clear their whole group, as the constraint dialog's shifts do. */
+/**
+ * A multiple Select of whole groups, as the constraint dialog's shifts: a
+ * group of one is its shift's row, named after it unless it repeats the
+ * label; a group of several is headed by a row that chooses or clears it.
+ */
 export const WholeGroups: Story = {
 	args: {
 		multiple: true,
 		wholeGroups: true,
 		placeholder: "Choose shifts",
+		selectAllLabel: "Select all",
+		groupCountText: (count: number) => `${String(count)} shifts`,
 		options: [
-			{ value: "early", label: "Early", group: "Morning" },
-			{ value: "mid", label: "Mid", group: "Morning" },
-			{ value: "late", label: "Late", group: "Evening" },
-			{ value: "night", label: "Night", group: "Evening" },
+			{ value: "morning", label: "Morning", group: "Day" },
+			{ value: "early", label: "Early", group: "Early" },
+			{ value: "late-a", label: "Late A", group: "Late" },
+			{ value: "late-b", label: "Late B", group: "Late" },
 		],
 	},
 };

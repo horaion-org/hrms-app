@@ -1,19 +1,13 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
-import { mondayOf } from "@/common/weeks";
 import { datesPlanQuery } from "@/features/scheduling/dates/api";
 import { useGenerateDates } from "@/features/scheduling/dates/useGenerateDates";
-import { formatDay } from "@/common/formatDay";
 import {
 	datesIn,
 	datesProblemOf,
 	daysBeforeOf,
-	rosterCoversDayBefore,
+	previousBefore,
 } from "@/features/scheduling/dates/datesSetup";
-import { startingDaysQuery } from "@/features/scheduling/startingContext/api";
-import {
-	type PreviousWeek,
-	unansweredDays,
-} from "@/features/scheduling/startingContext/startingGrid";
+import type { PreviousWeek } from "@/features/scheduling/startingContext/startingGrid";
 import { formatPeriod, periodStartingOn } from "@/features/scheduling/periods";
 import { Navigate, useNavigate, useSearch } from "@tanstack/react-router";
 import dayjs from "dayjs";
@@ -344,37 +338,22 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			datesDraftId !== "" && allowedHere("schedule:read")
 		)
 	);
-	// Owner answer 2: the days of the first week before its first generated day that nobody knows are asked
-	// about (were rest days given?), and taken as days nobody worked if left unknown. A started week is
-	// generated from today; dates name those days in their plan.
-	const restDaysFrom = byDates
-		? (datesStart?.newFrom ?? undefined)
-		: startingWeek && startingWeek.periodStart < branchToday
+	// A week that has begun is generated from today (owner, API ADR-0115).
+	const startedWeekFrom =
+		startingWeek && startingWeek.periodStart < branchToday
 			? branchToday
 			: undefined;
-	const askedRestDays = byDates
+	// The first day the run generates: a dates run's first new day, a started week's today, or the week's Monday.
+	const firstGeneratedDay = byDates
+		? (datesStart?.newFrom ?? undefined)
+		: (startedWeekFrom ?? startingWeek?.periodStart);
+	// Owner answer 2: this week's days before its first generated day, which "Before this week" names while
+	// nobody knows them (were rest days given?); dates name them in their plan.
+	const daysBeforeStart = byDates
 		? (plan?.notRosteredBefore ?? undefined)
-		: startingWeek && restDaysFrom
-			? daysBeforeOf(startingWeek.periodStart, restDaysFrom)
+		: startingWeek && startedWeekFrom
+			? daysBeforeOf(startingWeek.periodStart, startedWeekFrom)
 			: undefined;
-	const startingDraftId = byDates
-		? datesDraftId
-		: startingWeek?.state === "DRAFT"
-			? (startingWeek.scheduleId ?? "")
-			: "";
-	const startingDays = useQuery(
-		startingDaysQuery(
-			companyId,
-			unit,
-			startingDraftId,
-			startingDraftId !== "" && askedRestDays !== undefined
-		)
-	);
-	const unknownRestDays = !askedRestDays
-		? []
-		: startingDays.data
-			? unansweredDays(startingDays.data, askedRestDays)
-			: datesIn(askedRestDays);
 	const laterStartingWeeks = scheduleMonth.data
 		? startingWeeksOf(scheduleMonth.data, ticked).filter(
 				(week) => week !== startingWeek
@@ -415,21 +394,19 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 				(byDates ? datesStartOnMonday : startingWeek?.state === "NOT_GENERATED")
 		)
 	);
-	// The first day the run generates: a dates run's first new day, a started week's today, or the week's Monday.
-	const firstGeneratedDay = byDates
-		? (datesStart?.newFrom ?? undefined)
-		: (restDaysFrom ?? startingWeek?.periodStart);
-	// "Before this week" asks unless a roster covers the day before it: in the week before, or earlier in a started week.
-	const dayBeforeRostered =
-		firstGeneratedDay !== undefined &&
-		rosterCoversDayBefore(firstGeneratedDay, [
+	// "Before this week" asks unless a roster covers the day before the first generated day: in the week
+	// before, earlier in a started week, or a part kept earlier in a dates run's first week.
+	const partsBeforeStart = [
+		...[
 			...(monthBefore.data?.weeks ?? []),
 			...(scheduleMonth.data?.weeks ?? []),
-		]);
+		].flatMap((week) => week.parts),
+		...(datesStart?.kept ?? []),
+	];
 	const previousOfStart: PreviousWeek =
-		weekBefore && dayBeforeRostered
-			? { kind: "carried", periodStart: weekBefore, uncovered: 0 }
-			: { kind: "none" };
+		firstGeneratedDay === undefined
+			? { kind: "none" }
+			: previousBefore(firstGeneratedDay, partsBeforeStart);
 	const mayGenerate = allowedHere("schedule:generate");
 	// A dates run's panel checks the first day's month (its leave counts that month).
 	const checkMonth = byDates ? monthOf(datesChoice.firstDay) : month;
@@ -611,6 +588,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			<StartingContextSection
 				canEdit={allowedHere("schedule:update")}
 				companyId={companyId}
+				daysBefore={daysBeforeStart}
 				openOnStart={openOnStartOf(startingWeek.scheduleId)}
 				scheduleId={startingWeek.scheduleId}
 				unit={unit}
@@ -627,6 +605,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 					adding={scheduleActions.create.isPending}
 					enteredCount={0}
 					previous={previousOfStart}
+					unknownDays={daysBeforeStart && datesIn(daysBeforeStart)}
 					onAdd={addToWeek(startingWeek, "days")}
 				/>
 				{startsAfterFirst(startingWeek.periodStart) && (
@@ -676,12 +655,9 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 				)}
 			</div>
 		));
-	const restDaysText = new Intl.ListFormat(language, {
-		type: "conjunction",
-	}).format(unknownRestDays.map((date) => formatDay(date, language)));
-	// Dates from mid-week with nothing rostered before, or from a Monday: the first new part's "Before this
-	// week", as the month's first week has it; the button saves that part as a draft covering its new days,
-	// which the run then generates.
+	// Dates: the first new part's "Before this week", as the month's first week has it (asked when nothing
+	// is rostered the day before, a calm carried line when it is); the button saves that part as a draft
+	// covering its new days, which the run then generates.
 	const saveDatesStart = async (): Promise<void> => {
 		if (!unit || !everything || !datesStart?.newFrom || !datesStart.newTo)
 			return;
@@ -705,13 +681,12 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			setProblem(scheduleRefusalMessage(error, true, t));
 		}
 	};
-	const datesAsksDaysBefore =
-		Boolean(plan?.notRosteredBefore) || datesStartOnMonday;
 	const datesStartingPoint =
-		!unit || !datesAsksDaysBefore ? undefined : datesDraftId !== "" ? (
+		!unit || !datesStart ? undefined : datesDraftId !== "" ? (
 			<StartingContextSection
 				canEdit={allowedHere("schedule:update")}
 				companyId={companyId}
+				daysBefore={daysBeforeStart}
 				nonWorkingDayTypes={datesDraft.data?.nonWorkingDayTypes ?? []}
 				openOnStart={openOnStartOf(datesDraftId)}
 				scheduleId={datesDraftId}
@@ -722,7 +697,8 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			<StartingContextCallout
 				adding={scheduleActions.create.isPending}
 				enteredCount={0}
-				previous={datesStartOnMonday ? previousOfStart : { kind: "none" }}
+				previous={previousOfStart}
+				unknownDays={daysBeforeStart && datesIn(daysBeforeStart)}
 				onAdd={
 					allowedHere("schedule:create") &&
 					allowedHere("schedule:update") &&
@@ -911,27 +887,6 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 									<p className="text-sm text-neutral-800">{savedDraftLine}</p>
 								)}
 								{!byDates && firstWeekDates}
-								{restDaysFrom && unknownRestDays.length > 0 && (
-									<Callout tone="warning">
-										<span className="block">
-											{t("scheduling.startingContext.restDaysAsk", {
-												days: restDaysText,
-											})}
-										</span>
-										<span className="block">
-											{t("scheduling.startingContext.restDaysFallback", {
-												days: restDaysText,
-												remaining: formatPeriod(
-													{
-														start: restDaysFrom,
-														end: periodStartingOn(mondayOf(restDaysFrom)).end,
-													},
-													language
-												),
-											})}
-										</span>
-									</Callout>
-								)}
 								{byDates ? datesStartingPoint : startingPoint}
 								{!byDates && laterStartingPoints}
 							</div>

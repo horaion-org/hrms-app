@@ -706,6 +706,7 @@ export const ConstraintDialog = ({
 								{...select}
 								multiple
 								emptyText={emptyTextOf(spec)}
+								groupCountText={(count) => t(`${key}.shiftCount`, { count })}
 								selectAllLabel={t(`${key}.selectAll`)}
 								value={shownValuesOf(spec, value)}
 								wholeGroups={spec.kind === "SHIFT"}

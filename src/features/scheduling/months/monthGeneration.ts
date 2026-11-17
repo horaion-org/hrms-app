@@ -6,6 +6,7 @@ import type {
 	WeekState,
 } from "@/features/scheduling/months/api";
 import { EARLIER_WEEK_FAILED } from "@/features/scheduling/schedules/scheduleRefusal";
+import { rosterPartBefore } from "@/features/scheduling/dates/datesSetup";
 import type { WeekChoiceIds } from "@/features/scheduling/weekChoice";
 
 /*
@@ -211,16 +212,23 @@ const STATES_WITH_A_ROSTER: ReadonlyArray<WeekState> = [
 export const rosterCarriesOver = (state: WeekState): boolean =>
 	STATES_WITH_A_ROSTER.includes(state);
 
-/** Whether the week before the month's week at `index` is chosen or has a roster, so it carries into it. */
+/**
+ * Whether the week before the month's week at `index` carries into it: it is
+ * chosen in this run (it has a roster by then), being generated (the API
+ * queues the next week behind it), or a roster covers the day before the week.
+ */
 const weekBeforeCarriesOver = (
 	month: ScheduleMonth,
 	index: number,
 	chosen: ReadonlyArray<string>
 ): boolean => {
 	const before = month.weeks[index - 1];
+	const week = month.weeks[index];
+	if (before === undefined || week === undefined) return false;
 	return (
-		before !== undefined &&
-		(chosen.includes(before.periodStart) || rosterCarriesOver(before.state))
+		chosen.includes(before.periodStart) ||
+		before.state === "GENERATING" ||
+		rosterPartBefore(week.periodStart, before.parts) !== undefined
 	);
 };
 

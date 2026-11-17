@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import { daysOf } from "@/common/weeks";
+import { daysOf, mondayOf } from "@/common/weeks";
 import type { DatesPlanWeek, DayRun } from "@/features/scheduling/dates/api";
 import type {
 	MonthWeek,
@@ -7,6 +7,7 @@ import type {
 	WeekState,
 } from "@/features/scheduling/months/api";
 import { hasRoster } from "@/features/scheduling/months/weekStateLooks";
+import type { PreviousWeek } from "@/features/scheduling/startingContext/startingGrid";
 
 /*
  * What Setup shows for a schedule by dates, pure. Dates are ISO strings
@@ -173,24 +174,45 @@ export const daysBeforeOf = (
 ): DayRun | undefined =>
 	firstDay > monday ? { from: monday, to: dayBefore(firstDay) } : undefined;
 
+/** A schedule's days and state: a month read's part, or a dates plan's kept part. */
+type PartDays = Pick<WeekPart, "coveredFrom" | "coveredTo" | "state">;
+
 /**
- * Whether a roster covers the day before a run's first generated day: a part
- * with a roster, among `weeks` (the month reads holding that day), runs over
- * it. When none does, "Before this week" asks about the days before.
+ * The part with a roster that covers the day before a run's first generated
+ * day, among `parts` (the month reads' parts, a dates plan's kept parts);
+ * none when no roster covers it, and "Before this week" asks about the days
+ * before.
  */
-export const rosterCoversDayBefore = (
+export const rosterPartBefore = (
 	firstDay: string,
-	weeks: ReadonlyArray<MonthWeek>
-): boolean => {
+	parts: ReadonlyArray<PartDays>
+): PartDays | undefined => {
 	const day = dayBefore(firstDay);
-	return weeks.some((week) =>
-		week.parts.some(
-			(part) =>
-				hasRoster(part.state) &&
-				part.coveredFrom <= day &&
-				part.coveredTo >= day
-		)
+	return parts.find(
+		(part) =>
+			hasRoster(part.state) && part.coveredFrom <= day && part.coveredTo >= day
 	);
+};
+
+/**
+ * What "Before this week" says of the days before a run's first generated
+ * day: carried over from the roster part that covers the day before (a whole
+ * week by its Monday, a shorter part by its days), or none.
+ */
+export const previousBefore = (
+	firstDay: string,
+	parts: ReadonlyArray<PartDays>
+): PreviousWeek => {
+	const part = rosterPartBefore(firstDay, parts);
+	if (part === undefined) return { kind: "none" };
+	const carried = {
+		kind: "carried",
+		periodStart: mondayOf(part.coveredFrom),
+		uncovered: 0,
+	} as const;
+	return dayCountOf(part.coveredFrom, part.coveredTo) === 7
+		? carried
+		: { ...carried, days: { from: part.coveredFrom, to: part.coveredTo } };
 };
 
 /** Every date of a run of days, in order. */

@@ -61,11 +61,14 @@ export type SelectProps = SharedProps &
 				 */
 				selectAllLabel?: string;
 				/**
-				 * Makes each group heading a row that chooses or clears every
-				 * available option of that group at once, as the select-all row
-				 * does for all of them.
+				 * Makes each group of several options a header row that chooses or
+				 * clears every available option of that group at once, as the
+				 * select-all row does for all of them. A group of one option is that
+				 * option's row alone, its group named after the label.
 				 */
 				wholeGroups?: boolean;
+				/** The muted text after a whole-group header, from its option count, e.g. "2 shifts"; none without it. */
+				groupCountText?: (count: number) => string;
 		  }
 	);
 
@@ -86,6 +89,43 @@ const optionRuns = (options: Array<SelectOption>): Array<OptionRun> =>
 		else runs.push({ group: option.group, options: [option] });
 		return runs;
 	}, []);
+
+/** An option's group, to name after its label in a one-option group; none when it only repeats the label. */
+const groupNoteOf = (option: SelectOption): string | undefined =>
+	option.group !== undefined &&
+	option.group.trim().toLowerCase() !== option.label.trim().toLowerCase()
+		? option.group
+		: undefined;
+
+/**
+ * A row's text, then any muted note after it. The note takes only the room
+ * left, so it is cut first and the list never scrolls sideways; the space
+ * between them keeps the two apart in the row's accessible name.
+ */
+const RowText = ({
+	text,
+	note,
+}: {
+	text: string;
+	note: string | undefined;
+}): FunctionComponent =>
+	note === undefined ? (
+		<span className="truncate">{text}</span>
+	) : (
+		<span className="flex min-w-0 flex-1 items-baseline gap-2">
+			<span className="truncate">{text}</span>{" "}
+			<span className="min-w-0 flex-1 truncate font-normal text-neutral-600">
+				{note}
+			</span>
+		</span>
+	);
+
+/** Whether a run is a group of several options, which whole-groups mode lists under a header row. */
+const isGroupOfSeveral = (run: OptionRun | undefined): boolean =>
+	run?.group !== undefined && run.options.length > 1;
+
+/** The line above a run in whole-groups mode: between a group of several and its neighbours, not above the first run. */
+const dividerClasses = "border-t border-neutral-300";
 
 const statusFocusClasses =
 	"focus:outline-2 focus:outline-solid focus:outline-offset-2 focus:outline-ink-blue-500";
@@ -115,6 +155,7 @@ export const Select = (props: SelectProps): FunctionComponent => {
 	} = props;
 	const selectAllLabel = props.multiple ? props.selectAllLabel : undefined;
 	const wholeGroups = props.multiple === true && props.wholeGroups === true;
+	const groupCountText = props.multiple ? props.groupCountText : undefined;
 	// With a select-all or whole-group row the Select keeps its own value, so
 	// the row can set many options at once even when the caller gave only a default.
 	const keepsOwnValue = selectAllLabel !== undefined || wholeGroups;
@@ -158,13 +199,18 @@ export const Select = (props: SelectProps): FunctionComponent => {
 		) : (
 			<CheckboxIcon className="size-5 text-neutral-400" />
 		);
-	const renderOption = (option: SelectOption): ReactNode => (
+	/** An option's row: indented under its group's header, or with its group named after the label. */
+	const renderOption = (
+		option: SelectOption,
+		{ indented = false, note }: { indented?: boolean; note?: string } = {}
+	): ReactNode => (
 		<ListboxOption
 			key={option.value}
 			disabled={option.disabled}
 			value={option.value}
 			className={joinClassNames(
-				"flex h-10 items-center justify-between gap-3 px-4 text-sm select-none pointer-coarse:min-h-11",
+				"flex h-10 items-center justify-between gap-3 text-sm select-none pointer-coarse:min-h-11",
+				indented ? "pr-4 pl-8" : "px-4",
 				option.disabled
 					? "cursor-not-allowed text-neutral-500"
 					: "cursor-pointer text-neutral-800 data-focus:bg-neutral-100"
@@ -172,7 +218,7 @@ export const Select = (props: SelectProps): FunctionComponent => {
 		>
 			{({ selected }) => (
 				<>
-					<span className="truncate">{option.label}</span>
+					<RowText note={note} text={option.label} />
 					<span className="size-5 shrink-0">
 						{props.multiple ? (
 							selected ? (
@@ -326,21 +372,40 @@ export const Select = (props: SelectProps): FunctionComponent => {
 									</span>
 								</ListboxOption>
 							)}
-							{optionRuns(options).map((run, index) =>
-								run.group === undefined ? (
-									<Fragment key={`run-${String(index)}`}>
-										{run.options.map(renderOption)}
-									</Fragment>
-								) : (
+							{optionRuns(options).map((run, index, runs) => {
+								const key = `run-${String(index)}`;
+								const headingId = `${groupId}-${String(index)}`;
+								const divider =
+									wholeGroups &&
+									index > 0 &&
+									(isGroupOfSeveral(run) || isGroupOfSeveral(runs[index - 1]))
+										? dividerClasses
+										: undefined;
+								if (wholeGroups && !isGroupOfSeveral(run))
+									return (
+										<div key={key} className={divider}>
+											{run.options.map((option) =>
+												renderOption(option, { note: groupNoteOf(option) })
+											)}
+										</div>
+									);
+								if (run.group === undefined)
+									return (
+										<Fragment key={key}>
+											{run.options.map((option) => renderOption(option))}
+										</Fragment>
+									);
+								return (
 									<div
-										key={`run-${String(index)}`}
-										aria-labelledby={`${groupId}-${String(index)}`}
+										key={key}
+										aria-labelledby={headingId}
+										className={divider}
 										role="group"
 									>
 										{wholeGroups ? (
 											<ListboxOption
-												className="flex h-10 cursor-pointer items-center justify-between gap-3 px-4 text-xs font-semibold tracking-wide text-neutral-700 uppercase select-none data-focus:bg-neutral-100"
-												id={`${groupId}-${String(index)}`}
+												className="flex h-10 cursor-pointer items-center justify-between gap-3 bg-neutral-50 px-4 text-sm font-semibold text-neutral-900 select-none data-focus:bg-neutral-100"
+												id={headingId}
 												value={`${WHOLE_GROUP}${run.group}`}
 												aria-label={t("select.wholeGroup", {
 													group: run.group,
@@ -351,7 +416,10 @@ export const Select = (props: SelectProps): FunctionComponent => {
 													)
 												}
 											>
-												<span className="truncate">{run.group}</span>
+												<RowText
+													note={groupCountText?.(run.options.length)}
+													text={run.group}
+												/>
 												<span className="size-5 shrink-0">
 													{stateIcon(groupState(run.group))}
 												</span>
@@ -359,15 +427,17 @@ export const Select = (props: SelectProps): FunctionComponent => {
 										) : (
 											<div
 												className="px-4 pt-2 pb-1 text-xs font-semibold tracking-wide text-neutral-700 uppercase"
-												id={`${groupId}-${String(index)}`}
+												id={headingId}
 											>
 												{run.group}
 											</div>
 										)}
-										{run.options.map(renderOption)}
+										{run.options.map((option) =>
+											renderOption(option, { indented: wholeGroups })
+										)}
 									</div>
-								)
-							)}
+								);
+							})}
 						</ListboxOptions>
 					</>
 				);

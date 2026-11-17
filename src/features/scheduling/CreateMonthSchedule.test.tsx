@@ -783,7 +783,7 @@ describe("Create schedules for a month: ticking weeks", () => {
 		).toBeVisible();
 	});
 
-	it("given_aStartedWeek_when_onSetup_then_asksAboutMondayAndOffersBeforeThisWeek", async () => {
+	it("given_aStartedWeek_when_onSetup_then_oneNoticeNamesItsDaysBeforeTodayWithItsButton", async () => {
 		const user = userEvent.setup();
 		await open(NEW_NOVEMBER, novemberRoutes());
 
@@ -793,19 +793,24 @@ describe("Create schedules for a month: ticking weeks", () => {
 			})
 		);
 
-		expect(
+		const notice = (
 			await screen.findByText(
-				"Were rest days already given on Mon, Nov 9, Tue, Nov 10, and Wed, Nov 11? Mark them under Before this week, so the week’s rest day counts them."
+				"Horaion doesn’t know what people worked on Mon, Nov 9, Tue, Nov 10, and Wed, Nov 11, or the week before."
 			)
-		).toBeInTheDocument();
+		).closest("[role='note']");
+		expect(notice).toHaveTextContent(
+			"Mark any rest days already given, so the week’s rest day counts them. Left unknown, they count as days nobody worked."
+		);
 		expect(
-			screen.getByText(
-				/^If you go on, Mon, Nov 9, Tue, Nov 10, and Wed, Nov 11 are taken as days nobody worked: no rest day is counted on them, so the rest day must fall on Nov 12\s?–\s?15, 2026\.$/
-			)
-		).toBeInTheDocument();
-		expect(
-			screen.getByText("Horaion doesn’t know what people worked last week.")
+			within(notice as HTMLElement).getByRole("button", {
+				name: "Add last week’s shifts",
+			})
 		).toBeVisible();
+		// Asked once: no second warning names the same days.
+		expect(
+			screen.getAllByText(/Mon, Nov 9, Tue, Nov 10, and Wed, Nov 11/)
+		).toHaveLength(1);
+		expect(screen.queryByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeNull();
 	});
 
 	it("given_aStartedWeekWithNothingRosteredBefore_when_daysBeforeAdded_then_savesItsDraftFromTodayAndOpensItsGrid", async () => {
@@ -877,19 +882,21 @@ describe("Create schedules for a month: ticking weeks", () => {
 			await screen.findByRole("checkbox", { name: STARTED_WEEK })
 		);
 
-		expect(await screen.findByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeVisible();
+		expect(
+			await screen.findByText(
+				/^Horaion doesn’t know what people worked on Mon, Nov 9/
+			)
+		).toBeVisible();
 		expect(
 			screen.getByRole("button", { name: "Add last week’s shifts" })
 		).toBeVisible();
 	});
 
-	it("given_aWeekStartingMonday_when_onSetup_then_noPrompt", async () => {
+	it("given_aWeekStartingMonday_when_onSetup_then_theNoticeNamesNoDaysOfThisWeek", async () => {
 		await open(NEW_NOVEMBER, novemberRoutes());
 
-		await screen.findByText(
-			"Horaion doesn’t know what people worked last week."
-		);
-		expect(screen.queryByText(/^Were rest days already given/)).toBeNull();
+		await screen.findByText(LAST_WEEKS_DAYS_UNKNOWN);
+		expect(screen.queryByText(/doesn’t know what people worked on/)).toBeNull();
 	});
 
 	it("given_theFirstTickedWeekAfterUntickedWeeks_when_hoursAdded_then_savesThatWeekAndTheHoursRunToTheDayBeforeIt", async () => {
@@ -1451,7 +1458,17 @@ describe("Create schedules for a month: where everyone starts", () => {
 				...december,
 				weeks: december.weeks.map((week) =>
 					week.periodStart === "2026-12-14"
-						? { ...week, state: "TO_REVIEW", scheduleId: "s-14" }
+						? {
+								...week,
+								state: "TO_REVIEW",
+								scheduleId: "s-14",
+								parts: [
+									{
+										...publishedPart("s-14", "2026-12-14", "2026-12-20"),
+										state: "TO_REVIEW",
+									},
+								],
+							}
 						: week
 				),
 			}),
@@ -1460,6 +1477,32 @@ describe("Create schedules for a month: where everyone starts", () => {
 		expect(await screen.findByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeVisible();
 		expect(screen.getAllByText(LAST_WEEKS_DAYS_UNKNOWN)).toHaveLength(1);
 		expect(screen.queryByText(/^Dec 21\s?–\s?27$/)).toBeNull();
+	});
+
+	it("given_anUntickedWeekRosteredOnlyToWednesday_when_onSetup_then_theNextTickedWeekIsAskedUnderItsDates", async () => {
+		const december = ungeneratedMonthFixture();
+		await open(NEW_DECEMBER, {
+			[`GET ${DECEMBER}`]: reply({
+				...december,
+				weeks: december.weeks.map((week) =>
+					week.periodStart === "2026-12-14"
+						? {
+								...week,
+								state: "PUBLISHED",
+								scheduleId: "s-14",
+								includedInMonthGeneration: false,
+								parts: [publishedPart("s-14", "2026-12-14", "2026-12-16")],
+							}
+						: week
+				),
+			}),
+		});
+
+		const gapWeek = await vi.waitFor(() => weekBlock(/^Dec 21\s?–\s?27$/));
+		expect(within(gapWeek).getByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeVisible();
+		expect(
+			within(gapWeek).getByRole("button", { name: "Add last week’s shifts" })
+		).toBeVisible();
 	});
 
 	it("given_consecutiveTickedWeeks_when_onSetup_then_asksOnlyForTheFirst", async () => {
@@ -1617,7 +1660,11 @@ describe("Create schedules for a month: by dates", () => {
 			[`GET ${SCHEDULES}/s-gala/starting-days`]: reply(firstWeek()),
 		});
 
-		expect(await screen.findByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeVisible();
+		expect(
+			await screen.findByText(
+				/^Horaion doesn’t know what people worked on Mon, Nov 16/
+			)
+		).toBeVisible();
 		await user.click(
 			await screen.findByRole("button", { name: "Add last week’s shifts" })
 		);
@@ -1676,7 +1723,7 @@ describe("Create schedules for a month: by dates", () => {
 		});
 	});
 
-	it("given_datesFromThursdayAfterARosteredPartOfTheSameWeek_when_onSetup_then_asksNothing", async () => {
+	it("given_datesFromThursdayAfterARosteredPartOfTheSameWeek_when_onSetup_then_saysItCarriesOverFromThatPart", async () => {
 		const plan = datesPlanFixture();
 		const [first, second] = plan.weeks;
 		await open(
@@ -1701,7 +1748,11 @@ describe("Create schedules for a month: by dates", () => {
 			})
 		);
 
-		await screen.findByRole("table", { name: "What this creates" });
+		expect(
+			await screen.findByText(
+				/^Carried over from the roster of Nov 16\s?–\s?18, 2026\.$/
+			)
+		).toBeVisible();
 		expect(screen.queryByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeNull();
 		expect(addLastWeek()).toBeNull();
 	});
@@ -1738,17 +1789,18 @@ describe("Create schedules for a month: by dates", () => {
 		);
 	});
 
-	it("given_datesFromThursdayWithNothingBefore_when_onSetup_then_asksAboutMondayToWednesday", async () => {
+	it("given_datesFromThursdayWithNothingBefore_when_onSetup_then_oneNoticeNamesMondayToWednesday", async () => {
 		await open(NEW_DATES, datesRoutes());
 
 		expect(
 			await screen.findByText(
-				"Were rest days already given on Mon, Nov 16, Tue, Nov 17, and Wed, Nov 18? Mark them under Before this week, so the week’s rest day counts them."
+				"Horaion doesn’t know what people worked on Mon, Nov 16, Tue, Nov 17, and Wed, Nov 18, or the week before."
 			)
-		).toBeInTheDocument();
+		).toBeVisible();
+		// Asked once: no second warning names the same days.
 		expect(
-			screen.getByText(/so the rest day must fall on Nov 19\s?–\s?22, 2026\.$/)
-		).toBeInTheDocument();
+			screen.getAllByText(/Mon, Nov 16, Tue, Nov 17, and Wed, Nov 18/)
+		).toHaveLength(1);
 	});
 
 	it("given_allDaysTaken_when_onSetup_then_nextWaitsAndSaysUseMonth", async () => {
@@ -1848,8 +1900,14 @@ describe("Create schedules for a month: by dates", () => {
 			expect(
 				calls.some((call) => call.path === `${SCHEDULES}/s-gala/starting-days`)
 			).toBe(true);
-			expect(screen.queryByText(/^Were rest days already given/)).toBeNull();
+			expect(
+				screen.getByText(
+					"No roster before this week. Days are added for 2 people; everyone else starts rested."
+				)
+			).toBeVisible();
 		});
+		expect(screen.queryByText(/doesn’t know what people worked on/)).toBeNull();
+		expect(screen.queryByText(/^Still unknown/)).toBeNull();
 		const body = await generateDates(user, calls);
 
 		expect(body).toMatchObject({
@@ -1865,9 +1923,9 @@ describe("Create schedules for a month: by dates", () => {
 
 		expect(
 			await screen.findByText(
-				/^If you go on, Mon, Nov 16, Tue, Nov 17, and Wed, Nov 18 are taken as days nobody worked: no rest day is counted on them/
+				"Mark any rest days already given, so the week’s rest day counts them. Left unknown, they count as days nobody worked."
 			)
-		).toBeInTheDocument();
+		).toBeVisible();
 		const body = await generateDates(user, calls);
 
 		expect(body).toMatchObject({
