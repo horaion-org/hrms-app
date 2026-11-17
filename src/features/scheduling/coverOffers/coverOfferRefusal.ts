@@ -1,4 +1,4 @@
-import { ApiProblemError } from "@/common/problem";
+import { refusalCodeOf } from "@/common/refusal";
 
 /** Why sending, recording, withdrawing or answering an offer didn't go through: one message each. */
 export type CoverOfferRefusal =
@@ -36,6 +36,7 @@ const REFUSALS: Readonly<Record<string, CoverOfferRefusal>> = {
 
 /** Which message a failed offer action shows. Pure. */
 export const coverOfferRefusal = (error: unknown): CoverOfferRefusal => {
-	if (!(error instanceof ApiProblemError)) return "failed";
-	return REFUSALS[`${error.status} ${error.errorCode ?? ""}`] ?? "failed";
+	const code = refusalCodeOf(error);
+	if (code === undefined) return "failed";
+	return REFUSALS[code] ?? "failed";
 };

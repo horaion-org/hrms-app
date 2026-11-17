@@ -1,4 +1,5 @@
 import { ApiProblemError } from "@/common/problem";
+import { refusalCodeOf } from "@/common/refusal";
 import { LEAVE_REFUSAL_CODES } from "@/features/leave/leaveRefusal";
 import type {
 	RosterChangeBody,
@@ -193,8 +194,7 @@ export type RosterLeaveRefusal = "overlaps" | "forbidden" | "failed";
 export const rosterLeaveRefusal = (error: unknown): RosterLeaveRefusal => {
 	if (!(error instanceof ApiProblemError)) return "failed";
 	if (error.status === 403 || error.status === 404) return "forbidden";
-	return `${error.status} ${error.errorCode ?? ""}` ===
-		LEAVE_REFUSAL_CODES.overlaps
+	return refusalCodeOf(error) === LEAVE_REFUSAL_CODES.overlaps
 		? "overlaps"
 		: "failed";
 };
