@@ -793,6 +793,9 @@ describe("Editing a person", () => {
 	it("returns to the profile on cancel, asking first only if something changed", async () => {
 		const user = userEvent.setup();
 		const { opened, calls } = await openEditing();
+		expect(
+			screen.queryByRole("checkbox", { name: "Send an invitation now" })
+		).not.toBeInTheDocument();
 
 		await user.click(button("Cancel"));
 		await waitFor(() => {

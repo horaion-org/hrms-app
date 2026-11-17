@@ -276,7 +276,11 @@ describe("Add employee", () => {
 		await screen.findByText(/Priya Nair was added/);
 		expect(opened.router.state.location.pathname).toBe("/people");
 		expect(sent(calls, CREATE_COMPANY).map((call) => call.body)).toEqual([
-			{ displayName: "Priya Nair", email: "priya@company.com" },
+			{
+				displayName: "Priya Nair",
+				email: "priya@company.com",
+				sendInvitation: true,
+			},
 		]);
 		expect(sent(calls, CREATE)).toEqual([]);
 		expect(sent(calls, ASSIGN)).toEqual([]);
@@ -307,7 +311,11 @@ describe("Add employee", () => {
 		await user.click(confirm());
 		await screen.findByText(/Priya Nair was added/);
 		expect(sent(calls, CREATE_COMPANY).map((call) => call.body)).toEqual([
-			{ displayName: "Priya Nair", email: "priya@company.com" },
+			{
+				displayName: "Priya Nair",
+				email: "priya@company.com",
+				sendInvitation: true,
+			},
 		]);
 		expect(sent(calls, ASSIGN)).toHaveLength(1);
 	});
@@ -458,6 +466,50 @@ describe("Add employee", () => {
 				employmentType: "CONTRACT",
 				hireDate: "2026-10-01",
 				probationEndDate: "2026-10-30",
+				sendInvitation: true,
+			},
+		]);
+	});
+
+	it("invites the new person by default, saying the email goes to their address", async () => {
+		stubApi(routes());
+		await open();
+
+		const invite = await screen.findByRole("checkbox", {
+			name: "Send an invitation now",
+		});
+		expect(invite).toBeChecked();
+		expect(invite).toHaveAccessibleDescription(
+			"We’ll email an invitation to log in to this address."
+		);
+	});
+
+	it("adds the person without an invitation when it is unticked, and says nobody was emailed", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi(routes());
+		await open();
+
+		await fillRequired(user);
+		const invite = screen.getByRole("checkbox", {
+			name: "Send an invitation now",
+		});
+		await user.click(invite);
+		expect(invite).not.toBeChecked();
+		expect(invite).toHaveAccessibleDescription(
+			"No e-mail is sent. You can invite them later from their profile."
+		);
+		await user.click(confirm());
+
+		expect(
+			await screen.findByText(
+				"Priya Nair was added. No email was sent: invite them from their profile when you’re ready."
+			)
+		).toHaveAttribute("role", "status");
+		expect(sent(calls, CREATE).map((call) => call.body)).toEqual([
+			{
+				displayName: "Priya Nair",
+				email: "priya@company.com",
+				sendInvitation: false,
 			},
 		]);
 	});
@@ -494,7 +546,11 @@ describe("Add employee", () => {
 
 		await screen.findByText(/Priya Nair was added/);
 		expect(sent(calls, CREATE).map((call) => call.body)).toEqual([
-			{ displayName: "Priya Nair", email: "priya@company.com" },
+			{
+				displayName: "Priya Nair",
+				email: "priya@company.com",
+				sendInvitation: true,
+			},
 		]);
 		expect(sent(calls, ASSIGN)).toEqual([]);
 	});

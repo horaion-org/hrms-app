@@ -102,7 +102,8 @@ export const useAddEmployee = (
 		await navigate({
 			to: "/people",
 			state: withPeopleNotice({
-				kind: "added",
+				kind:
+					values.sendInvitation === false ? "addedWithoutInvitation" : "added",
 				name: person.displayName,
 				roleNotAssigned,
 				termsNotSet,

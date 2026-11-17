@@ -10,6 +10,7 @@ import type { ProfileFormValues } from "@/features/people/profileFormSchema";
  * The create request for a filled-in profile. Fields left empty are left out,
  * never sent as "", which the API rejects. The Department goes in the URL and
  * a system role is assigned separately, so neither is part of the body.
+ * Whether to invite them now is sent as the form holds it.
  */
 export const profileRequest = ({
 	displayName,
@@ -22,6 +23,7 @@ export const profileRequest = ({
 	employmentType,
 	hireDate,
 	probationEndDate,
+	sendInvitation,
 }: ProfileFormValues): CreateMemberProfileBody => ({
 	displayName: displayName.trim(),
 	email: email.trim(),
@@ -32,6 +34,7 @@ export const profileRequest = ({
 	...(employmentType && { employmentType }),
 	...(hireDate && { hireDate }),
 	...(probationEndDate && { probationEndDate }),
+	...(sendInvitation !== undefined && { sendInvitation }),
 });
 
 /** A profile as the form holds it, with the status it is saved with. */
