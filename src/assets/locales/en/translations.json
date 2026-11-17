@@ -4627,6 +4627,7 @@
 			"jobShort": "{{job}} short",
 			"unknownJob": "A job title",
 			"wholeRoster": "Whole roster",
+			"ruleWithoutPlace": "The engine could not say who or which day. Check the changes made by hand since this roster was generated, or validate again.",
 			"rosterNote": "Roster note",
 			"summary": {
 				"mustFix_one": "{{count}} to fix",

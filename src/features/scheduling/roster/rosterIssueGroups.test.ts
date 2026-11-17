@@ -91,6 +91,66 @@ describe("rosterIssues", () => {
 		});
 	});
 
+	it("words a rule the engine named with no violations, and says what to do", () => {
+		const [issue] = rosterIssues(
+			input({
+				brokenMusts: [
+					ruleFixture({ rule: "impossible_shift_assignment_is_zero" }),
+				],
+			})
+		);
+
+		expect(issue).toMatchObject({
+			who: "scheduling.issues.wholeRoster",
+			rule: "scheduling.rulesCheck.rule.impossible_shift_assignment_is_zero",
+			hint: "scheduling.issues.ruleWithoutPlace",
+		});
+	});
+
+	it("names the person and day of the same rule when the engine sends violations, with no hint", () => {
+		const [issue] = rosterIssues(
+			input({
+				brokenMusts: [
+					ruleFixture({
+						rule: "impossible_shift_assignment_is_zero",
+						violations: [
+							{ employeeId: "mp-1", date: "2026-10-14", messages: [] },
+						],
+					}),
+				],
+			})
+		);
+
+		expect(issue).toMatchObject({
+			who: "Aisha Rahman",
+			day: "2026-10-14",
+			rule: "scheduling.rulesCheck.rule.impossible_shift_assignment_is_zero",
+		});
+		expect(issue?.hint).toBeUndefined();
+	});
+
+	it("gives the hint only to an item with no person and no day", () => {
+		const issues = rosterIssues(
+			input({
+				brokenMusts: [
+					ruleFixture({
+						violations: [
+							{ employeeId: null, date: null, messages: [] },
+							{ employeeId: "mp-1", date: null, messages: [] },
+							{ employeeId: null, date: "2026-10-14", messages: [] },
+						],
+					}),
+				],
+			})
+		);
+
+		expect(issues.map((issue) => issue.hint)).toEqual([
+			"scheduling.issues.ruleWithoutPlace",
+			undefined,
+			undefined,
+		]);
+	});
+
 	it("lists notes for information, and nothing twice", () => {
 		const issues = rosterIssues(
 			input({

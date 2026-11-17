@@ -30,6 +30,8 @@ export const IssueRow = ({
 	]
 		.filter((part): part is string => part !== undefined)
 		.join(" · ");
+	// An item with no day has no "when" line, so its hint takes that line.
+	const secondLine = when || issue.hint;
 	const findCover =
 		action.kind === "findCover" && onFindCover
 			? (): void => {
@@ -50,7 +52,9 @@ export const IssueRow = ({
 				<span className="text-sm font-semibold text-neutral-900">
 					{issue.who}
 				</span>
-				{when ? <span className="text-sm text-neutral-700">{when}</span> : null}
+				{secondLine ? (
+					<span className="text-sm text-neutral-700">{secondLine}</span>
+				) : null}
 				<span className="text-sm text-neutral-700">{issue.rule}</span>
 			</div>
 			{act ? (
