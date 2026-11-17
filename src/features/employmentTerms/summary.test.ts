@@ -67,10 +67,10 @@ describe("weekLines and overtimeShort", () => {
 
 describe("suggestedTermsName", () => {
 	it.each<[WeekFields, string]>([
-		[FIVE_DAY_WEEK, "5-day week, 44 h"],
-		[SIX_DAY_SHIFT, "Shift work, 6 days, 12 h"],
+		[FIVE_DAY_WEEK, "Full-time, 5 days, 44 h"],
 		[PART_TIME_20, "Part-time, 20 h"],
-		[{ ...FIVE_DAY_WEEK, daysPerWeek: null }, "44 h week"],
+		[{ ...FIVE_DAY_WEEK, hoursLimitsApply: false }, "Managers, 5 days, 44 h"],
+		[{ ...FIVE_DAY_WEEK, daysPerWeek: null }, "Full-time, 44 h"],
 	])("names %o", (fields, name) => {
 		expect(suggestedTermsName(fields, PART_TIME_BELOW_MINUTES, t)).toBe(name);
 	});

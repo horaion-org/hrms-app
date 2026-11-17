@@ -8,9 +8,11 @@ import type {
 	TermsOverviewItem,
 	TermsPresets,
 } from "@/features/employmentTerms/api";
-import { overtimeShort, weekLines } from "@/features/employmentTerms/summary";
-import { termsFormValuesOf } from "@/features/employmentTerms/termsForm";
-import { kindOf } from "@/features/employmentTerms/termsKinds";
+import {
+	isPartTimeWeek,
+	overtimeShort,
+	weekLines,
+} from "@/features/employmentTerms/summary";
 import { actionsColumn } from "@/features/organisation/listColumns";
 import { ALL_BRANCHES } from "@/features/workspace/unitSelection";
 
@@ -47,9 +49,6 @@ const statusCell = (terms: TermsOverviewItem, t: TFunction): ReactNode => (
 	</span>
 );
 
-/** The kinds a list row names with a pill; fixed weeks and the company's own read from their figures. */
-const PILL_KINDS = ["SHIFT_WORK", "PART_TIME"] as const;
-
 /**
  * The terms in full, so the list reads in the width Settings gives it: the
  * name with a pill for shift work or part-time, the week and rest day on one
@@ -60,18 +59,18 @@ const termsCell = (
 	presets: TermsPresets | undefined,
 	t: TFunction
 ): ReactNode => {
-	const kind = kindOf(
-		termsFormValuesOf(terms),
-		presets?.presets ?? [],
+	const partTime = isPartTimeWeek(
+		terms.weekMinutes,
 		presets?.partTimeBelowMinutes ?? null
 	);
-	const pill = PILL_KINDS.find((each) => each === kind);
 	const overtime = overtimeShort(terms, presets, t);
 	return (
 		<span className="flex flex-col gap-1">
 			<span className="flex flex-wrap items-center gap-2">
 				{terms.name}
-				{pill && <Badge>{t(`employmentTerms.kinds.${pill}`)}</Badge>}
+				{partTime && (
+					<Badge>{t("employmentTerms.dialog.partTimeBadge")}</Badge>
+				)}
 			</span>
 			<span className="font-normal text-neutral-900">
 				{weekLines(terms, presets, t).join(" · ")}

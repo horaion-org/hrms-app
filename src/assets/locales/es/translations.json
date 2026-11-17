@@ -5863,10 +5863,10 @@
 				"restRostered": "El cuadrante elige el descanso"
 			},
 			"name": {
-				"days": "Semana de {{days}} días, {{week}}",
-				"shiftWork": "Turnos, {{days}} días, {{day}}",
-				"partTime": "Tiempo parcial, {{week}}",
-				"weekOnly": "Semana de {{week}}"
+				"managers": "Mandos",
+				"weekOnly": "{{kind}}, {{week}}",
+				"days_one": "{{kind}}, {{days}} día, {{week}}",
+				"days_other": "{{kind}}, {{days}} días, {{week}}"
 			},
 			"partTimeUntil": "Tiempo parcial (menos de {{line}} a la semana): las horas por encima de sus horas propias son horas adicionales hasta {{full}} a la semana; después, horas extra.",
 			"overDays_one": "Trabaja {{week}} en {{days}} día a la semana.",
@@ -5905,7 +5905,7 @@
 			"daysPerWeek": "Días laborables a la semana",
 			"daysHint": "½ es medio día, como una mañana de sábado.",
 			"dayHours": "Horas normales al día",
-			"weekHours": "Horas normales a la semana",
+			"weekHours": "Horas a la semana",
 			"restDay": "Día de descanso",
 			"restFixed": "El mismo día cada semana",
 			"restFixedDescription": "El mismo día cada semana.",
@@ -5917,7 +5917,7 @@
 			"dailyOvertimeDescription": "Las horas por encima de {{day}} en un día son horas extra, aunque no se hayan alcanzado las {{week}} de la semana.",
 			"hoursLimitsDescription": "Cubren a la mayoría del personal. Se puede dejar fuera a directivos, ejecutivos y a quienes las normas de horas de la Ley no cubren.",
 			"name": "Nombre",
-			"nameHint": "Se sugiere a partir de la semana hasta que escribas uno.",
+			"nameHint": "Sugerido a partir de tus respuestas hasta que escribas uno.",
 			"namePlaceholder": "p. ej., Semana de cinco días, 44 h",
 			"nameCounter": "{{count}}/100",
 			"descriptionLabel": "Descripción (opcional)",
@@ -5944,7 +5944,7 @@
 			"gone": "Estas condiciones de empleo ya no existen.",
 			"hoursRange": "Escribe de {{min}} a {{max}}.",
 			"dayRejected": "Revisa las horas normales al día: están fuera de lo que pueden fijar las condiciones.",
-			"weekRejected": "Revisa las horas normales a la semana: los días laborables y las horas al día deben poder sumarlas.",
+			"weekRejected": "Revisa las horas a la semana: están fuera de lo que pueden fijar unas condiciones, o dan una jornada más larga que la jornada normal más larga. Reduce las horas a la semana o añade días laborables.",
 			"dailyNeedsDay": "Las horas extra después del día normal necesitan un día normal.",
 			"shiftNoDaily": "El trabajo por turnos no tiene horas extra por día. Elige otro tipo, o desmarca las horas extra después del día normal.",
 			"weekUnchanged": "No hay nada que cambiar desde una fecha: la semana laboral es la misma. Cambia antes los días, las horas o el día de descanso, o usa Editar para guardar un nuevo nombre o descripción.",
@@ -6006,7 +6006,33 @@
 				"restChanges": "{{week}}, el día de descanso cambia",
 				"daysVary": "{{week}}, los días varían",
 				"notCovered": "Fuera de las normas de horario de la Ley"
-			}
+			},
+			"startFrom": "Empezar desde",
+			"startFromNote": "Solo un punto de partida. Puedes cambiar cualquier cifra de abajo.",
+			"startFromChanged": "Cambiado respecto al punto de partida. No pasa nada: se guardan las respuestas de abajo.",
+			"workingWeek": "Semana laboral",
+			"dayLine": "Son {{day}} al día.",
+			"dayLineHalf": "Son {{day}} al día, con media jornada de {{half}}.",
+			"dayLineVaries": "Las horas al día varían según el cuadrante.",
+			"fullTimeBadge": "Tiempo completo",
+			"partTimeBadge": "Tiempo parcial",
+			"partTimeLine": "Menos de {{line}} a la semana es tiempo parcial.",
+			"restPartTimeNote": "Las personas a tiempo parcial no tienen un día de descanso fijo aquí. El cuadrante se basa en los días en que dicen estar disponibles.",
+			"restDayHint": "Un día no remunerado a la semana sin trabajo. El contrato modelo del MOM indica el día.",
+			"restRosteredChoice": "Un día distinto cada semana (lo elige el cuadrante)",
+			"covered": {
+				"question": "¿Cubiertos por las normas de horario de la Ley de Empleo?",
+				"yes": "Sí",
+				"yesDescription": "Operarios que ganan hasta {{workman}} al mes y demás personal hasta {{other}} (salario base). Los cuadrantes los mantienen dentro de los límites de horas de la política de trabajo.",
+				"yesDescriptionWithoutPay": "Personal cubierto por las normas de horario de la Ley. Los cuadrantes los mantienen dentro de los límites de horas de la política de trabajo.",
+				"no": "No",
+				"noDescription": "Mandos, directivos y cualquiera por encima de esos salarios. Sus horas se siguen contando, pero los límites y el mínimo legal de horas extra no se aplican."
+			},
+			"dailyByDay": "También después de {{day}} al día, aunque la semana no llegue a {{week}}.",
+			"partTimeOvertimeNote": "Tiempo parcial según la ley: las horas adicionales hasta {{full}} a la semana (la semana de tiempo completo) se pagan a la tarifa normal. Las horas por encima de {{full}} se pagan a {{times}}.",
+			"dayTooLong_one": "{{week}} en {{days}} día son {{day}} al día, más que la jornada normal más larga de {{max}}. Reduce las horas a la semana o añade días laborables.",
+			"dayTooLong_other": "{{week}} en {{days}} días son {{day}} al día, más que la jornada normal más larga de {{max}}. Reduce las horas a la semana o añade días laborables.",
+			"dailyNeedsDays": "Las horas extra por día necesitan días laborables fijos. Elige los días laborables o desmarca las horas extra por día."
 		},
 		"apply": {
 			"title": "¿Cómo se aplica este cambio?",
@@ -6176,7 +6202,7 @@
 			"title": "Estas condiciones, en palabras",
 			"unfinished": "Aún sin terminar: completa o revisa {{fields}}.",
 			"fields": {
-				"weekHours": "las horas normales a la semana",
+				"weekHours": "las horas a la semana",
 				"dayHours": "las horas normales al día",
 				"longestShift": "el turno más largo",
 				"daysPerWeek": "los días laborables a la semana",

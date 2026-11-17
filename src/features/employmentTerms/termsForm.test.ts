@@ -4,7 +4,7 @@ import "@/common/i18n";
 import {
 	FIVE_DAY_WEEK,
 	PART_TIME_20,
-	SIX_DAY_SHIFT,
+	STANDARD_WEEK,
 } from "@/features/employmentTerms/fixtures";
 import {
 	durationLong,
@@ -102,7 +102,7 @@ describe("parseDays", () => {
 describe("termsFormSchema", () => {
 	it("accepts terms that mirror the API's rules", () => {
 		expect(problemsOf(valid)).toEqual({});
-		expect(problemsOf(termsFormValuesOf(SIX_DAY_SHIFT))).toEqual({});
+		expect(problemsOf(termsFormValuesOf(STANDARD_WEEK))).toEqual({});
 		expect(problemsOf(termsFormValuesOf(PART_TIME_20))).toEqual({});
 	});
 
@@ -111,24 +111,8 @@ describe("termsFormSchema", () => {
 		["a week not typed", { weekHours: "" }, { weekHours: "Enter the hours." }],
 		[
 			"hours that aren't whole minutes",
-			{ dayHours: "8.33" },
-			{ dayHours: "Use whole minutes, such as 8:30 or 8:45." },
-		],
-		[
-			"a week longer than its days",
-			{ weekHours: "48" },
-			{
-				weekHours:
-					"5 days of 8 h 48 min make 44 h, less than the 48 h normal hours a week. Raise the hours a day or the working days.",
-			},
-		],
-		[
-			"daily overtime without a day",
-			{ dayHours: "" },
-			{
-				dayHours:
-					"Enter the normal hours a day, or untick overtime after the normal day.",
-			},
+			{ weekHours: "44.33" },
+			{ weekHours: "Use whole minutes, such as 8:30 or 8:45." },
 		],
 		[
 			"a fixed rest day without a weekday",
@@ -144,10 +128,19 @@ describe("termsFormSchema", () => {
 		expect(problemsOf({ ...valid, ...change })).toEqual(problems);
 	});
 
-	it("needs no day when overtime counts by the week only", () => {
-		expect(
-			problemsOf({ ...valid, dailyOvertime: false, dayHours: "" })
-		).toEqual({});
+	it("given_60hOver4Days_when_checked_then_dayAbove12hRefusedWithWhatToDo", () => {
+		const result = termsFormSchema(t, { maxDayMinutes: 720 }).safeParse({
+			...valid,
+			daysPerWeek: "4",
+			weekHours: "60",
+		});
+		expect(result.success ? [] : result.error.issues).toEqual([
+			expect.objectContaining({
+				path: ["weekHours"],
+				message:
+					"60 h over 4 days is 15 h a day, more than the longest normal day of 12 h. Lower the hours a week or add working days.",
+			}),
+		]);
 	});
 });
 
@@ -215,10 +208,8 @@ describe("weekFieldsOf and termsBodyOf", () => {
 			description: FIVE_DAY_WEEK.description,
 			daysPerWeek: 5,
 			weekMinutes: 2640,
-			dayMinutes: 528,
 			restDay: "SUN",
 			dailyOvertime: true,
-			shiftWork: false,
 			hoursLimitsApply: true,
 			overtimePercent: 150,
 			restDayWorkPercent: 200,
@@ -233,10 +224,14 @@ describe("weekFieldsOf and termsBodyOf", () => {
 		).toMatchObject({ dayOffWorkPercent: 175 });
 	});
 
-	it("drops daily overtime for shift work", () => {
+	it("given_44hOver5Days_when_read_then_theDayIsWorkedOut", () => {
+		expect(weekFieldsOf(valid)).toMatchObject({ dayMinutes: 528 });
+	});
+
+	it("given_daysVary_when_read_then_noDayAndNoDailyOvertime", () => {
 		expect(
-			weekFieldsOf({ ...valid, shiftWork: true, dailyOvertime: true })
-		).toMatchObject({ shiftWork: true, dailyOvertime: false });
+			weekFieldsOf({ ...valid, daysPerWeek: "", dailyOvertime: true })
+		).toMatchObject({ dayMinutes: null, dailyOvertime: false });
 	});
 
 	it("has no week while the form is blank", () => {

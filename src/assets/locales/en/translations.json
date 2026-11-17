@@ -5863,10 +5863,10 @@
 				"restRostered": "Roster picks the rest day"
 			},
 			"name": {
-				"days": "{{days}}-day week, {{week}}",
-				"shiftWork": "Shift work, {{days}} days, {{day}}",
-				"partTime": "Part-time, {{week}}",
-				"weekOnly": "{{week}} week"
+				"managers": "Managers",
+				"weekOnly": "{{kind}}, {{week}}",
+				"days_one": "{{kind}}, {{days}} day, {{week}}",
+				"days_other": "{{kind}}, {{days}} days, {{week}}"
 			},
 			"partTimeUntil": "Part-time (under {{line}} a week): hours past their own hours are extra hours until {{full}} a week, then overtime.",
 			"overDays_one": "Works {{week}} over {{days}} day a week.",
@@ -5905,7 +5905,7 @@
 			"daysPerWeek": "Working days a week",
 			"daysHint": "½ is a half day, such as a Saturday morning.",
 			"dayHours": "Normal hours a day",
-			"weekHours": "Normal hours a week",
+			"weekHours": "Hours a week",
 			"restDay": "Rest day",
 			"restFixed": "Same day each week",
 			"restFixedDescription": "The same weekday every week.",
@@ -5917,7 +5917,7 @@
 			"dailyOvertimeDescription": "Hours past {{day}} in a day count as overtime, even before the week’s {{week}} are reached.",
 			"hoursLimitsDescription": "Most staff are covered. Managers, executives and others the Act’s hours rules don’t cover can be left out.",
 			"name": "Name",
-			"nameHint": "Suggested from the week until you type one.",
+			"nameHint": "Suggested from your answers until you type one.",
 			"namePlaceholder": "e.g. Five-day week, 44 h",
 			"nameCounter": "{{count}}/100",
 			"descriptionLabel": "Description (optional)",
@@ -5944,7 +5944,7 @@
 			"gone": "These employment terms no longer exist.",
 			"hoursRange": "Enter {{min}} to {{max}}.",
 			"dayRejected": "Check the normal hours a day: they’re outside what terms may set.",
-			"weekRejected": "Check the normal hours a week: the working days and hours a day must be able to hold them.",
+			"weekRejected": "Check the hours a week: they are outside what terms may set, or make a day longer than the longest normal day. Lower the hours a week or add working days.",
 			"dailyNeedsDay": "Overtime after the normal day needs a normal day.",
 			"shiftNoDaily": "Shift work has no overtime by the day. Choose another kind, or untick overtime after the normal day.",
 			"weekUnchanged": "Nothing changes from a date: the working week is the same. Change the days, hours or rest day first, or use Edit to save a new name or description.",
@@ -6006,7 +6006,33 @@
 				"restChanges": "{{week}}, rest day changes",
 				"daysVary": "{{week}}, days vary",
 				"notCovered": "Not under the Act’s hour rules"
-			}
+			},
+			"startFrom": "Start from",
+			"startFromNote": "A starting point only. Every figure below can be changed.",
+			"startFromChanged": "Changed from the starting point. That is fine: the answers below are what gets saved.",
+			"workingWeek": "Working week",
+			"dayLine": "That is {{day}} a day.",
+			"dayLineHalf": "That is {{day}} a day, with a half day of {{half}}.",
+			"dayLineVaries": "Hours a day vary with the roster.",
+			"fullTimeBadge": "Full-time",
+			"partTimeBadge": "Part-time",
+			"partTimeLine": "Under {{line}} a week is part-time.",
+			"restPartTimeNote": "Part-timers have no fixed rest day here. The roster works from the days they say they are available.",
+			"restDayHint": "One unpaid day a week with no work. MOM’s sample contract names the day.",
+			"restRosteredChoice": "A different day each week (the roster picks it)",
+			"covered": {
+				"question": "Covered by the Employment Act’s working-hour rules?",
+				"yes": "Yes",
+				"yesDescription": "Workmen earning up to {{workman}} a month and other staff up to {{other}} (basic pay). Rosters keep them within the Work policy’s hour limits.",
+				"yesDescriptionWithoutPay": "Staff the Act’s working-hour rules cover. Rosters keep them within the Work policy’s hour limits.",
+				"no": "No",
+				"noDescription": "Managers, executives and anyone above those salaries. Their hours are still counted, but the limits and the legal overtime minimum do not bind."
+			},
+			"dailyByDay": "Also after {{day}} in a day, even before the week reaches {{week}}.",
+			"partTimeOvertimeNote": "Part-time by law: extra hours up to {{full}} a week (a full-timer’s week) are paid at the normal rate. Hours past {{full}} are paid at {{times}}.",
+			"dayTooLong_one": "{{week}} over {{days}} day is {{day}} a day, more than the longest normal day of {{max}}. Lower the hours a week or add working days.",
+			"dayTooLong_other": "{{week}} over {{days}} days is {{day}} a day, more than the longest normal day of {{max}}. Lower the hours a week or add working days.",
+			"dailyNeedsDays": "Overtime by the day needs fixed working days. Choose the working days, or untick overtime by the day."
 		},
 		"apply": {
 			"title": "How should this change apply?",
@@ -6176,7 +6202,7 @@
 			"title": "These terms in words",
 			"unfinished": "Not finished yet: fill in or check {{fields}}.",
 			"fields": {
-				"weekHours": "the normal hours a week",
+				"weekHours": "the hours a week",
 				"dayHours": "the normal hours a day",
 				"longestShift": "the longest shift",
 				"daysPerWeek": "the working days a week",

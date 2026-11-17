@@ -11,7 +11,6 @@ import {
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
-import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { isWeekday, WEEKDAYS } from "@/common/weekdays";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
@@ -19,6 +18,7 @@ import { Input } from "@/components/forms/Input";
 import { RadioCard } from "@/components/forms/RadioCard";
 import { Select } from "@/components/forms/Select";
 import { Textarea } from "@/components/forms/Textarea";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Dialog } from "@/components/ui/Dialog";
@@ -28,20 +28,29 @@ import {
 	type ApplyChange,
 	type EmploymentTermsBody,
 	type TermsOverviewItem,
+	type TermsPreset,
 } from "@/features/employmentTerms/api";
 import { ApplyChangeStep } from "@/features/employmentTerms/ApplyChangeStep";
 import {
-	durationLong,
+	durationShort,
 	formatDays,
 	parseHours,
 } from "@/features/employmentTerms/hours";
-import { timesOfPercent } from "@/features/employmentTerms/rates";
+import { normalDayMinutes } from "@/features/employmentTerms/normalDay";
+import { formatTimes, timesOfPercent } from "@/features/employmentTerms/rates";
 import {
 	applyChangeRefusal,
 	isHeldRefusal,
 	termsSaveRefusal,
 } from "@/features/employmentTerms/refusals";
 import {
+	holdsPreset,
+	presetLine,
+	valuesOfPreset,
+} from "@/features/employmentTerms/startFrom";
+import {
+	hasDayOff,
+	isPartTimeWeek,
 	overtimeSentence,
 	suggestedTermsName,
 } from "@/features/employmentTerms/summary";
@@ -61,15 +70,6 @@ import {
 	weekFieldsOf,
 	type TermsFormValues,
 } from "@/features/employmentTerms/termsForm";
-import {
-	kindDescription,
-	kindLabel,
-	kindOf,
-	presetOfKind,
-	TERMS_KINDS,
-	valuesForKind,
-	type TermsKind,
-} from "@/features/employmentTerms/termsKinds";
 import { readBackOf } from "@/features/employmentTerms/termsReadBack";
 import { TermsSummary } from "@/features/employmentTerms/TermsSummary";
 import { useEmploymentTermsActions } from "@/features/employmentTerms/useEmploymentTermsActions";
@@ -102,7 +102,6 @@ const FIELDS = [
 	"name",
 	"description",
 	"daysPerWeek",
-	"dayHours",
 	"weekHours",
 	"restWeekday",
 	"overtimeTimes",
@@ -110,17 +109,15 @@ const FIELDS = [
 	"restDayTimes",
 	"dayOffTimes",
 ] as const;
-/** A week of this many working days or more leaves no day off beside the rest day. */
-const DAYS_WITHOUT_A_DAY_OFF = 6;
+
 const key = "employmentTerms.dialog";
 /** The rest-day choice that lets the roster pick the day; every other choice is a weekday. */
 const ROSTERED = "ROSTERED";
 /**
- * The terms form takes a wide panel (880 px, 1040 px from `lg`), so the kind,
- * the hours and the days sit side by side and the form fits a screen.
+ * The terms form takes a wide panel (880 px, 1040 px from `lg`), so the form
+ * and its read-back sit side by side; on a phone the read-back follows it.
  */
 const WIDE_DIALOG_CLASSES = "sm:max-w-220 lg:max-w-260";
-const kindsKey = "employmentTerms.kinds";
 /** The heading of each of the form's groups. */
 const legendClasses = "mb-3 text-base font-semibold text-neutral-900";
 
@@ -141,10 +138,10 @@ type TermsFormProps = {
 };
 
 /**
- * The terms form, in the wide panel: the kind of week first; then the name
- * and Hours beside Days and rest, Overtime and More options. "These terms in
- * words" sits in the footer beside the buttons, true at every keystroke and
- * never over a field.
+ * The terms form, in the approved design's order: Start from, the working
+ * week (hours a day worked out), whether the Act's hour rules cover them,
+ * overtime and its rates, the name, and More options for a description.
+ * Beside it, "These terms in words" reads the form back at every keystroke.
  */
 const TermsForm = ({
 	companyId,
@@ -161,7 +158,7 @@ const TermsForm = ({
 	const language = formattingLocale(i18n);
 	const formId = useId();
 	const idOf = (field: string): string => `${formId}-${field}`;
-	// The country's figures (part-time line, longest normal day) and the weeks the kinds start from.
+	// The country's figures (part-time line, longest normal day, the Act's rates) and the starting points.
 	const presets = useQuery(termsPresetsQuery(companyId));
 	const reference = presets.data;
 	const presetList = useMemo(() => presets.data?.presets ?? [], [presets.data]);
@@ -169,10 +166,12 @@ const TermsForm = ({
 	const maxDayMinutes = presets.data?.maxNormalDayMinutes ?? null;
 	const minimumCoveredOvertimePercent =
 		presets.data?.minimumCoveredOvertimePercent ?? null;
-	// The name follows the week until someone types one; existing terms keep theirs.
+	// The name follows the answers until someone types one; existing terms keep theirs.
 	const [nameTyped, setNameTyped] = useState(
 		editing !== undefined || initial !== undefined
 	);
+	// The starting point last clicked; it steps aside once any answer differs from it.
+	const [startedFrom, setStartedFrom] = useState<TermsPreset>();
 	const schema = useMemo(
 		() => termsFormSchema(t, { maxDayMinutes, minimumCoveredOvertimePercent }),
 		[t, maxDayMinutes, minimumCoveredOvertimePercent]
@@ -202,73 +201,92 @@ const TermsForm = ({
 		run,
 	} = useCreateFormSubmit(form, FIELDS, onClose);
 	const held = (editing?.holderCount ?? 0) + (editing?.scheduledCount ?? 0);
-	const kind = kindOf(values, presetList, partTimeBelowMinutes);
 	const readBack = readBackOf(values, reference, t, language);
-	// More options opens itself when what it holds already differs from the default.
-	const [moreOptionsOpen] = useState(
-		!values.hoursLimitsApply || values.description !== ""
-	);
 
-	const chooseKind = (choice: Exclude<TermsKind, "CUSTOM">): void => {
-		const preset = presetOfKind(choice, presetList);
-		if (!preset) return;
-		const next = valuesForKind(preset, values);
+	const startFrom = (preset: TermsPreset): void => {
+		const next = valuesOfPreset(preset, values);
 		reset(next);
+		setStartedFrom(preset);
 		const week = weekFieldsOf(next);
 		if (!nameTyped && week)
 			setValue("name", suggestedTermsName(week, partTimeBelowMinutes, t));
 	};
-	// New terms start from the first kind once its figures arrive, so the form is never blank.
+	// New terms start from the first starting point once the figures arrive, so the form is never blank.
 	const started = useRef(editing !== undefined || initial !== undefined);
 	useEffect(() => {
 		if (started.current || presetList.length === 0) return;
 		started.current = true;
-		const first = TERMS_KINDS.find((each) => presetOfKind(each, presetList));
-		if (first) chooseKind(first);
-		// chooseKind reads the form as it is now; it runs once, when the presets arrive.
+		const [first] = presetList;
+		if (first) startFrom(first);
+		// startFrom reads the form as it is now; it runs once, when the presets arrive.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [presetList]);
 
-	const followWeek = (next: Partial<TermsFormValues>): void => {
+	const followAnswers = (next: Partial<TermsFormValues>): void => {
 		if (nameTyped) return;
 		const week = weekFieldsOf({ ...values, ...next });
 		if (week)
 			setValue("name", suggestedTermsName(week, partTimeBelowMinutes, t));
 	};
-	// The two hours sit side by side; their hints share one line under them, so the pair stays short.
-	const hoursField = (
-		name: "dayHours" | "weekHours",
-		label: string,
-		unit: string
-	): ReactNode => {
-		const error = errors[name]?.message;
-		const ids = formRowIds(idOf(name));
-		return (
-			<FormRow
-				error={error}
-				htmlFor={idOf(name)}
-				label={label}
-				layout="stacked"
-			>
-				<Input
-					aria-describedby={error ? ids.errorId : idOf("hoursHint")}
-					aria-invalid={Boolean(error)}
-					className="w-full"
-					disabled={isSubmitting}
-					id={idOf(name)}
-					inputMode="decimal"
-					status={error ? "error" : undefined}
-					unit={unit}
-					{...register(name, {
-						onChange: (event: { target: { value: string } }) => {
-							followWeek({ [name]: event.target.value });
-						},
-					})}
-				/>
-			</FormRow>
+	const typedDays = parseDays(values.daysPerWeek);
+	const typedWeek = parseHours(values.weekHours);
+	const weekMinutes = typedWeek.kind === "minutes" ? typedWeek.minutes : null;
+	const days = typeof typedDays === "number" ? typedDays : null;
+	const dayMinutes = normalDayMinutes(days, weekMinutes);
+	const partTime =
+		weekMinutes !== null && isPartTimeWeek(weekMinutes, partTimeBelowMinutes);
+	// Overtime by the day is for full-timers on fixed days only.
+	const dailyShown = !partTime && dayMinutes !== null;
+	const startedNote =
+		startedFrom !== undefined && !holdsPreset(values, startedFrom)
+			? t(`${key}.startFromChanged`)
+			: t(`${key}.startFromNote`);
+	const dayLine =
+		weekMinutes === null
+			? undefined
+			: days === null
+				? t(`${key}.dayLineVaries`)
+				: dayMinutes === null
+					? undefined
+					: days % 1 === 0
+						? t(`${key}.dayLine`, { day: durationShort(dayMinutes, t) })
+						: t(`${key}.dayLineHalf`, {
+								day: durationShort(dayMinutes, t),
+								half: durationShort(Math.floor(dayMinutes / 2), t),
+							});
+	// A days figure the form no longer offers (stored before the design's list) is still shown as itself.
+	const dayChoices =
+		days === null || DAYS_CHOICES.includes(days)
+			? DAYS_CHOICES
+			: [...DAYS_CHOICES.slice(0, -1), days, null];
+	const payLines = reference?.coveredPayLines ?? null;
+	const money = (amount: number): string =>
+		payLines === null
+			? String(amount)
+			: new Intl.NumberFormat(language, {
+					style: "currency",
+					currency: payLines.currency,
+					maximumFractionDigits: 0,
+				}).format(amount);
+	const weekError = errors.weekHours?.message;
+	const nameError = errors.name?.message;
+	const descriptionError = errors.description?.message;
+	const restError = errors.restWeekday?.message;
+	const daysError = errors.daysPerWeek?.message;
+	const paidAsError = errors.extraHoursPaidAs?.message;
+	const restChoice =
+		values.restKind === "ROSTERED" ? ROSTERED : values.restWeekday;
+	const chooseRest = (choice: string): void => {
+		const rostered = choice === ROSTERED;
+		setValue("restKind", rostered ? "ROSTERED" : "FIXED");
+		if (!rostered && isWeekday(choice))
+			setValue("restWeekday", choice, { shouldValidate: true });
+		followAnswers(
+			rostered
+				? { restKind: "ROSTERED" }
+				: { restKind: "FIXED", restWeekday: isWeekday(choice) ? choice : "" }
 		);
 	};
-	const partTime = kind === "PART_TIME";
 	// A rate field: the figure in times a normal hour, its hint under it.
 	const rateField = (
 		name: "overtimeTimes" | "restDayTimes" | "dayOffTimes",
@@ -301,12 +319,10 @@ const TermsForm = ({
 	};
 	// The rate is asked whenever the Act's limits apply, otherwise only for extra hours paid at a rate.
 	const rateAsked = overtimeRateAsked(values);
-	const typedDays = parseDays(values.daysPerWeek);
 	const dayOffShown =
-		!partTime &&
 		rateAsked &&
-		typeof typedDays === "number" &&
-		typedDays < DAYS_WITHOUT_A_DAY_OFF;
+		fields !== undefined &&
+		hasDayOff(fields, partTime);
 	const overtimeRateHint = values.hoursLimitsApply
 		? minimumCoveredOvertimePercent === null
 			? undefined
@@ -321,57 +337,6 @@ const TermsForm = ({
 			: t(`${key}.restDayRateHint`, {
 					usual: timesOfPercent(usualRestDayWorkPercent),
 				});
-	const paidAsError = errors.extraHoursPaidAs?.message;
-	const dayField = values.shiftWork
-		? hoursField(
-				"dayHours",
-				t(`${key}.longestShift`),
-				t(`${key}.longestShiftUnit`)
-			)
-		: hoursField(
-				"dayHours",
-				t(values.dailyOvertime ? `${key}.dayHours` : `${key}.dayHoursOptional`),
-				t(`${key}.dayHoursUnit`)
-			);
-	const dayHint = t(
-		values.shiftWork ? `${key}.longestShiftHint` : `${key}.hoursFormatHint`
-	);
-	const weekHint =
-		partTimeBelowMinutes === null
-			? t(`${key}.weekHoursHint`)
-			: t(`${key}.weekHoursHintPartTime`, {
-					line: durationLong(partTimeBelowMinutes, t),
-				});
-	// Read from the day field itself, so the line stays true while only the week is unfinished.
-	const typedDay = parseHours(values.dayHours);
-	const dailyOvertimeDescription =
-		typedDay.kind !== "minutes"
-			? t(`${key}.dailyOvertimeNeedsDay`)
-			: fields
-				? t(`${key}.dailyOvertimeDescription`, {
-						day: durationLong(typedDay.minutes, t),
-						week: durationLong(fields.weekMinutes, t),
-					})
-				: t(`${key}.dailyOvertimeDescriptionDayOnly`, {
-						day: durationLong(typedDay.minutes, t),
-					});
-	const nameError = errors.name?.message;
-	const descriptionError = errors.description?.message;
-	const restError = errors.restWeekday?.message;
-	const daysError = errors.daysPerWeek?.message;
-	const restChoice =
-		values.restKind === "ROSTERED" ? ROSTERED : values.restWeekday;
-	const chooseRest = (choice: string): void => {
-		const rostered = choice === ROSTERED;
-		setValue("restKind", rostered ? "ROSTERED" : "FIXED");
-		if (!rostered && isWeekday(choice))
-			setValue("restWeekday", choice, { shouldValidate: true });
-		followWeek(
-			rostered
-				? { restKind: "ROSTERED" }
-				: { restKind: "FIXED", restWeekday: isWeekday(choice) ? choice : "" }
-		);
-	};
 	const formMessage =
 		submitMessage ?? (unchangedWeek ? t(`${key}.weekUnchanged`) : undefined);
 	return (
@@ -390,418 +355,411 @@ const TermsForm = ({
 					: t(`${key}.addDescription`)
 			}
 			footer={
-				<div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-6">
-					<TermsSummary className="min-w-0 flex-1" readBack={readBack} />
-					<div className="grid shrink-0 grid-cols-[auto_1fr] gap-3 sm:flex">
-						<Button disabled={isSubmitting} variant="secondary" onClick={close}>
-							{t(`${key}.cancel`)}
-						</Button>
-						<Button form={formId} loading={isSubmitting} type="submit">
-							{t(editing ? `${key}.save` : `${key}.add`)}
-						</Button>
-					</div>
+				<div className="flex justify-end gap-3">
+					<Button disabled={isSubmitting} variant="secondary" onClick={close}>
+						{t(`${key}.cancel`)}
+					</Button>
+					<Button form={formId} loading={isSubmitting} type="submit">
+						{t(editing ? `${key}.save` : `${key}.add`)}
+					</Button>
 				</div>
 			}
 			onClose={close}
 		>
-			<form
-				noValidate
-				aria-busy={isSubmitting}
-				className="flex flex-col gap-6"
-				id={formId}
-				onSubmit={(event) =>
-					handleSubmit(async (submitted) => {
-						const body = termsBodyOf(submitted);
-						// "Change from a date…" with the same week has nothing to change from a date.
-						const sameWeek =
-							fromDateOnly &&
-							editing !== undefined &&
-							!weekChanges(editing, body);
-						setUnchangedWeek(sameWeek);
-						if (sameWeek) return;
-						if (needsChoice(body)) {
-							onChoose(body);
-							return;
-						}
-						await run(
-							() => onSave(body),
-							(error) => {
-								if (!isHeldRefusal(error))
-									return termsSaveRefusal(error, submitted.name, t);
+			<div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+				<form
+					noValidate
+					aria-busy={isSubmitting}
+					className="flex flex-col gap-6"
+					id={formId}
+					onSubmit={(event) =>
+						handleSubmit(async (submitted) => {
+							const body = termsBodyOf(submitted);
+							// "Change from a date…" with the same week has nothing to change from a date.
+							const sameWeek =
+								fromDateOnly &&
+								editing !== undefined &&
+								!weekChanges(editing, body);
+							setUnchangedWeek(sameWeek);
+							if (sameWeek) return;
+							if (needsChoice(body)) {
 								onChoose(body);
-								return { fields: {}, refreshMembers: false };
+								return;
 							}
-						);
-					})(event)
-				}
-			>
-				{formMessage && (
-					<p
-						ref={alertRef}
-						className="text-sm text-error-700"
-						role="alert"
-						tabIndex={-1}
-					>
-						{formMessage}
-					</p>
-				)}
-				<fieldset className="flex flex-col gap-2">
-					<legend className={legendClasses}>{t(`${kindsKey}.legend`)}</legend>
-					{(presets.isError || editing) && (
-						<p className="text-xs text-neutral-700">
-							{presets.isError
-								? t(`${key}.presetsFailed`)
-								: t(`${kindsKey}.replaces`)}
+							await run(
+								() => onSave(body),
+								(error) => {
+									if (!isHeldRefusal(error))
+										return termsSaveRefusal(error, submitted.name, t);
+									onChoose(body);
+									return { fields: {}, refreshMembers: false };
+								}
+							);
+						})(event)
+					}
+				>
+					{formMessage && (
+						<p
+							ref={alertRef}
+							className="text-sm text-error-700"
+							role="alert"
+							tabIndex={-1}
+						>
+							{formMessage}
 						</p>
 					)}
-					<div
-						className={joinClassNames(
-							"grid grid-cols-2 gap-3",
-							kind === "CUSTOM" ? "lg:grid-cols-5" : "lg:grid-cols-4"
-						)}
-					>
-						{TERMS_KINDS.map((each) => {
-							const preset = presetOfKind(each, presetList);
-							return (
-								<RadioCard
-									key={each}
-									checked={kind === each}
-									description={kindDescription(each, preset, reference, t)}
-									disabled={isSubmitting || !preset}
-									label={kindLabel(each, preset, t)}
-									name={`${formId}-kind`}
-									value={each}
-									onChange={() => {
-										chooseKind(each);
-									}}
-								/>
-							);
-						})}
-						{kind === "CUSTOM" && (
-							<RadioCard
-								checked
-								description={t(`${kindsKey}.customDescription`)}
-								disabled={isSubmitting}
-								label={t(`${kindsKey}.CUSTOM`)}
-								name={`${formId}-kind`}
-								value="CUSTOM"
-								onChange={() => undefined}
-							/>
-						)}
-					</div>
-				</fieldset>
-				<div className="grid gap-x-8 gap-y-6 md:grid-cols-2">
-					<div className="flex flex-col gap-6">
-						<FormRow
-							counter={t(`${key}.nameCounter`, { count: values.name.length })}
-							error={nameError}
-							hint={t(`${key}.nameHint`)}
-							htmlFor={idOf("name")}
-							label={t(`${key}.name`)}
-							layout="stacked"
-						>
-							<Input
-								aria-invalid={Boolean(nameError)}
-								className="w-full"
-								disabled={isSubmitting}
-								id={idOf("name")}
-								maxLength={TERMS_NAME_MAX_LENGTH}
-								placeholder={t(`${key}.namePlaceholder`)}
-								status={nameError ? "error" : undefined}
-								aria-describedby={
-									nameError
-										? formRowIds(idOf("name")).errorId
-										: formRowIds(idOf("name")).hintId
-								}
-								{...register("name", {
-									onChange: () => {
-										setNameTyped(true);
-									},
-								})}
-							/>
-						</FormRow>
-						<fieldset className="flex flex-col gap-4">
-							<legend className={legendClasses}>{t(`${key}.hours`)}</legend>
-							<div className="grid gap-4 sm:grid-cols-2">
-								{hoursField(
-									"weekHours",
-									t(`${key}.weekHours`),
-									t(`${key}.weekHoursUnit`)
-								)}
-								{dayField}
-							</div>
-							<p className="text-xs text-neutral-700" id={idOf("hoursHint")}>
-								{`${weekHint} ${dayHint}`}
+					<fieldset className="flex flex-col gap-2">
+						<legend className={legendClasses}>{t(`${key}.startFrom`)}</legend>
+						{presets.isError ? (
+							<p className="text-xs text-neutral-700">
+								{t(`${key}.presetsFailed`)}
 							</p>
-						</fieldset>
-					</div>
-					<div className="flex flex-col gap-6 md:row-span-2">
-						<fieldset className="flex flex-col gap-4">
-							<legend className={legendClasses}>
-								{t(`${key}.daysAndRest`)}
-							</legend>
-							<div className="grid gap-4 sm:grid-cols-2">
-								<FormRow
-									error={daysError}
-									htmlFor={idOf("daysPerWeek")}
-									label={t(`${key}.daysPerWeek`)}
-									layout="stacked"
-								>
-									<Controller
-										control={control}
-										name="daysPerWeek"
-										render={({ field }) => (
-											<Select
-												ref={field.ref}
-												aria-describedby={idOf("daysHint")}
-												aria-invalid={Boolean(daysError)}
-												className="w-full"
-												disabled={isSubmitting}
-												name={field.name}
-												status={daysError ? "error" : undefined}
-												value={field.value}
-												aria-labelledby={
-													formRowIds(idOf("daysPerWeek")).labelId
-												}
-												options={DAYS_CHOICES.map((days) => ({
-													value: days === null ? "" : String(days),
-													label:
-														days === null
-															? t(`${key}.daysVary`)
-															: t(`${key}.daysOption`, {
-																	days: formatDays(days),
-																	count: days,
-																}),
-												}))}
-												onChange={(next) => {
-													field.onChange(next);
-													followWeek({ daysPerWeek: next });
-												}}
-											/>
-										)}
-									/>
-								</FormRow>
-								{partTime ? (
-									<div>
-										<p className="text-sm font-semibold text-neutral-900">
-											{t(`${key}.restDay`)}
-										</p>
-										<p className="mt-1 text-sm text-neutral-800">
-											{t(`${key}.restPartTime`)}
-										</p>
-									</div>
-								) : (
-									<FormRow
-										error={restError}
-										htmlFor={idOf("restDay")}
-										label={t(`${key}.restDay`)}
-										layout="stacked"
+						) : (
+							<div className="flex flex-wrap gap-2">
+								{presetList.map((preset) => (
+									<Button
+										key={preset.key}
+										aria-pressed={
+											startedFrom?.key === preset.key &&
+											holdsPreset(values, preset)
+										}
+										disabled={isSubmitting}
+										size="sm"
+										variant="secondary"
+										onClick={() => {
+											startFrom(preset);
+										}}
 									>
-										<Select
-											aria-describedby={idOf("daysHint")}
-											aria-invalid={Boolean(restError)}
-											aria-labelledby={formRowIds(idOf("restDay")).labelId}
-											className="w-full"
-											disabled={isSubmitting}
-											status={restError ? "error" : undefined}
-											value={restChoice}
-											options={[
-												...WEEKDAYS.map((day) => ({
-													value: day,
-													label: t(`weekdays.${day}`),
-												})),
-												{ value: ROSTERED, label: t(`${key}.restRostered`) },
-											]}
-											onChange={chooseRest}
-										/>
-									</FormRow>
-								)}
+										<span className="flex flex-col items-start leading-tight">
+											<span>{preset.name}</span>
+											<span className="text-xs font-normal text-neutral-700">
+												{presetLine(preset, t)}
+											</span>
+										</span>
+									</Button>
+								))}
 							</div>
-							<p className="text-xs text-neutral-700" id={idOf("daysHint")}>
-								{partTime
-									? t(`${key}.daysHint`)
-									: `${t(`${key}.daysHint`)} ${t(
-											restChoice === ROSTERED
-												? `${key}.restRosteredDescription`
-												: `${key}.restFixedDescription`
-										)}`}
-							</p>
-						</fieldset>
-						<fieldset className="flex flex-col gap-3">
-							<legend className={legendClasses}>{t(`${key}.overtime`)}</legend>
-							{reference === undefined ? (
-								<p className="text-sm text-neutral-700">
-									{t(`${key}.overtimeUnknown`)}
-								</p>
-							) : (
-								fields && (
-									<p className="text-sm text-neutral-800">
-										{overtimeSentence(fields, reference, t)}
-									</p>
-								)
-							)}
-							{values.shiftWork ? (
-								// The overtime line above already says shift work counts by the week, when it can be read.
-								(reference === undefined || !fields) && (
-									<p className="text-sm text-neutral-800">
-										{t(`${key}.shiftNoDailyNote`)}
-									</p>
-								)
-							) : (
+						)}
+						<p className="text-xs text-neutral-700">{startedNote}</p>
+					</fieldset>
+					<fieldset className="flex flex-col gap-4">
+						<legend className={legendClasses}>{t(`${key}.workingWeek`)}</legend>
+						<div className="grid gap-4 sm:grid-cols-2">
+							<FormRow
+								error={daysError}
+								htmlFor={idOf("daysPerWeek")}
+								label={t(`${key}.daysPerWeek`)}
+								layout="stacked"
+							>
 								<Controller
 									control={control}
-									name="dailyOvertime"
+									name="daysPerWeek"
 									render={({ field }) => (
-										<Checkbox
-											checked={field.value}
-											description={dailyOvertimeDescription}
+										<Select
+											ref={field.ref}
+											aria-invalid={Boolean(daysError)}
+											className="w-full"
 											disabled={isSubmitting}
-											label={t(`${key}.dailyOvertime`)}
 											name={field.name}
-											onBlur={field.onBlur}
-											onChange={(event) => {
-												field.onChange(event.target.checked);
+											status={daysError ? "error" : undefined}
+											value={field.value}
+											aria-labelledby={
+												formRowIds(idOf("daysPerWeek")).labelId
+											}
+											options={dayChoices.map((choice) => ({
+												value: choice === null ? "" : String(choice),
+												label:
+													choice === null
+														? t(`${key}.daysVary`)
+														: t(`${key}.daysOption`, {
+																days: formatDays(choice),
+																count: choice,
+															}),
+											}))}
+											onChange={(next) => {
+												field.onChange(next);
+												followAnswers({ daysPerWeek: next });
 											}}
 										/>
 									)}
 								/>
-							)}
-							{rateAsked &&
-								rateField(
-									"overtimeTimes",
-									t(`${key}.overtimeRate`),
-									overtimeRateHint
-								)}
-							{!values.hoursLimitsApply && (
-								<Controller
-									control={control}
-									name="extraHoursPaidAs"
-									render={({ field }) => (
-										<div
-											aria-label={t(`${key}.paidAs.legend`)}
-											className="flex flex-col gap-3"
-											role="radiogroup"
-										>
-											{(["RATE", "NOTHING"] as const).map((choice) => (
-												<RadioCard
-													key={choice}
-													checked={field.value === choice}
-													description={t(`${key}.paidAs.${choice}Description`)}
-													disabled={isSubmitting}
-													label={t(`${key}.paidAs.${choice}`)}
-													name={`${formId}-paidAs`}
-													value={choice}
-													onChange={() => {
-														field.onChange(choice);
-													}}
-												/>
-											))}
-										</div>
-									)}
+							</FormRow>
+							<FormRow
+								error={weekError}
+								htmlFor={idOf("weekHours")}
+								label={t(`${key}.weekHours`)}
+								layout="stacked"
+							>
+								<Input
+									aria-describedby={
+										weekError
+											? formRowIds(idOf("weekHours")).errorId
+											: idOf("dayLine")
+									}
+									aria-invalid={Boolean(weekError)}
+									className="w-full"
+									disabled={isSubmitting}
+									id={idOf("weekHours")}
+									inputMode="decimal"
+									status={weekError ? "error" : undefined}
+									unit={t(`${key}.weekHoursUnit`)}
+									{...register("weekHours", {
+										onChange: (event: { target: { value: string } }) => {
+											followAnswers({ weekHours: event.target.value });
+										},
+									})}
 								/>
+							</FormRow>
+						</div>
+						<p
+							className="flex flex-wrap items-center gap-2 text-sm text-neutral-800"
+							id={idOf("dayLine")}
+						>
+							{dayLine}
+							{weekMinutes !== null && partTimeBelowMinutes !== null && (
+								<Badge>
+									{t(`${key}.${partTime ? "partTimeBadge" : "fullTimeBadge"}`)}
+								</Badge>
 							)}
-							{paidAsError && (
-								<p className="text-sm text-error-700" role="alert">
-									{paidAsError}
-								</p>
-							)}
-							{!partTime &&
-								rateAsked &&
-								rateField(
-									"restDayTimes",
-									t(`${key}.restDayRate`),
-									restDayRateHint
-								)}
-							{dayOffShown && (
-								<FormRow
-									hint={t(`${key}.dayOffHint`)}
-									htmlFor={idOf("dayOffMode")}
-									label={t(`${key}.dayOff`)}
-									layout="stacked"
-								>
-									<Controller
-										control={control}
-										name="dayOffMode"
-										render={({ field }) => (
-											<Select
-												ref={field.ref}
-												aria-describedby={formRowIds(idOf("dayOffMode")).hintId}
-												aria-labelledby={formRowIds(idOf("dayOffMode")).labelId}
-												className="w-full"
-												disabled={isSubmitting}
-												name={field.name}
-												value={field.value}
-												options={(["NORMAL", "OWN_RATE"] as const).map(
-													(mode) => ({
-														value: mode,
-														label: t(`${key}.dayOffMode.${mode}`),
+						</p>
+						{partTimeBelowMinutes !== null && (
+							<p className="text-xs text-neutral-700">
+								{t(`${key}.partTimeLine`, {
+									line: durationShort(partTimeBelowMinutes, t),
+								})}
+							</p>
+						)}
+						{partTime ? (
+							<p className="text-sm text-neutral-800">
+								{t(`${key}.restPartTimeNote`)}
+							</p>
+						) : (
+							<FormRow
+								error={restError}
+								hint={t(`${key}.restDayHint`)}
+								htmlFor={idOf("restDay")}
+								label={t(`${key}.restDay`)}
+								layout="stacked"
+							>
+								<Select
+									aria-invalid={Boolean(restError)}
+									aria-labelledby={formRowIds(idOf("restDay")).labelId}
+									className="w-full"
+									disabled={isSubmitting}
+									status={restError ? "error" : undefined}
+									value={restChoice}
+									options={[
+										...WEEKDAYS.map((day) => ({
+											value: day,
+											label: t(`weekdays.${day}`),
+										})),
+										{ value: ROSTERED, label: t(`${key}.restRosteredChoice`) },
+									]}
+									onChange={chooseRest}
+								/>
+							</FormRow>
+						)}
+					</fieldset>
+					<Controller
+						control={control}
+						name="hoursLimitsApply"
+						render={({ field }) => (
+							<fieldset className="flex flex-col gap-3">
+								<legend className={legendClasses}>
+									{t(`${key}.covered.question`)}
+								</legend>
+								<div className="flex flex-col gap-3" role="radiogroup">
+									<RadioCard
+										checked={field.value}
+										disabled={isSubmitting}
+										label={t(`${key}.covered.yes`)}
+										name={`${formId}-covered`}
+										value="YES"
+										description={
+											payLines === null
+												? t(`${key}.covered.yesDescriptionWithoutPay`)
+												: t(`${key}.covered.yesDescription`, {
+														workman: money(payLines.workmanMonthly),
+														other: money(payLines.otherStaffMonthly),
 													})
-												)}
-												onChange={field.onChange}
-											/>
-										)}
+										}
+										onChange={() => {
+											field.onChange(true);
+											// Covered staff are always paid at a rate, so the choice goes with the answer.
+											setValue("extraHoursPaidAs", "RATE");
+											followAnswers({
+												hoursLimitsApply: true,
+												extraHoursPaidAs: "RATE",
+											});
+										}}
 									/>
-								</FormRow>
+									<RadioCard
+										checked={!field.value}
+										description={t(`${key}.covered.noDescription`)}
+										disabled={isSubmitting}
+										label={t(`${key}.covered.no`)}
+										name={`${formId}-covered`}
+										value="NO"
+										onChange={() => {
+											field.onChange(false);
+											followAnswers({ hoursLimitsApply: false });
+										}}
+									/>
+								</div>
+							</fieldset>
+						)}
+					/>
+					<fieldset className="flex flex-col gap-3">
+						<legend className={legendClasses}>{t(`${key}.overtime`)}</legend>
+						{reference === undefined ? (
+							<p className="text-sm text-neutral-700">
+								{t(`${key}.overtimeUnknown`)}
+							</p>
+						) : (
+							fields && (
+								<p className="text-sm text-neutral-800">
+									{overtimeSentence(fields, reference, t)}
+								</p>
+							)
+						)}
+						{dailyShown && (
+							<Controller
+								control={control}
+								name="dailyOvertime"
+								render={({ field }) => (
+									<Checkbox
+										checked={field.value}
+										disabled={isSubmitting}
+										name={field.name}
+										label={t(`${key}.dailyByDay`, {
+											day: durationShort(dayMinutes, t),
+											week: durationShort(weekMinutes ?? 0, t),
+										})}
+										onBlur={field.onBlur}
+										onChange={(event) => {
+											field.onChange(event.target.checked);
+										}}
+									/>
+								)}
+							/>
+						)}
+						{rateAsked &&
+							rateField(
+								"overtimeTimes",
+								t(`${key}.overtimeRate`),
+								overtimeRateHint
 							)}
-							{dayOffShown &&
-								values.dayOffMode === "OWN_RATE" &&
-								rateField("dayOffTimes", t(`${key}.dayOffRate`), undefined)}
-						</fieldset>
-					</div>
-					<Disclosure
-						className="md:col-start-1 md:self-start"
-						defaultOpen={moreOptionsOpen}
-						title={t(`${key}.moreOptions`)}
-					>
-						<Controller
-							control={control}
-							name="hoursLimitsApply"
-							render={({ field }) => (
-								<div className="flex flex-col gap-3">
-									<div>
-										<p
-											className="text-sm font-semibold text-neutral-900"
-											id={idOf("hoursLimits")}
-										>
-											{t(`${key}.hoursLimits`)}
-										</p>
-										<p className="mt-1 text-xs text-neutral-700">
-											{t(`${key}.hoursLimitsDescription`)}
-										</p>
-									</div>
+						{!values.hoursLimitsApply && (
+							<Controller
+								control={control}
+								name="extraHoursPaidAs"
+								render={({ field }) => (
 									<div
-										aria-labelledby={idOf("hoursLimits")}
+										aria-label={t(`${key}.paidAs.legend`)}
 										className="flex flex-col gap-3"
 										role="radiogroup"
 									>
-										<RadioCard
-											checked={field.value}
-											description={t(`${key}.limitsApplyDescription`)}
-											disabled={isSubmitting}
-											label={t(`${key}.limitsApply`)}
-											name={`${formId}-limits`}
-											value="APPLY"
-											onChange={() => {
-												field.onChange(true);
-												// Covered staff are always paid at a rate, so the choice goes with the answer.
-												setValue("extraHoursPaidAs", "RATE");
-											}}
-										/>
-										<RadioCard
-											checked={!field.value}
-											description={t(`${key}.limitsDontApplyDescription`)}
-											disabled={isSubmitting}
-											label={t(`${key}.limitsDontApply`)}
-											name={`${formId}-limits`}
-											value="DONT_APPLY"
-											onChange={() => {
-												field.onChange(false);
-											}}
-										/>
+										{(["RATE", "NOTHING"] as const).map((choice) => (
+											<RadioCard
+												key={choice}
+												checked={field.value === choice}
+												description={t(`${key}.paidAs.${choice}Description`)}
+												disabled={isSubmitting}
+												label={t(`${key}.paidAs.${choice}`)}
+												name={`${formId}-paidAs`}
+												value={choice}
+												onChange={() => {
+													field.onChange(choice);
+												}}
+											/>
+										))}
 									</div>
-								</div>
+								)}
+							/>
+						)}
+						{paidAsError && (
+							<p className="text-sm text-error-700" role="alert">
+								{paidAsError}
+							</p>
+						)}
+						{!partTime &&
+							rateAsked &&
+							rateField("restDayTimes", t(`${key}.restDayRate`), restDayRateHint)}
+						{dayOffShown && (
+							<FormRow
+								hint={t(`${key}.dayOffHint`)}
+								htmlFor={idOf("dayOffMode")}
+								label={t(`${key}.dayOff`)}
+								layout="stacked"
+							>
+								<Controller
+									control={control}
+									name="dayOffMode"
+									render={({ field }) => (
+										<Select
+											ref={field.ref}
+											aria-describedby={formRowIds(idOf("dayOffMode")).hintId}
+											aria-labelledby={formRowIds(idOf("dayOffMode")).labelId}
+											className="w-full"
+											disabled={isSubmitting}
+											name={field.name}
+											value={field.value}
+											options={(["NORMAL", "OWN_RATE"] as const).map((mode) => ({
+												value: mode,
+												label: t(`${key}.dayOffMode.${mode}`),
+											}))}
+											onChange={field.onChange}
+										/>
+									)}
+								/>
+							</FormRow>
+						)}
+						{dayOffShown &&
+							values.dayOffMode === "OWN_RATE" &&
+							rateField("dayOffTimes", t(`${key}.dayOffRate`), undefined)}
+						{partTime &&
+							reference?.fullTimeWeekMinutes != null &&
+							fields?.overtimePercent != null && (
+								<p className="text-sm text-neutral-800">
+									{t(`${key}.partTimeOvertimeNote`, {
+										full: durationShort(reference.fullTimeWeekMinutes, t),
+										times: formatTimes(fields.overtimePercent, t),
+									})}
+								</p>
 							)}
+					</fieldset>
+					<FormRow
+						counter={t(`${key}.nameCounter`, { count: values.name.length })}
+						error={nameError}
+						hint={t(`${key}.nameHint`)}
+						htmlFor={idOf("name")}
+						label={t(`${key}.name`)}
+						layout="stacked"
+					>
+						<Input
+							aria-invalid={Boolean(nameError)}
+							className="w-full"
+							disabled={isSubmitting}
+							id={idOf("name")}
+							maxLength={TERMS_NAME_MAX_LENGTH}
+							placeholder={t(`${key}.namePlaceholder`)}
+							status={nameError ? "error" : undefined}
+							aria-describedby={
+								nameError
+									? formRowIds(idOf("name")).errorId
+									: formRowIds(idOf("name")).hintId
+							}
+							{...register("name", {
+								onChange: () => {
+									setNameTyped(true);
+								},
+							})}
 						/>
+					</FormRow>
+					<Disclosure
+						defaultOpen={values.description !== ""}
+						title={t(`${key}.moreOptions`)}
+					>
 						<FormRow
 							error={descriptionError}
 							htmlFor={idOf("description")}
@@ -828,18 +786,19 @@ const TermsForm = ({
 							/>
 						</FormRow>
 					</Disclosure>
-				</div>
-			</form>
+				</form>
+				<TermsSummary className="md:self-start" readBack={readBack} />
+			</div>
 		</Dialog>
 	);
 };
 
 /**
- * Adds or edits employment terms: the kind of week (whose figures come from
- * the API's presets), a name suggested from the week until one is typed, the
- * hours, days and rest, overtime, and under More options the Act's hour
- * limits and a description. "These terms in words" reads the form back as
- * it changes. Saving held terms with a different week asks how the change
+ * Adds or edits employment terms: "Start from" buttons (the API's presets)
+ * that fill the form once, the working week, the Act's hour rules, overtime
+ * and its rates, a name suggested from the answers until one is typed, and a
+ * description under More options. "These terms in words" reads the form back
+ * as it changes. Saving held terms with a different week asks how the change
  * applies (`ApplyChangeStep`). Mount when opened.
  */
 export const EmploymentTermsDialog = ({

@@ -6,7 +6,6 @@ import {
 	FIVE_DAY_WEEK,
 	PART_TIME_20,
 	REFERENCE,
-	SIX_DAY_SHIFT,
 	STANDARD_WEEK,
 } from "@/features/employmentTerms/fixtures";
 import { termsSentence } from "@/features/employmentTerms/summary";
@@ -42,7 +41,7 @@ describe("readBackOf", () => {
 		expect(readBackOf({ ...valid, weekHours: "" }, REFERENCE, t, "en")).toEqual(
 			{
 				complete: false,
-				text: "Not finished yet: fill in or check the normal hours a week.",
+				text: "Not finished yet: fill in or check the hours a week.",
 			}
 		);
 	});
@@ -50,31 +49,14 @@ describe("readBackOf", () => {
 	it("names every unfinished field, in the form's order", () => {
 		expect(
 			readBackOf(
-				{ ...valid, weekHours: "lots", dayHours: "", restWeekday: "" },
+				{ ...valid, daysPerWeek: "9", weekHours: "lots", restWeekday: "" },
 				REFERENCE,
 				t,
 				"en"
 			).text
 		).toBe(
-			"Not finished yet: fill in or check the normal hours a week, the normal hours a day, and the rest day’s weekday."
+			"Not finished yet: fill in or check the working days a week, the hours a week, and the rest day’s weekday."
 		);
-	});
-
-	it("calls the day the longest shift for shift work", () => {
-		expect(
-			readBackOf(
-				{ ...termsFormValuesOf(SIX_DAY_SHIFT), dayHours: "8:75" },
-				REFERENCE,
-				t,
-				"en"
-			).text
-		).toBe("Not finished yet: fill in or check the longest shift.");
-	});
-
-	it("refuses a week its days can't hold rather than reading it back", () => {
-		expect(
-			readBackOf({ ...valid, weekHours: "60" }, REFERENCE, t, "en").complete
-		).toBe(false);
 	});
 
 	it("is never stopped by the name or the description", () => {
@@ -83,11 +65,17 @@ describe("readBackOf", () => {
 		).toBe(true);
 	});
 
-	it("names a day longer than the country's longest normal day", () => {
+	it("names a worked-out day longer than the country's longest normal day", () => {
 		expect(
-			readBackOf({ ...valid, dayHours: "13" }, REFERENCE, t, "en").text
-		).toBe("Not finished yet: fill in or check the normal hours a day.");
+			readBackOf(
+				{ ...valid, daysPerWeek: "4", weekHours: "60" },
+				REFERENCE,
+				t,
+				"en"
+			).text
+		).toBe("Not finished yet: fill in or check the hours a week.");
 	});
+
 });
 
 describe("termsSentence, the design's sentence", () => {

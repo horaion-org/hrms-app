@@ -273,8 +273,9 @@ export const overtimeShort = (
 };
 
 /**
- * A name new terms are offered while nobody has typed one: "5-day week,
- * 44 h", "Shift work, 6 days, 12 h", "Part-time, 20 h", "44 h week".
+ * A name new terms are offered while nobody has typed one, the approved
+ * design's: "Full-time, 5 days, 44 h", "Part-time, 20 h", and "Managers, 5
+ * days, 44 h" for terms outside the Act's hour rules.
  */
 export const suggestedTermsName = (
 	fields: WeekFields,
@@ -282,14 +283,21 @@ export const suggestedTermsName = (
 	t: TFunction
 ): string => {
 	const week = durationShort(fields.weekMinutes, t);
-	if (isPartTimeWeek(fields.weekMinutes, partTimeBelowMinutes))
-		return t(`${key}.name.partTime`, { week });
-	if (fields.daysPerWeek === null) return t(`${key}.name.weekOnly`, { week });
-	const days = formatDays(fields.daysPerWeek);
-	if (fields.shiftWork && fields.dayMinutes !== null)
-		return t(`${key}.name.shiftWork`, {
-			days,
-			day: durationShort(fields.dayMinutes, t),
-		});
-	return t(`${key}.name.days`, { days, week });
+	const kind = !fields.hoursLimitsApply
+		? t(`${key}.name.managers`)
+		: t(
+				`${sentenceKey}.${
+					isPartTimeWeek(fields.weekMinutes, partTimeBelowMinutes)
+						? "partTime"
+						: "fullTime"
+				}`
+			);
+	if (fields.daysPerWeek === null)
+		return t(`${key}.name.weekOnly`, { kind, week });
+	return t(`${key}.name.days`, {
+		kind,
+		week,
+		days: formatDays(fields.daysPerWeek),
+		count: fields.daysPerWeek,
+	});
 };

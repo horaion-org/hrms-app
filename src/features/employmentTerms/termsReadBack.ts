@@ -22,9 +22,8 @@ export type ReadBack =
 
 /** The fields the sentence is built from, in the order the form shows them. */
 const WEEK_FIELDS = [
-	"weekHours",
-	"dayHours",
 	"daysPerWeek",
+	"weekHours",
 	"restWeekday",
 ] as const satisfies ReadonlyArray<keyof TermsFormValues>;
 
@@ -56,13 +55,7 @@ export const readBackOf = (
 		// A week the schema accepts but can't read is still missing its hours.
 		const missing: Array<WeekField> =
 			unfinished.length > 0 ? unfinished : ["weekHours"];
-		const names = missing.map((field) =>
-			t(
-				field === "dayHours" && values.shiftWork
-					? `${key}.fields.longestShift`
-					: `${key}.fields.${field}`
-			)
-		);
+		const names = missing.map((field) => t(`${key}.fields.${field}`));
 		return {
 			complete: false,
 			text: t(`${key}.unfinished`, {

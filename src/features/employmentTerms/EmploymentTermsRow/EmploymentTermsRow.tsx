@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { formatDate } from "@/components/forms/Calendar";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -20,8 +19,6 @@ import { EmploymentTermsHistoryDialog } from "@/features/employmentTerms/Employm
 import { durationShort } from "@/features/employmentTerms/hours";
 import { memberTermsRefusal } from "@/features/employmentTerms/refusals";
 import { weekLines } from "@/features/employmentTerms/summary";
-import { termsFormValuesOf } from "@/features/employmentTerms/termsForm";
-import { kindOf } from "@/features/employmentTerms/termsKinds";
 import { useMemberTermsActions } from "@/features/employmentTerms/useMemberTermsActions";
 import type { MemberProfileDetail } from "@/features/people/api";
 import { personScope } from "@/features/people/profileEditAccess";
@@ -112,14 +109,6 @@ export const EmploymentTermsRow = ({
 		.reverse()
 		.find((entry) => entry.scheduled);
 	const name = inForce ? inForce.name : t(`${key}.unset`);
-	// Shift work says so beside the name; part-time is already the profile's Employment type above.
-	const shiftWork = inForce
-		? kindOf(
-				termsFormValuesOf(inForce),
-				[],
-				current.reference?.partTimeBelowMinutes ?? null
-			) === "SHIFT_WORK"
-		: false;
 	return (
 		<span className="flex min-w-0 flex-col gap-1">
 			<span className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -135,7 +124,6 @@ export const EmploymentTermsRow = ({
 				) : (
 					<span>{name}</span>
 				)}
-				{shiftWork && <Badge>{t("employmentTerms.kinds.SHIFT_WORK")}</Badge>}
 				{canChange && (
 					<Button
 						variant="textlink"

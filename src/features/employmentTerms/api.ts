@@ -66,13 +66,13 @@ const weekFieldsSchema = z.object({
 	/** Working days a week, in half days; empty for part-time terms without set days. */
 	daysPerWeek: z.number().nullable(),
 	weekMinutes: z.number().int(),
-	/** Normal hours a day; empty when the terms set none. */
+	/** Normal hours a day, worked out by the API from the days and the week; empty when the days vary. */
 	dayMinutes: z.number().int().nullable(),
 	restDay: restDaySchema,
 	/** Overtime also starts past the normal day, not only past the week. */
 	dailyOvertime: z.boolean(),
-	/** Shift work: no daily overtime, and the week is averaged. */
-	shiftWork: z.boolean(),
+	/** Dropped by the API (ADR-0124); read while an older API still sends it. */
+	shiftWork: z.boolean().optional(),
 	/** Whether the Employment Act's hour limits apply to people on these terms. */
 	hoursLimitsApply: z.boolean(),
 	...payFieldsSchema.shape,
@@ -158,8 +158,8 @@ const termsPresetsSchema = referenceSchema.extend({
 /** The country's figures and common weeks new terms start from; the app holds none of its own. */
 export type TermsPresets = z.infer<typeof termsPresetsSchema>;
 
-/** What creating or saving terms sends. */
-export type EmploymentTermsBody = WeekFields & {
+/** What creating or saving terms sends: never the day, which the API works out. */
+export type EmploymentTermsBody = Omit<WeekFields, "dayMinutes" | "shiftWork"> & {
 	name: string;
 	description: string | null;
 };

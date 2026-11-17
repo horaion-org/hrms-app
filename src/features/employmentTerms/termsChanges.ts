@@ -10,15 +10,14 @@ import { durationShort } from "@/features/employmentTerms/hours";
 import { isPartTimeWeek } from "@/features/employmentTerms/summary";
 
 /** The fields that change how hours are counted; name and description never do. */
-const WEEK_FIELDS: ReadonlyArray<keyof WeekFields> = [
-	"daysPerWeek",
-	"weekMinutes",
-	"dayMinutes",
-	"restDay",
-	"dailyOvertime",
-	"shiftWork",
-	"hoursLimitsApply",
-];
+const WEEK_FIELDS: ReadonlyArray<keyof EmploymentTermsBody & keyof WeekFields> =
+	[
+		"daysPerWeek",
+		"weekMinutes",
+		"restDay",
+		"dailyOvertime",
+		"hoursLimitsApply",
+	];
 
 /** Whether the working week changes; only then can it change from a date. */
 export const weekChanges = (

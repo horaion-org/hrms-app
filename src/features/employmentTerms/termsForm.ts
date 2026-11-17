@@ -12,6 +12,7 @@ import {
 	hoursInput,
 	parseHours,
 } from "@/features/employmentTerms/hours";
+import { normalDayMinutes } from "@/features/employmentTerms/normalDay";
 import {
 	percentOfTimes,
 	timesOfPercent,
@@ -21,12 +22,9 @@ import {
 export const TERMS_NAME_MAX_LENGTH = 100;
 export const TERMS_DESCRIPTION_MAX_LENGTH = 500;
 
-/** One extra minute covers rounding, e.g. 5 × 8.8 h against 44 h. */
-const ROUNDING_MINUTES = 1;
-/** The week's range and the shortest day, as the API's columns check them (no country figure). */
+/** The week's range, as the API's columns check it (no country figure). */
 const MIN_WEEK_MINUTES = 60;
 const MAX_WEEK_MINUTES = 3600;
-const MIN_DAY_MINUTES = 30;
 /** A rate's sanity bounds, as the API's columns check them: 0 to 10 times a normal hour (no country figure). */
 const MIN_RATE_PERCENT = 0;
 const MAX_RATE_PERCENT = 1000;
@@ -39,18 +37,17 @@ export const RATE_BOUNDS_IN_TIMES = {
 
 /**
  * The terms dialog as it holds its values: numbers as typed text, and the
- * rest day as a kind plus the weekday a fixed one falls on.
+ * rest day as a kind plus the weekday a fixed one falls on. Hours a day are
+ * worked out from the days and the week, never typed (ADR-0124 in the API).
  */
 export type TermsFormValues = {
 	name: string;
 	description: string;
 	daysPerWeek: string;
-	dayHours: string;
 	weekHours: string;
 	restKind: "FIXED" | "ROSTERED";
 	restWeekday: Weekday | "";
 	dailyOvertime: boolean;
-	shiftWork: boolean;
 	hoursLimitsApply: boolean;
 	/** An overtime hour, in times a normal hour as typed ("1.5"). */
 	overtimeTimes: string;
@@ -68,12 +65,10 @@ export const BLANK_TERMS: TermsFormValues = {
 	name: "",
 	description: "",
 	daysPerWeek: "",
-	dayHours: "",
 	weekHours: "",
 	restKind: "FIXED",
 	restWeekday: "SUN",
 	dailyOvertime: true,
-	shiftWork: false,
 	hoursLimitsApply: true,
 	overtimeTimes: "",
 	restDayTimes: "",
@@ -82,11 +77,12 @@ export const BLANK_TERMS: TermsFormValues = {
 	extraHoursPaidAs: "RATE",
 };
 
-/** The working days the form offers: "It varies" (null), then ½ to 7 in half days, as the API stores them. */
-export const DAYS_CHOICES: ReadonlyArray<number | null> = [
-	null,
-	...Array.from({ length: 14 }, (_, index) => (index + 1) / 2),
-];
+/**
+ * The working days the form offers, as the approved design lists them: 4, 5,
+ * 5½ and 6 days, and "It varies" (null). Terms stored with another figure
+ * offer theirs too; the API takes any half day.
+ */
+export const DAYS_CHOICES: ReadonlyArray<number | null> = [4, 5, 5.5, 6, null];
 
 /** Working days a week: 0.5 to 7, in half days; empty is allowed (part-time). */
 export const parseDays = (text: string): number | null | "invalid" => {
@@ -128,7 +124,7 @@ export const weekFieldsOf = (
 		return undefined;
 	if (values.restKind === "FIXED" && !isWeekday(values.restWeekday))
 		return undefined;
-	const dayMinutes = minutesOrNull(values.dayHours);
+	const dayMinutes = normalDayMinutes(days, weekMinutes);
 	return {
 		daysPerWeek: days,
 		weekMinutes,
@@ -137,9 +133,7 @@ export const weekFieldsOf = (
 			values.restKind === "ROSTERED"
 				? "ROSTERED"
 				: (values.restWeekday as Weekday),
-		dailyOvertime:
-			values.dailyOvertime && !values.shiftWork && dayMinutes !== null,
-		shiftWork: values.shiftWork,
+		dailyOvertime: values.dailyOvertime && dayMinutes !== null,
 		hoursLimitsApply: values.hoursLimitsApply,
 		overtimePercent: percentOrNull(values.overtimeTimes),
 		restDayWorkPercent: percentOrNull(values.restDayTimes),
@@ -151,14 +145,23 @@ export const weekFieldsOf = (
 	};
 };
 
-/** The form as stored terms: what is sent once the schema passes. */
+/** The form as stored terms: what is sent once the schema passes; the API works out the day. */
 export const termsBodyOf = (values: TermsFormValues): EmploymentTermsBody => {
 	const fields = weekFieldsOf(values);
 	if (!fields) throw new Error("termsBodyOf: the form did not pass its schema");
+	// The day is the API's to work out, so it is not sent.
 	return {
-		...fields,
 		name: values.name.trim(),
 		description: values.description.trim() || null,
+		daysPerWeek: fields.daysPerWeek,
+		weekMinutes: fields.weekMinutes,
+		restDay: fields.restDay,
+		dailyOvertime: fields.dailyOvertime,
+		hoursLimitsApply: fields.hoursLimitsApply,
+		overtimePercent: fields.overtimePercent,
+		restDayWorkPercent: fields.restDayWorkPercent,
+		dayOffWorkPercent: fields.dayOffWorkPercent,
+		extraHoursPaidAs: fields.extraHoursPaidAs,
 	};
 };
 
@@ -169,7 +172,11 @@ const timesOrEmpty = (percent: number | null): string =>
 /** Where the form starts from: terms being edited, a preset, or blank. */
 export const termsFormValuesOf = (
 	start:
-		(WeekFields & { name: string; description?: string | null }) | undefined
+		| (Omit<WeekFields, "dayMinutes" | "shiftWork"> & {
+				name: string;
+				description?: string | null;
+		  })
+		| undefined
 ): TermsFormValues =>
 	start === undefined
 		? BLANK_TERMS
@@ -178,12 +185,10 @@ export const termsFormValuesOf = (
 				description: start.description ?? "",
 				daysPerWeek:
 					start.daysPerWeek === null ? "" : String(start.daysPerWeek),
-				dayHours: hoursInput(start.dayMinutes),
 				weekHours: hoursInput(start.weekMinutes),
 				restKind: start.restDay === "ROSTERED" ? "ROSTERED" : "FIXED",
 				restWeekday: isWeekday(start.restDay) ? start.restDay : "",
 				dailyOvertime: start.dailyOvertime,
-				shiftWork: start.shiftWork,
 				hoursLimitsApply: start.hoursLimitsApply,
 				overtimeTimes: timesOrEmpty(start.overtimePercent),
 				restDayTimes: timesOrEmpty(start.restDayWorkPercent),
@@ -232,8 +237,8 @@ const rateProblem = (text: string, t: TFunction): string | undefined => {
 /**
  * Mirrors the API's rules for terms (`EmploymentTermsRules`) so most
  * mistakes show before saving, each as a sentence saying what to change: a
- * name, whole-minute hours in range, a week its working days can hold, a
- * day when overtime counts by the day, a weekday for a fixed rest day, and
+ * name, whole-minute hours in range, a week whose worked-out day is not
+ * longer than the longest normal day, a weekday for a fixed rest day, and
  * rates the Employment Act allows. The longest normal day and the lowest
  * overtime rate for covered staff are the country's, so they come from the
  * API (`maxDayMinutes`, `minimumCoveredOvertimePercent`); without them the
@@ -261,7 +266,6 @@ export const termsFormSchema = (
 				.trim()
 				.max(TERMS_DESCRIPTION_MAX_LENGTH, t(`${key}.descriptionLength`)),
 			daysPerWeek: z.string(),
-			dayHours: z.string(),
 			weekHours: z.string(),
 			restKind: z.enum(["FIXED", "ROSTERED"]),
 			restWeekday: z.union([
@@ -269,7 +273,6 @@ export const termsFormSchema = (
 				z.literal(""),
 			]),
 			dailyOvertime: z.boolean(),
-			shiftWork: z.boolean(),
 			hoursLimitsApply: z.boolean(),
 			overtimeTimes: z.string(),
 			restDayTimes: z.string(),
@@ -283,14 +286,6 @@ export const termsFormSchema = (
 			};
 			if (parseDays(values.daysPerWeek) === "invalid")
 				problem("daysPerWeek", t(`${key}.daysInvalid`));
-			const dayRequired = values.dailyOvertime && !values.shiftWork;
-			const dayProblem = hoursProblem(
-				values.dayHours,
-				{ required: dayRequired, min: MIN_DAY_MINUTES, max: maxDayMinutes },
-				t,
-				t(`${key}.dayRequiredForOvertime`)
-			);
-			if (dayProblem) problem("dayHours", dayProblem);
 			const weekProblem = hoursProblem(
 				values.weekHours,
 				{ required: true, min: MIN_WEEK_MINUTES, max: MAX_WEEK_MINUTES },
@@ -327,22 +322,26 @@ export const termsFormSchema = (
 					: undefined;
 			if (dayOffProblem) problem("dayOffTimes", dayOffProblem);
 			const days = parseDays(values.daysPerWeek);
-			const day = minutesOrNull(values.dayHours);
 			const week = minutesOrNull(values.weekHours);
+			const day = normalDayMinutes(
+				typeof days === "number" ? days : null,
+				week
+			);
 			if (
 				typeof days === "number" &&
-				day !== null &&
 				week !== null &&
-				week > days * day + ROUNDING_MINUTES
+				day !== null &&
+				maxDayMinutes !== null &&
+				day > maxDayMinutes
 			)
 				problem(
 					"weekHours",
-					t(`${key}.weekAboveDays`, {
+					t(`${key}.dayTooLong`, {
+						week: durationShort(week, t),
 						days: formatDays(days),
 						count: days,
 						day: durationShort(day, t),
-						made: durationShort(Math.round(days * day), t),
-						week: durationShort(week, t),
+						max: durationShort(maxDayMinutes, t),
 					})
 				);
 		});

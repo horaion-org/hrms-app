@@ -167,11 +167,12 @@ describe("A person's employment terms", () => {
 			"/settings?section=employment&terms=terms-six-day-shift"
 		);
 		// The kind beside the name, then the week in a few words; the full sentence lives in Settings.
-		expect(within(card).getByText("Shift work")).toBeVisible();
+		// Shift work is gone (API ADR-0124): no pill beside the name.
+		expect(within(card).queryByText("Shift work")).toBeNull();
 		expect(card).toHaveTextContent(
 			"44 h over 6 days · Shifts up to 12 h · Roster picks the rest day · Since 1 Mar 2025"
 		);
-		expect(card).not.toHaveTextContent("Works 44 hours");
+		expect(card).not.toHaveTextContent("Full-time, 6 days a week");
 		expect(card).toHaveTextContent(
 			"Changes to Five-day week, 44 h from 4 Jan 2027."
 		);
@@ -312,7 +313,7 @@ describe("A person's employment terms", () => {
 			await screen.findByRole("option", { name: "Five-day week, 44 h" })
 		);
 		expect(dialog).toHaveTextContent(
-			"Works 44 hours over 5 days a week, 8 hours 48 minutes a day."
+			"Full-time, 5 days a week, 44 h (8 h 48 min a day)."
 		);
 		// Contracted hours wait behind their question until asked for.
 		expect(

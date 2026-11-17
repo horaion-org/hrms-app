@@ -13,7 +13,6 @@ export type TermsField = keyof Pick<
 	| "name"
 	| "description"
 	| "daysPerWeek"
-	| "dayHours"
 	| "weekHours"
 	| "restWeekday"
 	| "overtimeTimes"
@@ -65,11 +64,12 @@ export const termsSaveRefusal = (
 				message: t(`${key}.descriptionLength`),
 			},
 			daysPerWeek: { field: "daysPerWeek", message: t(`${key}.daysInvalid`) },
-			dayMinutes: { field: "dayHours", message: t(`${key}.dayRejected`) },
 			weekMinutes: { field: "weekHours", message: t(`${key}.weekRejected`) },
 			restDay: { field: "restWeekday", message: t(`${key}.restDayRequired`) },
-			dailyOvertime: { field: "dayHours", message: t(`${key}.dailyNeedsDay`) },
-			shiftWork: { field: "dayHours", message: t(`${key}.shiftNoDaily`) },
+			dailyOvertime: {
+				field: "daysPerWeek",
+				message: t(`${key}.dailyNeedsDays`),
+			},
 			overtimePercent: {
 				field: "overtimeTimes",
 				message: t(`${key}.overtimeRateRejected`, RATE_BOUNDS_IN_TIMES),
