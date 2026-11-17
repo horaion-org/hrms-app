@@ -226,3 +226,30 @@ export const defaultMonthOf = (
 	};
 	return months.find(hasAWeekTickedByDefault) ?? months[0];
 };
+
+/** What decides the month Setup suggests: whether a month is already settled, and the Department's summaries. */
+export type MonthSuggestionInput = {
+	/** A month the link names, or one Setup was submitted with: it is kept, never replaced by a suggestion. */
+	monthSettled: boolean;
+	departmentId: string;
+	/** The company's month summaries; undefined until they are read. */
+	summaries: ReadonlyArray<ScheduleMonthSummary> | undefined;
+};
+
+/**
+ * The month Setup suggests for the chosen Department (defaultMonthOf over its
+ * summaries), or none: once a month is settled, so going back from Generate
+ * keeps the month the manager chose, and before the summaries are read.
+ */
+export const suggestedMonthOf = (
+	months: ReadonlyArray<string>,
+	today: string,
+	{ monthSettled, departmentId, summaries }: MonthSuggestionInput
+): string | undefined =>
+	monthSettled || summaries === undefined
+		? undefined
+		: defaultMonthOf(
+				months,
+				today,
+				summaries.filter((summary) => summary.departmentId === departmentId)
+			);

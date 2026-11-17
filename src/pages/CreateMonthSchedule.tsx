@@ -62,6 +62,7 @@ import {
 	chosenWeeksNow,
 	defaultMonthOf,
 	defaultTicksOf,
+	suggestedMonthOf,
 	tickableWeeksOf,
 	tickedRangesOf,
 } from "@/features/scheduling/months/weekTicks";
@@ -236,13 +237,11 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 				allowedHere("schedule:read")
 		)
 	);
-	const suggestedMonth =
-		summaries.data &&
-		defaultMonthOf(
-			months,
-			todayIso,
-			summaries.data.filter((summary) => summary.departmentId === departmentId)
-		);
+	const suggestedMonth = suggestedMonthOf(months, todayIso, {
+		monthSettled: search.month !== undefined || setup !== undefined,
+		departmentId,
+		summaries: summaries.data,
+	});
 	// "Started" follows the branch's today, as the API's "over" does; the browser's date only without its time zone.
 	const branchToday = scheduleMonth.data?.timeZone
 		? isoDateIn(scheduleMonth.data.timeZone, today)
