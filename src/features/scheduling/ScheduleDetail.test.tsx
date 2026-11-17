@@ -1327,7 +1327,7 @@ it("counts what the engine found on one Issues button and lists it in the side p
 		.getByRole("button", { name: "Must fix, 2" })
 		.closest("section");
 	expect(mustFix).toHaveTextContent(
-		"1 Front Desk Staff short · Sat, Oct 17 · 09:00–15:00Not enough people on this shift. Find someone to cover it. Rule: Morning cover"
+		"1 Front Desk Staff short · Sat, Oct 17 · 09:00–15:00Rule: Morning cover"
 	);
 	expect(mustFix).toHaveTextContent(
 		"Ben OngBen Ong works more than five days in a row."
@@ -1394,9 +1394,7 @@ it("names findings without reading the setup it can't see", async () => {
 	await user.click(await screen.findByRole("button", { name: /^Issues: / }));
 
 	const panel = screen.getByRole("complementary", { name: "Issues" });
-	expect(panel).toHaveTextContent(
-		"Not enough people on this shift. Find someone to cover it. Rule: People on a shift"
-	);
+	expect(panel).toHaveTextContent("Rule: People on a shift");
 	expect(panel).toHaveTextContent(
 		"No one in this schedule can take one of its shifts."
 	);

@@ -28,7 +28,7 @@ export const rosterIssuesFixture = (): Array<RosterIssue> => [
 		memberProfileId: null,
 		day: "2026-10-17",
 		time: "09:00–15:00",
-		rule: "Not enough people on this shift. Find someone to cover it. Rule: Early front desk",
+		rule: "Rule: Early front desk",
 		action: {
 			kind: "findCover",
 			gap: { shiftId: "front-desk-am", day: "2026-10-17" },

@@ -56,7 +56,8 @@ describe("rosterIssues", () => {
 				gap: { day: "2026-10-17" },
 			},
 		});
-		expect(issue?.rule).toMatch(/^scheduling\.issues\.shortOnRule\(1\|/);
+		// Line 1 and Find cover already say it is short: line 2 is only the rule.
+		expect(issue?.rule).toMatch(/^scheduling\.issues\.ruleOnly\(/);
 	});
 
 	it("offers Show for a gap with no shift to find cover for", () => {

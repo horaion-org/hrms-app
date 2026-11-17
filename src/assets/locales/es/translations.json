@@ -4532,8 +4532,6 @@
 			"save": "Guardar horas"
 		},
 		"issues": {
-			"shortOnRule_one": "No hay suficientes personas en este turno. Busca a alguien que lo cubra. Regla: {{rule}}",
-			"shortOnRule_other": "No hay suficientes personas en este turno. Busca {{count}} personas que lo cubran. Regla: {{rule}}",
 			"conflict": "Un conflicto en este día",
 			"weekBarLabel": "Incidencias: {{count}} por corregir, {{notMet}} no se pudieron cumplir",
 			"groupLabel": "{{group}}, {{count}}",
@@ -4563,7 +4561,7 @@
 			"jobShort_other": "Faltan {{count}} {{job}}",
 			"brokenMust": "Aquí se incumple una regla obligatoria. Cambia este día a mano y vuelve a validar. Regla: {{rule}}",
 			"notMetRule": "Se pidió si es posible, y este cuadrante no pudo cumplirla. Regla: {{rule}}",
-			"leaveShort": "{{name}} está de permiso, así que falta gente en {{shift}}. Busca a alguien que lo cubra.",
+			"leaveShort": "De permiso, así que falta gente en {{shift}}.",
 			"nothingToFix": "Nada que corregir esta semana",
 			"startChanged": {
 				"title_one": "Los días antes de esta semana de {{count}} persona cambiaron",
@@ -4574,7 +4572,8 @@
 				"title": "Estas notas son de la generación",
 				"detail": "No reflejan los cambios hechos a mano desde entonces. Valida el cuadrante para actualizarlas."
 			},
-			"ruleSentence": "{{sentence}} Regla: {{rule}}"
+			"ruleSentence": "{{sentence}} Regla: {{rule}}",
+			"ruleOnly": "Regla: {{rule}}"
 		},
 		"rosterMarkers": {
 			"leaveRequested": "Permiso solicitado",

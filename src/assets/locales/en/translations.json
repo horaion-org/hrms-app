@@ -4732,8 +4732,6 @@
 			"save": "Save hours"
 		},
 		"issues": {
-			"shortOnRule_one": "Not enough people on this shift. Find someone to cover it. Rule: {{rule}}",
-			"shortOnRule_other": "Not enough people on this shift. Find {{count}} people to cover it. Rule: {{rule}}",
 			"conflict": "A clash on this day",
 			"weekBarLabel": "Issues: {{count}} to fix, {{notMet}} could not be met",
 			"groupLabel": "{{group}}, {{count}}",
@@ -4763,7 +4761,7 @@
 			"jobShort_other": "{{count}} {{job}} short",
 			"brokenMust": "A rule that must hold is broken here. Change this day by hand, then validate again. Rule: {{rule}}",
 			"notMetRule": "Asked for if possible, and this roster could not meet it. Rule: {{rule}}",
-			"leaveShort": "{{name}} is on leave, so {{shift}} is short. Find someone to cover it.",
+			"leaveShort": "On leave, so {{shift}} is short.",
 			"nothingToFix": "Nothing to fix this week",
 			"startChanged": {
 				"title_one": "{{count}} person’s days before this week changed",
@@ -4774,7 +4772,8 @@
 				"title": "These notes are from generation",
 				"detail": "Changes made by hand since aren’t reflected. Validate the schedule to bring them up to date."
 			},
-			"ruleSentence": "{{sentence}} Rule: {{rule}}"
+			"ruleSentence": "{{sentence}} Rule: {{rule}}",
+			"ruleOnly": "Rule: {{rule}}"
 		},
 		"rosterMarkers": {
 			"leaveRequested": "Leave requested",

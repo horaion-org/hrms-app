@@ -98,11 +98,9 @@ describe("RosterIssueGroups", () => {
 				/^1 Front Desk Staff short · Sat.*17.* · 09:00–15:00$/
 			)
 		).toHaveClass("font-medium");
-		expect(
-			within(row).getByText(
-				"Not enough people on this shift. Find someone to cover it. Rule: Early front desk"
-			)
-		).toHaveClass("text-neutral-700");
+		expect(within(row).getByText("Rule: Early front desk")).toHaveClass(
+			"text-neutral-700"
+		);
 		expect(within(row).getAllByRole("button")).toHaveLength(1);
 	});
 

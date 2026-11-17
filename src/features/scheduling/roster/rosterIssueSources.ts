@@ -116,10 +116,7 @@ const leaveAndCoverIssue = (
 			row.uncoveredFrom && row.uncoveredTo
 				? timeRangeText(row.uncoveredFrom, row.uncoveredTo, t)
 				: null,
-		rule: t("scheduling.issues.leaveShort", {
-			name: base.who,
-			shift: shift.name,
-		}),
+		rule: t("scheduling.issues.leaveShort", { shift: shift.name }),
 		action: {
 			kind: "findCover",
 			gap: { shiftId: shift.shiftId, day: row.day },

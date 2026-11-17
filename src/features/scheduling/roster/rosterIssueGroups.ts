@@ -101,8 +101,7 @@ const gapIssue = (
 		memberProfileId: null,
 		day: gap.date,
 		time: `${clockOf(gap.start)}–${clockOf(gap.end)}`,
-		rule: t(`${key}.shortOnRule`, {
-			count: gap.missing,
+		rule: t(`${key}.ruleOnly`, {
 			rule: ruleLabel(
 				{ name: gap.sourceRule, constraintId: gap.sourceRuleId },
 				ruleNames,
