@@ -4426,7 +4426,7 @@
 			},
 			"jobShort": "Falta {{job}}",
 			"unknownJob": "un puesto",
-			"wholeRoster": "Todo el turno",
+			"wholeRoster": "Todo el cuadrante",
 			"ruleWithoutPlace": "El motor no pudo indicar a quién ni qué día. Revise los cambios hechos a mano desde que se generó este cuadrante, o vuelva a validar.",
 			"rosterNote": "Nota del turno",
 			"summary": {
