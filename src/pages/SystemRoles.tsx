@@ -25,6 +25,7 @@ import type {
 import { CreateSystemRoleDialog } from "@/features/organisation/CreateSystemRoleDialog";
 import {
 	defaultRuleText,
+	deleteRoleOffer,
 	giveDefaultAccessSummary,
 	type DefaultRuleText,
 } from "@/features/organisation/defaultAccess";
@@ -60,6 +61,7 @@ import {
 	type SystemRoleAction,
 } from "@/pages/SystemRoleActions";
 import { AssignSystemRole } from "@/pages/SystemRoleHolders";
+import { ListProblem } from "@/features/organisation/ListProblem";
 
 /** Every role, whatever the list's filter, to name the role each default gives. */
 const ALL_ROLES_BY_NAME = { sort: { field: "name", desc: false } } as const;
@@ -136,6 +138,15 @@ export const SystemRoles = (): FunctionComponent => {
 			});
 		},
 		[navigate]
+	);
+	const deleteOffer = useCallback(
+		(role: AccessRole) =>
+			deleteRoleOffer(
+				role,
+				defaults.data,
+				access.can("access_role:delete", COMPANY_SCOPE)
+			),
+		[defaults.data, access]
 	);
 	const [assigning, setAssigning] = useState(false);
 	const [action, setAction] = useState<SystemRoleAction>();
@@ -239,17 +250,12 @@ export const SystemRoles = (): FunctionComponent => {
 								)}
 							</OverflowMenuItem>
 							<OverflowMenuItem
-								// Only a role nobody holds can be deleted.
-								disabled={
-									role.protectedRole ||
-									role.holderCount > 0 ||
-									!access.can("access_role:delete", COMPANY_SCOPE)
-								}
+								disabled={deleteOffer(role).disabled}
 								onClick={() => {
 									setAction({ kind: "delete", role });
 								}}
 							>
-								{t("organisation.list.deleteItem")}
+								{t(deleteOffer(role).label)}
 							</OverflowMenuItem>
 						</>
 					),
@@ -260,7 +266,7 @@ export const SystemRoles = (): FunctionComponent => {
 				headerClassName: "w-24",
 			},
 		],
-		[t, access, canCreate, canEdit, navigate, open]
+		[t, canCreate, canEdit, navigate, open, deleteOffer]
 	);
 
 	return (
@@ -346,13 +352,7 @@ export const SystemRoles = (): FunctionComponent => {
 				/>
 			)}
 			{view.problem ? (
-				<p
-					className="mt-8 text-sm text-neutral-700 data-alert:text-error-700"
-					data-alert={view.problem.alert || undefined}
-					role={view.problem.alert ? "alert" : undefined}
-				>
-					{view.problem.message}
-				</p>
+				<ListProblem problem={view.problem} />
 			) : (
 				<>
 					<DataTable

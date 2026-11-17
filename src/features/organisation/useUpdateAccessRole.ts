@@ -24,10 +24,10 @@ export const useUpdateAccessRole = (
 		mutationFn: (body: UpdateAccessRoleBody) =>
 			updateAccessRole(companyId, accessRoleId, body),
 		meta: { successMessage: "organisation.accessRoles.toast.saved" },
-		onSuccess: () =>
-			Promise.all([
-				client.invalidateQueries({ queryKey: ["organisation", companyId] }),
-				client.invalidateQueries({ queryKey: workspaceQuery.queryKey }),
-			]),
+		// Reloaded in the background: the change is done when the API answers.
+		onSuccess: () => {
+			void client.invalidateQueries({ queryKey: ["organisation", companyId] });
+			void client.invalidateQueries({ queryKey: workspaceQuery.queryKey });
+		},
 	});
 };

@@ -20,6 +20,7 @@ import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated._app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated._app.index'
+import { Route as AuthenticatedAppSplatRouteImport } from './routes/_authenticated._app.$'
 import { Route as AuthenticatedAppActivityRouteImport } from './routes/_authenticated._app.activity'
 import { Route as AuthenticatedAppAvailabilityRouteImport } from './routes/_authenticated._app.availability'
 import { Route as AuthenticatedAppForbiddenRouteImport } from './routes/_authenticated._app.forbidden'
@@ -105,6 +106,11 @@ const AuthenticatedAppRoute = AuthenticatedAppRouteImport.update({
 const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppSplatRoute = AuthenticatedAppSplatRouteImport.update({
+  id: '/$',
+  path: '/$',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 const AuthenticatedAppActivityRoute =
@@ -313,6 +319,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/$': typeof AuthenticatedAppSplatRoute
   '/activity': typeof AuthenticatedAppActivityRoute
   '/availability': typeof AuthenticatedAppAvailabilityRoute
   '/forbidden': typeof AuthenticatedAppForbiddenRoute
@@ -357,6 +364,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/$': typeof AuthenticatedAppSplatRoute
   '/activity': typeof AuthenticatedAppActivityRoute
   '/availability': typeof AuthenticatedAppAvailabilityRoute
   '/forbidden': typeof AuthenticatedAppForbiddenRoute
@@ -403,6 +411,7 @@ export interface FileRoutesById {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/_authenticated/_app': typeof AuthenticatedAppRouteWithChildren
+  '/_authenticated/_app/$': typeof AuthenticatedAppSplatRoute
   '/_authenticated/_app/activity': typeof AuthenticatedAppActivityRoute
   '/_authenticated/_app/availability': typeof AuthenticatedAppAvailabilityRoute
   '/_authenticated/_app/forbidden': typeof AuthenticatedAppForbiddenRoute
@@ -450,6 +459,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/sign-in'
     | '/sign-up'
+    | '/$'
     | '/activity'
     | '/availability'
     | '/forbidden'
@@ -494,6 +504,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/sign-in'
     | '/sign-up'
+    | '/$'
     | '/activity'
     | '/availability'
     | '/forbidden'
@@ -539,6 +550,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/_authenticated/_app'
+    | '/_authenticated/_app/$'
     | '/_authenticated/_app/activity'
     | '/_authenticated/_app/availability'
     | '/_authenticated/_app/forbidden'
@@ -664,6 +676,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/$': {
+      id: '/_authenticated/_app/$'
+      path: '/$'
+      fullPath: '/$'
+      preLoaderRoute: typeof AuthenticatedAppSplatRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/_app/activity': {
@@ -901,6 +920,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAppRouteChildren {
+  AuthenticatedAppSplatRoute: typeof AuthenticatedAppSplatRoute
   AuthenticatedAppActivityRoute: typeof AuthenticatedAppActivityRoute
   AuthenticatedAppAvailabilityRoute: typeof AuthenticatedAppAvailabilityRoute
   AuthenticatedAppForbiddenRoute: typeof AuthenticatedAppForbiddenRoute
@@ -938,6 +958,7 @@ interface AuthenticatedAppRouteChildren {
 }
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
+  AuthenticatedAppSplatRoute: AuthenticatedAppSplatRoute,
   AuthenticatedAppActivityRoute: AuthenticatedAppActivityRoute,
   AuthenticatedAppAvailabilityRoute: AuthenticatedAppAvailabilityRoute,
   AuthenticatedAppForbiddenRoute: AuthenticatedAppForbiddenRoute,

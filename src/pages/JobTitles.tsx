@@ -37,6 +37,7 @@ import { selectedUnits } from "@/features/workspace/unitSelection";
 import { useAccess } from "@/features/workspace/useAccess";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
+import { ListProblem } from "@/features/organisation/ListProblem";
 
 const route = getRouteApi("/_authenticated/_app/organisation/job-titles");
 
@@ -210,6 +211,7 @@ export const JobTitles = (): FunctionComponent => {
 						setJobTitleStatus.error
 							? mapRefusal(setJobTitleStatus.error, {
 									forbidden: t("organisation.jobTitles.status.forbidden"),
+									stillUpdating: t("organisation.stillUpdatingWrite"),
 									failed: t("organisation.jobTitles.status.failed"),
 								}).message
 							: undefined
@@ -227,13 +229,7 @@ export const JobTitles = (): FunctionComponent => {
 				/>
 			)}
 			{view.problem ? (
-				<p
-					className="mt-8 text-sm text-neutral-700 data-alert:text-error-700"
-					data-alert={view.problem.alert || undefined}
-					role={view.problem.alert ? "alert" : undefined}
-				>
-					{view.problem.message}
-				</p>
+				<ListProblem problem={view.problem} />
 			) : (
 				<>
 					<DataTable

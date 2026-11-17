@@ -120,3 +120,16 @@ export async function readProblem(
 		body,
 	});
 }
+
+/** The API's code for a `503` while its decision engine catches up with a recent organisation change. */
+const DECISION_ENGINE_STALE = "DECISION_ENGINE_STALE";
+
+/**
+ * Whether the API refused because access is still being updated after a
+ * recent organisation change (a new branch, role or default access, an
+ * import). The same request passes again within seconds.
+ */
+export const isDecisionEngineStale = (error: unknown): boolean =>
+	error instanceof ApiProblemError &&
+	error.status === 503 &&
+	error.errorCode === DECISION_ENGINE_STALE;

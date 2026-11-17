@@ -110,12 +110,14 @@ describe("ApprovalsSettings", () => {
 			within(row!)
 				.getAllByRole("cell")
 				.map((cell) => cell.firstChild?.textContent ?? undefined);
-		expect(cellsOf(company).slice(0, 3)).toEqual([
+		expect(cellsOf(company).slice(0, 4)).toEqual([
+			"Company publishing",
 			"Company default",
 			"1 Publish",
 			"On",
 		]);
-		expect(cellsOf(kitchen).slice(0, 3)).toEqual([
+		expect(cellsOf(kitchen).slice(0, 4)).toEqual([
+			"Kitchen publishing",
 			"Kitchen",
 			"1 Endorse (all of 2) → 2 Publish",
 			"Off",
@@ -536,8 +538,12 @@ describe("ApprovalsSettings", () => {
 		const user = userEvent.setup();
 
 		const panel = await open();
+		// The row shows the name the dialog then asks about.
+		expect(
+			await within(panel).findByRole("cell", { name: /^Kitchen publishing/ })
+		).toBeInTheDocument();
 		await user.click(
-			await within(panel).findByRole("button", {
+			within(panel).getByRole("button", {
 				name: "More actions for Kitchen publishing",
 			})
 		);

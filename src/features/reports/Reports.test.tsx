@@ -200,6 +200,21 @@ describe("Reports", () => {
 		expect(calls.some((call) => call.path.startsWith(REPORTS))).toBe(false);
 	});
 
+	it("says why each section is empty over a range it cannot ask for, never Loading", async () => {
+		stubApi(routes(["report:read"]));
+		await open("/reports?from=2026-03-10&to=2026-03-01");
+
+		expect(
+			await screen.findByText(
+				"The end date is before the start date. Choose the dates again."
+			)
+		).toBeInTheDocument();
+		expect(
+			screen.getAllByText("Choose a valid range to see this.")
+		).toHaveLength(3);
+		expect(screen.queryByText("Loading…")).not.toBeInTheDocument();
+	});
+
 	it("is not offered in the menu to someone who reads rosters but holds no report key", async () => {
 		stubApi(routes(["schedule:read"]));
 		await open("/");

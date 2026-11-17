@@ -23,3 +23,7 @@ type Story = StoryObj<typeof meta>;
 export const Answered: Story = {};
 export const Empty: Story = { args: { isEmpty: (): boolean => true } };
 export const Failed: Story = { args: { read: { status: "error" } } };
+/** The chosen dates can't be asked for, so nothing loads. */
+export const RangeInvalid: Story = {
+	args: { read: { status: "pending" }, rangeInvalid: true },
+};

@@ -88,6 +88,7 @@ export const accessRoleRowRefusal = (
 				),
 			},
 			forbidden: t(`organisation.accessRoles.${change}.forbidden`),
+			stillUpdating: t("organisation.stillUpdatingWrite"),
 			failed,
 		}).message ?? failed
 	);

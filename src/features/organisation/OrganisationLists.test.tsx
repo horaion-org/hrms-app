@@ -470,7 +470,7 @@ describe("Branches", () => {
 		{ status: "ACTIVE", statusAction: "Deactivate" },
 		{ status: "INACTIVE", statusAction: "Activate" },
 	])(
-		"offers View and Duplicate as not yet built and changes a $status branch's status after asking",
+		"offers only what works, never a View or Duplicate that can't, and changes a $status branch's status after asking",
 		async ({ status, statusAction }) => {
 			const user = userEvent.setup();
 			const next = status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
@@ -494,16 +494,10 @@ describe("Branches", () => {
 
 			const menu = screen.getByRole("menu");
 			const items = within(menu).getAllByRole("menuitem");
-			expect(items.map((item) => item.textContent)).toEqual([
-				"View",
-				"Duplicate",
-				statusAction,
-			]);
+			expect(items.map((item) => item.textContent)).toEqual([statusAction]);
 			expect(
 				within(menu).queryByRole("menuitem", { name: "Edit" })
 			).not.toBeInTheDocument();
-			expect(items[0]).toHaveAttribute("aria-disabled", "true");
-			expect(items[1]).toHaveAttribute("aria-disabled", "true");
 
 			await user.click(
 				within(menu).getByRole("menuitem", { name: statusAction })

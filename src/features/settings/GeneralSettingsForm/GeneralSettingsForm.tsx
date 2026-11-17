@@ -157,11 +157,12 @@ export const GeneralSettingsForm = ({
 						/>
 					</FormRow>
 				))}
-			</div>
-			<div className="mt-auto flex flex-col items-end gap-3 pt-8">
+				{/* The reason sits with the fixed preferences, not by Save, which saves only the name. */}
 				<p className="text-sm text-neutral-700">
 					{t("settings.general.preferencesUnavailable")}
 				</p>
+			</div>
+			<div className="mt-auto flex flex-col items-end gap-3 pt-8">
 				{alert && (
 					<p className="text-sm text-error-700" role="alert">
 						{alert}

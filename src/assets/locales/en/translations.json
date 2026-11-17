@@ -405,6 +405,7 @@
 		},
 		"flows": {
 			"add": "Add flow",
+			"name": "Name",
 			"appliesTo": "Applies to",
 			"steps": "Steps",
 			"status": "Status",
@@ -961,7 +962,13 @@
 		"mainNavigation": "Main navigation",
 		"collapseMenu": "Collapse menu",
 		"expandMenu": "Expand menu",
-		"logo": "Horaion"
+		"logo": "Horaion",
+		"notFound": {
+			"title": "Page not found",
+			"explanation": "This page doesn’t exist.",
+			"dashboard": "Go to the dashboard",
+			"signIn": "Sign in"
+		}
 	},
 	"people": {
 		"title": "People overview",
@@ -1577,13 +1584,9 @@
 			"billingPlaceholder": "Your billing cycle, payment method and invoices will appear here once billing is available."
 		},
 		"upgrade": {
-			"action": "Upgrade plan",
-			"description": "Switch to a paid plan for your company.",
 			"plan": "Paid plan",
 			"comingSoon": "Coming soon",
-			"details": "Plan features and pricing will be available soon.",
-			"unavailable": "Upgrades will be available here once billing is ready.",
-			"dismiss": "Got it"
+			"details": "Plan features and pricing will be available soon."
 		},
 		"general": {
 			"workspaceName": "Workspace Name",
@@ -1878,7 +1881,10 @@
 			"truncated": "Showing the first {{shown}} of {{total}}. Use the status filter to narrow the list.",
 			"cancel": "Cancel",
 			"branch": "Branch",
-			"created": "Created"
+			"created": "Created",
+			"stillUpdating": "Access is still being updated after a recent change, so this list can’t be shown yet. Try again in a few seconds.",
+			"tryAgain": "Try again",
+			"waitingForAccess": "Access is being updated after a recent change. Trying again in a few seconds…"
 		},
 		"branches": {
 			"title": "Branches",
@@ -2181,7 +2187,8 @@
 				},
 				"through": "{{name}} ({{source}})",
 				"hiddenPlace": "a place you can't see",
-				"unknownRole": "A role you can't see"
+				"unknownRole": "A role you can't see",
+				"usedAsDefaultDeleteItem": "Delete: remove it from Default access first"
 			},
 			"title": "Access roles",
 			"caption": "Configured roles",
@@ -2371,7 +2378,7 @@
 				}
 			},
 			"delete": {
-				"usedAsDefault": "This role is default access. Remove it from Default access first, then delete it.",
+				"usedAsDefault": "This role is given as default access. Remove it under Default access on this page first, then delete it.",
 				"title": "Delete {{name}}",
 				"description": "Nobody holds this role. Deleting it can’t be undone.",
 				"confirm": "Delete role",
@@ -3491,7 +3498,8 @@
 				"leftOut_one": "{{count}} new permission left out",
 				"leftOut_other": "{{count}} new permissions left out"
 			}
-		}
+		},
+		"stillUpdatingWrite": "Access is still being updated after a recent change, so this wasn’t saved. Try again in a few seconds."
 	},
 	"workspace": {
 		"branchSelector": {
@@ -6294,6 +6302,7 @@
 		"range": "Dates",
 		"failed": "We couldn’t load this table. Try again in a moment.",
 		"loading": "Loading…",
+		"chooseValidRange": "Choose a valid range to see this.",
 		"hidden": "You don’t have access to any rosters here.",
 		"rangeProblems": {
 			"inverted": "The end date is before the start date. Choose the dates again.",

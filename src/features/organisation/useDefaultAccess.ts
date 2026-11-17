@@ -70,11 +70,16 @@ export const defaultAccessRecipientQuery = (
 		retry,
 	});
 
-/** Reloads everything under the company's Organisation entries, defaults and people's access included. */
-const useReloadOrganisation = (companyId: string): (() => Promise<void>) => {
+/**
+ * Reloads everything under the company's Organisation entries, defaults and
+ * people's access included, in the background: a change is done when the
+ * API answers, so a re-read that is slow or retrying never holds its dialog.
+ */
+const useReloadOrganisation = (companyId: string): (() => void) => {
 	const client = useQueryClient();
-	return () =>
-		client.invalidateQueries({ queryKey: ["organisation", companyId] });
+	return () => {
+		void client.invalidateQueries({ queryKey: ["organisation", companyId] });
+	};
 };
 
 /** Adds a default at the place the body names. */

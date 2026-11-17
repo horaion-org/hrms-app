@@ -74,6 +74,25 @@ describe("ReportSection", () => {
 		);
 	});
 
+	it("says to choose a valid range instead of loading when the range can't be asked for", () => {
+		render(
+			<ReportSection
+				rangeInvalid
+				findingOf={overtimeFinding}
+				id="overtime"
+				isEmpty={() => false}
+				read={{ status: "pending" }}
+			>
+				{() => null}
+			</ReportSection>
+		);
+
+		expect(
+			screen.getByText("Choose a valid range to see this.")
+		).toBeInTheDocument();
+		expect(screen.queryByText("Loading…")).not.toBeInTheDocument();
+	});
+
 	it("is left out where its read is out of reach", () => {
 		const { container } = render(
 			<ReportSection

@@ -16,7 +16,9 @@ export const useCreateAccessRole = (
 	const client = useQueryClient();
 	return useMutation({
 		mutationFn: (body: AccessRoleBody) => createAccessRole(companyId, body),
-		onSuccess: () =>
-			client.invalidateQueries({ queryKey: ["organisation", companyId] }),
+		// Reloaded in the background: the change is done when the API answers.
+		onSuccess: () => {
+			void client.invalidateQueries({ queryKey: ["organisation", companyId] });
+		},
 	});
 };

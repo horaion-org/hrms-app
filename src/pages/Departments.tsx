@@ -30,6 +30,7 @@ import { unitSelectionOf } from "@/features/workspace/unitSearch";
 import { useAccess } from "@/features/workspace/useAccess";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
+import { ListProblem } from "@/features/organisation/ListProblem";
 
 const route = getRouteApi("/_authenticated/_app/organisation/departments");
 
@@ -169,6 +170,7 @@ export const Departments = (): FunctionComponent => {
 						setDepartmentStatus.error
 							? mapRefusal(setDepartmentStatus.error, {
 									forbidden: t("organisation.departments.status.forbidden"),
+									stillUpdating: t("organisation.stillUpdatingWrite"),
 									failed: t("organisation.departments.status.failed"),
 								}).message
 							: undefined
@@ -186,13 +188,7 @@ export const Departments = (): FunctionComponent => {
 				/>
 			)}
 			{view.problem ? (
-				<p
-					className="mt-8 text-sm text-neutral-700 data-alert:text-error-700"
-					data-alert={view.problem.alert || undefined}
-					role={view.problem.alert ? "alert" : undefined}
-				>
-					{view.problem.message}
-				</p>
+				<ListProblem problem={view.problem} />
 			) : (
 				<>
 					<DataTable

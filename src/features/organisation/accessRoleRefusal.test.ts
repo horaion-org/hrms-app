@@ -104,7 +104,7 @@ describe("access role row refusal mapping", () => {
 				t
 			)
 		).toBe(
-			"This role is default access. Remove it from Default access first, then delete it."
+			"This role is given as default access. Remove it under Default access on this page first, then delete it."
 		);
 	});
 });

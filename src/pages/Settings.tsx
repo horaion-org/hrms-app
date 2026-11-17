@@ -1,10 +1,10 @@
 import { getRouteApi, useRouteContext } from "@tanstack/react-router";
-import { useRef, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
-import { ArrowLeftIcon, ArrowUpIcon } from "@/components/ui/Icon";
+import { ArrowLeftIcon } from "@/components/ui/Icon";
 import { ApprovalsSettings } from "@/features/settings/ApprovalsSettings";
 import { dataItemsFor } from "@/features/settings/dataAccess";
 import { DataSettings } from "@/features/settings/DataSettings";
@@ -56,7 +56,6 @@ export const Settings = (): FunctionComponent => {
 	const selected = selectedSection(groups, asked);
 	// With no section in the address, a phone shows the list and `md` up shows General.
 	const listOnPhone = search.section === undefined;
-	const panelRef = useRef<HTMLElement>(null);
 	const approvalsProps = {
 		canManage: access.can("approval_flow:manage", COMPANY_SCOPE),
 		canRead: access.can("approval_flow:read", COMPANY_SCOPE),
@@ -149,17 +148,6 @@ export const Settings = (): FunctionComponent => {
 						{t("settings.subtitle")}
 					</p>
 				</div>
-				<Button
-					className="self-start sm:self-auto"
-					leadingIcon={<ArrowUpIcon />}
-					onClick={() => {
-						void navigate({ search: { section: "plan" } }).then(() => {
-							panelRef.current?.focus();
-						});
-					}}
-				>
-					{t("settings.upgrade.action")}
-				</Button>
 			</div>
 			<div className="mt-10 flex flex-col overflow-hidden rounded-xl border border-neutral-400 md:min-h-144 md:flex-row">
 				<SettingsNav
@@ -185,7 +173,6 @@ export const Settings = (): FunctionComponent => {
 					</Button>
 				)}
 				<section
-					ref={panelRef}
 					aria-label={t(`settings.entries.${selected}.title`)}
 					tabIndex={-1}
 					className={joinClassNames(

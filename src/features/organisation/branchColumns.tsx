@@ -56,26 +56,18 @@ export const branchColumns = (
 	actionsColumn<Branch>(
 		t,
 		(branch) => (
-			<>
-				<OverflowMenuItem disabled>
-					{t("organisation.list.viewItem")}
-				</OverflowMenuItem>
-				<OverflowMenuItem disabled>
-					{t("organisation.list.duplicateItem")}
-				</OverflowMenuItem>
-				<OverflowMenuItem
-					disabled={!canUpdate(branch)}
-					onClick={() => {
-						onChangeStatus(branch);
-					}}
-				>
-					{t(
-						branch.status === "ACTIVE"
-							? "organisation.list.deactivateItem"
-							: "organisation.list.activateItem"
-					)}
-				</OverflowMenuItem>
-			</>
+			<OverflowMenuItem
+				disabled={!canUpdate(branch)}
+				onClick={() => {
+					onChangeStatus(branch);
+				}}
+			>
+				{t(
+					branch.status === "ACTIVE"
+						? "organisation.list.deactivateItem"
+						: "organisation.list.activateItem"
+				)}
+			</OverflowMenuItem>
 		),
 		canUpdate,
 		onEdit

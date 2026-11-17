@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import { ApiProblemError } from "@/common/problem";
+import { ApiProblemError, isDecisionEngineStale } from "@/common/problem";
 import { mapRefusal } from "@/common/refusal";
 import {
 	firstFailure,
@@ -48,6 +48,8 @@ export const assignmentRefusal = (error: unknown, t: TFunction): string => {
 		)
 			reason = t(`${key}.kindConflict`);
 		else if (cause.status === 403) reason = t(`${key}.forbidden`);
+		else if (isDecisionEngineStale(cause))
+			reason = t("organisation.stillUpdatingWrite");
 	}
 	return withOutcome(error, reason, t);
 };
@@ -66,6 +68,7 @@ export const assignmentStatusRefusal = (
 				[`400 ${ASSIGNMENT_ERROR.kindConflict}`]: t(`${key}.kindConflict`),
 			},
 			forbidden: t(`${key}.forbidden`),
+			stillUpdating: t("organisation.stillUpdatingWrite"),
 			failed: t(`${key}.failed`),
 		}).message ?? t(`${key}.failed`);
 	return withOutcome(error, reason, t);

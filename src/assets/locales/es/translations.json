@@ -405,6 +405,7 @@
 		},
 		"flows": {
 			"add": "Añadir flujo",
+			"name": "Nombre",
 			"appliesTo": "Se aplica a",
 			"steps": "Pasos",
 			"status": "Estado",
@@ -752,13 +753,9 @@
 			"billingPlaceholder": "Tu ciclo de facturación, método de pago y facturas aparecerán aquí cuando la facturación esté disponible."
 		},
 		"upgrade": {
-			"action": "Mejorar plan",
-			"description": "Cambia a un plan de pago para tu empresa.",
 			"plan": "Plan de pago",
 			"comingSoon": "Próximamente",
-			"details": "Las funciones y los precios del plan estarán disponibles pronto.",
-			"unavailable": "Podrás cambiar de plan aquí cuando la facturación esté disponible.",
-			"dismiss": "Entendido"
+			"details": "Las funciones y los precios del plan estarán disponibles pronto."
 		},
 		"general": {
 			"workspaceName": "Nombre del espacio de trabajo",
@@ -2068,7 +2065,8 @@
 				},
 				"through": "{{name}} ({{source}})",
 				"hiddenPlace": "un lugar que no puedes ver",
-				"unknownRole": "Un rol que no puedes ver"
+				"unknownRole": "Un rol que no puedes ver",
+				"usedAsDefaultDeleteItem": "Eliminar: quítalo antes de Acceso predeterminado"
 			},
 			"title": "Roles de acceso",
 			"caption": "Roles configurados",
@@ -2258,7 +2256,7 @@
 				}
 			},
 			"delete": {
-				"usedAsDefault": "Este rol es acceso predeterminado. Quítalo primero de Acceso predeterminado y luego elimínalo.",
+				"usedAsDefault": "Este rol se da como acceso predeterminado. Quítalo primero en Acceso predeterminado, en esta página, y luego elimínalo.",
 				"title": "Eliminar {{name}}",
 				"description": "Nadie tiene este rol. Eliminarlo no se puede deshacer.",
 				"confirm": "Eliminar rol",
@@ -2365,7 +2363,10 @@
 			"truncated": "Se muestran los primeros {{shown}} de {{total}}. Usa el filtro de estado para acotar la lista.",
 			"cancel": "Cancelar",
 			"branch": "Sucursal",
-			"created": "Creado"
+			"created": "Creado",
+			"stillUpdating": "El acceso aún se está actualizando tras un cambio reciente, así que esta lista no se puede mostrar todavía. Inténtalo de nuevo en unos segundos.",
+			"tryAgain": "Reintentar",
+			"waitingForAccess": "El acceso se está actualizando tras un cambio reciente. Se volverá a intentar en unos segundos…"
 		},
 		"import": {
 			"title": "Importar organización",
@@ -2759,7 +2760,8 @@
 				"leftOut_one": "{{count}} permiso nuevo dejado fuera",
 				"leftOut_other": "{{count}} permisos nuevos dejados fuera"
 			}
-		}
+		},
+		"stillUpdatingWrite": "El acceso aún se está actualizando tras un cambio reciente, así que esto no se guardó. Inténtalo de nuevo en unos segundos."
 	},
 	"shell": {
 		"welcome": "Te damos la bienvenida, <name>{{name}}</name>.",
@@ -2783,7 +2785,13 @@
 		"mainNavigation": "Navegación principal",
 		"collapseMenu": "Contraer menú",
 		"expandMenu": "Expandir menú",
-		"logo": "Horaion"
+		"logo": "Horaion",
+		"notFound": {
+			"title": "Página no encontrada",
+			"explanation": "Esta página no existe.",
+			"dashboard": "Ir al panel",
+			"signIn": "Iniciar sesión"
+		}
 	},
 	"people": {
 		"title": "Resumen de personas",
@@ -6294,6 +6302,7 @@
 		"range": "Fechas",
 		"failed": "No pudimos cargar esta tabla. Inténtalo de nuevo en un momento.",
 		"loading": "Cargando…",
+		"chooseValidRange": "Elige unas fechas válidas para ver esto.",
 		"hidden": "No tienes acceso a ningún horario aquí.",
 		"rangeProblems": {
 			"inverted": "La fecha final es anterior a la inicial. Vuelve a elegir las fechas.",
