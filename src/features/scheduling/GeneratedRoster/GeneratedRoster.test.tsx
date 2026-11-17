@@ -249,9 +249,9 @@ describe("GeneratedRoster", () => {
 		await user.click(screen.getByRole("button", { name: /^Issues/ }));
 
 		const panel = screen.getByRole("complementary", { name: "Issues" });
-		expect(
-			within(panel).getByRole("button", { name: /^For your information/ })
-		).toBeVisible();
+		await user.click(
+			within(panel).getByRole("button", { name: /^More information/ })
+		);
 		expect(
 			within(panel).getByText("Leave requested: Annual leave")
 		).toBeVisible();
@@ -520,6 +520,9 @@ describe("GeneratedRoster", () => {
 			await user.click(screen.getByRole("button", { name: /^Issues: / }));
 
 			const panel = screen.getByRole("complementary", { name: "Issues" });
+			await user.click(
+				within(panel).getByRole("button", { name: /^More information/ })
+			);
 			expect(
 				within(panel).getByRole("heading", { name: "Offers out" })
 			).toBeVisible();

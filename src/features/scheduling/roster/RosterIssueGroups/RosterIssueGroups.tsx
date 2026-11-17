@@ -34,7 +34,7 @@ export type RosterIssueGroupsProps = {
 /**
  * The Issues tab by what to do: the counts in each group's tone, the
  * validation result, then Must fix, Could not be met and More
- * information, each foldable, ordered by person or by day.
+ * information (closed until opened), each foldable, ordered by person or by day.
  */
 export const RosterIssueGroups = ({
 	issues,

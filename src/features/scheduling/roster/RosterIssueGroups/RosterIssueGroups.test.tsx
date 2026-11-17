@@ -51,6 +51,32 @@ describe("RosterIssueGroups", () => {
 		).toBeInTheDocument();
 	});
 
+	it("keeps More information closed until its header is clicked", async () => {
+		const issues = rosterIssuesFixture();
+		const textOf = (group: string): string => {
+			const issue = issues.find((each) => each.group === group);
+			if (!issue) throw new Error(`fixture has a ${group} item`);
+			return issue.rule;
+		};
+		render(
+			<RosterIssueGroups
+				issues={issues}
+				onFindCover={vi.fn()}
+				onShow={vi.fn()}
+			/>
+		);
+
+		expect(screen.getByText(textOf("mustFix"))).toBeVisible();
+		expect(screen.getByText(textOf("notMet"))).toBeVisible();
+		expect(screen.getByText(textOf("forInformation"))).not.toBeVisible();
+
+		await userEvent.click(
+			screen.getByRole("button", { name: `${copy.groups.forInformation}, 1` })
+		);
+
+		expect(screen.getByText(textOf("forInformation"))).toBeVisible();
+	});
+
 	it("finds cover for a shift short and shows the rest", async () => {
 		const onFindCover = vi.fn();
 		const onShow = vi.fn();

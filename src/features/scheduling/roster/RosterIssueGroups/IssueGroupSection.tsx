@@ -4,9 +4,10 @@ import type { FunctionComponent } from "@/common/types";
 import { Badge } from "@/components/ui/Badge";
 import { ChevronDownIcon } from "@/components/ui/Icon";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
-import type {
-	IssueGroup,
-	RosterIssue,
+import {
+	GROUPS_STARTING_CLOSED,
+	type IssueGroup,
+	type RosterIssue,
 } from "@/features/scheduling/roster/rosterIssueGroups";
 import { IssueRow } from "./IssueRow";
 import { GROUP_TONES } from "./issueGroupTones";
@@ -22,7 +23,10 @@ export type IssueGroupSectionProps = {
 	onFindCover?: (gap: CoverGapRequest) => void;
 };
 
-/** One group, foldable by its heading; folded, a one-line gist of who it names. */
+/**
+ * One group, foldable by its heading; folded, a one-line gist of who it
+ * names. Open at first, unless it is one of `GROUPS_STARTING_CLOSED`.
+ */
 export const IssueGroupSection = ({
 	group,
 	items,
@@ -32,7 +36,7 @@ export const IssueGroupSection = ({
 	onFindCover,
 }: IssueGroupSectionProps): FunctionComponent => {
 	const { t } = useTranslation();
-	const [open, setOpen] = useState(true);
+	const [open, setOpen] = useState(!GROUPS_STARTING_CLOSED.includes(group));
 	const listId = useId();
 	const title = t(`scheduling.issues.groups.${group}`);
 	const gist = t("scheduling.constraints.list", {
