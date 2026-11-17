@@ -422,6 +422,87 @@ it("given_aFailedWeek_when_shown_then_itsCardSaysWhy", async () => {
 	).toBeInTheDocument();
 });
 
+it("given_aFailedWeekAndStoppedWeeks_when_tryAgain_then_postsExactlyThoseWeeks", async () => {
+	const stopped = {
+		state: "DRAFT" as const,
+		queueRefusal: { code: "EARLIER_WEEK_FAILED", at: "2026-11-17T09:20:00Z" },
+	};
+	const december = ungeneratedMonthFixture();
+	const failedDecember = ungeneratedMonthFixture({
+		weeks: december.weeks.map((week, index) => ({
+			...week,
+			scheduleId: `s-${index + 1}`,
+			...[
+				{ state: "TO_REVIEW" as const },
+				{
+					state: "FAILED" as const,
+					failure: {
+						runStatus: "FAILED",
+						errorCode: "engine_unreachable",
+						engineOutcome: null,
+					},
+				},
+				stopped,
+				stopped,
+			][index],
+		})),
+	});
+	const calls = await openMonth(
+		decemberRoutes([ok(failedDecember)]),
+		"/scheduling/months/2026-12?department=d-1"
+	);
+
+	const callout = (
+		await screen.findByText(
+			/^The week of Dec 14\s?–\s?20 could not be generated, so Dec 21\s?–\s?27 and Dec 28, 2026\s–\sJan 3, 2027 were not generated either\.$/
+		)
+	).closest("[role=note]") as HTMLElement;
+	expect(
+		screen.getAllByText(
+			/^Not generated: The week of Dec 14\s?–\s?20 failed first\. Try again from this page\.$/
+		)
+	).toHaveLength(2);
+	await userEvent.click(
+		within(callout).getByRole("button", { name: "Try again" })
+	);
+
+	await vi.waitFor(() => {
+		const post = calls.find(
+			(call) => call.method === "POST" && call.path === `${DECEMBER}/generation`
+		);
+		expect(post?.body).toMatchObject({
+			weeks: ["2026-12-14", "2026-12-21", "2026-12-28"],
+			newWeeks: [],
+		});
+	});
+});
+
+it("given_stoppedWeeksAndNoScheduleGenerate_when_shown_then_theCalloutHasNoTryAgain", async () => {
+	const december = ungeneratedMonthFixture();
+	const failedDecember = ungeneratedMonthFixture({
+		weeks: december.weeks.map((week, index) => ({
+			...week,
+			scheduleId: `s-${index + 1}`,
+			state: index === 0 ? ("FAILED" as const) : ("DRAFT" as const),
+			queueRefusal:
+				index === 0
+					? null
+					: { code: "EARLIER_WEEK_FAILED", at: "2026-11-17T09:20:00Z" },
+		})),
+	});
+	await openMonth(
+		{ ...decemberRoutes([ok(failedDecember)]), ...signedIn() },
+		"/scheduling/months/2026-12?department=d-1"
+	);
+
+	const callout = (
+		await screen.findByText(
+			/^The week of Dec 7\s?–\s?13 could not be generated/
+		)
+	).closest("[role=note]") as HTMLElement;
+	expect(within(callout).queryByRole("button")).toBeNull();
+});
+
 it("given_noScheduleGenerate_when_aMonthIsNotGenerated_then_noPanelAndTheNoScheduleLine", async () => {
 	const calls = await openMonth(
 		{ ...decemberRoutes([ok(ungeneratedMonthFixture())]), ...signedIn() },
