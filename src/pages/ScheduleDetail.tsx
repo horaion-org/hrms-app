@@ -85,6 +85,7 @@ import {
 	actionWaitsForEarlierWeek,
 	publishWaitsFor,
 } from "@/features/scheduling/schedules/publishOrder";
+import { partLinesOf } from "@/features/scheduling/schedules/partLines";
 import { scheduleDetailItems } from "@/features/scheduling/schedules/scheduleDetails";
 import {
 	rosterShown,
@@ -451,42 +452,6 @@ const ApiSchedule = ({
 		)
 	).data;
 	const publishNoteId = useId();
-	// A part of its week (API ADR-0113): the week's other days, and a way to schedule the days after it.
-	const weekParts =
-		state.status === "ready"
-			? (scheduleMonth?.weeks.find(
-					(week) => week.periodStart === state.schedule.periodStart
-				)?.parts ?? [])
-			: [];
-	const around =
-		state.status === "ready"
-			? daysAroundPart(state.schedule, weekParts)
-			: undefined;
-	// A redo part in the week (API ADR-0129): this schedule is one, or one redoes some of its days.
-	const redo =
-		state.status === "ready"
-			? partRedoOf(state.schedule, weekParts)
-			: undefined;
-	const daysText = (days: DayRun): string =>
-		formatPeriod({ start: days.from, end: days.to }, formattingLocale(i18n));
-	const remaining =
-		around?.after && !around.afterTaken ? around.after : undefined;
-	const partLines = [
-		redo && t(`scheduling.roster.${redo.kind}`, { days: daysText(redo.days) }),
-		around?.before &&
-			t("scheduling.roster.otherPart", { days: daysText(around.before) }),
-		around?.after &&
-			state.status === "ready" &&
-			(around.afterTaken
-				? t("scheduling.roster.otherPart", { days: daysText(around.after) })
-				: t("scheduling.roster.coversCallout", {
-						covered: daysText({
-							from: state.schedule.coveredFrom,
-							to: state.schedule.coveredTo,
-						}),
-						rest: daysText(around.after),
-					})),
-	].filter((line): line is string => typeof line === "string");
 	const monthName = month ? formatMonthName(month, formattingLocale(i18n)) : "";
 	if (state.status !== "ready")
 		return (
@@ -535,6 +500,26 @@ const ApiSchedule = ({
 				}
 			: undefined;
 	const schedule = state.schedule;
+	// A part of its week (API ADR-0113): the week's other days, and a way to schedule the days after it.
+	const weekParts =
+		scheduleMonth?.weeks.find(
+			(week) => week.periodStart === schedule.periodStart
+		)?.parts ?? [];
+	const around = daysAroundPart(schedule, weekParts);
+	const remaining =
+		around.after && !around.afterTaken ? around.after : undefined;
+	const daysText = (days: DayRun): string =>
+		formatPeriod({ start: days.from, end: days.to }, formattingLocale(i18n));
+	const partLines = partLinesOf(
+		{
+			covered: { from: schedule.coveredFrom, to: schedule.coveredTo },
+			around,
+			// A redo part in the week (API ADR-0129): this schedule is one, or one redoes some of its days.
+			redo: partRedoOf(schedule, weekParts),
+		},
+		daysText,
+		t
+	);
 	const noticeFacts: ScheduleNoticeFacts = {
 		status: schedule.status,
 		generating: generationInProgress(schedule),
