@@ -1,3 +1,6 @@
+/** Minutes in one hour. */
+export const MINUTES_PER_HOUR = 60;
+
 /** Minutes in one day. */
 export const MINUTES_PER_DAY = 24 * 60;
 

@@ -1,4 +1,8 @@
-import { MINUTES_PER_DAY, minutesOfDay } from "@/common/timeOfDay";
+import {
+	MINUTES_PER_DAY,
+	MINUTES_PER_HOUR,
+	minutesOfDay,
+} from "@/common/timeOfDay";
 import type { ScheduleShift } from "@/features/scheduling/schedules/api";
 import { WEEKDAYS, type Weekday } from "@/features/scheduling/shifts/api";
 
@@ -22,7 +26,7 @@ export const shiftMinutes = (
 /** How long a shift lasts in hours, counting past midnight. */
 export const shiftHours = (
 	shift: Pick<ScheduleShift, "startTime" | "endTime">
-): number => shiftMinutes(shift) / 60;
+): number => shiftMinutes(shift) / MINUTES_PER_HOUR;
 
 /** A shift's length less its unpaid break, in minutes. */
 export const paidShiftMinutes = (
@@ -35,13 +39,20 @@ export const paidShiftMinutes = (
  * hours ledger.
  */
 export const hoursFromMinutes = (minutes: number): number =>
-	Math.round((minutes * 100) / 60) / 100;
+	Math.round((minutes * 100) / MINUTES_PER_HOUR) / 100;
 
 /** A shift's paid hours, to two places. */
 export const paidShiftHours = (
 	shift: Pick<ScheduleShift, "startTime" | "endTime" | "unpaidBreakMinutes">
 ): number => hoursFromMinutes(paidShiftMinutes(shift));
 
+/** Monday to Friday: the days of the week before Saturday. */
+const MONDAY_TO_FRIDAY: ReadonlyArray<Weekday> = WEEKDAYS.slice(
+	0,
+	WEEKDAYS.indexOf("SAT")
+);
+
 /** Monday to Friday exactly, which reads better as "Weekdays". */
 export const isWeekdays = (days: Array<Weekday>): boolean =>
-	days.length === 5 && WEEKDAYS.slice(0, 5).every((day) => days.includes(day));
+	days.length === MONDAY_TO_FRIDAY.length &&
+	MONDAY_TO_FRIDAY.every((day) => days.includes(day));
