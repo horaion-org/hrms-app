@@ -2,6 +2,8 @@ import { useId, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { weekdayOf } from "@/common/weekdays";
+import { Button } from "@/components/ui/Button";
+import { EditIcon } from "@/components/ui/Icon";
 import { Pagination } from "@/components/ui/Pagination";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { WeekGrid, type WeekGridRowData } from "@/components/ui/WeekGrid";
@@ -22,15 +24,20 @@ export type TeamShiftPreferencesProps = {
 	weekStartMonday: string;
 	/** The one day shown below `md`, as the page's `DaySwitcher` picks it. */
 	shownDay?: string;
+	/** Whether the person may change this member's preferences, as the workspace says. */
+	canEdit: (member: TeamMemberWeek) => boolean;
+	/** Opens the editor on the member's week. */
+	onEdit: (member: TeamMemberWeek) => void;
 	className?: string;
 };
 
 const key = "shiftPreferences.team";
 
-/** One member's row: their name (`formerMember` once removed), and each day's preferred shifts as chips. */
+/** One member's row: their name (`formerMember` once removed), each day's preferred shifts as chips, and `action`. */
 const rowOf = (
 	member: TeamMemberWeek,
-	formerMember: string
+	formerMember: string,
+	action: ReactNode
 ): WeekGridRowData => ({
 	id: member.membershipId,
 	heading: (
@@ -42,12 +49,14 @@ const rowOf = (
 		day: weekdayOf(day.date),
 		cell: <PreferredShiftsCell shifts={day.shifts} />,
 	})),
+	action,
 });
 
 /**
  * The members of a Branch, or of one Department of it, and their preferred
- * shifts for a week, read-only, a page at a time, under its own heading. Whether the person may read them
- * is the hook's call alone: held nowhere, or refused, it says so.
+ * shifts for a week, a page at a time, under its own heading. Whether the person may read them
+ * is the hook's call alone: held nowhere, or refused, it says so. Editing is
+ * offered only on the rows the person may change; the API still checks every change.
  */
 export const TeamShiftPreferences = ({
 	companyId,
@@ -55,6 +64,8 @@ export const TeamShiftPreferences = ({
 	departmentId,
 	weekStartMonday,
 	shownDay,
+	canEdit,
+	onEdit,
 	className,
 }: TeamShiftPreferencesProps): FunctionComponent => {
 	const { t } = useTranslation();
@@ -94,11 +105,26 @@ export const TeamShiftPreferences = ({
 	if (team.status !== "ready")
 		return headed(<Skeleton className="h-36 w-full rounded-lg" />);
 	const rows = team.page.content.map((member) =>
-		rowOf(member, t("scheduling.detail.formerMember"))
+		rowOf(
+			member,
+			t("scheduling.detail.formerMember"),
+			canEdit(member) && (
+				<Button
+					aria-label={t(`${key}.editFor`, { name: member.displayName })}
+					variant="icon"
+					onClick={() => {
+						onEdit(member);
+					}}
+				>
+					<EditIcon />
+				</Button>
+			)
+		)
 	);
 	return headed(
 		<>
 			<WeekGrid
+				actionsLabel={t(`${key}.actions`)}
 				emptyState={t(`${key}.empty`)}
 				headingLabel={t(`${key}.member`)}
 				label={t(`${key}.label`)}

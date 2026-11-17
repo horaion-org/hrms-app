@@ -41,8 +41,8 @@ chosen in Filters. A part-timer is warned of the open days they have no availabi
   day's availability warning when given.
 - `MemberShiftPreferencesDialog` — a colleague's week as a list of days, opened from the team list; an open day opens
   `ShiftPreferenceDialog` in place of the week, which saves straight away through the member's routes.
-- `TeamShiftPreferences` — a Branch's or Department's members and their week, read-only, under its own heading,
-  paged; the page starts again at the first when the Branch, Department or week changes.
+- `TeamShiftPreferences` — a Branch's or Department's members and their week under its own heading, with an edit
+  control on each row the page says may be changed (opening `MemberShiftPreferencesDialog`), paged; the page starts again at the first when the Branch, Department or week changes.
 - `fixtures.ts` — API-shaped weeks, team pages and outcomes for stories and component tests.
 
 A roster's outcomes are read on the roster's side (`features/scheduling/preferenceOutcomes`) and shown in the roster
@@ -51,7 +51,9 @@ cell panel (`CellNow`) and `ShiftDetailsPanel`.
 ## Permissions
 
 A member's own week needs nothing granted. The team list needs `shift_preference:read` somewhere; the API lists
-only the members of the units where it is held and checks every request regardless.
+only the members of the units where it is held and checks every request regardless. A row's edit control shows when
+the week has not ended, the member has not been removed, and `shift_preference:update` is held where the member is
+filed: their Department, or the company for a member filed at none (`recordScope`), as availability decides it.
 
 ## Verification
 

@@ -638,7 +638,9 @@
 			"member": "Miembro",
 			"empty": "No hay miembros aquí.",
 			"failed": "No pudimos cargar las preferencias de turno del equipo. Inténtalo de nuevo.",
-			"hidden": "No tienes acceso a las preferencias de turno de nadie en esta empresa."
+			"hidden": "No tienes acceso a las preferencias de turno de nadie en esta empresa.",
+			"actions": "Acciones",
+			"editFor": "Editar las preferencias de turno de {{name}}"
 		},
 		"dialog": {
 			"save": "Guardar",

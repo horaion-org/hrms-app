@@ -25,7 +25,10 @@ import {
 	fixtureTeamPage,
 	fixtureWeek,
 } from "@/features/shiftPreferences/fixtures";
-import { TEAM_PAGE_SIZE } from "@/features/shiftPreferences/api";
+import {
+	TEAM_PAGE_SIZE,
+	type TeamMemberWeek,
+} from "@/features/shiftPreferences/api";
 
 const REFRESH = "POST /api/v1/public/sessions/refreshes";
 const ME = "GET /api/v1/me";
@@ -35,6 +38,8 @@ const MY_AVAILABILITY_PATH = "/api/v1/companies/c-1/me/availability";
 const MY_PREFERENCES_PATH = "/api/v1/companies/c-1/me/shift-preferences";
 const TEAM_PATH = "/api/v1/companies/c-1/shift-preferences";
 const READ = "shift_preference:read";
+const UPDATE = "shift_preference:update";
+const MEMBERS_PATH = "/api/v1/companies/c-1/member-profiles";
 
 let app: OpenedApp | undefined;
 
@@ -237,5 +242,82 @@ describe("ShiftPreferences", () => {
 			calls.filter((call) => call.path === TEAM_PATH).map((call) => call.search)
 		).toEqual([teamSearch("d-1")]);
 		expect(screen.getByRole("button", { name: /Filters/ })).toBeVisible();
+	});
+
+	it("offers a member's edit control to someone holding the update key, opening their week", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...routes("FULL_TIME", workspaceReply([READ, UPDATE])),
+			[`GET ${MEMBERS_PATH}/m-1/shift-preferences/weeks/${mondayOf(new Date())}`]:
+				{ status: 200, body: envelope(fixtureWeek()) },
+		});
+		await open("/shift-preferences?view=team");
+
+		await user.click(
+			await screen.findByRole("button", {
+				name: "Edit Alex Example’s shift preferences",
+			})
+		);
+
+		expect(
+			await screen.findByRole("dialog", { name: "Edit shift preferences" })
+		).toBeVisible();
+		await waitFor(() => {
+			expect(
+				calls.some((call) =>
+					call.path.startsWith(`${MEMBERS_PATH}/m-1/shift-preferences/weeks/`)
+				)
+			).toBe(true);
+		});
+	});
+
+	it("offers no edit control without the update key", async () => {
+		stubApi(routes("FULL_TIME", workspaceReply([READ])));
+		await open("/shift-preferences?view=team");
+
+		const table = await screen.findByRole("table", {
+			name: "Team shift preferences",
+		});
+		await within(table).findByText("Alex Example");
+		expect(within(table).queryByRole("button")).not.toBeInTheDocument();
+	});
+
+	it("offers the edit control only on members filed where the update key is held", async () => {
+		const memberOf = (
+			membershipId: string,
+			displayName: string,
+			departmentId: string | null
+		): TeamMemberWeek => ({
+			...fixtureTeamPage().content[0]!,
+			membershipId,
+			displayName,
+			departmentId,
+		});
+		stubApi({
+			...routes("FULL_TIME", workspaceReply([READ], [UPDATE])),
+			[`GET ${TEAM_PATH}`]: {
+				status: 200,
+				body: envelope({
+					content: [
+						memberOf("m-1", "Alex Example", "d-1"),
+						memberOf("m-2", "Bea Kitchen", "d-2"),
+						memberOf("m-3", "Cy Unassigned", null),
+					],
+					page: { totalElements: 3 },
+				}),
+			},
+		});
+		await open("/shift-preferences?view=team");
+
+		const table = await screen.findByRole("table", {
+			name: "Team shift preferences",
+		});
+		await within(table).findByText("Cy Unassigned");
+		// Sales holds the key; Kitchen does not, and a member filed nowhere is decided company-wide.
+		expect(
+			within(table)
+				.getAllByRole("button")
+				.map((button) => button.getAttribute("aria-label"))
+		).toEqual(["Edit Alex Example’s shift preferences"]);
 	});
 });

@@ -638,7 +638,9 @@
 			"member": "Member",
 			"empty": "No members here.",
 			"failed": "We couldn’t load the team’s shift preferences. Try again.",
-			"hidden": "You don’t have access to anyone’s shift preferences in this company."
+			"hidden": "You don’t have access to anyone’s shift preferences in this company.",
+			"actions": "Actions",
+			"editFor": "Edit {{name}}’s shift preferences"
 		},
 		"dialog": {
 			"save": "Save",

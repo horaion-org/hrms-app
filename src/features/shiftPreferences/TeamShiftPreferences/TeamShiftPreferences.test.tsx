@@ -56,14 +56,23 @@ const showList = (permissions: Array<string>, list: ReactElement): void => {
 	);
 };
 
-/** Renders the list for Department d-1 in company c-1, holding `permissions` company-wide. */
-const show = (permissions: Array<string>): void => {
+/**
+ * Renders the list for Department d-1 in company c-1, holding `permissions`
+ * company-wide; `editable` rows offer their edit control, reported to `onEdit`.
+ */
+const show = (
+	permissions: Array<string>,
+	editable = false,
+	onEdit = vi.fn()
+): void => {
 	showList(
 		permissions,
 		<TeamShiftPreferences
+			canEdit={() => editable}
 			companyId="c-1"
 			departmentId="d-1"
 			weekStartMonday={FIXTURE_WEEK}
+			onEdit={onEdit}
 		/>
 	);
 };
@@ -92,9 +101,11 @@ const MovingList = (): ReactElement => {
 			</button>
 			<TeamShiftPreferences
 				branchId="b-1"
+				canEdit={() => false}
 				companyId="c-1"
 				departmentId={departmentId}
 				weekStartMonday={week}
+				onEdit={vi.fn()}
 			/>
 		</>
 	);
@@ -116,15 +127,31 @@ describe("TeamShiftPreferences", () => {
 		expect(within(table).getByRole("rowheader")).toHaveTextContent(
 			"Alex Example"
 		);
+		// Seven days, then the row's actions.
 		const cells = within(table).getAllByRole("cell");
-		expect(cells).toHaveLength(7);
+		expect(cells).toHaveLength(8);
 		expect(cells[0]).toHaveTextContent("Morning");
 		expect(cells[1]).toHaveTextContent("No preference");
-		// Read-only: no day is a button.
+		// Read-only: no day is a button, and the row may not be changed.
 		expect(within(table).queryByRole("button")).not.toBeInTheDocument();
 		expect(calls.map((call) => call.search)).toEqual([
 			`weekStartMonday=${FIXTURE_WEEK}&departmentId=d-1&page=0&size=${TEAM_PAGE_SIZE}`,
 		]);
+	});
+
+	it("given_aRowThePersonMayChange_when_itsEditControlIsUsed_then_opensTheEditorOnThatMember", async () => {
+		const user = userEvent.setup();
+		const onEdit = vi.fn();
+		stubApi({ [TEAM]: { status: 200, body: envelope(fixtureTeamPage()) } });
+		show([READ], true, onEdit);
+
+		await user.click(
+			await screen.findByRole("button", {
+				name: "Edit Alex Example’s shift preferences",
+			})
+		);
+
+		expect(onEdit).toHaveBeenCalledWith(fixtureTeamPage().content[0]);
 	});
 
 	it("given_aRemovedMember_when_shown_then_namesThemAsAFormerMember", async () => {

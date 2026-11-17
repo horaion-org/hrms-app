@@ -73,6 +73,8 @@ const teamMemberWeekSchema = z.object({
 	membershipId: z.string(),
 	/** Null once the member has been removed; their preferences stay listed. */
 	displayName: z.string().nullable(),
+	/** The Department the member is assigned to; null for none. Left out by an API older than ADR-0127. */
+	departmentId: z.string().nullish(),
 	days: z.array(
 		z.object({
 			date: z.iso.date(),
