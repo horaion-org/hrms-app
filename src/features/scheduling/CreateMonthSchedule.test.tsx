@@ -860,6 +860,29 @@ describe("Create schedules for a month: ticking weeks", () => {
 		).toBe(true);
 	});
 
+	it("given_aStartedWeekAfterARosteredWeek_when_onSetup_then_stillAsksForTheDaysBeforeToday", async () => {
+		const user = userEvent.setup();
+		await open(
+			NEW_NOVEMBER,
+			novemberRoutes({
+				"2026-11-02": {
+					state: "PUBLISHED",
+					scheduleId: "s-2",
+					parts: [publishedPart("s-2", "2026-11-02", "2026-11-08")],
+				},
+			})
+		);
+
+		await user.click(
+			await screen.findByRole("checkbox", { name: STARTED_WEEK })
+		);
+
+		expect(await screen.findByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeVisible();
+		expect(
+			screen.getByRole("button", { name: "Add last week’s shifts" })
+		).toBeVisible();
+	});
+
 	it("given_aWeekStartingMonday_when_onSetup_then_noPrompt", async () => {
 		await open(NEW_NOVEMBER, novemberRoutes());
 
@@ -1115,6 +1138,10 @@ describe("Create schedules for a month: where everyone starts", () => {
 						scheduleId: state === "PUBLISHED" ? "s-nov" : null,
 						days: [],
 						handChangedDays: null,
+						parts:
+							state === "PUBLISHED"
+								? [publishedPart("s-nov", "2026-11-30", "2026-12-06")]
+								: [],
 					}),
 				],
 			})
@@ -1484,6 +1511,29 @@ describe("Create schedules for a month: where everyone starts", () => {
 			).toEqual(["2026-12-21"]);
 		});
 	});
+
+	it("given_theWeekBeforeRosteredOnlyToMidweek_when_onSetup_then_asksForTheDaysBefore", async () => {
+		await open(NEW_DECEMBER, {
+			[`GET ${NOVEMBER}`]: reply(
+				scheduleMonthFixture({
+					weeks: [
+						monthWeekFixture({
+							periodStart: "2026-11-30",
+							periodEnd: "2026-12-06",
+							state: "PUBLISHED",
+							scheduleId: "s-nov",
+							days: [],
+							handChangedDays: null,
+							parts: [publishedPart("s-nov", "2026-11-30", "2026-12-02")],
+						}),
+					],
+				})
+			),
+		});
+
+		expect(await screen.findByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeVisible();
+		expect(addLastWeek()).toBeVisible();
+	});
 });
 
 describe("Create schedules for a month: by dates", () => {
@@ -1595,6 +1645,37 @@ describe("Create schedules for a month: by dates", () => {
 		).toBe(true);
 	});
 
+	it("given_datesFromAMondayWithNoRosterOnTheSundayBefore_when_daysBeforeAdded_then_savesTheFirstPartFromThatMonday", async () => {
+		const user = userEvent.setup();
+		const { calls } = await open(NEW_DATES_FROM_MONDAY, {
+			...datesRoutes(mondayPlan()),
+			[`GET ${NOVEMBER}`]: weekOf16Read(),
+			[`POST ${SCHEDULES}`]: reply(
+				scheduleFixture({ scheduleId: "s-gala" }),
+				201
+			),
+		});
+
+		expect(await screen.findByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeVisible();
+		await user.click(
+			await screen.findByRole("button", { name: "Add last week’s shifts" })
+		);
+
+		await vi.waitFor(() => {
+			expect(savedDrafts(calls)).toEqual([
+				{
+					name: "Week of 2026-11-23",
+					periodStart: "2026-11-23",
+					coveredFrom: "2026-11-23",
+					coveredTo: "2026-11-28",
+					includeLeave: true,
+					includedShiftIds: EVERYTHING.shiftIds,
+					includedConstraintIds: EVERYTHING.constraintIds,
+				},
+			]);
+		});
+	});
+
 	it("given_datesFromThursdayAfterARosteredPartOfTheSameWeek_when_onSetup_then_asksNothing", async () => {
 		const plan = datesPlanFixture();
 		const [first, second] = plan.weeks;
@@ -1635,7 +1716,9 @@ describe("Create schedules for a month: by dates", () => {
 			}),
 		});
 
-		await screen.findByRole("table", { name: "What this creates" });
+		expect(
+			await screen.findByText("Carried over from the week of Nov 16.")
+		).toBeVisible();
 		expect(screen.queryByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeNull();
 		expect(addLastWeek()).toBeNull();
 	});
