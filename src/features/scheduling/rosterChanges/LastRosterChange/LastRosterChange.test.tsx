@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
-import { LastRosterChange } from "@/features/scheduling/LastRosterChange";
+import { LastRosterChange } from "@/features/scheduling/rosterChanges/LastRosterChange";
 import type { RosterChange } from "@/features/scheduling/rosterChanges/api";
 import {
 	rosterChangeFixture,

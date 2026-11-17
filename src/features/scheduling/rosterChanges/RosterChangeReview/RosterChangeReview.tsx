@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { Skeleton } from "@/components/ui/Skeleton";
-import { RosterChangeChecks } from "@/features/scheduling/RosterChangeChecks";
+import { RosterChangeChecks } from "@/features/scheduling/rosterChanges/RosterChangeChecks";
 import {
 	ROSTER_CHANGE_REMARK_MAX_LENGTH,
 	type RosterChangePreview,

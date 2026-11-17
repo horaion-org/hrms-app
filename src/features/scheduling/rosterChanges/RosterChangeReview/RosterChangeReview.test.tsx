@@ -6,7 +6,7 @@ import { authTestI18n } from "@/features/auth/testingI18n";
 import {
 	RosterChangeReview,
 	type RosterChangeReviewProps,
-} from "@/features/scheduling/RosterChangeReview";
+} from "@/features/scheduling/rosterChanges/RosterChangeReview";
 import type { RosterChangePreview } from "@/features/scheduling/rosterChanges/api";
 import {
 	rosterChangePreviewFixture,

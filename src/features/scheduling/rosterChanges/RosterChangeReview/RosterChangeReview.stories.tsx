@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
-import { RosterChangeReview } from "@/features/scheduling/RosterChangeReview";
+import { RosterChangeReview } from "@/features/scheduling/rosterChanges/RosterChangeReview";
 import {
 	rosterChangePreviewFixture,
 	rosterCheckFixture,

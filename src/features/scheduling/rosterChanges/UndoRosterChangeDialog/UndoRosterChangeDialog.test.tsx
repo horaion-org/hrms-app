@@ -7,7 +7,7 @@ import {
 	rosterChangePreviewFixture,
 	rosterCheckFixture,
 } from "@/features/scheduling/rosterChanges/fixtures";
-import { UndoRosterChangeDialog } from "@/features/scheduling/UndoRosterChangeDialog";
+import { UndoRosterChangeDialog } from "@/features/scheduling/rosterChanges/UndoRosterChangeDialog";
 
 describe("UndoRosterChangeDialog", () => {
 	it("given_anUndoThatNeedsATick_when_ticked_then_confirmsWithTheFingerprint", async () => {

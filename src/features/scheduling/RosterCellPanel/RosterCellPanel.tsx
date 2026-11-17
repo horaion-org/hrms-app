@@ -15,8 +15,8 @@ import { CellNow } from "@/features/scheduling/RosterCellPanel/CellNow";
 import { CellPanelFooter } from "@/features/scheduling/RosterCellPanel/CellPanelFooter";
 import { CellPanelHeader } from "@/features/scheduling/RosterCellPanel/CellPanelHeader";
 import { useRosterCellPanel } from "@/features/scheduling/RosterCellPanel/useRosterCellPanel";
-import { RosterChangeReview } from "@/features/scheduling/RosterChangeReview";
-import { RosterLeaveReview } from "@/features/scheduling/RosterLeaveReview";
+import { RosterChangeReview } from "@/features/scheduling/rosterChanges/RosterChangeReview";
+import { RosterLeaveReview } from "@/features/scheduling/rosterChanges/RosterLeaveReview";
 import type { RosterChange } from "@/features/scheduling/rosterChanges/api";
 import {
 	cellPanelSections,

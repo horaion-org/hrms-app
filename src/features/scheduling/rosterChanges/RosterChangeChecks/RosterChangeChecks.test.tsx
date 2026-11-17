@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
 import { describe, expect, it } from "vitest";
 import { authTestI18n } from "@/features/auth/testingI18n";
-import { RosterChangeChecks } from "@/features/scheduling/RosterChangeChecks";
+import { RosterChangeChecks } from "@/features/scheduling/rosterChanges/RosterChangeChecks";
 import { rosterCheckFixture } from "@/features/scheduling/rosterChanges/fixtures";
 
 const names = {

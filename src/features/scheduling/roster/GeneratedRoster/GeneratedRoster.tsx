@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { CountBadge } from "@/components/ui/CountBadge";
 import { DaySwitcher } from "@/components/ui/DaySwitcher";
 import type { DescriptionListItem } from "@/components/ui/DescriptionList";
-import { LastRosterChange } from "@/features/scheduling/LastRosterChange";
+import { LastRosterChange } from "@/features/scheduling/rosterChanges/LastRosterChange";
 import type { FindingNameSources } from "@/features/scheduling/roster/findings/findingNames";
 import { legendOf } from "@/features/scheduling/roster/roster";
 import {

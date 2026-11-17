@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ReactElement } from "react";
 import { fn } from "storybook/test";
-import { LastRosterChange } from "@/features/scheduling/LastRosterChange";
+import { LastRosterChange } from "@/features/scheduling/rosterChanges/LastRosterChange";
 import { latestRosterChangeKey } from "@/features/scheduling/rosterChanges/api";
 import { rosterChangeFixture } from "@/features/scheduling/rosterChanges/fixtures";
 import "@/common/i18n";

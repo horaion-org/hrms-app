@@ -5,7 +5,7 @@ import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { dayTypeInSentence } from "@/features/scheduling/dayTypes";
 import { formatDay } from "@/common/formatDay";
-import { RosterChangeReview } from "@/features/scheduling/RosterChangeReview";
+import { RosterChangeReview } from "@/features/scheduling/rosterChanges/RosterChangeReview";
 import type {
 	RosterChangePreview,
 	RosterUndoBody,

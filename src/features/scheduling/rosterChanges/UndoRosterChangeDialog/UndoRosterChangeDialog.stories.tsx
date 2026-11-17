@@ -4,7 +4,7 @@ import {
 	rosterChangePreviewFixture,
 	rosterCheckFixture,
 } from "@/features/scheduling/rosterChanges/fixtures";
-import { UndoRosterChangeDialog } from "@/features/scheduling/UndoRosterChangeDialog";
+import { UndoRosterChangeDialog } from "@/features/scheduling/rosterChanges/UndoRosterChangeDialog";
 import "@/common/i18n";
 
 const meta = {

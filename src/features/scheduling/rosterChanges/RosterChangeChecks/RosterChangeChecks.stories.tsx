@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { RosterChangeChecks } from "@/features/scheduling/RosterChangeChecks";
+import { RosterChangeChecks } from "@/features/scheduling/rosterChanges/RosterChangeChecks";
 import { rosterCheckFixture } from "@/features/scheduling/rosterChanges/fixtures";
 import "@/common/i18n";
 

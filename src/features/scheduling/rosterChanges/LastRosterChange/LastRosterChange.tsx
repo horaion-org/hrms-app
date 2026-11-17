@@ -20,7 +20,7 @@ import {
 	useRosterChangeActions,
 	type RosterChangeTarget,
 } from "@/features/scheduling/rosterChanges/useRosterChangeActions";
-import { UndoRosterChangeDialog } from "@/features/scheduling/UndoRosterChangeDialog";
+import { UndoRosterChangeDialog } from "@/features/scheduling/rosterChanges/UndoRosterChangeDialog";
 
 export type LastRosterChangeProps = {
 	/** Where the roster lives and which run's rows are shown. */
