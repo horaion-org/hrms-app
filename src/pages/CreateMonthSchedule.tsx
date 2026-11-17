@@ -4,7 +4,6 @@ import { useGenerateDates } from "@/features/scheduling/dates/useGenerateDates";
 import {
 	datesIn,
 	datesProblemOf,
-	daysBeforeOf,
 	previousBefore,
 } from "@/features/scheduling/dates/datesSetup";
 import type { PreviousWeek } from "@/features/scheduling/startingContext/startingGrid";
@@ -64,6 +63,10 @@ import {
 	tickedRangesOf,
 } from "@/features/scheduling/months/weekTicks";
 import { withRefusedWeeks } from "@/features/scheduling/months/refusedWeeksState";
+import {
+	partsBeforeStartOf,
+	runStartOf,
+} from "@/features/scheduling/months/runStart";
 import { useGenerateMonth } from "@/features/scheduling/months/useGenerateMonth";
 import { isoDateIn } from "@/features/scheduling/roster/roster";
 import {
@@ -286,8 +289,16 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 		)
 	);
 	const plan = datesValid ? datesPlan.data : undefined;
-	// The first week with new days: where everyone starts, and whose earlier days are asked about.
-	const datesStart = plan?.weeks.find((week) => week.newFrom !== null);
+	// Where the run starts: its first generated day, the days before it "Before this week" asks about,
+	// and the week before, whose roster may carry over.
+	const {
+		datesStart,
+		firstGeneratedDay,
+		daysBeforeStart,
+		weekBefore,
+		datesStartOnMonday,
+		datesRedoStart,
+	} = runStartOf({ byDates, plan, startingWeek, branchToday });
 	const datesDraftId =
 		datesStart?.action === "GENERATE" ? (datesStart.draftId ?? "") : "";
 	const datesDraft = useQuery(
@@ -298,22 +309,6 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			datesDraftId !== "" && allowedHere("schedule:read")
 		)
 	);
-	// A week that has begun is generated from today (owner, API ADR-0115).
-	const startedWeekFrom =
-		startingWeek && startingWeek.periodStart < branchToday
-			? branchToday
-			: undefined;
-	// The first day the run generates: a dates run's first new day, a started week's today, or the week's Monday.
-	const firstGeneratedDay = byDates
-		? (datesStart?.newFrom ?? undefined)
-		: (startedWeekFrom ?? startingWeek?.periodStart);
-	// Owner answer 2: this week's days before its first generated day, which "Before this week" names while
-	// nobody knows them (were rest days given?); dates name them in their plan.
-	const daysBeforeStart = byDates
-		? (plan?.notRosteredBefore ?? undefined)
-		: startingWeek && startedWeekFrom
-			? daysBeforeOf(startingWeek.periodStart, startedWeekFrom)
-			: undefined;
 	const laterStartingWeeks = scheduleMonth.data
 		? startingWeeksOf(scheduleMonth.data, ticked).filter(
 				(week) => week !== startingWeek
@@ -336,15 +331,8 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			? (startingWeek.scheduleId ?? undefined)
 			: undefined
 	);
-	// A dates run whose first new day is a Monday: the plan names no days before it, so the week before is read.
-	const datesStartOnMonday =
-		datesStart !== undefined && datesStart.newFrom === datesStart.periodStart;
-	const firstMonday = byDates
-		? datesStart?.periodStart
-		: startingWeek?.periodStart;
-	const weekBefore =
-		firstMonday && dayjs(firstMonday).subtract(7, "day").format("YYYY-MM-DD");
-	// The week before may sit in the month before; its state comes from that month's read.
+	// The week before may sit in the month before; its state comes from that month's read. A dates run
+	// whose first new day is a Monday reads it: the plan names no days before it.
 	const monthBefore = useQuery(
 		scheduleMonthQuery(
 			companyId,
@@ -355,19 +343,14 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 		)
 	);
 	// "Before this week" asks unless a roster covers the day before the first generated day: in the week
-	// before, earlier in a started week, or a part kept earlier in a dates run's first week. The kept parts
-	// come first: cut to the days that stay, they name what carries over when the dates redo a wider part.
-	const partsBeforeStart = [
-		...(datesStart?.kept ?? []),
-		...[
-			...(monthBefore.data?.weeks ?? []),
-			...(scheduleMonth.data?.weeks ?? []),
-		].flatMap((week) => week.parts),
-	];
+	// before, earlier in a started week, or a part kept earlier in a dates run's first week.
 	const previousOfStart: PreviousWeek =
 		firstGeneratedDay === undefined
 			? { kind: "none" }
-			: previousBefore(firstGeneratedDay, partsBeforeStart);
+			: previousBefore(
+					firstGeneratedDay,
+					partsBeforeStartOf(datesStart, monthBefore.data, scheduleMonth.data)
+				);
 	const mayGenerate = allowedHere("schedule:generate");
 	// A dates run's panel checks the first day's month (its leave counts that month).
 	const checkMonth = byDates ? monthOf(datesChoice.firstDay) : month;
@@ -619,7 +602,6 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 	};
 	// Dates whose first new days already have a schedule redo them (API ADR-0129): no draft can be saved over
 	// scheduled days, so "Before this week" is not offered; the calm carried line still shows when it applies.
-	const datesRedoStart = (datesStart?.redone.length ?? 0) > 0;
 	const showsDatesStart = !datesRedoStart || previousOfStart.kind === "carried";
 	const mayAddDaysBefore =
 		!datesRedoStart &&
