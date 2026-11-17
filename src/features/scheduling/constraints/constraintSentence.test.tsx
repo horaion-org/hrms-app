@@ -474,12 +474,12 @@ describe("sentencePartsOf with constraintWords", () => {
 		[
 			"en",
 			"No days off on Friday and Saturday.",
-			"Each person’s rest days, days off and leave in a week are together.",
+			"Each person’s rest days, days off and leave in each Monday-to-Sunday week are together.",
 		],
 		[
 			"es",
 			"Sin días libres el Viernes y Sábado.",
-			"Los días de descanso, días libres y permisos de cada persona en una semana van juntos.",
+			"Los días de descanso, días libres y permisos de cada persona en cada semana de lunes a domingo van juntos.",
 		],
 	])(
 		"reads the two rules asked as a Must as what never happens (%s)",

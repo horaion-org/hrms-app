@@ -3738,7 +3738,7 @@
 				"NO_OVERTIME_WHEN_GENERATING": "Un cuadrante generado no da a nadie horas extra más allá de su día o semana normal ni llama a nadie en un día de descanso. Los turnos que no pueden cubrirse sin horas adicionales quedan con falta de personal, y las horas extra se ofrecen al preguntar al motor en Buscar cobertura.",
 				"KEEP_DAYS_OFF_TOGETHER": {
 					"ifPossible": "Mantener juntos los días de descanso, días libres y permisos de cada persona cuando el cuadrante lo permita.",
-					"must": "Los días de descanso, días libres y permisos de cada persona en una semana van juntos."
+					"must": "Los días de descanso, días libres y permisos de cada persona en cada semana de lunes a domingo van juntos."
 				},
 				"MAX_DAYS_WITHOUT_DAY_TYPES": {
 					"fullTimers_one": "Ningún empleado a tiempo completo pasa más de <DAYS_IN_A_ROW/> día seguido sin un <DAY_TYPE/>.",
@@ -3994,7 +3994,7 @@
 				"PAY_RATES": "Estas tarifas solo orientan qué cuadrante prefiere el motor; no se usan para pagar.",
 				"NO_OVERTIME_WHEN_GENERATING": "Por ejemplo: los turnos que el equipo no puede cubrir sin horas adicionales quedan abiertos, y eliges las horas extra al preguntar al motor en Buscar cobertura.",
 				"OVERTIME_STRETCH": "Por ejemplo: no hay Supervisor en el turno de tarde hasta las 16:00, así que el Supervisor del turno de mañana puede quedarse 2 horas más. Una ampliación cubre un puesto que falta durante algunas horas de un turno; nunca suma una persona a la plantilla de un turno.",
-				"KEEP_DAYS_OFF_TOGETHER": "Nunca cuesta cobertura: solo elige entre cuadrantes que, por lo demás, son iguales."
+				"KEEP_DAYS_OFF_TOGETHER": "Nunca cuesta cobertura: solo elige entre cuadrantes que, por lo demás, son iguales, y también tiene en cuenta los permisos ya aprobados para los días posteriores al cuadrante."
 			},
 			"fieldHints": {
 				"SHIFT": "Elige más de uno para contarlos juntos cada día.",
