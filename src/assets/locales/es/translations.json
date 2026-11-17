@@ -5939,7 +5939,6 @@
 			"daysPerWeek": "Días laborables a la semana",
 			"weekHours": "Horas a la semana",
 			"restDay": "Día de descanso",
-			"overtime": "Horas extra",
 			"name": "Nombre",
 			"nameHint": "Sugerido a partir de tus respuestas hasta que escribas uno.",
 			"namePlaceholder": "p. ej., Semana de cinco días, 44 h",
@@ -5987,7 +5986,7 @@
 			"paidAs": {
 				"legend": "Cómo se pagan las horas extra",
 				"RATE": "Pagadas a una tarifa",
-				"RATEDescription": "Indica la tarifa arriba.",
+				"RATEDescription": "Indica la tarifa abajo.",
 				"TIME_OFF": "Tiempo libre en su lugar",
 				"TIME_OFFDescription": "{{time}} libre por cada hora extra trabajada. Las horas extra no se pagan: se suman a un saldo que se recupera como Día libre compensatorio.",
 				"NOTHING": "Nada adicional",

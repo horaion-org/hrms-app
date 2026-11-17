@@ -4,6 +4,7 @@ import "@/common/i18n";
 import {
 	FIVE_DAY_WEEK,
 	PART_TIME_20,
+	PART_TIME_BELOW_MINUTES,
 	STANDARD_WEEK,
 } from "@/features/employmentTerms/fixtures";
 import {
@@ -15,10 +16,12 @@ import {
 } from "@/features/employmentTerms/hours";
 import {
 	BLANK_TERMS,
+	dayLineOf,
 	parseDays,
 	termsBodyOf,
 	termsFormSchema,
 	termsFormValuesOf,
+	typedWeekOf,
 	weekFieldsOf,
 	type TermsFormValues,
 } from "@/features/employmentTerms/termsForm";
@@ -236,5 +239,49 @@ describe("weekFieldsOf and termsBodyOf", () => {
 
 	it("has no week while the form is blank", () => {
 		expect(weekFieldsOf(BLANK_TERMS)).toBeUndefined();
+	});
+});
+
+describe("typedWeekOf", () => {
+	it("given_fiveDaysOf44Hours_when_read_then_aFullTimeWeekOf8Hours48", () => {
+		expect(
+			typedWeekOf({ daysPerWeek: "5", weekHours: "44" }, PART_TIME_BELOW_MINUTES)
+		).toEqual({ days: 5, weekMinutes: 2640, dayMinutes: 528, partTime: false });
+	});
+
+	it("given_20HoursOnVaryingDays_when_read_then_partTimeWithNoNormalDay", () => {
+		expect(
+			typedWeekOf({ daysPerWeek: "", weekHours: "20" }, PART_TIME_BELOW_MINUTES)
+		).toEqual({ days: null, weekMinutes: 1200, dayMinutes: null, partTime: true });
+	});
+
+	it("given_unreadableHours_when_read_then_noWeekAndNotPartTime", () => {
+		expect(
+			typedWeekOf({ daysPerWeek: "5", weekHours: "lots" }, PART_TIME_BELOW_MINUTES)
+		).toEqual({ days: 5, weekMinutes: null, dayMinutes: null, partTime: false });
+	});
+});
+
+describe("dayLineOf", () => {
+	/** The line for a week typed as days and hours. */
+	const lineFor = (daysPerWeek: string, weekHours: string): string | undefined =>
+		dayLineOf(typedWeekOf({ daysPerWeek, weekHours }, PART_TIME_BELOW_MINUTES), t);
+
+	it("given_wholeDays_when_read_then_saysTheDay", () => {
+		expect(lineFor("5", "44")).toBe("That is 8 h 48 min a day.");
+	});
+
+	it("given_aHalfDay_when_read_then_saysTheDayAndTheHalfDay", () => {
+		expect(lineFor("5.5", "44")).toBe(
+			"That is 8 h a day, with a half day of 4 h."
+		);
+	});
+
+	it("given_varyingDays_when_read_then_saysHoursVary", () => {
+		expect(lineFor("", "20")).toBe("Hours a day vary with the roster.");
+	});
+
+	it("given_noHours_when_read_then_saysNothing", () => {
+		expect(lineFor("5", "")).toBeUndefined();
 	});
 });

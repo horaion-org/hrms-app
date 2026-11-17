@@ -13,6 +13,7 @@ import {
 	parseHours,
 } from "@/features/employmentTerms/hours";
 import { normalDayMinutes } from "@/features/employmentTerms/normalDay";
+import { isPartTimeWeek } from "@/features/employmentTerms/summary";
 import {
 	percentOfTimes,
 	timesOfPercent,
@@ -95,6 +96,47 @@ export const parseDays = (text: string): number | null | "invalid" => {
 		days * 2 === Math.round(days * 2)
 		? days
 		: "invalid";
+};
+
+/** The week as typed so far: each figure null until it reads as one. */
+export type TypedWeek = {
+	days: number | null;
+	weekMinutes: number | null;
+	/** The normal day worked out from the days and the week. */
+	dayMinutes: number | null;
+	partTime: boolean;
+};
+
+/** The working days, hours a week and normal day the form's answers make, and whether that week is part-time. */
+export const typedWeekOf = (
+	values: Pick<TermsFormValues, "daysPerWeek" | "weekHours">,
+	partTimeBelowMinutes: number | null
+): TypedWeek => {
+	const typedDays = parseDays(values.daysPerWeek);
+	const typedHours = parseHours(values.weekHours);
+	const weekMinutes = typedHours.kind === "minutes" ? typedHours.minutes : null;
+	const days = typeof typedDays === "number" ? typedDays : null;
+	return {
+		days,
+		weekMinutes,
+		dayMinutes: normalDayMinutes(days, weekMinutes),
+		partTime:
+			weekMinutes !== null && isPartTimeWeek(weekMinutes, partTimeBelowMinutes),
+	};
+};
+
+/** The line under the week's figures saying the normal day, or nothing while the week cannot be read. */
+export const dayLineOf = (week: TypedWeek, t: TFunction): string | undefined => {
+	const key = "employmentTerms.dialog";
+	if (week.weekMinutes === null) return undefined;
+	if (week.days === null) return t(`${key}.dayLineVaries`);
+	if (week.dayMinutes === null) return undefined;
+	const day = durationShort(week.dayMinutes, t);
+	if (Number.isInteger(week.days)) return t(`${key}.dayLine`, { day });
+	return t(`${key}.dayLineHalf`, {
+		day,
+		half: durationShort(Math.floor(week.dayMinutes / 2), t),
+	});
 };
 
 const minutesOrNull = (text: string): number | null => {

@@ -5939,7 +5939,6 @@
 			"daysPerWeek": "Working days a week",
 			"weekHours": "Hours a week",
 			"restDay": "Rest day",
-			"overtime": "Overtime",
 			"name": "Name",
 			"nameHint": "Suggested from your answers until you type one.",
 			"namePlaceholder": "e.g. Five-day week, 44 h",
@@ -5987,7 +5986,7 @@
 			"paidAs": {
 				"legend": "How extra hours are paid",
 				"RATE": "Paid at a rate",
-				"RATEDescription": "Set the rate above.",
+				"RATEDescription": "Set the rate below.",
 				"TIME_OFF": "Time off instead",
 				"TIME_OFFDescription": "{{time}} off for each extra hour worked. Extra hours aren’t paid: they add to a balance, taken back as Off in lieu.",
 				"NOTHING": "Nothing extra",
