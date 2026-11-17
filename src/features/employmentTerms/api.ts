@@ -37,7 +37,31 @@ export type RestDay = z.infer<typeof restDaySchema>;
 
 export type TermsStatus = z.infer<typeof termsStatusSchema>;
 
-/** The fields that say what a working week is; shared by terms, presets and a person's terms in force. */
+// How extra hours are paid (backend ADR-0123); a value a newer API adds reads as UNKNOWN.
+const extraHoursPaidAsSchema = z
+	.enum(["RATE", "TIME_OFF", "NOTHING", "UNKNOWN"])
+	.catch("UNKNOWN");
+
+/** Paid at a rate, given as time off, or nothing extra; UNKNOWN when newer than the app. */
+export type ExtraHoursPaidAs = z.infer<typeof extraHoursPaidAsSchema>;
+
+/**
+ * What terms pay for extra hours, as whole percentages of a normal hour
+ * (150 is 1.5 times): relative costs the engine weighs rosters by, never pay
+ * amounts. Empty from an older API.
+ */
+const payFieldsSchema = z.object({
+	overtimePercent: z.number().int().nullable().catch(null),
+	restDayWorkPercent: z.number().int().nullable().catch(null),
+	/** Work on a day off at its own rate; empty counts it as normal hours until the week is passed. */
+	dayOffWorkPercent: z.number().int().nullable().catch(null),
+	extraHoursPaidAs: extraHoursPaidAsSchema,
+});
+
+/** The pay part of terms. */
+export type PayFields = z.infer<typeof payFieldsSchema>;
+
+/** The fields that say what a working week is and what it pays; shared by terms, presets and a person's terms in force. */
 const weekFieldsSchema = z.object({
 	/** Working days a week, in half days; empty for part-time terms without set days. */
 	daysPerWeek: z.number().nullable(),
@@ -51,6 +75,7 @@ const weekFieldsSchema = z.object({
 	shiftWork: z.boolean(),
 	/** Whether the Employment Act's hour limits apply to people on these terms. */
 	hoursLimitsApply: z.boolean(),
+	...payFieldsSchema.shape,
 });
 
 /** What a working week is made of, as the summary sentence reads it. */
@@ -98,6 +123,21 @@ const referenceSchema = z.object({
 	fullTimeWeekMinutes: z.number().int().nullable().catch(null),
 	/** The longest normal day terms may set. */
 	maxNormalDayMinutes: z.number().int().nullable().catch(null),
+	/** The lowest overtime rate for staff under the Act's hour rules, as a whole percentage. */
+	minimumCoveredOvertimePercent: z.number().int().nullable().catch(null),
+	/** The usual rate for work on the rest day, as a whole percentage. */
+	usualRestDayWorkPercent: z.number().int().nullable().catch(null),
+	/** Time off earned per extra hour, as a whole percentage. */
+	timeOffPerExtraHourPercent: z.number().int().nullable().catch(null),
+	/** The basic monthly pay up to which staff are under the Act's hour rules. */
+	coveredPayLines: z
+		.object({
+			currency: z.string(),
+			workmanMonthly: z.number().int(),
+			otherStaffMonthly: z.number().int(),
+		})
+		.nullable()
+		.catch(null),
 });
 
 /** The country's figures the API reads terms against; the app holds none of its own. */
@@ -188,16 +228,22 @@ const historyEntrySchema = z.object({
 /** One entry of a person's terms history. */
 export type HistoryEntry = z.infer<typeof historyEntrySchema>;
 
-const termsInForceSchema = weekFieldsSchema.extend({
-	termsId: z.string(),
-	name: z.string(),
-	basis: termsBasisSchema,
-	/** Their own hours, when they have any; never above the terms. */
-	contractedWeekMinutes: z.number().int().nullable(),
-	contractedDayMinutes: z.number().int().nullable(),
-	/** The day these terms started for them; none when they follow the Default. */
-	since: z.string().nullable().catch(null),
-});
+const termsInForceSchema = weekFieldsSchema
+	.extend({
+		termsId: z.string(),
+		name: z.string(),
+		basis: termsBasisSchema,
+		/** Their own hours, when they have any; never above the terms. */
+		contractedWeekMinutes: z.number().int().nullable(),
+		contractedDayMinutes: z.number().int().nullable(),
+		/** The day these terms started for them; none when they follow the Default. */
+		since: z.string().nullable().catch(null),
+		/** The API sends a person's pay as one block; read flat like the terms'. */
+		pay: payFieldsSchema.nullable().catch(null),
+	})
+	.transform(({ pay, ...inForce }) =>
+		pay === null ? inForce : { ...inForce, ...pay }
+	);
 
 /** The terms a person works on today. */
 export type TermsInForce = z.infer<typeof termsInForceSchema>;

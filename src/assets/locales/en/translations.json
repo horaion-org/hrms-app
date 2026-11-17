@@ -6143,6 +6143,9 @@
 				"minutes": "{{count}} min"
 			}
 		},
+		"rates": {
+			"times": "{{times}} times"
+		},
 		"readBack": {
 			"title": "These terms in words",
 			"unfinished": "Not finished yet: fill in or check {{fields}}.",

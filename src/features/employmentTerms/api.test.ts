@@ -55,6 +55,84 @@ describe("employment terms api", () => {
 		});
 	});
 
+	it("given_termsWithPay_when_parsed_then_kept", async () => {
+		stubApi({
+			[`GET ${BASE}/employment-terms/overview`]: {
+				status: 200,
+				body: envelope(
+					overviewResponse([
+						{ ...SIX_DAY_SHIFT, overtimePercent: 175, dayOffWorkPercent: 150 },
+					])
+				),
+			},
+		});
+
+		const overview = await fetchTermsOverview("c-1");
+
+		expect(overview.terms[0]).toMatchObject({
+			overtimePercent: 175,
+			restDayWorkPercent: 200,
+			dayOffWorkPercent: 150,
+			extraHoursPaidAs: "RATE",
+		});
+	});
+
+	it("given_anUnknownPaidAs_when_parsed_then_UNKNOWN", async () => {
+		stubApi({
+			[`GET ${BASE}/employment-terms/overview`]: {
+				status: 200,
+				body: envelope(
+					overviewResponse([
+						{ ...SIX_DAY_SHIFT, extraHoursPaidAs: "VOUCHERS" as never },
+					])
+				),
+			},
+		});
+
+		const overview = await fetchTermsOverview("c-1");
+
+		expect(overview.terms[0]?.extraHoursPaidAs).toBe("UNKNOWN");
+	});
+
+	// The API sends a person's pay as one block, `pay`; it reads flat like the terms'.
+	it("given_aPersonsPayBlock_when_parsed_then_readFlat", async () => {
+		const { inForce } = MEMBER_TERMS;
+		if (inForce === null) throw new Error("fixture has terms in force");
+		const {
+			overtimePercent,
+			restDayWorkPercent,
+			dayOffWorkPercent,
+			extraHoursPaidAs,
+			...week
+		} = inForce;
+		stubApi({
+			[`GET ${BASE}/member-profiles/m-1/employment-terms`]: {
+				status: 200,
+				body: envelope({
+					...MEMBER_TERMS,
+					inForce: {
+						...week,
+						pay: {
+							overtimePercent: 200,
+							restDayWorkPercent,
+							dayOffWorkPercent,
+							extraHoursPaidAs,
+						},
+					},
+				}),
+			},
+		});
+
+		const terms = await fetchMemberTerms("c-1", "m-1");
+
+		expect(terms.inForce).toMatchObject({
+			overtimePercent: 200,
+			restDayWorkPercent: 200,
+			extraHoursPaidAs: "RATE",
+		});
+		expect(overtimePercent).toBe(150);
+	});
+
 	it("reads a person's terms and history, with sources newer than the app", async () => {
 		stubApi({
 			[`GET ${BASE}/member-profiles/m-1/employment-terms`]: {

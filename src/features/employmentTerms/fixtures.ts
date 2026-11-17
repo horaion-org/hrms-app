@@ -1,5 +1,6 @@
 import type {
 	EmploymentTerms,
+	PayFields,
 	MemberTerms,
 	TermsOverview,
 	TermsOverviewItem,
@@ -10,11 +11,23 @@ import type {
 /** The part-time line the fixtures' company has: 35 h a week. */
 export const PART_TIME_BELOW_MINUTES = 2100;
 
-/** The figures the API reads terms against: 35 h line, 44 h full-time week, 12 h longest day. */
+/** The figures the API reads terms against: 35 h line, 44 h full-time week, 12 h longest day, the Act's rates. */
 export const REFERENCE: TermsReference = {
 	partTimeBelowMinutes: PART_TIME_BELOW_MINUTES,
 	fullTimeWeekMinutes: 2640,
 	maxNormalDayMinutes: 720,
+	minimumCoveredOvertimePercent: 150,
+	usualRestDayWorkPercent: 200,
+	timeOffPerExtraHourPercent: 100,
+	coveredPayLines: { currency: "SGD", workmanMonthly: 4500, otherStaffMonthly: 2600 },
+};
+
+/** What new terms pay: overtime at 1.5 times, rest day work at 2, a day off as normal hours, paid at a rate. */
+export const DEFAULT_PAY: PayFields = {
+	overtimePercent: 150,
+	restDayWorkPercent: 200,
+	dayOffWorkPercent: null,
+	extraHoursPaidAs: "RATE",
 };
 
 /** The seeded Default: 6 days, 44 h, a rest day set on the roster. */
@@ -31,6 +44,7 @@ export const STANDARD_WEEK: TermsOverviewItem = {
 	dailyOvertime: false,
 	shiftWork: false,
 	hoursLimitsApply: true,
+	...DEFAULT_PAY,
 	// Everyone is backfilled onto the Default, so it is held like any terms.
 	holderCount: 64,
 	scheduledCount: 0,
@@ -49,6 +63,7 @@ export const FIVE_DAY_WEEK: TermsOverviewItem = {
 	dailyOvertime: true,
 	shiftWork: false,
 	hoursLimitsApply: true,
+	...DEFAULT_PAY,
 	holderCount: 0,
 	scheduledCount: 0,
 };
@@ -66,6 +81,7 @@ export const SIX_DAY_SHIFT: TermsOverviewItem = {
 	dailyOvertime: false,
 	shiftWork: true,
 	hoursLimitsApply: true,
+	...DEFAULT_PAY,
 	holderCount: 41,
 	scheduledCount: 2,
 };
@@ -83,6 +99,7 @@ export const PART_TIME_20: TermsOverviewItem = {
 	dailyOvertime: true,
 	shiftWork: false,
 	hoursLimitsApply: true,
+	...DEFAULT_PAY,
 	holderCount: 9,
 	scheduledCount: 0,
 };
@@ -105,6 +122,7 @@ export const TERMS_PRESETS: TermsPresets = {
 			dailyOvertime: true,
 			shiftWork: false,
 			hoursLimitsApply: true,
+			...DEFAULT_PAY,
 		},
 		{
 			key: "FIVE_AND_HALF_DAY",
@@ -116,6 +134,7 @@ export const TERMS_PRESETS: TermsPresets = {
 			dailyOvertime: true,
 			shiftWork: false,
 			hoursLimitsApply: true,
+			...DEFAULT_PAY,
 		},
 		{
 			key: "SIX_DAY_SHIFT",
@@ -127,6 +146,7 @@ export const TERMS_PRESETS: TermsPresets = {
 			dailyOvertime: false,
 			shiftWork: true,
 			hoursLimitsApply: true,
+			...DEFAULT_PAY,
 		},
 		{
 			key: "PART_TIME",
@@ -138,6 +158,7 @@ export const TERMS_PRESETS: TermsPresets = {
 			dailyOvertime: false,
 			shiftWork: false,
 			hoursLimitsApply: true,
+			...DEFAULT_PAY,
 		},
 	],
 };
@@ -173,6 +194,7 @@ export const MEMBER_TERMS: MemberTerms = {
 		dailyOvertime: false,
 		shiftWork: true,
 		hoursLimitsApply: true,
+		...DEFAULT_PAY,
 		contractedWeekMinutes: null,
 		contractedDayMinutes: null,
 		since: "2025-03-01",
@@ -220,6 +242,7 @@ export const MEMBER_ON_STANDARD: MemberTerms = {
 		dailyOvertime: false,
 		shiftWork: false,
 		hoursLimitsApply: true,
+		...DEFAULT_PAY,
 		contractedWeekMinutes: null,
 		contractedDayMinutes: null,
 		since: "2024-06-03",

@@ -6143,6 +6143,9 @@
 				"minutes": "{{count}} min"
 			}
 		},
+		"rates": {
+			"times": "{{times}} veces"
+		},
 		"readBack": {
 			"title": "Estas condiciones, en palabras",
 			"unfinished": "Aún sin terminar: completa o revisa {{fields}}.",
