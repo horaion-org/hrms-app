@@ -66,21 +66,28 @@ const IF_POSSIBLE_NOT_MET = "If possible, not met: ";
 const nameOf = (row: ScheduleAssignment, t: TFunction): string =>
 	row.member?.displayName ?? t("scheduling.detail.formerMember");
 
-/** A day a manager must decide, to fix. */
-const toDecideIssue = (row: ScheduleAssignment, t: TFunction): RosterIssue => ({
-	key: `decide|${row.assignmentId}`,
-	group: "mustFix",
-	who: nameOf(row, t),
-	memberProfileId: row.member?.memberProfileId ?? null,
-	day: row.day,
-	time: null,
-	rule: t(
-		row.flag === "NEEDS_ATTENTION"
-			? "scheduling.rosterMarkers.needsAttention"
-			: "scheduling.rosterMarkers.needsDecision"
-	),
-	action: { kind: "show" },
-});
+/**
+ * A day a manager must decide, to fix, saying what to do as the day editor
+ * does: give the person a shift or confirm the day off.
+ */
+const toDecideIssue = (row: ScheduleAssignment, t: TFunction): RosterIssue => {
+	const name = nameOf(row, t);
+	return {
+		key: `decide|${row.assignmentId}`,
+		group: "mustFix",
+		who: name,
+		memberProfileId: row.member?.memberProfileId ?? null,
+		day: row.day,
+		time: null,
+		rule: t(
+			row.flag === "NEEDS_ATTENTION"
+				? "scheduling.rosterEdit.needsAttention"
+				: "scheduling.rosterEdit.needsDecision",
+			{ name }
+		),
+		action: { kind: "show" },
+	};
+};
 
 /** A day on leave or covered: to fix with Find cover while its shift is short, else for information. */
 const leaveAndCoverIssue = (

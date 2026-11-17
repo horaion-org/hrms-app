@@ -286,7 +286,11 @@ describe("GeneratedRoster", () => {
 			.getByRole("button", { name: /^Must fix/ })
 			.closest("section");
 		expect(toDecide).not.toBeNull();
-		expect(within(toDecide!).getByText("Needs attention")).toBeVisible();
+		expect(
+			within(toDecide!).getByText(
+				/^This day needs attention\. Give .+ a shift or confirm the day off\.$/
+			)
+		).toBeVisible();
 		expect(toDecide).not.toHaveTextContent(/leave/i);
 	});
 

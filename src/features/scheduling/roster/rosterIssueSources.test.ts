@@ -121,7 +121,10 @@ describe("issuesOfRoster", () => {
 		);
 
 		expect(issues.map((issue) => [issue.group, issue.rule])).toEqual([
-			["mustFix", "scheduling.rosterMarkers.needsDecision"],
+			[
+				"mustFix",
+				`scheduling.rosterEdit.needsDecision(${row.member?.displayName ?? ""})`,
+			],
 		]);
 	});
 
