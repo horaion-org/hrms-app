@@ -27,10 +27,7 @@ export const partTimeOf = (
 	reference !== undefined &&
 	isPartTimeWeek(fields.weekMinutes, reference.partTimeBelowMinutes);
 
-/**
- * When overtime starts, read against the API's figures. Shift work counts
- * by the week: the product does not average hours over several weeks.
- */
+/** When overtime starts, read against the API's figures: by the day and the week, or by the week. */
 export const overtimeSentence = (
 	fields: WeekFields,
 	reference: TermsReference,
@@ -46,7 +43,6 @@ export const overtimeSentence = (
 				});
 	}
 	const week = durationLong(fields.weekMinutes, t);
-	if (fields.shiftWork) return t(`${key}.overtimeShiftWork`, { week });
 	if (fields.dailyOvertime && fields.dayMinutes !== null)
 		return t(`${key}.overtimeDayOrWeek`, {
 			day: durationLong(fields.dayMinutes, t),
@@ -200,8 +196,8 @@ export const restShort = (fields: WeekFields, t: TFunction): string => {
 };
 
 /**
- * The list's week, line by line: hours over days ("44 h over 5½ days" or
- * "20 h a week"), then the shift length or "Days vary", then the rest day
+ * A profile's week, line by line: hours over days ("44 h over 5½ days" or
+ * "20 h a week"), then "Days vary" when they do, then the rest day
  * (none for a part-timer, whom rosters give no rest day).
  */
 export const weekLines = (
@@ -220,56 +216,8 @@ export const weekLines = (
 						count: fields.daysPerWeek,
 					}),
 				];
-	if (fields.shiftWork && fields.dayMinutes !== null)
-		lines.push(
-			t(`${key}.list.shifts`, { day: durationShort(fields.dayMinutes, t) })
-		);
 	if (!partTimeOf(fields, reference)) lines.push(restShort(fields, t));
 	return lines;
-};
-
-/** When overtime starts, in a few words, before its rate is added. */
-const overtimeStartShort = (
-	fields: WeekFields,
-	reference: TermsReference,
-	t: TFunction
-): string => {
-	const week = durationShort(fields.weekMinutes, t);
-	if (partTimeOf(fields, reference))
-		return reference.fullTimeWeekMinutes === null
-			? t(`${key}.list.overtimePartTime`)
-			: t(`${key}.list.overtimePartTimeUntil`, {
-					full: durationShort(reference.fullTimeWeekMinutes, t),
-				});
-	if (fields.shiftWork) return t(`${key}.list.overtimeShiftWork`, { week });
-	if (fields.dailyOvertime && fields.dayMinutes !== null)
-		return t(`${key}.list.overtimeDayOrWeek`, {
-			day: durationShort(fields.dayMinutes, t),
-			week,
-		});
-	return t(`${key}.list.overtimeWeek`, { week });
-};
-
-/**
- * When overtime starts and what it earns, in a few words for the list:
- * "Overtime after 8 h 48 min a day or 44 h a week, at 1.5 times", "Extra
- * hours up to 44 h, then overtime, at 1.5 times", "…, nothing extra". Empty
- * without the API's figures, rather than a guess.
- */
-export const overtimeShort = (
-	fields: WeekFields,
-	reference: TermsReference | undefined,
-	t: TFunction
-): string => {
-	if (reference === undefined) return "";
-	const overtime = overtimeStartShort(fields, reference, t);
-	if (fields.extraHoursPaidAs === "NOTHING")
-		return t(`${key}.list.nothingExtra`, { overtime });
-	if (fields.overtimePercent === null) return overtime;
-	return t(`${key}.list.atRate`, {
-		overtime,
-		times: formatTimes(fields.overtimePercent, t),
-	});
 };
 
 /**

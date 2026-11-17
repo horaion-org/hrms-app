@@ -15,7 +15,7 @@ import { retry } from "@/features/workspace/retry";
 
 /*
  * Employment terms: the working week each kind of contract sets (working
- * days, normal hours a week and a day, the rest day, shift work, and whether
+ * days, normal hours a week and a day worked out from them, the rest day, and whether
  * the Employment Act's hour limits apply), and which terms each person works
  * on from which date. The catalogue is read and changed under
  * `employment_terms:read`/`:update`, held company-wide; a person's terms
@@ -71,8 +71,6 @@ const weekFieldsSchema = z.object({
 	restDay: restDaySchema,
 	/** Overtime also starts past the normal day, not only past the week. */
 	dailyOvertime: z.boolean(),
-	/** Dropped by the API (ADR-0124); read while an older API still sends it. */
-	shiftWork: z.boolean().optional(),
 	/** Whether the Employment Act's hour limits apply to people on these terms. */
 	hoursLimitsApply: z.boolean(),
 	...payFieldsSchema.shape,
@@ -159,7 +157,7 @@ const termsPresetsSchema = referenceSchema.extend({
 export type TermsPresets = z.infer<typeof termsPresetsSchema>;
 
 /** What creating or saving terms sends: never the day, which the API works out. */
-export type EmploymentTermsBody = Omit<WeekFields, "dayMinutes" | "shiftWork"> & {
+export type EmploymentTermsBody = Omit<WeekFields, "dayMinutes"> & {
 	name: string;
 	description: string | null;
 };

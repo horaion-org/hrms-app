@@ -888,7 +888,7 @@ describe("Add employee's employment terms", () => {
 		await choose(user, /^Employment terms/, "Five-day week, 44 h");
 		expect(
 			screen.getByText(
-				/^Works 44 hours over 5 days a week, 8 hours 48 minutes a day\./
+				/^Full-time, 5 days a week, 44 h \(8 h 48 min a day\)\./
 			)
 		).toBeVisible();
 		await pickDate(user, /^Hire date/, "1 October 2026");

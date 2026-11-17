@@ -167,10 +167,10 @@ describe("A person's employment terms", () => {
 			"/settings?section=employment&terms=terms-six-day-shift"
 		);
 		// The kind beside the name, then the week in a few words; the full sentence lives in Settings.
-		// Shift work is gone (API ADR-0124): no pill beside the name.
+		// given_terms_when_shown_then_noShiftWorkPill: shift work is gone (API ADR-0124).
 		expect(within(card).queryByText("Shift work")).toBeNull();
 		expect(card).toHaveTextContent(
-			"44 h over 6 days · Shifts up to 12 h · Roster picks the rest day · Since 1 Mar 2025"
+			"44 h over 6 days · Roster picks the rest day · Since 1 Mar 2025"
 		);
 		expect(card).not.toHaveTextContent("Full-time, 6 days a week");
 		expect(card).toHaveTextContent(

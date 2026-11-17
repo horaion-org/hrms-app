@@ -10,58 +10,23 @@ import {
 	SIX_DAY_SHIFT,
 } from "@/features/employmentTerms/fixtures";
 import {
-	overtimeShort,
 	suggestedTermsName,
 	weekLines,
 } from "@/features/employmentTerms/summary";
 
 const t = i18n.getFixedT("en");
 
-describe("weekLines and overtimeShort", () => {
-	it.each<[string, WeekFields, Array<string>, string]>([
+describe("weekLines", () => {
+	it.each<[string, WeekFields, Array<string>]>([
+		["a five-day week", FIVE_DAY_WEEK, ["44 h over 5 days", "Rest day Sunday"]],
 		[
-			"a five-day week",
-			FIVE_DAY_WEEK,
-			["44 h over 5 days", "Rest day Sunday"],
-			"Overtime after 8 h 48 min a day or 44 h a week, at 1.5 times",
-		],
-		[
-			"shift work",
+			"six days, the roster's rest day",
 			SIX_DAY_SHIFT,
-			["44 h over 6 days", "Shifts up to 12 h", "Roster picks the rest day"],
-			"Overtime by the week, after 44 h, at 1.5 times",
+			["44 h over 6 days", "Roster picks the rest day"],
 		],
-		[
-			"part-time, with no rest day",
-			PART_TIME_20,
-			["20 h a week", "Days vary"],
-			"Extra hours up to 44 h, then overtime, at 1.5 times",
-		],
-	])("words %s for the list", (_, fields, lines, overtime) => {
+		["part-time, with no rest day", PART_TIME_20, ["20 h a week", "Days vary"]],
+	])("words %s for a profile", (_, fields, lines) => {
 		expect(weekLines(fields, REFERENCE, t)).toEqual(lines);
-		expect(overtimeShort(fields, REFERENCE, t)).toBe(overtime);
-	});
-
-	it("given_nothingExtra_when_worded_then_saysSo", () => {
-		const managers: WeekFields = {
-			...FIVE_DAY_WEEK,
-			hoursLimitsApply: false,
-			extraHoursPaidAs: "NOTHING",
-		};
-		expect(overtimeShort(managers, REFERENCE, t)).toBe(
-			"Overtime after 8 h 48 min a day or 44 h a week, nothing extra"
-		);
-	});
-
-	it("given_noRateFromAnOlderApi_when_worded_then_saysNoRate", () => {
-		const older: WeekFields = { ...FIVE_DAY_WEEK, overtimePercent: null };
-		expect(overtimeShort(older, REFERENCE, t)).toBe(
-			"Overtime after 8 h 48 min a day or 44 h a week"
-		);
-	});
-
-	it("says nothing about overtime without the API's figures", () => {
-		expect(overtimeShort(FIVE_DAY_WEEK, undefined, t)).toBe("");
 	});
 });
 

@@ -172,7 +172,7 @@ const timesOrEmpty = (percent: number | null): string =>
 /** Where the form starts from: terms being edited, a preset, or blank. */
 export const termsFormValuesOf = (
 	start:
-		| (Omit<WeekFields, "dayMinutes" | "shiftWork"> & {
+		| (Omit<WeekFields, "dayMinutes"> & {
 				name: string;
 				description?: string | null;
 		  })
