@@ -2795,6 +2795,7 @@
 			"signIn": "Iniciar sesión"
 		},
 		"loading": "Cargando…",
+		"loadingSlow": "Esto está tardando más de lo habitual. Si se acaba de cambiar algo, puede que el acceso aún se esté actualizando.",
 		"accessUpdating": {
 			"title": "El acceso se está actualizando",
 			"explanation": "Un cambio reciente en tu organización aún se está aplicando al acceso de todos, así que esta página no se puede abrir todavía. Inténtalo de nuevo en unos segundos.",

@@ -972,6 +972,7 @@
 			"signIn": "Sign in"
 		},
 		"loading": "Loading…",
+		"loadingSlow": "This is taking longer than usual. If something was just changed, access may still be updating.",
 		"accessUpdating": {
 			"title": "Access is being updated",
 			"explanation": "A recent change to your organisation is still being applied to everyone’s access, so this page can’t open yet. Try again in a few seconds.",
