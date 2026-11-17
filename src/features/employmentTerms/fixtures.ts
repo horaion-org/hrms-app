@@ -112,13 +112,13 @@ export const TERMS_OVERVIEW: TermsOverview = {
 	terms: [STANDARD_WEEK, FIVE_DAY_WEEK, SIX_DAY_SHIFT, PART_TIME_20],
 };
 
-/** The presets route's answer: the country's figures and the four common weeks (no figure lives in the app). */
+/** The presets route's answer: the country's figures and the five starting points (no figure lives in the app). */
 export const TERMS_PRESETS: TermsPresets = {
 	...REFERENCE,
 	presets: [
 		{
-			key: "FIVE_DAY",
-			name: "Five-day week, 44 h",
+			key: "FULL_TIME_5_DAYS",
+			name: "Full-time, 5 days",
 			daysPerWeek: 5,
 			weekMinutes: 2640,
 			dayMinutes: 528,
@@ -129,8 +129,8 @@ export const TERMS_PRESETS: TermsPresets = {
 			...DEFAULT_PAY,
 		},
 		{
-			key: "FIVE_AND_HALF_DAY",
-			name: "Five-and-a-half-day week, 44 h",
+			key: "FULL_TIME_5_AND_HALF_DAYS",
+			name: "Full-time, 5½ days",
 			daysPerWeek: 5.5,
 			weekMinutes: 2640,
 			dayMinutes: 480,
@@ -141,19 +141,19 @@ export const TERMS_PRESETS: TermsPresets = {
 			...DEFAULT_PAY,
 		},
 		{
-			key: "SIX_DAY_SHIFT",
-			name: "Six-day shift, 12 h",
+			key: "FULL_TIME_6_DAYS",
+			name: "Full-time, 6 days",
 			daysPerWeek: 6,
 			weekMinutes: 2640,
-			dayMinutes: 720,
+			dayMinutes: 440,
 			restDay: "ROSTERED",
 			dailyOvertime: false,
-			shiftWork: true,
+			shiftWork: false,
 			hoursLimitsApply: true,
 			...DEFAULT_PAY,
 		},
 		{
-			key: "PART_TIME",
+			key: "PART_TIME_20_H",
 			name: "Part-time, 20 h",
 			daysPerWeek: null,
 			weekMinutes: 1200,
@@ -163,6 +163,19 @@ export const TERMS_PRESETS: TermsPresets = {
 			shiftWork: false,
 			hoursLimitsApply: true,
 			...DEFAULT_PAY,
+		},
+		{
+			key: "MANAGERS",
+			name: "Managers and executives",
+			daysPerWeek: 5,
+			weekMinutes: 2640,
+			dayMinutes: 528,
+			restDay: "SUN",
+			dailyOvertime: false,
+			shiftWork: false,
+			hoursLimitsApply: false,
+			...DEFAULT_PAY,
+			extraHoursPaidAs: "NOTHING",
 		},
 	],
 };

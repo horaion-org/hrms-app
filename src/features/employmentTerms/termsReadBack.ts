@@ -1,6 +1,15 @@
 import type { TFunction } from "i18next";
-import type { TermsReference } from "@/features/employmentTerms/api";
-import { termsSentence } from "@/features/employmentTerms/summary";
+import type {
+	TermsReference,
+	WeekFields,
+} from "@/features/employmentTerms/api";
+import { durationShort } from "@/features/employmentTerms/hours";
+import { formatTimes } from "@/features/employmentTerms/rates";
+import {
+	paidAtARate,
+	partTimeOf,
+	termsSentence,
+} from "@/features/employmentTerms/summary";
 import {
 	termsFormSchema,
 	weekFieldsOf,
@@ -64,4 +73,96 @@ export const readBackOf = (
 		};
 	}
 	return { complete: true, text: termsSentence(fields, reference, t) };
+};
+
+/** The extra hours the examples work: four past the week, one past the day (an illustration, not a figure of law). */
+const EXAMPLE_EXTRA_WEEK_MINUTES = 240;
+const EXAMPLE_EXTRA_DAY_MINUTES = 60;
+
+const exampleKey = "employmentTerms.readBack.example";
+
+/**
+ * The sample week's example, in figures: a long week (or day, with daily
+ * overtime) and how it splits. A part-timer's extra hours are at the normal
+ * rate. When the roster picks the rest day, it says the drawn day is only an
+ * example. Nothing without the API's figures.
+ */
+export const termsExample = (
+	fields: WeekFields,
+	reference: TermsReference | undefined,
+	t: TFunction
+): string | undefined => {
+	if (reference === undefined) return undefined;
+	const short = (minutes: number): string => durationShort(minutes, t);
+	const times =
+		paidAtARate(fields) && fields.overtimePercent !== null
+			? formatTimes(fields.overtimePercent, t)
+			: undefined;
+	const withRate = (
+		sentence: "week" | "day",
+		values: Record<string, string>
+	): string =>
+		times === undefined
+			? t(`${exampleKey}.${sentence}`, values)
+			: t(`${exampleKey}.${sentence}At`, { ...values, times });
+	const partTime = partTimeOf(fields, reference);
+	const example = partTime
+		? t(`${exampleKey}.partTime`, {
+				worked: short(fields.weekMinutes + EXAMPLE_EXTRA_WEEK_MINUTES),
+				week: short(fields.weekMinutes),
+				extra: short(EXAMPLE_EXTRA_WEEK_MINUTES),
+			})
+		: fields.dailyOvertime && fields.dayMinutes !== null
+			? withRate("day", {
+					worked: short(fields.dayMinutes + EXAMPLE_EXTRA_DAY_MINUTES),
+					day: short(fields.dayMinutes),
+					extra: short(EXAMPLE_EXTRA_DAY_MINUTES),
+				})
+			: withRate("week", {
+					worked: short(fields.weekMinutes + EXAMPLE_EXTRA_WEEK_MINUTES),
+					week: short(fields.weekMinutes),
+					extra: short(EXAMPLE_EXTRA_WEEK_MINUTES),
+				});
+	const restIsExample =
+		!partTime && fields.restDay === "ROSTERED" && fields.daysPerWeek !== null;
+	return restIsExample
+		? `${example} ${t(`${exampleKey}.restIsExample`)}`
+		: example;
+};
+
+const effectsKey = "employmentTerms.readBack.does";
+
+/**
+ * "What this changes": the hours ledger, the roster's limits, the rest day,
+ * and how the engine weighs extra hours. The limits are the Work policy's,
+ * named without figures (the dialog does not read the policy).
+ */
+export const termsEffects = (
+	fields: WeekFields,
+	reference: TermsReference | undefined,
+	t: TFunction
+): Array<string> => {
+	const partTime = partTimeOf(fields, reference);
+	const daily = fields.dailyOvertime && fields.dayMinutes !== null;
+	const rest = partTime
+		? t(`${effectsKey}.restPartTime`)
+		: fields.restDay === "ROSTERED" || fields.restDay === "UNKNOWN"
+			? t(`${effectsKey}.restRostered`)
+			: t(`${effectsKey}.restFixed`, {
+					weekday: t(`weekdays.${fields.restDay}`),
+				});
+	return [
+		t(daily ? `${effectsKey}.hoursDayAndWeek` : `${effectsKey}.hoursWeek`),
+		t(
+			fields.hoursLimitsApply
+				? `${effectsKey}.limitsApply`
+				: `${effectsKey}.limitsDontApply`
+		),
+		rest,
+		paidAtARate(fields) && fields.overtimePercent !== null
+			? t(`${effectsKey}.costAt`, {
+					times: formatTimes(fields.overtimePercent, t),
+				})
+			: t(`${effectsKey}.costSame`),
+	];
 };

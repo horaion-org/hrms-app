@@ -20,38 +20,12 @@ export const isPartTimeWeek = (
 	partTimeBelowMinutes !== null && weekMinutes < partTimeBelowMinutes;
 
 /** Whether the reader's figures make these terms part-time; unknown figures never do. */
-const partTimeOf = (
+export const partTimeOf = (
 	fields: WeekFields,
 	reference: TermsReference | undefined
 ): boolean =>
 	reference !== undefined &&
 	isPartTimeWeek(fields.weekMinutes, reference.partTimeBelowMinutes);
-
-/** "Works 44 hours over 5½ days a week." and its shift, day and varying forms. */
-const workSentence = (fields: WeekFields, t: TFunction): string => {
-	const week = durationLong(fields.weekMinutes, t);
-	if (fields.daysPerWeek === null) return t(`${key}.weekOnly`, { week });
-	const days = formatDays(fields.daysPerWeek);
-	const count = fields.daysPerWeek;
-	if (fields.dayMinutes === null)
-		return t(`${key}.overDays`, { week, days, count });
-	const day = durationLong(fields.dayMinutes, t);
-	return fields.shiftWork
-		? t(`${key}.inShifts`, { week, days, count, day })
-		: t(`${key}.overDaysWithDay`, { week, days, count, day });
-};
-
-/** The rest day: a weekday, the roster's choice, or none for a part-timer. */
-const restSentence = (
-	fields: WeekFields,
-	partTime: boolean,
-	t: TFunction
-): string => {
-	if (partTime) return t(`${key}.restPartTime`);
-	if (fields.restDay === "ROSTERED") return t(`${key}.restRostered`);
-	if (fields.restDay === "UNKNOWN") return t(`${key}.restUnknown`);
-	return t(`${key}.restFixed`, { weekday: t(`weekdays.${fields.restDay}`) });
-};
 
 /**
  * When overtime starts, read against the API's figures. Shift work counts
@@ -81,49 +55,114 @@ export const overtimeSentence = (
 	return t(`${key}.overtimeWeek`, { week });
 };
 
-/**
- * What extra hours earn: "Overtime is paid at 1.5 times." with the rest day's
- * and a day off's own rates (never for a part-timer, whom rosters give
- * neither), or "Hours past 44 hours a week earn nothing extra.". Nothing
- * when the API sent no rate (an older API), rather than a guess.
- */
-export const paySentence = (
+/** A week of this many working days or more leaves no day off beside the rest day. */
+const DAYS_WITHOUT_A_DAY_OFF = 6;
+
+/** Whether the overtime rate applies: always under the Act's hour rules, otherwise only when paid at a rate. */
+export const paidAtARate = (fields: WeekFields): boolean =>
+	fields.hoursLimitsApply || fields.extraHoursPaidAs === "RATE";
+
+/** Whether the terms have a day off beside the rest day, whose work the terms price. */
+export const hasDayOff = (fields: WeekFields, partTime: boolean): boolean =>
+	!partTime &&
+	fields.daysPerWeek !== null &&
+	fields.daysPerWeek < DAYS_WITHOUT_A_DAY_OFF;
+
+const sentenceKey = "employmentTerms.readBack.sentence";
+
+/** "5 days a week, 44 h (8 h 48 min a day)" or "20 h a week, days vary". */
+const weekWords = (fields: WeekFields, t: TFunction): string => {
+	const week = durationShort(fields.weekMinutes, t);
+	if (fields.daysPerWeek === null)
+		return t(`${sentenceKey}.weekVaries`, { week });
+	const days = formatDays(fields.daysPerWeek);
+	const count = fields.daysPerWeek;
+	return fields.dayMinutes === null
+		? t(`${sentenceKey}.days`, { days, count, week })
+		: t(`${sentenceKey}.daysWithDay`, {
+				days,
+				count,
+				week,
+				day: durationShort(fields.dayMinutes, t),
+			});
+};
+
+/** The rest day; none for a part-timer, whom rosters give no rest day. */
+const restWords = (
 	fields: WeekFields,
 	partTime: boolean,
 	t: TFunction
-): string | undefined => {
-	if (fields.extraHoursPaidAs === "NOTHING")
-		return t(`${key}.nothingExtra`, {
-			week: durationLong(fields.weekMinutes, t),
-		});
-	if (fields.overtimePercent === null) return undefined;
-	const sentences = [
-		t(`${key}.paidAt`, { times: formatTimes(fields.overtimePercent, t) }),
+): Array<string> => {
+	if (partTime) return [];
+	if (fields.restDay === "ROSTERED") return [t(`${sentenceKey}.restRostered`)];
+	if (fields.restDay === "UNKNOWN") return [t(`${key}.restUnknown`)];
+	return [
+		t(`${sentenceKey}.restFixed`, {
+			weekday: t(`weekdays.${fields.restDay}`),
+		}),
 	];
-	if (!partTime && fields.restDayWorkPercent !== null)
-		sentences.push(
-			t(`${key}.restDayAt`, {
+};
+
+/** What extra hours earn, read against the API's figures. */
+const overtimeWords = (
+	fields: WeekFields,
+	reference: TermsReference,
+	partTime: boolean,
+	t: TFunction
+): Array<string> => {
+	const week = durationShort(fields.weekMinutes, t);
+	if (!fields.hoursLimitsApply && fields.extraHoursPaidAs === "NOTHING")
+		return [t(`${sentenceKey}.nothingExtra`, { week })];
+	const times =
+		fields.overtimePercent === null
+			? undefined
+			: formatTimes(fields.overtimePercent, t);
+	if (partTime) {
+		if (reference.fullTimeWeekMinutes === null) return [];
+		const full = durationShort(reference.fullTimeWeekMinutes, t);
+		return [
+			times === undefined
+				? t(`${sentenceKey}.partTimeExtra`, { full })
+				: t(`${sentenceKey}.partTimeExtraAt`, { full, times }),
+		];
+	}
+	const daily = fields.dailyOvertime && fields.dayMinutes !== null;
+	const after = daily
+		? t(`${sentenceKey}.afterDayOrWeek`, {
+				week,
+				day: durationShort(fields.dayMinutes ?? 0, t),
+			})
+		: t(`${sentenceKey}.afterWeek`, { week });
+	const words = [
+		times === undefined
+			? t(`${sentenceKey}.overtime`, { after })
+			: t(`${sentenceKey}.overtimeAt`, { after, times }),
+	];
+	if (fields.restDayWorkPercent !== null)
+		words.push(
+			t(`${sentenceKey}.restDayAt`, {
 				times: formatTimes(fields.restDayWorkPercent, t),
 			})
 		);
-	if (!partTime && fields.dayOffWorkPercent !== null)
-		sentences.push(
-			t(`${key}.dayOffAt`, { times: formatTimes(fields.dayOffWorkPercent, t) })
+	if (hasDayOff(fields, partTime) && paidAtARate(fields))
+		words.push(
+			fields.dayOffWorkPercent === null
+				? t(`${sentenceKey}.dayOffNormal`)
+				: t(`${sentenceKey}.dayOffAt`, {
+						times: formatTimes(fields.dayOffWorkPercent, t),
+					})
 		);
-	return sentences.join(" ");
+	return words;
 };
 
-/** Whether the Employment Act's hour limits hold, and what that means for a roster. */
-export const limitsSentence = (fields: WeekFields, t: TFunction): string =>
-	t(fields.hoursLimitsApply ? `${key}.limitsApply` : `${key}.limitsDontApply`);
-
 /**
- * What terms mean, in plain words, built from their fields alone: the
- * working week, the rest day, when overtime starts, and whether the Act's
- * hour limits apply. The one sentence the dialog, the catalogue and every
- * profile read, so they never disagree. Overtime is read against the
- * API's `reference` (the part-time line and a full-timer's week); without
- * it the sentence leaves overtime out rather than state a wrong threshold.
+ * What terms mean, in plain words, built from their fields alone (the
+ * approved design's sentence): full-time or part-time, the working week,
+ * the rest day, when overtime starts and what extra hours earn, and whether
+ * the Act's hour limits apply. The one sentence the dialog, the list and
+ * every profile read, so they never disagree. Full-time or part-time and
+ * overtime are read against the API's `reference`; without it the sentence
+ * leaves them out rather than state a wrong threshold.
  */
 export const termsSentence = (
 	fields: WeekFields,
@@ -131,15 +170,23 @@ export const termsSentence = (
 	t: TFunction
 ): string => {
 	const partTime = partTimeOf(fields, reference);
-	const pay = paySentence(fields, partTime, t);
+	const work = weekWords(fields, t);
 	return [
-		workSentence(fields, t),
-		restSentence(fields, partTime, t),
+		reference === undefined
+			? t(`${sentenceKey}.withoutKind`, { work })
+			: t(`${sentenceKey}.withKind`, {
+					kind: t(`${sentenceKey}.${partTime ? "partTime" : "fullTime"}`),
+					work,
+				}),
+		...restWords(fields, partTime, t),
 		...(reference === undefined
 			? []
-			: [overtimeSentence(fields, reference, t)]),
-		...(pay === undefined ? [] : [pay]),
-		limitsSentence(fields, t),
+			: overtimeWords(fields, reference, partTime, t)),
+		t(
+			fields.hoursLimitsApply
+				? `${sentenceKey}.limitsApply`
+				: `${sentenceKey}.limitsDontApply`
+		),
 	].join(" ");
 };
 

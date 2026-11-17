@@ -6000,7 +6000,13 @@
 				"OWN_RATE": "Su propia tarifa"
 			},
 			"dayOffRate": "El trabajo en un día libre cuenta a",
-			"dayOffHint": "Un día libre es un día no laborable que no es el día de descanso, como el sábado en una semana de 5 días. La ley no fija una tarifa especial: las horas cuentan para la semana."
+			"dayOffHint": "Un día libre es un día no laborable que no es el día de descanso, como el sábado en una semana de 5 días. La ley no fija una tarifa especial: las horas cuentan para la semana.",
+			"startFromLine": {
+				"restOn": "{{week}}, día de descanso {{weekday}}",
+				"restChanges": "{{week}}, el día de descanso cambia",
+				"daysVary": "{{week}}, los días varían",
+				"notCovered": "Fuera de las normas de horario de la Ley"
+			}
 		},
 		"apply": {
 			"title": "¿Cómo se aplica este cambio?",
@@ -6177,7 +6183,51 @@
 				"restWeekday": "el día de la semana del descanso"
 			},
 			"showAll": "Ver todo",
-			"showLess": "Ver menos"
+			"showLess": "Ver menos",
+			"sentence": {
+				"withKind": "{{kind}}, {{work}}.",
+				"withoutKind": "{{work}}.",
+				"fullTime": "Tiempo completo",
+				"partTime": "Tiempo parcial",
+				"weekVaries": "{{week}} a la semana, los días varían",
+				"days_one": "{{days}} día a la semana, {{week}}",
+				"days_other": "{{days}} días a la semana, {{week}}",
+				"daysWithDay_one": "{{days}} día a la semana, {{week}} ({{day}} al día)",
+				"daysWithDay_other": "{{days}} días a la semana, {{week}} ({{day}} al día)",
+				"restRostered": "Día de descanso: un día distinto cada semana, elegido por el cuadrante.",
+				"restFixed": "Día de descanso: {{weekday}}.",
+				"nothingExtra": "Las horas por encima de {{week}} a la semana no suman nada adicional.",
+				"partTimeExtra": "Las horas adicionales se pagan a la tarifa normal hasta {{full}} a la semana, y después como horas extra.",
+				"partTimeExtraAt": "Las horas adicionales se pagan a la tarifa normal hasta {{full}} a la semana, y después a {{times}}.",
+				"afterWeek": "después de {{week}} a la semana",
+				"afterDayOrWeek": "después de {{week}} a la semana o {{day}} al día",
+				"overtime": "Horas extra {{after}}.",
+				"overtimeAt": "Horas extra {{after}}, pagadas a {{times}}.",
+				"restDayAt": "El trabajo en el día de descanso cuenta a {{times}}.",
+				"dayOffNormal": "El trabajo en un día libre cuenta como horas normales hasta superar la semana.",
+				"dayOffAt": "El trabajo en un día libre cuenta a {{times}}.",
+				"limitsApply": "Se aplican los límites de horas de la Ley de Empleo.",
+				"limitsDontApply": "No se aplican los límites de horas de la Ley de Empleo."
+			},
+			"example": {
+				"week": "Ejemplo: {{worked}} trabajadas en una semana son {{week}} normales y {{extra}} extra.",
+				"weekAt": "Ejemplo: {{worked}} trabajadas en una semana son {{week}} normales y {{extra}} extra a {{times}}.",
+				"day": "Ejemplo: un día de {{worked}} son {{day}} normales y {{extra}} extra.",
+				"dayAt": "Ejemplo: un día de {{worked}} son {{day}} normales y {{extra}} extra a {{times}}.",
+				"partTime": "Ejemplo: {{worked}} trabajadas en una semana son {{week}} contratadas y {{extra}} adicionales a la tarifa normal.",
+				"restIsExample": "*El cuadrante elige el día de descanso cada semana; el domingo solo se muestra como ejemplo."
+			},
+			"does": {
+				"hoursWeek": "Horas: las horas extra se cuentan desde la semana indicada, en el registro de horas y los informes.",
+				"hoursDayAndWeek": "Horas: las horas extra se cuentan desde el día y la semana indicados, en el registro de horas y los informes.",
+				"limitsApply": "Cuadrantes: el motor mantiene a estas personas dentro de los límites de horas de la política de trabajo.",
+				"limitsDontApply": "Cuadrantes: el motor puede planificar a estas personas por encima de los límites de horas.",
+				"restRostered": "Día de descanso: el cuadrante da un día de descanso cada semana.",
+				"restFixed": "Día de descanso: el cuadrante nunca les asigna un {{weekday}} salvo que les hagas volver.",
+				"restPartTime": "Día de descanso: ninguno fijado; el cuadrante sigue su disponibilidad.",
+				"costAt": "Coste: cuando el motor elige quién cubre un hueco, una hora extra de estas personas pesa {{times}} una hora normal.",
+				"costSame": "Coste: las horas adicionales de estas personas pesan lo mismo que las normales cuando el motor elige la cobertura."
+			}
 		},
 		"kinds": {
 			"legend": "¿Qué tipo de semana es?",

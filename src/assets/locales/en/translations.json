@@ -6000,7 +6000,13 @@
 				"OWN_RATE": "Its own rate"
 			},
 			"dayOffRate": "Work on a day off counts at",
-			"dayOffHint": "A day off is a non-working day that is not the rest day, such as Saturday in a 5-day week. The law sets no special rate for it: the hours count towards the week."
+			"dayOffHint": "A day off is a non-working day that is not the rest day, such as Saturday in a 5-day week. The law sets no special rate for it: the hours count towards the week.",
+			"startFromLine": {
+				"restOn": "{{week}}, rest day {{weekday}}",
+				"restChanges": "{{week}}, rest day changes",
+				"daysVary": "{{week}}, days vary",
+				"notCovered": "Not under the Act’s hour rules"
+			}
 		},
 		"apply": {
 			"title": "How should this change apply?",
@@ -6177,7 +6183,51 @@
 				"restWeekday": "the rest day’s weekday"
 			},
 			"showAll": "Show all",
-			"showLess": "Show less"
+			"showLess": "Show less",
+			"sentence": {
+				"withKind": "{{kind}}, {{work}}.",
+				"withoutKind": "{{work}}.",
+				"fullTime": "Full-time",
+				"partTime": "Part-time",
+				"weekVaries": "{{week}} a week, days vary",
+				"days_one": "{{days}} day a week, {{week}}",
+				"days_other": "{{days}} days a week, {{week}}",
+				"daysWithDay_one": "{{days}} day a week, {{week}} ({{day}} a day)",
+				"daysWithDay_other": "{{days}} days a week, {{week}} ({{day}} a day)",
+				"restRostered": "Rest day: a different day each week, picked by the roster.",
+				"restFixed": "Rest day: {{weekday}}.",
+				"nothingExtra": "Hours past {{week}} a week earn nothing extra.",
+				"partTimeExtra": "Extra hours are paid at the normal rate up to {{full}} a week, then as overtime.",
+				"partTimeExtraAt": "Extra hours are paid at the normal rate up to {{full}} a week, then at {{times}}.",
+				"afterWeek": "after {{week}} in a week",
+				"afterDayOrWeek": "after {{week}} in a week or {{day}} in a day",
+				"overtime": "Overtime {{after}}.",
+				"overtimeAt": "Overtime {{after}}, paid at {{times}}.",
+				"restDayAt": "Rest day work counts at {{times}}.",
+				"dayOffNormal": "Day off work counts as normal hours until the week is passed.",
+				"dayOffAt": "Day off work counts at {{times}}.",
+				"limitsApply": "The Employment Act’s hour limits apply.",
+				"limitsDontApply": "The Employment Act’s hour limits do not apply."
+			},
+			"example": {
+				"week": "Example: {{worked}} worked in a week is {{week}} normal and {{extra}} overtime.",
+				"weekAt": "Example: {{worked}} worked in a week is {{week}} normal and {{extra}} overtime at {{times}}.",
+				"day": "Example: a {{worked}} day is {{day}} normal and {{extra}} overtime.",
+				"dayAt": "Example: a {{worked}} day is {{day}} normal and {{extra}} overtime at {{times}}.",
+				"partTime": "Example: {{worked}} worked in a week is {{week}} contracted and {{extra}} extra at the normal rate.",
+				"restIsExample": "*The roster picks the rest day each week; Sunday is only shown as an example."
+			},
+			"does": {
+				"hoursWeek": "Hours: overtime is counted from the week above, in the hours ledger and reports.",
+				"hoursDayAndWeek": "Hours: overtime is counted from the day and the week above, in the hours ledger and reports.",
+				"limitsApply": "Rosters: the engine keeps these people within the Work policy’s hour limits.",
+				"limitsDontApply": "Rosters: the engine may plan these people past the hour limits.",
+				"restRostered": "Rest day: the roster gives one rest day each week.",
+				"restFixed": "Rest day: the roster never puts them on a {{weekday}} unless you call them back.",
+				"restPartTime": "Rest day: none set; the roster follows their availability.",
+				"costAt": "Cost: when the engine chooses who covers a gap, an overtime hour for these people weighs {{times}} a normal hour.",
+				"costSame": "Cost: extra hours for these people weigh the same as normal hours when the engine chooses cover."
+			}
 		},
 		"kinds": {
 			"legend": "What kind of week is it?",
