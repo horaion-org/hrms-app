@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { ErrorText } from "@/components/ui/ErrorText";
 import {
 	changeableAt,
 	changeablePart,
@@ -28,6 +27,8 @@ import {
 	placeKey,
 	placeOf,
 } from "@/features/organisation/assignmentTargets";
+import type { ListView } from "@/features/organisation/listColumns";
+import { ListProblem } from "@/features/organisation/ListProblem";
 import { PermissionSummary } from "@/features/organisation/PermissionSummary";
 import {
 	useAccessRoleHolders,
@@ -151,8 +152,10 @@ export const AssignSystemRole = ({
 
 export type SystemRoleHoldersProps = {
 	role: AccessRole;
-	/** Who holds the role and where; `undefined` when the list couldn't be loaded. */
+	/** Who holds the role and where; `undefined` until the list is loaded. */
 	holders: Array<AccessRoleAssignmentRow> | undefined;
+	/** Why the list couldn't be loaded, with Try again; shown in its place. */
+	holdersProblem?: ListView<never>["problem"];
 };
 
 /**
@@ -165,6 +168,7 @@ export type SystemRoleHoldersProps = {
 export const SystemRoleHolders = ({
 	role,
 	holders,
+	holdersProblem,
 }: SystemRoleHoldersProps): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const access = useAccess();
@@ -207,9 +211,7 @@ export const SystemRoleHolders = ({
 					{t(`${key}.whoCanChange.${whoCanAssign(role)}`)}
 				</p>
 			)}
-			{!holders && (
-				<ErrorText className="mt-6">{t(`${key}.loadFailed`)}</ErrorText>
-			)}
+			{holdersProblem && <ListProblem problem={holdersProblem} />}
 			<AccessRoleAssignments
 				assignments={holders ?? []}
 				canChange={canChangePerson}

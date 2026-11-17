@@ -9,6 +9,7 @@ import { ArrowLeftIcon } from "@/components/ui/Icon";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
 import { AccessRoleForm } from "@/features/organisation/AccessRoleForm";
 import { readOnlyReason } from "@/features/organisation/accessRoleReadOnly";
+import { failedReadProblem } from "@/features/organisation/listColumns";
 import { PEOPLE_TAB } from "@/features/organisation/accessRoleTabs";
 import { newSinceReview } from "@/features/organisation/newPermissions";
 import { SYSTEM_ROLES_PATH } from "@/features/organisation/systemRolesPath";
@@ -125,7 +126,15 @@ export const SystemRoleEditor = (): FunctionComponent => {
 						/>
 					</TabPanel>
 					<TabPanel>
-						<SystemRoleHolders holders={holders.data} role={role} />
+						<SystemRoleHolders
+							holders={holders.data}
+							role={role}
+							holdersProblem={
+								holders.isError
+									? failedReadProblem(holders, t(`${holdersKey}.loadFailed`), t)
+									: undefined
+							}
+						/>
 					</TabPanel>
 				</TabPanels>
 			</Tabs>

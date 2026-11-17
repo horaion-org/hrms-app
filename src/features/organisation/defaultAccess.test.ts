@@ -271,6 +271,8 @@ describe("giveDefaultAccessSummary", () => {
 
 describe("deleteRoleOffer", () => {
 	const role = { accessRoleId: "r-1", protectedRole: false, holderCount: 0 };
+	const mayDelete = { can: (): boolean => true };
+	const mayNotDelete = { can: (): boolean => false };
 	const givenByDefault: Array<DefaultAccessRule> = [
 		{
 			defaultAccessRuleId: "d-1",
@@ -283,26 +285,26 @@ describe("deleteRoleOffer", () => {
 	];
 
 	it("offers Delete for a custom role nobody holds and no default gives", () => {
-		expect(deleteRoleOffer(role, [], true)).toEqual({
+		expect(deleteRoleOffer(role, [], mayDelete)).toEqual({
 			disabled: false,
 			label: "organisation.list.deleteItem",
 		});
 	});
 
 	it("disables Delete for a role a default gives, its label saying to remove the default first", () => {
-		expect(deleteRoleOffer(role, givenByDefault, true)).toEqual({
+		expect(deleteRoleOffer(role, givenByDefault, mayDelete)).toEqual({
 			disabled: true,
 			label: "organisation.accessRoles.defaults.usedAsDefaultDeleteItem",
 		});
 	});
 
 	it("keeps Delete offered while the defaults are unread, leaving the refusal to explain", () => {
-		expect(deleteRoleOffer(role, undefined, true).disabled).toBe(false);
+		expect(deleteRoleOffer(role, undefined, mayDelete).disabled).toBe(false);
 	});
 
 	it("disables Delete for a held or built-in role, or without the delete key", () => {
-		expect(deleteRoleOffer({ ...role, holderCount: 1 }, [], true).disabled).toBe(true);
-		expect(deleteRoleOffer({ ...role, protectedRole: true }, [], true).disabled).toBe(true);
-		expect(deleteRoleOffer(role, [], false).disabled).toBe(true);
+		expect(deleteRoleOffer({ ...role, holderCount: 1 }, [], mayDelete).disabled).toBe(true);
+		expect(deleteRoleOffer({ ...role, protectedRole: true }, [], mayDelete).disabled).toBe(true);
+		expect(deleteRoleOffer(role, [], mayNotDelete).disabled).toBe(true);
 	});
 });
