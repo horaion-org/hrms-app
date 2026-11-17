@@ -22,6 +22,7 @@ export const coverDays = (
 		return {
 			date: date.toISOString().slice(0, 10),
 			shortShifts: shortByDay[index] ?? 0,
+			covered: true,
 		};
 	});
 
@@ -36,6 +37,7 @@ export const monthWeekFixture = (
 	days: coverDays(overrides.periodStart ?? "2026-11-02"),
 	handChangedDays: 0,
 	queueRefusal: null,
+	parts: [],
 	...overrides,
 });
 

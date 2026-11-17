@@ -173,6 +173,52 @@ describe("schedules client", () => {
 		expect(calls[1]?.body).toEqual(body);
 	});
 
+	it("reads a schedule's covered days, and the whole week from an API without them", async () => {
+		const part = { ...scheduleFixture(), coveredFrom: "2026-10-15" };
+		// Undefined is left out of the JSON reply, as an API without the fields sends it.
+		const older = {
+			...scheduleFixture(),
+			coveredFrom: undefined as never,
+			coveredTo: undefined as never,
+		};
+		stubApi({
+			[`GET ${SCHEDULES}/s-1`]: [
+				{ status: 200, body: envelope(part) },
+				{ status: 200, body: envelope(older) },
+			],
+		});
+
+		const read = await fetchSchedule("c-1", UNIT, "s-1");
+		const olderRead = await fetchSchedule("c-1", UNIT, "s-1");
+
+		expect([read.coveredFrom, read.coveredTo]).toEqual([
+			"2026-10-15",
+			"2026-10-18",
+		]);
+		expect([olderRead.coveredFrom, olderRead.coveredTo]).toEqual([
+			"2026-10-12",
+			"2026-10-18",
+		]);
+	});
+
+	it("sends a part's covered days when saving one", async () => {
+		const calls = stubApi({
+			[`POST ${SCHEDULES}`]: { status: 201, body: envelope(scheduleFixture()) },
+		});
+		const body = {
+			...BODY,
+			coveredFrom: "2026-10-15",
+			coveredTo: "2026-10-18",
+		};
+
+		await createSchedule("c-1", UNIT, body);
+
+		expect(calls[0]?.body).toMatchObject({
+			coveredFrom: "2026-10-15",
+			coveredTo: "2026-10-18",
+		});
+	});
+
 	it("parses a generated schedule with who asked for it", async () => {
 		const schedule = generatedScheduleFixture();
 		stubApi({

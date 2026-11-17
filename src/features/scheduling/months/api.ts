@@ -41,6 +41,20 @@ export const weekStateSchema = z
  */
 export type WeekState = z.infer<typeof weekStateSchema>;
 
+/** One live schedule of a week: a week may hold several, one per run of days, in day order (API ADR-0113). */
+const weekPartSchema = z.object({
+	scheduleId: z.string(),
+	name: z.string(),
+	/** Whether the name is one the manager gave, not the default week name; the app never compares names. */
+	named: z.boolean(),
+	coveredFrom: z.string(),
+	coveredTo: z.string(),
+	state: weekStateSchema,
+});
+
+/** One schedule of a week, by the days it covers. */
+export type WeekPart = z.infer<typeof weekPartSchema>;
+
 const monthWeekSchema = z.object({
 	/** The week's Monday. */
 	periodStart: z.string(),
@@ -49,7 +63,14 @@ const monthWeekSchema = z.object({
 	/** The week's live schedule, or null when it has none. */
 	scheduleId: z.string().nullable(),
 	/** Seven days, Monday first, when the week has a roster to show; otherwise empty. */
-	days: z.array(z.object({ date: z.string(), shortShifts: z.number() })),
+	days: z.array(
+		z.object({
+			date: z.string(),
+			shortShifts: z.number(),
+			/** False on a day no part with a roster covers: drawn as no roster. Absent from an older API. */
+			covered: z.boolean().default(true),
+		})
+	),
 	/** Cells changed by hand, or null without a roster. */
 	handChangedDays: z.number().nullable(),
 	/** Whether generating the month generates this week; absent from an API without it. */
@@ -77,6 +98,13 @@ const monthWeekSchema = z.object({
 		})
 		.nullable()
 		.default(null),
+	/** The days the week's newest part covers, or null without a schedule; absent from an older API. */
+	coveredFrom: z.string().nullish(),
+	coveredTo: z.string().nullish(),
+	/** The newest part's name, or null without a schedule. */
+	name: z.string().nullish(),
+	/** The week's live schedules in day order; the state and schedule above are the newest part's. */
+	parts: z.array(weekPartSchema).default([]),
 });
 
 /** One week of a Department's month, as the month page shows it. */
@@ -108,6 +136,8 @@ export const scheduleMonthSummarySchema = z.object({
 			periodStart: z.string(),
 			state: weekStateSchema,
 			scheduleId: z.string().nullable(),
+			/** The week's live schedules in day order (API ADR-0113); absent from an older API. */
+			parts: z.array(weekPartSchema).optional(),
 		})
 	),
 });

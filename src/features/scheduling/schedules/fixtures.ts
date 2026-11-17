@@ -3,13 +3,14 @@ import {
 	INCLUDED_CONSTRAINT_IDS,
 	constraintCopyId,
 } from "@/features/scheduling/constraints/fixtures";
-import type {
-	AssignmentOffReason,
-	GenerationFindings,
-	Schedule,
-	ScheduleAssignment,
-	ScheduleGeneration,
-	ScheduleStatus,
+import {
+	type AssignmentOffReason,
+	type GenerationFindings,
+	type Schedule,
+	type ScheduleAssignment,
+	type ScheduleGeneration,
+	type ScheduleStatus,
+	withCoveredDays,
 } from "@/features/scheduling/schedules/api";
 import {
 	INCLUDED_SHIFT_IDS,
@@ -25,53 +26,52 @@ import type { Workspace } from "@/features/workspace/api";
  * (`shifts/fixtures.ts`, `constraints/fixtures.ts`).
  */
 
-/** Draft s-1; `overrides` set it apart. */
-export const scheduleFixture = (
-	overrides: Partial<Schedule> = {}
-): Schedule => ({
-	scheduleId: "s-1",
-	companyId: "c-1",
-	branchId: "b-1",
-	branchName: "Main branch",
-	departmentId: "d-1",
-	departmentName: "Front Office",
-	timeZone: "Asia/Singapore",
-	name: "Front Office - Week 42",
-	periodStart: "2026-10-12",
-	periodEnd: "2026-10-18",
-	includeLeave: true,
-	status: "DRAFT",
-	includedShiftIds: [
-		"front-desk-am",
-		"breakfast-prep",
-		"lunch-rush",
-		"swing-shift",
-	],
-	includedConstraintIds: [
-		"lunch-stand-ins",
-		"morning-cover",
-		"rest-between-shifts",
-	],
-	generationRequestedAt: null,
-	generationRequestedBy: null,
-	decidedAt: null,
-	decidedBy: null,
-	rejectionReason: null,
-	rosterRevision: 0,
-	publication: {
-		requiresApproval: false,
-		stepLabels: [],
-		submission: null,
-		rejectedAtStep: null,
-		waitingForWeek: null,
-	},
-	publicationWithdrawnAt: null,
-	nonWorkingDayTypes: ["OFF", "REST"],
-	generation: null,
-	createdAt: "2026-10-08T09:00:00Z",
-	updatedAt: "2026-10-08T09:00:00Z",
-	...overrides,
-});
+/** Draft s-1 covering its whole week; `overrides` set it apart. */
+export const scheduleFixture = (overrides: Partial<Schedule> = {}): Schedule =>
+	withCoveredDays({
+		scheduleId: "s-1",
+		companyId: "c-1",
+		branchId: "b-1",
+		branchName: "Main branch",
+		departmentId: "d-1",
+		departmentName: "Front Office",
+		timeZone: "Asia/Singapore",
+		name: "Front Office - Week 42",
+		periodStart: "2026-10-12",
+		periodEnd: "2026-10-18",
+		includeLeave: true,
+		status: "DRAFT",
+		includedShiftIds: [
+			"front-desk-am",
+			"breakfast-prep",
+			"lunch-rush",
+			"swing-shift",
+		],
+		includedConstraintIds: [
+			"lunch-stand-ins",
+			"morning-cover",
+			"rest-between-shifts",
+		],
+		generationRequestedAt: null,
+		generationRequestedBy: null,
+		decidedAt: null,
+		decidedBy: null,
+		rejectionReason: null,
+		rosterRevision: 0,
+		publication: {
+			requiresApproval: false,
+			stepLabels: [],
+			submission: null,
+			rejectedAtStep: null,
+			waitingForWeek: null,
+		},
+		publicationWithdrawnAt: null,
+		nonWorkingDayTypes: ["OFF", "REST"],
+		generation: null,
+		createdAt: "2026-10-08T09:00:00Z",
+		updatedAt: "2026-10-08T09:00:00Z",
+		...overrides,
+	});
 
 /** The three members of Front Office that schedule s-1's roster and findings name. */
 const ROSTER_MEMBERS = [

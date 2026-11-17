@@ -76,6 +76,10 @@ export const scheduleMonthGenerationCheckPath = (
 	month: string
 ): string => `${scheduleMonthPath(companyId, month)}/generation-check`;
 
+/** Schedules of any dates (API ADR-0114); the Department is a required query parameter. */
+export const scheduleDatesPath = (companyId: string): string =>
+	`${companyPath(companyId)}/schedule-dates`;
+
 /** Generating a Department's month; the Department is a required query parameter. */
 export const scheduleMonthGenerationPath = (
 	companyId: string,

@@ -203,96 +203,121 @@ const rejectedStepSchema = z.object({
 	stepLabel: z.string(),
 });
 
-const scheduleSchema = z.object({
-	scheduleId: z.string(),
-	companyId: z.string(),
-	branchId: z.string(),
-	branchName: z.string(),
-	departmentId: z.string(),
-	departmentName: z.string(),
-	/** The IANA name of the branch's time zone, which the schedule's days are in. */
-	timeZone: z.string(),
-	name: z.string(),
-	/** The Monday the week-long period starts, as an ISO date. */
-	periodStart: z.string(),
-	/** The Sunday it ends, six days on. */
-	periodEnd: z.string(),
-	includeLeave: z.boolean(),
-	status: scheduleStatusSchema,
-	/** A draft's ticked live shifts; once generated, every frozen copy's own id. */
-	includedShiftIds: z.array(z.string()),
-	/** A draft's ticked live ACTIVE constraints; once generated, every frozen copy's own id. */
-	includedConstraintIds: z.array(z.string()),
-	/** Set exactly when the status is not DRAFT. */
-	generationRequestedAt: z.string().nullable(),
-	generationRequestedBy: participantSchema.nullable(),
-	/** When the roster was published or rejected; null while undecided (and from an API without publishing). */
-	decidedAt: z.string().nullable().default(null),
-	/** Who published or rejected it. */
-	decidedBy: participantSchema.nullable().default(null),
-	/** Why it was rejected; null unless REJECTED. */
-	rejectionReason: z.string().nullable().default(null),
-	/** The newest generation run, or null for a schedule that has none. */
-	generation: generationSchema.nullable(),
-	/**
-	 * How many times the roster was written: by a generation, a hand change or
-	 * an undo. A change names it, and the roster is cached under it. 0 from an
-	 * API without roster changes.
-	 */
-	rosterRevision: z.number().int().default(0),
-	/**
-	 * How deciding goes at the schedule's department now: whether Publish
-	 * submits it for approval, and the steps it would go through. Absent from
-	 * an API without approvals, which reads as one-step publishing. A roster
-	 * already submitted keeps its own steps; read them on its approval, or
-	 * where it stands on `submission`.
-	 */
-	publication: z
-		.object({
-			requiresApproval: z.boolean(),
-			stepLabels: z.array(z.string()),
-			submission: publicationSubmissionSchema
-				.nullish()
-				.transform((value) => value ?? null),
-			/** The step that rejected the roster; null unless an approval step did. */
-			rejectedAtStep: rejectedStepSchema
-				.nullish()
-				.transform((value) => value ?? null),
-			/**
-			 * The earlier week of the department Publish waits for: weeks are
-			 * published in order. Null when Publish is not held up, and from an
-			 * API without it.
-			 */
-			waitingForWeek: z
-				.object({ periodStart: z.string(), periodEnd: z.string() })
-				.nullish()
-				.transform((value) => value ?? null),
-		})
-		.nullish()
-		.transform(
-			(value) =>
-				value ?? {
-					requiresApproval: false,
-					stepLabels: [],
-					submission: null,
-					rejectedAtStep: null,
-					waitingForWeek: null,
-				}
-		),
-	/**
-	 * When its publication was last withdrawn; null if never. Once set the
-	 * schedule is published once and never regenerated. Null from an older API.
-	 */
-	publicationWithdrawnAt: z.string().nullable().default(null),
-	/**
-	 * The types a day can be made when it is not worked, such as a day off or
-	 * a rest day, as codes; `dayTypeLabel` words them. Empty from an older
-	 * API, which takes a day off without a type.
-	 */
-	nonWorkingDayTypes: z.array(z.string()).catch([]),
-	createdAt: z.string(),
-	updatedAt: z.string(),
+/**
+ * A schedule covers a run of its week's days (API ADR-0113); an older API
+ * sends none, and the schedule covers its whole week.
+ */
+export const withCoveredDays = <
+	Read extends {
+		periodStart: string;
+		periodEnd: string;
+		coveredFrom?: string | null;
+		coveredTo?: string | null;
+	},
+>(
+	read: Read
+): Read & { coveredFrom: string; coveredTo: string } => ({
+	...read,
+	coveredFrom: read.coveredFrom ?? read.periodStart,
+	coveredTo: read.coveredTo ?? read.periodEnd,
 });
+
+const scheduleSchema = z
+	.object({
+		scheduleId: z.string(),
+		companyId: z.string(),
+		branchId: z.string(),
+		branchName: z.string(),
+		departmentId: z.string(),
+		departmentName: z.string(),
+		/** The IANA name of the branch's time zone, which the schedule's days are in. */
+		timeZone: z.string(),
+		name: z.string(),
+		/** The Monday the week-long period starts, as an ISO date. */
+		periodStart: z.string(),
+		/** The Sunday it ends, six days on. */
+		periodEnd: z.string(),
+		/** The first day of the week the schedule covers (API ADR-0113); the Monday for a whole week. */
+		coveredFrom: z.string().nullish(),
+		/** The last day of the week the schedule covers; the Sunday for a whole week. */
+		coveredTo: z.string().nullish(),
+		includeLeave: z.boolean(),
+		status: scheduleStatusSchema,
+		/** A draft's ticked live shifts; once generated, every frozen copy's own id. */
+		includedShiftIds: z.array(z.string()),
+		/** A draft's ticked live ACTIVE constraints; once generated, every frozen copy's own id. */
+		includedConstraintIds: z.array(z.string()),
+		/** Set exactly when the status is not DRAFT. */
+		generationRequestedAt: z.string().nullable(),
+		generationRequestedBy: participantSchema.nullable(),
+		/** When the roster was published or rejected; null while undecided (and from an API without publishing). */
+		decidedAt: z.string().nullable().default(null),
+		/** Who published or rejected it. */
+		decidedBy: participantSchema.nullable().default(null),
+		/** Why it was rejected; null unless REJECTED. */
+		rejectionReason: z.string().nullable().default(null),
+		/** The newest generation run, or null for a schedule that has none. */
+		generation: generationSchema.nullable(),
+		/**
+		 * How many times the roster was written: by a generation, a hand change or
+		 * an undo. A change names it, and the roster is cached under it. 0 from an
+		 * API without roster changes.
+		 */
+		rosterRevision: z.number().int().default(0),
+		/**
+		 * How deciding goes at the schedule's department now: whether Publish
+		 * submits it for approval, and the steps it would go through. Absent from
+		 * an API without approvals, which reads as one-step publishing. A roster
+		 * already submitted keeps its own steps; read them on its approval, or
+		 * where it stands on `submission`.
+		 */
+		publication: z
+			.object({
+				requiresApproval: z.boolean(),
+				stepLabels: z.array(z.string()),
+				submission: publicationSubmissionSchema
+					.nullish()
+					.transform((value) => value ?? null),
+				/** The step that rejected the roster; null unless an approval step did. */
+				rejectedAtStep: rejectedStepSchema
+					.nullish()
+					.transform((value) => value ?? null),
+				/**
+				 * The earlier week of the department Publish waits for: weeks are
+				 * published in order. Null when Publish is not held up, and from an
+				 * API without it.
+				 */
+				waitingForWeek: z
+					.object({ periodStart: z.string(), periodEnd: z.string() })
+					.nullish()
+					.transform((value) => value ?? null),
+			})
+			.nullish()
+			.transform(
+				(value) =>
+					value ?? {
+						requiresApproval: false,
+						stepLabels: [],
+						submission: null,
+						rejectedAtStep: null,
+						waitingForWeek: null,
+					}
+			),
+		/**
+		 * When its publication was last withdrawn; null if never. Once set the
+		 * schedule is published once and never regenerated. Null from an older API.
+		 */
+		publicationWithdrawnAt: z.string().nullable().default(null),
+		/**
+		 * The types a day can be made when it is not worked, such as a day off or
+		 * a rest day, as codes; `dayTypeLabel` words them. Empty from an older
+		 * API, which takes a day off without a type.
+		 */
+		nonWorkingDayTypes: z.array(z.string()).catch([]),
+		createdAt: z.string(),
+		updatedAt: z.string(),
+	})
+	.transform(withCoveredDays);
 
 /** A schedule as the API answers it; its shifts, constraints and roster are read on their own. */
 export type Schedule = z.infer<typeof scheduleSchema>;
@@ -402,6 +427,9 @@ export const fetchSchedules = async (
 export type ScheduleBody = {
 	name: string;
 	periodStart: string;
+	/** The week's days the schedule covers, both or neither; neither is the whole week. */
+	coveredFrom?: string;
+	coveredTo?: string;
 	includeLeave: boolean;
 	includedShiftIds: Array<string>;
 	includedConstraintIds: Array<string>;
