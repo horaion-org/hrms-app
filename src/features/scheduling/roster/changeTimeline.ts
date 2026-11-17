@@ -1,5 +1,6 @@
 import type { TFunction } from "i18next";
 import dayjs from "dayjs";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import { formatDay } from "@/common/formatDay";
 import {
 	assignmentCell,
@@ -50,7 +51,7 @@ export const changeTimeline = (
 		);
 	const timeline: Array<ChangeDay> = [];
 	for (const { row, change } of changes) {
-		const appliedOn = dayjs(change.appliedAt).format("YYYY-MM-DD");
+		const appliedOn = dayjs(change.appliedAt).format(ISO_DATE_FORMAT);
 		const time = clock.format(dayjs(change.appliedAt).toDate());
 		const name = row.member?.displayName ?? t("scheduling.detail.formerMember");
 		const entry: ChangeEntry = {
