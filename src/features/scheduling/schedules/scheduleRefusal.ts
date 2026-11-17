@@ -1,5 +1,9 @@
 import type { TFunction } from "i18next";
+import { formatDay } from "@/common/formatDay";
 import { mapRefusal, type Refusal } from "@/common/refusal";
+import { mondayOf } from "@/common/weeks";
+import type { DatesRefusal, DayRun } from "@/features/scheduling/dates/api";
+import { formatPeriod, periodStartingOn } from "@/features/scheduling/periods";
 
 /**
  * The refusals of the schedules API, as `"<status> <errorCode>"`. Every code
@@ -39,6 +43,10 @@ export const SCHEDULE_REFUSAL_CODES = {
 	weekChoiceMissing: "400 MONTH_WEEK_CHOICE_MISSING",
 	weekCannotBeGenerated: "400 MONTH_WEEK_CANNOT_BE_GENERATED",
 	monthNotFound: "404 SCHEDULE_MONTH_NOT_FOUND",
+	datesInvalid: "400 SCHEDULE_DATES_INVALID",
+	daysAllTaken: "409 SCHEDULE_DAYS_ALL_TAKEN",
+	daysBeforeRoster: "409 SCHEDULE_DAYS_BEFORE_ROSTER",
+	coveredDaysInvalid: "400 SCHEDULE_COVERED_DAYS_INVALID",
 } as const;
 
 const codes = SCHEDULE_REFUSAL_CODES;
@@ -65,6 +73,8 @@ export const scheduleRefusal = (
 			[codes.weekTaken]: field("periodStart", t(`${key}.weekTaken`)),
 		},
 		alerts: {
+			[codes.coveredDaysInvalid]: t(`${key}.coveredDaysInvalid`),
+			[codes.daysBeforeRoster]: t(`${key}.daysBeforeRoster`),
 			[codes.notDraft]: t(`${key}.notDraft`),
 			[codes.scheduleNotFound]: t(`${key}.gone`),
 			[codes.shiftNotFound]: t(`${key}.shiftGone`),
@@ -261,4 +271,67 @@ export const monthGenerationRefusal = (
 			failed: t(`${key}.failed`),
 		}).message ?? t(`${key}.failed`)
 	);
+};
+
+/**
+ * Why generating dates was refused as a whole, as one message for the page.
+ * The plan read words a refusal with its days first (`datesRefusalText`), so
+ * one met here means the days changed since Setup read them.
+ */
+export const datesGenerationRefusal = (
+	error: unknown,
+	t: TFunction
+): string => {
+	const key = "scheduling.dates.refusal";
+	return (
+		mapRefusal<never>(error, {
+			alerts: {
+				[codes.datesInvalid]: t(`${key}.datesInvalid`),
+				[codes.daysAllTaken]: t(`${key}.changed`),
+				[codes.daysBeforeRoster]: t(`${key}.changed`),
+				[codes.weekTaken]: t(`${key}.changed`),
+				[codes.weekChoiceMissing]: t(
+					"scheduling.months.generate.choiceMissing"
+				),
+				[codes.monthNotFound]: t(`${key}.unavailable`),
+			},
+			forbidden: t(`${key}.forbidden`),
+			failed: t(`${key}.failed`),
+		}).message ?? t(`${key}.failed`)
+	);
+};
+
+/** A run of days in the person's language, e.g. "19 – 22 Nov 2026". */
+const daysText = (days: DayRun, language: string): string =>
+	formatPeriod({ start: days.from, end: days.to }, language);
+
+/**
+ * Why the dates plan refuses the dates, worded with its days: every day
+ * taken, days before a week's schedule, or a draft in the way. A code the
+ * app doesn't know reads as the plain failure.
+ */
+export const datesRefusalText = (
+	refusal: DatesRefusal,
+	t: TFunction,
+	language: string
+): string => {
+	const key = "scheduling.dates.refusal";
+	const scheduled = refusal.scheduledDays ?? refusal.days;
+	if (refusal.code === errorCodeOf(codes.daysAllTaken))
+		return t(`${key}.allTaken`, {
+			first: formatDay(refusal.days.from, language),
+			last: formatDay(refusal.days.to, language),
+		});
+	if (refusal.code === errorCodeOf(codes.daysBeforeRoster))
+		return t(`${key}.beforeRoster`, {
+			days: daysText(refusal.days, language),
+			scheduled: daysText(scheduled, language),
+			last: formatDay(scheduled.to, language),
+		});
+	if (refusal.code === errorCodeOf(codes.weekTaken))
+		return t(`${key}.draftInTheWay`, {
+			week: formatPeriod(periodStartingOn(mondayOf(scheduled.from)), language),
+			days: daysText(scheduled, language),
+		});
+	return t(`${key}.failed`);
 };

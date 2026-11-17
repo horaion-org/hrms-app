@@ -4159,7 +4159,9 @@
 			"saveForbidden": "Ya no tienes permiso para cambiar este horario.",
 			"createFailed": "No pudimos crear el borrador. Inténtalo de nuevo.",
 			"saveFailed": "No pudimos guardar el borrador. Inténtalo de nuevo.",
-			"weekTaken": "Este departamento ya tiene un horario para esa semana."
+			"weekTaken": "Este departamento ya tiene un horario para esa semana.",
+			"coveredDaysInvalid": "Estos días no están todos en la semana del horario. Vuelve atrás y elige sus días de nuevo.",
+			"daysBeforeRoster": "Días posteriores de esta semana ya tienen un horario, y solo se pueden añadir días después. Elige Mes y marca la semana para volver a programarla."
 		},
 		"detail": {
 			"back": "Volver a Programación",
@@ -5325,6 +5327,18 @@
 				"title_other": "Si es posible, no cumplidas ({{count}})",
 				"place": "{{person}} · {{day}}",
 				"line": "{{place}}: «{{message}}»"
+			}
+		},
+		"dates": {
+			"refusal": {
+				"allTaken": "Todos los días del {{first}} al {{last}} ya tienen un horario. Para rehacer una semana, elige Mes y márcala.",
+				"beforeRoster": "{{days}} van antes de {{scheduled}}, que ya tienen un horario. Solo se pueden añadir días después: elige un primer día posterior al {{last}}, o elige Mes y marca esa semana.",
+				"draftInTheWay": "La semana del {{week}} tiene un borrador para {{days}}. Elimínalo desde la página del mes, o elige fechas que coincidan con él.",
+				"datesInvalid": "Ya no se pueden programar estas fechas. Vuelve a Configuración y elígelas de nuevo.",
+				"changed": "Los días cambiaron desde que Configuración los leyó, así que no se generó nada. Vuelve a Configuración para verlos como están ahora.",
+				"unavailable": "No puedes programar este departamento. Elige un departamento que programes.",
+				"forbidden": "No tienes permiso para generar horarios en este departamento.",
+				"failed": "No pudimos generar estas fechas. Inténtalo de nuevo."
 			}
 		}
 	},

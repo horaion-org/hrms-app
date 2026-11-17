@@ -4359,7 +4359,9 @@
 			"saveForbidden": "You no longer have permission to change this schedule.",
 			"createFailed": "We couldn’t create the draft. Try again.",
 			"saveFailed": "We couldn’t save the draft. Try again.",
-			"weekTaken": "This department already has a schedule for that week."
+			"weekTaken": "This department already has a schedule for that week.",
+			"coveredDaysInvalid": "These days aren’t all in the schedule’s week. Go back and choose its days again.",
+			"daysBeforeRoster": "Later days of this week already have a schedule, and days can only be added after them. Choose Month and tick the week to schedule it again."
 		},
 		"detail": {
 			"back": "Back to Scheduling",
@@ -5525,6 +5527,18 @@
 				"title_other": "If possible, not met ({{count}})",
 				"place": "{{person}} · {{day}}",
 				"line": "{{place}}: “{{message}}”"
+			}
+		},
+		"dates": {
+			"refusal": {
+				"allTaken": "Every day from {{first}} to {{last}} already has a schedule. To redo a week, choose Month and tick it.",
+				"beforeRoster": "{{days}} come before {{scheduled}}, which already have a schedule. Days can only be added after them: choose a first day after {{last}}, or choose Month and tick that week.",
+				"draftInTheWay": "The week of {{week}} has a draft for {{days}}. Delete it from the month page, or choose dates that match it.",
+				"datesInvalid": "These dates can’t be scheduled any more. Go back to Setup and choose them again.",
+				"changed": "The days changed since Setup read them, so nothing was generated. Go back to Setup to see them as they are now.",
+				"unavailable": "You can’t schedule this department. Choose a department you schedule.",
+				"forbidden": "You don’t have permission to generate schedules at this department.",
+				"failed": "We couldn’t generate these dates. Try again."
 			}
 		}
 	},
