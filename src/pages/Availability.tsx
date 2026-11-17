@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import dayjs from "dayjs";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { dayParameter, shownDayOf } from "@/common/dayView";
@@ -91,7 +92,7 @@ export const Availability = (): FunctionComponent => {
 	const today = new Date();
 	const week = weekOf(search, today);
 	// A phone shows the team's week one day at a time; the grid hides the others' columns.
-	const todayDate = dayjs(today).format("YYYY-MM-DD");
+	const todayDate = dayjs(today).format(ISO_DATE_FORMAT);
 	const weekDates = daysOf(week);
 	const shownDay = shownDayOf(weekDates, search.day, todayDate);
 	// A week that has ended is shown, never changed: the API refuses it too.
