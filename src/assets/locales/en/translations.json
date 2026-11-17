@@ -4196,7 +4196,6 @@
 			"examples": {
 				"SHIFT_STAFFING": "For example: Front desk AM needs at least 2 people as Clerk or Lead.",
 				"SHIFT_STAFFING_WITH_STAND_INS": "For example: Closing needs at least 2 people as Lead. 2 people as Clerk count as 1 Lead.",
-				"ROLE_PRESENCE": "For example: Closing has at least 1 person as Supervisor on duty from start to finish. Overtime from the shift before counts.",
 				"DAYS_OFF_PER_PERIOD": "For example: At least 1 day off every week.",
 				"AVOID_DAYS_OFF_ON": "For example: Avoid days off on Friday and Saturday, your busiest days.",
 				"REST_BETWEEN_SHIFTS": "For example: Everyone gets at least 11 hours off between shifts.",
@@ -4233,7 +4232,6 @@
 			"nameSuggestions": {
 				"SHIFT_STAFFING": "{{shift}} staffing",
 				"SHIFT_STAFFING_WITH_STAND_INS": "{{shift}} staffing",
-				"ROLE_PRESENCE": "{{shift}} on duty",
 				"DAYS_OFF_PER_PERIOD": "Days off",
 				"AVOID_DAYS_OFF_ON": "Days to avoid off",
 				"REST_BETWEEN_SHIFTS": "Rest between shifts",
@@ -4250,7 +4248,6 @@
 			"descriptions": {
 				"SHIFT_STAFFING": "How many people a shift needs, by job title.",
 				"SHIFT_STAFFING_WITH_STAND_INS": "The same, where people of another job title may stand in.",
-				"ROLE_PRESENCE": "A job title that must be on duty from the start of a shift to its end.",
 				"DAYS_OFF_PER_PERIOD": "How many days off each person gets every week, or every 2, 3 or 4 weeks.",
 				"AVOID_DAYS_OFF_ON": "Busy days when people should be working, not off.",
 				"MAX_DAYS_WITHOUT_DAY_TYPES": "The longest run of days anyone works without a break.",

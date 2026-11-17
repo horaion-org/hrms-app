@@ -23,7 +23,6 @@ describe("fieldsInReadingOrder", () => {
 				"STAND_IN_JOB_TITLE",
 			],
 		],
-		["ROLE_PRESENCE", ["SHIFT", "COMPARISON", "HEADCOUNT", "JOB_TITLE"]],
 		[
 			"DAYS_OFF_PER_PERIOD",
 			["COMPARISON", "DAYS_OFF", "PERIOD_WEEKS", "DAY_TYPE"],

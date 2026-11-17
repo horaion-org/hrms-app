@@ -200,6 +200,13 @@ describe("SchedulingPolicySettings", () => {
 		const dialog = await screen.findByRole("dialog", {
 			name: "Add constraint",
 		});
+		// On duty throughout is retired (ADR-0128 in the API): neither the kind nor its group is offered.
+		expect(
+			within(dialog).queryByRole("radio", { name: /Someone on duty/ })
+		).toBeNull();
+		expect(
+			within(dialog).queryByRole("radiogroup", { name: "On duty throughout" })
+		).toBeNull();
 		await user.click(
 			within(dialog).getByRole("radio", { name: "Rest between shifts" })
 		);

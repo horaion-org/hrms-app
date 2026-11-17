@@ -9,7 +9,6 @@ import {
 	PeopleIcon,
 	PhoneIcon,
 	PlaceholderIcon,
-	RoleIcon,
 	SchedulingIcon,
 	SwapIcon,
 	TableIcon,
@@ -34,7 +33,6 @@ import {
 const TYPE_ICONS: Partial<Record<ConstraintType, Heroicon>> = {
 	SHIFT_STAFFING: PeopleIcon,
 	SHIFT_STAFFING_WITH_STAND_INS: SwapIcon,
-	ROLE_PRESENCE: RoleIcon,
 	DAYS_OFF_PER_PERIOD: SchedulingIcon,
 	AVOID_DAYS_OFF_ON: CrossIcon,
 	MAX_DAYS_WITHOUT_DAY_TYPES: HistoryIcon,
@@ -52,7 +50,6 @@ const TYPE_ICONS: Partial<Record<ConstraintType, Heroicon>> = {
 /** The icon heading each category, where constraints are grouped by what they are for. */
 const CATEGORY_ICONS: Partial<Record<ConstraintCategory, Heroicon>> = {
 	STAFFING: PeopleIcon,
-	ROLE_COVERAGE: RoleIcon,
 	SHIFT_PATTERN: SchedulingIcon,
 	WORKING_HOURS: TimeIcon,
 };

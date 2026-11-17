@@ -36,14 +36,14 @@ describe("constraintSectionsOf", () => {
 
 	it("given_aCategoryTheOrderDoesNotName_when_laidOut_then_itFollowsAsFirstMet", () => {
 		const laidOut = constraintSectionsOf(
-			[row("Duty", "ROLE_COVERAGE"), row("Cover", "STAFFING")],
+			[row("Hours", "WORKING_HOURS"), row("Cover", "STAFFING")],
 			["STAFFING"],
 			() => false
 		);
 
 		expect(laidOut.sections.map((section) => section.category)).toEqual([
 			"STAFFING",
-			"ROLE_COVERAGE",
+			"WORKING_HOURS",
 		]);
 	});
 

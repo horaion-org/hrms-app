@@ -177,21 +177,6 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		],
 	},
 	{
-		type: "ROLE_PRESENCE",
-		category: "ROLE_COVERAGE",
-		hasRequirement: true,
-		requirementPolicy: "MUST_OR_SHOULD",
-		onePerDepartment: false,
-		levels: [...DEPARTMENT_ONLY],
-		...ORDINARY,
-		fields: [
-			choice("COMPARISON", "COMPARISON"),
-			number("HEADCOUNT", 0, 999),
-			listedByShift("JOB_TITLE"),
-			shiftsListing(["JOB_TITLE"]),
-		],
-	},
-	{
 		type: "DAYS_OFF_PER_PERIOD",
 		category: "SHIFT_PATTERN",
 		hasRequirement: true,
@@ -616,8 +601,7 @@ export const CONSTRAINT_FIXTURES: Array<DepartmentConstraint> = [
 		constraintId: "closing-supervisor",
 		requiresPeople: true,
 		name: "Closing supervisor",
-		type: "ROLE_PRESENCE",
-		category: "ROLE_COVERAGE",
+		type: "SHIFT_STAFFING",
 		requirement: "SHOULD",
 		values: [
 			plain("COMPARISON", "AT_LEAST"),

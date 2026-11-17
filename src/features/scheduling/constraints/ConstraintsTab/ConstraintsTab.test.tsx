@@ -408,14 +408,18 @@ describe("ConstraintsTab", () => {
 		show({ permissions: ["constraint:read"] });
 
 		const staffing = await screen.findByRole("region", {
-			name: "People on shifts · 1",
+			name: "People on shifts · 2",
 		});
 		expect(
 			within(staffing).getByRole("listitem", { name: /Morning cover/ })
 		).toBeVisible();
 		expect(
-			screen.getByRole("region", { name: "On duty throughout · 1" })
+			within(staffing).getByRole("listitem", { name: /Closing supervisor/ })
 		).toBeVisible();
+		// On duty throughout holds no live kind (ADR-0128 in the API), so it has no section.
+		expect(
+			screen.queryByRole("region", { name: /^On duty throughout/ })
+		).toBeNull();
 		expect(
 			screen.getByRole("region", { name: "Set by the company · 1" })
 		).toBeVisible();
@@ -977,5 +981,33 @@ describe("ConstraintsTab: readiness", () => {
 		expect(
 			screen.getByRole("button", { name: "Remove Showing: If possible" })
 		).toBeVisible();
+	});
+
+	it("given_theShowingFilter_when_opened_then_noEmptyOnDutyThroughoutGroup", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			[`GET ${KITCHEN}/constraints`]: ok([
+				dutyCover("3"),
+				{ ...barSupervisor, departmentId: "d-1" },
+			]),
+			[`GET ${KITCHEN}/constraint-options`]: ok(CONSTRAINT_OPTIONS_RESPONSE),
+			...TWO_DUTY_MANAGERS,
+		});
+		show({
+			permissions: ["constraint:read", "job_title:read"],
+			requested: KITCHEN_ONLY,
+		});
+
+		await screen.findByRole("listitem", { name: /Duty cover/ });
+		await user.click(screen.getByRole("button", { name: /^Filters/ }));
+		await user.click(screen.getByRole("button", { name: /^Showing/ }));
+
+		expect(
+			screen.getByRole("group", { name: "People on shifts" })
+		).toBeVisible();
+		// On duty throughout holds no live kind (ADR-0128 in the API), so it is no group of the filter.
+		expect(
+			screen.queryByRole("group", { name: "On duty throughout" })
+		).toBeNull();
 	});
 });

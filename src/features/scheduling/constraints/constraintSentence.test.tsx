@@ -178,6 +178,7 @@ describe("sentencePartsOf with constraintWords", () => {
 	const MID = named("SHIFT", "Mid");
 	const SUPERVISOR = named("JOB_TITLE", "Supervisor");
 
+	// On duty throughout is retired (ADR-0128 in the API); a schedule generated with the rule still reads it.
 	it.each([
 		[
 			"AT_LEAST",
@@ -234,7 +235,7 @@ describe("sentencePartsOf with constraintWords", () => {
 			"Opening and Mid each have no one as Supervisor on duty at any time.",
 		],
 	])(
-		"reads on duty %s %s over %#",
+		"reads a frozen on-duty copy %s %s over %#",
 		(comparison, headcount, shifts, sentence) => {
 			expect(
 				read(

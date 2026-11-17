@@ -75,13 +75,27 @@ describe("appliesToOf", () => {
 		expect(
 			appliesToOf(
 				{
-					type: "ROLE_PRESENCE",
+					type: "SHIFT_STAFFING_WITH_STAND_INS",
 					level: "DEPARTMENT",
 					values: [shift("Opening"), shift("Closing")],
 				},
 				t
 			)
 		).toBe("Opening and Closing");
+	});
+
+	// On duty throughout is retired (ADR-0128 in the API); a schedule generated with the rule still names its shifts.
+	it("names a frozen on-duty copy's shifts", () => {
+		expect(
+			appliesToOf(
+				{
+					type: "ROLE_PRESENCE",
+					level: "DEPARTMENT",
+					values: [shift("Closing")],
+				},
+				t
+			)
+		).toBe("Closing");
 	});
 
 	it("says nothing for a shift type with no shift yet", () => {

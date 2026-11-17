@@ -46,7 +46,7 @@ const SUNDAY_COVER = constraintFixture({
 const EVENING_PAIR = constraintFixture({
 	constraintId: "evening-pair",
 	name: "Evening pair",
-	type: "ROLE_PRESENCE",
+	type: "SHIFT_STAFFING",
 	requiresPeople: true,
 	values: [shiftValue("closing", "Closing"), shiftValue("sunday", "Sunday")],
 });

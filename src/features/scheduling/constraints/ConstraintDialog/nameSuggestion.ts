@@ -18,9 +18,7 @@ export const nameSuggestion = (
 	if (isRetiredConstraintType(type))
 		return t(`scheduling.constraints.types.${type}`);
 	const usesShift =
-		type === "SHIFT_STAFFING" ||
-		type === "SHIFT_STAFFING_WITH_STAND_INS" ||
-		type === "ROLE_PRESENCE";
+		type === "SHIFT_STAFFING" || type === "SHIFT_STAFFING_WITH_STAND_INS";
 	const name =
 		usesShift && firstShiftName === undefined
 			? t(`scheduling.constraints.types.${type}`)

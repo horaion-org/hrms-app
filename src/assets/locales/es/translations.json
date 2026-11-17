@@ -3996,7 +3996,6 @@
 			"examples": {
 				"SHIFT_STAFFING": "Por ejemplo: Recepción AM necesita al menos 2 personas como Cajero o Encargado.",
 				"SHIFT_STAFFING_WITH_STAND_INS": "Por ejemplo: Cierre necesita al menos 2 personas como Encargado. 2 personas como Cajero cuentan como 1 Encargado.",
-				"ROLE_PRESENCE": "Por ejemplo: Cierre tiene al menos 1 persona como Supervisor de servicio de principio a fin. Las horas extra del turno anterior cuentan.",
 				"DAYS_OFF_PER_PERIOD": "Por ejemplo: Al menos 1 día libre cada semana.",
 				"AVOID_DAYS_OFF_ON": "Por ejemplo: Evitar días libres el viernes y el sábado, los días de más trabajo.",
 				"REST_BETWEEN_SHIFTS": "Por ejemplo: Todos tienen al menos 11 horas libres entre turnos.",
@@ -4033,7 +4032,6 @@
 			"nameSuggestions": {
 				"SHIFT_STAFFING": "Personal de {{shift}}",
 				"SHIFT_STAFFING_WITH_STAND_INS": "Personal de {{shift}}",
-				"ROLE_PRESENCE": "De servicio en {{shift}}",
 				"DAYS_OFF_PER_PERIOD": "Días libres",
 				"AVOID_DAYS_OFF_ON": "Evitar días libres",
 				"REST_BETWEEN_SHIFTS": "Descanso entre turnos",
@@ -4050,7 +4048,6 @@
 			"descriptions": {
 				"SHIFT_STAFFING": "Cuántas personas necesita un turno, por puesto.",
 				"SHIFT_STAFFING_WITH_STAND_INS": "Lo mismo, cuando personas de otro puesto pueden suplir.",
-				"ROLE_PRESENCE": "Un puesto que debe estar de servicio de principio a fin del turno.",
 				"DAYS_OFF_PER_PERIOD": "Cuántos días libres tiene cada persona cada semana, o cada 2, 3 o 4 semanas.",
 				"AVOID_DAYS_OFF_ON": "Días de mucho trabajo en que la gente debe trabajar, no librar.",
 				"MAX_DAYS_WITHOUT_DAY_TYPES": "La racha más larga de días que alguien trabaja sin descanso.",

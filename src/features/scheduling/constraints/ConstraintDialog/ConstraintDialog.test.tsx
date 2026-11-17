@@ -562,7 +562,6 @@ describe("ConstraintDialog", () => {
 		);
 		for (const [category, count] of [
 			["People on shifts", 2],
-			["On duty throughout", 1],
 			["Days off", 4],
 			["Rest and hours", 5],
 		] as const)
@@ -571,6 +570,11 @@ describe("ConstraintDialog", () => {
 					"radio"
 				)
 			).toHaveLength(count);
+		// On duty throughout is retired (ADR-0128 in the API): no kind, and no empty group for its category.
+		expect(screen.queryByRole("radio", { name: /Someone on duty/ })).toBeNull();
+		expect(
+			screen.queryByRole("radiogroup", { name: "On duty throughout" })
+		).toBeNull();
 	});
 
 	it("given_aKindChosen_when_continued_then_theFormKeepsItAtTheTopAndChangeGoesBack", async () => {
