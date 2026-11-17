@@ -64,7 +64,8 @@ const show = (
 	permissions = ["schedule:read"],
 	kitchenStatus: Schedule["status"] = "GENERATION_REQUESTED",
 	/** Still loading when null. */
-	summaries: Array<ScheduleMonthSummary> | null = SUMMARIES
+	summaries: Array<ScheduleMonthSummary> | null = SUMMARIES,
+	kitchen: Partial<Schedule> = {}
 ): { onDepartmentChange: typeof onDepartmentChange } => {
 	// The router scrolls to the top on load, which jsdom does not implement.
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
@@ -77,6 +78,7 @@ const show = (
 			scheduleId: "s-2",
 			name: "Kitchen - Week 41",
 			status: kitchenStatus,
+			...kitchen,
 		}),
 	]);
 	const monthsKey = scheduleMonthSummariesKey(
@@ -177,6 +179,20 @@ describe("SchedulesTab", () => {
 				name: /^View the Front Office schedule for Oct 12\s?–\s?18, 2026$/,
 			})
 		).toBeInTheDocument();
+	});
+
+	it("given_aPart_when_listed_then_itsDateIsTheDaysItCovers", async () => {
+		show(vi.fn(), ["schedule:read"], "GENERATED", SUMMARIES, {
+			coveredFrom: "2026-10-15",
+		});
+
+		const history = await screen.findByRole("table", {
+			name: "Schedule history",
+		});
+		const row = within(history).getByRole("row", { name: /Kitchen - Week 41/ });
+		expect(within(row).getAllByRole("cell")[0]).toHaveTextContent(
+			/^Oct 15\s?–\s?18, 2026/
+		);
 	});
 
 	it("given_anApprovalWaitingOnTheViewer_when_rendered_then_itsMonthCardSaysWhichWeek", async () => {

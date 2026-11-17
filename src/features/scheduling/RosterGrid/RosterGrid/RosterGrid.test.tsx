@@ -75,6 +75,36 @@ describe("RosterGrid", () => {
 		).toBeInTheDocument();
 	});
 
+	it("given_outsideDays_when_shown_then_greyedSayingNotInThisScheduleAndNotClickable", async () => {
+		const user = userEvent.setup();
+		const onDaySelect = vi.fn();
+		const onAssignmentSelect = vi.fn();
+		const part = rosterFromAssignments(scheduleAssignmentsFixture(), {
+			start: "2026-10-15",
+			end: "2026-10-18",
+		});
+		render(
+			<RosterGrid
+				days={week}
+				outsideDays={week.slice(0, 3)}
+				rows={part}
+				onAssignmentSelect={onAssignmentSelect}
+				onDaySelect={onDaySelect}
+			/>
+		);
+
+		const row = screen.getAllByRole("row")[1]!;
+		const cells = within(row).getAllByRole("cell");
+		for (const cell of cells.slice(0, 3)) {
+			expect(cell).toHaveTextContent("Not in this schedule");
+			expect(within(cell).queryByRole("button")).toBeNull();
+		}
+		await user.click(within(cells[0]!).getByText("Not in this schedule"));
+		expect(onDaySelect).not.toHaveBeenCalled();
+		expect(onAssignmentSelect).not.toHaveBeenCalled();
+		expect(cells[3]).not.toHaveTextContent("Not in this schedule");
+	});
+
 	it("given_aNonWorkingDayWithoutAType_when_rendered_then_showsOff", () => {
 		const untyped = rosterFromAssignments(
 			scheduleAssignmentsFixture().map((assignment) =>

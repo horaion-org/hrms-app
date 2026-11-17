@@ -104,9 +104,10 @@ export const SchedulesTab = ({
 			? list.schedules.filter((schedule) => matches(schedule, search))
 			: [];
 	const columns = useMemo((): Array<DataTableColumn<Schedule>> => {
+		// The days the schedule covers: its week, or a run of it (API ADR-0113).
 		const periodOf = (schedule: Schedule): string =>
 			formatPeriod(
-				{ start: schedule.periodStart, end: schedule.periodEnd },
+				{ start: schedule.coveredFrom, end: schedule.coveredTo },
 				language
 			);
 		const createdAt = new Intl.DateTimeFormat(language, {
@@ -124,7 +125,7 @@ export const SchedulesTab = ({
 				header: t(`${key}.history.date`),
 				cell: (schedule) => periodOf(schedule),
 				cellClassName: "font-semibold",
-				sortValue: (schedule) => schedule.periodStart,
+				sortValue: (schedule) => schedule.coveredFrom,
 				pin: "start",
 			},
 			{

@@ -385,6 +385,96 @@ it("says a passed week is final and offers no regeneration, even to someone who 
 	).toBeNull();
 });
 
+describe("a schedule covering part of its week", () => {
+	const PART = {
+		name: "Week of 2026-10-12",
+		named: false,
+		state: "TO_REVIEW" as const,
+	};
+	const partRoutes = (
+		permissions: Array<string>,
+		parts: Array<{ scheduleId: string; coveredFrom: string; coveredTo: string }>
+	): Routes => ({
+		...signedIn(permissions),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({
+				status: "GENERATED",
+				coveredFrom: "2026-10-12",
+				coveredTo: "2026-10-17",
+			})
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`GET ${OCTOBER_MONTH}`]: ok(
+			scheduleMonthFixture({
+				month: "2026-10",
+				departmentName: "Front Office",
+				weeks: [
+					monthWeekFixture({
+						periodStart: "2026-10-12",
+						periodEnd: "2026-10-18",
+						state: "TO_REVIEW",
+						scheduleId: "s-1",
+						parts: parts.map((part) => ({ ...PART, ...part })),
+					}),
+				],
+			})
+		),
+	});
+
+	it("given_aPartEndingSaturday_when_shown_then_offersScheduleSunday", async () => {
+		await openRoster(
+			partRoutes(
+				["schedule:read", "schedule:create"],
+				[
+					{
+						scheduleId: "s-1",
+						coveredFrom: "2026-10-12",
+						coveredTo: "2026-10-17",
+					},
+				]
+			)
+		);
+
+		const button = await screen.findByRole("link", {
+			name: /^Schedule Oct 18, 2026/,
+		});
+		expect(button).toHaveAttribute(
+			"href",
+			"/scheduling/new?department=d-1&for=dates&firstDay=2026-10-18&lastDay=2026-10-18"
+		);
+		expect(
+			screen.getByText(
+				/^This schedule covers Oct 12\s?–\s?17, 2026\. Oct 18, 2026 can be scheduled later\.$/
+			)
+		).toBeInTheDocument();
+	});
+
+	it("given_aLaterPartExists_when_shown_then_noButton", async () => {
+		await openRoster(
+			partRoutes(
+				["schedule:read", "schedule:create"],
+				[
+					{
+						scheduleId: "s-1",
+						coveredFrom: "2026-10-12",
+						coveredTo: "2026-10-17",
+					},
+					{
+						scheduleId: "s-2",
+						coveredFrom: "2026-10-18",
+						coveredTo: "2026-10-18",
+					},
+				]
+			)
+		);
+
+		expect(
+			await screen.findByText("Oct 18, 2026 are in another schedule.")
+		).toBeInTheDocument();
+		expect(screen.queryByRole("link", { name: /^Schedule Oct/ })).toBeNull();
+	});
+});
+
 it("says the rules changed since the roster was generated when the month read says so", async () => {
 	await openRoster({
 		...signedIn(["schedule:read", "schedule:generate"]),

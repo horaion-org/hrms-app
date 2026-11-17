@@ -4169,7 +4169,9 @@
 			"saveForbidden": "Ya no tienes permiso para cambiar este horario.",
 			"createFailed": "No pudimos crear el borrador. Inténtalo de nuevo.",
 			"saveFailed": "No pudimos guardar el borrador. Inténtalo de nuevo.",
-			"weekTaken": "Este departamento ya tiene un horario para esa semana."
+			"weekTaken": "Este departamento ya tiene un horario para esa semana.",
+			"coveredDaysInvalid": "Estos días no están todos en la semana del horario. Vuelve atrás y elige sus días de nuevo.",
+			"daysBeforeRoster": "Días posteriores de esta semana ya tienen un horario, y solo se pueden añadir días después. Elige Mes y marca la semana para volver a programarla."
 		},
 		"detail": {
 			"back": "Volver a Programación",
@@ -4486,7 +4488,9 @@
 			"notDraft": "Este horario ya se generó, así que su punto de partida ya no puede cambiar.",
 			"failed": "No se pudieron guardar los días. Inténtalo de nuevo.",
 			"stale_one": "Los días de {{count}} persona antes de esta semana cambiaron después de generar este cuadrante, así que lo que dice de la semana anterior es lo que se sabía entonces. Para planificar con los días actuales, regenera el mes desde su página.",
-			"stale_other": "Los días de {{count}} personas antes de esta semana cambiaron después de generar este cuadrante, así que lo que dice de la semana anterior es lo que se sabía entonces. Para planificar con los días actuales, regenera el mes desde su página."
+			"stale_other": "Los días de {{count}} personas antes de esta semana cambiaron después de generar este cuadrante, así que lo que dice de la semana anterior es lo que se sabía entonces. Para planificar con los días actuales, regenera el mes desde su página.",
+			"restDaysAsk": "¿Ya se dieron días de descanso el {{days}}? Márcalos en Antes de esta semana, para que el descanso de la semana los cuente.",
+			"restDaysFallback": "Si continúas, {{days}} se toman como días en que nadie trabajó: no se cuenta ningún descanso en ellos, así que el descanso debe caer entre {{remaining}}."
 		},
 		"openingHours": {
 			"title": "Horas ya trabajadas este mes (del {{from}} al {{to}})",
@@ -5090,7 +5094,11 @@
 				"shiftsShort_one": "{{count}} turno con falta de personal",
 				"shiftsShort_other": "{{count}} turnos con falta de personal",
 				"handChanged_one": "{{count}} día cambiado a mano",
-				"handChanged_other": "{{count}} días cambiados a mano"
+				"handChanged_other": "{{count}} días cambiados a mano",
+				"covers": "Cubre {{range}}",
+				"coversNamed": "{{name}} · cubre {{range}}",
+				"publishedInPart": "{{published}} publicado · {{rest}} {{state}}",
+				"namedSpan": "{{name}} · {{range}}"
 			},
 			"actions": {
 				"review": "Revisar",
@@ -5218,6 +5226,8 @@
 			"setup": {
 				"description": "Selecciona el departamento y el mes que quieres generar.",
 				"month": "Mes",
+				"scheduleFor": "Programar por",
+				"dates": "Fechas",
 				"belongs": "Una semana pertenece al mes en que cae su lunes.",
 				"weeksLabel": "Semanas",
 				"weekColumn": "Semana",
@@ -5229,7 +5239,7 @@
 				},
 				"chosen_one": "{{count}} semana: {{ranges}}",
 				"chosen_other": "{{count}} semanas: {{ranges}}",
-				"startedNote": "{{week}} ya ha empezado. Se genera completa, lunes incluido.",
+				"startedNote": "{{week}} ya ha empezado. Se genera desde hoy: {{range}}.",
 				"rosterWaitingNote": "{{week}} tiene un horario pendiente de revisión. Generar de nuevo lo sustituye.",
 				"rosterRejectedNote": "{{week}} tiene un horario rechazado. Generar de nuevo lo sustituye.",
 				"skippedNote": "{{week}} queda fuera y no tiene horario. Las horas trabajadas esa semana no cuentan para las horas extra de este mes salvo que un horario la cubra.",
@@ -5285,6 +5295,7 @@
 			"overtimeSummary": "Horas extra {{hours}}",
 			"empty": "Nadie tiene turnos esta semana.",
 			"note": "Horas previstas de este cuadrante, según las condiciones de empleo de cada persona esa semana. Normales: dentro de sus horas de contrato. Complementarias: horas de una persona a tiempo parcial por encima de su contrato. Horas extra: las que pasan de la jornada o la semana normal.",
+			"countsEarlierParts": "Cuenta la semana desde el {{from}}, con los días del horario anterior, para que las horas extra semanales coincidan con las reglas del cuadrante.",
 			"loading": "Cargando las horas…",
 			"loadFailed": "No se pudieron cargar las horas."
 		},
@@ -5336,6 +5347,53 @@
 				"place": "{{person}} · {{day}}",
 				"line": "{{place}}: «{{message}}»"
 			}
+		},
+		"dates": {
+			"refusal": {
+				"allTaken": "Todos los días del {{first}} al {{last}} ya tienen un horario. Para rehacer una semana, elige Mes y márcala.",
+				"beforeRoster": "{{days}} van antes de {{scheduled}}, que ya tienen un horario. Solo se pueden añadir días después: elige un primer día posterior al {{last}}, o elige Mes y marca esa semana.",
+				"draftInTheWay": "La semana del {{week}} tiene un borrador para {{days}}. Elimínalo desde la página del mes, o elige fechas que coincidan con él.",
+				"datesInvalid": "Ya no se pueden programar estas fechas. Vuelve a Configuración y elígelas de nuevo.",
+				"changed": "Los días cambiaron desde que Configuración los leyó, así que no se generó nada. Vuelve a Configuración para verlos como están ahora.",
+				"unavailable": "No puedes programar este departamento. Elige un departamento que programes.",
+				"forbidden": "No tienes permiso para generar horarios en este departamento.",
+				"failed": "No pudimos generar estas fechas. Inténtalo de nuevo."
+			},
+			"setup": {
+				"firstDay": "Primer día",
+				"lastDay": "Último día",
+				"hint": "Cualquier día de la semana, hasta {{max}} días. Los días que ya tienen un horario se quedan como están.",
+				"name": "Nombre",
+				"nameHint": "Opcional. Se muestra en las semanas que crean estas fechas.",
+				"nameCounter": "{{count}}/{{max}}",
+				"creates": "Qué se crea",
+				"datesColumn": "Fechas",
+				"daysColumn": "Días",
+				"wholeWeek": "La semana completa",
+				"someDays_one": "{{count}} de 7 días",
+				"someDays_other": "{{count}} de 7 días",
+				"keptLine": "Ya {{state}}, se queda como está",
+				"new": "Nueva",
+				"kept": "Se mantiene",
+				"summary_one": "{{count}} día por generar, {{range}}",
+				"summary_other": "{{count}} días por generar, {{range}}",
+				"keptNote": "{{days}} ya tiene un horario y se queda como está.",
+				"checking": "Comprobando estas fechas…",
+				"missing": "Elige un primer día y un último día.",
+				"past": "Elige hoy ({{today}}) o un primer día posterior. Los días que ya pasaron no se pueden programar.",
+				"reversed": "El último día es anterior al primero. Elige un último día igual o posterior al {{first}}.",
+				"tooLong": "Son {{days}} días. Un horario por fechas cubre hasta {{max}} días. Elige un último día igual o anterior al {{last}}, o haz un segundo horario para el resto."
+			},
+			"generate": {
+				"hint_one": "Generar calcula {{count}} día, {{range}}. Después lo revisas y lo publicas.",
+				"hint_other": "Generar calcula {{count}} días, {{range}}. Después los revisas y los publicas semana a semana."
+			}
+		},
+		"roster": {
+			"notInSchedule": "No está en este horario",
+			"coversCallout": "Este horario cubre {{covered}}. {{rest}} se puede programar más adelante.",
+			"remainingButton": "Programar {{rest}}",
+			"otherPart": "{{days}} están en otro horario."
 		}
 	},
 	"workspace": {

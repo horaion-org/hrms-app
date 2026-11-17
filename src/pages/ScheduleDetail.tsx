@@ -1,4 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
+import type { DayRun } from "@/features/scheduling/dates/api";
+import { daysAroundPart } from "@/features/scheduling/dates/datesSetup";
+import { SCHEDULE_CREATE_KEYS } from "@/features/workspace/permissionKeys";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
@@ -242,6 +245,7 @@ const RosterBody = ({
 			<RosterHours
 				assignments={assignments.items}
 				className="mt-8"
+				coveredFrom={roster.schedule.coveredFrom}
 				hours={hours}
 			/>
 		</>
@@ -475,6 +479,38 @@ const ApiSchedule = ({
 		)
 	).data;
 	const publishNoteId = useId();
+	// A part of its week (API ADR-0113): the week's other days, and a way to schedule the days after it.
+	const around =
+		state.status === "ready"
+			? daysAroundPart(
+					state.schedule,
+					scheduleMonth?.weeks.find(
+						(week) => week.periodStart === state.schedule.periodStart
+					)?.parts ?? []
+				)
+			: undefined;
+	const daysText = (days: DayRun): string =>
+		formatPeriod({ start: days.from, end: days.to }, formattingLocale(i18n));
+	const remaining =
+		around?.after && !around.afterTaken ? around.after : undefined;
+	const partLines = [
+		around?.before &&
+			t("scheduling.roster.otherPart", { days: daysText(around.before) }),
+		around?.after &&
+			state.status === "ready" &&
+			(around.afterTaken
+				? t("scheduling.roster.otherPart", { days: daysText(around.after) })
+				: t("scheduling.roster.coversCallout", {
+						covered: daysText({
+							from: state.schedule.coveredFrom,
+							to: state.schedule.coveredTo,
+						}),
+						rest: daysText(around.after),
+					})),
+	].filter((line): line is string => typeof line === "string");
+	const mayCreateHere =
+		unit !== undefined &&
+		access.canAll(SCHEDULE_CREATE_KEYS, departmentScope(unit.departmentId));
 	const monthName = month ? formatMonthName(month, formattingLocale(i18n)) : "";
 	if (state.status !== "ready")
 		return (
@@ -768,6 +804,33 @@ const ApiSchedule = ({
 					{notices[notice]}
 				</div>
 			))}
+			{partLines.length > 0 && (
+				<Callout className="mt-6">
+					{partLines.map((line) => (
+						<span key={line} className="block">
+							{line}
+						</span>
+					))}
+					{remaining && mayCreateHere && (
+						<Button
+							className="mt-2"
+							size="sm"
+							to="/scheduling/new"
+							variant="secondary"
+							search={{
+								department: schedule.departmentId,
+								for: "dates",
+								firstDay: remaining.from,
+								lastDay: remaining.to,
+							}}
+						>
+							{t("scheduling.roster.remainingButton", {
+								rest: daysText(remaining),
+							})}
+						</Button>
+					)}
+				</Callout>
+			)}
 			{rosterShown(noticeFacts) && (
 				<RosterBody
 					approval={trail}

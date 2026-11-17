@@ -43,6 +43,8 @@ import {
 import {
 	decisionRefusal,
 	deleteRefusal,
+	datesGenerationRefusal,
+	datesRefusalText,
 	monthGenerationRefusal,
 	refusalOfCode,
 	withdrawalRefusal,
@@ -171,6 +173,52 @@ describe("schedules client", () => {
 			`PUT ${SCHEDULES}/s-1`,
 		]);
 		expect(calls[1]?.body).toEqual(body);
+	});
+
+	it("reads a schedule's covered days, and the whole week from an API without them", async () => {
+		const part = { ...scheduleFixture(), coveredFrom: "2026-10-15" };
+		// Undefined is left out of the JSON reply, as an API without the fields sends it.
+		const older = {
+			...scheduleFixture(),
+			coveredFrom: undefined as never,
+			coveredTo: undefined as never,
+		};
+		stubApi({
+			[`GET ${SCHEDULES}/s-1`]: [
+				{ status: 200, body: envelope(part) },
+				{ status: 200, body: envelope(older) },
+			],
+		});
+
+		const read = await fetchSchedule("c-1", UNIT, "s-1");
+		const olderRead = await fetchSchedule("c-1", UNIT, "s-1");
+
+		expect([read.coveredFrom, read.coveredTo]).toEqual([
+			"2026-10-15",
+			"2026-10-18",
+		]);
+		expect([olderRead.coveredFrom, olderRead.coveredTo]).toEqual([
+			"2026-10-12",
+			"2026-10-18",
+		]);
+	});
+
+	it("sends a part's covered days when saving one", async () => {
+		const calls = stubApi({
+			[`POST ${SCHEDULES}`]: { status: 201, body: envelope(scheduleFixture()) },
+		});
+		const body = {
+			...BODY,
+			coveredFrom: "2026-10-15",
+			coveredTo: "2026-10-18",
+		};
+
+		await createSchedule("c-1", UNIT, body);
+
+		expect(calls[0]?.body).toMatchObject({
+			coveredFrom: "2026-10-15",
+			coveredTo: "2026-10-18",
+		});
 	});
 
 	it("parses a generated schedule with who asked for it", async () => {
@@ -1186,6 +1234,68 @@ describe("schedule refusals", () => {
 			monthGenerationRefusal(problem(400, "MONTH_WEEK_CANNOT_BE_GENERATED"), t)
 		).toBe(
 			"A week you ticked changed since Setup, so nothing was generated. It is now left out and named above; generate again, or go back to Setup to choose other weeks."
+		);
+	});
+
+	it.each([
+		[
+			400,
+			"SCHEDULE_DATES_INVALID",
+			/^These dates can’t be scheduled any more\. Go back to Setup/,
+		],
+		[
+			409,
+			"SCHEDULE_DAYS_ALL_TAKEN",
+			/^The days changed since Setup read them.*Go back to Setup/,
+		],
+		[
+			409,
+			"SCHEDULE_DAYS_BEFORE_ROSTER",
+			/^The days changed since Setup read them/,
+		],
+		[409, "SCHEDULE_WEEK_TAKEN", /^The days changed since Setup read them/],
+		[403, "FORBIDDEN", /^You don’t have permission to generate schedules/],
+	])(
+		"words a %i %s dates generation refusal with what to do",
+		(status, code, copy) => {
+			expect(datesGenerationRefusal(problem(status, code), t)).toMatch(copy);
+		}
+	);
+
+	it("words the plan's refusals with their days and what to do", () => {
+		const days = { from: "2026-11-19", to: "2026-11-22" };
+		const scheduled = { from: "2026-11-23", to: "2026-11-29" };
+
+		expect(
+			datesRefusalText(
+				{ code: "SCHEDULE_DAYS_ALL_TAKEN", days, scheduledDays: null },
+				t,
+				"en-GB"
+			)
+		).toBe(
+			"Every day from Thu 19 Nov to Sun 22 Nov already has a schedule. To redo a week, choose Month and tick it."
+		);
+		expect(
+			datesRefusalText(
+				{ code: "SCHEDULE_DAYS_BEFORE_ROSTER", days, scheduledDays: scheduled },
+				t,
+				"en-GB"
+			)
+		).toMatch(
+			/^19\s?–\s?22 Nov 2026 come before 23\s?–\s?29 Nov 2026, which already have a schedule\. Days can only be added after them: choose a first day after Sun 29 Nov, or choose Month and tick that week\.$/
+		);
+		expect(
+			datesRefusalText(
+				{
+					code: "SCHEDULE_WEEK_TAKEN",
+					days,
+					scheduledDays: { from: "2026-11-18", to: "2026-11-20" },
+				},
+				t,
+				"en-GB"
+			)
+		).toMatch(
+			/^The week of 16\s?–\s?22 Nov 2026 has a draft for 18\s?–\s?20 Nov 2026\. Delete it from the month page, or choose dates that match it\.$/
 		);
 	});
 

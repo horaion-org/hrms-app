@@ -238,6 +238,80 @@ describe("generating a month", () => {
 		});
 	});
 
+	it("given_aWeekInTwoParts_when_parsed_then_itsPartsAndUncoveredDaysRead", async () => {
+		const days = monthWeekFixture().days.map((day, index) => ({
+			...day,
+			covered: index >= 3,
+		}));
+		// Undefined fields are left out of the JSON reply, as an older API sends them.
+		const olderDay = { ...days[0]!, covered: undefined as never };
+		const parts = [
+			{
+				scheduleId: "s-1",
+				name: "Week of 2026-11-02",
+				named: false,
+				coveredFrom: "2026-11-02",
+				coveredTo: "2026-11-04",
+				state: "PUBLISHED",
+			},
+			{
+				scheduleId: "s-2",
+				name: "Year-end gala",
+				named: true,
+				coveredFrom: "2026-11-05",
+				coveredTo: "2026-11-08",
+				state: "TO_REVIEW",
+			},
+		];
+		const olderWeek = {
+			...monthWeekFixture({
+				periodStart: "2026-11-09",
+				periodEnd: "2026-11-15",
+			}),
+			parts: undefined as never,
+		};
+		stubApi({
+			[`GET ${NOVEMBER}`]: {
+				status: 200,
+				body: envelope(
+					scheduleMonthFixture({
+						weeks: [
+							monthWeekFixture({
+								state: "TO_REVIEW",
+								scheduleId: "s-2",
+								coveredFrom: "2026-11-05",
+								coveredTo: "2026-11-08",
+								name: "Year-end gala",
+								days,
+								parts: parts as never,
+							}),
+							{ ...olderWeek, days: [olderDay] },
+						],
+					})
+				),
+			},
+		});
+
+		const month = await fetchScheduleMonth("c-1", "d-1", "2026-11");
+
+		expect(month.weeks[0]?.parts.map((part) => part.named)).toEqual([
+			false,
+			true,
+		]);
+		expect(month.weeks[0]?.coveredFrom).toBe("2026-11-05");
+		expect(month.weeks[0]?.days.map((day) => day.covered)).toEqual([
+			false,
+			false,
+			false,
+			true,
+			true,
+			true,
+			true,
+		]);
+		expect(month.weeks[1]?.parts).toEqual([]);
+		expect(month.weeks[1]?.days[0]?.covered).toBe(true);
+	});
+
 	it("given_theCheckQuery_when_built_then_itsKeySitsUnderTheMonthReads", () => {
 		expect(
 			monthGenerationCheckQuery("c-1", "d-1", "2026-11").queryKey.slice(0, 3)

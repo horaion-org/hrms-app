@@ -178,3 +178,15 @@ export const PartDayShifts: Story = {
 		),
 	},
 };
+
+/** A part week: the schedule covers Thursday to Sunday; Monday to Wednesday are greyed, not in this schedule. */
+export const APartWeek: Story = {
+	name: "A part week",
+	args: {
+		rows: rosterFromAssignments(scheduleAssignmentsFixture(), {
+			start: "2026-10-15",
+			end: "2026-10-18",
+		}),
+		outsideDays: ["2026-10-12", "2026-10-13", "2026-10-14"],
+	},
+};

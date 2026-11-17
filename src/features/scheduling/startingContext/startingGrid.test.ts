@@ -20,6 +20,7 @@ import {
 	previousWeekOf,
 	runsByMember,
 	splitDays,
+	unansweredDays,
 	withCell,
 } from "@/features/scheduling/startingContext/startingGrid";
 
@@ -197,5 +198,34 @@ describe("isCellValue", () => {
 
 	it("given_anythingElse_when_asked_then_notACellValue", () => {
 		expect(isCellValue("s-night")).toBe(false);
+	});
+});
+
+describe("unansweredDays", () => {
+	it("given_daysSomeoneDoesNotKnow_when_asked_then_thoseDatesOnly", () => {
+		const week = firstWeek();
+		const answered = {
+			...week,
+			members: week.members.map((member) =>
+				member.memberProfileId === "p-siti"
+					? {
+							...member,
+							cells: member.cells.map((cell) =>
+								cell.date === "2026-11-08"
+									? {
+											...cell,
+											kind: "OFF" as const,
+											source: "ENTERED" as const,
+										}
+									: cell
+							),
+						}
+					: member
+			),
+		};
+
+		expect(
+			unansweredDays(answered, { from: "2026-11-06", to: "2026-11-08" })
+		).toEqual(["2026-11-06", "2026-11-07"]);
 	});
 });

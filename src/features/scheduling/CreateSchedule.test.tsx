@@ -241,6 +241,29 @@ describe("Create Schedule: the URL", () => {
 		});
 	});
 
+	it("given_datesToPreFill_when_parsed_then_keepsThemAndDropsMalformedOnes", () => {
+		expect(
+			parseCreateScheduleSearch({
+				department: "d-1",
+				for: "dates",
+				firstDay: "2026-11-22",
+				lastDay: "2026-11-22",
+			})
+		).toEqual({
+			department: "d-1",
+			for: "dates",
+			firstDay: "2026-11-22",
+			lastDay: "2026-11-22",
+		});
+		expect(
+			parseCreateScheduleSearch({
+				for: "weeks",
+				firstDay: "22 Nov",
+				lastDay: 3,
+			})
+		).toEqual({});
+	});
+
 	it("given_aMalformedDepartmentOrWeek_when_parsed_then_dropsThem", () => {
 		expect(
 			parseCreateScheduleSearch({ department: "", week: "16-11" })

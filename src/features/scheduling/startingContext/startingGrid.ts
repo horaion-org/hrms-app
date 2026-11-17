@@ -192,3 +192,22 @@ export const runsByMember = (context: StartingContext): Map<string, number> =>
 				: []
 		)
 	);
+
+/**
+ * The dates of `days` someone has no known value on, in date order: a cell
+ * that is neither locked (a roster or leave covers it) nor known. The days
+ * nobody answered for a week's rest day.
+ */
+export const unansweredDays = (
+	week: StartingDays,
+	days: { from: string; to: string }
+): Array<string> =>
+	week.days.filter(
+		(date) =>
+			date >= days.from &&
+			date <= days.to &&
+			week.members.some((member) => {
+				const cell = cellOn(member, date);
+				return cell !== undefined && !cell.locked && cell.kind === null;
+			})
+	);

@@ -24,9 +24,9 @@ const labelKeys = {
 	noRoster: "scheduling.months.cover.dayNoRoster",
 } as const satisfies Record<MarkLook, string>;
 
-/** A day without a roster entry has no roster; otherwise it is short or covered. */
+/** A day without a roster entry, or one no part of the week covers, has no roster; otherwise it is short or covered. */
 const lookOf = (day: MonthWeek["days"][number] | undefined): MarkLook => {
-	if (day === undefined) return "noRoster";
+	if (day === undefined || !day.covered) return "noRoster";
 	return day.shortShifts > 0 ? "short" : "covered";
 };
 

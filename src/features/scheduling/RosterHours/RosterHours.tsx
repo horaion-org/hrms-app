@@ -1,6 +1,7 @@
 import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
+import { formatDay } from "@/common/formatDay";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
@@ -17,6 +18,8 @@ export type RosterHoursProps = {
 	hours: RosterHoursState;
 	/** The roster's rows, which name each person and set their order. */
 	assignments: ReadonlyArray<ScheduleAssignment>;
+	/** The first day the schedule covers: a later part's hours count the week's earlier days too, and say so. */
+	coveredFrom?: string;
 	className?: string;
 };
 
@@ -45,6 +48,7 @@ const overtimeClasses = (row: RosterHoursRow): string | undefined =>
 export const RosterHours = ({
 	hours,
 	assignments,
+	coveredFrom,
 	className,
 }: RosterHoursProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -126,6 +130,17 @@ export const RosterHours = ({
 			</h2>
 			{hours.status === "ready" ? (
 				<>
+					{coveredFrom !== undefined &&
+						hours.hours.countedFrom < coveredFrom && (
+							<p className="mt-2 text-neutral-700">
+								{t(`${key}.countsEarlierParts`, {
+									from: formatDay(
+										hours.hours.countedFrom,
+										formattingLocale(i18n)
+									),
+								})}
+							</p>
+						)}
 					<DataTable
 						className="mt-3"
 						columns={columns}

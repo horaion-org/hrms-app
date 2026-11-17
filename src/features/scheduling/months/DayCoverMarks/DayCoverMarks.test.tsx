@@ -31,6 +31,18 @@ describe("DayCoverMarks", () => {
 		);
 	});
 
+	it("given_uncoveredDays_when_shown_then_dashedAndReadAsNoRoster", () => {
+		const days = coverDays("2026-11-16", { 0: 1 }).map((day, index) => ({
+			...day,
+			covered: index >= 3,
+		}));
+		render(<DayCoverMarks days={days} />);
+
+		expect(screen.getByRole("img").getAttribute("aria-label")).toBe(
+			"Monday no roster, Tuesday no roster, Wednesday no roster, Thursday covered, Friday covered, Saturday covered, Sunday covered"
+		);
+	});
+
 	it("given_noRoster_when_rendered_then_sevenWeekdaysWithNoRoster", () => {
 		render(<DayCoverMarks days={[]} />);
 

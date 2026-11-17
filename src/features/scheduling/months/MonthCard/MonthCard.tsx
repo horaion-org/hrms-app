@@ -15,7 +15,9 @@ import {
 	formatDayAndMonth,
 	formatMonth,
 	formatMonthName,
+	formatWeekDates,
 } from "@/features/scheduling/months/monthWeeks";
+import { namedSpansOf } from "@/features/scheduling/dates/datesSetup";
 import { stateCountsLine } from "@/features/scheduling/months/monthCopy";
 
 export type MonthCardProps = {
@@ -61,6 +63,10 @@ export const MonthCard = ({
 	const mine = weekWaitingOnMe(summary, waitingOnMe);
 	const toReview = summary.weeks.find((week) => week.state === "TO_REVIEW");
 	const month = formatMonth(summary.month, language);
+	// A named schedule by dates, across the month's weeks; one crossing into the next month shows on both cards.
+	const namedSpans = namedSpansOf(
+		summary.weeks.flatMap((week) => week.parts ?? [])
+	);
 
 	return (
 		<section
@@ -103,6 +109,20 @@ export const MonthCard = ({
 				))}
 			</div>
 			<p className="text-sm text-neutral-800">{counts}</p>
+			{namedSpans.map((span) => (
+				<p
+					key={`${span.name}-${span.from}`}
+					className="text-sm text-neutral-800"
+				>
+					{t(`${key}.cover.namedSpan`, {
+						name: span.name,
+						range: formatWeekDates(
+							{ start: span.from, end: span.to },
+							language
+						),
+					})}
+				</p>
+			))}
 			{mine && (
 				<p className="text-sm font-medium text-neutral-800">
 					{t(`${key}.waitingOnYou`, {

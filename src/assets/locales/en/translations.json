@@ -4369,7 +4369,9 @@
 			"saveForbidden": "You no longer have permission to change this schedule.",
 			"createFailed": "We couldn’t create the draft. Try again.",
 			"saveFailed": "We couldn’t save the draft. Try again.",
-			"weekTaken": "This department already has a schedule for that week."
+			"weekTaken": "This department already has a schedule for that week.",
+			"coveredDaysInvalid": "These days aren’t all in the schedule’s week. Go back and choose its days again.",
+			"daysBeforeRoster": "Later days of this week already have a schedule, and days can only be added after them. Choose Month and tick the week to schedule it again."
 		},
 		"detail": {
 			"back": "Back to Scheduling",
@@ -4686,7 +4688,9 @@
 			"notDraft": "This schedule has already been generated, so its starting point can no longer change.",
 			"failed": "The days couldn’t be saved. Try again.",
 			"stale_one": "{{count}} person’s days before this week changed after this roster was generated, so what it says about the week before is what was known then. To plan from the days as they are now, regenerate the month from its page.",
-			"stale_other": "{{count}} people’s days before this week changed after this roster was generated, so what it says about the week before is what was known then. To plan from the days as they are now, regenerate the month from its page."
+			"stale_other": "{{count}} people’s days before this week changed after this roster was generated, so what it says about the week before is what was known then. To plan from the days as they are now, regenerate the month from its page.",
+			"restDaysAsk": "Were rest days already given on {{days}}? Mark them under Before this week, so the week’s rest day counts them.",
+			"restDaysFallback": "If you go on, {{days}} are taken as days nobody worked: no rest day is counted on them, so the rest day must fall on {{remaining}}."
 		},
 		"openingHours": {
 			"title": "Hours already worked this month ({{from}} to {{to}})",
@@ -5290,7 +5294,11 @@
 				"shiftsShort_one": "{{count}} shift short",
 				"shiftsShort_other": "{{count}} shifts short",
 				"handChanged_one": "{{count}} day changed by hand",
-				"handChanged_other": "{{count}} days changed by hand"
+				"handChanged_other": "{{count}} days changed by hand",
+				"covers": "Covers {{range}}",
+				"coversNamed": "{{name}} · covers {{range}}",
+				"publishedInPart": "{{published}} published · {{rest}} {{state}}",
+				"namedSpan": "{{name}} · {{range}}"
 			},
 			"actions": {
 				"review": "Review",
@@ -5418,6 +5426,8 @@
 			"setup": {
 				"description": "Select the department and the month to generate.",
 				"month": "Month",
+				"scheduleFor": "Schedule for",
+				"dates": "Dates",
 				"belongs": "A week belongs to the month its Monday falls in.",
 				"weeksLabel": "Weeks",
 				"weekColumn": "Week",
@@ -5429,7 +5439,7 @@
 				},
 				"chosen_one": "{{count}} week: {{ranges}}",
 				"chosen_other": "{{count}} weeks: {{ranges}}",
-				"startedNote": "{{week}} has already started. It is generated whole, Monday included.",
+				"startedNote": "{{week}} has already started. It is generated from today on: {{range}}.",
 				"rosterWaitingNote": "{{week}} has a roster waiting for review. Generating again replaces it.",
 				"rosterRejectedNote": "{{week}} has a rejected roster. Generating again replaces it.",
 				"skippedNote": "{{week}} is left out and has no roster. Hours worked that week don’t count towards this month’s overtime unless a roster covers it.",
@@ -5485,6 +5495,7 @@
 			"overtimeSummary": "Overtime {{hours}}",
 			"empty": "Nobody is rostered this week.",
 			"note": "Planned hours in this roster, by each person’s employment terms that week. Normal: within their contracted hours. Extra: a part-timer’s hours above their contract. Overtime: hours past the normal day or week.",
+			"countsEarlierParts": "Counts the week from {{from}}, with the days of the earlier schedule, so weekly overtime matches the roster’s rules.",
 			"loading": "Loading hours…",
 			"loadFailed": "Couldn’t load the hours."
 		},
@@ -5536,6 +5547,53 @@
 				"place": "{{person}} · {{day}}",
 				"line": "{{place}}: “{{message}}”"
 			}
+		},
+		"dates": {
+			"refusal": {
+				"allTaken": "Every day from {{first}} to {{last}} already has a schedule. To redo a week, choose Month and tick it.",
+				"beforeRoster": "{{days}} come before {{scheduled}}, which already have a schedule. Days can only be added after them: choose a first day after {{last}}, or choose Month and tick that week.",
+				"draftInTheWay": "The week of {{week}} has a draft for {{days}}. Delete it from the month page, or choose dates that match it.",
+				"datesInvalid": "These dates can’t be scheduled any more. Go back to Setup and choose them again.",
+				"changed": "The days changed since Setup read them, so nothing was generated. Go back to Setup to see them as they are now.",
+				"unavailable": "You can’t schedule this department. Choose a department you schedule.",
+				"forbidden": "You don’t have permission to generate schedules at this department.",
+				"failed": "We couldn’t generate these dates. Try again."
+			},
+			"setup": {
+				"firstDay": "First day",
+				"lastDay": "Last day",
+				"hint": "Any weekday, up to {{max}} days. Days that already have a schedule are left as they are.",
+				"name": "Name",
+				"nameHint": "Optional. Shown on the weeks these dates create.",
+				"nameCounter": "{{count}}/{{max}}",
+				"creates": "What this creates",
+				"datesColumn": "Dates",
+				"daysColumn": "Days",
+				"wholeWeek": "The whole week",
+				"someDays_one": "{{count}} of 7 days",
+				"someDays_other": "{{count}} of 7 days",
+				"keptLine": "Already {{state}}, stays as it is",
+				"new": "New",
+				"kept": "Kept",
+				"summary_one": "{{count}} day to generate, {{range}}",
+				"summary_other": "{{count}} days to generate, {{range}}",
+				"keptNote": "{{days}} already has a schedule and stays as it is.",
+				"checking": "Checking these dates…",
+				"missing": "Choose a first day and a last day.",
+				"past": "Choose today ({{today}}) or a later first day. Days that have passed cannot be scheduled.",
+				"reversed": "The last day is before the first day. Choose a last day on or after {{first}}.",
+				"tooLong": "That is {{days}} days. A schedule by dates covers up to {{max}} days. Choose a last day on or before {{last}}, or make a second schedule for the rest."
+			},
+			"generate": {
+				"hint_one": "Generating works out {{count}} day, {{range}}. You then review and publish it.",
+				"hint_other": "Generating works out {{count}} days, {{range}}. You then review and publish them week by week."
+			}
+		},
+		"roster": {
+			"notInSchedule": "Not in this schedule",
+			"coversCallout": "This schedule covers {{covered}}. {{rest}} can be scheduled later.",
+			"remainingButton": "Schedule {{rest}}",
+			"otherPart": "{{days}} are in another schedule."
 		}
 	},
 	"colourSwatchPicker": {
