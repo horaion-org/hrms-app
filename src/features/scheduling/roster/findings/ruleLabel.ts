@@ -17,7 +17,7 @@ export type EngineRule = { name: string; constraintId: string | null };
 /**
  * What a rule is called on the roster: the schedule's constraint by its own
  * name, else the forecast, else the one rule table's words
- * (`brokenRuleLabel`), else "A working-time rule": an engine name is never
+ * (`brokenRuleLabel`), else "A rule the app has no name for yet": an engine name is never
  * shown.
  */
 export const ruleLabel = (

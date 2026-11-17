@@ -45,13 +45,13 @@ export type RosterIssueSourceInput = {
 	language: string;
 };
 
-/** A broken roster whose rules the engine did not name, listed once for the whole roster. */
-const UNNAMED_RULE: BrokenRule = {
+/** A broken roster whose rules the engine did not name, listed once for the whole roster, as "This roster breaks a working-time rule." */
+const unnamedRule = (t: TFunction): BrokenRule => ({
 	rule: "unnamed",
 	constraintId: null,
-	constraintName: null,
+	constraintName: t("scheduling.rulesCheck.brokenUnnamed"),
 	violations: null,
-};
+});
 
 /**
  * How the engine starts each message of a rule asked "if possible" that gave
@@ -223,10 +223,11 @@ const setupNotes = ({
 
 /** The musts the check found broken: its named rules, or one for the whole roster when it named none. */
 const brokenMustsOf = (
-	check: RosterRulesCheck | undefined
+	check: RosterRulesCheck | undefined,
+	t: TFunction
 ): Array<BrokenRule> => {
 	if (check?.status !== "BROKEN") return [];
-	return check.brokenRules.length > 0 ? check.brokenRules : [UNNAMED_RULE];
+	return check.brokenRules.length > 0 ? check.brokenRules : [unnamedRule(t)];
 };
 
 /**
@@ -244,7 +245,7 @@ export const issuesOfRoster = (
 		gaps: (roster.findings?.conflicts ?? []).filter(
 			(conflict) => conflict.employeeUuid === null
 		),
-		brokenMusts: brokenMustsOf(check),
+		brokenMusts: brokenMustsOf(check, t),
 		notMet: check?.notMet ?? [],
 		notes: [...noteLines, ...setupNotes(input)],
 		memberNames: roster.names?.members ?? new Map<string, string>(),

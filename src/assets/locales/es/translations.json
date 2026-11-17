@@ -4427,6 +4427,7 @@
 			"jobShort": "Falta {{job}}",
 			"unknownJob": "un puesto",
 			"wholeRoster": "Todo el turno",
+			"ruleWithoutPlace": "El motor no pudo indicar a quién ni qué día. Revise los cambios hechos a mano desde que se generó este cuadrante, o vuelva a validar.",
 			"rosterNote": "Nota del turno",
 			"summary": {
 				"mustFix_one": "{{count}} por corregir",
@@ -5165,14 +5166,24 @@
 			"check": "Validar cuadrante",
 			"loading": "Validando el cuadrante…",
 			"brokenUnnamed": "Este cuadrante incumple una regla de tiempo de trabajo.",
-			"unnamedRule": "Una regla de tiempo de trabajo",
+			"unnamedRule": "Una regla que la app aún no sabe nombrar",
 			"rule": {
 				"most_days_a_week": "Máximo de días a la semana",
 				"overtime_past_the_normal_day": "Horas extra sobre la jornada normal",
 				"overtime_past_the_normal_week": "Horas extra sobre la semana normal",
 				"overtime_respects_daily_work_cap": "Horas extra dentro del límite diario",
 				"work_minutes_per_period": "Horas por periodo",
-				"consecutive_day_work_patterns": "Días trabajados seguidos"
+				"impossible_shift_assignment_is_zero": "Un turno que esta persona no puede hacer",
+				"at_most_one_role_assignment_per_day": "Un turno por persona al día",
+				"overtime_requires_base_shift": "Horas extra solo junto a un turno",
+				"overtime_extension_is_contiguous": "Horas extra unidas a su turno",
+				"shift_preference_fairness": "Reparto justo de las preferencias de turno",
+				"timeblock_demand_coverage": "Personal por horas",
+				"employee_role_requirement_per_horizon": "Días en un puesto por periodo",
+				"non_working_day_requires_off_day_type": "Un día sin trabajar tiene un tipo de día",
+				"overtime_credit_partition": "Horas extra contadas una sola vez",
+				"shift_change_penalty_indicator": "Cambio de hora de inicio entre días",
+				"working_day_follows_shift_assignment": "El día trabajado sigue a los turnos asignados"
 			},
 			"refusal": {
 				"expired": "El motor ya no guarda la generación de esta semana, así que no se puede validar. Regenerar el mes la vuelve a comprobar, pero sustituye los cambios hechos a mano.",

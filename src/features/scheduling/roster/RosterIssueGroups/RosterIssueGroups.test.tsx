@@ -4,7 +4,10 @@ import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import en from "@/assets/locales/en/translations.json";
-import { rosterIssuesFixture } from "@/features/scheduling/roster/rosterIssueFixtures";
+import {
+	rosterIssueFixture,
+	rosterIssuesFixture,
+} from "@/features/scheduling/roster/rosterIssueFixtures";
 import { RosterIssueGroups } from "@/features/scheduling/roster/RosterIssueGroups";
 
 const copy = en.scheduling.issues;
@@ -100,6 +103,25 @@ describe("RosterIssueGroups", () => {
 			day: "2026-10-17",
 		});
 		expect(onShow).toHaveBeenCalledOnce();
+	});
+
+	it("shows the hint of an item with no day where the day would be", () => {
+		render(
+			<RosterIssueGroups
+				issues={[
+					rosterIssueFixture({
+						who: copy.wholeRoster,
+						memberProfileId: null,
+						day: null,
+						hint: copy.ruleWithoutPlace,
+					}),
+				]}
+				onFindCover={vi.fn()}
+				onShow={vi.fn()}
+			/>
+		);
+
+		expect(screen.getByText(copy.ruleWithoutPlace)).toBeInTheDocument();
 	});
 
 	it("says nothing is wrong when there are no issues", () => {

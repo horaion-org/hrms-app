@@ -44,6 +44,8 @@ export type RosterIssue = {
 	time: string | null;
 	/** The rule, in plain words. */
 	rule: string;
+	/** What to do when the item names no person and no day, shown where the day would be. */
+	hint?: string;
 	action: IssueAction;
 };
 
@@ -109,6 +111,16 @@ const gapIssue = (
 	};
 };
 
+/** What to do about a rule the engine could not place: a hint only when it names no person and no day. */
+const hintWithoutPlace = (
+	employeeId: string | null,
+	date: string | null,
+	t: TFunction
+): string | undefined =>
+	employeeId === null && date === null
+		? t(`${key}.ruleWithoutPlace`)
+		: undefined;
+
 /** One item per person and day a rule names, or one for the whole roster when it names none. */
 const ruleIssues = (
 	rule: BrokenRule,
@@ -127,6 +139,7 @@ const ruleIssues = (
 				day: null,
 				time: null,
 				rule: label,
+				hint: hintWithoutPlace(null, null, t),
 				action: { kind: "show" },
 			},
 		];
@@ -142,6 +155,7 @@ const ruleIssues = (
 		day: violation.date,
 		time: null,
 		rule: label,
+		hint: hintWithoutPlace(violation.employeeId, violation.date, t),
 		action: { kind: "show" },
 	}));
 };

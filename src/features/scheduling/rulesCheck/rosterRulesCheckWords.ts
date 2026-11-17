@@ -50,6 +50,7 @@ const RULE_TYPES: ReadonlyMap<string, ConstraintType> = new Map<
 	["most_overtime_minutes_a_month", "MAX_OVERTIME_HOURS_PER_MONTH"],
 	["shortest_part_shift", "SHORTEST_PART_SHIFT"],
 	["most_call_backs_per_person", "MAX_CALL_BACKS_PER_PERSON"],
+	["no_extra_hours_when_generating", "NO_OVERTIME_WHEN_GENERATING"],
 ]);
 
 /** The engine's rules that are no setting of their own, each with the roster check's label. */
@@ -59,6 +60,17 @@ const LABELLED_RULES = [
 	"overtime_past_the_normal_week",
 	"overtime_respects_daily_work_cap",
 	"work_minutes_per_period",
+	"impossible_shift_assignment_is_zero",
+	"at_most_one_role_assignment_per_day",
+	"overtime_requires_base_shift",
+	"overtime_extension_is_contiguous",
+	"shift_preference_fairness",
+	"timeblock_demand_coverage",
+	"employee_role_requirement_per_horizon",
+	"non_working_day_requires_off_day_type",
+	"overtime_credit_partition",
+	"shift_change_penalty_indicator",
+	"working_day_follows_shift_assignment",
 ] as const;
 
 type LabelledRule = (typeof LABELLED_RULES)[number];
@@ -67,6 +79,45 @@ type LabelledRule = (typeof LABELLED_RULES)[number];
 export const NAMED_RULES: ReadonlyArray<string> = [
 	...RULE_TYPES.keys(),
 	...LABELLED_RULES,
+];
+
+/**
+ * Every rule the engine registers, one per module of its `rostering/constraints`
+ * folder (the module name is the rule name). Copied here so a test can fail when
+ * the app has no label for one: a new engine rule must be added to this list
+ * together with its label (`RULE_TYPES` or `LABELLED_RULES`).
+ */
+export const ENGINE_RULE_NAMES: ReadonlyArray<string> = [
+	"at_most_one_role_assignment_per_day",
+	"avoid_off_on_weekdays",
+	"consecutive_day_work_patterns",
+	"days_not_worked_together",
+	"days_of_day_types_per_period",
+	"employee_role_requirement_per_horizon",
+	"impossible_shift_assignment_is_zero",
+	"max_days_without_day_types",
+	"minimum_rest_between_shifts",
+	"most_call_backs_per_person",
+	"most_days_a_week",
+	"most_minutes_a_day",
+	"most_overtime_minutes_a_month",
+	"no_extra_hours_when_generating",
+	"non_working_day_requires_off_day_type",
+	"off_requirement_per_horizon",
+	"overtime_credit_partition",
+	"overtime_extension_is_contiguous",
+	"overtime_past_the_normal_day",
+	"overtime_past_the_normal_week",
+	"overtime_requires_base_shift",
+	"overtime_respects_daily_work_cap",
+	"shift_change_penalty_indicator",
+	"shift_demand_requirement",
+	"shift_demand_with_substitutes",
+	"shift_preference_fairness",
+	"shift_presence_requirement",
+	"timeblock_demand_coverage",
+	"work_minutes_per_period",
+	"working_day_follows_shift_assignment",
 ];
 
 /** Why the check couldn't be shown, as the section words it. */
@@ -116,7 +167,7 @@ export const ruleNameLabel = (
 
 /**
  * One broken rule's line: the company's own constraint name, else what the
- * rule is called (`ruleNameLabel`), else a generic "A working-time rule".
+ * rule is called (`ruleNameLabel`), else "A rule the app has no name for yet".
  */
 export const brokenRuleLabel = (
 	// Only its names: a generation's finding names a rule the same way, with no violations of its own.
