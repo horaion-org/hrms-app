@@ -144,7 +144,9 @@ export const weekFieldsOf = (
 		overtimePercent: percentOrNull(values.overtimeTimes),
 		restDayWorkPercent: percentOrNull(values.restDayTimes),
 		dayOffWorkPercent:
-			values.dayOffMode === "OWN_RATE" ? percentOrNull(values.dayOffTimes) : null,
+			values.dayOffMode === "OWN_RATE"
+				? percentOrNull(values.dayOffTimes)
+				: null,
 		extraHoursPaidAs: values.extraHoursPaidAs,
 	};
 };
@@ -159,6 +161,10 @@ export const termsBodyOf = (values: TermsFormValues): EmploymentTermsBody => {
 		description: values.description.trim() || null,
 	};
 };
+
+/** A stored rate as the field shows it, or empty when the API sent none. */
+const timesOrEmpty = (percent: number | null): string =>
+	percent === null ? "" : timesOfPercent(percent);
 
 /** Where the form starts from: terms being edited, a preset, or blank. */
 export const termsFormValuesOf = (
@@ -188,10 +194,6 @@ export const termsFormValuesOf = (
 					start.extraHoursPaidAs === "NOTHING" ? "NOTHING" : "RATE",
 			};
 
-/** A stored rate as the field shows it, or empty when the API sent none. */
-const timesOrEmpty = (percent: number | null): string =>
-	percent === null ? "" : timesOfPercent(percent);
-
 const key = "employmentTerms.dialog";
 
 /** A typed hours field's problem, if any; `required` makes empty a problem. */
@@ -220,7 +222,8 @@ const hoursProblem = (
 /** A typed rate's problem, if any: required, a number such as 1.5, within the sanity bounds. */
 const rateProblem = (text: string, t: TFunction): string | undefined => {
 	const parsed = percentOfTimes(text);
-	if (parsed === "empty" || parsed === "invalid") return t(`${key}.rateInvalid`);
+	if (parsed === "empty" || parsed === "invalid")
+		return t(`${key}.rateInvalid`);
 	if (parsed < MIN_RATE_PERCENT || parsed > MAX_RATE_PERCENT)
 		return t(`${key}.rateRange`, RATE_BOUNDS_IN_TIMES);
 	return undefined;

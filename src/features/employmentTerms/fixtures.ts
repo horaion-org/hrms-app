@@ -19,7 +19,11 @@ export const REFERENCE: TermsReference = {
 	minimumCoveredOvertimePercent: 150,
 	usualRestDayWorkPercent: 200,
 	timeOffPerExtraHourPercent: 100,
-	coveredPayLines: { currency: "SGD", workmanMonthly: 4500, otherStaffMonthly: 2600 },
+	coveredPayLines: {
+		currency: "SGD",
+		workmanMonthly: 4500,
+		otherStaffMonthly: 2600,
+	},
 };
 
 /** What new terms pay: overtime at 1.5 times, rest day work at 2, a day off as normal hours, paid at a rate. */

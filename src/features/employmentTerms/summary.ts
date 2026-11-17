@@ -181,28 +181,6 @@ export const weekLines = (
 	return lines;
 };
 
-/**
- * When overtime starts and what it earns, in a few words for the list:
- * "Overtime after 8 h 48 min a day or 44 h a week, at 1.5 times", "Extra
- * hours up to 44 h, then overtime, at 1.5 times", "…, nothing extra". Empty
- * without the API's figures, rather than a guess.
- */
-export const overtimeShort = (
-	fields: WeekFields,
-	reference: TermsReference | undefined,
-	t: TFunction
-): string => {
-	if (reference === undefined) return "";
-	const overtime = overtimeStartShort(fields, reference, t);
-	if (fields.extraHoursPaidAs === "NOTHING")
-		return t(`${key}.list.nothingExtra`, { overtime });
-	if (fields.overtimePercent === null) return overtime;
-	return t(`${key}.list.atRate`, {
-		overtime,
-		times: formatTimes(fields.overtimePercent, t),
-	});
-};
-
 /** When overtime starts, in a few words, before its rate is added. */
 const overtimeStartShort = (
 	fields: WeekFields,
@@ -223,6 +201,28 @@ const overtimeStartShort = (
 			week,
 		});
 	return t(`${key}.list.overtimeWeek`, { week });
+};
+
+/**
+ * When overtime starts and what it earns, in a few words for the list:
+ * "Overtime after 8 h 48 min a day or 44 h a week, at 1.5 times", "Extra
+ * hours up to 44 h, then overtime, at 1.5 times", "…, nothing extra". Empty
+ * without the API's figures, rather than a guess.
+ */
+export const overtimeShort = (
+	fields: WeekFields,
+	reference: TermsReference | undefined,
+	t: TFunction
+): string => {
+	if (reference === undefined) return "";
+	const overtime = overtimeStartShort(fields, reference, t);
+	if (fields.extraHoursPaidAs === "NOTHING")
+		return t(`${key}.list.nothingExtra`, { overtime });
+	if (fields.overtimePercent === null) return overtime;
+	return t(`${key}.list.atRate`, {
+		overtime,
+		times: formatTimes(fields.overtimePercent, t),
+	});
 };
 
 /**

@@ -28,6 +28,10 @@ const bodyOf = (
 	dailyOvertime: terms.dailyOvertime,
 	shiftWork: terms.shiftWork,
 	hoursLimitsApply: terms.hoursLimitsApply,
+	overtimePercent: terms.overtimePercent,
+	restDayWorkPercent: terms.restDayWorkPercent,
+	dayOffWorkPercent: terms.dayOffWorkPercent,
+	extraHoursPaidAs: terms.extraHoursPaidAs,
 });
 
 describe("needsApplyChoice", () => {

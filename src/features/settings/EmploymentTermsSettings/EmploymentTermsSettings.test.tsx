@@ -256,7 +256,9 @@ describe("EmploymentTermsSettings", () => {
 				name: "Add employment terms",
 			});
 			expect(
-				await within(dialog).findByRole("radio", { name: /Fixed hours, 5 days/ })
+				await within(dialog).findByRole("radio", {
+					name: /Fixed hours, 5 days/,
+				})
 			).toBeChecked();
 			return dialog;
 		};
@@ -323,7 +325,9 @@ describe("EmploymentTermsSettings", () => {
 				"No legal minimum for staff outside the Act’s hour rules."
 			);
 
-			await user.click(within(dialog).getByRole("radio", { name: /Nothing extra/ }));
+			await user.click(
+				within(dialog).getByRole("radio", { name: /Nothing extra/ })
+			);
 
 			expect(
 				within(dialog).queryByLabelText("An overtime hour is paid at")
@@ -347,7 +351,8 @@ describe("EmploymentTermsSettings", () => {
 				expect(screen.queryByRole("dialog")).toBeNull();
 			});
 			expect(
-				calls.find((call) => call.method === "POST" && call.path === TERMS)?.body
+				calls.find((call) => call.method === "POST" && call.path === TERMS)
+					?.body
 			).toMatchObject({
 				overtimePercent: 150,
 				restDayWorkPercent: 200,

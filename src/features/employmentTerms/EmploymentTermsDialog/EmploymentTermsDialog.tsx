@@ -314,8 +314,7 @@ const TermsForm = ({
 					minimum: timesOfPercent(minimumCoveredOvertimePercent),
 				})
 		: t(`${key}.overtimeRateHintNotCovered`);
-	const usualRestDayWorkPercent =
-		presets.data?.usualRestDayWorkPercent ?? null;
+	const usualRestDayWorkPercent = presets.data?.usualRestDayWorkPercent ?? null;
 	const restDayRateHint =
 		usualRestDayWorkPercent === null
 			? undefined
@@ -394,11 +393,7 @@ const TermsForm = ({
 				<div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:gap-6">
 					<TermsSummary className="min-w-0 flex-1" readBack={readBack} />
 					<div className="grid shrink-0 grid-cols-[auto_1fr] gap-3 sm:flex">
-						<Button
-							disabled={isSubmitting}
-							variant="secondary"
-							onClick={close}
-						>
+						<Button disabled={isSubmitting} variant="secondary" onClick={close}>
 							{t(`${key}.cancel`)}
 						</Button>
 						<Button form={formId} loading={isSubmitting} type="submit">
