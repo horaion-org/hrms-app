@@ -974,8 +974,54 @@ it("withholds Publish and Regenerate when another schedule is already the week's
 	expect(items).toContain("Reject");
 	expect(items).not.toContain("Regenerate October");
 	expect(readsOf(calls, PUBLISHED_WEEK)[0]?.search).toBe(
-		`periodStart=${generatedScheduleFixture().periodStart}`
+		`periodStart=${generatedScheduleFixture().periodStart}&coveredFrom=2026-10-12&coveredTo=2026-10-18`
 	);
+});
+
+describe("a part beside a published part of its week", () => {
+	/** The API's answer when Monday to Wednesday are published as s-9: only days overlapping them are held. */
+	const publishedMondayToWednesday = (call: {
+		search: string;
+	}): ReturnType<typeof ok> => {
+		const asked = new URLSearchParams(call.search);
+		const overlaps = (asked.get("coveredFrom") ?? "") <= "2026-10-14";
+		return ok({
+			periodStart: "2026-10-12",
+			scheduleId: overlaps ? "s-9" : null,
+		});
+	};
+	const partRoutes = (
+		coveredFrom: string
+	): Parameters<typeof openRoster>[0] => ({
+		...signedIn(["schedule:read", "schedule:generate", "schedule:publish"]),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED", coveredFrom })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`GET ${PUBLISHED_WEEK}`]: publishedMondayToWednesday,
+	});
+
+	it("given_aLaterPartBesideAPublishedEarlierPart_when_shown_then_noPublishedWeekCallout", async () => {
+		const calls = await openRoster(partRoutes("2026-10-15"));
+
+		await screen.findByRole("table", { name: "Roster" });
+		await waitFor(() => {
+			expect(readsOf(calls, PUBLISHED_WEEK)[0]?.search).toBe(
+				"periodStart=2026-10-12&coveredFrom=2026-10-15&coveredTo=2026-10-18"
+			);
+		});
+		expect(
+			screen.queryByRole("link", { name: "Open the published roster" })
+		).toBeNull();
+	});
+
+	it("given_aPartWhoseOwnDaysArePublished_when_shown_then_saysSo", async () => {
+		await openRoster(partRoutes("2026-10-13"));
+
+		expect(
+			await screen.findByRole("link", { name: "Open the published roster" })
+		).toHaveAttribute("href", "/scheduling/s-9");
+	});
 });
 
 it("never asks about the week of a published roster itself", async () => {

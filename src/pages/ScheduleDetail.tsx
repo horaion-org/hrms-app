@@ -459,7 +459,12 @@ const ApiSchedule = ({
 			unit && access.can("schedule:read", departmentScope(unit.departmentId))
 				? unit
 				: undefined,
-			awaitingPublication?.periodStart
+			awaitingPublication?.periodStart,
+			// A part asks about its own days: an earlier part published doesn't hold it up (API ADR-0113).
+			awaitingPublication && {
+				coveredFrom: awaitingPublication.coveredFrom,
+				coveredTo: awaitingPublication.coveredTo,
+			}
 		)
 	);
 	const weekPublishedBy = publishedRosterOtherThan(
