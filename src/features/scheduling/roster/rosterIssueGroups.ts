@@ -21,6 +21,11 @@ export const ISSUE_GROUPS = ["mustFix", "notMet", "forInformation"] as const;
 
 export type IssueGroup = (typeof ISSUE_GROUPS)[number];
 
+/** The groups that stay closed until the person opens them: notes with nothing to fix. */
+export const GROUPS_STARTING_CLOSED: ReadonlyArray<IssueGroup> = [
+	"forInformation",
+];
+
 /** The one action an item offers: outline it on the grid, or find cover for a shift left short. */
 export type IssueAction =
 	{ kind: "show" } | { kind: "findCover"; gap: CoverGapRequest };
@@ -182,7 +187,7 @@ export const issueCounts = (
 		.length,
 });
 
-/** "3 to fix · 2 could not be met · 1 for your information", leaving out empty groups; empty when none. */
+/** "3 to fix · 2 could not be met · 1 for information", leaving out empty groups; empty when none. */
 export const issueSummary = (
 	counts: Record<IssueGroup, number>,
 	t: TFunction

@@ -185,7 +185,7 @@ export const headerIssueSections = (
 
 /**
  * The whole Issues list by what to do, the validation result at its head and
- * the cover offers out under For your information; or one header's part of
+ * the cover offers out under More information; or one header's part of
  * it when it was opened from a header.
  */
 export const issuesSections = (

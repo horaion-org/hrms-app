@@ -4422,7 +4422,7 @@
 			"groups": {
 				"mustFix": "Por corregir",
 				"notMet": "No se pudo cumplir",
-				"forInformation": "Para tu información"
+				"forInformation": "Más información"
 			},
 			"jobShort": "Falta {{job}}",
 			"unknownJob": "un puesto",
@@ -4433,8 +4433,8 @@
 				"mustFix_other": "{{count}} por corregir",
 				"notMet_one": "{{count}} no se pudo cumplir",
 				"notMet_other": "{{count}} no se pudieron cumplir",
-				"forInformation_one": "{{count}} para tu información",
-				"forInformation_other": "{{count}} para tu información"
+				"forInformation_one": "{{count}} a título informativo",
+				"forInformation_other": "{{count}} a título informativo"
 			}
 		},
 		"rosterMarkers": {
