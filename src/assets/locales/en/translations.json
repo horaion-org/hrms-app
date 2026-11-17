@@ -1872,7 +1872,9 @@
 			"truncated": "Showing the first {{shown}} of {{total}}. Use the status filter to narrow the list.",
 			"cancel": "Cancel",
 			"branch": "Branch",
-			"created": "Created"
+			"created": "Created",
+			"stillUpdating": "Access is still being updated after a recent change, so this list can’t be shown yet. Try again in a few seconds.",
+			"tryAgain": "Try again"
 		},
 		"branches": {
 			"title": "Branches",
@@ -3485,7 +3487,8 @@
 				"leftOut_one": "{{count}} new permission left out",
 				"leftOut_other": "{{count}} new permissions left out"
 			}
-		}
+		},
+		"stillUpdatingWrite": "Access is still being updated after a recent change, so this wasn’t saved. Try again in a few seconds."
 	},
 	"workspace": {
 		"branchSelector": {

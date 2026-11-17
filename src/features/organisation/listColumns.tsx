@@ -180,8 +180,8 @@ export type ListView<T> = {
 	rows: Array<T>;
 	/** Shown in the table body when `rows` is empty. */
 	empty: string;
-	/** Replaces the table when the list can't be shown. */
-	problem?: { message: string; alert: boolean };
+	/** Replaces the table when the list can't be shown; `retry` when reading it again may help. */
+	problem?: { message: string; alert: boolean; retry?: () => void };
 	/** Set when the API holds more rows than one page returns. */
 	truncated?: string;
 };
@@ -214,7 +214,13 @@ export const describeList = <T extends { name: string }>(
 			return {
 				rows: NO_ROWS,
 				empty: emptyText,
-				problem: { message: t("organisation.list.failed"), alert: true },
+				problem: {
+					message: list.stillUpdating
+						? t("organisation.list.stillUpdating")
+						: t("organisation.list.failed"),
+					alert: true,
+					retry: list.retry,
+				},
 			};
 		case "ready": {
 			// Unfiltered rows keep their identity, so the table keeps its models.

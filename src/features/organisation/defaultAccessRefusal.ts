@@ -35,6 +35,7 @@ export const defaultAccessRefusal = (error: unknown, t: TFunction): string => {
 				[DEFAULT_ACCESS_ERROR.notMember]: t(`${key}.notMember`),
 			},
 			forbidden: t(`${key}.forbidden`),
+			stillUpdating: t("organisation.stillUpdatingWrite"),
 			failed,
 		}).message ?? failed
 	);

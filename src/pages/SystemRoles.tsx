@@ -60,6 +60,7 @@ import {
 	type SystemRoleAction,
 } from "@/pages/SystemRoleActions";
 import { AssignSystemRole } from "@/pages/SystemRoleHolders";
+import { ListProblem } from "@/features/organisation/ListProblem";
 
 /** Every role, whatever the list's filter, to name the role each default gives. */
 const ALL_ROLES_BY_NAME = { sort: { field: "name", desc: false } } as const;
@@ -346,13 +347,7 @@ export const SystemRoles = (): FunctionComponent => {
 				/>
 			)}
 			{view.problem ? (
-				<p
-					className="mt-8 text-sm text-neutral-700 data-alert:text-error-700"
-					data-alert={view.problem.alert || undefined}
-					role={view.problem.alert ? "alert" : undefined}
-				>
-					{view.problem.message}
-				</p>
+				<ListProblem problem={view.problem} />
 			) : (
 				<>
 					<DataTable

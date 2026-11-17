@@ -2364,7 +2364,9 @@
 			"truncated": "Se muestran los primeros {{shown}} de {{total}}. Usa el filtro de estado para acotar la lista.",
 			"cancel": "Cancelar",
 			"branch": "Sucursal",
-			"created": "Creado"
+			"created": "Creado",
+			"stillUpdating": "El acceso aún se está actualizando tras un cambio reciente, así que esta lista no se puede mostrar todavía. Inténtalo de nuevo en unos segundos.",
+			"tryAgain": "Reintentar"
 		},
 		"import": {
 			"title": "Importar organización",
@@ -2758,7 +2760,8 @@
 				"leftOut_one": "{{count}} permiso nuevo dejado fuera",
 				"leftOut_other": "{{count}} permisos nuevos dejados fuera"
 			}
-		}
+		},
+		"stillUpdatingWrite": "El acceso aún se está actualizando tras un cambio reciente, así que esto no se guardó. Inténtalo de nuevo en unos segundos."
 	},
 	"shell": {
 		"welcome": "Te damos la bienvenida, <name>{{name}}</name>.",

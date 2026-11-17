@@ -1,4 +1,4 @@
-import { ApiProblemError } from "@/common/problem";
+import { ApiProblemError, isDecisionEngineStale } from "@/common/problem";
 
 /**
  * 403 codes that are business rules rather than missing authority: holding
@@ -29,6 +29,12 @@ export type RefusalRules<F extends string> = {
 	fieldErrors?: Partial<Record<string, { field: F; message: string }>>;
 	/** Any other 403 that is about authority (see `BUSINESS_RULE_REFUSALS`). */
 	forbidden: string;
+	/**
+	 * A `503 DECISION_ENGINE_STALE`: access is still being updated after a
+	 * recent change, so this write wasn't saved and passes in a few seconds.
+	 * Writes are never repeated by the app; without it, `failed` is shown.
+	 */
+	stillUpdating?: string;
 	/** Everything else, including network failures. */
 	failed: string;
 };
@@ -63,6 +69,12 @@ export const mapRefusal = <F extends string>(
 			};
 		const alert = rules.alerts?.[key];
 		if (alert) return { fields: {}, message: alert, refreshMembers: false };
+		if (isDecisionEngineStale(error) && rules.stillUpdating)
+			return {
+				fields: {},
+				message: rules.stillUpdating,
+				refreshMembers: false,
+			};
 		if (error.status === 400) {
 			const fields: Partial<Record<F, string>> = {};
 			for (const { field } of error.fieldErrors) {
