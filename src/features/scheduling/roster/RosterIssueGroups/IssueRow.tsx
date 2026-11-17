@@ -3,7 +3,10 @@ import { formatDay } from "@/common/formatDay";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
-import type { RosterIssue } from "@/features/scheduling/roster/rosterIssueGroups";
+import {
+	dayListText,
+	type RosterIssue,
+} from "@/features/scheduling/roster/rosterIssueGroups";
 
 export type IssueRowProps = {
 	issue: RosterIssue;
@@ -28,8 +31,11 @@ export const IssueRow = ({
 }: IssueRowProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const { action } = issue;
+	const formatOne = (day: string): string => formatDay(day, language);
+	// A row standing for several days names them all, as a run or a list.
+	const days = issue.days ?? (issue.day ? [issue.day] : []);
 	const when = [
-		issue.day ? formatDay(issue.day, language) : undefined,
+		days.length > 0 ? dayListText(days, formatOne, t) : undefined,
 		issue.time ?? undefined,
 	]
 		.filter((part): part is string => part !== undefined)

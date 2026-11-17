@@ -83,6 +83,26 @@ describe("RosterIssueGroups", () => {
 		expect(screen.getByText(itemOf("forInformation").rule)).toBeVisible();
 	});
 
+	it("names every day of a row standing for several, as a run, with one Show", () => {
+		render(
+			<RosterIssueGroups
+				issues={[
+					rosterIssueFixture({
+						day: "2026-10-12",
+						days: ["2026-10-12", "2026-10-13", "2026-10-14"],
+					}),
+				]}
+				onShow={vi.fn()}
+			/>
+		);
+
+		const row = screen.getByRole("listitem");
+		expect(
+			within(row).getByText(/^Aisha Rahman · Mon.*12.* – Wed.*14\S*$/)
+		).toBeInTheDocument();
+		expect(within(row).getAllByRole("button")).toHaveLength(1);
+	});
+
 	it("draws a row as who and when, then why and what to do, with one action", () => {
 		render(
 			<RosterIssueGroups

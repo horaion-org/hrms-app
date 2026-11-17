@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import type { TFunction } from "i18next";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import type {
@@ -38,8 +39,10 @@ export type RosterIssue = {
 	who: string;
 	/** The member it is about, when it names one. */
 	memberProfileId: string | null;
-	/** The ISO day it is about, when it names one. */
+	/** The ISO day it is about, when it names one; the first of `days`. */
 	day: string | null;
+	/** Every ISO day, in order, when one row stands for the same finding on several days. */
+	days?: ReadonlyArray<string>;
 	/** "09:00–15:00" for a shift short, otherwise null. */
 	time: string | null;
 	/** Why it is listed and, where there is something to do, what to do, the rule's name last. */
@@ -188,6 +191,41 @@ const placelessRuleIssue = (
 	action: { kind: "show" },
 });
 
+type RuleViolation = NonNullable<BrokenRule["violations"]>[number];
+
+/** One person's violations of a rule that say the same: the days, in order, and the sentences once. */
+type SameFinding = {
+	employeeId: string;
+	days: Array<string>;
+	messages: ReadonlyArray<string>;
+};
+
+/**
+ * A rule's violations about a person and a day, joined where the person and
+ * the sentences are the same: the engine sends one per day, but it is one
+ * thing to fix. Different sentences stay apart. Pure.
+ */
+const sameFindings = (
+	violations: ReadonlyArray<RuleViolation>
+): Array<SameFinding> => {
+	const findings = new Map<string, SameFinding>();
+	for (const { employeeId, date, messages } of violations) {
+		if (employeeId === null || date === null) continue;
+		const findingKey = JSON.stringify([employeeId, messages]);
+		const finding = findings.get(findingKey) ?? {
+			employeeId,
+			days: [],
+			messages,
+		};
+		finding.days.push(date);
+		findings.set(findingKey, finding);
+	}
+	return [...findings.values()].map((finding) => ({
+		...finding,
+		days: [...new Set(finding.days)].sort(),
+	}));
+};
+
 /** One item per person and day a rule names, or one by the rule's name when it names neither. */
 const ruleIssues = (
 	rule: BrokenRule,
@@ -198,24 +236,46 @@ const ruleIssues = (
 	const violations = rule.violations ?? [];
 	if (violations.length === 0)
 		return [placelessRuleIssue(rule, group, ruleName, [], t)];
-	return violations.map((violation) => {
-		if (violation.employeeId === null && violation.date === null)
-			return placelessRuleIssue(rule, group, ruleName, violation.messages, t);
-		return {
-			key: `${group}|${rule.rule}|${ruleName}|${violation.employeeId ?? ""}|${violation.date ?? ""}`,
+	const whoOf = (employeeId: string): string =>
+		memberNames.get(employeeId) ?? t("scheduling.detail.formerMember");
+	const placed = sameFindings(violations).map(
+		({ employeeId, days, messages }): RosterIssue => ({
+			key: `${group}|${rule.rule}|${ruleName}|${employeeId}|${messages.join(" ")}`,
 			group,
 			topic: issueTopic(RULE_TOPICS[group], t),
-			who: violation.employeeId
-				? (memberNames.get(violation.employeeId) ??
-					t("scheduling.detail.formerMember"))
-				: t(`${key}.wholeRoster`),
-			memberProfileId: violation.employeeId,
-			day: violation.date,
+			who: whoOf(employeeId),
+			memberProfileId: employeeId,
+			day: days[0] ?? null,
+			days,
 			time: null,
-			rule: ruleReason(group, ruleName, violation.messages, t),
+			rule: ruleReason(group, ruleName, messages, t),
 			action: { kind: "show" },
-		};
-	});
+		})
+	);
+	// A violation missing its person or its day stands alone, as it can't be joined to another.
+	const unplaced = violations.filter(
+		(violation) => violation.employeeId === null || violation.date === null
+	);
+	return [
+		...placed,
+		...unplaced.map((violation): RosterIssue => {
+			if (violation.employeeId === null && violation.date === null)
+				return placelessRuleIssue(rule, group, ruleName, violation.messages, t);
+			return {
+				key: `${group}|${rule.rule}|${ruleName}|${violation.employeeId ?? ""}|${violation.date ?? ""}`,
+				group,
+				topic: issueTopic(RULE_TOPICS[group], t),
+				who: violation.employeeId
+					? whoOf(violation.employeeId)
+					: t(`${key}.wholeRoster`),
+				memberProfileId: violation.employeeId,
+				day: violation.date,
+				time: null,
+				rule: ruleReason(group, ruleName, violation.messages, t),
+				action: { kind: "show" },
+			};
+		}),
+	];
 };
 
 const noteIssue = ({ title, detail, topic }: IssueNote): RosterIssue => ({
@@ -229,6 +289,32 @@ const noteIssue = ({ title, detail, topic }: IssueNote): RosterIssue => ({
 	rule: detail,
 	action: { kind: "show" },
 });
+
+/** The next ISO day after `day`. */
+const nextDay = (day: string): string =>
+	dayjs(day).add(1, "day").format("YYYY-MM-DD");
+
+/**
+ * Several days as a run when each follows the last ("Mon, Feb 1 – Sun, Feb
+ * 7"), else as a list ("Mon, Feb 1 and Wed, Feb 3"); one day as itself.
+ * `formatOne` writes a day the way the page does. Pure.
+ */
+export const dayListText = (
+	days: ReadonlyArray<string>,
+	formatOne: (day: string) => string,
+	t: TFunction
+): string => {
+	const [first, ...rest] = days;
+	if (first === undefined) return "";
+	const last = rest[rest.length - 1];
+	if (last === undefined) return formatOne(first);
+	const isRun = days.every(
+		(day, index) => index === 0 || day === nextDay(days[index - 1] ?? "")
+	);
+	if (isRun)
+		return t(`${key}.dayRun`, { from: formatOne(first), to: formatOne(last) });
+	return t("scheduling.constraints.list", { items: days.map(formatOne) });
+};
 
 /** Keeps the first item of each key, so nothing is listed twice. */
 const onceEach = (issues: ReadonlyArray<RosterIssue>): Array<RosterIssue> => {
