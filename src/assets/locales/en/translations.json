@@ -1005,6 +1005,7 @@
 				"CONTRACT": "Contract",
 				"INTERN": "Intern"
 			},
+			"employmentTypeFromTerms": "From the terms",
 			"hireDate": "Hire date",
 			"probationEndDate": "Probation end date",
 			"probationBeforeHire": "Choose a date on or after the hire date.",

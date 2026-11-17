@@ -37,8 +37,8 @@ import {
 	useJobTitles,
 } from "@/features/organisation/useOrganisationList";
 import {
-	EMPLOYMENT_TYPES,
 	isEmploymentType,
+	LABEL_EMPLOYMENT_TYPES,
 	isMemberStatus,
 	MEMBER_STATUSES,
 	type MemberProfilePlace,
@@ -571,7 +571,15 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 										status={typeError ? "error" : undefined}
 										value={field.value}
 										options={withNone(
-											EMPLOYMENT_TYPES.map((type) => ({
+											// Full-time or part-time follows the terms: only the labels are offered, and a
+											// full-time or part-time value an older record holds stays shown until changed.
+											[
+												...(isEmploymentType(field.value) &&
+												!LABEL_EMPLOYMENT_TYPES.includes(field.value)
+													? [field.value]
+													: []),
+												...LABEL_EMPLOYMENT_TYPES,
+											].map((type) => ({
 												value: type,
 												label: t(`${key}.employmentTypes.${type}`),
 											})),

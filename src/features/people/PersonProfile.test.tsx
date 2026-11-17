@@ -584,7 +584,7 @@ describe("Editing a person", () => {
 				})
 			)
 		);
-		await choose(user, /^Employment type/, "Part-time");
+		await choose(user, /^Employment type/, "Contract");
 		await save(user);
 		await screen.findByText("Changes to Kent Chua were saved.");
 		expect(sent(calls, `PUT ${PROFILE}`)).toEqual([
@@ -592,7 +592,7 @@ describe("Editing a person", () => {
 				...kentBody,
 				departmentId: null,
 				jobTitleId: null,
-				employmentType: "PART_TIME",
+				employmentType: "CONTRACT",
 			},
 		]);
 	});
@@ -696,7 +696,7 @@ describe("Editing a person", () => {
 
 		await user.clear(textbox("Full name"));
 		await user.type(textbox("Full name"), " Kent Tan ");
-		await choose(user, /^Employment type/, "Part-time");
+		await choose(user, /^Employment type/, "Contract");
 		await choose(user, /^Employment status/, "Inactive");
 		await save(user);
 
@@ -711,7 +711,7 @@ describe("Editing a person", () => {
 			{
 				...kentBody,
 				displayName: "Kent Tan",
-				employmentType: "PART_TIME",
+				employmentType: "CONTRACT",
 				status: "INACTIVE",
 			},
 		]);

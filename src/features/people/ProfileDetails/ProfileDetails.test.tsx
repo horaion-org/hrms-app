@@ -79,6 +79,22 @@ describe("ProfileDetails", () => {
 		]);
 	});
 
+	it("given_partTimeByTerms_when_shown_then_saysFromTheTerms", () => {
+		show({ ...kent, partTime: true, employmentType: "CONTRACT" });
+
+		expect(rows("Employment information")[0]).toBe(
+			"Employment type: Part-timeFrom the terms· Contract"
+		);
+	});
+
+	it("given_fullTimeByTermsWithoutALabel_when_shown_then_saysFullTimeFromTheTerms", () => {
+		show({ ...kent, partTime: false, employmentType: null });
+
+		expect(rows("Employment information")[0]).toBe(
+			"Employment type: Full-timeFrom the terms"
+		);
+	});
+
 	it("calls the phone number and writes to the email address when tapped", () => {
 		show(kent);
 

@@ -19,7 +19,6 @@ import { endSession } from "@/features/auth/session";
 import {
 	FIVE_DAY_WEEK,
 	MEMBER_TERMS,
-	PART_TIME_20,
 	STANDARD_WEEK,
 	termsListResponse,
 } from "@/features/employmentTerms/fixtures";
@@ -415,6 +414,18 @@ describe("Add employee", () => {
 		).not.toBeInTheDocument();
 	});
 
+	it("given_theForm_when_opened_then_onlyContractAndIntern", async () => {
+		const user = userEvent.setup();
+		stubApi(routes());
+		await open();
+
+		await user.click(button(/^Employment type/));
+
+		expect(
+			(await screen.findAllByRole("option")).map((option) => option.textContent)
+		).toEqual(["Contract", "Intern"]);
+	});
+
 	it("sends every field filled in, as the API takes it, and confirms on the list", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi(routes());
@@ -423,7 +434,7 @@ describe("Add employee", () => {
 		await fillRequired(user);
 		await pickDate(user, /^Date of birth/, "1 October 2026");
 		await user.type(textbox("Phone number"), "8123 4567");
-		await choose(user, /^Employment type/, "Part-time");
+		await choose(user, /^Employment type/, "Contract");
 		await pickDate(user, /^Hire date/, "1 October 2026");
 		await pickDate(user, /^Probation end date/, "30 October 2026");
 		await choose(user, /^Job title/, "Chef");
@@ -444,7 +455,7 @@ describe("Add employee", () => {
 				reportsToMembershipId: "m-9",
 				dateOfBirth: "2026-10-01",
 				phone: "+6581234567",
-				employmentType: "PART_TIME",
+				employmentType: "CONTRACT",
 				hireDate: "2026-10-01",
 				probationEndDate: "2026-10-30",
 			},
@@ -916,33 +927,6 @@ describe("Add employee's employment terms", () => {
 
 		await screen.findByText(/Priya Nair was added/);
 		expect(calls.some((call) => call.path.startsWith(MEMBER))).toBe(false);
-	});
-
-	it("warn when the terms disagree with the Employment type chosen", async () => {
-		const user = userEvent.setup();
-		stubApi({
-			...withTerms(),
-			[TERMS_LIST]: {
-				status: 200,
-				body: envelope(
-					termsListResponse([
-						STANDARD_WEEK,
-						{ ...PART_TIME_20, status: "ACTIVE" },
-					])
-				),
-			},
-		});
-		await open();
-
-		await fillRequired(user);
-		await choose(user, /^Employment type/, "Full-time");
-		await choose(user, /^Employment terms/, "Part-time, 20 h");
-
-		expect(
-			await screen.findByText(
-				"Their employment type is Full-time, but these terms are part-time (20 h a week). Check one of them."
-			)
-		).toBeVisible();
 	});
 
 	it("are not offered, nor sent, without member_employment_terms:update", async () => {

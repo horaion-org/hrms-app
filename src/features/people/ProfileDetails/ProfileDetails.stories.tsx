@@ -94,3 +94,14 @@ export const WithAccess: Story = {
 
 /** Their roles give nothing at the places the reader can see. */
 export const WithoutAccess: Story = { args: { access: [] } };
+
+/** Part-time by the terms, with a Contract label: "Part-time [From the terms] · Contract". */
+export const PartTimeByTheTerms: Story = {
+	args: {
+		profile: {
+			...meta.args.profile,
+			partTime: true,
+			employmentType: "CONTRACT",
+		},
+	},
+};

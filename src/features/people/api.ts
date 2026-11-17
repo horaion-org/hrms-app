@@ -176,6 +176,16 @@ export type EmploymentType = z.infer<typeof employmentTypeSchema>;
 
 export const EMPLOYMENT_TYPES = employmentTypeSchema.options;
 
+/**
+ * The employment types a person may be given. Full-time or part-time
+ * follows their employment terms (API ADR on Part 3), so only these labels
+ * are offered; the other two are still read from older records.
+ */
+export const LABEL_EMPLOYMENT_TYPES: ReadonlyArray<EmploymentType> = [
+	"CONTRACT",
+	"INTERN",
+];
+
 export const isEmploymentType = (value: string): value is EmploymentType =>
 	employmentTypeSchema.safeParse(value).success;
 
@@ -231,6 +241,13 @@ const isoDateSchema = z.string().nullable();
 const memberProfileDetailSchema = memberProfileSchema.extend({
 	dateOfBirth: isoDateSchema,
 	employmentType: employmentTypeSchema.nullable(),
+	/**
+	 * Whether the person is part-time today by their employment terms (own
+	 * hours, else the terms' week, under 35 h). Null when the caller may not
+	 * read terms; absent from an API before full-time or part-time followed
+	 * the terms.
+	 */
+	partTime: z.boolean().nullish(),
 	hireDate: isoDateSchema,
 	probationEndDate: isoDateSchema,
 	endDate: isoDateSchema,

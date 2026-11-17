@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
@@ -41,6 +42,36 @@ export type ProfileDetailsProps = {
 };
 
 const key = "people.form";
+
+/**
+ * The Employment type row: full-time or part-time from the terms, with a
+ * Contract or Intern label beside it when set, e.g. "Part-time [From the
+ * terms] · Contract". From an API before that, the stored type as it was.
+ */
+const employmentTypeValue = (
+	profile: MemberProfileDetail,
+	t: TFunction,
+	notSet: string
+): ReactNode => {
+	const stored =
+		profile.employmentType &&
+		t(`${key}.employmentTypes.${profile.employmentType}`);
+	if (profile.partTime === undefined || profile.partTime === null)
+		return stored || notSet;
+	const label =
+		profile.employmentType === "CONTRACT" || profile.employmentType === "INTERN"
+			? stored
+			: undefined;
+	return (
+		<span className="inline-flex flex-wrap items-center gap-2">
+			{t(
+				`${key}.employmentTypes.${profile.partTime ? "PART_TIME" : "FULL_TIME"}`
+			)}
+			<Badge>{t(`${key}.employmentTypeFromTerms`)}</Badge>
+			{label && <span>· {label}</span>}
+		</span>
+	);
+};
 const accessKey = "organisation.accessRoles.access";
 
 // Plain text until hovered, like the People list's Contact links; on touch screens as tall as the copy button beside it.
@@ -120,9 +151,7 @@ export const ProfileDetails = ({
 			{card(t(`${key}.employment`), RoleIcon, [
 				{
 					label: t(`${key}.employmentType`),
-					value: profile.employmentType
-						? t(`${key}.employmentTypes.${profile.employmentType}`)
-						: notSet,
+					value: employmentTypeValue(profile, t, notSet),
 				},
 				...(employmentTerms === undefined
 					? []

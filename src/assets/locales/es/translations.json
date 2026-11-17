@@ -3235,6 +3235,7 @@
 				"CONTRACT": "Contrato temporal",
 				"INTERN": "Becario"
 			},
+			"employmentTypeFromTerms": "Según las condiciones",
 			"hireDate": "Fecha de contratación",
 			"probationEndDate": "Fin del periodo de prueba",
 			"probationBeforeHire": "Elige una fecha igual o posterior a la fecha de contratación.",
