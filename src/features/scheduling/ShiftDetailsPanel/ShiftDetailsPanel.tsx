@@ -11,7 +11,7 @@ import { CloseIcon } from "@/components/ui/Icon";
 import { dayTypeInSentence } from "@/features/scheduling/dayTypes";
 import { formatTimeRange } from "@/features/scheduling/formatShift";
 import type { RosterShiftCell } from "@/features/scheduling/roster/roster";
-import { paidShiftHours } from "@/features/scheduling/scheduleDraft";
+import { paidShiftHours } from "@/features/scheduling/shifts/shiftHours";
 import type { SchedulePreferenceOutcome } from "@/features/shiftPreferences/api";
 import {
 	OUTCOME_TONES,

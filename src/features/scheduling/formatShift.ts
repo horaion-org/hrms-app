@@ -2,7 +2,7 @@ import type { TFunction } from "i18next";
 import {
 	isWeekdays,
 	paidShiftHours,
-} from "@/features/scheduling/scheduleDraft";
+} from "@/features/scheduling/shifts/shiftHours";
 import type { ScheduleShift } from "@/features/scheduling/schedules/api";
 
 /** "09:00 – 15:00" */

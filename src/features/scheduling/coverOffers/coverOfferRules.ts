@@ -14,7 +14,7 @@ import {
 import {
 	hoursFromMinutes,
 	paidShiftHours,
-} from "@/features/scheduling/scheduleDraft";
+} from "@/features/scheduling/shifts/shiftHours";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 
 /*

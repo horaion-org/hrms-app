@@ -10,7 +10,7 @@ import {
 	type RosterHoursRow,
 } from "@/features/scheduling/hours/rosterHoursRows";
 import type { RosterHoursState } from "@/features/scheduling/hours/useRosterHours";
-import { hoursFromMinutes } from "@/features/scheduling/scheduleDraft";
+import { hoursFromMinutes } from "@/features/scheduling/shifts/shiftHours";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 
 export type RosterHoursProps = {

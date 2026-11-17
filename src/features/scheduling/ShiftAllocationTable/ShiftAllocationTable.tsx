@@ -7,9 +7,9 @@ import { formatDays, formatTimeRange } from "@/features/scheduling/formatShift";
 import {
 	allocatedStaff,
 	allocatedTo,
-	shiftHours,
 	type Allocations,
 } from "@/features/scheduling/scheduleDraft";
+import { shiftHours } from "@/features/scheduling/shifts/shiftHours";
 import type { ScheduleShift } from "@/features/scheduling/schedules/api";
 
 export type ShiftAllocationTableProps = {

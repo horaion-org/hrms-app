@@ -4,7 +4,7 @@ import {
 	UNIT_NAME_PATTERN,
 	unitNameSchema,
 } from "@/features/organisation/createSchemas";
-import { shiftMinutes } from "@/features/scheduling/scheduleDraft";
+import { shiftMinutes } from "@/features/scheduling/shifts/shiftHours";
 import {
 	SHIFT_COLOUR_PATTERN,
 	WEEKDAYS,

@@ -22,7 +22,7 @@ import {
 	asksForDecision,
 	marksLeaveOrCover,
 } from "@/features/scheduling/roster/rosterSummary";
-import { hoursFromMinutes } from "@/features/scheduling/scheduleDraft";
+import { hoursFromMinutes } from "@/features/scheduling/shifts/shiftHours";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 
 /*
