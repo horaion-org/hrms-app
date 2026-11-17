@@ -14,6 +14,7 @@ import dayjs from "dayjs";
 import { useCallback, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
@@ -146,7 +147,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 	).branch?.branchId;
 	// Today is read once, so the offered months hold still while the page is open.
 	const [today] = useState(() => new Date());
-	const todayIso = dayjs(today).format("YYYY-MM-DD");
+	const todayIso = dayjs(today).format(ISO_DATE_FORMAT);
 	const months = monthChoicesFrom(today);
 	const [setup, setSetup] = useState<MonthSetupValues>();
 	const setupDefaults: MonthSetupValues = setup ?? {
