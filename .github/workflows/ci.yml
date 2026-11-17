@@ -101,7 +101,7 @@ jobs:
       # suites that pass alone in about 1 s have timed out under load. 15 s still catches a hung test.
       - name: Vitest
         run: >-
-          pnpm exec vitest run src/
+          pnpm exec vitest run src/ scripts/
           --shard=${{ matrix.shard }}/${{ strategy.job-total }}
           --maxWorkers=100%
           --testTimeout=15000
