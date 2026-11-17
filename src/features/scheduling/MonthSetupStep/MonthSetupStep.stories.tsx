@@ -10,6 +10,7 @@ import {
 } from "@/features/scheduling/months/weekTicks";
 import {
 	datesPlanFixture,
+	datesPlanRedoingFixture,
 	datesPlanWithKeptWeekFixture,
 } from "@/features/scheduling/dates/fixtures";
 import { MonthSetupStep } from "@/features/scheduling/MonthSetupStep";
@@ -143,6 +144,25 @@ export const DatesThisWeekPublished: Story = {
 		},
 		dates: {
 			plan: datesPlanWithKeptWeekFixture(),
+			pending: false,
+			today: "2026-11-17",
+		},
+	},
+};
+
+/** The owner's example: a generated week, Wed 18 – Thu 19 asked; the rest of the week is scheduled again. */
+export const DatesRedo: Story = {
+	name: "Dates, redo",
+	args: {
+		defaultValues: {
+			...meta.args.defaultValues,
+			departmentId: "d-1",
+			scheduleFor: "dates",
+			firstDay: "2026-11-18",
+			lastDay: "2026-11-19",
+		},
+		dates: {
+			plan: datesPlanRedoingFixture(),
 			pending: false,
 			today: "2026-11-17",
 		},

@@ -17,6 +17,7 @@ import {
 import { schedulingWorkspace } from "@/features/scheduling/schedules/fixtures";
 import {
 	datesPlanFixture,
+	datesPlanRedoingFixture,
 	datesPlanWithKeptWeekFixture,
 } from "@/features/scheduling/dates/fixtures";
 import { workspaceQuery } from "@/features/workspace/api";
@@ -393,7 +394,9 @@ describe("MonthSetupStep", () => {
 			).toBeInTheDocument();
 			const table = screen.getByRole("table", { name: "What this creates" });
 			expect(within(table).getAllByRole("row")).toHaveLength(3);
-			expect(within(table).getByText("4 of 7 days")).toBeInTheDocument();
+			expect(
+				within(table).getByText(/^Nov 19\s?–\s?22, 2026 with your choices$/)
+			).toBeInTheDocument();
 			expect(within(table).getAllByText("New")).toHaveLength(2);
 			expect(
 				screen.getByText(/^10 days to generate, Nov 19\s?–\s?28, 2026$/)
@@ -451,12 +454,51 @@ describe("MonthSetupStep", () => {
 			);
 
 			expect(
-				screen.getByText("Already published, stays as it is")
+				screen.getByText(/^Nov 23\s?–\s?29, 2026 stay as they are$/)
 			).toBeInTheDocument();
 			expect(screen.getByText("Kept")).toBeInTheDocument();
 			expect(
 				screen.getByText(
-					/^Nov 23\s?–\s?28, 2026 already has a schedule and stays as it is\.$/
+					/^Nov 23\s?–\s?28, 2026 are published and stay as they are\.$/
+				)
+			).toBeInTheDocument();
+		});
+
+		it("given_aRedoPlan_when_shown_then_saysWhichDaysStayWhichAreRedoneWithYourChoicesAndWhichWithTheWeeksOwn", () => {
+			render(
+				<Harness
+					dates={datesProp(datesPlanRedoingFixture())}
+					defaultValues={{
+						...DATES,
+						firstDay: "2026-11-18",
+						lastDay: "2026-11-19",
+					}}
+				/>
+			);
+
+			const table = screen.getByRole("table", { name: "What this creates" });
+			expect(
+				within(table).getByText(/^Nov 16\s?–\s?17, 2026 stay as they are$/)
+			).toBeInTheDocument();
+			expect(
+				within(table).getByText(
+					/^Nov 18\s?–\s?19, 2026 scheduled again with your choices$/
+				)
+			).toBeInTheDocument();
+			expect(
+				within(table).getByText(
+					/^Nov 20\s?–\s?22, 2026 scheduled again with the week’s own shifts and rules$/
+				)
+			).toBeInTheDocument();
+			expect(within(table).getByText("Redone")).toBeInTheDocument();
+			expect(
+				screen.getByText(
+					"3 more days after them, scheduled again with their week’s own shifts and rules"
+				)
+			).toBeInTheDocument();
+			expect(
+				screen.getByText(
+					/^Nov 18\s?–\s?19, 2026 already have a schedule\. Generating replaces those days and the rest of their week; the current schedule stays until the new one is ready\.$/
 				)
 			).toBeInTheDocument();
 		});

@@ -6,6 +6,7 @@ import {
 	datesProblemOf,
 	maxLastDayOf,
 	namedSpansOf,
+	planNotesOf,
 	planRowOf,
 	previousBefore,
 	rosterPartBefore,
@@ -54,9 +55,8 @@ describe("planRowOf", () => {
 		]);
 		expect(row).toMatchObject({
 			badge: "new",
-			newDayCount: 4,
 			asked: { start: "2026-11-19", end: "2026-11-22" },
-			keptState: undefined,
+			lines: [{ kind: "new", days: { from: "2026-11-19", to: "2026-11-22" } }],
 		});
 	});
 
@@ -112,10 +112,54 @@ describe("planRowOf", () => {
 
 		expect(row).toMatchObject({
 			badge: "kept",
-			newDayCount: 0,
-			keptState: "PUBLISHED",
+			lines: [
+				{ kind: "stays", days: { from: "2026-11-23", to: "2026-11-29" } },
+			],
 		});
 		expect(row.days.every((day) => !day.covered)).toBe(true);
+	});
+});
+
+describe("planNotesOf", () => {
+	it("given_aPublishedWeek_when_noted_then_itsAskedDaysArePublishedAndNothingReplaced", () => {
+		expect(planNotesOf(datesPlanWithKeptWeekFixture())).toEqual({
+			publishedDays: [{ from: "2026-11-23", to: "2026-11-28" }],
+			replacedDays: [],
+			restDayCount: 0,
+		});
+	});
+
+	it("given_theOwnersExample_when_noted_then_wednesdayThursdayReplacedAndThreeRestDays", () => {
+		expect(planNotesOf(datesPlanRedoingFixture())).toEqual({
+			publishedDays: [],
+			replacedDays: [{ from: "2026-11-18", to: "2026-11-19" }],
+			restDayCount: 3,
+		});
+	});
+
+	it("given_newDaysBeforeALaterPart_when_noted_then_theRestIsReplaced", () => {
+		const plan = datesPlanFixture();
+		const week = {
+			...plan.weeks[0]!,
+			askedFrom: "2026-11-16",
+			askedTo: "2026-11-18",
+			newFrom: "2026-11-16",
+			newTo: "2026-11-18",
+			rest: [
+				{
+					scheduleId: "s-2",
+					coveredFrom: "2026-11-19",
+					coveredTo: "2026-11-22",
+					state: "TO_REVIEW" as const,
+				},
+			],
+		};
+
+		expect(planNotesOf({ ...plan, weeks: [week] })).toEqual({
+			publishedDays: [],
+			replacedDays: [{ from: "2026-11-19", to: "2026-11-22" }],
+			restDayCount: 4,
+		});
 	});
 });
 

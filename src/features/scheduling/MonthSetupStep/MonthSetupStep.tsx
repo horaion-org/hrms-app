@@ -2,7 +2,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useId, useMemo, useState, type ReactNode } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
-import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
@@ -10,16 +9,19 @@ import { DatePicker } from "@/components/forms/DatePicker";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Input } from "@/components/forms/Input";
 import { Select } from "@/components/forms/Select";
-import { Badge } from "@/components/ui/Badge";
+import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Callout } from "@/components/ui/Callout";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { Tab, TabList, Tabs } from "@/components/ui/Tabs";
-import type { DatesPlan } from "@/features/scheduling/dates/api";
+import type { DatesPlan, DayRun } from "@/features/scheduling/dates/api";
 import {
+	dayCountOfRuns,
 	MAX_DAYS_BY_DATES,
 	maxLastDayOf,
+	planNotesOf,
 	planRowOf,
+	type PlanBadge,
 	type PlanRow,
 } from "@/features/scheduling/dates/datesSetup";
 import { DayCoverMarks } from "@/features/scheduling/months/DayCoverMarks";
@@ -118,29 +120,32 @@ const rangeOf = (week: TickableWeek): TickedRange => ({
 	end: week.periodEnd,
 });
 
-/** A plan week's dates and what happens to them: the whole week, some of its days, or kept as it is. */
-const planRowLine = (row: PlanRow, language: string, t: TFunction): string =>
-	row.badge === "kept"
-		? t("scheduling.dates.setup.keptLine", {
-				state: t(
-					`scheduling.months.states.${row.keptState ?? "UNKNOWN"}`
-				).toLocaleLowerCase(language),
-			})
-		: row.newDayCount === 7
-			? t("scheduling.dates.setup.wholeWeek")
-			: t("scheduling.dates.setup.someDays", { count: row.newDayCount });
+/** The tone of a week's badge in "What this creates": a redo warns, a kept week is settled. */
+const PLAN_BADGE_TONES: Record<PlanBadge, BadgeTone> = {
+	new: "neutral",
+	redo: "warning",
+	kept: "success",
+};
 
 /**
- * "What this creates": each week the dates touch, its days (new days look
- * covered, others have no roster) and New or Kept; then how many days are
- * generated, the kept days, and why the dates are refused, if they are.
+ * "What this creates": each week the dates touch, a line for each run of its
+ * days saying whether they stay, are new, or are scheduled again with the
+ * run's choices or the week's own; its days (generated days look covered,
+ * others have no roster) and New, Redone or Kept. Then how many days are
+ * generated and how many more after them, the published days, the days with
+ * a schedule that are replaced, and why the dates are refused, if they are.
  */
 const DatesPlanRows = ({ plan }: { plan: DatesPlan }): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
 	const rows = plan.weeks.map(planRowOf);
+	const notes = planNotesOf(plan);
 	const datesText = (start: string, end: string): string =>
 		formatPeriod({ start, end }, language);
+	const runsText = (runs: Array<DayRun>): string =>
+		new Intl.ListFormat(language, { type: "conjunction" }).format(
+			runs.map((run) => datesText(run.from, run.to))
+		);
 	const columns: Array<DataTableColumn<PlanRow>> = [
 		{
 			id: "dates",
@@ -148,9 +153,14 @@ const DatesPlanRows = ({ plan }: { plan: DatesPlan }): FunctionComponent => {
 			cell: (row): FunctionComponent => (
 				<span className="flex flex-col">
 					<span>{datesText(row.asked.start, row.asked.end)}</span>
-					<span className="text-xs text-neutral-700">
-						{planRowLine(row, language, t)}
-					</span>
+					{row.lines.map((line) => (
+						<span key={line.days.from} className="text-xs text-neutral-700">
+							{t(`scheduling.dates.setup.${line.kind}Line`, {
+								days: datesText(line.days.from, line.days.to),
+								count: dayCountOfRuns([line.days]),
+							})}
+						</span>
+					))}
 				</span>
 			),
 		},
@@ -163,7 +173,7 @@ const DatesPlanRows = ({ plan }: { plan: DatesPlan }): FunctionComponent => {
 			id: "state",
 			header: t("scheduling.months.setup.stateColumn"),
 			cell: (row): FunctionComponent => (
-				<Badge tone={row.badge === "new" ? "neutral" : "success"}>
+				<Badge tone={PLAN_BADGE_TONES[row.badge]}>
 					{t(`scheduling.dates.setup.${row.badge}`)}
 				</Badge>
 			),
@@ -172,9 +182,6 @@ const DatesPlanRows = ({ plan }: { plan: DatesPlan }): FunctionComponent => {
 	const newWeeks = plan.weeks.filter((week) => week.newFrom !== null);
 	const firstNew = newWeeks[0]?.newFrom;
 	const lastNew = newWeeks[newWeeks.length - 1]?.newTo;
-	const keptDays = plan.weeks
-		.filter((week) => week.kept.length > 0)
-		.map((week) => datesText(week.askedFrom, week.askedTo));
 	return (
 		<div className="flex flex-col gap-4">
 			<h3 className="text-xl font-semibold text-neutral-900">
@@ -194,12 +201,26 @@ const DatesPlanRows = ({ plan }: { plan: DatesPlan }): FunctionComponent => {
 					})}
 				</p>
 			)}
-			{keptDays.length > 0 && (
+			{notes.restDayCount > 0 && (
+				<p className="text-sm text-neutral-900">
+					{t("scheduling.dates.setup.restSummary", {
+						count: notes.restDayCount,
+					})}
+				</p>
+			)}
+			{notes.publishedDays.length > 0 && (
 				<Callout tone="warning">
 					{t("scheduling.dates.setup.keptNote", {
-						days: new Intl.ListFormat(language, { type: "conjunction" }).format(
-							keptDays
-						),
+						days: runsText(notes.publishedDays),
+						count: dayCountOfRuns(notes.publishedDays),
+					})}
+				</Callout>
+			)}
+			{notes.replacedDays.length > 0 && (
+				<Callout tone="warning">
+					{t("scheduling.dates.setup.redoNote", {
+						days: runsText(notes.replacedDays),
+						count: dayCountOfRuns(notes.replacedDays),
 					})}
 				</Callout>
 			)}

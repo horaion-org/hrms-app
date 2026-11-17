@@ -1,11 +1,11 @@
 import dayjs from "dayjs";
 import { daysOf, mondayOf } from "@/common/weeks";
-import type { DatesPlanWeek, DayRun } from "@/features/scheduling/dates/api";
 import type {
-	MonthWeek,
-	WeekPart,
-	WeekState,
-} from "@/features/scheduling/months/api";
+	DatesPlan,
+	DatesPlanWeek,
+	DayRun,
+} from "@/features/scheduling/dates/api";
+import type { MonthWeek, WeekPart } from "@/features/scheduling/months/api";
 import { hasRoster } from "@/features/scheduling/months/weekStateLooks";
 import type { PreviousWeek } from "@/features/scheduling/startingContext/startingGrid";
 
@@ -71,10 +71,6 @@ export type PlanRow = {
 	/** The week's days the run touches, in day order: consecutive days treated alike make one line. */
 	lines: Array<PlanLine>;
 	badge: PlanBadge;
-	/** How many of the week's days are new; 7 is the whole week. */
-	newDayCount: number;
-	/** The state of the schedule kept on the asked days, for a week with nothing new. */
-	keptState: WeekState | undefined;
 };
 
 /** The day after `date`. */
@@ -137,19 +133,67 @@ export const planRowOf = (week: DatesPlanWeek): PlanRow => {
 			covered: kind !== undefined && kind !== "stays",
 		};
 	});
-	const newDayCount = days.filter((day) =>
-		isWithin(day.date, week.newFrom, week.newTo)
-	).length;
 	return {
 		periodStart: week.periodStart,
 		asked: { start: week.askedFrom, end: week.askedTo },
 		days,
 		lines: planLinesOf(week),
 		badge: planBadgeOf(week),
-		newDayCount,
-		keptState: newDayCount > 0 ? undefined : week.kept[0]?.state,
 	};
 };
+
+/** What the notes under "What this creates" name, across the plan's weeks. */
+export type PlanNotes = {
+	/** The asked days that are published and stay as they are, a run per part. */
+	publishedDays: Array<DayRun>;
+	/**
+	 * The days with a schedule that generating replaces, a run per part: each
+	 * week's redone days, or its rest days when it redoes none.
+	 */
+	replacedDays: Array<DayRun>;
+	/** How many days after the new days are scheduled again with their week's own shifts and rules. */
+	restDayCount: number;
+};
+
+/** A part's days as a run. */
+const runOf = (part: PartDays): DayRun => ({
+	from: part.coveredFrom,
+	to: part.coveredTo,
+});
+
+/** A part's days from `from` to `to`, or none when it has no day there. */
+const partDaysWithin = (
+	part: PartDays,
+	from: string,
+	to: string
+): Array<DayRun> => {
+	const first = part.coveredFrom > from ? part.coveredFrom : from;
+	const last = part.coveredTo < to ? part.coveredTo : to;
+	return first <= last ? [{ from: first, to: last }] : [];
+};
+
+/** How many days the runs hold together. */
+export const dayCountOfRuns = (runs: ReadonlyArray<DayRun>): number =>
+	runs.reduce((total, run) => total + dayCountOf(run.from, run.to), 0);
+
+/**
+ * The notes under "What this creates". A week's kept days among its asked
+ * days are published: its new days start at the first asked day that is not
+ * (API ADR-0129).
+ */
+export const planNotesOf = (plan: DatesPlan): PlanNotes => ({
+	publishedDays: plan.weeks.flatMap((week) =>
+		week.kept.flatMap((part) =>
+			partDaysWithin(part, week.askedFrom, week.askedTo)
+		)
+	),
+	replacedDays: plan.weeks.flatMap((week) =>
+		(week.redone.length > 0 ? week.redone : week.rest).map(runOf)
+	),
+	restDayCount: dayCountOfRuns(
+		plan.weeks.flatMap((week) => week.rest.map(runOf))
+	),
+});
 
 /** A named schedule's days across touching parts of the weeks shown. */
 export type NamedSpan = { name: string; from: string; to: string };
