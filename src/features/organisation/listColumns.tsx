@@ -203,7 +203,12 @@ export const describeList = <T extends { name: string }>(
 ): ListView<T> => {
 	switch (list.status) {
 		case "pending":
-			return { rows: NO_ROWS, empty: t("organisation.list.loading") };
+			return {
+				rows: NO_ROWS,
+				empty: list.stillUpdating
+					? t("organisation.list.waitingForAccess")
+					: t("organisation.list.loading"),
+			};
 		case "hidden":
 			return {
 				rows: NO_ROWS,

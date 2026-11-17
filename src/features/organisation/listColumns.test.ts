@@ -68,3 +68,15 @@ it("offers Try again on any other failed read too", () => {
 	expect(view.problem?.message).toBe("organisation.list.failed");
 	expect(view.problem?.retry).toBe(retry);
 });
+
+it("says access is being updated while a refused read waits to try again, not just Loading", () => {
+	const view = describeList(
+		{ status: "pending", stillUpdating: true },
+		"",
+		false,
+		"No branches yet.",
+		t
+	);
+
+	expect(view.empty).toBe("organisation.list.waitingForAccess");
+});

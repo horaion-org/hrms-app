@@ -1877,7 +1877,8 @@
 			"branch": "Branch",
 			"created": "Created",
 			"stillUpdating": "Access is still being updated after a recent change, so this list can’t be shown yet. Try again in a few seconds.",
-			"tryAgain": "Try again"
+			"tryAgain": "Try again",
+			"waitingForAccess": "Access is being updated after a recent change. Trying again in a few seconds…"
 		},
 		"branches": {
 			"title": "Branches",

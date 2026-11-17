@@ -2364,7 +2364,8 @@
 			"branch": "Sucursal",
 			"created": "Creado",
 			"stillUpdating": "El acceso aún se está actualizando tras un cambio reciente, así que esta lista no se puede mostrar todavía. Inténtalo de nuevo en unos segundos.",
-			"tryAgain": "Reintentar"
+			"tryAgain": "Reintentar",
+			"waitingForAccess": "El acceso se está actualizando tras un cambio reciente. Se volverá a intentar en unos segundos…"
 		},
 		"import": {
 			"title": "Importar organización",

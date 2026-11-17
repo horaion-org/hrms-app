@@ -4,8 +4,8 @@ import { queryClient } from "@/common/query-client";
 import {
 	retry,
 	retryDelay,
+	STALE_FALLBACK_DELAY_MS,
 	STALE_RETRIES,
-	STALE_RETRY_DELAY_MS,
 } from "@/common/queryRetry";
 
 const problem = (status: number, errorCode?: string): ApiProblemError =>
@@ -17,16 +17,30 @@ const problem = (status: number, errorCode?: string): ApiProblemError =>
 		reason: "http",
 	});
 
-const stale = problem(503, "DECISION_ENGINE_STALE");
+const stale = (retryAfterSeconds?: number): ApiProblemError =>
+	new ApiProblemError({
+		message: "API says wait",
+		status: 503,
+		errorCode: "DECISION_ENGINE_STALE",
+		fieldErrors: [],
+		retryAfterSeconds,
+		reason: "http",
+	});
 
 describe("retry", () => {
-	it("retries a stale decision engine every 2 seconds for 20 seconds, then stops", () => {
-		expect(retry(0, stale)).toBe(true);
-		expect(retry(STALE_RETRIES - 1, stale)).toBe(true);
-		expect(retry(STALE_RETRIES, stale)).toBe(false);
-		expect(retryDelay(0, stale)).toBe(STALE_RETRY_DELAY_MS);
-		expect(retryDelay(STALE_RETRIES - 1, stale)).toBe(STALE_RETRY_DELAY_MS);
-		expect(STALE_RETRIES * STALE_RETRY_DELAY_MS).toBe(20_000);
+	it("retries a read refused while access is updated twice, then stops", () => {
+		expect(retry(0, stale(5))).toBe(true);
+		expect(retry(STALE_RETRIES - 1, stale(5))).toBe(true);
+		expect(retry(STALE_RETRIES, stale(5))).toBe(false);
+	});
+
+	it("waits the API's Retry-After before each such retry", () => {
+		expect(retryDelay(0, stale(5))).toBe(5_000);
+		expect(retryDelay(1, stale(3))).toBe(3_000);
+	});
+
+	it("waits a short fixed time when an older API sends no Retry-After", () => {
+		expect(retryDelay(0, stale())).toBe(STALE_FALLBACK_DELAY_MS);
 	});
 
 	it("retries an outage three times on a doubling wait", () => {

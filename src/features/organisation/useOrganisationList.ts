@@ -33,7 +33,12 @@ import { retry } from "@/features/organisation/useOrganisationOverview";
  * person granted at one Branch or Department sees their part of the list.
  */
 export type OrganisationList<T> =
-	| { status: "pending" | "hidden" }
+	| { status: "hidden" }
+	| {
+			status: "pending";
+			/** The last try was refused while access is updated; another follows shortly. */
+			stillUpdating?: boolean;
+	  }
 	| {
 			status: "error";
 			/** The API is still updating access after a recent change; reading again soon will pass. */
@@ -83,7 +88,11 @@ export const useOrganisationList = <T>(
 	if (list.error instanceof ApiProblemError && list.error.status === 403)
 		return { status: "hidden" };
 	if (list.isError) return failedRead(list);
-	if (list.data === undefined) return { status: "pending" };
+	if (list.data === undefined)
+		return {
+			status: "pending",
+			stillUpdating: isDecisionEngineStale(list.failureReason),
+		};
 	return { status: "ready", ...list.data };
 };
 
