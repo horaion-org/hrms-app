@@ -5373,6 +5373,10 @@
 				"past": "Elige hoy ({{today}}) o un primer día posterior. Los días que ya pasaron no se pueden programar.",
 				"reversed": "El último día es anterior al primero. Elige un último día igual o posterior al {{first}}.",
 				"tooLong": "Son {{days}} días. Un horario por fechas cubre hasta {{max}} días. Elige un último día igual o anterior al {{last}}, o haz un segundo horario para el resto."
+			},
+			"generate": {
+				"hint_one": "Generar calcula {{count}} día, {{range}}. Después lo revisas y lo publicas.",
+				"hint_other": "Generar calcula {{count}} días, {{range}}. Después los revisas y los publicas semana a semana."
 			}
 		},
 		"roster": {

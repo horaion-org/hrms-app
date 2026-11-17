@@ -70,7 +70,7 @@ export type MonthSetupDates = {
 /** What Setup schedules for, and the chosen days. */
 export type DatesChoice = Pick<
 	MonthSetupValues,
-	"scheduleFor" | "firstDay" | "lastDay"
+	"scheduleFor" | "firstDay" | "lastDay" | "name"
 >;
 
 export type MonthSetupStepProps = {
@@ -274,8 +274,8 @@ export const MonthSetupStep = ({
 		],
 	});
 	useEffect(() => {
-		onDatesChange?.({ scheduleFor, firstDay, lastDay });
-	}, [scheduleFor, firstDay, lastDay, onDatesChange]);
+		onDatesChange?.({ scheduleFor, firstDay, lastDay, name });
+	}, [scheduleFor, firstDay, lastDay, name, onDatesChange]);
 	useEffect(() => {
 		onSettingsChange?.({ includeLeave });
 	}, [includeLeave, onSettingsChange]);

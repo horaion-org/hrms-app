@@ -1,6 +1,13 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
+import { mondayOf } from "@/common/weeks";
+import { datesPlanQuery } from "@/features/scheduling/dates/api";
+import { useGenerateDates } from "@/features/scheduling/dates/useGenerateDates";
 import { formatDay } from "@/common/formatDay";
-import { datesIn, daysBeforeOf } from "@/features/scheduling/dates/datesSetup";
+import {
+	datesIn,
+	datesProblemOf,
+	daysBeforeOf,
+} from "@/features/scheduling/dates/datesSetup";
 import { startingDaysQuery } from "@/features/scheduling/startingContext/api";
 import { unansweredDays } from "@/features/scheduling/startingContext/startingGrid";
 import { formatPeriod, periodStartingOn } from "@/features/scheduling/periods";
@@ -59,6 +66,7 @@ import { withRefusedWeeks } from "@/features/scheduling/months/refusedWeeksState
 import { useGenerateMonth } from "@/features/scheduling/months/useGenerateMonth";
 import { isoDateIn } from "@/features/scheduling/roster/roster";
 import {
+	type DatesChoice,
 	MonthSetupStep,
 	type MonthSetupValues,
 } from "@/features/scheduling/MonthSetupStep";
@@ -74,6 +82,7 @@ import {
 import { useSchedulingReadiness } from "@/features/scheduling/readiness/useSchedulingReadiness";
 import { scheduleQuery } from "@/features/scheduling/schedules/api";
 import {
+	datesGenerationRefusal,
 	monthGenerationRefusal,
 	scheduleRefusalMessage,
 } from "@/features/scheduling/schedules/scheduleRefusal";
@@ -296,15 +305,59 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 		? startingWeekOf(scheduleMonth.data, ticked)
 		: undefined;
 	// Each later ticked week with nothing before it (after a gap) is asked for its days before, not for hours.
+	// Dates (API ADR-0114): what Setup schedules for and the chosen days; their plan once they are valid.
+	const [datesChoice, setDatesChoice] = useState<DatesChoice>({
+		scheduleFor: setupDefaults.scheduleFor,
+		firstDay: setupDefaults.firstDay,
+		lastDay: setupDefaults.lastDay,
+		name: setupDefaults.name,
+	});
+	const byDates = datesChoice.scheduleFor === "dates";
+	const datesValid =
+		byDates &&
+		unit !== undefined &&
+		datesProblemOf(datesChoice.firstDay, datesChoice.lastDay, branchToday) ===
+			undefined;
+	const datesPlan = useQuery(
+		datesPlanQuery(
+			companyId,
+			departmentId,
+			datesChoice.firstDay,
+			datesChoice.lastDay,
+			datesValid && allowedHere("schedule:read")
+		)
+	);
+	const plan = datesValid ? datesPlan.data : undefined;
+	// The first week with new days: where everyone starts, and whose earlier days are asked about.
+	const datesStart = plan?.weeks.find((week) => week.newFrom !== null);
+	const datesDraftId =
+		datesStart?.action === "GENERATE" ? (datesStart.draftId ?? "") : "";
+	const datesDraft = useQuery(
+		scheduleQuery(
+			companyId,
+			unit,
+			datesDraftId,
+			datesDraftId !== "" && allowedHere("schedule:read")
+		)
+	);
 	// Owner answer 2: the days of the first week before its first generated day that nobody knows are asked
 	// about (were rest days given?), and taken as days nobody worked if left unknown. A started week is
-	// generated from today.
-	const askedRestDays =
-		startingWeek && startingWeek.periodStart < branchToday
-			? daysBeforeOf(startingWeek.periodStart, branchToday)
+	// generated from today; dates name those days in their plan.
+	const restDaysFrom = byDates
+		? (datesStart?.newFrom ?? undefined)
+		: startingWeek && startingWeek.periodStart < branchToday
+			? branchToday
 			: undefined;
-	const startingDraftId =
-		startingWeek?.state === "DRAFT" ? (startingWeek.scheduleId ?? "") : "";
+	const askedRestDays = byDates
+		? (plan?.notRosteredBefore ?? undefined)
+		: startingWeek && restDaysFrom
+			? daysBeforeOf(startingWeek.periodStart, restDaysFrom)
+			: undefined;
+	const startingDraftId = byDates
+		? datesDraftId
+		: startingWeek?.state === "DRAFT"
+			? (startingWeek.scheduleId ?? "")
+			: "";
 	const startingDays = useQuery(
 		startingDaysQuery(
 			companyId,
@@ -353,14 +406,17 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 		)
 	);
 	const mayGenerate = allowedHere("schedule:generate");
+	// A dates run's panel checks the first day's month (its leave counts that month).
+	const checkMonth = byDates ? monthOf(datesChoice.firstDay) : month;
 	const check = useQuery(
 		monthGenerationCheckQuery(
 			companyId,
 			departmentId,
-			month,
-			mayGenerate && step === "generate"
+			checkMonth,
+			mayGenerate && step === "generate" && checkMonth !== ""
 		)
 	);
+	const datesGeneration = useGenerateDates(companyId, departmentId);
 	const readiness = useSchedulingReadiness(
 		companyId,
 		{ departmentId: unit?.departmentId },
@@ -402,13 +458,21 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 		shifts.data && constraints.data
 			? allOf(shifts.data, constraints.data)
 			: undefined;
-	const weeks: Array<MonthWeek> = scheduleMonth.data
-		? weeksToCreate(scheduleMonth.data, ticked)
-		: [];
-	const weekLabel = (week: MonthWeek): string =>
+	// The weeks the run creates, each with its own choice: the ticked new weeks, or the dates' new parts.
+	const weeks: Array<Pick<MonthWeek, "periodStart" | "periodEnd">> = byDates
+		? (plan?.weeks ?? []).filter(
+				(week) => week.action === "CREATE_AND_GENERATE"
+			)
+		: scheduleMonth.data
+			? weeksToCreate(scheduleMonth.data, ticked)
+			: [];
+	const weekLabel = (
+		week: Pick<MonthWeek, "periodStart" | "periodEnd">
+	): string =>
 		formatWeekDates({ start: week.periodStart, end: week.periodEnd }, language);
-	const choiceOf = (week: MonthWeek): WeekChoiceIds | undefined =>
-		choices[week.periodStart] ?? everything;
+	const choiceOf = (
+		week: Pick<MonthWeek, "periodStart">
+	): WeekChoiceIds | undefined => choices[week.periodStart] ?? everything;
 	// The Scheduling tab that edits the Department, where its list may be read.
 	const editLink = (
 		view: SetupLink["search"]["view"],
@@ -593,6 +657,59 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 	const restDaysText = new Intl.ListFormat(language, {
 		type: "conjunction",
 	}).format(unknownRestDays.map((date) => formatDay(date, language)));
+	// Dates from mid-week with nothing rostered before: the first new part's "Before this week", as the
+	// month's first week has it; the button saves that part as a draft covering its new days, which the
+	// run then generates.
+	const saveDatesStart = async (): Promise<void> => {
+		if (!unit || !everything || !datesStart?.newFrom || !datesStart.newTo)
+			return;
+		setProblem("");
+		const weekChoice = choices[datesStart.periodStart] ?? everything;
+		try {
+			const created = await scheduleActions.create.mutateAsync({
+				unit,
+				body: {
+					name: datesChoice.name.trim() || weekNameOf(datesStart.periodStart),
+					periodStart: datesStart.periodStart,
+					coveredFrom: datesStart.newFrom,
+					coveredTo: datesStart.newTo,
+					includeLeave: settings.includeLeave,
+					includedShiftIds: weekChoice.shiftIds,
+					includedConstraintIds: weekChoice.constraintIds,
+				},
+			});
+			setSavedStart({ scheduleId: created.scheduleId, dialog: "days" });
+		} catch (error) {
+			setProblem(scheduleRefusalMessage(error, true, t));
+		}
+	};
+	const datesStartingPoint =
+		!unit || !plan?.notRosteredBefore ? undefined : datesDraftId !== "" ? (
+			<StartingContextSection
+				canEdit={allowedHere("schedule:update")}
+				companyId={companyId}
+				nonWorkingDayTypes={datesDraft.data?.nonWorkingDayTypes ?? []}
+				openOnStart={openOnStartOf(datesDraftId)}
+				scheduleId={datesDraftId}
+				showsHours={false}
+				unit={unit}
+			/>
+		) : (
+			<StartingContextCallout
+				adding={scheduleActions.create.isPending}
+				enteredCount={0}
+				previous={{ kind: "none" }}
+				onAdd={
+					allowedHere("schedule:create") &&
+					allowedHere("schedule:update") &&
+					everything
+						? (): void => {
+								void saveDatesStart();
+							}
+						: undefined
+				}
+			/>
+		);
 	// The first week saved as a draft keeps its own choice, changed on its own page.
 	const savedDraftLine =
 		startingWeek?.state === "DRAFT"
@@ -622,7 +739,10 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 		? t(setupGate.nextNoteKey, { department: setupGate.department })
 		: listsHidden && choice
 			? t("scheduling.week.listsHiddenNote", { department: choice.name })
-			: listsWaiting || nothingTicked
+			: listsWaiting ||
+				  (byDates
+						? !plan || plan.refusal !== null || plan.newDays === 0
+						: nothingTicked)
 				? ""
 				: undefined;
 	// The Generate step names the ticked weeks, joined where they touch, as Setup's list does.
@@ -632,8 +752,57 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			tickedRangesOf(ticked).map((range) => weekRangeText(range, language, t))
 		),
 	});
+	// The days a dates run generates, from its first new day to its last.
+	const newDatesWeeks =
+		plan?.weeks.filter((week) => week.newFrom !== null) ?? [];
+	const firstNewDay = newDatesWeeks[0]?.newFrom;
+	const lastNewDay = newDatesWeeks[newDatesWeeks.length - 1]?.newTo;
+	const datesHint =
+		plan && firstNewDay && lastNewDay
+			? t("scheduling.dates.generate.hint", {
+					count: plan.newDays,
+					range: formatPeriod(
+						{ start: firstNewDay, end: lastNewDay },
+						language
+					),
+				})
+			: "";
+	const generateDatesNow = async (values: MonthSetupValues): Promise<void> => {
+		if (!plan || !everything) return;
+		setProblem("");
+		try {
+			const answer = await datesGeneration.generate({
+				firstDay: values.firstDay,
+				lastDay: values.lastDay,
+				...(values.name.trim() === "" ? {} : { name: values.name.trim() }),
+				includeLeave: values.includeLeave,
+				newWeeks: plan.weeks
+					.filter((week) => week.action === "CREATE_AND_GENERATE")
+					.map((week) => {
+						const weekChoice = choices[week.periodStart] ?? everything;
+						return {
+							periodStart: week.periodStart,
+							includedShiftIds: weekChoice.shiftIds,
+							includedConstraintIds: weekChoice.constraintIds,
+						};
+					}),
+			});
+			await navigate({
+				to: "/scheduling/months/$month",
+				params: { month: monthOf(values.firstDay) },
+				search: { department: values.departmentId },
+				state: withRefusedWeeks(refusedWeeks(answer)),
+			});
+		} catch (error) {
+			setProblem(datesGenerationRefusal(error, t));
+		}
+	};
 	const generate = async (): Promise<void> => {
 		if (!setup) return;
+		if (setup.scheduleFor === "dates") {
+			await generateDatesNow(setup);
+			return;
+		}
 		setProblem("");
 		try {
 			const answer = await generation.generate({
@@ -698,6 +867,11 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 						formId={setupFormId}
 						months={months}
 						suggestedMonth={suggestedMonth}
+						dates={{
+							plan,
+							pending: datesValid && datesPlan.isPending,
+							today: branchToday,
+						}}
 						departmentExtras={
 							setupGate && (
 								<ReadinessGateCallout
@@ -709,11 +883,11 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 						usesLine={
 							<div className="flex flex-col gap-4">
 								{usesSummary}
-								{savedDraftLine && (
+								{!byDates && savedDraftLine && (
 									<p className="text-sm text-neutral-800">{savedDraftLine}</p>
 								)}
-								{firstWeekDates}
-								{startingWeek && unknownRestDays.length > 0 && (
+								{!byDates && firstWeekDates}
+								{restDaysFrom && unknownRestDays.length > 0 && (
 									<Callout tone="warning">
 										<span className="block">
 											{t("scheduling.startingContext.restDaysAsk", {
@@ -725,8 +899,8 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 												days: restDaysText,
 												remaining: formatPeriod(
 													{
-														start: branchToday,
-														end: periodStartingOn(startingWeek.periodStart).end,
+														start: restDaysFrom,
+														end: periodStartingOn(mondayOf(restDaysFrom)).end,
 													},
 													language
 												),
@@ -734,8 +908,8 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 										</span>
 									</Callout>
 								)}
-								{startingPoint}
-								{laterStartingPoints}
+								{byDates ? datesStartingPoint : startingPoint}
+								{!byDates && laterStartingPoints}
 							</div>
 						}
 						weeks={
@@ -745,6 +919,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 								onTickedChange: setTicks,
 							}
 						}
+						onDatesChange={setDatesChoice}
 						onDepartmentChange={chooseDepartment}
 						onMonthChange={chooseMonth}
 						onSettingsChange={setSettings}
@@ -763,34 +938,44 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 						</p>
 					) : (
 						<>
-							{chosenNow.dropped.map((week) => (
-								<Callout key={week.periodStart} className="mb-4" tone="warning">
-									{t("scheduling.months.generate.droppedNote", {
-										week: weekRangeText(
-											{ start: week.periodStart, end: week.periodEnd },
-											language,
-											t
-										),
-										state: t(badgeOf(week.look).key),
-									})}
-								</Callout>
-							))}
-							{chosenNow.replacing.map((week) => (
-								<Callout key={week.periodStart} className="mb-4" tone="warning">
-									{t(
-										week.note === "rosterRejected"
-											? "scheduling.months.setup.rosterRejectedNote"
-											: "scheduling.months.setup.rosterWaitingNote",
-										{
+							{!byDates &&
+								chosenNow.dropped.map((week) => (
+									<Callout
+										key={week.periodStart}
+										className="mb-4"
+										tone="warning"
+									>
+										{t("scheduling.months.generate.droppedNote", {
 											week: weekRangeText(
 												{ start: week.periodStart, end: week.periodEnd },
 												language,
 												t
 											),
-										}
-									)}
-								</Callout>
-							))}
+											state: t(badgeOf(week.look).key),
+										})}
+									</Callout>
+								))}
+							{!byDates &&
+								chosenNow.replacing.map((week) => (
+									<Callout
+										key={week.periodStart}
+										className="mb-4"
+										tone="warning"
+									>
+										{t(
+											week.note === "rosterRejected"
+												? "scheduling.months.setup.rosterRejectedNote"
+												: "scheduling.months.setup.rosterWaitingNote",
+											{
+												week: weekRangeText(
+													{ start: week.periodStart, end: week.periodEnd },
+													language,
+													t
+												),
+											}
+										)}
+									</Callout>
+								))}
 							{check.isPending && (
 								<p className="text-sm text-neutral-800" role="status">
 									{t("scheduling.months.generate.panel.checking", {
@@ -818,14 +1003,22 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 							{check.data && (
 								<BeforeGeneratePanel
 									check={check.data}
-									generating={generation.isPending}
-									hint={ticked.length > 0 ? tickedHint : ""}
-									month={month}
-									waiting={generation.block === "listsLoading"}
+									month={checkMonth}
 									blockedNote={
-										ticked.length === 0
+										!byDates && ticked.length === 0
 											? t("scheduling.months.generate.noneLeft")
 											: undefined
+									}
+									generating={
+										byDates ? datesGeneration.isPending : generation.isPending
+									}
+									hint={
+										byDates ? datesHint : ticked.length > 0 ? tickedHint : ""
+									}
+									waiting={
+										byDates
+											? everything === undefined
+											: generation.block === "listsLoading"
 									}
 									onGenerate={() => {
 										void generate();

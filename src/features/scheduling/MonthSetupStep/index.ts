@@ -1,4 +1,5 @@
 export {
+	type DatesChoice,
 	MonthSetupStep,
 	type MonthSetupStepProps,
 	type MonthSetupValues,

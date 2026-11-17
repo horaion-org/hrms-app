@@ -376,6 +376,7 @@ describe("MonthSetupStep", () => {
 				scheduleFor: "dates",
 				firstDay: "",
 				lastDay: "",
+				name: "",
 			});
 		});
 

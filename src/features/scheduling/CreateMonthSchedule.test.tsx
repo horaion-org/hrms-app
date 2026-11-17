@@ -36,6 +36,10 @@ import {
 } from "@/features/scheduling/months/fixtures";
 import { readinessFixture } from "@/features/scheduling/readiness/fixtures";
 import {
+	datesGenerationFixture,
+	datesPlanFixture,
+} from "@/features/scheduling/dates/fixtures";
+import {
 	scheduleFixture,
 	schedulingWorkspace,
 	twoBranchSchedulingWorkspace,
@@ -1382,5 +1386,118 @@ describe("Create schedules for a month: where everyone starts", () => {
 		expect(await screen.findByRole("alert")).toHaveTextContent(
 			"You don’t have permission to create schedules for this department."
 		);
+	});
+});
+
+describe("Create schedules for a month: by dates", () => {
+	const DATES = `${COMPANY}/schedule-dates`;
+	const NOVEMBER = `${COMPANY}/schedule-months/2026-11`;
+	const NEW_DATES =
+		"/scheduling/new?department=d-1&month=2026-12&for=dates&firstDay=2026-11-19&lastDay=2026-11-28";
+	const datesRoutes = (
+		plan = datesPlanFixture()
+	): Record<string, StubReply> => ({
+		[`GET ${DATES}/plan`]: reply(plan),
+		[`POST ${DATES}/generation`]: reply(datesGenerationFixture()),
+		[`GET ${NOVEMBER}/generation-check`]: reply(
+			monthGenerationCheckFixture({ month: "2026-11" })
+		),
+	});
+
+	it("given_forDatesInTheLink_when_opened_then_datesPrefilled", async () => {
+		const { calls } = await open(NEW_DATES, datesRoutes());
+
+		expect(
+			await screen.findByRole("table", { name: "What this creates" })
+		).toBeInTheDocument();
+		expect(screen.getByRole("tab", { name: "Dates" })).toHaveAttribute(
+			"aria-selected",
+			"true"
+		);
+		expect(calls.find((call) => call.path === `${DATES}/plan`)?.search).toBe(
+			"departmentId=d-1&firstDay=2026-11-19&lastDay=2026-11-28"
+		);
+	});
+
+	it("given_datesFromThursdayWithNothingBefore_when_onSetup_then_asksAboutMondayToWednesday", async () => {
+		await open(NEW_DATES, datesRoutes());
+
+		expect(
+			await screen.findByText(
+				"Were rest days already given on Mon, Nov 16, Tue, Nov 17, and Wed, Nov 18? Mark them under Before this week, so the week’s rest day counts them."
+			)
+		).toBeInTheDocument();
+		expect(
+			screen.getByText(/so the rest day must fall on Nov 19\s?–\s?22, 2026\.$/)
+		).toBeInTheDocument();
+	});
+
+	it("given_allDaysTaken_when_onSetup_then_nextWaitsAndSaysUseMonth", async () => {
+		await open(
+			NEW_DATES,
+			datesRoutes(
+				datesPlanFixture({
+					newDays: 0,
+					refusal: {
+						code: "SCHEDULE_DAYS_ALL_TAKEN",
+						days: { from: "2026-11-19", to: "2026-11-28" },
+						scheduledDays: null,
+					},
+				})
+			)
+		);
+
+		expect(
+			await screen.findByText(
+				"Every day from Thu, Nov 19 to Sat, Nov 28 already has a schedule. To redo a week, choose Month and tick it."
+			)
+		).toBeInTheDocument();
+		expect(next()).toBeDisabled();
+	});
+
+	it("given_datesChosen_when_generated_then_postsTheDatesTheNameAndOneChoicePerNewWeek", async () => {
+		const user = userEvent.setup();
+		const { opened, calls } = await open(NEW_DATES, datesRoutes());
+		await screen.findByRole("table", { name: "What this creates" });
+		await user.type(
+			screen.getByRole("textbox", { name: "Name" }),
+			"Year-end gala"
+		);
+		await vi.waitFor(() => {
+			expect(next()).toBeEnabled();
+		});
+
+		await user.click(next());
+		expect(
+			await screen.findByText(
+				/^Generating works out 10 days, Nov 19\s?–\s?28, 2026\./
+			)
+		).toBeInTheDocument();
+		const generate = await screen.findByRole("button", { name: /^Generate / });
+		await vi.waitFor(() => {
+			expect(generate).toBeEnabled();
+		});
+		await user.click(generate);
+
+		await vi.waitFor(() => {
+			expect(opened.router.state.location.pathname).toBe(
+				"/scheduling/months/2026-11"
+			);
+		});
+		const post = calls.find(
+			(call) => call.method === "POST" && call.path === `${DATES}/generation`
+		);
+		expect(post?.search).toBe("departmentId=d-1");
+		expect(post?.body).toEqual({
+			firstDay: "2026-11-19",
+			lastDay: "2026-11-28",
+			name: "Year-end gala",
+			includeLeave: true,
+			newWeeks: ["2026-11-16", "2026-11-23"].map((periodStart) => ({
+				periodStart,
+				includedShiftIds: EVERYTHING.shiftIds,
+				includedConstraintIds: EVERYTHING.constraintIds,
+			})),
+		});
 	});
 });

@@ -80,7 +80,9 @@ export const handChangedCoveredWeeks = (
 	);
 
 /** The weeks a run refused, by Monday, with the API's error code. */
-export const refusedWeeks = (answer: MonthGeneration): Record<string, string> =>
+export const refusedWeeks = (
+	answer: Pick<MonthGeneration, "weeks">
+): Record<string, string> =>
 	Object.fromEntries(
 		answer.weeks.flatMap((week) =>
 			week.outcome === "REFUSED" && week.reason !== null
