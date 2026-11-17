@@ -49,10 +49,10 @@ folder under `src/features` that owns what the page shows.
 9. **Prove it.**
 
    ```sh
-   pnpm exec vitest run --maxWorkers=3 src/pages/MainLayout.test.tsx src/features/<feature>
+   pnpm exec vitest run --maxWorkers=3 src/pages/MainLayout.test.tsx src/features/<feature> src/common/locales.test.ts
    pnpm exec tsc --noEmit
    pnpm lint
    ```
 
    The menu order test fails until step 6 is done in both files. `tsc` fails while a `t("…")` key is missing from
-   the English copy, and `src/common/locales.test.ts` (run it too) while English and Spanish differ.
+   the English copy, and `src/common/locales.test.ts` while English and Spanish differ.
