@@ -1,4 +1,5 @@
 import dayjs from "dayjs";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import type { DateRange } from "@/components/forms/Calendar";
 
 export const shiftRange = (range: DateRange, direction: number): DateRange => {
@@ -6,10 +7,10 @@ export const shiftRange = (range: DateRange, direction: number): DateRange => {
 	return {
 		start: dayjs(range.start)
 			.add(days * direction, "day")
-			.format("YYYY-MM-DD"),
+			.format(ISO_DATE_FORMAT),
 		end: dayjs(range.end)
 			.add(days * direction, "day")
-			.format("YYYY-MM-DD"),
+			.format(ISO_DATE_FORMAT),
 	};
 };
 
@@ -28,15 +29,15 @@ export const formatPeriod = (
 export const rangeDays = (range: DateRange): Array<string> =>
 	Array.from(
 		{ length: dayjs(range.end).diff(dayjs(range.start), "day") + 1 },
-		(_, index) => dayjs(range.start).add(index, "day").format("YYYY-MM-DD")
+		(_, index) => dayjs(range.start).add(index, "day").format(ISO_DATE_FORMAT)
 	);
 
 /** Four weeks from the Monday of this week, the timeline's first window. */
 export const defaultRange = (today = dayjs()): DateRange => {
 	const monday = today.subtract((today.day() + 6) % 7, "day");
 	return {
-		start: monday.format("YYYY-MM-DD"),
-		end: monday.add(27, "day").format("YYYY-MM-DD"),
+		start: monday.format(ISO_DATE_FORMAT),
+		end: monday.add(27, "day").format(ISO_DATE_FORMAT),
 	};
 };
 
