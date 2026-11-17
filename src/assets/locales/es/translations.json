@@ -751,13 +751,9 @@
 			"billingPlaceholder": "Tu ciclo de facturación, método de pago y facturas aparecerán aquí cuando la facturación esté disponible."
 		},
 		"upgrade": {
-			"action": "Mejorar plan",
-			"description": "Cambia a un plan de pago para tu empresa.",
 			"plan": "Plan de pago",
 			"comingSoon": "Próximamente",
-			"details": "Las funciones y los precios del plan estarán disponibles pronto.",
-			"unavailable": "Podrás cambiar de plan aquí cuando la facturación esté disponible.",
-			"dismiss": "Entendido"
+			"details": "Las funciones y los precios del plan estarán disponibles pronto."
 		},
 		"general": {
 			"workspaceName": "Nombre del espacio de trabajo",

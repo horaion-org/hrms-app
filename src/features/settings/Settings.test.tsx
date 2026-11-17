@@ -218,7 +218,7 @@ it("opens one section at a time from its link, marking it current", async () => 
 	expect(plan).toHaveTextContent("Billing details");
 });
 
-it("opens Plan and billing from Upgrade plan and moves focus to it", async () => {
+it("offers no Upgrade plan while upgrades can't be bought, the plan saying they are coming soon", async () => {
 	stubApi({
 		[REFRESH]: accessPassReply(),
 		[ME]: currentUserReply(),
@@ -227,11 +227,14 @@ it("opens Plan and billing from Upgrade plan and moves focus to it", async () =>
 	await open();
 	const user = userEvent.setup();
 
-	await user.click(await screen.findByRole("button", { name: "Upgrade plan" }));
+	await user.click(
+		await screen.findByRole("link", { name: "Plan and billing" })
+	);
 	const plan = await screen.findByRole("region", { name: "Plan and billing" });
-	await waitFor(() => {
-		expect(plan).toHaveFocus();
-	});
+	expect(plan).toHaveTextContent("Coming soon");
+	expect(
+		screen.queryByRole("button", { name: "Upgrade plan" })
+	).not.toBeInTheDocument();
 });
 
 it("shows the list alone on a phone until a section is chosen, then the section with a link back", async () => {

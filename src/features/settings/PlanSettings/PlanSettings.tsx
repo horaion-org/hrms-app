@@ -1,17 +1,16 @@
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
-import { ArrowUpIcon } from "@/components/ui/Icon";
-import { UpgradePlanDialog } from "@/features/settings/UpgradePlanDialog";
 
 const PLAN_DETAILS = ["pricing", "features"] as const;
 
-/** Plan information is preview content until a billing contract is available. */
+/**
+ * Plan information is preview content until a billing contract is
+ * available. Nothing here can be bought yet, so no upgrade is offered: the
+ * card's "Coming soon" says why.
+ */
 export const PlanSettings = (): FunctionComponent => {
 	const { t } = useTranslation();
-	const [upgradeOpen, setUpgradeOpen] = useState(false);
 	return (
 		<>
 			<h2 className="text-xl font-semibold text-neutral-900">
@@ -60,18 +59,6 @@ export const PlanSettings = (): FunctionComponent => {
 							</div>
 						))}
 					</dl>
-					<div className="mt-6 flex justify-end">
-						<Button
-							aria-haspopup="dialog"
-							leadingIcon={<ArrowUpIcon />}
-							size="sm"
-							onClick={() => {
-								setUpgradeOpen(true);
-							}}
-						>
-							{t("settings.upgrade.action")}
-						</Button>
-					</div>
 				</div>
 			</div>
 			<div className="mt-8 border-t border-neutral-200 pt-6">
@@ -82,13 +69,6 @@ export const PlanSettings = (): FunctionComponent => {
 					{t("settings.plan.billingPlaceholder")}
 				</p>
 			</div>
-			{upgradeOpen && (
-				<UpgradePlanDialog
-					onClose={() => {
-						setUpgradeOpen(false);
-					}}
-				/>
-			)}
 		</>
 	);
 };

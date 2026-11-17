@@ -1577,13 +1577,9 @@
 			"billingPlaceholder": "Your billing cycle, payment method and invoices will appear here once billing is available."
 		},
 		"upgrade": {
-			"action": "Upgrade plan",
-			"description": "Switch to a paid plan for your company.",
 			"plan": "Paid plan",
 			"comingSoon": "Coming soon",
-			"details": "Plan features and pricing will be available soon.",
-			"unavailable": "Upgrades will be available here once billing is ready.",
-			"dismiss": "Got it"
+			"details": "Plan features and pricing will be available soon."
 		},
 		"general": {
 			"workspaceName": "Workspace Name",
