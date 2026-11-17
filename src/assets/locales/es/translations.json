@@ -4470,6 +4470,9 @@
 			"carriedWithNew_other": "Continúa desde la semana del {{week}}. {{count}} personas no figuran en ese cuadrante y empiezan descansadas.",
 			"unknownLastWeek": "Horaion no sabe qué trabajó cada persona la semana pasada.",
 			"unknownLastWeekRisk": "Sin esto, todos se tratan como descansados, así que a quien trabajó el domingo por la noche se le podría asignar el lunes por la mañana.",
+			"unknownDaysAndLastWeek": "Horaion no sabe qué trabajó cada persona el {{days}} ni la semana anterior.",
+			"unknownDaysRisk": "Marca los días de descanso ya dados, para que el descanso de la semana los cuente. Si quedan sin saberse, cuentan como días en que nadie trabajó.",
+			"unknownDaysLeft": "Aún sin saberse para algunas personas: {{days}}. Si quedan así, cuentan como días en que nadie trabajó.",
 			"addShifts": "Añadir los turnos de la semana pasada",
 			"editShifts": "Editar los turnos de la semana pasada",
 			"notKnown": "Desconocido",
@@ -4487,9 +4490,7 @@
 			"notDraft": "Este horario ya se generó, así que su punto de partida ya no puede cambiar.",
 			"failed": "No se pudieron guardar los días. Inténtalo de nuevo.",
 			"stale_one": "Los días de {{count}} persona antes de esta semana cambiaron después de generar este cuadrante, así que lo que dice de la semana anterior es lo que se sabía entonces. Para planificar con los días actuales, regenera el mes desde su página.",
-			"stale_other": "Los días de {{count}} personas antes de esta semana cambiaron después de generar este cuadrante, así que lo que dice de la semana anterior es lo que se sabía entonces. Para planificar con los días actuales, regenera el mes desde su página.",
-			"restDaysAsk": "¿Ya se dieron días de descanso el {{days}}? Márcalos en Antes de esta semana, para que el descanso de la semana los cuente.",
-			"restDaysFallback": "Si continúas, {{days}} se toman como días en que nadie trabajó: no se cuenta ningún descanso en ellos, así que el descanso debe caer entre {{remaining}}."
+			"stale_other": "Los días de {{count}} personas antes de esta semana cambiaron después de generar este cuadrante, así que lo que dice de la semana anterior es lo que se sabía entonces. Para planificar con los días actuales, regenera el mes desde su página."
 		},
 		"openingHours": {
 			"title": "Horas ya trabajadas este mes (del {{from}} al {{to}})",

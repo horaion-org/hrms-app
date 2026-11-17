@@ -4670,6 +4670,9 @@
 			"carriedWithNew_other": "Carried over from the week of {{week}}. {{count}} people aren’t on that roster and start rested.",
 			"unknownLastWeek": "Horaion doesn’t know what people worked last week.",
 			"unknownLastWeekRisk": "Without it, everyone is treated as rested, so someone who worked Sunday night could be given Monday morning.",
+			"unknownDaysAndLastWeek": "Horaion doesn’t know what people worked on {{days}}, or the week before.",
+			"unknownDaysRisk": "Mark any rest days already given, so the week’s rest day counts them. Left unknown, they count as days nobody worked.",
+			"unknownDaysLeft": "Still unknown for some people: {{days}}. Left unknown, they count as days nobody worked.",
 			"addShifts": "Add last week’s shifts",
 			"editShifts": "Edit last week’s shifts",
 			"notKnown": "Not known",
@@ -4687,9 +4690,7 @@
 			"notDraft": "This schedule has already been generated, so its starting point can no longer change.",
 			"failed": "The days couldn’t be saved. Try again.",
 			"stale_one": "{{count}} person’s days before this week changed after this roster was generated, so what it says about the week before is what was known then. To plan from the days as they are now, regenerate the month from its page.",
-			"stale_other": "{{count}} people’s days before this week changed after this roster was generated, so what it says about the week before is what was known then. To plan from the days as they are now, regenerate the month from its page.",
-			"restDaysAsk": "Were rest days already given on {{days}}? Mark them under Before this week, so the week’s rest day counts them.",
-			"restDaysFallback": "If you go on, {{days}} are taken as days nobody worked: no rest day is counted on them, so the rest day must fall on {{remaining}}."
+			"stale_other": "{{count}} people’s days before this week changed after this roster was generated, so what it says about the week before is what was known then. To plan from the days as they are now, regenerate the month from its page."
 		},
 		"openingHours": {
 			"title": "Hours already worked this month ({{from}} to {{to}})",

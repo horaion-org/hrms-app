@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { formatDay } from "@/common/formatDay";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
@@ -13,6 +14,12 @@ export type StartingContextCalloutProps = {
 	previous: PreviousWeek;
 	/** Members with any day entered on the draft. */
 	enteredCount: number;
+	/**
+	 * This week's days before its first generated day that someone's days are
+	 * still unknown on (a week that has begun, or dates from mid-week); named
+	 * when no roster comes before them.
+	 */
+	unknownDays?: ReadonlyArray<string>;
 	/** Opens the week-before grid; left out when the draft can't be changed. */
 	onAdd?: () => void;
 	/** The button waits while `onAdd`'s own work is under way, such as the month page saving its first week. */
@@ -25,9 +32,10 @@ const key = "scheduling.startingContext";
 /**
  * The line on the Generate step about the week before the period. With no
  * roster before it and nothing entered, a warning says Horaion doesn't know
- * last week and why that matters, with a button to add its shifts (the
- * nearest analogue: ReadinessCallout's warning, a title then a plain line).
- * With days entered, a calm line and the same button to edit them. When a
+ * last week, and this week's unknown days when it has begun, and why that
+ * matters, with a button to add its shifts (the nearest analogue:
+ * ReadinessCallout's warning, a title then a plain line). With days entered,
+ * a calm line, any days still unknown, and the same button to edit them. When a
  * roster carries over, a calm line naming members it doesn't cover, with a
  * small link to edit their days. Without `onAdd`, no control. It never
  * blocks generating. The week page and the month page both show it.
@@ -35,6 +43,7 @@ const key = "scheduling.startingContext";
 export const StartingContextCallout = ({
 	previous,
 	enteredCount,
+	unknownDays = [],
 	onAdd,
 	adding = false,
 	className,
@@ -56,12 +65,23 @@ export const StartingContextCallout = ({
 			</span>
 		);
 
+	const days = new Intl.ListFormat(language, { type: "conjunction" }).format(
+		unknownDays.map((date) => formatDay(date, language))
+	);
+	const daysUnknown = unknownDays.length > 0;
+
 	if (previous.kind === "none" && enteredCount === 0)
 		return (
 			<Callout className={className} tone="warning">
-				<span className="block">{t(`${key}.unknownLastWeek`)}</span>
+				<span className="block">
+					{daysUnknown
+						? t(`${key}.unknownDaysAndLastWeek`, { days })
+						: t(`${key}.unknownLastWeek`)}
+				</span>
 				<span className="mt-1 block font-normal">
-					{t(`${key}.unknownLastWeekRisk`)}
+					{daysUnknown
+						? t(`${key}.unknownDaysRisk`)
+						: t(`${key}.unknownLastWeekRisk`)}
 				</span>
 				{shiftsButton(t(`${key}.addShifts`))}
 			</Callout>
@@ -73,6 +93,11 @@ export const StartingContextCallout = ({
 				<span className="block">
 					{t(`${key}.noneWithEntries`, { count: enteredCount })}
 				</span>
+				{daysUnknown && (
+					<span className="mt-1 block font-normal">
+						{t(`${key}.unknownDaysLeft`, { days })}
+					</span>
+				)}
 				{shiftsButton(t(`${key}.editShifts`))}
 			</Callout>
 		);

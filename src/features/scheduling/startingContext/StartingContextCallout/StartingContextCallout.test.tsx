@@ -14,13 +14,15 @@ import { previousWeekOf } from "@/features/scheduling/startingContext/startingGr
 const show = (
 	week: StartingDays,
 	enteredCount: number,
-	onAdd?: () => void
+	onAdd?: () => void,
+	unknownDays?: Array<string>
 ): void => {
 	render(
 		<I18nextProvider i18n={authTestI18n}>
 			<StartingContextCallout
 				enteredCount={enteredCount}
 				previous={previousWeekOf(week)}
+				unknownDays={unknownDays}
 				onAdd={onAdd}
 			/>
 		</I18nextProvider>
@@ -58,6 +60,28 @@ describe("StartingContextCallout", () => {
 			screen.getByRole("button", { name: "Edit last week’s shifts" })
 		);
 		expect(onAdd).toHaveBeenCalledOnce();
+	});
+
+	it("given_aWeekThatHasBegunAndNothingEntered_when_shown_then_oneWarningNamesItsUnknownDaysWithTheButton", () => {
+		show(firstWeek(), 0, vi.fn(), ["2026-11-09", "2026-11-10"]);
+
+		const note = screen.getByRole("note");
+		expect(note).toHaveClass("bg-warning-50");
+		expect(note).toHaveTextContent(
+			"Horaion doesn’t know what people worked on Mon, Nov 9 and Tue, Nov 10, or the week before." +
+				"Mark any rest days already given, so the week’s rest day counts them. Left unknown, they count as days nobody worked." +
+				"Add last week’s shifts"
+		);
+	});
+
+	it("given_daysEnteredButSomeOfThisWeeksDaysStillUnknown_when_shown_then_theCalmLineNamesThem", () => {
+		show(firstWeek(), 1, vi.fn(), ["2026-11-10"]);
+
+		const note = screen.getByRole("note");
+		expect(note).toHaveClass("bg-ink-blue-50");
+		expect(note).toHaveTextContent(
+			"Still unknown for some people: Tue, Nov 10. Left unknown, they count as days nobody worked."
+		);
 	});
 
 	it("given_aPreviousRosterMissingANewJoiner_when_shown_then_carriedOverWithTheNewJoinerNamedAndASmallLink", () => {
