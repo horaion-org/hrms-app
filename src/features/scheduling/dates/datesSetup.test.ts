@@ -7,12 +7,14 @@ import {
 	maxLastDayOf,
 	namedSpansOf,
 	planRowOf,
+	rosterCoversDayBefore,
 } from "@/features/scheduling/dates/datesSetup";
 import {
 	datesPlanFixture,
 	datesPlanWithKeptWeekFixture,
 } from "@/features/scheduling/dates/fixtures";
-import type { WeekPart } from "@/features/scheduling/months/api";
+import type { MonthWeek, WeekPart } from "@/features/scheduling/months/api";
+import { monthWeekFixture } from "@/features/scheduling/months/fixtures";
 
 const TODAY = "2026-11-17";
 
@@ -129,6 +131,54 @@ describe("daysBeforeOf and datesIn", () => {
 
 	it("given_aMondayStart_when_asked_then_none", () => {
 		expect(daysBeforeOf("2026-11-16", "2026-11-16")).toBeUndefined();
+	});
+});
+
+describe("rosterCoversDayBefore", () => {
+	/** The week of 9 Nov holding `parts`. */
+	const weekOf9 = (parts: Array<Partial<WeekPart>>): MonthWeek =>
+		monthWeekFixture({
+			periodStart: "2026-11-09",
+			periodEnd: "2026-11-15",
+			parts: parts.map((overrides) => ({
+				scheduleId: "s-1",
+				name: "Week of 2026-11-09",
+				named: false,
+				coveredFrom: "2026-11-09",
+				coveredTo: "2026-11-15",
+				state: "PUBLISHED",
+				...overrides,
+			})),
+		});
+
+	it("given_aMondayAfterAWholeRosteredWeek_when_asked_then_covered", () => {
+		expect(rosterCoversDayBefore("2026-11-16", [weekOf9([{}])])).toBe(true);
+	});
+
+	it("given_aMondayAfterAWeekRosteredOnlyToWednesday_when_asked_then_notCovered", () => {
+		expect(
+			rosterCoversDayBefore("2026-11-16", [
+				weekOf9([{ coveredTo: "2026-11-11" }]),
+			])
+		).toBe(false);
+	});
+
+	it("given_aThursdayAfterAPartEndingWednesday_when_asked_then_covered", () => {
+		expect(
+			rosterCoversDayBefore("2026-11-12", [
+				weekOf9([{ coveredTo: "2026-11-11" }]),
+			])
+		).toBe(true);
+	});
+
+	it("given_onlyADraftOverTheDayBefore_when_asked_then_notCovered", () => {
+		expect(
+			rosterCoversDayBefore("2026-11-16", [weekOf9([{ state: "DRAFT" }])])
+		).toBe(false);
+	});
+
+	it("given_aWeekWithoutParts_when_asked_then_notCovered", () => {
+		expect(rosterCoversDayBefore("2026-11-16", [weekOf9([])])).toBe(false);
 	});
 });
 

@@ -6,6 +6,7 @@ import type {
 	WeekPart,
 	WeekState,
 } from "@/features/scheduling/months/api";
+import { hasRoster } from "@/features/scheduling/months/weekStateLooks";
 
 /*
  * What Setup shows for a schedule by dates, pure. Dates are ISO strings
@@ -171,6 +172,26 @@ export const daysBeforeOf = (
 	firstDay: string
 ): DayRun | undefined =>
 	firstDay > monday ? { from: monday, to: dayBefore(firstDay) } : undefined;
+
+/**
+ * Whether a roster covers the day before a run's first generated day: a part
+ * with a roster, among `weeks` (the month reads holding that day), runs over
+ * it. When none does, "Before this week" asks about the days before.
+ */
+export const rosterCoversDayBefore = (
+	firstDay: string,
+	weeks: ReadonlyArray<MonthWeek>
+): boolean => {
+	const day = dayBefore(firstDay);
+	return weeks.some((week) =>
+		week.parts.some(
+			(part) =>
+				hasRoster(part.state) &&
+				part.coveredFrom <= day &&
+				part.coveredTo >= day
+		)
+	);
+};
 
 /** Every date of a run of days, in order. */
 export const datesIn = (days: DayRun): Array<string> =>
