@@ -79,6 +79,7 @@ import {
 } from "@/features/employmentTerms/termsReadBack";
 import { TermsSummary } from "@/features/employmentTerms/TermsSummary";
 import { useEmploymentTermsActions } from "@/features/employmentTerms/useEmploymentTermsActions";
+import { RateField } from "@/features/employmentTerms/EmploymentTermsDialog/RateField";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
 
 /** What a save did, for the list's confirmation. */
@@ -317,31 +318,17 @@ const TermsForm = ({
 		name: "overtimeTimes" | "restDayTimes" | "dayOffTimes",
 		label: string,
 		hint: string | undefined
-	): ReactNode => {
-		const error = errors[name]?.message;
-		const ids = formRowIds(idOf(name));
-		return (
-			<FormRow
-				error={error}
-				hint={hint}
-				htmlFor={idOf(name)}
-				label={label}
-				layout="stacked"
-			>
-				<Input
-					aria-describedby={error ? ids.errorId : hint ? ids.hintId : undefined}
-					aria-invalid={Boolean(error)}
-					className="w-full sm:w-40"
-					disabled={isSubmitting}
-					id={idOf(name)}
-					inputMode="decimal"
-					status={error ? "error" : undefined}
-					unit={t(`${key}.timesUnit`)}
-					{...register(name)}
-				/>
-			</FormRow>
-		);
-	};
+	): ReactNode => (
+		<RateField
+			disabled={isSubmitting}
+			error={errors[name]?.message}
+			hint={hint}
+			id={idOf(name)}
+			label={label}
+			registration={register(name)}
+			unit={t(`${key}.timesUnit`)}
+		/>
+	);
 	// The rate is asked whenever the Act's limits apply, otherwise only for extra hours paid at a rate.
 	const rateAsked = overtimeRateAsked(values);
 	const dayOffShown =
@@ -389,7 +376,7 @@ const TermsForm = ({
 			}
 			onClose={close}
 		>
-			<div className="grid gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+			<div className="grid grid-cols-[minmax(0,1fr)] gap-6 md:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
 				<form
 					noValidate
 					aria-busy={isSubmitting}
@@ -431,7 +418,7 @@ const TermsForm = ({
 							{formMessage}
 						</p>
 					)}
-					<fieldset className="flex flex-col gap-2">
+					<fieldset className="flex min-w-0 flex-col gap-2">
 						<legend className={legendClasses}>{t(`${key}.startFrom`)}</legend>
 						{presets.isError ? (
 							<p className="text-xs text-neutral-700">
@@ -465,7 +452,7 @@ const TermsForm = ({
 						)}
 						<p className="text-xs text-neutral-700">{startedNote}</p>
 					</fieldset>
-					<fieldset className="flex flex-col gap-4">
+					<fieldset className="flex min-w-0 flex-col gap-4">
 						<legend className={legendClasses}>{t(`${key}.workingWeek`)}</legend>
 						<div className="grid gap-4 sm:grid-cols-2">
 							<FormRow
@@ -585,7 +572,7 @@ const TermsForm = ({
 						control={control}
 						name="hoursLimitsApply"
 						render={({ field }) => (
-							<fieldset className="flex flex-col gap-3">
+							<fieldset className="flex min-w-0 flex-col gap-3">
 								<legend className={legendClasses}>
 									{t(`${key}.covered.question`)}
 								</legend>
@@ -630,7 +617,7 @@ const TermsForm = ({
 							</fieldset>
 						)}
 					/>
-					<fieldset className="flex flex-col gap-3">
+					<fieldset className="flex min-w-0 flex-col gap-3">
 						<legend className={legendClasses}>{t(`${key}.overtime`)}</legend>
 						{reference === undefined ? (
 							<p className="text-sm text-neutral-700">
