@@ -36,10 +36,12 @@ import {
 	ungeneratedMonthFixture,
 } from "@/features/scheduling/months/fixtures";
 import { readinessFixture } from "@/features/scheduling/readiness/fixtures";
+import type { PartDays } from "@/features/scheduling/dates/api";
 import { datesIn } from "@/features/scheduling/dates/datesSetup";
 import {
 	datesGenerationFixture,
 	datesPlanFixture,
+	datesPlanRedoingFixture,
 } from "@/features/scheduling/dates/fixtures";
 import {
 	scheduleFixture,
@@ -1772,6 +1774,80 @@ describe("Create schedules for a month: by dates", () => {
 			await screen.findByText("Carried over from the week of Nov 16.")
 		).toBeVisible();
 		expect(screen.queryByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeNull();
+		expect(addLastWeek()).toBeNull();
+	});
+
+	it("given_datesRedoingAWeekFromMonday_when_setUp_then_beforeThisWeekIsNotOffered", async () => {
+		/** The week of 23 Nov's whole schedule, s-23, cut to some of its days. */
+		const scheduled = (coveredFrom: string, coveredTo: string): PartDays => ({
+			scheduleId: "s-23",
+			coveredFrom,
+			coveredTo,
+			state: "TO_REVIEW",
+		});
+		const plan = mondayPlan();
+		const [week] = plan.weeks;
+		const { opened, calls } = await open(NEW_DATES_FROM_MONDAY, {
+			...datesRoutes({
+				...plan,
+				weeks: [
+					{
+						...week!,
+						redone: [scheduled("2026-11-23", "2026-11-28")],
+						rest: [scheduled("2026-11-29", "2026-11-29")],
+					},
+				],
+			}),
+			[`GET ${NOVEMBER}`]: weekOf16Read(),
+		});
+
+		await screen.findByRole("table", { name: "What this creates" });
+		// Once the week before is read (nothing rostered) and drawn, the notice would show if it were offered.
+		await vi.waitFor(() => {
+			expect(calls.some((call) => call.path === NOVEMBER)).toBe(true);
+			expect(opened.queryClient.isFetching()).toBe(0);
+		});
+		await act(async () => {
+			await new Promise((resolve) => {
+				setTimeout(resolve, 0);
+			});
+		});
+
+		expect(screen.queryByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeNull();
+		expect(addLastWeek()).toBeNull();
+	});
+
+	it("given_datesRedoingFromWednesdayAfterTheirOwnPart_when_setUp_then_carriesOverFromTheDaysThatStay", async () => {
+		await open(
+			"/scheduling/new?department=d-1&month=2026-11&for=dates&firstDay=2026-11-18&lastDay=2026-11-19",
+			{
+				...datesRoutes(datesPlanRedoingFixture()),
+				[`GET ${NOVEMBER}`]: reply(
+					scheduleMonthFixture({
+						weeks: [
+							monthWeekFixture({
+								periodStart: "2026-11-16",
+								periodEnd: "2026-11-22",
+								state: "TO_REVIEW",
+								scheduleId: "s-1",
+								parts: [
+									{
+										...publishedPart("s-1", "2026-11-16", "2026-11-22"),
+										state: "TO_REVIEW",
+									},
+								],
+							}),
+						],
+					})
+				),
+			}
+		);
+
+		expect(
+			await screen.findByText(
+				/^Carried over from the roster of Nov 16\s?–\s?17, 2026\.$/
+			)
+		).toBeVisible();
 		expect(addLastWeek()).toBeNull();
 	});
 
