@@ -5410,6 +5410,8 @@
 			"setup": {
 				"description": "Select the department and the month to generate.",
 				"month": "Month",
+				"scheduleFor": "Schedule for",
+				"dates": "Dates",
 				"belongs": "A week belongs to the month its Monday falls in.",
 				"weeksLabel": "Weeks",
 				"weekColumn": "Week",
@@ -5539,6 +5541,31 @@
 				"unavailable": "You can’t schedule this department. Choose a department you schedule.",
 				"forbidden": "You don’t have permission to generate schedules at this department.",
 				"failed": "We couldn’t generate these dates. Try again."
+			},
+			"setup": {
+				"firstDay": "First day",
+				"lastDay": "Last day",
+				"hint": "Any weekday, up to {{max}} days. Days that already have a schedule are left as they are.",
+				"name": "Name",
+				"nameHint": "Optional. Shown on the weeks these dates create.",
+				"nameCounter": "{{count}}/{{max}}",
+				"creates": "What this creates",
+				"datesColumn": "Dates",
+				"daysColumn": "Days",
+				"wholeWeek": "The whole week",
+				"someDays_one": "{{count}} of 7 days",
+				"someDays_other": "{{count}} of 7 days",
+				"keptLine": "Already {{state}}, stays as it is",
+				"new": "New",
+				"kept": "Kept",
+				"summary_one": "{{count}} day to generate, {{range}}",
+				"summary_other": "{{count}} days to generate, {{range}}",
+				"keptNote": "{{days}} already has a schedule and stays as it is.",
+				"checking": "Checking these dates…",
+				"missing": "Choose a first day and a last day.",
+				"past": "Choose today ({{today}}) or a later first day. Days that have passed cannot be scheduled.",
+				"reversed": "The last day is before the first day. Choose a last day on or after {{first}}.",
+				"tooLong": "That is {{days}} days. A schedule by dates covers up to {{max}} days. Choose a last day on or before {{last}}, or make a second schedule for the rest."
 			}
 		}
 	},

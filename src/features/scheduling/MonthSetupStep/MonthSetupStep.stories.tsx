@@ -8,6 +8,10 @@ import {
 	defaultTicksOf,
 	tickableWeeksOf,
 } from "@/features/scheduling/months/weekTicks";
+import {
+	datesPlanFixture,
+	datesPlanWithKeptWeekFixture,
+} from "@/features/scheduling/dates/fixtures";
 import { MonthSetupStep } from "@/features/scheduling/MonthSetupStep";
 import { schedulingWorkspace } from "@/features/scheduling/schedules/fixtures";
 import { workspaceQuery } from "@/features/workspace/api";
@@ -33,7 +37,11 @@ const meta = {
 		companyId: "c-1",
 		defaultValues: {
 			departmentId: "",
+			scheduleFor: "month",
 			month: "2026-11",
+			firstDay: "",
+			lastDay: "",
+			name: "",
 			includeLeave: true,
 		},
 		// Thursday 12 Nov 2026: November and the twelve months after it.
@@ -103,5 +111,40 @@ export const December: Story = {
 				Uses all 3 shifts and 5 constraints of Front Office.
 			</p>
 		),
+	},
+};
+
+/** The design's example by dates: Thursday 19 to Saturday 28 November, nothing rostered before. */
+export const DatesNothingRostered: Story = {
+	name: "Dates, nothing rostered",
+	args: {
+		defaultValues: {
+			...meta.args.defaultValues,
+			departmentId: "d-1",
+			scheduleFor: "dates",
+			firstDay: "2026-11-19",
+			lastDay: "2026-11-28",
+			name: "Year-end gala",
+		},
+		dates: { plan: datesPlanFixture(), pending: false, today: "2026-11-17" },
+	},
+};
+
+/** The same dates with the week of 23 Nov already published: it is kept. */
+export const DatesThisWeekPublished: Story = {
+	name: "Dates, this week published",
+	args: {
+		defaultValues: {
+			...meta.args.defaultValues,
+			departmentId: "d-1",
+			scheduleFor: "dates",
+			firstDay: "2026-11-19",
+			lastDay: "2026-11-28",
+		},
+		dates: {
+			plan: datesPlanWithKeptWeekFixture(),
+			pending: false,
+			today: "2026-11-17",
+		},
 	},
 };

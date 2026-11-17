@@ -5210,6 +5210,8 @@
 			"setup": {
 				"description": "Selecciona el departamento y el mes que quieres generar.",
 				"month": "Mes",
+				"scheduleFor": "Programar por",
+				"dates": "Fechas",
 				"belongs": "Una semana pertenece al mes en que cae su lunes.",
 				"weeksLabel": "Semanas",
 				"weekColumn": "Semana",
@@ -5339,6 +5341,31 @@
 				"unavailable": "No puedes programar este departamento. Elige un departamento que programes.",
 				"forbidden": "No tienes permiso para generar horarios en este departamento.",
 				"failed": "No pudimos generar estas fechas. Inténtalo de nuevo."
+			},
+			"setup": {
+				"firstDay": "Primer día",
+				"lastDay": "Último día",
+				"hint": "Cualquier día de la semana, hasta {{max}} días. Los días que ya tienen un horario se quedan como están.",
+				"name": "Nombre",
+				"nameHint": "Opcional. Se muestra en las semanas que crean estas fechas.",
+				"nameCounter": "{{count}}/{{max}}",
+				"creates": "Qué se crea",
+				"datesColumn": "Fechas",
+				"daysColumn": "Días",
+				"wholeWeek": "La semana completa",
+				"someDays_one": "{{count}} de 7 días",
+				"someDays_other": "{{count}} de 7 días",
+				"keptLine": "Ya {{state}}, se queda como está",
+				"new": "Nueva",
+				"kept": "Se mantiene",
+				"summary_one": "{{count}} día por generar, {{range}}",
+				"summary_other": "{{count}} días por generar, {{range}}",
+				"keptNote": "{{days}} ya tiene un horario y se queda como está.",
+				"checking": "Comprobando estas fechas…",
+				"missing": "Elige un primer día y un último día.",
+				"past": "Elige hoy ({{today}}) o un primer día posterior. Los días que ya pasaron no se pueden programar.",
+				"reversed": "El último día es anterior al primero. Elige un último día igual o posterior al {{first}}.",
+				"tooLong": "Son {{days}} días. Un horario por fechas cubre hasta {{max}} días. Elige un último día igual o anterior al {{last}}, o haz un segundo horario para el resto."
 			}
 		}
 	},

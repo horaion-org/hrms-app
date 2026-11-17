@@ -174,6 +174,10 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 	const [setup, setSetup] = useState<MonthSetupValues>();
 	const setupDefaults: MonthSetupValues = setup ?? {
 		departmentId: search.department ?? "",
+		scheduleFor: "month",
+		firstDay: "",
+		lastDay: "",
+		name: "",
 		month:
 			search.month && months.includes(search.month)
 				? search.month

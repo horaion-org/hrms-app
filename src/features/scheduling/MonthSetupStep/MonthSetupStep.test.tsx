@@ -15,11 +15,19 @@ import {
 	type MonthSetupStepProps,
 } from "@/features/scheduling/MonthSetupStep";
 import { schedulingWorkspace } from "@/features/scheduling/schedules/fixtures";
+import {
+	datesPlanFixture,
+	datesPlanWithKeptWeekFixture,
+} from "@/features/scheduling/dates/fixtures";
 import { workspaceQuery } from "@/features/workspace/api";
 
 const DEFAULTS = {
 	departmentId: "",
+	scheduleFor: "month" as const,
 	month: "2026-11",
+	firstDay: "",
+	lastDay: "",
+	name: "",
 	includeLeave: true,
 };
 
@@ -308,9 +316,8 @@ describe("MonthSetupStep", () => {
 			expect(onSubmit).toHaveBeenCalledOnce();
 		});
 		expect(onSubmit.mock.calls[0]?.[0]).toEqual({
+			...DEFAULTS,
 			departmentId: "d-2",
-			month: "2026-11",
-			includeLeave: true,
 		});
 		expect(onDepartmentChange).toHaveBeenLastCalledWith("d-2");
 	});
@@ -322,5 +329,127 @@ describe("MonthSetupStep", () => {
 			screen.getByRole("checkbox", { name: "Include approved leave" })
 		).toBeInTheDocument();
 		expect(screen.queryByRole("checkbox", { name: /open shifts/i })).toBeNull();
+	});
+
+	describe("schedule for dates", () => {
+		const DATES = {
+			...DEFAULTS,
+			departmentId: "d-1",
+			scheduleFor: "dates" as const,
+			firstDay: "2026-11-19",
+			lastDay: "2026-11-28",
+		};
+		const datesProp = (
+			plan = datesPlanFixture()
+		): MonthSetupStepProps["dates"] => ({ plan, pending: false, today: TODAY });
+
+		it("given_aNewSetup_when_shown_then_monthIsChosen", () => {
+			render(<Harness />);
+
+			expect(screen.getByRole("tab", { name: "Month" })).toHaveAttribute(
+				"aria-selected",
+				"true"
+			);
+			expect(screen.queryByText("First day")).toBeNull();
+		});
+
+		it("given_datesChosen_when_shown_then_firstLastNameAndThePlanRows", async () => {
+			const user = userEvent.setup();
+			const onDatesChange = vi.fn();
+			render(<Harness dates={datesProp()} onDatesChange={onDatesChange} />);
+
+			await user.click(screen.getByRole("tab", { name: "Dates" }));
+
+			expect(screen.getByText("First day")).toBeInTheDocument();
+			expect(screen.getByText("Last day")).toBeInTheDocument();
+			expect(
+				screen.getByText("Optional. Shown on the weeks these dates create.")
+			).toBeInTheDocument();
+			const table = screen.getByRole("table", { name: "What this creates" });
+			expect(within(table).getAllByRole("row")).toHaveLength(3);
+			expect(within(table).getByText("4 of 7 days")).toBeInTheDocument();
+			expect(within(table).getAllByText("New")).toHaveLength(2);
+			expect(
+				screen.getByText(/^10 days to generate, Nov 19\s?–\s?28, 2026$/)
+			).toBeInTheDocument();
+			expect(onDatesChange).toHaveBeenLastCalledWith({
+				scheduleFor: "dates",
+				firstDay: "",
+				lastDay: "",
+			});
+		});
+
+		it("given_aPastFirstDay_when_validated_then_saysChooseTodayOrLater", async () => {
+			const user = userEvent.setup();
+			render(
+				<Harness
+					dates={datesProp()}
+					defaultValues={{ ...DATES, firstDay: "2026-11-16" }}
+				/>
+			);
+
+			await user.click(screen.getByRole("button", { name: "Next" }));
+
+			expect(
+				await screen.findByText(
+					"Choose today (Tue, Nov 17) or a later first day. Days that have passed cannot be scheduled."
+				)
+			).toBeInTheDocument();
+		});
+
+		it("given_32Days_when_validated_then_namesTheLastDayAllowed", async () => {
+			const user = userEvent.setup();
+			render(
+				<Harness
+					dates={datesProp()}
+					defaultValues={{ ...DATES, lastDay: "2026-12-20" }}
+				/>
+			);
+
+			await user.click(screen.getByRole("button", { name: "Next" }));
+
+			expect(
+				await screen.findByText(
+					"That is 32 days. A schedule by dates covers up to 31 days. Choose a last day on or before Sat, Dec 19, or make a second schedule for the rest."
+				)
+			).toBeInTheDocument();
+		});
+
+		it("given_aPlanWithKeptDays_when_shown_then_warnsTheyStay", () => {
+			render(
+				<Harness
+					dates={datesProp(datesPlanWithKeptWeekFixture())}
+					defaultValues={DATES}
+				/>
+			);
+
+			expect(
+				screen.getByText("Already published, stays as it is")
+			).toBeInTheDocument();
+			expect(screen.getByText("Kept")).toBeInTheDocument();
+			expect(
+				screen.getByText(
+					/^Nov 23\s?–\s?28, 2026 already has a schedule and stays as it is\.$/
+				)
+			).toBeInTheDocument();
+		});
+
+		it("given_aPlanRefusedAllTaken_when_shown_then_saysUseMonth", () => {
+			const plan = datesPlanFixture({
+				newDays: 0,
+				refusal: {
+					code: "SCHEDULE_DAYS_ALL_TAKEN",
+					days: { from: "2026-11-19", to: "2026-11-28" },
+					scheduledDays: null,
+				},
+			});
+			render(<Harness dates={datesProp(plan)} defaultValues={DATES} />);
+
+			expect(
+				screen.getByText(
+					"Every day from Thu, Nov 19 to Sat, Nov 28 already has a schedule. To redo a week, choose Month and tick it."
+				)
+			).toBeInTheDocument();
+		});
 	});
 });
