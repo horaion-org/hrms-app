@@ -49,7 +49,7 @@ describe("SampleWeek", () => {
 				partTime: false,
 			})
 		);
-		expect(days.at(-1)).toBe("rest*SunSunday");
+		expect(days[days.length - 1]).toBe("rest*SunSunday");
 	});
 
 	it("given_daysVary_when_drawn_then_everyDayVaries", () => {

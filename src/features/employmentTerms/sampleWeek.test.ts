@@ -34,7 +34,11 @@ describe("sampleWeek", () => {
 			restDay: "SUN",
 			partTime: false,
 		});
-		expect(week.days[5]).toEqual({ weekday: "SAT", kind: "HALF", minutes: 240 });
+		expect(week.days[5]).toEqual({
+			weekday: "SAT",
+			kind: "HALF",
+			minutes: 240,
+		});
 	});
 
 	it("given_rosterPicks_when_drawn_then_restMarkedAsAnExample", () => {

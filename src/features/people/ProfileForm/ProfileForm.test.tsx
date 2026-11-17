@@ -887,9 +887,7 @@ describe("Add employee's employment terms", () => {
 		expect(button(/^Employment terms/)).toHaveTextContent("Standard week");
 		await choose(user, /^Employment terms/, "Five-day week, 44 h");
 		expect(
-			screen.getByText(
-				/^Full-time, 5 days a week, 44 h \(8 h 48 min a day\)\./
-			)
+			screen.getByText(/^Full-time, 5 days a week, 44 h \(8 h 48 min a day\)\./)
 		).toBeVisible();
 		await pickDate(user, /^Hire date/, "1 October 2026");
 		await user.click(confirm());

@@ -175,8 +175,9 @@ const TermsForm = ({
 	const [nameTyped, setNameTyped] = useState(
 		editing !== undefined || initial !== undefined
 	);
-	// The starting point last clicked; it steps aside once any answer differs from it.
-	const [startedFrom, setStartedFrom] = useState<TermsPreset>();
+	// The starting point last clicked (new terms start from the first); it steps aside once an answer differs.
+	const [startedFromKey, setStartedFromKey] = useState<string>();
+	const isNew = editing === undefined && initial === undefined;
 	const schema = useMemo(
 		() => termsFormSchema(t, { maxDayMinutes, minimumCoveredOvertimePercent }),
 		[t, maxDayMinutes, minimumCoveredOvertimePercent]
@@ -208,13 +209,22 @@ const TermsForm = ({
 	const held = (editing?.holderCount ?? 0) + (editing?.scheduledCount ?? 0);
 	const readBack = readBackOf(values, reference, t, language);
 
-	const startFrom = (preset: TermsPreset): void => {
+	const startedFrom = presetList.find(
+		(preset) =>
+			preset.key ===
+			(startedFromKey ?? (isNew ? presetList[0]?.key : undefined))
+	);
+	// Fills the form from a starting point; the name follows unless one was typed.
+	const fillFrom = (preset: TermsPreset): void => {
 		const next = valuesOfPreset(preset, values);
 		reset(next);
-		setStartedFrom(preset);
 		const week = weekFieldsOf(next);
 		if (!nameTyped && week)
 			setValue("name", suggestedTermsName(week, partTimeBelowMinutes, t));
+	};
+	const startFrom = (preset: TermsPreset): void => {
+		fillFrom(preset);
+		setStartedFromKey(preset.key);
 	};
 	// New terms start from the first starting point once the figures arrive, so the form is never blank.
 	const started = useRef(editing !== undefined || initial !== undefined);
@@ -222,8 +232,8 @@ const TermsForm = ({
 		if (started.current || presetList.length === 0) return;
 		started.current = true;
 		const [first] = presetList;
-		if (first) startFrom(first);
-		// startFrom reads the form as it is now; it runs once, when the presets arrive.
+		if (first) fillFrom(first);
+		// fillFrom reads the form as it is now; it runs once, when the presets arrive.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [presetList]);
 
@@ -325,9 +335,7 @@ const TermsForm = ({
 	// The rate is asked whenever the Act's limits apply, otherwise only for extra hours paid at a rate.
 	const rateAsked = overtimeRateAsked(values);
 	const dayOffShown =
-		rateAsked &&
-		fields !== undefined &&
-		hasDayOff(fields, partTime);
+		rateAsked && fields !== undefined && hasDayOff(fields, partTime);
 	const overtimeRateHint = values.hoursLimitsApply
 		? minimumCoveredOvertimePercent === null
 			? undefined
@@ -424,13 +432,13 @@ const TermsForm = ({
 								{presetList.map((preset) => (
 									<Button
 										key={preset.key}
+										disabled={isSubmitting}
+										size="sm"
+										variant="secondary"
 										aria-pressed={
 											startedFrom?.key === preset.key &&
 											holdsPreset(values, preset)
 										}
-										disabled={isSubmitting}
-										size="sm"
-										variant="secondary"
 										onClick={() => {
 											startFrom(preset);
 										}}
@@ -463,14 +471,12 @@ const TermsForm = ({
 										<Select
 											ref={field.ref}
 											aria-invalid={Boolean(daysError)}
+											aria-labelledby={formRowIds(idOf("daysPerWeek")).labelId}
 											className="w-full"
 											disabled={isSubmitting}
 											name={field.name}
 											status={daysError ? "error" : undefined}
 											value={field.value}
-											aria-labelledby={
-												formRowIds(idOf("daysPerWeek")).labelId
-											}
 											options={dayChoices.map((choice) => ({
 												value: choice === null ? "" : String(choice),
 												label:
@@ -496,11 +502,6 @@ const TermsForm = ({
 								layout="stacked"
 							>
 								<Input
-									aria-describedby={
-										weekError
-											? formRowIds(idOf("weekHours")).errorId
-											: idOf("dayLine")
-									}
 									aria-invalid={Boolean(weekError)}
 									className="w-full"
 									disabled={isSubmitting}
@@ -508,6 +509,11 @@ const TermsForm = ({
 									inputMode="decimal"
 									status={weekError ? "error" : undefined}
 									unit={t(`${key}.weekHoursUnit`)}
+									aria-describedby={
+										weekError
+											? formRowIds(idOf("weekHours")).errorId
+											: idOf("dayLine")
+									}
 									{...register("weekHours", {
 										onChange: (event: { target: { value: string } }) => {
 											followAnswers({ weekHours: event.target.value });
@@ -689,7 +695,11 @@ const TermsForm = ({
 						)}
 						{!partTime &&
 							rateAsked &&
-							rateField("restDayTimes", t(`${key}.restDayRate`), restDayRateHint)}
+							rateField(
+								"restDayTimes",
+								t(`${key}.restDayRate`),
+								restDayRateHint
+							)}
 						{dayOffShown && (
 							<FormRow
 								hint={t(`${key}.dayOffHint`)}
@@ -709,10 +719,12 @@ const TermsForm = ({
 											disabled={isSubmitting}
 											name={field.name}
 											value={field.value}
-											options={(["NORMAL", "OWN_RATE"] as const).map((mode) => ({
-												value: mode,
-												label: t(`${key}.dayOffMode.${mode}`),
-											}))}
+											options={(["NORMAL", "OWN_RATE"] as const).map(
+												(mode) => ({
+													value: mode,
+													label: t(`${key}.dayOffMode.${mode}`),
+												})
+											)}
 											onChange={field.onChange}
 										/>
 									)}

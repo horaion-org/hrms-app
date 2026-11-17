@@ -75,7 +75,6 @@ describe("readBackOf", () => {
 			).text
 		).toBe("Not finished yet: fill in or check the hours a week.");
 	});
-
 });
 
 describe("termsSentence, the design's sentence", () => {

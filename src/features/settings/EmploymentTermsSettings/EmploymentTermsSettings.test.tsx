@@ -154,7 +154,6 @@ describe("EmploymentTermsSettings", () => {
 		).toHaveTextContent("New people get these");
 	});
 
-
 	it("links each count to the People list filtered to those terms, across every Branch", async () => {
 		stubApi(
 			routes([
@@ -292,8 +291,12 @@ describe("EmploymentTermsSettings", () => {
 		expect(dialog).toHaveTextContent(
 			"Part-timers have no fixed rest day here. The roster works from the days they say they are available."
 		);
-		expect(within(dialog).queryByRole("combobox", { name: "Rest day" })).toBeNull();
-		expect(within(dialog).getByText("Part-time", { selector: "span" })).toBeVisible();
+		expect(
+			within(dialog).queryByRole("combobox", { name: "Rest day" })
+		).toBeNull();
+		expect(
+			within(dialog).getByText("Part-time", { selector: "span" })
+		).toBeVisible();
 	});
 
 	it("given_coveredNo_when_chosen_then_minimumHintChanges", async () => {
@@ -348,7 +351,6 @@ describe("EmploymentTermsSettings", () => {
 		expect(await screen.findByText("Employment terms added")).toBeVisible();
 	});
 
-
 	describe("the pay for extra hours", () => {
 		/** Opens Add employment terms once the first kind has filled the form. */
 		const openAdd = async (panel: HTMLElement): Promise<HTMLElement> => {
@@ -363,9 +365,9 @@ describe("EmploymentTermsSettings", () => {
 			});
 			expect(
 				await within(dialog).findByRole("button", {
-				name: /^Full-time, 5 days/,
-			})
-		).toHaveAttribute("aria-pressed", "true");
+					name: /^Full-time, 5 days/,
+				})
+			).toHaveAttribute("aria-pressed", "true");
 			return dialog;
 		};
 
@@ -525,7 +527,6 @@ describe("EmploymentTermsSettings", () => {
 			calls.some((call) => call.method === "POST" && call.path === TERMS)
 		).toBe(false);
 	});
-
 
 	it("says what is wrong at the field as soon as it is left, before saving", async () => {
 		const calls = stubApi(routes(READ_AND_UPDATE));
@@ -949,7 +950,6 @@ describe("EmploymentTermsSettings", () => {
 		);
 	});
 
-
 	it("opens terms outside the Act's hour rules on No, in the main form", async () => {
 		stubApi(
 			routes(READ_AND_UPDATE, {
@@ -974,7 +974,6 @@ describe("EmploymentTermsSettings", () => {
 		});
 		expect(within(dialog).getByRole("radio", { name: "No" })).toBeChecked();
 	});
-
 
 	it("says who moves before making terms the default", async () => {
 		const calls = stubApi(

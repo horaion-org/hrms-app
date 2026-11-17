@@ -9,7 +9,10 @@ describe("normalDayMinutes", () => {
 		[6, 2640, 440],
 		[null, 2640, null],
 		[7, 61, 8],
-	])("given_%s days and %s minutes_when_worked out_then_%s", (days, week, day) => {
-		expect(normalDayMinutes(days, week)).toBe(day);
-	});
+	])(
+		"given_%s days and %s minutes_when_worked out_then_%s",
+		(days, week, day) => {
+			expect(normalDayMinutes(days, week)).toBe(day);
+		}
+	);
 });

@@ -29,7 +29,7 @@ const MIN_BAR_PERCENT = 8;
 const PERCENT = 100;
 /** How many letters of a weekday's name the narrow column shows. */
 const SHORT_WEEKDAY_LENGTH = 3;
-const LEGEND: ReadonlyArray<SampleDayKind> = ["NORMAL", "HALF", "OFF", "REST"];
+const LEGEND = ["NORMAL", "HALF", "OFF", "REST"] as const;
 
 const barHeight = (minutes: number): string =>
 	`${Math.max(MIN_BAR_PERCENT, Math.min(PERCENT, (minutes / FULL_BAR_MINUTES) * PERCENT))}%`;
@@ -70,11 +70,11 @@ export const SampleWeek = ({
 								className="flex h-18 w-full items-end justify-center"
 							>
 								<span
+									style={{ height: barHeight(day.minutes) }}
 									className={joinClassNames(
 										"w-full max-w-8 rounded-sm",
 										BAR_CLASSES[day.kind]
 									)}
-									style={{ height: barHeight(day.minutes) }}
 								/>
 							</span>
 							<span className="font-semibold text-neutral-900">

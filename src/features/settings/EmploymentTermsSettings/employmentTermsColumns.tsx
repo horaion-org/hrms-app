@@ -66,9 +66,7 @@ const termsCell = (
 		<span className="flex flex-col gap-1">
 			<span className="flex flex-wrap items-center gap-2">
 				{terms.name}
-				{partTime && (
-					<Badge>{t("employmentTerms.dialog.partTimeBadge")}</Badge>
-				)}
+				{partTime && <Badge>{t("employmentTerms.dialog.partTimeBadge")}</Badge>}
 				{!terms.hoursLimitsApply && <Badge>{t(`${key}.notCovered`)}</Badge>}
 			</span>
 			<span className="font-normal text-neutral-900">

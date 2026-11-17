@@ -91,31 +91,30 @@ export const termsExample = (
 		paidAtARate(fields) && fields.overtimePercent !== null
 			? formatTimes(fields.overtimePercent, t)
 			: undefined;
-	const withRate = (
-		sentence: "week" | "day",
-		values: Record<string, string>
-	): string =>
-		times === undefined
-			? t(`${exampleKey}.${sentence}`, values)
-			: t(`${exampleKey}.${sentence}At`, { ...values, times });
 	const partTime = partTimeOf(fields, reference);
-	const example = partTime
-		? t(`${exampleKey}.partTime`, {
-				worked: short(fields.weekMinutes + EXAMPLE_EXTRA_WEEK_MINUTES),
-				week: short(fields.weekMinutes),
-				extra: short(EXAMPLE_EXTRA_WEEK_MINUTES),
-			})
-		: fields.dailyOvertime && fields.dayMinutes !== null
-			? withRate("day", {
-					worked: short(fields.dayMinutes + EXAMPLE_EXTRA_DAY_MINUTES),
-					day: short(fields.dayMinutes),
-					extra: short(EXAMPLE_EXTRA_DAY_MINUTES),
-				})
-			: withRate("week", {
-					worked: short(fields.weekMinutes + EXAMPLE_EXTRA_WEEK_MINUTES),
-					week: short(fields.weekMinutes),
-					extra: short(EXAMPLE_EXTRA_WEEK_MINUTES),
-				});
+	const daily = fields.dailyOvertime && fields.dayMinutes !== null;
+	const dayMinutes = fields.dayMinutes ?? 0;
+	const dayValues = {
+		worked: short(dayMinutes + EXAMPLE_EXTRA_DAY_MINUTES),
+		day: short(dayMinutes),
+		extra: short(EXAMPLE_EXTRA_DAY_MINUTES),
+	};
+	const weekValues = {
+		worked: short(fields.weekMinutes + EXAMPLE_EXTRA_WEEK_MINUTES),
+		week: short(fields.weekMinutes),
+		extra: short(EXAMPLE_EXTRA_WEEK_MINUTES),
+	};
+	const splitOf = (): string => {
+		if (partTime) return t(`${exampleKey}.partTime`, weekValues);
+		if (daily)
+			return times === undefined
+				? t(`${exampleKey}.day`, dayValues)
+				: t(`${exampleKey}.dayAt`, { ...dayValues, times });
+		return times === undefined
+			? t(`${exampleKey}.week`, weekValues)
+			: t(`${exampleKey}.weekAt`, { ...weekValues, times });
+	};
+	const example = splitOf();
 	const restIsExample =
 		!partTime && fields.restDay === "ROSTERED" && fields.daysPerWeek !== null;
 	return restIsExample

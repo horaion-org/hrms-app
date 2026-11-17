@@ -4,7 +4,11 @@ import type { RestDay } from "@/features/employmentTerms/api";
 /** What one day of the sample week is. */
 export type SampleDayKind = "NORMAL" | "HALF" | "OFF" | "REST" | "VARIES";
 
-export type SampleDay = { weekday: Weekday; kind: SampleDayKind; minutes: number };
+export type SampleDay = {
+	weekday: Weekday;
+	kind: SampleDayKind;
+	minutes: number;
+};
 
 /** A week the terms make, Monday first, and whether its rest day is only an example (the roster picks it). */
 export type SampleWeek = { days: Array<SampleDay>; restIsExample: boolean };
