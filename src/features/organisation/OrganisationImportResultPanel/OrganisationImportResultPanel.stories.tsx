@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { OrganisationImportResultPanel } from "@/features/organisation/OrganisationImportResultPanel";
 import type { OrganisationImport } from "@/features/organisation/import/api";
+import "@/common/i18n";
 
 const finished: OrganisationImport = {
 	importId: "o-1",
