@@ -5343,7 +5343,8 @@
 				"allWeeks_other": "All {{count}} weeks of {{month}} are worked out again. Nothing is published yet, so every week can change.",
 				"handChanged_one": "{{weeks}} was changed by hand.",
 				"handChanged_other": "{{weeks}} were changed by hand.",
-				"replaced": "Those changes and the roster are replaced only once the new roster is ready; if generating fails, the current roster stays."
+				"replaced": "Those changes are replaced once the new roster is ready.",
+				"keptUntilReady": "The current roster stays until the new one is ready. If generating fails, it stays as it is."
 			}
 		},
 		"rosterHours": {

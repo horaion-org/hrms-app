@@ -120,7 +120,7 @@ describe("RegenerateMonthDialog", () => {
 		const dialog = await show(november()).dialog();
 
 		expect(dialog).toHaveTextContent(
-			"All 5 weeks of November are worked out again. Nothing is published yet, so every week can change."
+			"All 5 weeks of November are worked out again. Nothing is published yet, so every week can change. The current roster stays until the new one is ready. If generating fails, it stays as it is."
 		);
 		expect(
 			within(dialog).getByRole("button", { name: "Regenerate November" })
@@ -140,7 +140,7 @@ describe("RegenerateMonthDialog", () => {
 			/The 4 weeks of November that aren’t published are worked out again, from Nov 9\s?–\s?15 on\. The published weeks stay as they are\./
 		);
 		expect(dialog).toHaveTextContent(
-			/Nov 16\s?–\s?22 was changed by hand\. Those changes and the roster are replaced only once the new roster is ready; if generating fails, the current roster stays\./
+			/Nov 16\s?–\s?22 was changed by hand\. Those changes are replaced once the new roster is ready\./
 		);
 		expect(
 			within(dialog).getByRole("button", { name: "Regenerate November" })

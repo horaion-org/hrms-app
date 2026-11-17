@@ -35,9 +35,9 @@ const key = "scheduling.months.regenerate";
 
 /**
  * Asks before generating a month again: which weeks are worked out again
- * (every week that isn't published, from its first on) and which weeks'
- * hand changes are replaced, which asks in red; they and the roster are
- * replaced only once the new roster is ready (API ADR-0112). Confirming posts the month
+ * (every week that isn't published, from its first on), that the current
+ * roster stays until the new one is ready (API ADR-0112), and which weeks'
+ * hand changes are replaced, which asks in red. Confirming posts the month
  * through useGenerateMonth; a refusal shows inside the dialog.
  */
 export const RegenerateMonthDialog = ({
@@ -60,7 +60,7 @@ export const RegenerateMonthDialog = ({
 		formatWeekDates({ start: week.periodStart, end: week.periodEnd }, language);
 	const firstCovered = covered[0];
 	const somePublished = month.weeks.some((week) => week.state === "PUBLISHED");
-	const description =
+	const weeksWorkedOut =
 		somePublished && firstCovered
 			? t(`${key}.someWeeks`, {
 					count: covered.length,
@@ -68,6 +68,8 @@ export const RegenerateMonthDialog = ({
 					from: weekLabel(firstCovered),
 				})
 			: t(`${key}.allWeeks`, { count: covered.length, month: monthName });
+	// Said every time: a failed run no longer takes the roster with it.
+	const description = `${weeksWorkedOut} ${t(`${key}.keptUntilReady`)}`;
 	const blockedNote =
 		generation.block === "cannotCreate"
 			? t("scheduling.months.generate.cannotCreate", {

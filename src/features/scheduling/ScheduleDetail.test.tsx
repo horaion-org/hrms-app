@@ -619,7 +619,7 @@ it("regenerates the month over a hand-changed week after a danger confirm, then 
 		"The 1 week of October is worked out again. Nothing is published yet, so it can change."
 	);
 	expect(dialog).toHaveTextContent(
-		/Oct 12\s?–\s?18 was changed by hand\. Those changes and the roster are replaced only once the new roster is ready; if generating fails, the current roster stays\./
+		/Oct 12\s?–\s?18 was changed by hand\. Those changes are replaced once the new roster is ready\./
 	);
 	const confirm = within(dialog).getByRole("button", {
 		name: "Regenerate October",
