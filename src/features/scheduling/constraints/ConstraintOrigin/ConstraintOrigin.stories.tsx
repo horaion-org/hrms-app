@@ -1,6 +1,7 @@
 import type { Decorator, Meta, StoryObj } from "@storybook/react-vite";
 import type { FunctionComponent } from "@/common/types";
 import { ConstraintOrigin } from "@/features/scheduling/constraints/ConstraintOrigin";
+import "@/common/i18n";
 
 const meta = {
 	title: "Scheduling/Constraint origin",

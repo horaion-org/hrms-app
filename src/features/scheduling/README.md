@@ -12,6 +12,10 @@ contracts are §2.4 of the API's `docs/implementation/2026-10-11-shifts-module.m
 `docs/implementation/2026-10-12-scheduling-constraints.md` (ADR-0050). Allocations and demand stay in the page until
 their API exists.
 
+To add a constraint type, a roster finding, an API read or write, or a page, follow the matching guide in
+[docs/guides](../../../docs/guides/README.md). The areas below (the lowercase folders) never import each other both
+ways; `scripts/check-feature-cycles.mjs` lists the pairs that still do, and that list only shrinks.
+
 ## Shape
 
 - `schedules/useSchedules.ts` — the overview's permission-aware company-wide history. Reads every page of

@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import { ImportCheckPanel } from "@/features/people/ImportCheckPanel";
 import type { ImportCheck } from "@/features/people/import/api";
+import "@/common/i18n";
 
 const values = (
 	name: string,

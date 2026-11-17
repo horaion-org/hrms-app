@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import type { FunctionComponent } from "@/common/types";
 import { CalendarDayView } from "@/components/forms/Calendar/CalendarDayView";
+import "@/common/i18n";
 
 const meta = {
 	title: "Forms/Calendar/CalendarDayView",

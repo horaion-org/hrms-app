@@ -3,6 +3,7 @@ import type { FunctionComponent } from "@/common/types";
 import { withMemoryRouter } from "@/components/utils/MemoryRouterHarness";
 import { SettingsNav } from "@/features/settings/SettingsNav";
 import { visibleGroups } from "@/features/settings/sections";
+import "@/common/i18n";
 
 const EVERYTHING = visibleGroups({
 	employment: true,

@@ -3,6 +3,7 @@ import { fn } from "storybook/test";
 import { withMemoryRouter } from "@/components/utils/MemoryRouterHarness";
 import { SetupChecklistCard } from "@/features/dashboard/SetupChecklistCard";
 import { setupProgress } from "@/features/dashboard/setupChecklist";
+import "@/common/i18n";
 
 const freshCompany = { branches: 0, departments: 0, jobTitles: 0, members: 1 };
 const structured = { branches: 4, departments: 18, jobTitles: 36, members: 1 };
