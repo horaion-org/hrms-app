@@ -65,12 +65,12 @@ export const RosterIssueGroups = ({
 							<Button
 								key={option}
 								aria-pressed={order === option}
+								variant="textlink"
 								className={
 									order === option
 										? "font-medium underline underline-offset-4"
 										: undefined
 								}
-								variant="textlink"
 								onClick={(): void => {
 									setOrder(option);
 								}}
