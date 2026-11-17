@@ -46,6 +46,10 @@ describe("generationFailure", () => {
 			"The scheduling engine didn’t finish this week’s roster in time, so generating was stopped. Generate again; if it keeps failing, contact support.",
 		],
 		[
+			"redone_days_changed",
+			"The days this schedule redoes were published or started generating while it ran, so nothing changed. Generate it again, or delete it.",
+		],
+		[
 			"engine_http_503",
 			"The scheduling engine returned an error, so nothing was generated. Generate again; if it keeps failing, contact support.",
 		],

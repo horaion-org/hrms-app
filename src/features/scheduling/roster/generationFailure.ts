@@ -28,6 +28,7 @@ const KNOWN_CODES = [
 	"worker_failed",
 	"worker_crashed",
 	"engine_run_timed_out",
+	"redone_days_changed",
 	"rule.soft_not_allowed",
 	"rule.days_not_worked_together_not_supported",
 ] as const;
