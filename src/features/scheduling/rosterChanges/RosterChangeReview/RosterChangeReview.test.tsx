@@ -117,4 +117,24 @@ describe("RosterChangeReview", () => {
 			expect(onRetryPreview).toHaveBeenCalledOnce();
 		}
 	);
+
+	it.each([
+		[
+			"invalid",
+			"This change can’t be made: it changes nothing, or names a day or shift that isn’t on this roster. Choose a different change.",
+		],
+		[
+			"notEditable",
+			"This roster can’t be changed now: only a generated or published roster can be. Reload the page to see where it stands.",
+		],
+	] as const)(
+		"given_aPreviewRefusedAs_%s_when_shown_then_itsOwnMessageAndNoRetryThatCannotWork",
+		(previewRefusal, message) => {
+			show(undefined, true, { previewRefusal, onRetryPreview: vi.fn() });
+
+			const alert = screen.getByRole("alert");
+			expect(alert).toHaveTextContent(message);
+			expect(within(alert).queryByRole("button")).toBeNull();
+		}
+	);
 });

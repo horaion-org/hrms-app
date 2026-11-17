@@ -4717,12 +4717,14 @@
 				"revision": "Alguien cambió este cuadrante después de que lo abrieras. Revisa tu cambio de nuevo.",
 				"reload": "Volver a cargar",
 				"checksChanged": "Algo cambió desde la comprobación (permisos, disponibilidad o el equipo). Revisa las comprobaciones.",
-				"notEditable": "Este cuadrante no se puede cambiar ahora.",
+				"notEditable": "Este cuadrante no se puede cambiar ahora: solo se puede cambiar un cuadrante generado o publicado. Vuelve a cargar la página para ver en qué punto está.",
 				"refused": "Este cambio no se puede aplicar. Revisa las comprobaciones.",
 				"undoBlocked": "Este cambio ya no se puede deshacer.",
 				"fromLeave": "Lo hizo una decisión de permiso. Cancela el permiso en Permisos.",
 				"forbidden": "Ya no tienes permiso para cambiar este cuadrante.",
-				"failed": "No pudimos aplicar el cambio. Inténtalo de nuevo."
+				"failed": "No pudimos aplicar el cambio. Inténtalo de nuevo.",
+				"invalid": "Este cambio no se puede hacer: no cambia nada, o nombra un día o un turno que no está en este cuadrante. Elige otro cambio.",
+				"fromOffer": "Este cambio vino de una oferta de cobertura que la persona aceptó, así que no se puede deshacer. Haz un cambio nuevo en el cuadrante."
 			},
 			"undoTitle": "¿Deshacer este cambio?",
 			"undoDescription": "Deshacer es un cambio de vuelta: se comprueba igual, y los permisos o la disponibilidad pueden haber cambiado desde entonces.",
