@@ -265,6 +265,7 @@ const decemberWith = (
 						coveredFrom: week.periodStart,
 						coveredTo: week.periodEnd,
 						state,
+						redoing: false,
 					},
 				],
 			};
@@ -283,6 +284,7 @@ const partOf14 = (
 	coveredFrom,
 	coveredTo,
 	state: "PUBLISHED",
+	redoing: false,
 });
 
 const mondaysOf = (weeks: Array<MonthWeek>): Array<string> =>

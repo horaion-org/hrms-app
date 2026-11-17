@@ -78,6 +78,7 @@ describe("namedSpansOf", () => {
 		coveredFrom: "2026-11-19",
 		coveredTo: "2026-11-22",
 		state: "TO_REVIEW",
+		redoing: false,
 		...overrides,
 	});
 
@@ -143,6 +144,7 @@ describe("rosterPartBefore and previousBefore", () => {
 		coveredFrom: "2026-11-09",
 		coveredTo: "2026-11-15",
 		state: "PUBLISHED",
+		redoing: false,
 		...overrides,
 	});
 

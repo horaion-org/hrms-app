@@ -90,6 +90,7 @@ describe("MonthCard", () => {
 			name: "Year-end gala",
 			named: true,
 			state: "TENTATIVE" as const,
+			redoing: false,
 		};
 		const summary = monthSummaryFixture();
 		const card = await renderCard({

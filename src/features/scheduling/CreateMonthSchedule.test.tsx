@@ -178,6 +178,7 @@ const publishedPart = (
 	coveredFrom,
 	coveredTo,
 	state: "PUBLISHED",
+	redoing: false,
 });
 
 describe("Create schedules for a month", () => {

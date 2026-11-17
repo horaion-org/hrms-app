@@ -9,6 +9,7 @@ import {
 import {
 	datesGenerationFixture,
 	datesPlanFixture,
+	datesPlanRedoingFixture,
 } from "@/features/scheduling/dates/fixtures";
 
 const DATES = "/api/v1/companies/c-1/schedule-dates";
@@ -58,6 +59,39 @@ describe("schedules by dates client", () => {
 		const parsed = await fetchDatesPlan("c-1", "d-1", DAYS);
 
 		expect(parsed.weeks[0]?.action).toBe("UNKNOWN");
+	});
+
+	it("given_aPlanWithoutRedoneOrRest_when_parsed_then_bothEmpty", async () => {
+		const plan = datesPlanFixture();
+		// Sent as JSON, a key set to undefined is left out, as an older API leaves these out.
+		const olderWeek = { ...plan.weeks[0], redone: undefined, rest: undefined };
+		stubApi({
+			[`GET ${DATES}/plan`]: {
+				status: 200,
+				body: envelope({ ...plan, weeks: [olderWeek] }),
+			},
+		});
+
+		const parsed = await fetchDatesPlan("c-1", "d-1", DAYS);
+
+		expect(parsed.weeks[0]).toMatchObject({ redone: [], rest: [] });
+	});
+
+	it("given_aRedoWeek_when_parsed_then_keptRedoneAndRestRead", async () => {
+		stubApi({
+			[`GET ${DATES}/plan`]: {
+				status: 200,
+				body: envelope(datesPlanRedoingFixture()),
+			},
+		});
+
+		const parsed = await fetchDatesPlan("c-1", "d-1", DAYS);
+
+		expect(parsed.weeks[0]).toMatchObject({
+			kept: [{ coveredFrom: "2026-11-16", coveredTo: "2026-11-17" }],
+			redone: [{ coveredFrom: "2026-11-18", coveredTo: "2026-11-19" }],
+			rest: [{ coveredFrom: "2026-11-20", coveredTo: "2026-11-22" }],
+		});
 	});
 
 	it("given_aGeneration_when_posted_then_sendsTheBodyWithTheDepartmentInTheQueryOnly", async () => {

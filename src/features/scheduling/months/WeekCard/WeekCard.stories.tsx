@@ -97,6 +97,7 @@ export const PublishedInPart: Story = {
 					coveredFrom: "2026-11-23",
 					coveredTo: "2026-11-25",
 					state: "PUBLISHED",
+					redoing: false,
 				},
 				{
 					scheduleId: "s-2",
@@ -105,6 +106,7 @@ export const PublishedInPart: Story = {
 					coveredFrom: "2026-11-26",
 					coveredTo: "2026-11-29",
 					state: "TO_REVIEW",
+					redoing: false,
 				},
 			],
 		}),

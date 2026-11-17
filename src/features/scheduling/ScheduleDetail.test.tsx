@@ -390,6 +390,7 @@ describe("a schedule covering part of its week", () => {
 		name: "Week of 2026-10-12",
 		named: false,
 		state: "TO_REVIEW" as const,
+		redoing: false,
 	};
 	const partRoutes = (
 		permissions: Array<string>,
