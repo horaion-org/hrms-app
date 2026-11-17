@@ -5557,9 +5557,10 @@
 		},
 		"dates": {
 			"refusal": {
-				"allTaken": "Every day from {{first}} to {{last}} already has a schedule. To redo a week, choose Month and tick it.",
-				"beforeRoster": "{{days}} come before {{scheduled}}, which already have a schedule. Days can only be added after them: choose a first day after {{last}}, or choose Month and tick that week.",
-				"draftInTheWay": "The week of {{week}} has a draft for {{days}}. Delete it from the month page, or choose dates that match it.",
+				"allTaken": "Every day from {{first}} to {{last}} is published, so nothing would change. Choose a first day after {{last}}.",
+				"beforeRoster": "{{days}} come before {{scheduled}}, which are published and stay as they are. Choose a first day after {{last}}.",
+				"draftInTheWay": "The week of {{week}} has a schedule for {{days}} with no roster yet. Open it from the month page to generate it, or delete it, then choose these dates again.",
+				"beingGenerated": "{{days}} are being generated right now. Wait until that finishes on the month page, then choose these dates again.",
 				"datesInvalid": "These dates can’t be scheduled any more. Go back to Setup and choose them again.",
 				"changed": "The days changed since Setup read them, so nothing was generated. Go back to Setup to see them as they are now.",
 				"unavailable": "You can’t schedule this department. Choose a department you schedule.",

@@ -5357,9 +5357,10 @@
 		},
 		"dates": {
 			"refusal": {
-				"allTaken": "Todos los días del {{first}} al {{last}} ya tienen un horario. Para rehacer una semana, elige Mes y márcala.",
-				"beforeRoster": "{{days}} van antes de {{scheduled}}, que ya tienen un horario. Solo se pueden añadir días después: elige un primer día posterior al {{last}}, o elige Mes y marca esa semana.",
-				"draftInTheWay": "La semana del {{week}} tiene un borrador para {{days}}. Elimínalo desde la página del mes, o elige fechas que coincidan con él.",
+				"allTaken": "Todos los días del {{first}} al {{last}} están publicados, así que no cambiaría nada. Elige un primer día posterior al {{last}}.",
+				"beforeRoster": "{{days}} van antes de {{scheduled}}, que están publicados y se quedan como están. Elige un primer día posterior al {{last}}.",
+				"draftInTheWay": "La semana del {{week}} tiene un horario para {{days}} todavía sin cuadrante. Ábrelo desde la página del mes para generarlo, o elimínalo, y luego vuelve a elegir estas fechas.",
+				"beingGenerated": "{{days}} se están generando ahora mismo. Espera a que termine en la página del mes y luego vuelve a elegir estas fechas.",
 				"datesInvalid": "Ya no se pueden programar estas fechas. Vuelve a Configuración y elígelas de nuevo.",
 				"changed": "Los días cambiaron desde que Configuración los leyó, así que no se generó nada. Vuelve a Configuración para verlos como están ahora.",
 				"unavailable": "No puedes programar este departamento. Elige un departamento que programes.",

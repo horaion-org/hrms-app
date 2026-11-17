@@ -1804,7 +1804,7 @@ describe("Create schedules for a month: by dates", () => {
 		).toHaveLength(1);
 	});
 
-	it("given_allDaysTaken_when_onSetup_then_nextWaitsAndSaysUseMonth", async () => {
+	it("given_allDaysPublished_when_onSetup_then_nextWaitsAndSaysChooseALaterFirstDay", async () => {
 		await open(
 			NEW_DATES,
 			datesRoutes(
@@ -1821,7 +1821,7 @@ describe("Create schedules for a month: by dates", () => {
 
 		expect(
 			await screen.findByText(
-				"Every day from Thu, Nov 19 to Sat, Nov 28 already has a schedule. To redo a week, choose Month and tick it."
+				"Every day from Thu, Nov 19 to Sat, Nov 28 is published, so nothing would change. Choose a first day after Sat, Nov 28."
 			)
 		).toBeInTheDocument();
 		expect(next()).toBeDisabled();

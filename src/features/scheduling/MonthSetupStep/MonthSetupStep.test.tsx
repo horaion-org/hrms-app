@@ -461,7 +461,7 @@ describe("MonthSetupStep", () => {
 			).toBeInTheDocument();
 		});
 
-		it("given_aPlanRefusedAllTaken_when_shown_then_saysUseMonth", () => {
+		it("given_aPlanRefusedAllTaken_when_shown_then_saysChooseALaterFirstDay", () => {
 			const plan = datesPlanFixture({
 				newDays: 0,
 				refusal: {
@@ -474,7 +474,7 @@ describe("MonthSetupStep", () => {
 
 			expect(
 				screen.getByText(
-					"Every day from Thu, Nov 19 to Sat, Nov 28 already has a schedule. To redo a week, choose Month and tick it."
+					"Every day from Thu, Nov 19 to Sat, Nov 28 is published, so nothing would change. Choose a first day after Sat, Nov 28."
 				)
 			).toBeInTheDocument();
 		});
