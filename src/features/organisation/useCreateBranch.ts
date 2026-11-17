@@ -17,10 +17,10 @@ export const useCreateBranch = (
 	const client = useQueryClient();
 	return useMutation({
 		mutationFn: (body: CreateBranchBody) => createBranch(companyId, body),
-		onSuccess: () =>
-			Promise.all([
-				client.invalidateQueries({ queryKey: ["organisation", companyId] }),
-				client.invalidateQueries({ queryKey: workspaceQuery.queryKey }),
-			]),
+		// Reloaded in the background: the change is done when the API answers.
+		onSuccess: () => {
+			void client.invalidateQueries({ queryKey: ["organisation", companyId] });
+			void client.invalidateQueries({ queryKey: workspaceQuery.queryKey });
+		},
 	});
 };

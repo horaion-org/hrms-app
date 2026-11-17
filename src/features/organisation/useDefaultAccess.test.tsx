@@ -172,4 +172,33 @@ describe("default access changes", () => {
 		expect(calls[0]?.method).toBe("DELETE");
 		expect(stale(client, "c-1")).toBe(true);
 	});
+
+	it("settles once the API has given access, without waiting for the re-read", async () => {
+		stubApi({
+			"POST /api/v1/companies/c-1/default-access-recipients": {
+				status: 200,
+				body: envelope({ given: 1, alreadyReceiving: 0 }),
+			},
+		});
+		const client = new QueryClient();
+		const { result } = renderHook(
+			() => {
+				// An Organisation read that never answers, as one retrying a 503 does.
+				useQuery({
+					queryKey: ["organisation", "c-1", "default-access-rules"],
+					queryFn: () => new Promise<never>(() => {}),
+				});
+				return useGiveDefaultAccess("c-1");
+			},
+			{ wrapper: wrapperFor(client) }
+		);
+
+		act(() => {
+			result.current.mutate(["m-1"]);
+		});
+
+		await waitFor(() => {
+			expect(result.current.isSuccess).toBe(true);
+		});
+	});
 });

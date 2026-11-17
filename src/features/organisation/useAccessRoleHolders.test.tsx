@@ -1,11 +1,18 @@
-import { renderHook, waitFor } from "@testing-library/react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import {
+	QueryClient,
+	QueryClientProvider,
+	useQuery,
+} from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, stubApi } from "@/common/testing/stubApi";
 import type { FunctionComponent } from "@/common/types";
-import { useAccessRoleHolders } from "@/features/organisation/useAccessRoleHolders";
+import {
+	useAccessRoleHolders,
+	useChangeAccessRoleHolders,
+} from "@/features/organisation/useAccessRoleHolders";
 
 beforeEach(() => {
 	configureApiClient({
@@ -47,6 +54,35 @@ describe("useAccessRoleHolders", () => {
 
 		await waitFor(() => {
 			expect(result.current.data).toEqual([]);
+		});
+	});
+});
+
+describe("useChangeAccessRoleHolders", () => {
+	it("settles once the API has removed the assignment, without waiting for the re-read", async () => {
+		stubApi({
+			"DELETE /api/v1/companies/c-1/access-role-assignments/a-1": {
+				status: 204,
+			},
+		});
+		const { result } = renderHook(
+			() => {
+				// An Organisation read that never answers, as one retrying a 503 does.
+				useQuery({
+					queryKey: ["organisation", "c-1", "access-role-holders", "r-1"],
+					queryFn: () => new Promise<never>(() => {}),
+				});
+				return useChangeAccessRoleHolders("c-1");
+			},
+			{ wrapper: wrapperFor(new QueryClient()) }
+		);
+
+		act(() => {
+			result.current.mutate({ revokes: ["a-1"] });
+		});
+
+		await waitFor(() => {
+			expect(result.current.isSuccess).toBe(true);
 		});
 	});
 });

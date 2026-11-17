@@ -98,7 +98,8 @@ export const firstFailure = (error: unknown): unknown =>
  * refusal of one never hides the outcome of the others: when every request
  * fails, the first refusal is thrown as it is; when only some do, a
  * `PartialChangeError` says how many. Either way the lists and the
- * workspace are reloaded, since the person may hold the role themselves.
+ * workspace are reloaded, since the person may hold the role themselves;
+ * the reload runs in the background, so it never holds the dialog.
  */
 export const useChangeAccessRoleHolders = (
 	companyId: string
@@ -133,10 +134,10 @@ export const useChangeAccessRoleHolders = (
 		meta: {
 			successMessage: "organisation.accessRoles.assignments.toast.changed",
 		},
-		onSettled: () =>
-			Promise.all([
-				client.invalidateQueries({ queryKey: ["organisation", companyId] }),
-				client.invalidateQueries({ queryKey: workspaceQuery.queryKey }),
-			]),
+		// Reloaded in the background: the change is done when the API answers.
+		onSettled: () => {
+			void client.invalidateQueries({ queryKey: ["organisation", companyId] });
+			void client.invalidateQueries({ queryKey: workspaceQuery.queryKey });
+		},
 	});
 };
