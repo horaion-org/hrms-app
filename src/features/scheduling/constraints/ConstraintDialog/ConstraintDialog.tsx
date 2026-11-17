@@ -43,6 +43,7 @@ import {
 	isFieldShown,
 } from "@/features/scheduling/constraints/ConstraintDialog/fieldOrder";
 import { nameSuggestion } from "@/features/scheduling/constraints/ConstraintDialog/nameSuggestion";
+import { shiftOptionsOf } from "@/features/scheduling/constraints/ConstraintDialog/shiftOptions";
 import { typeGroupsOf } from "@/features/scheduling/constraints/ConstraintDialog/typeGroups";
 import {
 	allowedComparisons,
@@ -350,12 +351,7 @@ export const ConstraintDialog = ({
 			value: jobTitle.jobTitleId,
 			label: jobTitle.name,
 		})),
-		// Each named with its group, whose chip above the list chooses the whole group at once.
-		SHIFT: (offered?.shifts ?? []).map((shift) => ({
-			value: shift.shiftId,
-			label: shift.name,
-			group: shift.group ?? undefined,
-		})),
+		SHIFT: shiftOptionsOf(offered?.shifts ?? []),
 		DAY_TYPE: (offered?.dayTypeChoices ?? []).map((code) => ({
 			value: code,
 			label: dayTypeLabel(code, t, 1, offered?.dayTypeNames[code]),
