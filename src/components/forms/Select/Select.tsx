@@ -78,6 +78,21 @@ const SELECT_ALL = "\u0000select-all";
 /** The value of a whole-group row is this prefix and the group; never reported, never submitted. */
 const WHOLE_GROUP = "\u0000group:";
 
+/** How many of some options are chosen: every one, some of them, or none. */
+type ChosenState = "all" | "some" | "none";
+
+/** Whether every, some or none of the given options are chosen; none when there are no options. */
+const chosenStateOf = (
+	members: Array<SelectOption>,
+	chosenValues: Array<string>
+): ChosenState => {
+	const chosenCount = members.filter((option) =>
+		chosenValues.includes(option.value)
+	).length;
+	if (members.length > 0 && chosenCount === members.length) return "all";
+	return chosenCount > 0 ? "some" : "none";
+};
+
 /** A run of consecutive options sharing one heading, or none. */
 type OptionRun = { group: string | undefined; options: Array<SelectOption> };
 
@@ -165,21 +180,13 @@ export const Select = (props: SelectProps): FunctionComponent => {
 	const current = keepsOwnValue ? (value ?? own) : value;
 	const chosenValues = Array.isArray(current) ? current : [];
 	const available = options.filter((option) => !option.disabled);
-	const allChosen =
-		available.length > 0 &&
-		available.every((option) => chosenValues.includes(option.value));
-	const someChosen = available.some((option) =>
-		chosenValues.includes(option.value)
-	);
+	const availableState = chosenStateOf(available, chosenValues);
 	/** Whether every, some or none of a group's available options are chosen. */
-	const groupState = (group: string): "all" | "some" | "none" => {
-		const members = available.filter((option) => option.group === group);
-		const chosen = members.filter((option) =>
-			chosenValues.includes(option.value)
+	const groupState = (group: string): ChosenState =>
+		chosenStateOf(
+			available.filter((option) => option.group === group),
+			chosenValues
 		);
-		if (members.length > 0 && chosen.length === members.length) return "all";
-		return chosen.length > 0 ? "some" : "none";
-	};
 	/** The values after a whole-group row: its available options all chosen, or all cleared when they already were. */
 	const toggledGroup = (group: string): Array<string> => {
 		const clearing = groupState(group) === "all";
@@ -191,7 +198,7 @@ export const Select = (props: SelectProps): FunctionComponent => {
 			)
 			.map((option) => option.value);
 	};
-	const stateIcon = (state: "all" | "some" | "none"): ReactNode =>
+	const stateIcon = (state: ChosenState): ReactNode =>
 		state === "all" ? (
 			<CheckboxFilledIcon className="size-5 text-ink-blue-900" />
 		) : state === "some" ? (
@@ -267,7 +274,7 @@ export const Select = (props: SelectProps): FunctionComponent => {
 									.filter((option) =>
 										option.disabled
 											? chosenValues.includes(option.value)
-											: !allChosen
+											: availableState !== "all"
 									)
 									.map((option) => option.value)
 							: options
@@ -366,9 +373,7 @@ export const Select = (props: SelectProps): FunctionComponent => {
 								>
 									<span className="truncate">{selectAllLabel}</span>
 									<span className="size-5 shrink-0">
-										{stateIcon(
-											allChosen ? "all" : someChosen ? "some" : "none"
-										)}
+										{stateIcon(availableState)}
 									</span>
 								</ListboxOption>
 							)}
