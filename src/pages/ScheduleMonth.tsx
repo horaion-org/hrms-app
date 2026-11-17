@@ -356,11 +356,10 @@ const MonthContent = ({
 	);
 	const generation = useGenerateMonth(companyId, scheduleMonth);
 	// A failed week stopped the weeks queued after it; "Try again" generates exactly those weeks.
-	const retry = useGenerateMonth(
-		companyId,
-		scheduleMonth,
-		retryWeeksOf(scheduleMonth)
-	);
+	const retryWeeks = retryWeeksOf(scheduleMonth);
+	const retry = useGenerateMonth(companyId, scheduleMonth, retryWeeks);
+	// Trying again over hand changes asks first, as Regenerate does; the dialog posts those weeks itself.
+	const [confirmingRetry, setConfirmingRetry] = useState(false);
 	// Named only while it stopped weeks after it.
 	const failedWeek = failedWeekOf(scheduleMonth);
 	const stoppedWeeks = stoppedWeeksOf(scheduleMonth);
@@ -534,6 +533,12 @@ const MonthContent = ({
 							size="sm"
 							variant="secondary"
 							onClick={() => {
+								if (
+									handChangedCoveredWeeks(scheduleMonth, retryWeeks).length > 0
+								) {
+									setConfirmingRetry(true);
+									return;
+								}
 								// A refusal shows from refusedRun.error above.
 								void retry.generate().catch(() => undefined);
 							}}
@@ -590,6 +595,17 @@ const MonthContent = ({
 					onStarted={setRegenerateAnswer}
 					onClose={() => {
 						setConfirmingRegenerate(false);
+					}}
+				/>
+			)}
+			{confirmingRetry && (
+				<RegenerateMonthDialog
+					companyId={companyId}
+					month={scheduleMonth}
+					weeks={retryWeeks}
+					onStarted={setRegenerateAnswer}
+					onClose={() => {
+						setConfirmingRetry(false);
 					}}
 				/>
 			)}

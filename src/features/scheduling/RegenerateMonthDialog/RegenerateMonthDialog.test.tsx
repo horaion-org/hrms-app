@@ -78,7 +78,8 @@ afterEach(() => {
 
 const show = (
 	month: ReturnType<typeof november>,
-	onStarted = vi.fn()
+	onStarted = vi.fn(),
+	weeks?: Array<string>
 ): { dialog: () => Promise<HTMLElement> } => {
 	const client = new QueryClient({
 		defaultOptions: { queries: { retry: false } },
@@ -91,6 +92,7 @@ const show = (
 						<RegenerateMonthDialog
 							companyId="c-1"
 							month={month}
+							weeks={weeks}
 							onClose={vi.fn()}
 							onStarted={onStarted}
 						/>
@@ -110,7 +112,10 @@ const show = (
 		</I18nextProvider>
 	);
 	return {
-		dialog: () => screen.findByRole("dialog", { name: "Regenerate November?" }),
+		dialog: () =>
+			screen.findByRole("dialog", {
+				name: weeks ? "Generate these weeks again?" : "Regenerate November?",
+			}),
 	};
 };
 
@@ -214,5 +219,65 @@ describe("RegenerateMonthDialog", () => {
 		expect(await within(dialog).findByRole("alert")).toHaveTextContent(
 			"You don’t have permission to generate this month here."
 		);
+	});
+
+	describe("with chosen weeks", () => {
+		const TRIED_AGAIN = ["2026-11-09", "2026-11-16", "2026-11-23"];
+
+		it("given_chosenWeeks_when_shown_then_namesTheFirstAndHowManyFollowAndWarnsOnlyOfTheirHandChanges", async () => {
+			stubApi({});
+			const dialog = await show(
+				november({
+					"2026-11-02": { handChangedDays: 1 },
+					"2026-11-16": { handChangedDays: 2 },
+				}),
+				vi.fn(),
+				TRIED_AGAIN
+			).dialog();
+
+			expect(dialog).toHaveTextContent(
+				/The week of Nov 9\s?–\s?15 and the 2 weeks after it are worked out again\. The current roster stays until the new one is ready\. If generating fails, it stays as it is\./
+			);
+			expect(dialog).toHaveTextContent(
+				/Nov 16\s?–\s?22 was changed by hand\. Those changes are replaced once the new roster is ready\./
+			);
+			expect(dialog).not.toHaveTextContent(/Nov 2\s?–\s?8/);
+		});
+
+		it("given_aFailedWeekAndOneStoppedWeek_when_shown_then_saysTheWeekAfterIt", async () => {
+			stubApi({});
+			const dialog = await show(november(), vi.fn(), [
+				"2026-11-09",
+				"2026-11-16",
+			]).dialog();
+
+			expect(dialog).toHaveTextContent(
+				/The week of Nov 9\s?–\s?15 and the week after it are worked out again\./
+			);
+		});
+
+		it("given_chosenWeeks_when_confirmed_then_postsExactlyThoseWeeks", async () => {
+			const user = userEvent.setup();
+			const calls = stubApi({
+				[`POST ${GENERATION}`]: ok(
+					monthGenerationFixture({ month: "2026-11" })
+				),
+			});
+			const onStarted = vi.fn();
+			const dialog = await show(november(), onStarted, TRIED_AGAIN).dialog();
+
+			await user.click(
+				within(dialog).getByRole("button", { name: "Generate again" })
+			);
+
+			await waitFor(() => {
+				expect(onStarted).toHaveBeenCalledOnce();
+			});
+			expect(calls.find((call) => call.method === "POST")?.body).toEqual({
+				includeLeave: true,
+				weeks: TRIED_AGAIN,
+				newWeeks: [],
+			});
+		});
 	});
 });

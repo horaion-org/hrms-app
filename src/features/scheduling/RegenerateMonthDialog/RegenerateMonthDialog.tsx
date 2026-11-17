@@ -29,16 +29,22 @@ export type RegenerateMonthDialogProps = {
 	onStarted?: (answer: MonthGeneration) => void;
 	/** A line shown first, such as the hours worked this month that are still unknown. */
 	notice?: ReactNode;
+	/**
+	 * The Mondays to generate again, first week first (e.g. "Try again" after a
+	 * failed week); without it, every covered week of the month.
+	 */
+	weeks?: ReadonlyArray<string>;
 };
 
 const key = "scheduling.months.regenerate";
 
 /**
  * Asks before generating a month again: which weeks are worked out again
- * (every week that isn't published, from its first on), that the current
- * roster stays until the new one is ready (API ADR-0112), and which weeks'
- * hand changes are replaced, which asks in red. Confirming posts the month
- * through useGenerateMonth; a refusal shows inside the dialog.
+ * (every week that isn't published, from its first on; with `weeks`, the
+ * first of them and how many follow), that the current roster stays until
+ * the new one is ready (API ADR-0112), and which of those weeks' hand changes
+ * are replaced, which asks in red. Confirming posts the month (only `weeks`
+ * when given) through useGenerateMonth; a refusal shows inside the dialog.
  */
 export const RegenerateMonthDialog = ({
 	companyId,
@@ -46,13 +52,14 @@ export const RegenerateMonthDialog = ({
 	onClose,
 	onStarted,
 	notice,
+	weeks,
 }: RegenerateMonthDialogProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
-	const generation = useGenerateMonth(companyId, month);
+	const generation = useGenerateMonth(companyId, month, weeks);
 	const monthName = formatMonthName(month.month, language);
 	const covered = coveredWeeks(month);
-	const handChanged = handChangedCoveredWeeks(month);
+	const handChanged = handChangedCoveredWeeks(month, weeks);
 	const weekLabel = (week: {
 		periodStart: string;
 		periodEnd: string;
@@ -60,8 +67,16 @@ export const RegenerateMonthDialog = ({
 		formatWeekDates({ start: week.periodStart, end: week.periodEnd }, language);
 	const firstCovered = covered[0];
 	const somePublished = month.weeks.some((week) => week.state === "PUBLISHED");
-	const weeksWorkedOut =
-		somePublished && firstCovered
+	// Only with `weeks`: the first of them, named with how many follow it.
+	const [firstChosen] = month.weeks.filter((week) =>
+		weeks?.includes(week.periodStart)
+	);
+	const weeksWorkedOut = firstChosen
+		? t(`${key}.chosenWeeks`, {
+				count: (weeks?.length ?? 1) - 1,
+				first: weekLabel(firstChosen),
+			})
+		: somePublished && firstCovered
 			? t(`${key}.someWeeks`, {
 					count: covered.length,
 					month: monthName,
@@ -85,11 +100,14 @@ export const RegenerateMonthDialog = ({
 		<ConfirmDialog
 			cancelLabel={t("scheduling.regenerate.cancel")}
 			confirmDisabled={generation.block !== undefined}
-			confirmLabel={t(`${key}.confirm`, { month: monthName })}
 			description={description}
 			submitting={generation.isPending}
-			title={t(`${key}.title`, { month: monthName })}
 			tone={handChanged.length > 0 ? "danger" : "default"}
+			confirmLabel={
+				weeks
+					? t(`${key}.chosenConfirm`)
+					: t(`${key}.confirm`, { month: monthName })
+			}
 			error={
 				generation.error
 					? monthGenerationRefusal(
@@ -98,6 +116,11 @@ export const RegenerateMonthDialog = ({
 							weekChangedRefusal(generation.sentWeeks, month, language, t)
 						)
 					: undefined
+			}
+			title={
+				weeks
+					? t(`${key}.chosenTitle`)
+					: t(`${key}.title`, { month: monthName })
 			}
 			onClose={onClose}
 			onConfirm={() => {

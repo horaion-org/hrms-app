@@ -5344,7 +5344,11 @@
 				"handChanged_one": "{{weeks}} was changed by hand.",
 				"handChanged_other": "{{weeks}} were changed by hand.",
 				"replaced": "Those changes are replaced once the new roster is ready.",
-				"keptUntilReady": "The current roster stays until the new one is ready. If generating fails, it stays as it is."
+				"keptUntilReady": "The current roster stays until the new one is ready. If generating fails, it stays as it is.",
+				"chosenTitle": "Generate these weeks again?",
+				"chosenConfirm": "Generate again",
+				"chosenWeeks_one": "The week of {{first}} and the week after it are worked out again.",
+				"chosenWeeks_other": "The week of {{first}} and the {{count}} weeks after it are worked out again."
 			}
 		},
 		"rosterHours": {

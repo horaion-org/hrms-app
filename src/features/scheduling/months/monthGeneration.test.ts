@@ -452,3 +452,25 @@ describe("retryWeeksOf", () => {
 		expect(retryWeeksOf(month)).toEqual([]);
 	});
 });
+
+describe("handChangedCoveredWeeks", () => {
+	it("given_chosenWeeks_when_asked_then_onlyTheChosenCoveredWeeksChangedByHand", () => {
+		const december = ungeneratedMonthFixture();
+		const month = ungeneratedMonthFixture({
+			weeks: december.weeks.map((week, index) => ({
+				...week,
+				state: "TENTATIVE" as const,
+				handChangedDays: index < 2 ? 1 : 0,
+			})),
+		});
+
+		expect(
+			handChangedCoveredWeeks(month).map((week) => week.periodStart)
+		).toEqual(["2026-12-07", "2026-12-14"]);
+		expect(
+			handChangedCoveredWeeks(month, ["2026-12-14", "2026-12-21"]).map(
+				(week) => week.periodStart
+			)
+		).toEqual(["2026-12-14"]);
+	});
+});

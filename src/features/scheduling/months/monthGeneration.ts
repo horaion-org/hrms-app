@@ -69,11 +69,15 @@ export const showsRegenerate = (month: ScheduleMonth): boolean =>
 	!showsBeforeGenerate(month) &&
 	coveredWeeks(month).length > 0;
 
-/** The covered weeks changed by hand: generating the month replaces those changes. */
+/** The chosen covered weeks changed by hand (every covered week by default): generating them replaces those changes. */
 export const handChangedCoveredWeeks = (
-	month: ScheduleMonth
+	month: ScheduleMonth,
+	chosen: ReadonlyArray<string> = coveredMondaysOf(month)
 ): Array<MonthWeek> =>
-	coveredWeeks(month).filter((week) => (week.handChangedDays ?? 0) > 0);
+	coveredWeeks(month).filter(
+		(week) =>
+			(week.handChangedDays ?? 0) > 0 && chosen.includes(week.periodStart)
+	);
 
 /** The weeks a run refused, by Monday, with the API's error code. */
 export const refusedWeeks = (answer: MonthGeneration): Record<string, string> =>

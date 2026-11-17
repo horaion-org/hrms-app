@@ -83,3 +83,11 @@ export const TwoChangedByHand: Story = {
 export const ARefusal: Story = {
 	beforeEach: (): (() => void) => stubStoryApi([], false, client),
 };
+
+/** "Try again" after a failed week: that week and the two after it, one changed by hand. */
+export const ChosenWeeks: Story = {
+	args: {
+		month: november({ "2026-11-16": { handChangedDays: 1 } }),
+		weeks: ["2026-11-09", "2026-11-16", "2026-11-23"],
+	},
+};

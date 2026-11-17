@@ -477,6 +477,67 @@ it("given_aFailedWeekAndStoppedWeeks_when_tryAgain_then_postsExactlyThoseWeeks",
 	});
 });
 
+it("given_aStoppedWeekChangedByHand_when_tryAgain_then_asksFirstAndPostsThoseWeeksOnConfirm", async () => {
+	const user = userEvent.setup();
+	const stopped = {
+		state: "TENTATIVE" as const,
+		queueRefusal: { code: "EARLIER_WEEK_FAILED", at: "2026-11-17T09:20:00Z" },
+	};
+	const december = ungeneratedMonthFixture();
+	const failedDecember = ungeneratedMonthFixture({
+		weeks: december.weeks.map((week, index) => ({
+			...week,
+			scheduleId: `s-${index + 1}`,
+			...[
+				{ state: "TO_REVIEW" as const, handChangedDays: 2 },
+				{
+					state: "TO_REVIEW" as const,
+					failure: {
+						runStatus: "SUCCEEDED",
+						errorCode: null,
+						engineOutcome: "INFEASIBLE",
+					},
+				},
+				{ ...stopped, handChangedDays: 1 },
+				stopped,
+			][index],
+		})),
+	});
+	const calls = await openMonth(
+		decemberRoutes([ok(failedDecember)]),
+		"/scheduling/months/2026-12?department=d-1"
+	);
+
+	const callout = (
+		await screen.findByText(
+			/^The week of Dec 14\s?–\s?20 could not be generated/
+		)
+	).closest("[role=note]") as HTMLElement;
+	await user.click(within(callout).getByRole("button", { name: "Try again" }));
+
+	const dialog = await screen.findByRole("dialog", {
+		name: "Generate these weeks again?",
+	});
+	expect(dialog).toHaveTextContent(/Dec 21\s?–\s?27 was changed by hand\./);
+	expect(dialog).not.toHaveTextContent(/Dec 7\s?–\s?13/);
+	expect(
+		calls.some(
+			(call) => call.method === "POST" && call.path === `${DECEMBER}/generation`
+		)
+	).toBe(false);
+	await user.click(
+		within(dialog).getByRole("button", { name: "Generate again" })
+	);
+	await vi.waitFor(() => {
+		const post = calls.find(
+			(call) => call.method === "POST" && call.path === `${DECEMBER}/generation`
+		);
+		expect(post?.body).toMatchObject({
+			weeks: ["2026-12-14", "2026-12-21", "2026-12-28"],
+		});
+	});
+});
+
 it("given_stoppedWeeksAndNoScheduleGenerate_when_shown_then_theCalloutHasNoTryAgain", async () => {
 	const december = ungeneratedMonthFixture();
 	const failedDecember = ungeneratedMonthFixture({
