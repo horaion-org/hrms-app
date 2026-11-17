@@ -8,11 +8,9 @@ import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { WeekGrid } from "@/components/ui/WeekGrid";
-import type {
-	PreferenceDay,
-	PreferredShift,
-} from "@/features/shiftPreferences/api";
+import type { PreferenceDay } from "@/features/shiftPreferences/api";
 import { daysWithoutAvailability } from "@/features/shiftPreferences/availabilityGaps";
+import { preferredShifts } from "@/features/shiftPreferences/preferenceLimit";
 import { PreferredShiftsCell } from "@/features/shiftPreferences/PreferredShiftsCell";
 import { ShiftPreferenceDialog } from "@/features/shiftPreferences/ShiftPreferenceDialog";
 import { shiftPreferenceRefusal } from "@/features/shiftPreferences/shiftPreferenceRefusal";
@@ -49,10 +47,6 @@ const closedDaysNoteKey = (
 	if (days.some((day) => !day.editable)) return "shiftPreferences.outOfReach";
 	return undefined;
 };
-
-/** A day's chosen shifts. */
-const preferredShifts = (day: PreferenceDay): Array<PreferredShift> =>
-	day.shifts.filter((shift) => shift.preferred);
 
 /**
  * The caller's own week as one row of seven days, each day's preferred shifts

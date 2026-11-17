@@ -649,6 +649,14 @@
 			"forbidden": "You can’t change shift preferences here.",
 			"failed": "Your preferences couldn’t be saved. Try again."
 		},
+		"member": {
+			"title": "Edit shift preferences",
+			"description": "The shifts {{name}} would like to work in the week of {{date}}. They’re weighed fairly when the roster is made, but not promised.",
+			"failed": "We couldn’t load {{name}}’s shift preferences. Try again.",
+			"notFound": "This person is no longer in a team you manage. Close this and reload the list.",
+			"forbidden": "You no longer have permission to change this person’s shift preferences. Ask an administrator for access.",
+			"saveFailed": "These preferences couldn’t be saved. Try again."
+		},
 		"preference": "Preference",
 		"preferred": "Preferred: {{shifts}}",
 		"outcome": {
