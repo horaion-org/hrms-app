@@ -1,6 +1,6 @@
 # Scheduling
 
-The Create Schedule steps at `/scheduling/new` (Setup, Forecast, Generate). Completing Setup creates the schedule on
+The Create Schedule steps at `/scheduling/new` (Setup, Generate; the Forecast step is kept but not shown until forecasts are sent to generation). Completing Setup creates the schedule on
 the API as a DRAFT, and from then on the URL names it with its department (`?step=…&scheduleId=…&departmentId=…`), so
 a refresh or a link reopens the same draft. Shifts and constraints belong to the department: one live set of each per
 department, changed on the Scheduling page's Shifts and Constraints tabs under their own `shift` and `constraint` keys
@@ -116,7 +116,7 @@ their API exists.
   and links (`readinessCopy.ts`: `gateOf`, `checklistOf`, `fixLinkOf`, `returnLinkOf`), `ReadinessCallout` (the
   tabs' first-run checklist and way back) and `ReadinessGateCallout` (the wizard's gate).
 - `schedulingNotice.ts` — the confirmation the Scheduling page shows after a generation, carried in history state.
-- `ForecastStep`, `GenerateStep`, `ScheduleSetupStep`, `StepActions` — the steps; `ShiftAllocationTable` and
+- `ForecastStep` (not shown), `GenerateStep`, `ScheduleSetupStep`, `StepActions` — the steps; `ShiftAllocationTable` and
   `TimeBlockGrid` are the two forecast views. `ScheduleSetupStep` reports the department and week chosen and takes a
   `departmentExtras` slot below its fields; `GenerateStep` takes `notice`, `uses` and `startingPoint` slots.
 - `periods.ts` — the weeks Setup offers (`selectablePeriods`: `PAST_WEEKS` back, this week, `FUTURE_WEEKS` ahead,
