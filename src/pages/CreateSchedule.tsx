@@ -55,12 +55,12 @@ import {
 	summarise,
 	tickedConstraintsOf,
 	tickedOf,
-	type ScheduleSetup,
 } from "@/features/scheduling/scheduleDraft";
-import type {
-	ScheduleBody,
-	ScheduleStatus,
-} from "@/features/scheduling/schedules/api";
+import {
+	draftProblemKey,
+	frozenNoticeKey,
+} from "@/features/scheduling/schedules/draftNotices";
+import { scheduleBodyOf } from "@/features/scheduling/schedules/scheduleBody";
 import {
 	monthGenerationRefusal,
 	scheduleRefusal,
@@ -69,7 +69,6 @@ import {
 import {
 	useSchedule,
 	useScheduleActions,
-	type ScheduleState,
 } from "@/features/scheduling/schedules/useSchedule";
 import { useScheduleConstraints } from "@/features/scheduling/schedules/useScheduleConstraints";
 import { useScheduleShifts } from "@/features/scheduling/schedules/useScheduleShifts";
@@ -103,46 +102,6 @@ import { retry } from "@/features/workspace/retry";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 import { departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
-
-/** What saving a schedule sends: its setup and the ticked shifts and constraints, each the whole set. */
-const bodyOf = (
-	setup: ScheduleSetup,
-	includedShiftIds: Array<string>,
-	includedConstraintIds: Array<string>
-): ScheduleBody => ({
-	name: setup.name,
-	periodStart: setup.periodStart,
-	includeLeave: setup.includeLeave,
-	includedShiftIds,
-	includedConstraintIds,
-});
-
-/** The copy a draft that can't be shown is explained with. */
-const draftProblemKey = (
-	status: ScheduleState["status"]
-):
-	| "scheduling.draft.loading"
-	| "scheduling.draft.missing"
-	| "scheduling.draft.failed" => {
-	if (status === "error") return "scheduling.draft.failed";
-	if (status === "hidden" || status === "missing")
-		return "scheduling.draft.missing";
-	return "scheduling.draft.loading";
-};
-
-/** What a frozen schedule's notice says: generation requested, failed, or done (also once decided). */
-const frozenNoticeKey = (
-	status: ScheduleStatus
-):
-	| "scheduling.draft.generationRequested"
-	| "scheduling.draft.generated"
-	| "scheduling.draft.generationFailed" => {
-	if (status === "GENERATION_REQUESTED")
-		return "scheduling.draft.generationRequested";
-	if (status === "GENERATION_FAILED")
-		return "scheduling.draft.generationFailed";
-	return "scheduling.draft.generated";
-};
 
 /**
  * The Create Schedule steps: Setup and Generate. The URL names the
@@ -365,7 +324,7 @@ export const CreateSchedule = (): FunctionComponent => {
 				await scheduleActions.update.mutateAsync({
 					unit: saved,
 					scheduleId: saved.scheduleId,
-					body: bodyOf(setup, ticked, tickedConstraints),
+					body: scheduleBodyOf(setup, ticked, tickedConstraints),
 				});
 			dispatch({ type: "setupSaved", setup });
 			goTo(1);
@@ -383,7 +342,7 @@ export const CreateSchedule = (): FunctionComponent => {
 			await scheduleActions.update.mutateAsync({
 				unit: saved,
 				scheduleId: saved.scheduleId,
-				body: bodyOf(draft.setup, ticked, tickedConstraints),
+				body: scheduleBodyOf(draft.setup, ticked, tickedConstraints),
 			});
 			return true;
 		} catch (error) {
