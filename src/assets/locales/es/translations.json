@@ -1964,6 +1964,21 @@
 		},
 		"accessRoles": {
 			"defaults": {
+				"title": "Acceso predeterminado",
+				"description": "Lo que las personas reciben en su propio departamento o sucursal sin que se les dé un rol. Los accesos predeterminados de toda la empresa, de una sucursal y de un departamento se suman; ninguno quita nada. Todas las personas que se añadan a partir de ahora reciben el acceso predeterminado.",
+				"empty": "Aún no hay acceso predeterminado. Las personas solo ven lo suyo hasta que se les da un rol.",
+				"loadFailed": "No pudimos cargar el acceso predeterminado. Recarga la página para volver a intentarlo.",
+				"columns": {
+					"role": "Rol",
+					"setFor": "Quién lo recibe",
+					"appliesTo": "Se aplica a"
+				},
+				"remove": {
+					"item": "Quitar {{role}} para {{setFor}}",
+					"title": "¿Quitar {{role}} como acceso predeterminado para {{setFor}}?",
+					"description": "Quienes lo tienen solo por este acceso predeterminado lo pierden en menos de un minuto. Los roles dados a mano no cambian.",
+					"confirm": "Quitar"
+				},
 				"refusals": {
 					"invalidRule": "Ese rol o lugar no se puede usar como acceso predeterminado. Elige un rol personalizado de esta empresa y como mucho una sucursal o un departamento, y vuelve a intentarlo.",
 					"inactive": "Ese rol está desactivado. Actívalo o elige otro rol.",

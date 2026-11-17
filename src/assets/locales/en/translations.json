@@ -2057,6 +2057,21 @@
 		},
 		"accessRoles": {
 			"defaults": {
+				"title": "Default access",
+				"description": "What people get in their own department or branch without being given a role. Defaults for the whole company, a branch and a department add up; none takes anything away. Everyone added from now on receives default access.",
+				"empty": "No default access yet. People see only their own things until they are given a role.",
+				"loadFailed": "We couldn’t load default access. Reload the page to try again.",
+				"columns": {
+					"role": "Role",
+					"setFor": "Who gets it",
+					"appliesTo": "Applies to"
+				},
+				"remove": {
+					"item": "Remove {{role}} for {{setFor}}",
+					"title": "Remove {{role}} as default access for {{setFor}}?",
+					"description": "Everyone who has it only through this default loses it within a minute. Roles given by hand are not touched.",
+					"confirm": "Remove"
+				},
 				"refusals": {
 					"invalidRule": "That role or place can’t be used for default access. Choose a custom role of this company and at most one branch or department, then try again.",
 					"inactive": "That role is switched off. Switch it on, or choose another role.",

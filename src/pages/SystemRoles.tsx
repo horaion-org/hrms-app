@@ -1,5 +1,6 @@
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useId, useMemo, useState } from "react";
 import { COMPANY_SCOPE, effectiveAt } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 import { useTranslation } from "react-i18next";
@@ -11,11 +12,22 @@ import {
 } from "@/components/ui/DataTable";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ArrowLeftIcon } from "@/components/ui/Icon";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import { mayAssignRole } from "@/features/organisation/accessRoleReadOnly";
-import type { AccessRole } from "@/features/organisation/api";
+import { placeLabels } from "@/features/organisation/accessSummary";
+import type {
+	AccessRole,
+	DefaultAccessRule,
+} from "@/features/organisation/api";
 import { CreateSystemRoleDialog } from "@/features/organisation/CreateSystemRoleDialog";
+import {
+	defaultRuleText,
+	type DefaultRuleText,
+} from "@/features/organisation/defaultAccess";
+import { defaultAccessColumns } from "@/features/organisation/defaultAccessColumns";
+import { defaultAccessRefusal } from "@/features/organisation/defaultAccessRefusal";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import {
 	actionsColumn,
@@ -27,9 +39,15 @@ import {
 	statusFilterOptions,
 	type StatusFilter,
 } from "@/features/organisation/listColumns";
+import {
+	defaultAccessRulesQuery,
+	useRemoveDefaultAccessRule,
+} from "@/features/organisation/useDefaultAccess";
 import { useAccessRoles } from "@/features/organisation/useOrganisationList";
 import { roleSummaryText } from "@/features/organisation/sectionLevels";
+import { workspaceQuery } from "@/features/workspace/api";
 import { isPermissionKey } from "@/features/workspace/permissionKeys";
+import { retry } from "@/features/workspace/retry";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 import {
 	SystemRoleActionDialog,
@@ -37,7 +55,15 @@ import {
 } from "@/pages/SystemRoleActions";
 import { AssignSystemRole } from "@/pages/SystemRoleHolders";
 
-/** Access roles: who may manage what, and where (Settings › Access roles). */
+/** Every role, whatever the list's filter, to name the role each default gives. */
+const ALL_ROLES_BY_NAME = { sort: { field: "name", desc: false } } as const;
+
+/**
+ * Access roles: who may manage what, and where (Settings › Access roles),
+ * then the defaults everyone who receives default access gets (API
+ * ADR-0118), read with `access_role:read` and removed with
+ * `access_role:assign`, both at the whole company.
+ */
 export const SystemRoles = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const { t } = useTranslation();
@@ -68,6 +94,28 @@ export const SystemRoles = (): FunctionComponent => {
 		[access]
 	);
 	const navigate = useNavigate();
+	const defaultsHeadingId = useId();
+	const canReadDefaults = access.can("access_role:read", COMPANY_SCOPE);
+	// Only the System Owner and System Admin hold it (API ADR-0108).
+	const canChangeDefaults = access.can("access_role:assign", COMPANY_SCOPE);
+	const defaults = useQuery(
+		defaultAccessRulesQuery(companyId, canReadDefaults)
+	);
+	const allRoles = useAccessRoles(companyId, ALL_ROLES_BY_NAME);
+	const { data: workspace } = useQuery({ ...workspaceQuery, retry });
+	const [removing, setRemoving] = useState<DefaultAccessRule>();
+	const remove = useRemoveDefaultAccessRule(companyId);
+	const describeDefault = (rule: DefaultAccessRule): DefaultRuleText =>
+		defaultRuleText(
+			rule,
+			allRoles.status === "ready" ? allRoles.items : [],
+			placeLabels(workspace, companyId, t),
+			t
+		);
+	const defaultsColumns = defaultAccessColumns(t, {
+		describe: describeDefault,
+		onRemove: canChangeDefaults ? setRemoving : undefined,
+	});
 	// Opens the role on its permissions, which are read-only for a role the person can't change.
 	const open = useCallback(
 		(role: AccessRole): void => {
@@ -313,6 +361,66 @@ export const SystemRoles = (): FunctionComponent => {
 						<p className="mt-4 text-sm text-neutral-700">{view.truncated}</p>
 					)}
 				</>
+			)}
+			{canReadDefaults && (
+				<section aria-labelledby={defaultsHeadingId} className="mt-12">
+					<h2
+						className="text-xl font-semibold text-neutral-900"
+						id={defaultsHeadingId}
+					>
+						{t("organisation.accessRoles.defaults.title")}
+					</h2>
+					<p className="mt-3 text-sm text-neutral-800">
+						{t("organisation.accessRoles.defaults.description")}
+					</p>
+					{defaults.isError ? (
+						<p className="mt-6 text-sm text-error-700" role="alert">
+							{t("organisation.accessRoles.defaults.loadFailed")}
+						</p>
+					) : (
+						<DataTable
+							className="mt-6"
+							columns={defaultsColumns}
+							data={defaults.data ?? []}
+							getRowId={(rule) => rule.defaultAccessRuleId}
+							label={t("organisation.accessRoles.defaults.title")}
+							emptyState={
+								defaults.isPending
+									? t("organisation.list.loading")
+									: t("organisation.accessRoles.defaults.empty")
+							}
+						/>
+					)}
+				</section>
+			)}
+			{removing && (
+				<ConfirmDialog
+					cancelLabel={t("organisation.list.cancel")}
+					confirmLabel={t("organisation.accessRoles.defaults.remove.confirm")}
+					submitting={remove.isPending}
+					tone="danger"
+					description={t(
+						"organisation.accessRoles.defaults.remove.description"
+					)}
+					error={
+						remove.error ? defaultAccessRefusal(remove.error, t) : undefined
+					}
+					title={t("organisation.accessRoles.defaults.remove.title", {
+						role: describeDefault(removing).role,
+						setFor: describeDefault(removing).setFor,
+					})}
+					onClose={() => {
+						remove.reset();
+						setRemoving(undefined);
+					}}
+					onConfirm={() => {
+						remove.mutate(removing.defaultAccessRuleId, {
+							onSuccess: () => {
+								setRemoving(undefined);
+							},
+						});
+					}}
+				/>
 			)}
 		</>
 	);
