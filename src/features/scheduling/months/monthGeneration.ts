@@ -90,16 +90,23 @@ export const stoppedWeeksOf = (month: ScheduleMonth): Array<MonthWeek> =>
 	month.weeks.filter((week) => week.queueRefusal?.code === EARLIER_WEEK_FAILED);
 
 /**
- * The failed week that stopped the month's stopped weeks: the last failed week
- * before the first of them. None when no week is stopped, or the failed week
- * is not in this month.
+ * Whether a week's newest run failed: a failed week, or a week whose
+ * regeneration failed and kept its earlier roster (it carries `failure`).
+ */
+const newestRunFailed = (week: MonthWeek): boolean =>
+	week.state === "FAILED" || week.failure != null;
+
+/**
+ * The failed week that stopped the month's stopped weeks: the last week before
+ * the first of them whose newest run failed. None when no week is stopped, or
+ * the failed week is not in this month.
  */
 export const failedWeekOf = (month: ScheduleMonth): MonthWeek | undefined => {
 	const [firstStopped] = stoppedWeeksOf(month);
 	if (!firstStopped) return undefined;
 	const failedBefore = month.weeks.filter(
 		(week) =>
-			week.state === "FAILED" && week.periodStart < firstStopped.periodStart
+			newestRunFailed(week) && week.periodStart < firstStopped.periodStart
 	);
 	return failedBefore[failedBefore.length - 1];
 };

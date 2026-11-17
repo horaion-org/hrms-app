@@ -411,6 +411,22 @@ describe("retryWeeksOf", () => {
 		expect(retryWeeksOf(month)).toEqual(["2026-12-14", "2026-12-21"]);
 	});
 
+	it("given_aRegenerationThatFailedAndKeptItsRoster_when_asked_then_thatWeekIsTheFailedWeek", () => {
+		const month = decemberWith({
+			0: {
+				state: "TO_REVIEW",
+				failure: {
+					runStatus: "SUCCEEDED",
+					errorCode: null,
+					engineOutcome: "INFEASIBLE",
+				},
+			},
+			1: { state: "TENTATIVE", queueRefusal: STOPPED },
+		});
+
+		expect(retryWeeksOf(month)).toEqual(["2026-12-07", "2026-12-14"]);
+	});
+
 	it("given_anotherRefusalCode_when_asked_then_thatWeekIsNotRetried", () => {
 		const month = decemberWith({
 			0: { state: "FAILED" },
