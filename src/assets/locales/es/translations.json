@@ -3307,6 +3307,7 @@
 			"invitationNotDelivered": "No pudimos enviar el correo de invitación. Inténtalo de nuevo.",
 			"saveFailed": "No pudimos guardar los cambios. Inténtalo de nuevo.",
 			"discardTitle": "¿Descartar los cambios?",
+			"discardNewDescription": "Lo que escribiste para esta nueva persona empleada no se guardará.",
 			"discardDescription": "Tus cambios en {{name}} no se guardarán.",
 			"discard": "Descartar cambios",
 			"keepEditing": "Seguir editando",

@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { effectiveWorkspace } from "@/common/testing/effectiveWorkspace";
@@ -844,7 +844,7 @@ describe("Add employee", () => {
 		expect(sent(calls, CREATE)).toHaveLength(1);
 	});
 
-	it("returns to the list without saving on cancel", async () => {
+	it("asks before Cancel throws away what was typed, then returns to the list without saving", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi(routes());
 		const opened = await open();
@@ -854,12 +854,44 @@ describe("Add employee", () => {
 		);
 
 		await user.click(button("Cancel"));
+		const asking = screen.getByRole("dialog", {
+			name: "Discard your changes?",
+		});
+		expect(asking).toHaveTextContent(
+			"What you typed for this new employee won’t be saved."
+		);
+		await user.click(
+			within(asking).getByRole("button", { name: "Keep editing" })
+		);
+		expect(textbox("Full name")).toHaveValue("Priya");
+		await user.click(button("Cancel"));
+		await user.click(
+			within(
+				screen.getByRole("dialog", { name: "Discard your changes?" })
+			).getByRole("button", { name: "Discard changes" })
+		);
 
 		await waitFor(() => {
 			expect(opened.router.state.location.pathname).toBe("/people");
 		});
 		expect(screen.queryByText(/was added/)).not.toBeInTheDocument();
 		expect(sent(calls, CREATE)).toEqual([]);
+	});
+
+	it("returns to the list at once on Cancel when nothing was typed", async () => {
+		const user = userEvent.setup();
+		stubApi(routes());
+		const opened = await open();
+		await screen.findByRole("textbox", { name: "Full name" });
+
+		await user.click(button("Cancel"));
+
+		await waitFor(() => {
+			expect(opened.router.state.location.pathname).toBe("/people");
+		});
+		expect(
+			screen.queryByRole("dialog", { name: "Discard your changes?" })
+		).not.toBeInTheDocument();
 	});
 });
 

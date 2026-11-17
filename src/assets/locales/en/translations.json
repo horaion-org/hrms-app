@@ -1071,6 +1071,7 @@
 			"invitationNotDelivered": "We couldn’t send the invitation email. Try again.",
 			"saveFailed": "We couldn’t save the changes. Try again.",
 			"discardTitle": "Discard your changes?",
+			"discardNewDescription": "What you typed for this new employee won’t be saved.",
 			"discardDescription": "Your changes to {{name}} won’t be saved.",
 			"discard": "Discard changes",
 			"keepEditing": "Keep editing",

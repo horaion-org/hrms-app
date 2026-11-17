@@ -100,7 +100,7 @@ export type ProfileFormProps = {
 		place: MemberProfilePlace | undefined,
 		role: { shown: boolean; place?: AssignmentTarget }
 	) => Promise<void>;
-	/** Leaves without saving; when editing, after asking if anything changed. */
+	/** Leaves without saving, after asking if anything was typed or changed. */
 	onCancel: () => void;
 	/** A further Employment card row, such as Add employee's employment terms. */
 	employmentTermsField?: ReactNode;
@@ -133,7 +133,7 @@ const NOTHING = (): void => {};
  *
  * With `edit` it changes an existing person: their employee ID is shown,
  * their status can be changed, their email address only while they have
- * yet to log in, and leaving with changes asks first.
+ * yet to log in. Leaving with changes asks first, adding or editing.
  */
 export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 	const {
@@ -151,9 +151,10 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 	const formId = useId();
 	const [today] = useState(() => todayDate(Date.now()));
 	const [discarding, setDiscarding] = useState(false);
-	const [rolePlaceKey, setRolePlaceKey] = useState<string | undefined>(
-		edit?.rolePlace ? placeKey(edit.rolePlace) : undefined
-	);
+	const initialRolePlaceKey = edit?.rolePlace
+		? placeKey(edit.rolePlace)
+		: undefined;
+	const [rolePlaceKey, setRolePlaceKey] = useState(initialRolePlaceKey);
 	const departmentRequired = !access.can(
 		edit ? "member_profile:update" : "member_profile:create",
 		COMPANY_SCOPE
@@ -333,14 +334,9 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 		) : (
 			t(`${key}.systemRoleHint`)
 		);
+	// Adding or editing, Cancel asks first once anything was typed or chosen.
 	const cancel = (): void => {
-		if (
-			edit &&
-			(isDirty ||
-				rolePlaceKey !==
-					(edit.rolePlace ? placeKey(edit.rolePlace) : undefined))
-		)
-			setDiscarding(true);
+		if (isDirty || rolePlaceKey !== initialRolePlaceKey) setDiscarding(true);
 		else onCancel();
 	};
 	const actions = (
@@ -835,9 +831,11 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 					cancelLabel={t(`${key}.keepEditing`)}
 					confirmLabel={t(`${key}.discard`)}
 					title={t(`${key}.discardTitle`)}
-					description={t(`${key}.discardDescription`, {
-						name: initial.displayName,
-					})}
+					description={
+						edit
+							? t(`${key}.discardDescription`, { name: initial.displayName })
+							: t(`${key}.discardNewDescription`)
+					}
 					onConfirm={onCancel}
 					onClose={() => {
 						setDiscarding(false);
