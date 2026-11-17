@@ -4,10 +4,13 @@ import type {
 	DatesPlan,
 	DatesPlanWeek,
 	DayRun,
+	GenerateDatesBody,
 } from "@/features/scheduling/dates/api";
 import type { MonthWeek, WeekPart } from "@/features/scheduling/months/api";
+import type { MonthChoices } from "@/features/scheduling/months/monthGeneration";
 import { hasRoster } from "@/features/scheduling/months/weekStateLooks";
 import type { PreviousWeek } from "@/features/scheduling/startingContext/startingGrid";
+import type { WeekChoiceIds } from "@/features/scheduling/weekChoice";
 
 /*
  * What Setup shows for a schedule by dates, pure. Dates are ISO strings
@@ -349,3 +352,39 @@ export const datesIn = (days: DayRun): Array<string> =>
 	Array.from({ length: dayCountOf(days.from, days.to) }, (_, offset) =>
 		dayjs(days.from).add(offset, "day").format(iso)
 	);
+
+/** The Setup fields a dates run sends: its days, the name it may give, and whether leave counts. */
+export type DatesRunSetup = {
+	firstDay: string;
+	lastDay: string;
+	/** Blank leaves the name out: each created week is named as the month run names its weeks. */
+	name: string;
+	includeLeave: boolean;
+};
+
+/**
+ * What generating the dates sends: Setup's days, its name when one is given,
+ * and a choice for every week the plan creates, the week's own or else
+ * `everything`, in the plan's order.
+ */
+export const datesGenerationBody = (
+	setup: DatesRunSetup,
+	plan: Pick<DatesPlan, "weeks">,
+	choices: MonthChoices,
+	everything: WeekChoiceIds
+): GenerateDatesBody => ({
+	firstDay: setup.firstDay,
+	lastDay: setup.lastDay,
+	...(setup.name.trim() === "" ? {} : { name: setup.name.trim() }),
+	includeLeave: setup.includeLeave,
+	newWeeks: plan.weeks
+		.filter((week) => week.action === "CREATE_AND_GENERATE")
+		.map((week) => {
+			const weekChoice = choices[week.periodStart] ?? everything;
+			return {
+				periodStart: week.periodStart,
+				includedShiftIds: weekChoice.shiftIds,
+				includedConstraintIds: weekChoice.constraintIds,
+			};
+		}),
+});

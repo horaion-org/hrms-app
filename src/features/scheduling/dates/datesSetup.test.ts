@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+	datesGenerationBody,
 	datesIn,
 	daysAroundPart,
 	daysBeforeOf,
@@ -380,6 +381,61 @@ describe("daysAroundPart", () => {
 			before: { from: "2026-10-12", to: "2026-10-14" },
 			after: undefined,
 			afterTaken: false,
+		});
+	});
+});
+
+describe("datesGenerationBody", () => {
+	const everything = { shiftIds: ["sh-1", "sh-2"], constraintIds: ["c-1"] };
+	const setup = {
+		firstDay: "2026-11-19",
+		lastDay: "2026-11-28",
+		name: " Year-end gala ",
+		includeLeave: true,
+	};
+
+	it("given_aNameAndNoWeekChosen_when_sent_then_theDaysTheTrimmedNameAndEverythingForEachNewWeek", () => {
+		expect(
+			datesGenerationBody(setup, datesPlanFixture(), {}, everything)
+		).toStrictEqual({
+			firstDay: "2026-11-19",
+			lastDay: "2026-11-28",
+			name: "Year-end gala",
+			includeLeave: true,
+			newWeeks: [
+				{
+					periodStart: "2026-11-16",
+					includedShiftIds: ["sh-1", "sh-2"],
+					includedConstraintIds: ["c-1"],
+				},
+				{
+					periodStart: "2026-11-23",
+					includedShiftIds: ["sh-1", "sh-2"],
+					includedConstraintIds: ["c-1"],
+				},
+			],
+		});
+	});
+
+	it("given_noNameAKeptWeekAndAWeeksOwnChoice_when_sent_then_noNameOnlyTheCreatedWeekWithItsChoice", () => {
+		expect(
+			datesGenerationBody(
+				{ ...setup, name: "  ", includeLeave: false },
+				datesPlanWithKeptWeekFixture(),
+				{ "2026-11-16": { shiftIds: ["sh-2"], constraintIds: [] } },
+				everything
+			)
+		).toStrictEqual({
+			firstDay: "2026-11-19",
+			lastDay: "2026-11-28",
+			includeLeave: false,
+			newWeeks: [
+				{
+					periodStart: "2026-11-16",
+					includedShiftIds: ["sh-2"],
+					includedConstraintIds: [],
+				},
+			],
 		});
 	});
 });
