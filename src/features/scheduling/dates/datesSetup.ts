@@ -269,6 +269,29 @@ export const daysAroundPart = (
 	afterTaken: parts.some((part) => part.coveredTo > schedule.coveredTo),
 });
 
+/** What a part's page says of a redo part in its week (API ADR-0129): this part is one, or one redoes its days. */
+export type PartRedo = { kind: "redoing" | "beingRedone"; days: DayRun };
+
+/**
+ * Whether a redo part touches this part (`parts`, from the month read): this
+ * part is a redo part, with its days, or else a redo part of the week
+ * overlaps it, with that part's days; none otherwise.
+ */
+export const partRedoOf = (
+	schedule: Pick<WeekPart, "scheduleId" | "coveredFrom" | "coveredTo">,
+	parts: ReadonlyArray<WeekPart>
+): PartRedo | undefined => {
+	const own = parts.find((part) => part.scheduleId === schedule.scheduleId);
+	if (own?.redoing) return { kind: "redoing", days: runOf(own) };
+	const redo = parts.find(
+		(part) =>
+			part.redoing &&
+			part.coveredFrom <= schedule.coveredTo &&
+			part.coveredTo >= schedule.coveredFrom
+	);
+	return redo && { kind: "beingRedone", days: runOf(redo) };
+};
+
 /**
  * The days of a part's week before its first generated day: Monday to the
  * day before `firstDay`; none when it starts on the Monday. A started week

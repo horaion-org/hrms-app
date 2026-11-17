@@ -6,6 +6,7 @@ import {
 	datesProblemOf,
 	maxLastDayOf,
 	namedSpansOf,
+	partRedoOf,
 	planNotesOf,
 	planRowOf,
 	previousBefore,
@@ -278,6 +279,49 @@ describe("rosterPartBefore and previousBefore", () => {
 
 	it("given_noParts_when_asked_then_none", () => {
 		expect(previousBefore("2026-11-16", [])).toEqual({ kind: "none" });
+	});
+});
+
+describe("partRedoOf", () => {
+	const wholeWeek: WeekPart = {
+		scheduleId: "s-1",
+		name: "Week of 2026-11-16",
+		named: false,
+		coveredFrom: "2026-11-16",
+		coveredTo: "2026-11-22",
+		state: "TO_REVIEW",
+		redoing: false,
+	};
+	const redo: WeekPart = {
+		...wholeWeek,
+		scheduleId: "s-2",
+		coveredFrom: "2026-11-18",
+		coveredTo: "2026-11-19",
+		state: "GENERATING",
+		redoing: true,
+	};
+	const WEDNESDAY_TO_THURSDAY = { from: "2026-11-18", to: "2026-11-19" };
+
+	it("given_aRedoPart_when_asked_then_itRedoesItsOwnDays", () => {
+		expect(partRedoOf(redo, [wholeWeek, redo])).toEqual({
+			kind: "redoing",
+			days: WEDNESDAY_TO_THURSDAY,
+		});
+	});
+
+	it("given_aPartARedoOverlaps_when_asked_then_theRedoPartsDaysAreBeingRedone", () => {
+		expect(partRedoOf(wholeWeek, [wholeWeek, redo])).toEqual({
+			kind: "beingRedone",
+			days: WEDNESDAY_TO_THURSDAY,
+		});
+	});
+
+	it("given_aRedoPartElsewhereInTheWeek_when_asked_then_none", () => {
+		const mondayToTuesday = { ...wholeWeek, coveredTo: "2026-11-17" };
+
+		expect(partRedoOf(mondayToTuesday, [mondayToTuesday, redo])).toBe(
+			undefined
+		);
 	});
 });
 
