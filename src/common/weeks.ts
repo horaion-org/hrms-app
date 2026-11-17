@@ -3,11 +3,12 @@
  * availability: the Monday of a date, a period's weeks and a week's days.
  */
 import dayjs, { type Dayjs } from "dayjs";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 
 /** A span of whole days as ISO dates, both ends included. */
 export type DateRange = { start: string; end: string };
 
-const iso = (day: Dayjs): string => day.format("YYYY-MM-DD");
+const iso = (day: Dayjs): string => day.format(ISO_DATE_FORMAT);
 
 /** The Monday on or before `date`. */
 export const mondayOf = (date: Date | string): string => {

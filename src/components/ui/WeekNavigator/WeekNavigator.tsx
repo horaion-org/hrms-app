@@ -1,6 +1,7 @@
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
@@ -22,11 +23,9 @@ type RangeFormat = Intl.DateTimeFormat & {
 	formatRange: (start: Date, end: Date) => string;
 };
 
-const isoFormat = "YYYY-MM-DD";
-
 /** The Monday `by` weeks from `week`. */
 const weekFrom = (week: string, by: number): string =>
-	dayjs(week).add(by, "week").format(isoFormat);
+	dayjs(week).add(by, "week").format(ISO_DATE_FORMAT);
 
 /** Monday to Sunday in the person's language, e.g. "Mon, 9 Nov – Sun, 15 Nov 2026". */
 const formatWeek = (week: string, language: string): string =>
