@@ -358,6 +358,27 @@ describe("MonthSetupStep", () => {
 			expect(screen.queryByText("First day")).toBeNull();
 		});
 
+		it("given_monthChosen_when_shown_then_theMonthFieldComesAfterTheChoice", () => {
+			render(<Harness />);
+
+			const choice = screen.getByRole("tablist", { name: "Schedule for" });
+			expect(
+				choice.compareDocumentPosition(
+					screen.getByRole("button", { name: /Month/ })
+				) & Node.DOCUMENT_POSITION_FOLLOWING
+			).toBeTruthy();
+		});
+
+		it("given_datesChosen_when_shown_then_theFirstDayFieldComesAfterTheChoice", () => {
+			render(<Harness dates={datesProp()} defaultValues={DATES} />);
+
+			const choice = screen.getByRole("tablist", { name: "Schedule for" });
+			expect(
+				choice.compareDocumentPosition(screen.getByText("First day")) &
+					Node.DOCUMENT_POSITION_FOLLOWING
+			).toBeTruthy();
+		});
+
 		it("given_datesChosen_when_shown_then_firstLastNameAndThePlanRows", async () => {
 			const user = userEvent.setup();
 			const onDatesChange = vi.fn();

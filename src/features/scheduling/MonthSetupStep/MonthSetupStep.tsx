@@ -371,81 +371,42 @@ export const MonthSetupStep = ({
 				}}
 			>
 				<div className="mt-10 flex flex-col gap-8">
-					<div className="flex flex-col gap-8 sm:flex-row">
-						<FormRow
-							required
-							className="sm:w-72"
-							error={errors.departmentId?.message}
-							hint={departmentHint}
-							htmlFor={fieldId("departmentId")}
-							label={t("scheduling.setup.department")}
-							layout="stacked"
-						>
-							<Controller
-								control={control}
-								name="departmentId"
-								render={({ field }) => (
-									<DepartmentSelector
-										ref={field.ref}
-										activeOnly
-										branchHeadings
-										aria-invalid={errors.departmentId ? true : undefined}
-										branchId={branchId}
-										className="w-full"
-										companyId={companyId}
-										keys={SCHEDULE_CREATE_KEYS}
-										name={field.name}
-										placeholder={t("scheduling.setup.departmentPlaceholder")}
-										status={errors.departmentId ? "error" : undefined}
-										value={field.value}
-										aria-describedby={describedBy(
-											"departmentId",
-											departmentHint !== undefined
-										)}
-										aria-labelledby={
-											formRowIds(fieldId("departmentId")).labelId
-										}
-										onChange={field.onChange}
-									/>
-								)}
-							/>
-						</FormRow>
-						{scheduleFor === "month" && (
-							<FormRow
-								required
-								className="sm:w-72"
-								error={errors.month?.message}
-								hint={monthHint}
-								htmlFor={fieldId("month")}
-								label={t("scheduling.months.setup.month")}
-								layout="stacked"
-							>
-								<Controller
-									control={control}
-									name="month"
-									render={({ field }) => (
-										<Select
-											ref={field.ref}
-											aria-describedby={describedBy("month", true)}
-											aria-labelledby={formRowIds(fieldId("month")).labelId}
-											className="w-full"
-											name={field.name}
-											status={errors.month ? "error" : undefined}
-											value={field.value}
-											options={months.map((choice) => ({
-												value: choice,
-												label: formatMonth(choice, language),
-											}))}
-											onChange={(value) => {
-												setMonthChosenByHand(true);
-												field.onChange(value);
-											}}
-										/>
+					<FormRow
+						required
+						className="sm:w-72"
+						error={errors.departmentId?.message}
+						hint={departmentHint}
+						htmlFor={fieldId("departmentId")}
+						label={t("scheduling.setup.department")}
+						layout="stacked"
+					>
+						<Controller
+							control={control}
+							name="departmentId"
+							render={({ field }) => (
+								<DepartmentSelector
+									ref={field.ref}
+									activeOnly
+									branchHeadings
+									aria-invalid={errors.departmentId ? true : undefined}
+									aria-labelledby={formRowIds(fieldId("departmentId")).labelId}
+									branchId={branchId}
+									className="w-full"
+									companyId={companyId}
+									keys={SCHEDULE_CREATE_KEYS}
+									name={field.name}
+									placeholder={t("scheduling.setup.departmentPlaceholder")}
+									status={errors.departmentId ? "error" : undefined}
+									value={field.value}
+									aria-describedby={describedBy(
+										"departmentId",
+										departmentHint !== undefined
 									)}
+									onChange={field.onChange}
 								/>
-							</FormRow>
-						)}
-					</div>
+							)}
+						/>
+					</FormRow>
 					<div className="flex flex-col gap-2">
 						<span className="text-sm font-normal text-neutral-800">
 							{t("scheduling.months.setup.scheduleFor")}
@@ -553,59 +514,100 @@ export const MonthSetupStep = ({
 							{dates?.plan && <DatesPlanRows plan={dates.plan} />}
 						</div>
 					)}
-					{scheduleFor === "month" && weeks && (
-						<div className="flex flex-col gap-4">
-							<h3 className="text-xl font-semibold text-neutral-900">
-								{t("scheduling.months.setup.weeksLabel")}
-							</h3>
-							<DataTable
-								columns={weekColumns}
-								data={weeks.rows}
-								getRowId={(week) => week.periodStart}
-								label={t("scheduling.months.setup.weeksLabel")}
-								selection={{
-									rowLabel: (week) => weekRangeText(rangeOf(week), language, t),
-									selectedIds: weeks.ticked,
-									onChange: weeks.onTickedChange,
-									canSelect: (week) => week.canTick,
-								}}
-							/>
-							{ticked.length > 0 ? (
-								<p className="text-sm font-semibold text-neutral-900">
-									{t("scheduling.months.setup.chosen", {
-										count: ticked.length,
-										ranges: tickedRanges,
-									})}
-								</p>
-							) : (
-								<Callout tone="error">
-									{noneCanBeTicked
-										? t("scheduling.months.setup.noneOpen", {
-												month: formatMonth(month, language),
-											})
-										: t("scheduling.months.setup.noneTicked")}
-								</Callout>
+					{scheduleFor === "month" && (
+						<div className="flex flex-col gap-8">
+							<FormRow
+								required
+								className="sm:w-72"
+								error={errors.month?.message}
+								hint={monthHint}
+								htmlFor={fieldId("month")}
+								label={t("scheduling.months.setup.month")}
+								layout="stacked"
+							>
+								<Controller
+									control={control}
+									name="month"
+									render={({ field }) => (
+										<Select
+											ref={field.ref}
+											aria-describedby={describedBy("month", true)}
+											aria-labelledby={formRowIds(fieldId("month")).labelId}
+											className="w-full"
+											name={field.name}
+											status={errors.month ? "error" : undefined}
+											value={field.value}
+											options={months.map((choice) => ({
+												value: choice,
+												label: formatMonth(choice, language),
+											}))}
+											onChange={(value) => {
+												setMonthChosenByHand(true);
+												field.onChange(value);
+											}}
+										/>
+									)}
+								/>
+							</FormRow>
+							{weeks && (
+								<div className="flex flex-col gap-4">
+									<h3 className="text-xl font-semibold text-neutral-900">
+										{t("scheduling.months.setup.weeksLabel")}
+									</h3>
+									<DataTable
+										columns={weekColumns}
+										data={weeks.rows}
+										getRowId={(week) => week.periodStart}
+										label={t("scheduling.months.setup.weeksLabel")}
+										selection={{
+											rowLabel: (week) =>
+												weekRangeText(rangeOf(week), language, t),
+											selectedIds: weeks.ticked,
+											onChange: weeks.onTickedChange,
+											canSelect: (week) => week.canTick,
+										}}
+									/>
+									{ticked.length > 0 ? (
+										<p className="text-sm font-semibold text-neutral-900">
+											{t("scheduling.months.setup.chosen", {
+												count: ticked.length,
+												ranges: tickedRanges,
+											})}
+										</p>
+									) : (
+										<Callout tone="error">
+											{noneCanBeTicked
+												? t("scheduling.months.setup.noneOpen", {
+														month: formatMonth(month, language),
+													})
+												: t("scheduling.months.setup.noneTicked")}
+										</Callout>
+									)}
+									{tickedNotes.map(({ week, note }) => (
+										<Callout key={week.periodStart} tone="warning">
+											{t(`scheduling.months.setup.${note}Note`, {
+												week: weekRangeText(rangeOf(week), language, t),
+												// A started week is generated from today on (API ADR-0115).
+												range: weekRangeText(
+													{
+														start: today || week.periodStart,
+														end: week.periodEnd,
+													},
+													language,
+													t
+												),
+											})}
+										</Callout>
+									))}
+									{skippedWeeks.map((week) => (
+										<Callout key={week.periodStart} tone="warning">
+											{t("scheduling.months.setup.skippedNote", {
+												week: weekRangeText(rangeOf(week), language, t),
+											})}
+										</Callout>
+									))}
+								</div>
 							)}
-							{tickedNotes.map(({ week, note }) => (
-								<Callout key={week.periodStart} tone="warning">
-									{t(`scheduling.months.setup.${note}Note`, {
-										week: weekRangeText(rangeOf(week), language, t),
-										// A started week is generated from today on (API ADR-0115).
-										range: weekRangeText(
-											{ start: today || week.periodStart, end: week.periodEnd },
-											language,
-											t
-										),
-									})}
-								</Callout>
-							))}
-							{skippedWeeks.map((week) => (
-								<Callout key={week.periodStart} tone="warning">
-									{t("scheduling.months.setup.skippedNote", {
-										week: weekRangeText(rangeOf(week), language, t),
-									})}
-								</Callout>
-							))}
 						</div>
 					)}
 					{departmentExtras}
