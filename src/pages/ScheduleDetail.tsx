@@ -24,8 +24,8 @@ import {
 	GeneratedRoster,
 	rosterEditingOf,
 	type GeneratedRosterProps,
-} from "@/features/scheduling/GeneratedRoster";
-import { GenerationFailurePanel } from "@/features/scheduling/GenerationFailurePanel";
+} from "@/features/scheduling/roster/GeneratedRoster";
+import { GenerationFailurePanel } from "@/features/scheduling/roster/GenerationFailurePanel";
 import { scheduleMonthQuery } from "@/features/scheduling/months/api";
 import {
 	formatMonth,
@@ -56,7 +56,7 @@ import {
 } from "@/features/scheduling/publishedWeek/api";
 import { PublishedWeekCallout } from "@/features/scheduling/publishedWeek/PublishedWeekCallout";
 import type { RosterSearch } from "@/features/scheduling/roster/rosterSearch";
-import { RosterHeader } from "@/features/scheduling/RosterHeader";
+import { RosterHeader } from "@/features/scheduling/roster/RosterHeader";
 import { RosterHours } from "@/features/scheduling/hours/RosterHours";
 import { useRosterRulesCheck } from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
 import { validationStanding } from "@/features/scheduling/rulesCheck/issuesFromValidation";

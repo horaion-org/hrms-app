@@ -8,7 +8,7 @@ import { FilterChips } from "@/components/ui/FilterChips";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
 import { OffersOutSection } from "@/features/scheduling/coverOffers/OffersOutSection";
-import { FindingList } from "@/features/scheduling/FindingList";
+import { FindingList } from "@/features/scheduling/roster/FindingList";
 import { formatDay } from "@/common/formatDay";
 import { findingFamily } from "@/features/scheduling/roster/findings/finding";
 import {

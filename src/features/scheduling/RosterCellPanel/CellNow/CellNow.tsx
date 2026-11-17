@@ -10,7 +10,7 @@ import {
 	leavePortionTimeText,
 	shiftTimeText,
 } from "@/features/scheduling/roster/roster";
-import type { LeaveLinkSearch } from "@/features/scheduling/RosterDayNotes/leaveLinkSearch";
+import type { LeaveLinkSearch } from "@/features/scheduling/roster/RosterDayNotes/leaveLinkSearch";
 import {
 	assignmentCell,
 	rosterCellText,

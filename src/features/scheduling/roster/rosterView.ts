@@ -26,7 +26,7 @@ import {
 	saidApartBy,
 	type IssuesAbout,
 } from "@/features/scheduling/roster/rosterMarks";
-import type { RosterDayNotesProps } from "@/features/scheduling/RosterDayNotes";
+import type { RosterDayNotesProps } from "@/features/scheduling/roster/RosterDayNotes";
 import {
 	coverGapOf,
 	issuesAboutOf,
