@@ -5,6 +5,7 @@ import type {
 	ScheduleMonth,
 	WeekState,
 } from "@/features/scheduling/months/api";
+import { EARLIER_WEEK_FAILED } from "@/features/scheduling/schedules/scheduleRefusal";
 import type { WeekChoiceIds } from "@/features/scheduling/weekChoice";
 
 /*
@@ -83,6 +84,40 @@ export const refusedWeeks = (answer: MonthGeneration): Record<string, string> =>
 				: []
 		)
 	);
+
+/** The weeks a month run took out of its queue because an earlier week failed, Monday order. */
+export const stoppedWeeksOf = (month: ScheduleMonth): Array<MonthWeek> =>
+	month.weeks.filter((week) => week.queueRefusal?.code === EARLIER_WEEK_FAILED);
+
+/**
+ * The failed week that stopped the month's stopped weeks: the last failed week
+ * before the first of them. None when no week is stopped, or the failed week
+ * is not in this month.
+ */
+export const failedWeekOf = (month: ScheduleMonth): MonthWeek | undefined => {
+	const [firstStopped] = stoppedWeeksOf(month);
+	if (!firstStopped) return undefined;
+	const failedBefore = month.weeks.filter(
+		(week) =>
+			week.state === "FAILED" && week.periodStart < firstStopped.periodStart
+	);
+	return failedBefore[failedBefore.length - 1];
+};
+
+/**
+ * What "Try again" generates (owner: "yes then ask the user to attempt
+ * again"): the failed week's Monday and every Monday its failure stopped,
+ * Monday order. Empty when the month has no failed week with stopped weeks
+ * after it.
+ */
+export const retryWeeksOf = (month: ScheduleMonth): Array<string> => {
+	const failed = failedWeekOf(month);
+	if (!failed) return [];
+	return [
+		failed.periodStart,
+		...stoppedWeeksOf(month).map((week) => week.periodStart),
+	];
+};
 
 /** Each new week's choice of shifts and constraints, by Monday. */
 export type MonthChoices = Record<string, WeekChoiceIds>;

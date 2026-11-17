@@ -13,6 +13,7 @@ import {
 	weekAction,
 	weekStateTones,
 } from "@/features/scheduling/months/weekStateLooks";
+import { refusalOfCode } from "@/features/scheduling/schedules/scheduleRefusal";
 import { scheduleViewLink } from "@/features/scheduling/schedules/scheduleViewLink";
 
 export type WeekCardProps = {
@@ -21,6 +22,8 @@ export type WeekCardProps = {
 	failureMessage?: string;
 	/** Why the last month run refused this week, in today's refusal words. */
 	refusal?: string;
+	/** The dates of the month's failed week, named when its failure took this week out of the queue. */
+	failedWeek?: string;
 	/** The week's Department, for the link to a draft's setup. */
 	departmentId: string;
 	className?: string;
@@ -34,7 +37,8 @@ const key = "scheduling.months";
  * week under review, Open on any other week with a schedule (a draft opens
  * its setup, any other its roster), none on a week not generated yet. A
  * tentative or missing week has a dashed frame: it is not final. A failed
- * week says why; a week the last month run refused says why too; a week whose
+ * week says why; a week the last month run refused, or one a month run took
+ * out of its queue, says why too (the last run's refusal first); a week whose
  * rules changed since it was generated says so. A week being generated shows
  * its state only.
  */
@@ -42,6 +46,7 @@ export const WeekCard = ({
 	week,
 	failureMessage,
 	refusal,
+	failedWeek,
 	departmentId,
 	className,
 }: WeekCardProps): FunctionComponent => {
@@ -55,6 +60,11 @@ export const WeekCard = ({
 	const shortShifts = week.days.reduce((sum, day) => sum + day.shortShifts, 0);
 	const handChangedDays = week.handChangedDays ?? 0;
 	const dashed = week.state === "TENTATIVE" || week.state === "NOT_GENERATED";
+	const refusalWords =
+		refusal ??
+		(week.queueRefusal
+			? refusalOfCode(week.queueRefusal.code, t, failedWeek)
+			: undefined);
 
 	return (
 		<section
@@ -81,9 +91,9 @@ export const WeekCard = ({
 			{week.rulesChanged === true && (
 				<p className="text-sm text-neutral-800">{t(`${key}.rulesChanged`)}</p>
 			)}
-			{refusal && (
+			{refusalWords && (
 				<p className="text-sm text-neutral-800">
-					{t(`${key}.generate.refused`, { reason: refusal })}
+					{t(`${key}.generate.refused`, { reason: refusalWords })}
 				</p>
 			)}
 			<DayCoverMarks days={week.days} />

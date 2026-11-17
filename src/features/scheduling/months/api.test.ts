@@ -208,6 +208,36 @@ describe("generating a month", () => {
 		expect(ungeneratedMonthFixture().weeks).toHaveLength(4);
 	});
 
+	it("given_aWeekTakenOutOfTheQueueAndOneWithoutTheField_when_parsed_then_theRefusalReadsAndTheOtherIsNull", async () => {
+		// Undefined is left out of the JSON reply, as an API without the field sends it.
+		const withoutTheField = {
+			...monthWeekFixture(),
+			queueRefusal: undefined as never,
+		};
+		const stopped = monthWeekFixture({
+			periodStart: "2026-11-09",
+			periodEnd: "2026-11-15",
+			state: "DRAFT",
+			queueRefusal: { code: "EARLIER_WEEK_FAILED", at: "2026-11-17T09:20:00Z" },
+		});
+		stubApi({
+			[`GET ${NOVEMBER}`]: {
+				status: 200,
+				body: envelope(
+					scheduleMonthFixture({ weeks: [withoutTheField, stopped] })
+				),
+			},
+		});
+
+		const month = await fetchScheduleMonth("c-1", "d-1", "2026-11");
+
+		expect(month.weeks[0]?.queueRefusal).toBeNull();
+		expect(month.weeks[1]?.queueRefusal).toEqual({
+			code: "EARLIER_WEEK_FAILED",
+			at: "2026-11-17T09:20:00Z",
+		});
+	});
+
 	it("given_theCheckQuery_when_built_then_itsKeySitsUnderTheMonthReads", () => {
 		expect(
 			monthGenerationCheckQuery("c-1", "d-1", "2026-11").queryKey.slice(0, 3)

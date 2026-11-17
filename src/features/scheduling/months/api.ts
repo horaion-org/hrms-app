@@ -64,6 +64,19 @@ const monthWeekSchema = z.object({
 		.nullish(),
 	/** Whether the rules changed since the week was generated, so regenerating it applies them (API ADR-0091). */
 	rulesChanged: z.boolean().nullish(),
+	/**
+	 * Why a month run took the week out of its queue, until the week is queued
+	 * or generated again; null otherwise and from an API without it.
+	 */
+	queueRefusal: z
+		.object({
+			/** The refusal's code, e.g. EARLIER_WEEK_FAILED. */
+			code: z.string(),
+			/** When the week left the queue. */
+			at: z.string(),
+		})
+		.nullable()
+		.default(null),
 });
 
 /** One week of a Department's month, as the month page shows it. */

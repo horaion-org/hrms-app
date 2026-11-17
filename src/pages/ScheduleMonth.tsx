@@ -26,6 +26,7 @@ import {
 	scheduleMonthQuery,
 	scheduleMonthSummariesQuery,
 	type MonthGeneration,
+	type MonthWeek,
 	type ScheduleMonth,
 } from "@/features/scheduling/months/api";
 import {
@@ -33,11 +34,14 @@ import {
 	type PanelLink,
 } from "@/features/scheduling/months/BeforeGeneratePanel";
 import {
+	failedWeekOf,
 	handChangedCoveredWeeks,
 	isGenerating,
 	refusedWeeks,
+	retryWeeksOf,
 	showsBeforeGenerate,
 	showsRegenerate,
+	stoppedWeeksOf,
 } from "@/features/scheduling/months/monthGeneration";
 import { refusedWeeksFrom } from "@/features/scheduling/months/refusedWeeksState";
 import { RegenerateMonthDialog } from "@/features/scheduling/RegenerateMonthDialog";
@@ -326,7 +330,11 @@ const blockedNoteOf = (
 			? t("scheduling.week.listsHiddenNote", { department })
 			: undefined;
 
-/** The month itself: its title and summary, Regenerate once every covered week has a roster, before generating or while generating, its weeks, and the legend. */
+/**
+ * The month itself: its title and summary, Regenerate once every covered week
+ * has a roster, before generating or while generating, a failed week that
+ * stopped the weeks queued after it with "Try again", its weeks, and the legend.
+ */
 const MonthContent = ({
 	scheduleMonth,
 }: {
@@ -347,6 +355,20 @@ const MonthContent = ({
 		monthGenerationCheckQuery(companyId, departmentId, month, showsPanel)
 	);
 	const generation = useGenerateMonth(companyId, scheduleMonth);
+	// A failed week stopped the weeks queued after it; "Try again" generates exactly those weeks.
+	const retry = useGenerateMonth(
+		companyId,
+		scheduleMonth,
+		retryWeeksOf(scheduleMonth)
+	);
+	// Named only while it stopped weeks after it.
+	const failedWeek = failedWeekOf(scheduleMonth);
+	const stoppedWeeks = stoppedWeeksOf(scheduleMonth);
+	const datesOf = (week: MonthWeek): string =>
+		formatWeekDates({ start: week.periodStart, end: week.periodEnd }, language);
+	const failedWeekDates = failedWeek && datesOf(failedWeek);
+	// The last refused post, to say why; a retry's refusal is the newer one.
+	const refusedRun = retry.error ? retry : generation;
 	// Generating again over hand changes asks first; the dialog posts the month itself.
 	const [confirmingRegenerate, setConfirmingRegenerate] = useState(false);
 	// The hours worked this month before its first scheduled week, entered on that week.
@@ -368,7 +390,7 @@ const MonthContent = ({
 	const unknownHours =
 		openings.data?.applies === true ? unknownOpeningCount(openings.data) : 0;
 	const [regenerateAnswer, setRegenerateAnswer] = useState<MonthGeneration>();
-	const lastAnswer = generation.answer ?? regenerateAnswer;
+	const lastAnswer = generation.answer ?? retry.answer ?? regenerateAnswer;
 	const refused = {
 		...refusedWeeksFrom(
 			useRouterState({ select: (state) => state.location.state })
@@ -482,12 +504,12 @@ const MonthContent = ({
 					}}
 				/>
 			)}
-			{generation.error && (
+			{refusedRun.error && (
 				<ErrorText>
 					{monthGenerationRefusal(
-						generation.error,
+						refusedRun.error,
 						t,
-						weekChangedRefusal(generation.sentWeeks, scheduleMonth, language, t)
+						weekChangedRefusal(refusedRun.sentWeeks, scheduleMonth, language, t)
 					)}
 				</ErrorText>
 			)}
@@ -496,6 +518,31 @@ const MonthContent = ({
 					{t(`${key}.noSchedule`, { month: formatMonth(month, language) })}
 				</p>
 			)}
+			{failedWeekDates && (
+				<Callout tone="error">
+					<span className="block">
+						{t("scheduling.months.generate.stoppedByFailedWeek", {
+							count: stoppedWeeks.length,
+							failed: failedWeekDates,
+							stopped: stoppedWeeks.map(datesOf),
+						})}
+					</span>
+					{mayGenerate && (
+						<Button
+							className="mt-2"
+							loading={retry.isPending}
+							size="sm"
+							variant="secondary"
+							onClick={() => {
+								// A refusal shows from refusedRun.error above.
+								void retry.generate().catch(() => undefined);
+							}}
+						>
+							{t("scheduling.rosterEdit.tryAgain")}
+						</Button>
+					)}
+				</Callout>
+			)}
 			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
 				{weeks.map((week) => {
 					const refusal = refused[week.periodStart];
@@ -503,6 +550,7 @@ const MonthContent = ({
 						<WeekCard
 							key={week.periodStart}
 							departmentId={departmentId}
+							failedWeek={failedWeekDates}
 							refusal={refusal ? refusalOfCode(refusal, t) : undefined}
 							week={week}
 							failureMessage={
