@@ -16,6 +16,38 @@ To add a constraint type, a roster finding, an API read or write, or a page, fol
 [docs/guides](../../../docs/guides/README.md). The areas below (the lowercase folders) never import each other both
 ways; `scripts/check-feature-cycles.mjs` lists the pairs that still do, and that list only shrinks.
 
+## Map
+
+Each area has one job. `SCHEDULING_TOP_LEVEL` in `scripts/check-feature-cycles.mjs` keeps the top level to this list.
+
+| Area | Its job |
+| --- | --- |
+| `constraints/` | A department's live constraints: their API, the constraint type catalogue, sentences, dialog and tab |
+| `shifts/` | A department's live shifts: their API, hours arithmetic, dialog and tab |
+| `departmentSetup/` | What the Shifts and Constraints tabs share: the department picker, draft count, folded sections |
+| `createSchedule/` | The Create Schedule wizard: its steps, week and month choice dialogs, forecast grids |
+| `schedules/` | One schedule and the list of them: their API, standing, actions, menu, dialogs and the Schedules tab |
+| `months/` | Schedules by month: month summaries, generating a month, the month page's cards |
+| `dates/` | Schedules of any dates, up to 31 days: their API and setup |
+| `readiness/` | Whether a department can be rostered, and the links that fix it |
+| `startingContext/` | What each member was doing in the days before a schedule's period |
+| `hours/` | Opening balances and a roster's hours per person |
+| `roster/` | One generated roster as the page shows it: rows, findings, Issues, grid, header and panels |
+| `rosterChanges/` | A hand change to a roster: its API, checks, review, leave moves and undo |
+| `rulesCheck/` | Checking a roster against its rules with the engine, and naming the engine's rules |
+| `cover/` | Finding cover for a short shift, with the engine's repair options |
+| `coverOffers/` | Shifts offered for cover and their answers |
+| `myRoster/` | A member's own view of a published roster they are on, and its changes |
+| `publishedWeek/` | Whether a department's week already has its published roster |
+| `policy/` | The company's work policy |
+| `preferenceOutcomes/` | What a generated roster made of each person's shift preferences |
+
+Shared by every area, at the top: `paths.ts` (request paths and the query root), `periods.ts`, `dayTypes.ts`,
+`schedulingSearch.ts`, and the six page tests (`*.test.tsx`). These also stay at the top, because areas on both
+sides read them, so inside one area they would make two areas import each other: `scheduleDraft.ts` (a draft's
+setup, shifts, constraints and forecast), `weekChoice.ts`, `steps.ts`, `setupReach.ts`, and the components
+`WeekChoiceSummary`, `RosterSidePanel` and `RosterCellPanel`.
+
 ## Shape
 
 - `schedules/useSchedules.ts` — the overview's permission-aware company-wide history. Reads every page of
@@ -34,7 +66,7 @@ ways; `scripts/check-feature-cycles.mjs` lists the pairs that still do, and that
 
 - `paths.ts` — the shift, constraint and schedule paths every scheduling request is built from (on
   `departmentPath` from `@/common/companyPath`), and the query root (`["scheduling", companyId, …]`).
-- `departmentUnit.ts` — the Branch and Department a route names, for a Department the workspace offers under the
+- `departmentSetup/departmentUnit.ts` — the Branch and Department a route names, for a Department the workspace offers under the
   given keys; nothing for one out of reach.
 - `shifts/api.ts` — the live shift schema and requests at the department's routes (create, replace, delete) and the
   role options (`shift-role-options`: the department's ACTIVE job titles, read under `shift:read`, so a shift editor
@@ -116,20 +148,20 @@ ways; `scripts/check-feature-cycles.mjs` lists the pairs that still do, and that
 - `weekChoice.ts` — what one week uses, pure: everything by default (`allOf`), a constraint switched off when any
   shift it names is left out (`withShiftsChosen`, `noteOf`), the week's problem (`weekChoiceProblem`: no shift, or no
   chosen constraint that `requiresPeople`) and the line (`usesSummary`, `usesLineOf`).
-- `WeekChoiceDialog` — the week's shifts and constraints with boxes; read-only for a generated schedule.
+- `createSchedule/WeekChoiceDialog` — the week's shifts and constraints with boxes; read-only for a generated schedule.
   `WeekChoiceSummary` — the "Uses …" line with its action and the "Edit shifts · Edit constraints" links, on Setup and
   Generate.
 - `readiness/` — the API's readiness read (`api.ts`, `useSchedulingReadiness`, under `schedule:create`), its wording
   and links (`readinessCopy.ts`: `gateOf`, `checklistOf`, `fixLinkOf`, `returnLinkOf`), `ReadinessCallout` (the
   tabs' first-run checklist and way back) and `ReadinessGateCallout` (the wizard's gate).
-- `schedulingNotice.ts` — the confirmation the Scheduling page shows after a generation, carried in history state.
-- `ForecastStep` (not shown), `GenerateStep`, `ScheduleSetupStep`, `StepActions` — the steps; `ShiftAllocationTable` and
-  `TimeBlockGrid` are the two forecast views. `ScheduleSetupStep` reports the department and week chosen and takes a
-  `departmentExtras` slot below its fields; `GenerateStep` takes `notice`, `uses` and `startingPoint` slots.
+- `schedules/schedulingNotice.ts` — the confirmation the Scheduling page shows after a generation, carried in history state.
+- `createSchedule/ForecastStep` (not shown), `createSchedule/GenerateStep`, `createSchedule/ScheduleSetupStep`, `createSchedule/StepActions` — the steps; `createSchedule/ShiftAllocationTable` and
+  `createSchedule/TimeBlockGrid` are the two forecast views. `createSchedule/ScheduleSetupStep` reports the department and week chosen and takes a
+  `departmentExtras` slot below its fields; `createSchedule/GenerateStep` takes `notice`, `uses` and `startingPoint` slots.
 - `periods.ts` — the weeks Setup offers (`selectablePeriods`: `PAST_WEEKS` back, this week, `FUTURE_WEEKS` ahead,
   each told whether it is last, this or next week and whether it has started), `defaultPeriod` and `withPeriod` for a
   reopened draft whose week has left the offered ones.
-- `stepCompletion.ts` — which steps the Stepper ticks, from the draft's data (saved, frozen) rather than from being
+- `createSchedule/stepCompletion.ts` — which steps the Stepper ticks, from the draft's data (saved, frozen) rather than from being
   behind the current step.
 - `startingContext/` — the 14 days before the period, the nearer 7 shown first (T3-12, the API's ADR-0056). `api.ts`
   reads and replaces a draft's `starting-days` and reads the `starting-context` frozen at generation; `startingGrid.ts`
@@ -156,8 +188,8 @@ gate, the saves and generating the draft's month.
 2. Page `src/pages/ScheduleDetail.tsx` — hooks and composition only:
    `useCompanySchedule(…, { pollWhileGenerating: true })`, which reads the schedule by its id; the schedule's
    `branchId`/`departmentId` then name the department routes. `useScheduleAssignments` once the schedule is GENERATED with no open run, and `useScheduleShifts` /
-   `useScheduleConstraints` (frozen copies, only to name the findings; empty when not readable). Under `RosterHeader` it shows, by
-   state: a generating note (read again every 15 s), `GenerationFailurePanel`, `GeneratedRoster`, or a draft's note.
+   `useScheduleConstraints` (frozen copies, only to name the findings; empty when not readable). Under `roster/RosterHeader` it shows, by
+   state: a generating note (read again every 15 s), `roster/GenerationFailurePanel`, `roster/GeneratedRoster`, or a draft's note.
    Once there is a roster it also reads the `starting-context`, for where members started the week and a notice when
    their starting points changed since generation (both in the Issues panel). Three tables decide the page, each a
    pure module with its own table test: `schedules/scheduleActions.ts` (`SCHEDULE_ACTIONS`: the one primary action
@@ -170,19 +202,19 @@ gate, the saves and generating the draft's month.
 3. Queries `schedules/api.ts` — `scheduleQuery` (`refetchInterval` while `generationInProgress`) and
    `scheduleAssignmentsQuery` → `fetchScheduleAssignments`.
 4. Pure mappers `roster/` — no I/O. They turn API rows into what the components draw.
-5. Components, plain props only — `RosterHeader`, `GenerationFailurePanel` (with `MemberNotes`), `GeneratedRoster`
-   (one summary line, `RosterWeekBar` with the Issues and Changed buttons, `RosterGrid` → `RosterShift` and
+5. Components, plain props only — `roster/RosterHeader`, `roster/GenerationFailurePanel` (with `roster/MemberNotes`), `roster/GeneratedRoster`
+   (one summary line, `roster/RosterWeekBar` with the Issues and Changed buttons, `roster/RosterGrid` → `RosterShift` and
    `RosterHeaderCount`, and one panel beside the grid: `RosterSidePanel` for the Issues, Changed and Details lists, or
-   `ShiftDetailsPanel` read-only for a chosen day). Someone holding `schedule:edit_shift` on a
+   `roster/ShiftDetailsPanel` read-only for a chosen day). Someone holding `schedule:edit_shift` on a
    GENERATED roster awaiting its decision, or a PUBLISHED one (`rosterEditable`), gets `editing`: any day opens
    `RosterCellPanel` beside the grid instead (another shift, a day off, or a same-day swap; a preview with
-   `RosterChangeChecks`; Apply), and `LastRosterChange` offers Undo in a toast and in the Changed panel (hrms-backend-v2
+   `rosterChanges/RosterChangeChecks`; Apply), and `rosterChanges/LastRosterChange` offers Undo in a toast and in the Changed panel (hrms-backend-v2
    docs/adr/0062). On a PUBLISHED roster (`editing.notifiesMembers`, docs/adr/0063) Apply and Undo first ask in a
    `ConfirmDialog` how many people will be told (`peopleTold`), and the remark hint says those people see it. Days
    changed by hand carry a hollow ring wherever the rows carry a `lastChange` (a day to look at shows its dot
    instead). A published schedule is never deleted
-   (`deletable`): `ScheduleMenu` leaves Delete out. The member's own roster (`pages/MyRoster.tsx`) lists their days
-   changed after publication with the remark (`MyRosterChanges`); the API sends no other change to a member.
+   (`deletable`): `schedules/ScheduleMenu` leaves Delete out. The member's own roster (`pages/MyRoster.tsx`) lists their days
+   changed after publication with the remark (`myRoster/MyRosterChanges`); the API sends no other change to a member.
    The editor reads the frozen shifts it offers from `…/roster-changes/shifts` (`rosterChangeShiftsQuery`) under
    the same key, so it needs neither `schedule:update` nor `shift:read`.
 
@@ -190,7 +222,7 @@ gate, the saves and generating the draft's month.
   `hours/useRosterHours.ts` (`hidden` without `schedule:read` at the department, on a 403, or while the roster has
   no hours: `hasRosterHours`, a GENERATED or PUBLISHED roster with no run open; a rejected roster no longer counts),
   `hours/rosterHoursRows.ts` (pure: the API's rows by member profile id, named and ordered by the roster's own rows,
-  a member the roster no longer names last as "Former member", then the total) and `RosterHours` — the Hours section
+  a member the roster no longer names last as "Former member", then the total) and `hours/RosterHours` — the Hours section
   under the grid: a `DataTable` with Staff, Days worked, Normal, Extra and Overtime ("37.5 h"), overtime above zero in
   `warning-900`, the total line, and the line that these are planned hours classified with each person's employment
   terms for the week. Below `sm` the figures read on the name's summary line, as on Job titles. The API's hours
@@ -251,49 +283,49 @@ gate, the saves and generating the draft's month.
   - `conflictTimes.ts` — a conflict's span as clock times (the engine writes datetimes).
 - `roster/generationFailure.ts` — a FAILED run's `errorCode` in the app's words (the closed set,
   `engine_http_<status>`, then a generic fallback), or INFEASIBLE.
-- `rosterLooks.ts` — the classes of a day off and of leave, `shiftTileStyle` for a frozen shift's colour, and
+- `roster/rosterLooks.ts` — the classes of a day off and of leave, `shiftTileStyle` for a frozen shift's colour, and
   `cellMarkLooks`: a cell's one mark in its tile's corner (an 8 px `warning-900` dot, or a hollow `ink-blue-700` ring).
 - `roster/rosterMarks.ts` — what the grid marks, pure and table-tested: `CELL_MARKS` (a cell's one mark, the issue's
   dot winning over the changed ring; none of the issue dots on a member's own roster), `cellIssues` (a day's findings
   plus what its note adds, as `ISSUE_SOURCES` counts it), `showsRole` (a tile drops the role that repeats the row's
   job title), `tileStatusKey` (a member's own leave read in their tile), `dayNoteLines` and `saidApartBy` (the
   chosen day's lines, less what the day editor says itself).
-- `RosterDayNotes` — what needs a look on a chosen day, first in its panel (`ShiftDetailsPanel` or `RosterCellPanel`,
+- `roster/RosterDayNotes` — what needs a look on a chosen day, first in its panel (`roster/ShiftDetailsPanel` or `RosterCellPanel`,
   `issues`): the engine's findings on the day, then a day to decide, leave requested or taken (with "Review in Leave",
   `leaveLinkSearch.ts`) and a shift left short. The grid shows only the tile's dot for them.
 - `common/formatDay.ts` `formatDay` — "Mon, 12 Oct" for a finding's day.
-- `RosterHeader` — department, then period, status badge and time zone; `actions` (primary action and menu) at the right.
+- `roster/RosterHeader` — department, then period, status badge and time zone; `actions` (primary action and menu) at the right.
 - `schedules/scheduleDetails.ts` — the Details list: requested, finished, decided and time zone.
-- `GenerationFailurePanel` — a failed run's copy and code, the engine's reason quoted, and its errors by member.
-- `MemberNotes` — a failed run's errors grouped by member, each message quoted.
-- `FindingsPanel` — setup issues by code (fix in the setup), then roster notes by day and by member, each part
+- `roster/GenerationFailurePanel` — a failed run's copy and code, the engine's reason quoted, and its errors by member.
+- `roster/MemberNotes` — a failed run's errors grouped by member, each message quoted.
+- `roster/FindingsPanel` — setup issues by code (fix in the setup), then roster notes by day and by member, each part
   titled in plain text like the side panel's sections.
-- `RosterGrid` layout — the staff column stays pinned while the days scroll (`sticky left-0`, as in the availability
+- `roster/RosterGrid` layout — the staff column stays pinned while the days scroll (`sticky left-0`, as in the availability
   `WeekGrid`); on a phone its row header keeps the name, count and hours, dropping the avatar and job title. While a
   panel is open beside it (`compact`), the row header drops the avatar and tiles show their time only, at one 40 px
   height, so the week stays in view.
-- `RosterGrid/RosterHeaderCount` — a 24 px count in a row's or day's header: the outline `AlertIcon` in
+- `roster/RosterGrid/RosterHeaderCount` — a 24 px count in a row's or day's header: the outline `AlertIcon` in
   `warning-900` for anything to look at (never red; red is for errors and refusals), `InfoIcon` in `ink-blue-700`
   for information only, then the number, on no background. It opens Issues narrowed to that row (`rowIssueCount`:
   the member's findings and every issue on their days in view) or that day (`dayIssueCount`: the day's own
   findings), with a `FilterChips` chip that clears back to all of Issues (`issuesOfHeader`).
-- `FindingList` — one list of findings, each led by its tone's outline icon (`FindingList/findingToneIcons.ts`:
+- `roster/FindingList` — one list of findings, each led by its tone's outline icon (`roster/FindingList/findingToneIcons.ts`:
   `AlertIcon` in `warning-900` to look at, `InfoIcon` in `ink-blue-700` for information only).
-- `GeneratedRoster` — the summary line, the week bar with one button per list in `rosterSideLists.ts`, the grid and
+- `roster/GeneratedRoster` — the summary line, the week bar with one button per list in `rosterSideLists.ts`, the grid and
   one side panel; the view (week, list, chosen day) comes from and goes back to the route's search, so it keeps only
   the previewed days and the change just applied.
 - `RosterSidePanel` — the side panel's frame (title, close, Escape, focus) drawing every list from sections: a heading,
-  `PanelItem`s (`roster/rosterPanels.ts`: starting points, changed days) and other content (`FindingsPanel`, the
+  `PanelItem`s (`roster/rosterPanels.ts`: starting points, changed days) and other content (`roster/FindingsPanel`, the
   latest change, `DescriptionList`).
-- `ScheduleMenu` — the "More actions" menu on a history row and the roster header: the caller's own items first
+- `schedules/ScheduleMenu` — the "More actions" menu on a history row and the roster header: the caller's own items first
   (`children`), then Export roster (header only, once there is a roster) and Delete. It owns the export mutation and
-  opens `DeleteScheduleDialog`.
-- `DeleteScheduleDialog` — a `ConfirmDialog` in the `danger` tone. `RegenerateMonthDialog` — asks before a month is
+  opens `schedules/DeleteScheduleDialog`.
+- `schedules/DeleteScheduleDialog` — a `ConfirmDialog` in the `danger` tone. `months/RegenerateMonthDialog` — asks before a month is
   generated again, naming the weeks changed by hand; `danger` only when it replaces them. Each refusal shows inside
   the dialog.
-- `RejectedRosterCallout` — a rejected roster says who rejected it, when, why and what next.
-  `schedules/scheduleDecision.ts` reads the decision off the status alone. `PublishScheduleDialog` (from the header's
-  Publish) and `RejectScheduleDialog` (from the menu; reason required, as rejecting leave) make the decision.
+- `schedules/RejectedRosterCallout` — a rejected roster says who rejected it, when, why and what next.
+  `schedules/scheduleDecision.ts` reads the decision off the status alone. `schedules/PublishScheduleDialog` (from the header's
+  Publish) and `schedules/RejectScheduleDialog` (from the menu; reason required, as rejecting leave) make the decision.
 
 Engine prose (failure reason, errors, conflicts, diagnostics) is shown quoted, never as the app's own copy
 (ADR-0003). The four known diagnostic codes also get the app's own sentence, with the engine's quoted beneath.
@@ -331,7 +363,7 @@ Engine prose (failure reason, errors, conflicts, diagnostics) is shown quoted, n
 Every check goes through `useAccess` at the schedule's department (`departmentScope`): `schedule:read` reads a draft;
 `schedule:create` decides which departments Setup offers; `schedule:update` saves (without it the setup is read-only
 and Save draft is not offered); `schedule:generate` offers Generate and Regenerate; `schedule:publish` offers Publish
-and Reject on a GENERATED roster; `schedule:delete` offers Delete in `ScheduleMenu`, and Export roster needs only
+and Reject on a GENERATED roster; `schedule:delete` offers Delete in `schedules/ScheduleMenu`, and Export roster needs only
 `schedule:read`. `shift:read` lists the shifts and the role options; `shift:create` offers Add, `shift:update`
 Edit and `shift:delete` Delete. `constraint:read` lists the constraints (a draft's and a generated schedule's) and the
 constraint options; `constraint:create` offers Add constraint, `constraint:update` Edit and `constraint:delete`

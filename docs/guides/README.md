@@ -25,7 +25,7 @@ folder imports it through its `index.ts`. `src/features/README.md` says more.
 
 | Script | What it keeps |
 | --- | --- |
-| `scripts/check-feature-cycles.mjs` | No two features, and no two areas of `features/scheduling`, import each other |
+| `scripts/check-feature-cycles.mjs` | No two features, and no two areas of `features/scheduling`, import each other; the top of `features/scheduling` holds only its listed entries |
 | `scripts/check-import-direction.mjs` | Imports point down the layers, and into a component folder only through its `index.ts` |
 | `scripts/check-file-size.mjs` | Source files stay within 500 lines, test files within 1,500 |
 | `scripts/check-loose-codes.mjs` | API refusal codes are named only in a feature's refusal module |
