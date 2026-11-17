@@ -22,8 +22,8 @@ import {
 } from "@/features/approvals/approvalStanding";
 import {
 	GeneratedRoster,
+	rosterEditingOf,
 	type GeneratedRosterProps,
-	type RosterEditing,
 } from "@/features/scheduling/GeneratedRoster";
 import { GenerationFailurePanel } from "@/features/scheduling/GenerationFailurePanel";
 import { scheduleMonthQuery } from "@/features/scheduling/months/api";
@@ -64,6 +64,7 @@ import { changedDays } from "@/features/scheduling/roster/rosterSummary";
 import { useRepairWarmUpOnValidate } from "@/features/scheduling/cover/useRepairWarmUp";
 import { coverOffersQuery } from "@/features/scheduling/coverOffers/api";
 import { rosterChangeShiftsQuery } from "@/features/scheduling/rosterChanges/api";
+import type { RosterChangeTarget } from "@/features/scheduling/rosterChanges/useRosterChangeActions";
 import { generationFailure } from "@/features/scheduling/roster/generationFailure";
 import { ScheduleMenu } from "@/features/scheduling/ScheduleMenu";
 import {
@@ -384,10 +385,13 @@ const ApiSchedule = ({
 	// Validate schedule lighting up after a hand change warms the engine's worker for the check to come.
 	const rosterRevision =
 		state.status === "ready" ? state.schedule.rosterRevision : 0;
-	useRepairWarmUpOnValidate(
+	// Where hand changes go, for someone who may change this roster now.
+	const editTarget: RosterChangeTarget | undefined =
 		mayEditShifts && runId !== undefined && unit !== undefined
 			? { companyId, unit, scheduleId, runId }
-			: undefined,
+			: undefined;
+	useRepairWarmUpOnValidate(
+		editTarget,
 		rosterRevision,
 		validationStanding({
 			revision: rosterRevision,
@@ -471,31 +475,20 @@ const ApiSchedule = ({
 					setOpenDialog("regenerate");
 				}
 			: undefined;
-	const editing: RosterEditing | undefined =
-		mayEditShifts && runId !== undefined && unit !== undefined
-			? {
-					target: { companyId, unit, scheduleId, runId },
-					revision: state.schedule.rosterRevision,
-					shifts: editorShifts.data ?? [],
-					nonWorkingDayTypes: state.schedule.nonWorkingDayTypes,
-					notifiesMembers: state.schedule.status === "PUBLISHED",
-					...(publishedForEditing
-						? {
-								coverOffers: {
-									offers: coverOffers.data ?? [],
-									failed: coverOffers.isError,
-									retry: (): void => {
-										void coverOffers.refetch();
-									},
-								},
-							}
-						: {}),
-					// Leave choices need the leave keys as well, here at the schedule's Department.
-					...(permissions.mayHandleLeave
-						? { leave: { viewerMembershipId } }
-						: {}),
-				}
-			: undefined;
+	const editing = rosterEditingOf({
+		target: editTarget,
+		schedule: state.schedule,
+		shifts: editorShifts.data ?? [],
+		coverOffers: {
+			offers: coverOffers.data ?? [],
+			failed: coverOffers.isError,
+			retry: (): void => {
+				void coverOffers.refetch();
+			},
+		},
+		// Leave choices need the leave keys as well, here at the schedule's Department.
+		leave: permissions.mayHandleLeave ? { viewerMembershipId } : undefined,
+	});
 	const schedule = state.schedule;
 	// A part of its week (API ADR-0113): the week's other days, and a way to schedule the days after it.
 	const weekParts =
