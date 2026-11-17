@@ -582,3 +582,39 @@ it("given_annualLeave_when_chosen_then_noBalance", async () => {
 		false
 	);
 });
+
+it("given_recording_when_submittedWithoutARemark_then_saysToEnterOneUnderTheField", async () => {
+	const user = userEvent.setup();
+	stubApi({
+		[MEMBER_ROSTERED_DAYS]: { status: 200, body: envelope([]) },
+		[MEMBER_LEAVE_OPTIONS]: optionsReply(),
+	});
+	const onCreate = vi.fn();
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveApplyForm
+				recording
+				busy={false}
+				companyId="c-1"
+				employees={{ search: "", onSearch: vi.fn(), options: [aisha] }}
+				onClose={vi.fn()}
+				onCreate={onCreate}
+			/>
+		</I18nextProvider>
+	);
+	await user.click(screen.getByRole("button", { name: "Employee" }));
+	await user.click(await screen.findByRole("option", { name: /Aisha Rahman/ }));
+	const record = screen.getByRole("button", { name: "Record approved leave" });
+	await waitFor(() => {
+		expect(record).toBeEnabled();
+	});
+	const remark = screen.getByRole("textbox", { name: "Remark" });
+	expect(remark.closest("form")).toHaveAttribute("novalidate");
+
+	await user.click(record);
+
+	expect(onCreate).not.toHaveBeenCalled();
+	expect(remark).toHaveAccessibleDescription(
+		"Enter a remark that says why this leave is recorded. The employee will see it."
+	);
+});

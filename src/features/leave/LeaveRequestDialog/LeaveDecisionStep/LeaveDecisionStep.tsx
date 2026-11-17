@@ -56,6 +56,7 @@ export const LeaveDecisionStep = ({
 	const required = rejecting || commentRequired;
 	return (
 		<form
+			noValidate
 			className="mt-8 border-t border-neutral-400 pt-8"
 			id={id}
 			onSubmit={(event) => {

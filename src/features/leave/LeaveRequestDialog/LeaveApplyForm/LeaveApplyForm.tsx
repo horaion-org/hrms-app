@@ -38,6 +38,7 @@ import {
 } from "@/features/employmentTerms/timeOffBalance";
 import type { LeaveRequestBody } from "@/features/leave/types";
 import { RosteredDaysNotice } from "../RosteredDaysNotice";
+import { remarksText } from "./remarksText";
 
 /** The people offered when applying: a search the caller owns and its current answer. */
 export type ApplyEmployees = {
@@ -171,10 +172,9 @@ export const LeaveApplyForm = ({
 			: 0;
 	const customIncomplete = portion.kind === "CUSTOM" && customMinutes === 0;
 	const portionIds = formRowIds(`${id}-portion`);
+	const remarksWords = remarksText(t, recording, remarksRequired);
 	const remarksError =
-		missingRemarks && remarksRequired
-			? t("leave.leaveReasonRequired")
-			: fields.notes;
+		missingRemarks && remarksRequired ? remarksWords.missing : fields.notes;
 	const typeError = fields.type ? `${id}-type-error` : undefined;
 	const rosterReadable =
 		companyId !== undefined && (own || chosen !== undefined);
@@ -221,13 +221,14 @@ export const LeaveApplyForm = ({
 			onClose={onClose}
 		>
 			<form
+				noValidate
 				className="space-y-6"
 				id={id}
 				onSubmit={(event) => {
 					event.preventDefault();
 					if (incomplete) return;
 					const trimmedRemarks = remarks.trim();
-					if ((remarksRequired || recording) && trimmedRemarks === "") {
+					if (remarksRequired && trimmedRemarks === "") {
 						setMissingRemarks(true);
 						return;
 					}
@@ -459,7 +460,9 @@ export const LeaveApplyForm = ({
 				/>
 				<FormRow
 					error={remarksError}
+					hint={remarksWords.hint}
 					htmlFor={`${id}-remarks`}
+					label={remarksWords.label}
 					layout="stacked"
 					required={remarksRequired}
 					counter={
@@ -467,27 +470,10 @@ export const LeaveApplyForm = ({
 							? undefined
 							: t("leave.remarksCounter", { count: remarks.length })
 					}
-					hint={
-						recording
-							? t("leave.remarkHintEmployee")
-							: t(
-									remarksRequired
-										? "leave.leaveReasonHint"
-										: "leave.remarksHint"
-								)
-					}
-					label={
-						recording
-							? t("leave.remark")
-							: t(
-									remarksRequired
-										? "leave.leaveReason"
-										: "leave.remarksOptional"
-								)
-					}
 				>
 					<Textarea
 						id={`${id}-remarks`}
+						placeholder={remarksWords.placeholder}
 						required={remarksRequired}
 						status={remarksError ? "error" : undefined}
 						value={remarks}
@@ -497,11 +483,6 @@ export const LeaveApplyForm = ({
 						maxLength={
 							recording ? LEAVE_REMARK_MAX_LENGTH : LEAVE_NOTES_MAX_LENGTH
 						}
-						placeholder={t(
-							remarksRequired
-								? "leave.leaveReasonPlaceholder"
-								: "leave.remarksPlaceholder"
-						)}
 						onChange={(event) => {
 							setRemarks(event.target.value);
 							setMissingRemarks(false);
