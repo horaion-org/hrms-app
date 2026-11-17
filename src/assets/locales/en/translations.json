@@ -960,7 +960,13 @@
 		"mainNavigation": "Main navigation",
 		"collapseMenu": "Collapse menu",
 		"expandMenu": "Expand menu",
-		"logo": "Horaion"
+		"logo": "Horaion",
+		"notFound": {
+			"title": "Page not found",
+			"explanation": "This page doesn’t exist.",
+			"dashboard": "Go to the dashboard",
+			"signIn": "Sign in"
+		}
 	},
 	"people": {
 		"title": "People overview",

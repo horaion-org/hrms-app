@@ -2785,7 +2785,13 @@
 		"mainNavigation": "Navegación principal",
 		"collapseMenu": "Contraer menú",
 		"expandMenu": "Expandir menú",
-		"logo": "Horaion"
+		"logo": "Horaion",
+		"notFound": {
+			"title": "Página no encontrada",
+			"explanation": "Esta página no existe.",
+			"dashboard": "Ir al panel",
+			"signIn": "Iniciar sesión"
+		}
 	},
 	"people": {
 		"title": "Resumen de personas",
