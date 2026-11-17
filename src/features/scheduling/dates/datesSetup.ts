@@ -160,3 +160,20 @@ export const daysAroundPart = (
 			: undefined,
 	afterTaken: parts.some((part) => part.coveredFrom > schedule.coveredTo),
 });
+
+/**
+ * The days of a part's week before its first generated day: Monday to the
+ * day before `firstDay`; none when it starts on the Monday. A started week
+ * generated from today (Month) or dates from mid-week ask about these days.
+ */
+export const daysBeforeOf = (
+	monday: string,
+	firstDay: string
+): DayRun | undefined =>
+	firstDay > monday ? { from: monday, to: dayBefore(firstDay) } : undefined;
+
+/** Every date of a run of days, in order. */
+export const datesIn = (days: DayRun): Array<string> =>
+	Array.from({ length: dayCountOf(days.from, days.to) }, (_, offset) =>
+		dayjs(days.from).add(offset, "day").format(iso)
+	);

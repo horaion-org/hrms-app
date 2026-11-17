@@ -1,5 +1,9 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
-import { periodStartingOn } from "@/features/scheduling/periods";
+import { formatDay } from "@/common/formatDay";
+import { datesIn, daysBeforeOf } from "@/features/scheduling/dates/datesSetup";
+import { startingDaysQuery } from "@/features/scheduling/startingContext/api";
+import { unansweredDays } from "@/features/scheduling/startingContext/startingGrid";
+import { formatPeriod, periodStartingOn } from "@/features/scheduling/periods";
 import { Navigate, useNavigate, useSearch } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import type { TFunction } from "i18next";
@@ -292,6 +296,28 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 		? startingWeekOf(scheduleMonth.data, ticked)
 		: undefined;
 	// Each later ticked week with nothing before it (after a gap) is asked for its days before, not for hours.
+	// Owner answer 2: the days of the first week before its first generated day that nobody knows are asked
+	// about (were rest days given?), and taken as days nobody worked if left unknown. A started week is
+	// generated from today.
+	const askedRestDays =
+		startingWeek && startingWeek.periodStart < branchToday
+			? daysBeforeOf(startingWeek.periodStart, branchToday)
+			: undefined;
+	const startingDraftId =
+		startingWeek?.state === "DRAFT" ? (startingWeek.scheduleId ?? "") : "";
+	const startingDays = useQuery(
+		startingDaysQuery(
+			companyId,
+			unit,
+			startingDraftId,
+			startingDraftId !== "" && askedRestDays !== undefined
+		)
+	);
+	const unknownRestDays = !askedRestDays
+		? []
+		: startingDays.data
+			? unansweredDays(startingDays.data, askedRestDays)
+			: datesIn(askedRestDays);
 	const laterStartingWeeks = scheduleMonth.data
 		? startingWeeksOf(scheduleMonth.data, ticked).filter(
 				(week) => week !== startingWeek
@@ -564,6 +590,9 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 				)}
 			</div>
 		));
+	const restDaysText = new Intl.ListFormat(language, {
+		type: "conjunction",
+	}).format(unknownRestDays.map((date) => formatDay(date, language)));
 	// The first week saved as a draft keeps its own choice, changed on its own page.
 	const savedDraftLine =
 		startingWeek?.state === "DRAFT"
@@ -684,6 +713,27 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 									<p className="text-sm text-neutral-800">{savedDraftLine}</p>
 								)}
 								{firstWeekDates}
+								{startingWeek && unknownRestDays.length > 0 && (
+									<Callout tone="warning">
+										<span className="block">
+											{t("scheduling.startingContext.restDaysAsk", {
+												days: restDaysText,
+											})}
+										</span>
+										<span className="block">
+											{t("scheduling.startingContext.restDaysFallback", {
+												days: restDaysText,
+												remaining: formatPeriod(
+													{
+														start: branchToday,
+														end: periodStartingOn(startingWeek.periodStart).end,
+													},
+													language
+												),
+											})}
+										</span>
+									</Callout>
+								)}
 								{startingPoint}
 								{laterStartingPoints}
 							</div>

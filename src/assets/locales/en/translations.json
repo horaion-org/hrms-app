@@ -4678,7 +4678,9 @@
 			"notDraft": "This schedule has already been generated, so its starting point can no longer change.",
 			"failed": "The days couldn’t be saved. Try again.",
 			"stale_one": "{{count}} person’s days before this week changed after this roster was generated, so what it says about the week before is what was known then. To plan from the days as they are now, regenerate the month from its page.",
-			"stale_other": "{{count}} people’s days before this week changed after this roster was generated, so what it says about the week before is what was known then. To plan from the days as they are now, regenerate the month from its page."
+			"stale_other": "{{count}} people’s days before this week changed after this roster was generated, so what it says about the week before is what was known then. To plan from the days as they are now, regenerate the month from its page.",
+			"restDaysAsk": "Were rest days already given on {{days}}? Mark them under Before this week, so the week’s rest day counts them.",
+			"restDaysFallback": "If you go on, {{days}} are taken as days nobody worked: no rest day is counted on them, so the rest day must fall on {{remaining}}."
 		},
 		"openingHours": {
 			"title": "Hours already worked this month ({{from}} to {{to}})",

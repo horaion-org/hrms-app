@@ -758,6 +758,40 @@ describe("Create schedules for a month: ticking weeks", () => {
 		).toBeVisible();
 	});
 
+	it("given_aStartedWeek_when_onSetup_then_asksAboutMondayAndOffersBeforeThisWeek", async () => {
+		const user = userEvent.setup();
+		await open(NEW_NOVEMBER, novemberRoutes());
+
+		await user.click(
+			await screen.findByRole("checkbox", {
+				name: "Select Mon, Nov 9 to Sun, Nov 15",
+			})
+		);
+
+		expect(
+			await screen.findByText(
+				"Were rest days already given on Mon, Nov 9, Tue, Nov 10, and Wed, Nov 11? Mark them under Before this week, so the week’s rest day counts them."
+			)
+		).toBeInTheDocument();
+		expect(
+			screen.getByText(
+				/^If you go on, Mon, Nov 9, Tue, Nov 10, and Wed, Nov 11 are taken as days nobody worked: no rest day is counted on them, so the rest day must fall on Nov 12\s?–\s?15, 2026\.$/
+			)
+		).toBeInTheDocument();
+		expect(
+			screen.getByText("Horaion doesn’t know what people worked last week.")
+		).toBeVisible();
+	});
+
+	it("given_aWeekStartingMonday_when_onSetup_then_noPrompt", async () => {
+		await open(NEW_NOVEMBER, novemberRoutes());
+
+		await screen.findByText(
+			"Horaion doesn’t know what people worked last week."
+		);
+		expect(screen.queryByText(/^Were rest days already given/)).toBeNull();
+	});
+
 	it("given_theFirstTickedWeekAfterUntickedWeeks_when_hoursAdded_then_savesThatWeekAndTheHoursRunToTheDayBeforeIt", async () => {
 		const user = userEvent.setup();
 		const { calls } = await open(NEW_DECEMBER, {

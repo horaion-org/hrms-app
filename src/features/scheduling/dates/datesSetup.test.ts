@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
+	datesIn,
+	daysAroundPart,
+	daysBeforeOf,
 	datesProblemOf,
 	maxLastDayOf,
 	namedSpansOf,
@@ -109,5 +112,52 @@ describe("namedSpansOf", () => {
 			{ name: "Year-end gala", from: "2026-11-23", to: "2026-11-24" },
 			{ name: "Stocktake", from: "2026-11-25", to: "2026-11-26" },
 		]);
+	});
+});
+
+describe("daysBeforeOf and datesIn", () => {
+	it("given_aThursdayStart_when_asked_then_mondayToWednesday", () => {
+		const before = daysBeforeOf("2026-11-16", "2026-11-19");
+
+		expect(before).toEqual({ from: "2026-11-16", to: "2026-11-18" });
+		expect(datesIn(before!)).toEqual([
+			"2026-11-16",
+			"2026-11-17",
+			"2026-11-18",
+		]);
+	});
+
+	it("given_aMondayStart_when_asked_then_none", () => {
+		expect(daysBeforeOf("2026-11-16", "2026-11-16")).toBeUndefined();
+	});
+});
+
+describe("daysAroundPart", () => {
+	const WEEK = { periodStart: "2026-10-12", periodEnd: "2026-10-18" };
+
+	it("given_aPartEndingSaturday_when_asked_then_sundayIsFree", () => {
+		expect(
+			daysAroundPart(
+				{ ...WEEK, coveredFrom: "2026-10-12", coveredTo: "2026-10-17" },
+				[]
+			)
+		).toEqual({
+			before: undefined,
+			after: { from: "2026-10-18", to: "2026-10-18" },
+			afterTaken: false,
+		});
+	});
+
+	it("given_aLaterPartFromThursday_when_asked_then_mondayToWednesdayBefore", () => {
+		expect(
+			daysAroundPart(
+				{ ...WEEK, coveredFrom: "2026-10-15", coveredTo: "2026-10-18" },
+				[]
+			)
+		).toEqual({
+			before: { from: "2026-10-12", to: "2026-10-14" },
+			after: undefined,
+			afterTaken: false,
+		});
 	});
 });
