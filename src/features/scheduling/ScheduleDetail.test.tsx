@@ -1145,7 +1145,7 @@ it("counts what the engine found on one Issues button and lists it in the side p
 	expect(issues).toHaveAttribute("aria-controls", panel.id);
 
 	const information = within(panel)
-		.getByRole("button", { name: /^For your information, / })
+		.getByRole("button", { name: /^More information, / })
 		.closest("section");
 	expect(information).toHaveTextContent(
 		"No one in this schedule can take Breakfast Prep."

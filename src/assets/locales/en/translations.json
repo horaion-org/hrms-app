@@ -4622,7 +4622,7 @@
 			"groups": {
 				"mustFix": "Must fix",
 				"notMet": "Could not be met",
-				"forInformation": "For your information"
+				"forInformation": "More information"
 			},
 			"jobShort": "{{job}} short",
 			"unknownJob": "A job title",
@@ -4633,8 +4633,8 @@
 				"mustFix_other": "{{count}} to fix",
 				"notMet_one": "{{count}} could not be met",
 				"notMet_other": "{{count}} could not be met",
-				"forInformation_one": "{{count}} for your information",
-				"forInformation_other": "{{count}} for your information"
+				"forInformation_one": "{{count}} for information",
+				"forInformation_other": "{{count}} for information"
 			}
 		},
 		"rosterMarkers": {

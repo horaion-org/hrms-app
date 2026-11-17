@@ -27,7 +27,7 @@ describe("RosterIssueGroups", () => {
 
 		expect(screen.getByText("2 to fix")).toBeInTheDocument();
 		expect(screen.getByText("1 could not be met")).toBeInTheDocument();
-		expect(screen.getByText("1 for your information")).toBeInTheDocument();
+		expect(screen.getByText("1 for information")).toBeInTheDocument();
 	});
 
 	it("folds a group with a real button, leaving a gist of who it names", async () => {

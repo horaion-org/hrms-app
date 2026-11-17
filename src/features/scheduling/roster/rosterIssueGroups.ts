@@ -182,7 +182,7 @@ export const issueCounts = (
 		.length,
 });
 
-/** "3 to fix · 2 could not be met · 1 for your information", leaving out empty groups; empty when none. */
+/** "3 to fix · 2 could not be met · 1 for information", leaving out empty groups; empty when none. */
 export const issueSummary = (
 	counts: Record<IssueGroup, number>,
 	t: TFunction

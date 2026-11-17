@@ -23,7 +23,7 @@ export type RosterIssueGroupsProps = {
 	issues: ReadonlyArray<RosterIssue>;
 	/** The validation result card, under the summary. */
 	validationNote?: ReactNode;
-	/** More for your information under its items, such as the cover offers out. */
+	/** More information under its items, such as the cover offers out. */
 	information?: ReactNode;
 	/** Outlines the item's cell on the grid; no Show buttons without. */
 	onShow?: (issue: RosterIssue) => void;
@@ -33,7 +33,7 @@ export type RosterIssueGroupsProps = {
 
 /**
  * The Issues tab by what to do: the counts in each group's tone, the
- * validation result, then Must fix, Could not be met and For your
+ * validation result, then Must fix, Could not be met and More
  * information, each foldable, ordered by person or by day.
  */
 export const RosterIssueGroups = ({
