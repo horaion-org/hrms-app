@@ -2264,7 +2264,8 @@
 				"confirm": "Eliminar rol",
 				"inUse": "Este rol sigue asignado a alguien. Quítaselo primero a todas las personas.",
 				"forbidden": "No tienes permiso para eliminar este rol.",
-				"failed": "No pudimos eliminar el rol. Inténtalo de nuevo."
+				"failed": "No pudimos eliminar el rol. Inténtalo de nuevo.",
+				"heldDeleteItem": "Eliminar: quítalo antes a las personas que lo tienen"
 			},
 			"kind": {
 				"label": "¿Dónde se puede usar este rol?",

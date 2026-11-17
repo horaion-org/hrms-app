@@ -302,6 +302,13 @@ describe("deleteRoleOffer", () => {
 		expect(deleteRoleOffer(role, undefined, mayDelete).disabled).toBe(false);
 	});
 
+	it("disables Delete for a role people hold, its label saying to remove it from them first", () => {
+		expect(deleteRoleOffer({ ...role, holderCount: 2 }, [], mayDelete)).toEqual({
+			disabled: true,
+			label: "organisation.accessRoles.delete.heldDeleteItem",
+		});
+	});
+
 	it("disables Delete for a held or built-in role, or without the delete key", () => {
 		expect(deleteRoleOffer({ ...role, holderCount: 1 }, [], mayDelete).disabled).toBe(true);
 		expect(deleteRoleOffer({ ...role, protectedRole: true }, [], mayDelete).disabled).toBe(true);

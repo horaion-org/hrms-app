@@ -189,16 +189,30 @@ export const giveDefaultAccessSummary = (
 			: []),
 	].join(" ");
 
-/** How a role's Delete is offered: disabled when it can't succeed, its label naming why when that is a default. */
+/** How a role's Delete is offered: disabled when it can't succeed, its label naming why when people hold it or a default gives it. */
 export type DeleteRoleOffer = {
 	disabled: boolean;
-	label: "organisation.list.deleteItem" | `${typeof key}.usedAsDefaultDeleteItem`;
+	label:
+		| "organisation.list.deleteItem"
+		| `${typeof key}.usedAsDefaultDeleteItem`
+		| "organisation.accessRoles.delete.heldDeleteItem";
+};
+
+/** The label naming what keeps a role from being deleted, or plain Delete. */
+const deleteLabel = (
+	held: boolean,
+	givenByDefault: boolean
+): DeleteRoleOffer["label"] => {
+	if (held) return "organisation.accessRoles.delete.heldDeleteItem";
+	if (givenByDefault) return `${key}.usedAsDefaultDeleteItem`;
+	return "organisation.list.deleteItem";
 };
 
 /**
  * Delete for one role. Only a custom role nobody holds can be deleted, and
  * not while a default still gives it (API ADR-0118): then the item says to
- * remove it from Default access first, rather than offer a refused delete.
+ * remove it from the people who hold it, or from Default access, first,
+ * rather than offer a refused delete.
  * `rules` is undefined while the defaults are unread or unreadable; the
  * API's refusal then says the same. Deleting needs `access_role:delete` at
  * the company.
@@ -212,14 +226,9 @@ export const deleteRoleOffer = (
 	const givenByDefault = (rules ?? []).some(
 		(rule) => rule.accessRoleId === role.accessRoleId
 	);
+	const held = role.holderCount > 0;
 	return {
-		disabled:
-			!mayDelete ||
-			role.protectedRole ||
-			role.holderCount > 0 ||
-			givenByDefault,
-		label: givenByDefault
-			? `${key}.usedAsDefaultDeleteItem`
-			: "organisation.list.deleteItem",
+		disabled: !mayDelete || role.protectedRole || held || givenByDefault,
+		label: deleteLabel(held, givenByDefault),
 	};
 };

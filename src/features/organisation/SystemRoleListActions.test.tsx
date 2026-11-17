@@ -168,10 +168,17 @@ describe("Access role list actions", () => {
 			within(menu)
 				.getAllByRole("menuitem")
 				.map((item) => item.textContent)
-		).toEqual(["View", "Duplicate", "Deactivate", "Delete"]);
-		// A role somebody holds can't be deleted.
+		).toEqual([
+			"View",
+			"Duplicate",
+			"Deactivate",
+			"Delete: remove it from the people who hold it first",
+		]);
+		// A role somebody holds can't be deleted, and the item says why.
 		expect(
-			within(menu).getByRole("menuitem", { name: "Delete" })
+			within(menu).getByRole("menuitem", {
+				name: "Delete: remove it from the people who hold it first",
+			})
 		).toHaveAttribute("aria-disabled", "true");
 	});
 
