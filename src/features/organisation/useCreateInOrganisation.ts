@@ -18,7 +18,7 @@ import { workspaceQuery } from "@/features/workspace/api";
 
 /**
  * Refreshes company lists and workspace access, including newly created units.
- * Without a `successMessage` the app's generic success toast shows.
+ * Without a `successMessage` nothing is announced: the new row shows on the list.
  */
 const useCompanyCreate = <TBody, TResult>(
 	companyId: string,
