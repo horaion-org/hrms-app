@@ -2057,6 +2057,17 @@
 		},
 		"accessRoles": {
 			"defaults": {
+				"refusals": {
+					"invalidRule": "That role or place can’t be used for default access. Choose a custom role of this company and at most one branch or department, then try again.",
+					"inactive": "That role is switched off. Switch it on, or choose another role.",
+					"kind": "A company role can’t be default access. Choose a role for branches and departments.",
+					"scope": "That role holds permissions that don’t work in a department. Remove them from the role, or apply it to their own branch.",
+					"duplicate": "That role is already default access there. Remove it first to change where it applies.",
+					"placeGone": "That branch or department no longer exists. Choose another place.",
+					"notMember": "Someone you chose has left the company. Untick them and try again.",
+					"forbidden": "Only the System Owner or a System Admin can change default access.",
+					"failed": "Default access couldn’t be changed. Try again."
+				},
 				"toast": {
 					"added": "Default access added.",
 					"removed": "Default access removed.",
@@ -2267,6 +2278,7 @@
 				}
 			},
 			"delete": {
+				"usedAsDefault": "This role is default access. Remove it from Default access first, then delete it.",
 				"title": "Delete {{name}}",
 				"description": "Nobody holds this role. Deleting it can’t be undone.",
 				"confirm": "Delete role",

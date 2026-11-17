@@ -1964,6 +1964,17 @@
 		},
 		"accessRoles": {
 			"defaults": {
+				"refusals": {
+					"invalidRule": "Ese rol o lugar no se puede usar como acceso predeterminado. Elige un rol personalizado de esta empresa y como mucho una sucursal o un departamento, y vuelve a intentarlo.",
+					"inactive": "Ese rol está desactivado. Actívalo o elige otro rol.",
+					"kind": "Un rol de empresa no puede ser acceso predeterminado. Elige un rol para sucursales y departamentos.",
+					"scope": "Ese rol tiene permisos que no funcionan en un departamento. Quítalos del rol o aplícalo a su propia sucursal.",
+					"duplicate": "Ese rol ya es acceso predeterminado ahí. Quítalo primero para cambiar dónde se aplica.",
+					"placeGone": "Esa sucursal o ese departamento ya no existe. Elige otro lugar.",
+					"notMember": "Alguien que elegiste ya no está en la empresa. Desmárcalo y vuelve a intentarlo.",
+					"forbidden": "Solo el Propietario del sistema o un Administrador del sistema puede cambiar el acceso predeterminado.",
+					"failed": "No pudimos cambiar el acceso predeterminado. Inténtalo de nuevo."
+				},
 				"toast": {
 					"added": "Acceso predeterminado añadido.",
 					"removed": "Acceso predeterminado quitado.",
@@ -2174,6 +2185,7 @@
 				}
 			},
 			"delete": {
+				"usedAsDefault": "Este rol es acceso predeterminado. Quítalo primero de Acceso predeterminado y luego elimínalo.",
 				"title": "Eliminar {{name}}",
 				"description": "Nadie tiene este rol. Eliminarlo no se puede deshacer.",
 				"confirm": "Eliminar rol",
