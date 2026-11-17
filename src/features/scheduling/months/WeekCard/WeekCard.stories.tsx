@@ -3,6 +3,7 @@ import { withMemoryRouter } from "@/components/utils/MemoryRouterHarness";
 import {
 	coverDays,
 	monthWeekFixture,
+	twoPartWeekFixture,
 } from "@/features/scheduling/months/fixtures";
 import { WeekCard } from "@/features/scheduling/months/WeekCard";
 import "@/common/i18n";
@@ -109,6 +110,21 @@ export const PublishedInPart: Story = {
 					redoing: false,
 				},
 			],
+		}),
+	},
+};
+
+/** A week of two schedules: each listed by its days and state, opening its own roster. */
+export const TwoSchedules: Story = {
+	args: {
+		week: monthWeekFixture({
+			periodStart: "2027-02-15",
+			periodEnd: "2027-02-21",
+			state: "TENTATIVE",
+			scheduleId: "s-2",
+			coveredFrom: "2027-02-20",
+			coveredTo: "2027-02-21",
+			parts: twoPartWeekFixture(),
 		}),
 	},
 };

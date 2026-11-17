@@ -10,6 +10,8 @@ import type { MonthWeek } from "@/features/scheduling/months/api";
 import { namedSpansOf } from "@/features/scheduling/dates/datesSetup";
 import { DayCoverMarks } from "@/features/scheduling/months/DayCoverMarks";
 import { formatWeekDates } from "@/features/scheduling/months/monthWeeks";
+import { listsWeekParts } from "@/features/scheduling/months/rosterWeeks";
+import { WeekPartLinks } from "@/features/scheduling/months/WeekPartLinks";
 import {
 	hasRoster,
 	weekAction,
@@ -37,53 +39,35 @@ export type WeekCardProps = {
 const key = "scheduling.months";
 
 /**
- * What a week in parts says (API ADR-0113): the days its newest part covers,
- * named when a manager named it, and which days an earlier part published.
- * Nothing for a week one schedule covers whole.
+ * What a week of one part says (API ADR-0113): the days that part covers,
+ * named when a manager named it; nothing for a week one schedule covers
+ * whole. A week of several parts lists them instead (`WeekPartLinks`).
  */
-const partLinesOf = (
+const coversLineOf = (
 	week: MonthWeek,
 	datesOf: (from: string, to: string) => string,
 	t: TFunction
-): Array<string> => {
+): string | undefined => {
 	const { coveredFrom, coveredTo } = week;
-	if (!coveredFrom || !coveredTo) return [];
+	if (!coveredFrom || !coveredTo) return undefined;
+	if (coveredFrom === week.periodStart && coveredTo === week.periodEnd)
+		return undefined;
 	const range = datesOf(coveredFrom, coveredTo);
 	const named = namedSpansOf(week.parts).find(
 		(span) => span.from <= coveredFrom && span.to >= coveredTo
 	);
-	const coversLine =
-		coveredFrom === week.periodStart && coveredTo === week.periodEnd
-			? undefined
-			: named
-				? t(`${key}.cover.coversNamed`, { name: named.name, range })
-				: t(`${key}.cover.covers`, { range });
-	const published = week.parts.filter(
-		(part) => part.state === "PUBLISHED" && part.coveredTo < coveredFrom
-	);
-	const firstPublished = published[0];
-	const lastPublished = published[published.length - 1];
-	const publishedLine =
-		firstPublished && lastPublished
-			? t(`${key}.cover.publishedInPart`, {
-					published: datesOf(
-						firstPublished.coveredFrom,
-						lastPublished.coveredTo
-					),
-					rest: range,
-					state: t(`${key}.states.${week.state}`).toLowerCase(),
-				})
-			: undefined;
-	return [coversLine, publishedLine].filter(
-		(line): line is string => line !== undefined
-	);
+	return named
+		? t(`${key}.cover.coversNamed`, { name: named.name, range })
+		: t(`${key}.cover.covers`, { range });
 };
 
 /**
  * One week of a Department's month: its dates, its state, its seven days'
  * cover and how many were changed by hand, and one action: Review on the
  * week under review, Open on any other week with a schedule (a draft opens
- * its setup, any other its roster), none on a week not generated yet. A
+ * its setup, any other its roster), none on a week not generated yet. A week
+ * of several schedules lists each by its days and state, each opening its
+ * own roster, in place of the one action. A
  * tentative or missing week has a dashed frame: it is not final. A failed
  * week says why, and so does a week whose regeneration failed and that shows
  * its earlier roster; a week the last month run refused, or one a month run took
@@ -111,7 +95,8 @@ export const WeekCard = ({
 	const dashed = week.state === "TENTATIVE" || week.state === "NOT_GENERATED";
 	const datesOf = (from: string, to: string): string =>
 		formatWeekDates({ start: from, end: to }, formattingLocale(i18n));
-	const partLines = partLinesOf(week, datesOf, t);
+	const severalParts = listsWeekParts(week.parts);
+	const coversLine = severalParts ? undefined : coversLineOf(week, datesOf, t);
 	// A week with a roster whose newest run failed kept its earlier roster (API ADR-0112).
 	const failureLine = !failureMessage
 		? undefined
@@ -147,11 +132,7 @@ export const WeekCard = ({
 					{t(`${key}.states.${week.state}`)}
 				</Badge>
 			</div>
-			{partLines.map((line) => (
-				<p key={line} className="text-sm text-neutral-800">
-					{line}
-				</p>
-			))}
+			{coversLine && <p className="text-sm text-neutral-800">{coversLine}</p>}
 			{failureLine && <p className="text-sm text-neutral-800">{failureLine}</p>}
 			{week.rulesChanged === true && (
 				<p className="text-sm text-neutral-800">{t(`${key}.rulesChanged`)}</p>
@@ -174,7 +155,14 @@ export const WeekCard = ({
 					)}
 				</div>
 			)}
-			{action && week.scheduleId && (
+			{severalParts && (
+				<WeekPartLinks
+					className="mt-auto"
+					departmentId={departmentId}
+					parts={week.parts}
+				/>
+			)}
+			{!severalParts && action && week.scheduleId && (
 				<Button
 					{...scheduleViewLink({
 						scheduleId: week.scheduleId,

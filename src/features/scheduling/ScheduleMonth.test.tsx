@@ -27,6 +27,7 @@ import {
 	monthSummaryFixture,
 	monthWeekFixture,
 	scheduleMonthFixture,
+	twoPartWeekFixture,
 	ungeneratedMonthFixture,
 } from "@/features/scheduling/months/fixtures";
 import { departmentShiftFixture } from "@/features/scheduling/shifts/fixtures";
@@ -110,6 +111,49 @@ it("given_novemberOfKitchen_when_opened_then_fiveWeekCardsInMondayOrderWithTheir
 	expect(calls.find((call) => call.path === `${MONTHS}/2026-11`)?.search).toBe(
 		"departmentId=d-1"
 	);
+});
+
+it("given_aWeekOfTwoSchedules_when_shown_then_itsCardListsBothEachOpeningItsOwnRoster", async () => {
+	await openMonth(
+		{
+			...signedIn(),
+			[`GET ${MONTHS}/2027-02`]: ok(
+				scheduleMonthFixture({
+					month: "2027-02",
+					weeks: [
+						monthWeekFixture({
+							periodStart: "2027-02-15",
+							periodEnd: "2027-02-21",
+							state: "TENTATIVE",
+							scheduleId: "s-2",
+							coveredFrom: "2027-02-20",
+							coveredTo: "2027-02-21",
+							parts: twoPartWeekFixture(),
+						}),
+					],
+				})
+			),
+		},
+		"/scheduling/months/2027-02?department=d-1"
+	);
+
+	const parts = await screen.findByRole("navigation", {
+		name: "Schedules this week",
+	});
+	expect(
+		within(parts)
+			.getAllByRole("link")
+			.map((link) => [link.textContent, link.getAttribute("href")])
+	).toEqual([
+		[
+			expect.stringMatching(/^Wed, Feb 17\s?–\s?Fri, Feb 19$/),
+			"/scheduling/s-1",
+		],
+		[
+			expect.stringMatching(/^Sat, Feb 20\s?–\s?Sun, Feb 21$/),
+			"/scheduling/s-2",
+		],
+	]);
 });
 
 it("given_aMonth_when_opened_then_theLegendExplainsTentative", async () => {

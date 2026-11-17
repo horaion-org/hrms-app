@@ -5131,7 +5131,6 @@
 				"handChanged_other": "{{count}} días cambiados a mano",
 				"covers": "Cubre {{range}}",
 				"coversNamed": "{{name}} · cubre {{range}}",
-				"publishedInPart": "{{published}} publicado · {{rest}} {{state}}",
 				"namedSpan": "{{name}} · {{range}}"
 			},
 			"actions": {
