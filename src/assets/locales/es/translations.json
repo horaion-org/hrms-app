@@ -4263,7 +4263,8 @@
 				"timeZone": "Zona horaria",
 				"byAt": "{{name}} · {{at}}"
 			},
-			"leaveWithTime": "{{leave}} {{time}}"
+			"leaveWithTime": "{{leave}} {{time}}",
+			"regenerateWeek": "Regenerar esta semana"
 		},
 		"myRoster": {
 			"title": "Mi cuadrante · {{department}} · {{period}}",
@@ -5304,10 +5305,12 @@
 				"handChanged_other": "{{weeks}} se cambiaron a mano.",
 				"replaced": "Esos cambios se reemplazan cuando el nuevo cuadrante esté listo.",
 				"keptUntilReady": "El cuadrante actual se mantiene hasta que el nuevo esté listo. Si la generación falla, se queda como está.",
-				"chosenTitle": "¿Generar de nuevo estas semanas?",
 				"chosenConfirm": "Generar de nuevo",
 				"chosenWeeks_one": "La semana del {{first}} y la semana siguiente se vuelven a calcular.",
-				"chosenWeeks_other": "La semana del {{first}} y las {{count}} semanas siguientes se vuelven a calcular."
+				"chosenWeeks_other": "La semana del {{first}} y las {{count}} semanas siguientes se vuelven a calcular.",
+				"chosenTitle_one": "¿Generar esta semana de nuevo?",
+				"chosenTitle_other": "¿Generar de nuevo estas semanas?",
+				"chosenWeeks_zero": "La semana del {{first}} se calcula de nuevo."
 			}
 		},
 		"rosterHours": {

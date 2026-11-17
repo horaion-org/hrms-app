@@ -119,7 +119,7 @@ export const RegenerateMonthDialog = ({
 			}
 			title={
 				weeks
-					? t(`${key}.chosenTitle`)
+					? t(`${key}.chosenTitle`, { count: weeks.length })
 					: t(`${key}.title`, { month: monthName })
 			}
 			onClose={onClose}

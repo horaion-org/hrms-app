@@ -379,9 +379,9 @@ it("says a passed week is final and offers no regeneration, even to someone who 
 			"This week has passed. Its rules and roster are final; change its days by hand if needed."
 		)
 	).toBeInTheDocument();
-	expect(await menuItemsOf(user)).not.toContain("Regenerate October 2026");
+	expect(await menuItemsOf(user)).not.toContain("Regenerate this week");
 	expect(
-		screen.queryByRole("button", { name: "Regenerate October 2026" })
+		screen.queryByRole("button", { name: "Regenerate this week" })
 	).toBeNull();
 });
 
@@ -464,7 +464,7 @@ it.each(["GENERATED", "PUBLISHED", "REJECTED"] as const)(
 		]);
 		expect(screen.queryByRole("button", { name: "Publish roster" })).toBeNull();
 		expect(
-			screen.queryByRole("button", { name: "Regenerate October 2026" })
+			screen.queryByRole("button", { name: "Regenerate this week" })
 		).toBeNull();
 	}
 );
@@ -475,7 +475,7 @@ it.each([
 		"Publish roster",
 		[
 			"Reject",
-			"Regenerate October 2026",
+			"Regenerate this week",
 			"View setup",
 			"Details",
 			"Export roster",
@@ -484,7 +484,7 @@ it.each([
 	],
 	[
 		"REJECTED",
-		"Regenerate October 2026",
+		"Regenerate this week",
 		["View setup", "Details", "Export roster", "Delete"],
 	],
 	[
@@ -600,7 +600,7 @@ it("says when the roster couldn't be downloaded and lets the person try again", 
 	).toBeEnabled();
 });
 
-it("regenerates the month over a hand-changed week after a danger confirm, then follows the new run", async () => {
+it("regenerates this week over its hand changes after a danger confirm, then follows the new run", async () => {
 	const calls = await openRoster({
 		...signedIn(["schedule:read", "schedule:generate"]),
 		[`GET ${SCHEDULE_READ}`]: [
@@ -613,18 +613,18 @@ it("regenerates the month over a hand-changed week after a danger confirm, then 
 	});
 	const user = userEvent.setup();
 
-	await chooseFromMenu(user, "Regenerate October 2026");
+	await chooseFromMenu(user, "Regenerate this week");
 	const dialog = screen.getByRole("dialog", {
-		name: "Regenerate October 2026?",
+		name: "Generate this week again?",
 	});
 	expect(dialog).toHaveTextContent(
-		"The 1 week of October 2026 is worked out again. Nothing is published yet, so it can change."
+		/The week of Oct 12\s?–\s?18 is worked out again\./
 	);
 	expect(dialog).toHaveTextContent(
 		/Oct 12\s?–\s?18 was changed by hand\. Those changes are replaced once the new roster is ready\./
 	);
 	const confirm = within(dialog).getByRole("button", {
-		name: "Regenerate October 2026",
+		name: "Generate again",
 	});
 	expect(confirm).toHaveClass("bg-error-600");
 	await user.click(confirm);
@@ -634,7 +634,7 @@ it("regenerates the month over a hand-changed week after a danger confirm, then 
 	);
 	expect(screen.queryByRole("dialog")).toBeNull();
 	expect(
-		screen.queryByRole("button", { name: "Regenerate October 2026" })
+		screen.queryByRole("button", { name: "Regenerate this week" })
 	).toBeNull();
 	const posts = postsOf(calls, OCTOBER_GENERATION);
 	expect(posts).toHaveLength(1);
@@ -643,6 +643,51 @@ it("regenerates the month over a hand-changed week after a danger confirm, then 
 		includeLeave: true,
 		weeks: ["2026-10-12"],
 		newWeeks: [],
+	});
+});
+
+// A week's page regenerates only its own week: the month's other weeks are left as they are.
+it("given_aMonthWithAnotherWeek_when_thisWeekIsRegenerated_then_onlyThisWeekIsSent", async () => {
+	const calls = await openRoster({
+		...signedIn(["schedule:read", "schedule:generate"]),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`GET ${OCTOBER_MONTH}`]: ok(
+			scheduleMonthFixture({
+				month: "2026-10",
+				departmentName: "Front Office",
+				weeks: [
+					["2026-10-12", "2026-10-18", "s-1"],
+					["2026-10-19", "2026-10-25", "s-2"],
+				].map(([periodStart, periodEnd, scheduleId]) =>
+					monthWeekFixture({
+						periodStart,
+						periodEnd,
+						scheduleId,
+						state: "TO_REVIEW",
+						includedInMonthGeneration: true,
+					})
+				),
+			})
+		),
+		[`POST ${OCTOBER_GENERATION}`]: octoberStarted(),
+	});
+	const user = userEvent.setup();
+
+	await chooseFromMenu(user, "Regenerate this week");
+	await user.click(
+		within(
+			screen.getByRole("dialog", { name: "Generate this week again?" })
+		).getByRole("button", { name: "Generate again" })
+	);
+
+	await vi.waitFor(() => {
+		expect(postsOf(calls, OCTOBER_GENERATION)).toHaveLength(1);
+	});
+	expect(postsOf(calls, OCTOBER_GENERATION)[0]?.body).toMatchObject({
+		weeks: ["2026-10-12"],
 	});
 });
 
@@ -681,11 +726,11 @@ it("shows the new run's roster once the poll reports it finished, without a relo
 	expect(
 		await screen.findByRole("row", { name: /Aisha Rahman/ })
 	).toBeInTheDocument();
-	await chooseFromMenu(user, "Regenerate October 2026");
+	await chooseFromMenu(user, "Regenerate this week");
 	roster = [];
 	await user.click(
 		within(screen.getByRole("dialog")).getByRole("button", {
-			name: "Regenerate October 2026",
+			name: "Generate again",
 		})
 	);
 	expect(await screen.findByRole("note")).toHaveTextContent(
@@ -716,10 +761,10 @@ it("shows the generating state, not the old roster, while a new run is open", as
 	const user = userEvent.setup();
 
 	await screen.findByRole("table", { name: "Roster" });
-	await chooseFromMenu(user, "Regenerate October 2026");
+	await chooseFromMenu(user, "Regenerate this week");
 	await user.click(
 		within(screen.getByRole("dialog")).getByRole("button", {
-			name: "Regenerate October 2026",
+			name: "Generate again",
 		})
 	);
 
@@ -748,11 +793,11 @@ it("offers to generate a failed schedule's month again from its failure panel", 
 		await within(panel).findByRole("button", { name: "Generate again" })
 	);
 	const dialog = screen.getByRole("dialog", {
-		name: "Regenerate October 2026?",
+		name: "Generate this week again?",
 	});
 	expect(dialog).not.toHaveTextContent("changed by hand");
 	const confirm = within(dialog).getByRole("button", {
-		name: "Regenerate October 2026",
+		name: "Generate again",
 	});
 	expect(confirm).not.toHaveClass("bg-error-600");
 	await user.click(confirm);
@@ -774,12 +819,12 @@ it("shows a refused regeneration inside the dialog and keeps it open", async () 
 	});
 	const user = userEvent.setup();
 
-	await chooseFromMenu(user, "Regenerate October 2026");
+	await chooseFromMenu(user, "Regenerate this week");
 	const dialog = screen.getByRole("dialog", {
-		name: "Regenerate October 2026?",
+		name: "Generate this week again?",
 	});
 	await user.click(
-		within(dialog).getByRole("button", { name: "Regenerate October 2026" })
+		within(dialog).getByRole("button", { name: "Generate again" })
 	);
 
 	expect(await within(dialog).findByRole("alert")).toHaveTextContent(
@@ -819,10 +864,10 @@ it.each([
 	await screen.findByText("Front Office Schedule");
 	if (screen.queryByRole("button", { name: MENU }))
 		expect(await menuItemsOf(userEvent.setup())).not.toContain(
-			"Regenerate October 2026"
+			"Regenerate this week"
 		);
 	expect(
-		screen.queryByRole("button", { name: "Regenerate October 2026" })
+		screen.queryByRole("button", { name: "Regenerate this week" })
 	).toBeNull();
 });
 
@@ -888,7 +933,7 @@ it("withholds Publish and Regenerate when another schedule is already the week's
 	expect(screen.queryByRole("button", { name: "Publish roster" })).toBeNull();
 	const items = await menuItemsOf(userEvent.setup());
 	expect(items).toContain("Reject");
-	expect(items).not.toContain("Regenerate October 2026");
+	expect(items).not.toContain("Regenerate this week");
 	expect(readsOf(calls, PUBLISHED_WEEK)[0]?.search).toBe(
 		`periodStart=${generatedScheduleFixture().periodStart}&coveredFrom=2026-10-12&coveredTo=2026-10-18`
 	);
@@ -1008,7 +1053,7 @@ it("asks for a reason before rejecting a roster, then shows the reason", async (
 		calls.find((call) => call.path === `${SCHEDULE}/rejection`)?.body
 	).toEqual({ reason: "Two nights have no supervisor." });
 	expect(
-		screen.getByRole("button", { name: "Regenerate October 2026" })
+		screen.getByRole("button", { name: "Regenerate this week" })
 	).toBeInTheDocument();
 });
 
@@ -1106,7 +1151,7 @@ it("withdraws a published roster's publication with a remark, back to To review"
 		calls.find((call) => call.path === `${SCHEDULE}/publication-withdrawal`)
 			?.body
 	).toEqual({ remark: "Wrong week went out." });
-	expect(await menuItemsOf(user)).not.toContain("Regenerate October 2026");
+	expect(await menuItemsOf(user)).not.toContain("Regenerate this week");
 });
 
 it("shows a refused withdrawal remark on its field and keeps the dialog open", async () => {
