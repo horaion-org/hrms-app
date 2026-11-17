@@ -91,6 +91,7 @@ export const OpeningHoursSection = ({
 	const saving = useMutation({
 		mutationFn: (entries: Array<OpeningEntry>) =>
 			saveOpeningBalances(companyId, unit, scheduleId, entries),
+		meta: { successMessage: "scheduling.openingHours.saved" },
 		onSuccess: (answered) => {
 			queryClient.setQueryData(
 				openingBalancesKey(companyId, scheduleId),

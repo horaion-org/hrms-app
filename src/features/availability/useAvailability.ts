@@ -206,6 +206,7 @@ const useReplaceAvailability = (
 	const reload = useReloadAvailability(companyId);
 	return useMutation({
 		mutationFn: (request) => replaceAvailability(companyId, owner, request),
+		meta: { successMessage: "availability.saved" },
 		onSuccess: reload,
 	});
 };
@@ -218,6 +219,7 @@ const useReplaceWeekAvailability = (
 	return useMutation({
 		mutationFn: ({ weekStartMonday, request }) =>
 			replaceWeekAvailability(companyId, owner, weekStartMonday, request),
+		meta: { successMessage: "availability.saved" },
 		onSuccess: reload,
 	});
 };
@@ -230,6 +232,7 @@ const useResetWeekAvailability = (
 	return useMutation({
 		mutationFn: (weekStartMonday) =>
 			deleteWeekAvailability(companyId, owner, weekStartMonday),
+		meta: { successMessage: "availability.weekReset" },
 		onSuccess: reload,
 	});
 };

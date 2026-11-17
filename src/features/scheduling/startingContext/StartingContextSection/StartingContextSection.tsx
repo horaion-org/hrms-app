@@ -98,6 +98,7 @@ export const StartingContextSection = ({
 	const saving = useMutation({
 		mutationFn: (days: Array<EnteredDay>) =>
 			saveStartingDays(companyId, unit, scheduleId, days),
+		meta: { successMessage: "scheduling.startingContext.saved" },
 		onSuccess: (answered) => {
 			queryClient.setQueryData(
 				startingDaysKey(companyId, scheduleId),
