@@ -12,6 +12,7 @@ import {
 	handChangedCoveredWeeks,
 	isGenerating,
 	refusedWeeks,
+	retryWeeksOf,
 	showsBeforeGenerate,
 	showsRegenerate,
 	startingWeekOf,
@@ -365,5 +366,73 @@ describe("weeksNoLongerCovered", () => {
 				(week) => week.periodStart
 			)
 		).toEqual(["2026-12-14"]);
+	});
+});
+
+describe("retryWeeksOf", () => {
+	const STOPPED = {
+		code: "EARLIER_WEEK_FAILED",
+		at: "2026-11-17T09:20:00Z",
+	};
+	const december = ungeneratedMonthFixture();
+	/** December with each week's state and queue refusal set by index. */
+	const decemberWith = (
+		changes: Record<number, Partial<MonthWeek>>
+	): ReturnType<typeof ungeneratedMonthFixture> =>
+		ungeneratedMonthFixture({
+			weeks: december.weeks.map((week, index) => ({
+				...week,
+				...changes[index],
+			})),
+		});
+
+	it("given_aFailedWeekAndTheWeeksItStopped_when_asked_then_theFailedMondayAndEveryStoppedMonday", () => {
+		const month = decemberWith({
+			0: { state: "TO_REVIEW" },
+			1: { state: "FAILED" },
+			2: { state: "DRAFT", queueRefusal: STOPPED },
+			3: { state: "DRAFT", queueRefusal: STOPPED },
+		});
+
+		expect(retryWeeksOf(month)).toEqual([
+			"2026-12-14",
+			"2026-12-21",
+			"2026-12-28",
+		]);
+	});
+
+	it("given_twoFailedWeeksBeforeTheStoppedWeek_when_asked_then_theLaterFailedWeek", () => {
+		const month = decemberWith({
+			0: { state: "FAILED" },
+			1: { state: "FAILED" },
+			2: { state: "DRAFT", queueRefusal: STOPPED },
+		});
+
+		expect(retryWeeksOf(month)).toEqual(["2026-12-14", "2026-12-21"]);
+	});
+
+	it("given_anotherRefusalCode_when_asked_then_thatWeekIsNotRetried", () => {
+		const month = decemberWith({
+			0: { state: "FAILED" },
+			1: {
+				state: "DRAFT",
+				queueRefusal: { ...STOPPED, code: "ASKER_MAY_NOT_GENERATE" },
+			},
+		});
+
+		expect(retryWeeksOf(month)).toEqual([]);
+	});
+
+	it("given_aFailedWeekWithoutStoppedWeeks_when_asked_then_nothing", () => {
+		expect(retryWeeksOf(decemberWith({ 0: { state: "FAILED" } }))).toEqual([]);
+	});
+
+	it("given_stoppedWeeksWithoutAFailedWeekBeforeThem_when_asked_then_nothing", () => {
+		const month = decemberWith({
+			0: { state: "DRAFT", queueRefusal: STOPPED },
+			1: { state: "FAILED" },
+		});
+
+		expect(retryWeeksOf(month)).toEqual([]);
 	});
 });
