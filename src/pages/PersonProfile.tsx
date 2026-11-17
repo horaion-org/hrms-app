@@ -25,9 +25,11 @@ import {
 import { ProfileHeader } from "@/features/people/ProfileHeader";
 import { ProfileMenu } from "@/features/people/ProfileMenu";
 import { ProfileNotesAndSkills } from "@/features/people/ProfileNotesAndSkills";
+import { useMemberDefaultAccess } from "@/features/people/useMemberDefaultAccess";
 import { useMemberRoles } from "@/features/people/useMemberRoles";
 import { workspaceQuery } from "@/features/workspace/api";
 import { retry } from "@/features/workspace/retry";
+import { COMPANY_SCOPE } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 import { EmploymentTermsRow } from "@/features/employmentTerms/EmploymentTermsRow";
 import {
@@ -66,6 +68,7 @@ export const PersonProfile = (): FunctionComponent => {
 	);
 	const access = profileEditAccess(profile, can);
 	const roles = useMemberRoles(companyId, membershipId);
+	const defaults = useMemberDefaultAccess(companyId, profile);
 	const { data: workspace } = useQuery({ ...workspaceQuery, retry });
 	const notice = peopleNoticeFrom(
 		useRouterState({ select: (state) => state.location.state })
@@ -97,9 +100,14 @@ export const PersonProfile = (): FunctionComponent => {
 									)}
 									{access && (
 										<ProfileMenu
+											// Only the System Owner and System Admin hold it (API ADR-0108).
 											companyId={companyId}
 											profile={profile}
 											self={self}
+											canChangeDefaultAccess={can(
+												"access_role:assign",
+												COMPANY_SCOPE
+											)}
 										/>
 									)}
 								</>
@@ -112,7 +120,8 @@ export const PersonProfile = (): FunctionComponent => {
 							access={describeMemberAccess(
 								roles,
 								placeLabels(workspace, companyId, t),
-								t
+								t,
+								defaults
 							)}
 							employmentTerms={
 								can("member_employment_terms:read", personScope(profile)) ? (

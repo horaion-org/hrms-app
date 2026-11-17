@@ -1060,6 +1060,20 @@
 			"employmentTermsHint": "From their hire date, or today without one."
 		},
 		"profile": {
+			"defaultAccess": {
+				"give": {
+					"item": "Give default access",
+					"title": "Give default access to {{name}}?",
+					"description": "{{name}} gets every default set for the company, their branch and their department, in their own department or branch.",
+					"confirm": "Give default access"
+				},
+				"stop": {
+					"item": "Stop default access",
+					"title": "Stop default access for {{name}}?",
+					"description": "{{name}} keeps their own things and any role given by hand, and loses what defaults give.",
+					"confirm": "Stop default access"
+				}
+			},
 			"back": "Back to people overview",
 			"edit": "Edit profile",
 			"invited": "Invited",

@@ -419,6 +419,65 @@ describe("A person's profile", () => {
 	});
 });
 
+describe("A person's default access", () => {
+	const DEFAULTS = `GET ${COMPANY}/default-access-rules`;
+	const RECIPIENT = `GET ${COMPANY}/default-access-recipients/m-1`;
+	// Supervisor for the whole company, applied in each person's own department.
+	const companyDefault = {
+		defaultAccessRuleId: "x",
+		accessRoleId: "r-1",
+		setAt: "COMPANY",
+		branchId: null,
+		departmentId: null,
+		appliesTo: "OWN_DEPARTMENT",
+	};
+	const receiving = (receivesDefaultAccess: boolean): StubReply => ({
+		status: 200,
+		body: envelope({
+			companyMembershipId: "m-1",
+			receivesDefaultAccess,
+			receivingSince: receivesDefaultAccess ? "2026-11-18T02:14:00Z" : null,
+		}),
+	});
+	const kitchenEntry = async (): Promise<string> => {
+		const access = await screen.findByRole("region", { name: "Access" });
+		let entry = "";
+		await waitFor(() => {
+			entry =
+				within(access)
+					.getAllByRole("listitem")
+					.map((item) => item.textContent ?? "")
+					.find((text) => text.startsWith("Orchard › Kitchen")) ?? "";
+			expect(entry).not.toBe("");
+		});
+		return entry;
+	};
+
+	it("shows the defaults that reach someone receiving default access, named as defaults", async () => {
+		stubApi({
+			...routes(),
+			[DEFAULTS]: { status: 200, body: envelope([companyDefault]) },
+			[RECIPIENT]: receiving(true),
+		});
+		await open();
+
+		await waitFor(async () => {
+			expect(await kitchenEntry()).toContain("Supervisor (company default)");
+		});
+	});
+
+	it("shows no defaults for someone who doesn't receive default access", async () => {
+		stubApi({
+			...routes(),
+			[DEFAULTS]: { status: 200, body: envelope([companyDefault]) },
+			[RECIPIENT]: receiving(false),
+		});
+		await open();
+
+		expect(await kitchenEntry()).not.toContain("company default");
+	});
+});
+
 describe("Who may edit a person", () => {
 	it("is anyone granted company-wide, from the profile and the list", async () => {
 		stubApi(routes());

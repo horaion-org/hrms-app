@@ -273,4 +273,58 @@ describe("member access", () => {
 			)
 		).toEqual([]);
 	});
+
+	it("lists default access beside the roles given by hand, named for where it was set", () => {
+		const supervisor = {
+			...role("r-1", "Supervisor"),
+			permissions: ["department:read"],
+		};
+		expect(
+			describeMemberAccess(
+				{
+					status: "ready",
+					roles: [],
+					accessRoles: [supervisor],
+					assignments: [
+						{
+							accessRoleAssignmentId: "a-1",
+							accessRoleId: "r-1",
+							status: "ACTIVE",
+							branchId: null,
+							departmentId: null,
+						},
+					],
+				},
+				label,
+				english,
+				{
+					assignments: [
+						{
+							accessRoleAssignmentId: "default:x",
+							accessRoleId: "default:x",
+							status: "ACTIVE",
+							branchId: "b-1",
+							departmentId: null,
+						},
+					],
+					roles: [
+						{
+							...supervisor,
+							accessRoleId: "default:x",
+							name: "Supervisor (company default)",
+						},
+					],
+				}
+			)
+		).toEqual([
+			expect.objectContaining({
+				place: "Whole company",
+				roles: ["Supervisor"],
+			}),
+			expect.objectContaining({
+				place: "Orchard",
+				roles: ["Supervisor (company default)"],
+			}),
+		]);
+	});
 });

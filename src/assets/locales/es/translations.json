@@ -2749,6 +2749,20 @@
 		"invited": "Hemos enviado a {{name}} una nueva invitación por correo para iniciar sesión.",
 		"view": "Ver a {{name}}",
 		"profile": {
+			"defaultAccess": {
+				"give": {
+					"item": "Dar acceso predeterminado",
+					"title": "¿Dar acceso predeterminado a {{name}}?",
+					"description": "{{name}} recibe todos los accesos predeterminados definidos para la empresa, su sucursal y su departamento, en su propio departamento o sucursal.",
+					"confirm": "Dar acceso predeterminado"
+				},
+				"stop": {
+					"item": "Detener acceso predeterminado",
+					"title": "¿Detener el acceso predeterminado de {{name}}?",
+					"description": "{{name}} conserva lo suyo y cualquier rol dado a mano, y pierde lo que dan los accesos predeterminados.",
+					"confirm": "Detener acceso predeterminado"
+				}
+			},
 			"back": "Volver al resumen de personas",
 			"edit": "Editar perfil",
 			"invited": "Invitado",
