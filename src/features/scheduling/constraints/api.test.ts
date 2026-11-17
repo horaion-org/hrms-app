@@ -5,7 +5,6 @@ import { envelope, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
 	CONSTRAINT_TYPES,
-	isRetiredConstraintType,
 	companyConstraintsQuery,
 	createConstraint,
 	deleteConstraint,
@@ -15,6 +14,7 @@ import {
 	updateConstraint,
 	type ConstraintBody,
 } from "@/features/scheduling/constraints/api";
+import { isRetiredConstraintType } from "@/features/scheduling/constraints/constraintTypeCatalogue";
 import {
 	constraintRefusal,
 	deleteConstraintRefusal,

@@ -27,7 +27,7 @@ import { CoverOfferSent } from "@/features/scheduling/coverOffers/CoverOfferActi
 import { offerActionsOf } from "@/features/scheduling/coverOffers/coverOfferRules";
 import { formatDay } from "@/common/formatDay";
 import { CellPanelFooter } from "@/features/scheduling/RosterCellPanel/CellPanelFooter";
-import { RosterChangeReview } from "@/features/scheduling/RosterChangeReview";
+import { RosterChangeReview } from "@/features/scheduling/rosterChanges/RosterChangeReview";
 import {
 	RosterSidePanel,
 	type RosterSidePanelSection,

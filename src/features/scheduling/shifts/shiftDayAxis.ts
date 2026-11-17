@@ -1,5 +1,9 @@
-import { MINUTES_PER_DAY, minutesOfDay } from "@/common/timeOfDay";
-import { shiftMinutes } from "@/features/scheduling/scheduleDraft";
+import {
+	MINUTES_PER_DAY,
+	MINUTES_PER_HOUR,
+	minutesOfDay,
+} from "@/common/timeOfDay";
+import { shiftMinutes } from "@/features/scheduling/shifts/shiftHours";
 import type { ScheduleShift } from "@/features/scheduling/schedules/api";
 
 /** What the day axis reads of a shift. */
@@ -14,7 +18,6 @@ export type DayBar = { leftPercent: number; widthPercent: number };
 /** One labelled hour on the axis, as "05", and where it sits. */
 export type DayAxisTick = { label: string; percent: number };
 
-const MINUTES_PER_HOUR = 60;
 /** A whole day, the axis of a department with no shifts. */
 const WHOLE_DAY: DayAxis = { startMinute: 0, endMinute: MINUTES_PER_DAY };
 

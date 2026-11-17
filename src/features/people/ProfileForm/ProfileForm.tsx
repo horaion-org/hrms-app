@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import { useId, useMemo, useState, type ReactNode } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -469,7 +470,7 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 							/>
 						</FormRow>
 						{date("dateOfBirth", t(`${key}.dateOfBirth`), {
-							maxDate: dayjs(today).subtract(1, "day").format("YYYY-MM-DD"),
+							maxDate: dayjs(today).subtract(1, "day").format(ISO_DATE_FORMAT),
 						})}
 						{edit && (
 							<FormRow

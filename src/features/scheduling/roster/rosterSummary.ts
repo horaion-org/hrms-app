@@ -157,19 +157,23 @@ const flagsOf = (row: ScheduleAssignment): DayFlags => ({
 	leavesShiftShort: Boolean(row.uncoveredShift),
 });
 
+/** Orders roster rows by day, then by the member's name; a row with no member sorts first within its day. */
+export const byDayThenName = (
+	first: ScheduleAssignment,
+	second: ScheduleAssignment
+): number =>
+	first.day.localeCompare(second.day) ||
+	(first.member?.displayName ?? "").localeCompare(
+		second.member?.displayName ?? ""
+	);
+
 /** The days a manager must decide (a shift or the day off), by day and then by name. */
 export const daysToDecide = (
 	assignments: ReadonlyArray<ScheduleAssignment>
 ): Array<ScheduleAssignment> =>
 	assignments
 		.filter((row) => row.member && asksForDecision(flagsOf(row)))
-		.sort(
-			(first, second) =>
-				first.day.localeCompare(second.day) ||
-				(first.member?.displayName ?? "").localeCompare(
-					second.member?.displayName ?? ""
-				)
-		);
+		.sort(byDayThenName);
 
 /** The days the roster marks for leave or a shift left short, by day and then by name. */
 export const leaveAndCoverDays = (
@@ -177,24 +181,10 @@ export const leaveAndCoverDays = (
 ): Array<ScheduleAssignment> =>
 	assignments
 		.filter((row) => row.member && marksLeaveOrCover(flagsOf(row)))
-		.sort(
-			(first, second) =>
-				first.day.localeCompare(second.day) ||
-				(first.member?.displayName ?? "").localeCompare(
-					second.member?.displayName ?? ""
-				)
-		);
+		.sort(byDayThenName);
 
 /** The days changed by hand since generation, by day and then by name. */
 export const changedDays = (
 	assignments: ReadonlyArray<ScheduleAssignment>
 ): Array<ScheduleAssignment> =>
-	assignments
-		.filter((row) => row.lastChange && row.member)
-		.sort(
-			(first, second) =>
-				first.day.localeCompare(second.day) ||
-				(first.member?.displayName ?? "").localeCompare(
-					second.member?.displayName ?? ""
-				)
-		);
+	assignments.filter((row) => row.lastChange && row.member).sort(byDayThenName);

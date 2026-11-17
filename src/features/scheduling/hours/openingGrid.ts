@@ -1,3 +1,4 @@
+import { MINUTES_PER_HOUR } from "@/common/timeOfDay";
 import type {
 	OpeningBalances,
 	OpeningEntry,
@@ -23,7 +24,6 @@ export type OpeningValues = Record<string, OpeningValue>;
 export type OpeningProblem =
 	"invalidHours" | "overtimeAboveWorked" | "moreThanTheDaysHold";
 
-const MINUTES_IN_HOUR = 60;
 const HOURS_IN_DAY = 24;
 const HOURS_PATTERN = /^\d+(?:[.,]\d+)?$/;
 const EMPTY: OpeningValue = { worked: "", overtime: "" };
@@ -32,14 +32,14 @@ const EMPTY: OpeningValue = { worked: "", overtime: "" };
 export const hoursText = (minutes: number | null): string =>
 	minutes === null
 		? ""
-		: String(Math.round((minutes / MINUTES_IN_HOUR) * 100) / 100);
+		: String(Math.round((minutes / MINUTES_PER_HOUR) * 100) / 100);
 
 /** Typed hours as whole minutes; null for an empty cell, undefined for text that isn't hours. */
 export const minutesOf = (text: string): number | null | undefined => {
 	const trimmed = text.trim();
 	if (trimmed === "") return null;
 	if (!HOURS_PATTERN.test(trimmed)) return undefined;
-	return Math.round(Number(trimmed.replace(",", ".")) * MINUTES_IN_HOUR);
+	return Math.round(Number(trimmed.replace(",", ".")) * MINUTES_PER_HOUR);
 };
 
 /**
@@ -97,7 +97,7 @@ export const openingProblem = (
 		const overtime = minutesOf(value.overtime);
 		if (worked === undefined || overtime === undefined) return "invalidHours";
 		if ((overtime ?? 0) > (worked ?? 0)) return "overtimeAboveWorked";
-		if ((worked ?? 0) > daysBefore * HOURS_IN_DAY * MINUTES_IN_HOUR)
+		if ((worked ?? 0) > daysBefore * HOURS_IN_DAY * MINUTES_PER_HOUR)
 			return "moreThanTheDaysHold";
 	}
 	return undefined;

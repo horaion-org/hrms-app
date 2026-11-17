@@ -10,6 +10,8 @@ import {
 	formatWeekDates,
 	stateCounts,
 } from "@/features/scheduling/months/monthWeeks";
+import type { Gate } from "@/features/scheduling/readiness/readinessCopy";
+import type { WeekChoiceIds } from "@/features/scheduling/weekChoice";
 
 /*
  * The months' words that take the person's language, kept apart from the
@@ -87,4 +89,80 @@ export const weekChangedRefusal = (
 		),
 		t(`${key}.weekStoppedNext`, { month: monthName }),
 	].join(" ");
+};
+
+/** Where the month wizard's own copy lives. */
+const CREATE_KEY = "scheduling.months.create";
+
+/** One week of the month a run creates: its dates as words, and how many shifts and constraints it leaves out. */
+export type WeekUses = { label: string; leftOut: number };
+
+/**
+ * What the month's weeks use, as one line: every week everything, or how
+ * many weeks use everything and which leave something out.
+ */
+export const monthUsesLine = (
+	t: TFunction,
+	weeks: ReadonlyArray<WeekUses>,
+	everything: WeekChoiceIds,
+	department: string,
+	language: string
+): string => {
+	const changed = weeks.filter((week) => week.leftOut > 0);
+	if (changed.length === 0)
+		return t(`${CREATE_KEY}.usesEveryWeek`, {
+			shifts: t("scheduling.week.shiftsAll", {
+				count: everything.shiftIds.length,
+			}),
+			constraints: t("scheduling.week.constraintCount", {
+				count: everything.constraintIds.length,
+			}),
+			department,
+		});
+	return t(`${CREATE_KEY}.usesSomeWeeks`, {
+		count: weeks.length - changed.length,
+		total: weeks.length,
+		department,
+		changed: new Intl.ListFormat(language, { type: "conjunction" }).format(
+			changed.map((week) =>
+				t(`${CREATE_KEY}.changedWeek`, {
+					week: week.label,
+					count: week.leftOut,
+				})
+			)
+		),
+	});
+};
+
+/** What the month wizard's Setup knows when it decides whether Next waits. */
+export type SetupNextFacts = {
+	/** The readiness gate, while the chosen Department can't roster anyone. */
+	gate: Gate | undefined;
+	/** The chosen Department's name; none before a Department is chosen. */
+	departmentName: string | undefined;
+	/** Whether the person may not read the Department's shifts or its constraints. */
+	listsHidden: boolean;
+	/** Whether the Department's shifts and constraints and the month's weeks have been read. */
+	listsRead: boolean;
+	/** Whether the run has nothing to generate yet: no week ticked, or dates without new days. */
+	nothingToGenerate: boolean;
+};
+
+/**
+ * The note under Setup's Next, and whether Next waits: the gate's note, the
+ * lists the person may not see, or no note ("") while the lists load or the
+ * run has nothing to generate (the list itself says so). Undefined lets Next
+ * submit the form.
+ */
+export const setupNextNoteOf = (
+	facts: SetupNextFacts,
+	t: TFunction
+): string | undefined => {
+	const { gate, departmentName, listsHidden } = facts;
+	if (gate) return t(gate.nextNoteKey, { department: gate.department });
+	if (listsHidden && departmentName !== undefined)
+		return t("scheduling.week.listsHiddenNote", { department: departmentName });
+	const listsWaiting =
+		departmentName !== undefined && !listsHidden && !facts.listsRead;
+	return listsWaiting || facts.nothingToGenerate ? "" : undefined;
 };

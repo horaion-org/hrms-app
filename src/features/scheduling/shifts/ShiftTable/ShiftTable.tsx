@@ -16,7 +16,7 @@ import {
 	formatDays,
 	formatPaidHours,
 	formatTimeRange,
-} from "@/features/scheduling/formatShift";
+} from "@/features/scheduling/shifts/formatShift";
 import type { ScheduleShift } from "@/features/scheduling/schedules/api";
 import { WEEKDAYS } from "@/features/scheduling/shifts/api";
 import { ShiftDayAxis } from "@/features/scheduling/shifts/ShiftDayAxis";
@@ -27,7 +27,7 @@ import {
 } from "@/features/scheduling/shifts/shiftDayAxis";
 import { shiftGroupSummaryOf } from "@/features/scheduling/shifts/shiftGroups";
 import type { ShiftNeed } from "@/features/scheduling/shifts/staffingNeeds";
-import { useSectionFolds } from "@/features/scheduling/useSectionFolds";
+import { useSectionFolds } from "@/features/scheduling/departmentSetup/useSectionFolds";
 
 /** How many job titles a row names before it counts the rest. */
 const NAMED_JOB_TITLES = 2;

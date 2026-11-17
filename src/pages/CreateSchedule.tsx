@@ -16,8 +16,8 @@ import { Stepper, StepperStep } from "@/components/ui/Stepper";
 import { Toast } from "@/components/ui/Toast";
 import { placeOf } from "@/features/organisation/assignmentTargets";
 import { useConstraintOptions } from "@/features/scheduling/constraints/useConstraintOptions";
-import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
-import { GenerateStep } from "@/features/scheduling/GenerateStep";
+import { departmentUnitOf } from "@/features/scheduling/departmentSetup/departmentUnit";
+import { GenerateStep } from "@/features/scheduling/createSchedule/GenerateStep";
 import {
 	publishedRosterOtherThan,
 	publishedWeekQuery,
@@ -38,7 +38,7 @@ import { weekChangedRefusal } from "@/features/scheduling/months/monthCopy";
 import { withRefusedWeeks } from "@/features/scheduling/months/refusedWeeksState";
 import { useGenerateMonth } from "@/features/scheduling/months/useGenerateMonth";
 import { PublishedWeekCallout } from "@/features/scheduling/publishedWeek/PublishedWeekCallout";
-import { RegenerateMonthDialog } from "@/features/scheduling/RegenerateMonthDialog";
+import { RegenerateMonthDialog } from "@/features/scheduling/months/RegenerateMonthDialog";
 import { StartingContextSection } from "@/features/scheduling/startingContext/StartingContextSection";
 import {
 	defaultPeriod,
@@ -55,12 +55,12 @@ import {
 	summarise,
 	tickedConstraintsOf,
 	tickedOf,
-	type ScheduleSetup,
 } from "@/features/scheduling/scheduleDraft";
-import type {
-	ScheduleBody,
-	ScheduleStatus,
-} from "@/features/scheduling/schedules/api";
+import {
+	draftProblemKey,
+	frozenNoticeKey,
+} from "@/features/scheduling/schedules/draftNotices";
+import { scheduleBodyOf } from "@/features/scheduling/schedules/scheduleBody";
 import {
 	monthGenerationRefusal,
 	scheduleRefusal,
@@ -69,27 +69,20 @@ import {
 import {
 	useSchedule,
 	useScheduleActions,
-	type ScheduleState,
 } from "@/features/scheduling/schedules/useSchedule";
 import { useScheduleConstraints } from "@/features/scheduling/schedules/useScheduleConstraints";
 import { useScheduleShifts } from "@/features/scheduling/schedules/useScheduleShifts";
 import {
 	ScheduleSetupStep,
 	type SetupFieldErrors,
-} from "@/features/scheduling/ScheduleSetupStep";
-import type { ScheduleSetupValues } from "@/features/scheduling/setupSchema";
-import {
-	fixLinkOf,
-	gateOf,
-	type Gate,
-} from "@/features/scheduling/readiness/readinessCopy";
-import {
-	ReadinessGateCallout,
-	type FixLink,
-} from "@/features/scheduling/readiness/ReadinessGateCallout";
+} from "@/features/scheduling/createSchedule/ScheduleSetupStep";
+import type { ScheduleSetupValues } from "@/features/scheduling/createSchedule/setupSchema";
+import { gateOf } from "@/features/scheduling/readiness/readinessCopy";
+import { ReadinessGateCallout } from "@/features/scheduling/readiness/ReadinessGateCallout";
+import { setupLinksOf } from "@/features/scheduling/readiness/setupLinks";
 import { useSchedulingReadiness } from "@/features/scheduling/readiness/useSchedulingReadiness";
-import { StepActions } from "@/features/scheduling/StepActions";
-import { stepCompletion } from "@/features/scheduling/stepCompletion";
+import { StepActions } from "@/features/scheduling/createSchedule/StepActions";
+import { stepCompletion } from "@/features/scheduling/createSchedule/stepCompletion";
 import { isScheduleStep, SCHEDULE_STEPS } from "@/features/scheduling/steps";
 import {
 	allOf,
@@ -98,11 +91,8 @@ import {
 	weekChoiceProblem,
 	type WeekChoiceIds,
 } from "@/features/scheduling/weekChoice";
-import { WeekChoiceDialog } from "@/features/scheduling/WeekChoiceDialog";
-import {
-	WeekChoiceSummary,
-	type SetupLink,
-} from "@/features/scheduling/WeekChoiceSummary";
+import { WeekChoiceDialog } from "@/features/scheduling/createSchedule/WeekChoiceDialog";
+import { WeekChoiceSummary } from "@/features/scheduling/WeekChoiceSummary";
 import { workspaceQuery } from "@/features/workspace/api";
 import {
 	SCHEDULE_READ_KEYS,
@@ -112,46 +102,6 @@ import { retry } from "@/features/workspace/retry";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 import { departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
-
-/** What saving a schedule sends: its setup and the ticked shifts and constraints, each the whole set. */
-const bodyOf = (
-	setup: ScheduleSetup,
-	includedShiftIds: Array<string>,
-	includedConstraintIds: Array<string>
-): ScheduleBody => ({
-	name: setup.name,
-	periodStart: setup.periodStart,
-	includeLeave: setup.includeLeave,
-	includedShiftIds,
-	includedConstraintIds,
-});
-
-/** The copy a draft that can't be shown is explained with. */
-const draftProblemKey = (
-	status: ScheduleState["status"]
-):
-	| "scheduling.draft.loading"
-	| "scheduling.draft.missing"
-	| "scheduling.draft.failed" => {
-	if (status === "error") return "scheduling.draft.failed";
-	if (status === "hidden" || status === "missing")
-		return "scheduling.draft.missing";
-	return "scheduling.draft.loading";
-};
-
-/** What a frozen schedule's notice says: generation requested, failed, or done (also once decided). */
-const frozenNoticeKey = (
-	status: ScheduleStatus
-):
-	| "scheduling.draft.generationRequested"
-	| "scheduling.draft.generated"
-	| "scheduling.draft.generationFailed" => {
-	if (status === "GENERATION_REQUESTED")
-		return "scheduling.draft.generationRequested";
-	if (status === "GENERATION_FAILED")
-		return "scheduling.draft.generationFailed";
-	return "scheduling.draft.generated";
-};
 
 /**
  * The Create Schedule steps: Setup and Generate. The URL names the
@@ -374,7 +324,7 @@ export const CreateSchedule = (): FunctionComponent => {
 				await scheduleActions.update.mutateAsync({
 					unit: saved,
 					scheduleId: saved.scheduleId,
-					body: bodyOf(setup, ticked, tickedConstraints),
+					body: scheduleBodyOf(setup, ticked, tickedConstraints),
 				});
 			dispatch({ type: "setupSaved", setup });
 			goTo(1);
@@ -392,7 +342,7 @@ export const CreateSchedule = (): FunctionComponent => {
 			await scheduleActions.update.mutateAsync({
 				unit: saved,
 				scheduleId: saved.scheduleId,
-				body: bodyOf(draft.setup, ticked, tickedConstraints),
+				body: scheduleBodyOf(draft.setup, ticked, tickedConstraints),
 			});
 			return true;
 		} catch (error) {
@@ -481,46 +431,11 @@ export const CreateSchedule = (): FunctionComponent => {
 							frozen
 						)
 					: undefined;
-	// The Scheduling tab that edits the week's department, where its list may be read.
-	const weekUnit = saved;
-	const editLink = (
-		view: SetupLink["search"]["view"],
-		readKey: PermissionKey
-	): SetupLink | undefined =>
-		weekUnit && access.can(readKey, departmentScope(weekUnit.departmentId))
-			? {
-					to: "/scheduling",
-					search: {
-						view,
-						branch: weekUnit.branchId,
-						department: weekUnit.departmentId,
-					},
-				}
-			: undefined;
-	const editShifts = editLink("shifts", "shift:read");
-	const editConstraints = editLink("constraints", "constraint:read");
-	// Whether the person may add what the department lacks there.
-	const canFix = {
-		shifts:
-			weekUnit !== undefined &&
-			access.can("shift:create", departmentScope(weekUnit.departmentId)),
-		constraints:
-			weekUnit !== undefined &&
-			access.can("constraint:create", departmentScope(weekUnit.departmentId)),
-	};
-	// The tab that fixes the gate, carrying the way back; only where that tab may be read.
-	const fixLink = (
-		gate: Gate | undefined,
-		returnTo: Parameters<typeof fixLinkOf>[2]
-	): FixLink | undefined =>
-		gate?.linkTo &&
-		weekUnit &&
-		(gate.linkTo === "shifts" ? editShifts : editConstraints)
-			? {
-					to: "/scheduling",
-					search: fixLinkOf(gate.linkTo, weekUnit, returnTo),
-				}
-			: undefined;
+	// The Scheduling tabs that edit the saved draft's department, where its lists may be read.
+	const { editShifts, editConstraints, canFix, fixLink } = setupLinksOf(
+		saved,
+		allowed
+	);
 	// The week can be chosen from its lists while the setup can change.
 	const canChooseWeek =
 		!frozen && !weekListsHidden && (saved === undefined || canSave);

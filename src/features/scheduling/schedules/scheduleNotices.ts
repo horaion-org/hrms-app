@@ -1,4 +1,9 @@
-import type { Schedule } from "@/features/scheduling/schedules/api";
+import {
+	generationInProgress,
+	hasRoster,
+	newestRunFailed,
+	type Schedule,
+} from "@/features/scheduling/schedules/api";
 
 /** A notice the roster page shows under its header. */
 export type ScheduleNoticeId =
@@ -27,6 +32,37 @@ export type ScheduleNoticeFacts = {
 	/** The rules changed since the week was generated, as the month read says (API ADR-0091). */
 	rulesChanged: boolean;
 };
+
+/** What the page knows of a schedule's week beyond the schedule itself. */
+export type ScheduleWeekFacts = {
+	/** Another schedule is already the week's published roster. */
+	weekPublishedElsewhere: boolean;
+	/** The week ended before today in its branch's time zone. */
+	weekPassed: boolean;
+	/** The Department's weeks of the schedule's month, once read. */
+	monthWeeks:
+		| ReadonlyArray<{
+				scheduleId: string | null;
+				rulesChanged?: boolean | null;
+		  }>
+		| undefined;
+};
+
+/** The facts that decide a schedule's notices: its own standing and what is known of its week. */
+export const scheduleNoticeFactsOf = (
+	schedule: Schedule,
+	{ weekPublishedElsewhere, weekPassed, monthWeeks }: ScheduleWeekFacts
+): ScheduleNoticeFacts => ({
+	status: schedule.status,
+	generating: generationInProgress(schedule),
+	hasRoster: hasRoster(schedule),
+	newestRunFailed: newestRunFailed(schedule),
+	weekPublishedElsewhere,
+	weekPassed,
+	rulesChanged:
+		monthWeeks?.find((week) => week.scheduleId === schedule.scheduleId)
+			?.rulesChanged === true,
+});
 
 /**
  * The notices the roster page may show, in order. Each says something

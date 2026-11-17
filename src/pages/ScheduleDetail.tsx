@@ -4,7 +4,6 @@ import {
 	daysAroundPart,
 	partRedoOf,
 } from "@/features/scheduling/dates/datesSetup";
-import { SCHEDULE_CREATE_KEYS } from "@/features/workspace/permissionKeys";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
@@ -20,14 +19,13 @@ import { ApprovalTrail } from "@/features/approvals/ApprovalTrail";
 import {
 	approvalMetaLine,
 	approvalStanding,
-	type ApprovalStanding,
 } from "@/features/approvals/approvalStanding";
 import {
 	GeneratedRoster,
+	rosterEditingOf,
 	type GeneratedRosterProps,
-	type RosterEditing,
-} from "@/features/scheduling/GeneratedRoster";
-import { GenerationFailurePanel } from "@/features/scheduling/GenerationFailurePanel";
+} from "@/features/scheduling/roster/GeneratedRoster";
+import { GenerationFailurePanel } from "@/features/scheduling/roster/GenerationFailurePanel";
 import { scheduleMonthQuery } from "@/features/scheduling/months/api";
 import {
 	formatMonth,
@@ -41,44 +39,41 @@ import {
 import { formatPeriod } from "@/features/scheduling/periods";
 import {
 	PublishScheduleDialog,
-	type PublishMode,
-} from "@/features/scheduling/PublishScheduleDialog";
+	publishModeOf,
+} from "@/features/scheduling/schedules/PublishScheduleDialog";
 import { hasRosterHours } from "@/features/scheduling/hours/rosterHoursRows";
 import {
 	useRosterHours,
 	type RosterHoursState,
 } from "@/features/scheduling/hours/useRosterHours";
 import { useRosterPreferenceOutcomes } from "@/features/scheduling/preferenceOutcomes/usePreferenceOutcomes";
-import { RegenerateMonthDialog } from "@/features/scheduling/RegenerateMonthDialog";
-import { RejectedRosterCallout } from "@/features/scheduling/RejectedRosterCallout";
-import { RejectScheduleDialog } from "@/features/scheduling/RejectScheduleDialog";
+import { RegenerateMonthDialog } from "@/features/scheduling/months/RegenerateMonthDialog";
+import { RejectedRosterCallout } from "@/features/scheduling/schedules/RejectedRosterCallout";
+import { RejectScheduleDialog } from "@/features/scheduling/schedules/RejectScheduleDialog";
 import {
 	publishedRosterOtherThan,
 	publishedWeekQuery,
 } from "@/features/scheduling/publishedWeek/api";
 import { PublishedWeekCallout } from "@/features/scheduling/publishedWeek/PublishedWeekCallout";
 import type { RosterSearch } from "@/features/scheduling/roster/rosterSearch";
-import { RosterHeader } from "@/features/scheduling/RosterHeader";
-import { RosterHours } from "@/features/scheduling/RosterHours";
+import { RosterHeader } from "@/features/scheduling/roster/RosterHeader";
+import { RosterHours } from "@/features/scheduling/hours/RosterHours";
 import { useRosterRulesCheck } from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
 import { validationStanding } from "@/features/scheduling/rulesCheck/issuesFromValidation";
 import { changedDays } from "@/features/scheduling/roster/rosterSummary";
 import { useRepairWarmUpOnValidate } from "@/features/scheduling/cover/useRepairWarmUp";
 import { coverOffersQuery } from "@/features/scheduling/coverOffers/api";
 import { rosterChangeShiftsQuery } from "@/features/scheduling/rosterChanges/api";
+import type { RosterChangeTarget } from "@/features/scheduling/rosterChanges/useRosterChangeActions";
 import { generationFailure } from "@/features/scheduling/roster/generationFailure";
-import { ScheduleMenu } from "@/features/scheduling/ScheduleMenu";
+import { ScheduleMenu } from "@/features/scheduling/schedules/ScheduleMenu";
 import {
 	decidable,
 	GENERATION_POLL_INTERVAL_MS,
-	generationInProgress,
-	hasRoster,
-	newestRunFailed,
 	regenerable,
-	rosterEditable,
 	rosterRunId,
-	withdrawable,
 } from "@/features/scheduling/schedules/api";
+import { rosterPagePermissions } from "@/features/scheduling/schedules/rosterPagePermissions";
 import {
 	approvalActionFacts,
 	scheduleActions,
@@ -88,11 +83,12 @@ import {
 	actionWaitsForEarlierWeek,
 	publishWaitsFor,
 } from "@/features/scheduling/schedules/publishOrder";
+import { partLinesOf } from "@/features/scheduling/schedules/partLines";
 import { scheduleDetailItems } from "@/features/scheduling/schedules/scheduleDetails";
 import {
 	rosterShown,
+	scheduleNoticeFactsOf,
 	scheduleNotices,
-	type ScheduleNoticeFacts,
 	type ScheduleNoticeId,
 } from "@/features/scheduling/schedules/scheduleNotices";
 import { weekPassed } from "@/features/scheduling/schedules/weekPassed";
@@ -105,13 +101,12 @@ import {
 } from "@/features/scheduling/schedules/useScheduleAssignments";
 import { useScheduleConstraints } from "@/features/scheduling/schedules/useScheduleConstraints";
 import { useScheduleShifts } from "@/features/scheduling/schedules/useScheduleShifts";
-import { WithdrawApprovalDialog } from "@/features/scheduling/WithdrawApprovalDialog";
+import { WithdrawApprovalDialog } from "@/features/scheduling/schedules/WithdrawApprovalDialog";
 import {
 	startingContextQuery,
 	type StartingContext,
 } from "@/features/scheduling/startingContext/api";
 import { runsByMember } from "@/features/scheduling/startingContext/startingGrid";
-import { departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 import {
 	useCurrentCompanyId,
@@ -264,25 +259,6 @@ type OpenDialog =
 	| "regenerate"
 	| undefined;
 
-/** What the header's primary button confirms, by where the viewer stands on the roster's approval. */
-const publishModeOf = (
-	standing: ApprovalStanding,
-	instanceSteps: ReadonlyArray<{ stepOrder: number; label: string }>
-): PublishMode => {
-	if (standing.kind === "toSubmit")
-		return { kind: "submit", stepLabels: standing.stepLabels };
-	if (standing.kind === "pending")
-		return {
-			kind: "approve",
-			instanceId: standing.instanceId,
-			step: standing.step,
-			nextLabel: instanceSteps.find(
-				(step) => step.stepOrder === standing.step.order + 1
-			)?.label,
-		};
-	return { kind: "publish" };
-};
-
 /**
  * One schedule read by its id alone. It is read again every
  * 15 seconds while its generation is in progress; its roster, and the frozen
@@ -391,25 +367,15 @@ const ApiSchedule = ({
 		companyId,
 		state.status === "ready" ? state.schedule : undefined
 	);
-	// A generated roster awaiting its decision, or a published one, may be
-	// changed by hand under its own key (hrms-backend-v2 docs/adr/0062, 0063);
-	// the editor reads the frozen shifts it offers through that key, so it
-	// needs no shift:read.
-	const mayEditShifts =
-		state.status === "ready" &&
-		runId !== undefined &&
-		rosterEditable(state.schedule) &&
-		access.can(
-			"schedule:edit_shift",
-			departmentScope(state.schedule.departmentId)
-		);
-	// Validate schedule writes nothing, so whoever may read the roster may ask (hrms-backend-v2
-	// docs/adr/0097): its button joins Issues and Changed. Repair stays with those who may change it.
-	const mayValidate =
-		state.status === "ready" &&
-		runId !== undefined &&
-		rosterEditable(state.schedule) &&
-		access.can("schedule:read", departmentScope(state.schedule.departmentId));
+	// What the viewer may do here, each at the schedule's Department. The roster
+	// editor reads the frozen shifts it offers under its own key, so it needs no
+	// shift:read; Validate schedule joins Issues and Changed, and Repair stays
+	// with those who may change the roster.
+	const permissions = rosterPagePermissions(
+		state.status === "ready" ? state.schedule : undefined,
+		access
+	);
+	const { mayEditShifts, mayValidate } = permissions;
 	const validation = useRosterRulesCheck(
 		mayValidate && runId !== undefined && unit !== undefined
 			? { companyId, unit, scheduleId, runId }
@@ -419,10 +385,13 @@ const ApiSchedule = ({
 	// Validate schedule lighting up after a hand change warms the engine's worker for the check to come.
 	const rosterRevision =
 		state.status === "ready" ? state.schedule.rosterRevision : 0;
-	useRepairWarmUpOnValidate(
+	// Where hand changes go, for someone who may change this roster now.
+	const editTarget: RosterChangeTarget | undefined =
 		mayEditShifts && runId !== undefined && unit !== undefined
 			? { companyId, unit, scheduleId, runId }
-			: undefined,
+			: undefined;
+	useRepairWarmUpOnValidate(
+		editTarget,
 		rosterRevision,
 		validationStanding({
 			revision: rosterRevision,
@@ -437,7 +406,9 @@ const ApiSchedule = ({
 	);
 	// A published roster asks the member before adding or moving their work.
 	const publishedForEditing =
-		mayEditShifts && state.schedule.status === "PUBLISHED";
+		mayEditShifts &&
+		state.status === "ready" &&
+		state.schedule.status === "PUBLISHED";
 	const coverOffers = useQuery(
 		coverOffersQuery(companyId, unit, scheduleId, publishedForEditing)
 	);
@@ -446,9 +417,7 @@ const ApiSchedule = ({
 			companyId,
 			unit,
 			scheduleId,
-			showsRoster &&
-				unit !== undefined &&
-				access.can("schedule:read", departmentScope(unit.departmentId))
+			showsRoster && permissions.mayRead
 		)
 	);
 	// Another schedule already published for the week means this one can't be generated again or published.
@@ -459,9 +428,7 @@ const ApiSchedule = ({
 	const publishedWeek = useQuery(
 		publishedWeekQuery(
 			companyId,
-			unit && access.can("schedule:read", departmentScope(unit.departmentId))
-				? unit
-				: undefined,
+			permissions.mayRead ? unit : undefined,
 			awaitingPublication?.periodStart,
 			// A part asks about its own days: an earlier part published doesn't hold it up (API ADR-0113).
 			awaitingPublication && {
@@ -482,50 +449,10 @@ const ApiSchedule = ({
 			companyId,
 			unit?.departmentId ?? "",
 			month,
-			unit !== undefined &&
-				access.can("schedule:read", departmentScope(unit.departmentId))
+			permissions.mayRead
 		)
 	).data;
 	const publishNoteId = useId();
-	// A part of its week (API ADR-0113): the week's other days, and a way to schedule the days after it.
-	const weekParts =
-		state.status === "ready"
-			? (scheduleMonth?.weeks.find(
-					(week) => week.periodStart === state.schedule.periodStart
-				)?.parts ?? [])
-			: [];
-	const around =
-		state.status === "ready"
-			? daysAroundPart(state.schedule, weekParts)
-			: undefined;
-	// A redo part in the week (API ADR-0129): this schedule is one, or one redoes some of its days.
-	const redo =
-		state.status === "ready"
-			? partRedoOf(state.schedule, weekParts)
-			: undefined;
-	const daysText = (days: DayRun): string =>
-		formatPeriod({ start: days.from, end: days.to }, formattingLocale(i18n));
-	const remaining =
-		around?.after && !around.afterTaken ? around.after : undefined;
-	const partLines = [
-		redo && t(`scheduling.roster.${redo.kind}`, { days: daysText(redo.days) }),
-		around?.before &&
-			t("scheduling.roster.otherPart", { days: daysText(around.before) }),
-		around?.after &&
-			state.status === "ready" &&
-			(around.afterTaken
-				? t("scheduling.roster.otherPart", { days: daysText(around.after) })
-				: t("scheduling.roster.coversCallout", {
-						covered: daysText({
-							from: state.schedule.coveredFrom,
-							to: state.schedule.coveredTo,
-						}),
-						rest: daysText(around.after),
-					})),
-	].filter((line): line is string => typeof line === "string");
-	const mayCreateHere =
-		unit !== undefined &&
-		access.canAll(SCHEDULE_CREATE_KEYS, departmentScope(unit.departmentId));
 	const monthName = month ? formatMonthName(month, formattingLocale(i18n)) : "";
 	if (state.status !== "ready")
 		return (
@@ -542,64 +469,57 @@ const ApiSchedule = ({
 	const openRegenerate =
 		scheduleMonth !== undefined &&
 		!passed &&
-		regenerable(state.schedule) &&
 		weekPublishedBy === undefined &&
-		access.can(
-			"schedule:generate",
-			departmentScope(state.schedule.departmentId)
-		)
+		permissions.mayGenerate
 			? (): void => {
 					setOpenDialog("regenerate");
 				}
 			: undefined;
-	const editing: RosterEditing | undefined =
-		mayEditShifts && runId !== undefined && unit !== undefined
-			? {
-					target: { companyId, unit, scheduleId, runId },
-					revision: state.schedule.rosterRevision,
-					shifts: editorShifts.data ?? [],
-					nonWorkingDayTypes: state.schedule.nonWorkingDayTypes,
-					notifiesMembers: state.schedule.status === "PUBLISHED",
-					...(publishedForEditing
-						? {
-								coverOffers: {
-									offers: coverOffers.data ?? [],
-									failed: coverOffers.isError,
-									retry: (): void => {
-										void coverOffers.refetch();
-									},
-								},
-							}
-						: {}),
-					// Leave choices need the leave keys as well, here at the schedule's Department.
-					...(access.canAll(
-						["leave_request:read", "leave_request:review"],
-						departmentScope(state.schedule.departmentId)
-					)
-						? { leave: { viewerMembershipId } }
-						: {}),
-				}
-			: undefined;
+	const editing = rosterEditingOf({
+		target: editTarget,
+		schedule: state.schedule,
+		shifts: editorShifts.data ?? [],
+		coverOffers: {
+			offers: coverOffers.data ?? [],
+			failed: coverOffers.isError,
+			retry: (): void => {
+				void coverOffers.refetch();
+			},
+		},
+		// Leave choices need the leave keys as well, here at the schedule's Department.
+		leave: permissions.mayHandleLeave ? { viewerMembershipId } : undefined,
+	});
 	const schedule = state.schedule;
-	const noticeFacts: ScheduleNoticeFacts = {
-		status: schedule.status,
-		generating: generationInProgress(schedule),
-		hasRoster: hasRoster(schedule),
-		newestRunFailed: newestRunFailed(schedule),
+	// A part of its week (API ADR-0113): the week's other days, and a way to schedule the days after it.
+	const weekParts =
+		scheduleMonth?.weeks.find(
+			(week) => week.periodStart === schedule.periodStart
+		)?.parts ?? [];
+	const around = daysAroundPart(schedule, weekParts);
+	const remaining =
+		around.after && !around.afterTaken ? around.after : undefined;
+	const daysText = (days: DayRun): string =>
+		formatPeriod({ start: days.from, end: days.to }, formattingLocale(i18n));
+	const partLines = partLinesOf(
+		{
+			covered: { from: schedule.coveredFrom, to: schedule.coveredTo },
+			around,
+			// A redo part in the week (API ADR-0129): this schedule is one, or one redoes some of its days.
+			redo: partRedoOf(schedule, weekParts),
+		},
+		daysText,
+		t
+	);
+	const noticeFacts = scheduleNoticeFactsOf(schedule, {
 		weekPublishedElsewhere: weekPublishedBy !== undefined,
 		weekPassed: passed,
-		rulesChanged:
-			scheduleMonth?.weeks.find(
-				(week) => week.scheduleId === schedule.scheduleId
-			)?.rulesChanged === true,
-	};
+		monthWeeks: scheduleMonth?.weeks,
+	});
 	const moment = dateTimeFormatIn(formattingLocale(i18n), schedule.timeZone, {
 		dateStyle: "medium",
 		timeStyle: "short",
 	});
-	const mayReject =
-		decidable(schedule) &&
-		access.can("schedule:publish", departmentScope(schedule.departmentId));
+	const { mayReject } = permissions;
 	const standing = approvalStanding({
 		awaitingDecision: decidable(schedule),
 		publication: schedule.publication,
@@ -610,9 +530,7 @@ const ApiSchedule = ({
 		status: schedule.status,
 		mayPublish: mayReject && weekPublishedBy === undefined,
 		mayReject,
-		mayWithdraw:
-			withdrawable(schedule) &&
-			access.can("schedule:publish", departmentScope(schedule.departmentId)),
+		mayWithdraw: permissions.mayWithdraw,
 		mayRegenerate: openRegenerate !== undefined,
 		hasRoster: rosterShown(noticeFacts),
 		...approvalActionFacts(standing),
@@ -826,7 +744,7 @@ const ApiSchedule = ({
 							{line}
 						</span>
 					))}
-					{remaining && mayCreateHere && (
+					{remaining && permissions.mayCreateHere && (
 						<Button
 							className="mt-2"
 							size="sm"

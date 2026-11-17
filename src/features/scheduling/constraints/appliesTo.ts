@@ -4,6 +4,7 @@ import type {
 	PolicyLevel,
 } from "@/features/scheduling/constraints/api";
 import type { SentenceValue } from "@/features/scheduling/constraints/constraintSentence";
+import { isCountedOnShifts } from "@/features/scheduling/constraints/constraintTypeCatalogue";
 import {
 	reachLabel,
 	type ReachedBranch,
@@ -21,13 +22,6 @@ export type AppliesToSource = {
 	appliesToBranches?: Array<ReachedBranch>;
 	appliesToDepartments?: Array<ReachedDepartment>;
 };
-
-/** The types counted on chosen shifts; every other type applies to everyone rostered. */
-const SHIFT_TYPES: ReadonlyArray<ConstraintType> = [
-	"SHIFT_STAFFING",
-	"SHIFT_STAFFING_WITH_STAND_INS",
-	"ROLE_PRESENCE",
-];
 
 /**
  * Who a constraint applies to, as the muted line under its sentence: for a
@@ -50,7 +44,7 @@ export const appliesToOf = (
 			? reachLabel(reach, t)
 			: t("scheduling.constraints.appliesTo.wholeCompany");
 	}
-	if (SHIFT_TYPES.includes(source.type)) {
+	if (isCountedOnShifts(source.type)) {
 		const shifts = source.values
 			.filter((value) => value.field === "SHIFT" && value.name !== null)
 			.map((value) => value.name);

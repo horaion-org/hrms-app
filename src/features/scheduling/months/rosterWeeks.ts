@@ -1,6 +1,6 @@
 import type { TFunction } from "i18next";
 import type { ScheduleMonth } from "@/features/scheduling/months/api";
-import type { RosterWeek } from "@/features/scheduling/RosterWeekBar";
+import type { RosterWeek } from "@/features/scheduling/roster/RosterWeekBar";
 import {
 	scheduleViewLink,
 	type ScheduleViewLink,

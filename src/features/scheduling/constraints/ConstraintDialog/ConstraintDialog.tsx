@@ -35,6 +35,10 @@ import {
 } from "@/features/scheduling/constraints/api";
 import { constraintRefusal } from "@/features/scheduling/constraints/constraintRefusal";
 import {
+	CONSTRAINT_TYPE_CATALOGUE,
+	startsIfPossible,
+} from "@/features/scheduling/constraints/constraintTypeCatalogue";
+import {
 	fieldRowsInReadingOrder,
 	isFieldShown,
 } from "@/features/scheduling/constraints/ConstraintDialog/fieldOrder";
@@ -78,7 +82,7 @@ import type { Constraint } from "@/features/scheduling/scheduleDraft";
 import {
 	SetupDepartmentField,
 	type SetupDepartment,
-} from "@/features/scheduling/SetupDepartmentField";
+} from "@/features/scheduling/departmentSetup/SetupDepartmentField";
 import { dayTypeLabel } from "@/features/scheduling/dayTypes";
 import { WEEKDAYS } from "@/features/scheduling/shifts/api";
 import {
@@ -140,12 +144,6 @@ const HINTED_FIELDS = [
 ] as const satisfies ReadonlyArray<ConstraintField>;
 
 type HintedField = (typeof HINTED_FIELDS)[number];
-
-/** Kinds that were only ever If possible, so a new one starts If possible rather than Must. */
-const STARTS_IF_POSSIBLE: ReadonlyArray<ConstraintType> = [
-	"AVOID_DAYS_OFF_ON",
-	"KEEP_DAYS_OFF_TOGETHER",
-];
 
 /** Numbers a type may leave out, each worded as a choice: what leaving it out means, or a figure. */
 const CHOICE_FIELDS = [
@@ -529,11 +527,13 @@ export const ConstraintDialog = ({
 	const firmnessHints: Partial<Record<ConstraintCategory, string>> = {
 		WORKING_HOURS: t(`${key}.firmnessHints.WORKING_HOURS`),
 	};
-	// Keeping days off together as a Must cannot hold for someone whose available days are scattered.
-	const firmnessHintOf = (option: ConstraintTypeOption): string | undefined =>
-		option.type === "KEEP_DAYS_OFF_TOGETHER" && requirement === "MUST"
-			? t(`${key}.firmnessHints.KEEP_DAYS_OFF_TOGETHER`)
+	// A type for which Must is a poor fit for some people says so while Must is chosen.
+	const firmnessHintOf = (option: ConstraintTypeOption): string | undefined => {
+		const mustHintKey = CONSTRAINT_TYPE_CATALOGUE[option.type].mustHintKey;
+		return mustHintKey && requirement === "MUST"
+			? t(mustHintKey)
 			: firmnessHints[option.category];
+	};
 	// Must or If possible as two cards, each saying what happens when unmet; a type that offers no choice says which it always is.
 	const firmnessRow = (option: ConstraintTypeOption): FunctionComponent => {
 		const id = fieldId("requirement");
@@ -868,7 +868,7 @@ export const ConstraintDialog = ({
 							if (!startingPoint)
 								setValue(
 									"requirement",
-									STARTS_IF_POSSIBLE.includes(chosenType) ? "SHOULD" : "MUST"
+									startsIfPossible(chosenType) ? "SHOULD" : "MUST"
 								);
 						}}
 					/>

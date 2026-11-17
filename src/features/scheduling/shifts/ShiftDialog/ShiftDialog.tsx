@@ -18,12 +18,12 @@ import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit
 import {
 	paidShiftHours,
 	shiftMinutes,
-} from "@/features/scheduling/scheduleDraft";
+} from "@/features/scheduling/shifts/shiftHours";
 import type { ScheduleShift } from "@/features/scheduling/schedules/api";
 import {
 	SetupDepartmentField,
 	type SetupDepartment,
-} from "@/features/scheduling/SetupDepartmentField";
+} from "@/features/scheduling/departmentSetup/SetupDepartmentField";
 import type { ShiftBody } from "@/features/scheduling/shifts/api";
 import {
 	shiftSchema,

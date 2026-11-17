@@ -60,27 +60,6 @@ export type ConstraintType = z.infer<typeof constraintTypeSchema>;
 
 export const CONSTRAINT_TYPES = constraintTypeSchema.options;
 
-/**
- * Types the API keeps only so a schedule generated with one still reads: never
- * offered, added or edited (ADR-0099 in the API). The shortest part of a shift
- * around leave gave way to each leave duration's own shift choice; Pay rates
- * moved onto employment terms (ADR-0123 in the API); On duty throughout gave
- * way to shift staffing (ADR-0128 in the API). A schedule generated with one
- * still reads its sentence.
- */
-const RETIRED_CONSTRAINT_TYPES = [
-	"SHORTEST_PART_SHIFT",
-	"PAY_RATES",
-	"ROLE_PRESENCE",
-] as const satisfies ReadonlyArray<ConstraintType>;
-
-type RetiredConstraintType = (typeof RETIRED_CONSTRAINT_TYPES)[number];
-
-/** Whether a type is only read, never offered. */
-export const isRetiredConstraintType = (
-	type: ConstraintType
-): type is RetiredConstraintType => isOneOf(RETIRED_CONSTRAINT_TYPES, type);
-
 export const constraintCategorySchema = z.enum([
 	"STAFFING",
 	"ROLE_COVERAGE",

@@ -3,7 +3,7 @@ import { dateTimeFormatIn } from "@/common/dateTimeFormatIn";
 import { daysOf, weeksOf } from "@/common/weeks";
 import { portionText, timeRangeText } from "@/features/leave/dayPortion";
 import { dayTypeLabel } from "@/features/scheduling/dayTypes";
-import { formatTimeRange } from "@/features/scheduling/formatShift";
+import { formatTimeRange } from "@/features/scheduling/shifts/formatShift";
 import type { SchedulePeriod } from "@/features/scheduling/periods";
 import {
 	stretchedTimes,
@@ -13,7 +13,7 @@ import {
 import {
 	hoursFromMinutes,
 	paidShiftMinutes,
-} from "@/features/scheduling/scheduleDraft";
+} from "@/features/scheduling/shifts/shiftHours";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 
 /*

@@ -1,0 +1,159 @@
+import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
+import { joinClassNames } from "@/common/joinClassNames";
+import type { FunctionComponent } from "@/common/types";
+import { Button } from "@/components/ui/Button";
+import type { CoverGapRequest } from "@/features/scheduling/cover/api";
+import { formatTimeRange } from "@/features/scheduling/shifts/formatShift";
+import { formatDay } from "@/common/formatDay";
+import { conflictClockTimes } from "@/features/scheduling/roster/findings/conflictTimes";
+import { diagnosticSentence } from "@/features/scheduling/roster/findings/diagnostics";
+import {
+	findingTone,
+	type Finding,
+} from "@/features/scheduling/roster/findings/finding";
+import type { FindingNames } from "@/features/scheduling/roster/findings/findingNames";
+import { ruleLabel } from "@/features/scheduling/roster/findings/ruleLabel";
+import { FINDING_TONE_ICONS } from "./findingToneIcons";
+
+export type FindingListProps = {
+	findings: ReadonlyArray<Finding>;
+	names: FindingNames;
+	/** Whether each finding says its day; off where a heading already names it. */
+	showDates?: boolean;
+	/** Offers Find cover on a shift the generation left short; none without. */
+	onFindCover?: (gap: CoverGapRequest) => void;
+};
+
+const key = "scheduling.findings";
+
+/**
+ * Findings as the Issues panel lists them, each led by its tone's outline
+ * icon (`FINDING_TONE_ICONS`). The engine's own words are quoted, never
+ * shown as the app's copy (ADR-0003), and only where the app has no sentence
+ * of its own. With `onFindCover`, a shift left short
+ * (a hole about no one person) has a Find cover button per shift it names.
+ */
+export const FindingList = ({
+	findings,
+	names,
+	showDates = false,
+	onFindCover,
+}: FindingListProps): FunctionComponent => {
+	const { t, i18n } = useTranslation();
+	const language = formattingLocale(i18n);
+	const dayOf = (date: string | null): string | null =>
+		showDates && date !== null ? formatDay(date, language) : null;
+
+	const item = (finding: Finding): ReactNode => {
+		switch (finding.kind) {
+			case "conflict": {
+				const { conflict } = finding;
+				const clock = formatTimeRange(conflictClockTimes(conflict), t);
+				// A shift left short says which shift and which job title; the engine's own sentence adds nothing to that.
+				const [onlyShift] = conflict.shiftUuids;
+				const shiftName =
+					conflict.shiftUuids.length === 1 && onlyShift
+						? names.shifts.get(onlyShift)
+						: undefined;
+				const time = shiftName
+					? t(`${key}.shiftAt`, { shift: shiftName, time: clock })
+					: clock;
+				const jobTitle = names.jobTitles.get(conflict.roleUuid);
+				const aboutAShift = conflict.employeeUuid === null;
+				const day = dayOf(conflict.date);
+				return (
+					<>
+						<p className="font-semibold text-neutral-900">
+							{day ? t(`${key}.when`, { day, time }) : time}
+							<span aria-hidden="true" className="mx-2">
+								•
+							</span>
+							{aboutAShift && jobTitle
+								? t(`${key}.missingAs`, {
+										count: conflict.missing,
+										jobTitle,
+									})
+								: t(`${key}.missing`, { count: conflict.missing })}
+						</p>
+						{conflict.message && !aboutAShift && (
+							<q className="mt-1 block text-neutral-800">{conflict.message}</q>
+						)}
+						<p className="mt-1 text-neutral-700">
+							{t(`${key}.rule`, {
+								rule: ruleLabel(
+									{
+										name: conflict.sourceRule,
+										constraintId: conflict.sourceRuleId,
+									},
+									names.rules,
+									t
+								),
+							})}
+						</p>
+						{onFindCover &&
+							conflict.employeeUuid === null &&
+							conflict.shiftUuids.map((shiftId) => (
+								<Button
+									key={shiftId}
+									className="mt-1 block"
+									variant="textlink"
+									onClick={() => {
+										onFindCover({ shiftId, day: conflict.date });
+									}}
+								>
+									{conflict.shiftUuids.length > 1
+										? t("scheduling.cover.findCoverFor", {
+												shift: names.shifts.get(shiftId) ?? "",
+											})
+										: t("scheduling.cover.findCover")}
+								</Button>
+							))}
+					</>
+				);
+			}
+			case "message": {
+				const day = dayOf(finding.date);
+				return (
+					<p className="text-neutral-800">
+						{day && <span className="mr-2 text-neutral-700">{day}</span>}
+						<q>{finding.message}</q>
+					</p>
+				);
+			}
+			case "diagnostic": {
+				const sentence = diagnosticSentence(
+					finding.diagnostic,
+					names,
+					t,
+					(date) => formatDay(date, language)
+				);
+				if (sentence === null)
+					return (
+						<q className="text-neutral-800">{finding.diagnostic.message}</q>
+					);
+				// The app's own sentence says it in full; the engine's, with its raw dates, is left out.
+				return <p className="text-neutral-900">{sentence}</p>;
+			}
+		}
+	};
+
+	return (
+		<ul className="flex flex-col gap-3 text-sm">
+			{findings.map((finding, index) => {
+				const { icon: Icon, colour } = FINDING_TONE_ICONS[findingTone(finding)];
+				return (
+					// The engine may repeat a finding word for word; the list never reorders.
+					<li key={index} className="flex gap-2">
+						<Icon
+							aria-hidden="true"
+							className={joinClassNames("mt-0.5 size-4 shrink-0", colour)}
+						/>
+						<div className="min-w-0">{item(finding)}</div>
+					</li>
+				);
+			})}
+		</ul>
+	);
+};

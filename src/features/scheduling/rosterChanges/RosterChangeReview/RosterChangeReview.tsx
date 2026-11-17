@@ -1,0 +1,161 @@
+import { useId } from "react";
+import { useTranslation } from "react-i18next";
+import type { FunctionComponent } from "@/common/types";
+import { FormRow, formRowIds } from "@/components/forms/FormRow";
+import { Textarea } from "@/components/forms/Textarea";
+import { Button } from "@/components/ui/Button";
+import { Callout } from "@/components/ui/Callout";
+import { Checkbox } from "@/components/ui/Checkbox";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { RosterChangeChecks } from "@/features/scheduling/rosterChanges/RosterChangeChecks";
+import {
+	ROSTER_CHANGE_REMARK_MAX_LENGTH,
+	type RosterChangePreview,
+} from "@/features/scheduling/rosterChanges/api";
+import { rosterCellText } from "@/features/scheduling/rosterChanges/cellText";
+import type { CheckNames } from "@/features/scheduling/rosterChanges/checkSentence";
+import { applyGate } from "@/features/scheduling/rosterChanges/rosterEdit";
+import type { RosterChangeRefusal } from "@/features/scheduling/rosterChanges/rosterChangeRefusal";
+
+export type RosterChangeReviewProps = {
+	/** The API's preview; undefined while it loads. */
+	preview: RosterChangePreview | undefined;
+	names: CheckNames;
+	remark: string;
+	onRemarkChange: (remark: string) => void;
+	/** Whether the person ticked these very checks. */
+	ticked: boolean;
+	onTickedChange: (ticked: boolean) => void;
+	/** The roster is published: the people whose days change are told, and see the remark. */
+	notifiesMembers?: boolean;
+	/** The remark is asked for whatever the checks say, as every leave move is. */
+	remarkRequired?: boolean;
+	/** Who reads the remark, where it isn't the roster's own readers: a leave move's remark reaches the employee. */
+	remarkHint?: string;
+	/** Says rules aren't re-checked; off where the panel already says so in its own words (Find cover). */
+	showsRulesNote?: boolean;
+	/** Why the preview couldn't be read: "revision" (the roster moved) asks for a reload, anything else a retry. */
+	previewRefusal?: RosterChangeRefusal;
+	/** Reads the preview again, or reloads the roster after a "revision" refusal. */
+	onRetryPreview?: () => void;
+};
+
+const key = "scheduling.rosterEdit";
+
+/**
+ * What a change, or the undo of one, would do before it is applied: each day
+ * before → after, the checks with what each asks, the line saying rules are
+ * not re-checked (unless the panel says it itself), and the remark and tick
+ * the checks ask for, and why the preview couldn't be read with its retry.
+ * Shared by the editor beside the grid, Find cover and the undo question, so
+ * all ask the same way.
+ */
+export const RosterChangeReview = ({
+	preview,
+	names,
+	remark,
+	onRemarkChange,
+	ticked,
+	onTickedChange,
+	notifiesMembers = false,
+	remarkRequired = false,
+	remarkHint,
+	showsRulesNote = true,
+	previewRefusal,
+	onRetryPreview,
+}: RosterChangeReviewProps): FunctionComponent => {
+	const { t } = useTranslation();
+	const remarkId = useId();
+	const remarkIds = formRowIds(remarkId);
+	const gate = applyGate(preview?.checks ?? []);
+	const needsRemark = gate.needsRemark || remarkRequired;
+	return (
+		<div className="flex flex-col gap-3">
+			<h3 className="text-sm font-semibold text-neutral-800">
+				{t(`${key}.beforeAfter`)}
+			</h3>
+			{preview ? (
+				<ul className="flex flex-col gap-1 text-sm text-neutral-900">
+					{preview.cells.map((cell) => (
+						<li key={`${cell.membershipId ?? ""}-${cell.day}`}>
+							<span className="font-semibold">
+								{cell.displayName ?? t("scheduling.detail.formerMember")}
+							</span>{" "}
+							{rosterCellText(cell.before, t)} → {rosterCellText(cell.after, t)}
+						</li>
+					))}
+				</ul>
+			) : (
+				<span className="flex flex-col gap-2" role="status">
+					<span className="sr-only">{t(`${key}.checking`)}</span>
+					<Skeleton className="h-3 w-3/4" />
+					<Skeleton className="h-3 w-1/2" />
+				</span>
+			)}
+			<h3 className="text-sm font-semibold text-neutral-800">
+				{t(`${key}.checks`)}
+			</h3>
+			{preview && (
+				<>
+					<RosterChangeChecks checks={preview.checks} names={names} />
+					{showsRulesNote && <Callout>{t(`${key}.rulesNotChecked`)}</Callout>}
+				</>
+			)}
+			{preview && !gate.refused && (
+				<FormRow
+					counter={`${remark.length}/${ROSTER_CHANGE_REMARK_MAX_LENGTH}`}
+					htmlFor={remarkId}
+					label={t(needsRemark ? `${key}.remarkRequired` : `${key}.remark`)}
+					layout="stacked"
+					required={needsRemark}
+					hint={
+						remarkHint ??
+						t(
+							notifiesMembers
+								? `${key}.remarkHintPublished`
+								: `${key}.remarkHint`
+						)
+					}
+				>
+					<Textarea
+						aria-describedby={remarkIds.hintId}
+						aria-required={needsRemark}
+						className="w-full"
+						id={remarkId}
+						maxLength={ROSTER_CHANGE_REMARK_MAX_LENGTH}
+						rows={2}
+						value={remark}
+						onChange={(event) => {
+							onRemarkChange(event.target.value);
+						}}
+					/>
+				</FormRow>
+			)}
+			{preview && gate.needsTick && !gate.refused && (
+				<Checkbox
+					checked={ticked}
+					label={t(`${key}.tick`)}
+					onChange={(event) => {
+						onTickedChange(event.target.checked);
+					}}
+				/>
+			)}
+			{previewRefusal && (
+				<div className="flex flex-col items-start gap-2" role="alert">
+					<p className="text-sm text-error-700">
+						{previewRefusal === "revision"
+							? t(`${key}.error.revision`)
+							: t(`${key}.previewFailed`)}
+					</p>
+					{onRetryPreview && (
+						<Button variant="textlink" onClick={onRetryPreview}>
+							{previewRefusal === "revision"
+								? t(`${key}.error.reload`)
+								: t(`${key}.tryAgain`)}
+						</Button>
+					)}
+				</div>
+			)}
+		</div>
+	);
+};

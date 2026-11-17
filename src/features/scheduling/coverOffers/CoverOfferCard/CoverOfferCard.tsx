@@ -20,7 +20,7 @@ import {
 	payWordsOf,
 } from "@/features/scheduling/coverOffers/coverOfferRules";
 import { payText } from "@/features/scheduling/coverOffers/coverOfferWords";
-import { formatTimeRange } from "@/features/scheduling/formatShift";
+import { formatTimeRange } from "@/features/scheduling/shifts/formatShift";
 import { formatDay } from "@/common/formatDay";
 
 /** Why the member's answer didn't go through. */

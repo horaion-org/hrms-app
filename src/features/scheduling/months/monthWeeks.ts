@@ -1,4 +1,5 @@
 import dayjs from "dayjs";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import { mondayOf } from "@/common/weeks";
 import type {
 	MonthRange,
@@ -44,13 +45,13 @@ export const mondaysIn = (month: string): Array<string> => {
 	const first = mondayOf(`${month}-01`);
 	const start =
 		first < `${month}-01`
-			? dayjs(first).add(7, "day").format("YYYY-MM-DD")
+			? dayjs(first).add(7, "day").format(ISO_DATE_FORMAT)
 			: first;
 	const mondays: Array<string> = [];
 	for (
 		let monday = start;
 		monthOf(monday) === month;
-		monday = dayjs(monday).add(7, "day").format("YYYY-MM-DD")
+		monday = dayjs(monday).add(7, "day").format(ISO_DATE_FORMAT)
 	)
 		mondays.push(monday);
 	return mondays;
@@ -107,7 +108,7 @@ export const crossingWeekOf = (month: string): SchedulePeriod | undefined => {
 	if (monday === first) return undefined;
 	return {
 		start: monday,
-		end: dayjs(monday).add(6, "day").format("YYYY-MM-DD"),
+		end: dayjs(monday).add(6, "day").format(ISO_DATE_FORMAT),
 	};
 };
 

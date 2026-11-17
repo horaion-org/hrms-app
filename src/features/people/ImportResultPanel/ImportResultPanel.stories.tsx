@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { ImportResultPanel } from "@/features/people/ImportResultPanel";
 import type { MemberImport } from "@/features/people/import/api";
+import "@/common/i18n";
 
 const finished: MemberImport = {
 	importId: "i-1",

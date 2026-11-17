@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import dayjs from "dayjs";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import type { TFunction } from "i18next";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -126,7 +127,7 @@ export const Leave = (): FunctionComponent => {
 	const pendingCount = usePendingLeaveCount(companyId);
 	const [range, setRange] = useState<DateRange>(defaultRange);
 	// A phone shows the timeline one day at a time; the timeline closes up the others' columns.
-	const today = dayjs().format("YYYY-MM-DD");
+	const today = dayjs().format(ISO_DATE_FORMAT);
 	const timelineDays = rangeDays(range);
 	const shownDay = shownDayOf(timelineDays, search.day, today);
 	const mine = useMyLeaveRequests(

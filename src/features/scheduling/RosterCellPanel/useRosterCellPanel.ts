@@ -15,7 +15,7 @@ import { dayTypeInSentence } from "@/features/scheduling/dayTypes";
 import { formatDay } from "@/common/formatDay";
 import type { RosterCellPanelState } from "@/features/scheduling/RosterCellPanel/cellPanelState";
 import { useLeaveMove } from "@/features/scheduling/RosterCellPanel/useLeaveMove";
-import { leaveLinkSearch } from "@/features/scheduling/RosterDayNotes/leaveLinkSearch";
+import { leaveLinkSearch } from "@/features/scheduling/roster/RosterDayNotes/leaveLinkSearch";
 import {
 	rosterChangePreviewQuery,
 	type RosterChange,

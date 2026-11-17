@@ -21,7 +21,7 @@ import { constraintSectionsOf } from "@/features/scheduling/constraints/constrai
 import { categoryIconOf } from "@/features/scheduling/constraints/constraintTypeLooks";
 import { needsAttention } from "@/features/scheduling/constraints/valueProblems";
 import { initiallyClosedOf } from "@/features/scheduling/constraints/constraintListView";
-import { useSectionFolds } from "@/features/scheduling/useSectionFolds";
+import { useSectionFolds } from "@/features/scheduling/departmentSetup/useSectionFolds";
 import type { ConstraintOptionsState } from "@/features/scheduling/constraints/useConstraintOptions";
 import {
 	policyConstraintsQuery,

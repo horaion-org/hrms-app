@@ -1,4 +1,5 @@
 import dayjs from "dayjs";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import { z } from "zod";
 import type { DayRange, MonthSpan } from "@/features/dashboard/api";
 import { unitSearchSchema } from "@/features/workspace/unitSearch";
@@ -11,7 +12,6 @@ import { unitSearchSchema } from "@/features/workspace/unitSearch";
 /** The longest range the API reads, in days, both ends included. */
 export const MOST_DAYS_IN_RANGE = 92;
 
-const ISO_DAY = "YYYY-MM-DD";
 const ISO_MONTH = "YYYY-MM";
 
 const searchSchema = unitSearchSchema.extend({
@@ -36,8 +36,8 @@ export const parseReportsSearch = (
 
 /** This calendar month, from its first day to its last: the range before one is chosen. */
 export const defaultRange = (today: Date): DayRange => ({
-	from: dayjs(today).startOf("month").format(ISO_DAY),
-	to: dayjs(today).endOf("month").format(ISO_DAY),
+	from: dayjs(today).startOf("month").format(ISO_DATE_FORMAT),
+	to: dayjs(today).endOf("month").format(ISO_DATE_FORMAT),
 });
 
 /** The range the URL names, else this month. */
@@ -94,8 +94,8 @@ export const presetRange = (
 ): DayRange => {
 	const { first, last } = presetMonths(preset, today);
 	return {
-		from: first.format(ISO_DAY),
-		to: last.endOf("month").format(ISO_DAY),
+		from: first.format(ISO_DATE_FORMAT),
+		to: last.endOf("month").format(ISO_DATE_FORMAT),
 	};
 };
 

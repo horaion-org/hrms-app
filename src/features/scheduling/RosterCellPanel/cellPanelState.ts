@@ -1,7 +1,7 @@
 import type { SelectOption } from "@/components/forms/Select";
 import type { RosteredDay } from "@/features/leave/api";
 import type { CellCoverOffer } from "@/features/scheduling/coverOffers/useCellCoverOffer";
-import type { LeaveLinkSearch } from "@/features/scheduling/RosterDayNotes/leaveLinkSearch";
+import type { LeaveLinkSearch } from "@/features/scheduling/roster/RosterDayNotes/leaveLinkSearch";
 import type { RosterChangePreview } from "@/features/scheduling/rosterChanges/api";
 import type { CellPanelFacts } from "@/features/scheduling/rosterChanges/cellPanelSections";
 import type { CheckNames } from "@/features/scheduling/rosterChanges/checkSentence";

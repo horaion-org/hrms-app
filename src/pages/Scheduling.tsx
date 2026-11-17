@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
 import { ConstraintsTab } from "@/features/scheduling/constraints/ConstraintsTab";
-import { SchedulesTab } from "@/features/scheduling/SchedulesTab";
+import { SchedulesTab } from "@/features/scheduling/schedules/SchedulesTab";
 import { SCHEDULING_UNIT_RULES } from "@/features/scheduling/schedules/schedulesUnitRules";
 import { returnLinkOf } from "@/features/scheduling/readiness/readinessCopy";
 import {

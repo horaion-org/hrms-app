@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Dialog, type DialogProps } from "@/components/ui/Dialog";
+import "@/common/i18n";
 
 const Example = (args: DialogProps): FunctionComponent => {
 	const [open, setOpen] = useState(args.open);

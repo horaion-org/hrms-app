@@ -1,0 +1,162 @@
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { createInstance } from "i18next";
+import { initReactI18next } from "react-i18next";
+import { beforeAll, describe, expect, it, vi } from "vitest";
+import en from "@/assets/locales/en/translations.json";
+import { ShiftDetailsPanel } from "@/features/scheduling/roster/ShiftDetailsPanel";
+
+beforeAll(async () => {
+	await createInstance()
+		.use(initReactI18next)
+		.init({ lng: "en", resources: { en: { translation: en } } });
+});
+
+const shift = {
+	kind: "shift",
+	assignmentId: "a-1",
+	shiftId: "front-desk-am-copy",
+	name: "Front Desk AM",
+	group: "Front Desk",
+	colour: "#E9A55A",
+	start: "09:00",
+	end: "15:00",
+	unpaidBreakMinutes: 0,
+	carriesOvertime: false,
+	role: "Front Desk Lead",
+	date: "2026-10-13",
+} as const;
+
+describe("ShiftDetailsPanel", () => {
+	it("given_aShiftOnARestDay_when_rendered_then_saysSoAsAPlainLine", () => {
+		render(
+			<ShiftDetailsPanel
+				shift={{ ...shift, note: { dayType: "REST" } }}
+				staffName="Aisha"
+				onClose={vi.fn()}
+			/>
+		);
+
+		expect(screen.getByText("On rest day")).toBeVisible();
+		expect(screen.queryByText("Needs a look")).not.toBeInTheDocument();
+	});
+
+	it("given_aShiftWithNoBreakOrMarker_when_rendered_then_showsNeither", () => {
+		render(
+			<ShiftDetailsPanel shift={shift} staffName="Aisha" onClose={vi.fn()} />
+		);
+
+		expect(screen.queryByText(/^On /)).not.toBeInTheDocument();
+
+		expect(screen.queryByText("Unpaid break")).not.toBeInTheDocument();
+		expect(screen.queryByText("Paid hours")).not.toBeInTheDocument();
+		expect(screen.queryByText("Built-in overtime")).not.toBeInTheDocument();
+	});
+
+	it("given_aFrozenShiftWithABreakAndMarker_when_rendered_then_showsThemWithThePaidHours", () => {
+		render(
+			<ShiftDetailsPanel
+				staffName="Aisha"
+				shift={{
+					...shift,
+					start: "07:00",
+					end: "19:00",
+					unpaidBreakMinutes: 60,
+					carriesOvertime: true,
+				}}
+				onClose={vi.fn()}
+			/>
+		);
+
+		expect(screen.getByText("60 min")).toBeVisible();
+		expect(screen.getByText("11 h")).toBeVisible();
+		expect(screen.getByText("Built-in overtime")).toBeVisible();
+	});
+
+	it("given_aWorkedDay_when_rendered_then_describesItsFrozenShiftWithoutActions", () => {
+		render(
+			<ShiftDetailsPanel
+				shift={shift}
+				staffName="Aisha Rahman"
+				onClose={vi.fn()}
+			/>
+		);
+
+		const panel = screen.getByRole("complementary", { name: "Shift Details" });
+		expect(panel).toHaveTextContent("Aisha Rahman");
+		expect(within(panel).getByText("Assigned")).toBeInTheDocument();
+		expect(panel).toHaveTextContent("DateTue, Oct 13, 2026");
+		expect(panel).toHaveTextContent("Time09:00 – 15:00");
+		expect(panel).toHaveTextContent("ShiftFront Desk AM");
+		expect(panel).toHaveTextContent("GroupFront Desk");
+		expect(panel).toHaveTextContent("RoleFront Desk Lead");
+		expect(within(panel).getAllByRole("button")).toHaveLength(1);
+	});
+
+	it("given_aPreferenceNotMet_when_rendered_then_namesTheShiftsAndAWarningPill", () => {
+		render(
+			<ShiftDetailsPanel
+				shift={shift}
+				staffName="Aisha Rahman"
+				preferenceOutcome={{
+					membershipId: "m-1",
+					date: shift.date,
+					shiftNames: ["Late"],
+					outcome: "NOT_MET",
+					reason: null,
+				}}
+				onClose={vi.fn()}
+			/>
+		);
+
+		expect(screen.getByText("Preference")).toBeInTheDocument();
+		expect(screen.getByText(/Preferred: Late/)).toBeInTheDocument();
+		expect(screen.getByText("Not met")).toBeInTheDocument();
+	});
+
+	it("given_noPreference_when_rendered_then_showsNoPreferenceSection", () => {
+		render(
+			<ShiftDetailsPanel
+				shift={shift}
+				staffName="Aisha Rahman"
+				onClose={vi.fn()}
+			/>
+		);
+
+		expect(screen.queryByText("Preference")).toBeNull();
+	});
+
+	it("given_close_when_clicked_then_reportsIt", async () => {
+		const user = userEvent.setup();
+		const onClose = vi.fn();
+		render(
+			<ShiftDetailsPanel
+				shift={shift}
+				staffName="Aisha Rahman"
+				onClose={onClose}
+			/>
+		);
+
+		await user.click(
+			screen.getByRole("button", { name: "Close shift details" })
+		);
+		expect(onClose).toHaveBeenCalled();
+	});
+
+	it("given_issues_when_rendered_then_showsThemBeforeTheShift", () => {
+		render(
+			<ShiftDetailsPanel
+				issues={<p>Needs cover: Front Desk PM</p>}
+				shift={shift}
+				staffName="Aisha Rahman"
+				onClose={vi.fn()}
+			/>
+		);
+
+		expect(
+			screen.getByRole("complementary", { name: "Shift Details" })
+		).toHaveTextContent(
+			/^Shift DetailsNeeds cover: Front Desk PMARAisha Rahman/
+		);
+	});
+});

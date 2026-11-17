@@ -5,7 +5,7 @@ import type {
 	CoverOption,
 	CoverUnavailableReason,
 } from "@/features/scheduling/cover/api";
-import { formatTimeRange } from "@/features/scheduling/formatShift";
+import { formatTimeRange } from "@/features/scheduling/shifts/formatShift";
 import type { ScheduleShift } from "@/features/scheduling/schedules/api";
 
 /*

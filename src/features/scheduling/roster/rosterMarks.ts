@@ -1,7 +1,7 @@
 import type { TFunction } from "i18next";
 import { timeRangeText } from "@/features/leave/dayPortion";
 import { dayTypeInSentence } from "@/features/scheduling/dayTypes";
-import { formatTimeRange } from "@/features/scheduling/formatShift";
+import { formatTimeRange } from "@/features/scheduling/shifts/formatShift";
 import {
 	findingWeight,
 	strongestTone,
@@ -22,7 +22,7 @@ import {
 	asksForDecision,
 	marksLeaveOrCover,
 } from "@/features/scheduling/roster/rosterSummary";
-import { hoursFromMinutes } from "@/features/scheduling/scheduleDraft";
+import { hoursFromMinutes } from "@/features/scheduling/shifts/shiftHours";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 
 /*

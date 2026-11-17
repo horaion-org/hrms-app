@@ -44,11 +44,17 @@ Run the API on port 8080 for local development; Vite proxies `/api` there. Overr
 
 The decision is recorded in [app ADR 0004](docs/adr/0004-sessions-through-the-api-bff.md).
 
+## Guides
+
+Step-by-step recipes for the common changes (a page, an API read or write, a constraint type, a roster finding, a
+permission key, a shared component, copy) are in [docs/guides](docs/guides/README.md). Each names the files to touch,
+the code to copy, and the command that proves it was followed.
+
 ## Checks
 
 ```sh
 pnpm lint
-pnpm exec vitest run src/
+pnpm exec vitest run src/ scripts/
 pnpm test:e2e
 pnpm build
 ```
@@ -56,8 +62,9 @@ pnpm build
 CI (`.github/workflows/ci.yml`) runs on every pull request to `development` and every push to it. It has two
 jobs:
 
-- **Type check & lint:** `pnpm exec tsc`, then `pnpm lint` (the permission contract check, then eslint).
-- **Unit tests:** `vitest run src/` in three shards, with one worker per core and a 15 s per-test timeout. The
+- **Type check & lint:** `pnpm exec tsc`, then `pnpm lint` (the permission contract, quarantine and structure checks,
+  then eslint).
+- **Unit tests:** `vitest run src/ scripts/` in three shards, with one worker per core and a 15 s per-test timeout. The
   5 s default is too tight on a shared runner.
 
 Both jobs run on Blacksmith runners (backend ADR-0070); setting the repository variable `CI_RUNNER` to
@@ -68,8 +75,14 @@ suite in all three browsers every week (and on demand from the Actions tab) and 
 artifact. To reproduce a CI shard locally:
 
 ```sh
-pnpm exec vitest run src/ --shard=1/3 --testTimeout=15000
+pnpm exec vitest run src/ scripts/ --shard=1/3 --testTimeout=15000
 ```
+
+**The structure checks.** `pnpm lint` also runs `check:feature-cycles`, `check:import-direction`,
+`check:file-size`, `check:loose-codes` and `check:story-translations` (`scripts/`), which keep imports pointing one
+way, files small, refusal codes in refusal modules and stories translated. Each holds a list of today's exceptions
+that only shrinks, and names the file and what to do when it fails; [docs/guides](docs/guides/README.md) lists them.
+Their own tests run with `pnpm exec vitest run scripts`.
 
 **The quarantine.** A test that fails on `development` and cannot be fixed at once is marked `it.skip` and listed
 in `test-quarantine.json` with its reason. `pnpm lint` runs `check:quarantine`, which fails when a skipped test is

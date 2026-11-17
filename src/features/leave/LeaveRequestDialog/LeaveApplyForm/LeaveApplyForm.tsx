@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Refusal } from "@/common/refusal";
@@ -103,7 +104,7 @@ export const LeaveApplyForm = ({
 	const id = useId();
 	const [membershipId, setMembershipId] = useState("");
 	const [chosenType, setChosenType] = useState<string | null>(null);
-	const today = dayjs().format("YYYY-MM-DD");
+	const today = dayjs().format(ISO_DATE_FORMAT);
 	const [dates, setDates] = useState({ start: today, end: today });
 	// The applicant's remarks, sent as the API's `notes`. A leave type that asks for a reason makes them required
 	// and relabels them "Reason for leave"; that is not the reviewer's rejection reason.

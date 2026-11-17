@@ -1,4 +1,5 @@
 import { ApiProblemError } from "@/common/problem";
+import { refusalCodeOf } from "@/common/refusal";
 
 /** Why a roster change, or its undo, didn't go through: one message each. */
 export type RosterChangeRefusal =
@@ -32,5 +33,7 @@ const REFUSALS: Readonly<Record<string, RosterChangeRefusal>> = {
 export const rosterChangeRefusal = (error: unknown): RosterChangeRefusal => {
 	if (!(error instanceof ApiProblemError)) return "failed";
 	if (error.status === 403) return "forbidden";
-	return REFUSALS[`${error.status} ${error.errorCode ?? ""}`] ?? "failed";
+	const code = refusalCodeOf(error);
+	if (code === undefined) return "failed";
+	return REFUSALS[code] ?? "failed";
 };

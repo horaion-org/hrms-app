@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ReactElement } from "react";
 import { ExpandableList } from "@/components/ui/ExpandableList";
+import "@/common/i18n";
 
 const rowsOf = (count: number): Array<string> =>
 	Array.from({ length: count }, (_, index) => `Row ${index + 1}`);
