@@ -5143,7 +5143,7 @@
 				"allWeeks_other": "Las {{count}} semanas de {{month}} se vuelven a calcular. Aún no hay nada publicado, así que todas pueden cambiar.",
 				"handChanged_one": "{{weeks}} se cambió a mano.",
 				"handChanged_other": "{{weeks}} se cambiaron a mano.",
-				"replaced": "Esos cambios se reemplazarán."
+				"replaced": "Esos cambios y el cuadrante se reemplazan solo cuando el nuevo cuadrante esté listo; si la generación falla, se mantiene el cuadrante actual."
 			}
 		},
 		"rosterHours": {

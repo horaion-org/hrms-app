@@ -36,7 +36,8 @@ const key = "scheduling.months.regenerate";
 /**
  * Asks before generating a month again: which weeks are worked out again
  * (every week that isn't published, from its first on) and which weeks'
- * hand changes are replaced, which asks in red. Confirming posts the month
+ * hand changes are replaced, which asks in red; they and the roster are
+ * replaced only once the new roster is ready (API ADR-0112). Confirming posts the month
  * through useGenerateMonth; a refusal shows inside the dialog.
  */
 export const RegenerateMonthDialog = ({

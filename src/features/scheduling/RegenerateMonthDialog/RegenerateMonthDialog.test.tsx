@@ -140,7 +140,7 @@ describe("RegenerateMonthDialog", () => {
 			/The 4 weeks of November that aren’t published are worked out again, from Nov 9\s?–\s?15 on\. The published weeks stay as they are\./
 		);
 		expect(dialog).toHaveTextContent(
-			/Nov 16\s?–\s?22 was changed by hand\. Those changes will be replaced\./
+			/Nov 16\s?–\s?22 was changed by hand\. Those changes and the roster are replaced only once the new roster is ready; if generating fails, the current roster stays\./
 		);
 		expect(
 			within(dialog).getByRole("button", { name: "Regenerate November" })
