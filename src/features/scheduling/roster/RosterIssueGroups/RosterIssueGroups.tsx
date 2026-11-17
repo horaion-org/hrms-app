@@ -57,15 +57,20 @@ export const RosterIssueGroups = ({
 				<>
 					<div
 						aria-label={t(`${key}.orderLabel`)}
-						className="flex gap-2"
+						className="flex gap-4"
 						role="group"
 					>
+						{/* Text links, not pills: the switch must not outweigh the groups. The choice is marked by weight and underline, not colour alone. */}
 						{ORDERS.map((option) => (
 							<Button
 								key={option}
 								aria-pressed={order === option}
-								size="sm"
-								variant={order === option ? "primary" : "secondary"}
+								className={
+									order === option
+										? "font-medium underline underline-offset-4"
+										: undefined
+								}
+								variant="textlink"
 								onClick={(): void => {
 									setOrder(option);
 								}}

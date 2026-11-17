@@ -104,6 +104,18 @@ describe("RosterIssueGroups", () => {
 		expect(within(row).getAllByRole("button")).toHaveLength(1);
 	});
 
+	it("orders by person or by day with two small text buttons, the choice pressed", async () => {
+		render(<RosterIssueGroups issues={rosterIssuesFixture()} />);
+
+		const byDay = screen.getByRole("button", { name: copy.order.byDay });
+		expect(
+			screen.getByRole("button", { name: copy.order.byPerson })
+		).toHaveAttribute("aria-pressed", "true");
+		await userEvent.click(byDay);
+		expect(byDay).toHaveAttribute("aria-pressed", "true");
+		expect(byDay).toHaveClass("font-medium");
+	});
+
 	it("finds cover for a shift short and shows the rest", async () => {
 		const onFindCover = vi.fn();
 		const onShow = vi.fn();
