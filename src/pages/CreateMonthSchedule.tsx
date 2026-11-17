@@ -2,12 +2,13 @@ import { useQueries, useQuery } from "@tanstack/react-query";
 import { datesPlanQuery } from "@/features/scheduling/dates/api";
 import { useGenerateDates } from "@/features/scheduling/dates/useGenerateDates";
 import {
+	datesGenerationBody,
 	datesIn,
 	datesProblemOf,
 	previousBefore,
 } from "@/features/scheduling/dates/datesSetup";
 import type { PreviousWeek } from "@/features/scheduling/startingContext/startingGrid";
-import { formatPeriod, periodStartingOn } from "@/features/scheduling/periods";
+import { formatPeriod } from "@/features/scheduling/periods";
 import { Navigate, useNavigate, useSearch } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { useCallback, useId, useState } from "react";
@@ -32,11 +33,12 @@ import {
 } from "@/features/scheduling/months/api";
 import { BeforeGeneratePanel } from "@/features/scheduling/months/BeforeGeneratePanel";
 import {
+	datesStartBody,
 	MONTH_SETUP_DEFAULTS,
 	refusedWeeks,
+	startingWeekBody,
 	startingWeekOf,
 	startingWeeksOf,
-	weekNameOf,
 	weeksToCreate,
 	type MonthChoices,
 	type MonthSetup,
@@ -464,20 +466,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 		try {
 			const created = await scheduleActions.create.mutateAsync({
 				unit,
-				body: {
-					name: weekNameOf(monday),
-					periodStart: monday,
-					// A started week is generated from today on (owner, API ADR-0115): its draft covers today to Sunday.
-					...(monday < branchToday
-						? {
-								coveredFrom: branchToday,
-								coveredTo: periodStartingOn(monday).end,
-							}
-						: {}),
-					includeLeave: settings.includeLeave,
-					includedShiftIds: weekChoice.shiftIds,
-					includedConstraintIds: weekChoice.constraintIds,
-				},
+				body: startingWeekBody(monday, branchToday, weekChoice, settings),
 			});
 			setSavedStart({ scheduleId: created.scheduleId, dialog });
 		} catch (error) {
@@ -578,23 +567,17 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 	// is rostered the day before, a calm carried line when it is); the button saves that part as a draft
 	// covering its new days, which the run then generates.
 	const saveDatesStart = async (): Promise<void> => {
-		if (!unit || !everything || !datesStart?.newFrom || !datesStart.newTo)
-			return;
+		if (!unit || !everything || !datesStart) return;
+		const body = datesStartBody(
+			datesStart,
+			datesChoice.name,
+			choices[datesStart.periodStart] ?? everything,
+			settings
+		);
+		if (!body) return;
 		setProblem("");
-		const weekChoice = choices[datesStart.periodStart] ?? everything;
 		try {
-			const created = await scheduleActions.create.mutateAsync({
-				unit,
-				body: {
-					name: datesChoice.name.trim() || weekNameOf(datesStart.periodStart),
-					periodStart: datesStart.periodStart,
-					coveredFrom: datesStart.newFrom,
-					coveredTo: datesStart.newTo,
-					includeLeave: settings.includeLeave,
-					includedShiftIds: weekChoice.shiftIds,
-					includedConstraintIds: weekChoice.constraintIds,
-				},
-			});
+			const created = await scheduleActions.create.mutateAsync({ unit, body });
 			setSavedStart({ scheduleId: created.scheduleId, dialog: "days" });
 		} catch (error) {
 			setProblem(scheduleRefusalMessage(error, true, t));
@@ -694,22 +677,9 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 		if (!plan || !everything) return;
 		setProblem("");
 		try {
-			const answer = await datesGeneration.generate({
-				firstDay: values.firstDay,
-				lastDay: values.lastDay,
-				...(values.name.trim() === "" ? {} : { name: values.name.trim() }),
-				includeLeave: values.includeLeave,
-				newWeeks: plan.weeks
-					.filter((week) => week.action === "CREATE_AND_GENERATE")
-					.map((week) => {
-						const weekChoice = choices[week.periodStart] ?? everything;
-						return {
-							periodStart: week.periodStart,
-							includedShiftIds: weekChoice.shiftIds,
-							includedConstraintIds: weekChoice.constraintIds,
-						};
-					}),
-			});
+			const answer = await datesGeneration.generate(
+				datesGenerationBody(values, plan, choices, everything)
+			);
 			await navigate({
 				to: "/scheduling/months/$month",
 				params: { month: monthOf(values.firstDay) },
