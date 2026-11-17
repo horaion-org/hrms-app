@@ -35,6 +35,7 @@ import {
 	ungeneratedMonthFixture,
 } from "@/features/scheduling/months/fixtures";
 import { readinessFixture } from "@/features/scheduling/readiness/fixtures";
+import { datesIn } from "@/features/scheduling/dates/datesSetup";
 import {
 	datesGenerationFixture,
 	datesPlanFixture,
@@ -52,6 +53,7 @@ import {
 import {
 	enteredNightCell,
 	firstWeek,
+	unknownCell,
 } from "@/features/scheduling/startingContext/fixtures";
 import { allOf, withShiftsChosen } from "@/features/scheduling/weekChoice";
 import type { Workspace } from "@/features/workspace/api";
@@ -1453,6 +1455,110 @@ describe("Create schedules for a month: by dates", () => {
 			)
 		).toBeInTheDocument();
 		expect(next()).toBeDisabled();
+	});
+
+	/** From a ready Setup to Generate, clicks it, and answers what it posted. */
+	const generateDates = async (
+		user: ReturnType<typeof userEvent.setup>,
+		calls: ReturnType<typeof stubApi>
+	): Promise<unknown> => {
+		await vi.waitFor(() => {
+			expect(next()).toBeEnabled();
+		});
+		await user.click(next());
+		const generate = await screen.findByRole("button", { name: /^Generate / });
+		await vi.waitFor(() => {
+			expect(generate).toBeEnabled();
+		});
+		await user.click(generate);
+		await vi.waitFor(() => {
+			expect(
+				calls.some(
+					(call) =>
+						call.method === "POST" && call.path === `${DATES}/generation`
+				)
+			).toBe(true);
+		});
+		return calls.find(
+			(call) => call.method === "POST" && call.path === `${DATES}/generation`
+		)?.body;
+	};
+
+	it("given_restDaysEnteredForEveryone_when_onSetup_then_noPromptAndGeneratePosts", async () => {
+		const user = userEvent.setup();
+		const SCHEDULES = `${DEPARTMENT}/schedules`;
+		const plan = datesPlanFixture();
+		const [first, second] = plan.weeks;
+		const week = firstWeek();
+		// The 14 days before Thursday 19 Nov, Monday to Wednesday marked as rest days for everyone.
+		const days = datesIn({ from: "2026-11-05", to: "2026-11-18" });
+		const answered = {
+			...week,
+			days,
+			members: week.members.map((member) => ({
+				...member,
+				cells: days.map((date) =>
+					date >= "2026-11-16"
+						? {
+								...unknownCell(date),
+								kind: "OFF" as const,
+								source: "ENTERED" as const,
+								dayType: "REST",
+							}
+						: unknownCell(date)
+				),
+			})),
+		};
+		const { calls } = await open(NEW_DATES, {
+			...datesRoutes({
+				...plan,
+				weeks: [{ ...first!, action: "GENERATE", draftId: "s-gala" }, second!],
+			}),
+			[`GET ${SCHEDULES}/s-gala`]: reply(
+				scheduleFixture({
+					scheduleId: "s-gala",
+					periodStart: "2026-11-16",
+					periodEnd: "2026-11-22",
+					coveredFrom: "2026-11-19",
+					coveredTo: "2026-11-22",
+				})
+			),
+			[`GET ${SCHEDULES}/s-gala/starting-days`]: reply(answered),
+		});
+
+		await screen.findByRole("table", { name: "What this creates" });
+		// The draft's starting days answer every day before Thursday, so the question goes away.
+		await vi.waitFor(() => {
+			expect(
+				calls.some((call) => call.path === `${SCHEDULES}/s-gala/starting-days`)
+			).toBe(true);
+			expect(screen.queryByText(/^Were rest days already given/)).toBeNull();
+		});
+		const body = await generateDates(user, calls);
+
+		expect(body).toMatchObject({
+			firstDay: "2026-11-19",
+			lastDay: "2026-11-28",
+			newWeeks: [{ periodStart: "2026-11-23" }],
+		});
+	});
+
+	it("given_daysLeftUnknown_when_generated_then_allowedAndPromptSaidTheyCountAsNotWorked", async () => {
+		const user = userEvent.setup();
+		const { calls } = await open(NEW_DATES, datesRoutes());
+
+		expect(
+			await screen.findByText(
+				/^If you go on, Mon, Nov 16, Tue, Nov 17, and Wed, Nov 18 are taken as days nobody worked: no rest day is counted on them/
+			)
+		).toBeInTheDocument();
+		const body = await generateDates(user, calls);
+
+		expect(body).toMatchObject({
+			firstDay: "2026-11-19",
+			lastDay: "2026-11-28",
+			newWeeks: [{ periodStart: "2026-11-16" }, { periodStart: "2026-11-23" }],
+		});
 	});
 
 	it("given_datesChosen_when_generated_then_postsTheDatesTheNameAndOneChoicePerNewWeek", async () => {
