@@ -2,47 +2,9 @@ import {
 	PATTERN_DAYS,
 	type ConstraintField,
 	type ConstraintFieldSpec,
-	type ConstraintType,
 	type ConstraintTypeOption,
 } from "@/features/scheduling/constraints/api";
-
-/**
- * Each type's fields in the order its sentence reads them, so a manager fills
- * them in as they would say the constraint. The API's field list stays as it
- * is; only the dialog's order comes from here.
- */
-export const FIELD_READING_ORDER: Record<
-	ConstraintType,
-	ReadonlyArray<ConstraintField>
-> = {
-	SHIFT_STAFFING: ["SHIFT", "COMPARISON", "HEADCOUNT", "JOB_TITLE"],
-	SHIFT_STAFFING_WITH_STAND_INS: [
-		"SHIFT",
-		"HEADCOUNT",
-		"JOB_TITLE",
-		"STAND_INS_PER_PERSON",
-		"STAND_IN_JOB_TITLE",
-	],
-	ROLE_PRESENCE: ["SHIFT", "COMPARISON", "HEADCOUNT", "JOB_TITLE"],
-	DAYS_OFF_PER_PERIOD: ["COMPARISON", "DAYS_OFF", "PERIOD_WEEKS"],
-	AVOID_DAYS_OFF_ON: ["WEEKDAY"],
-	REST_BETWEEN_SHIFTS: ["REST_HOURS"],
-	BANNED_SHIFT_PATTERN: PATTERN_DAYS,
-	MAX_DAYS_WITHOUT_DAY_TYPES: ["DAYS_IN_A_ROW", "DAY_TYPE"],
-	DAY_TYPE_DAYS_PER_WEEK: ["COMPARISON", "DAY_TYPE_COUNT", "DAY_TYPE"],
-	MAX_WORK_HOURS_PER_DAY: ["WORK_HOURS_A_DAY"],
-	MAX_OVERTIME_HOURS_PER_MONTH: ["OVERTIME_HOURS_A_MONTH"],
-	SHORTEST_PART_SHIFT: ["PART_SHIFT_MINUTES"],
-	MAX_CALL_BACKS_PER_PERSON: ["CALL_BACKS", "CALL_BACK_SPAN_DAYS"],
-	PAY_RATES: [
-		"OVERTIME_PERCENT",
-		"REST_DAY_WORK_PERCENT",
-		"DAY_OFF_WORK_PERCENT",
-	],
-	NO_OVERTIME_WHEN_GENERATING: [],
-	OVERTIME_STRETCH: ["STRETCH_HOURS"],
-	KEEP_DAYS_OFF_TOGETHER: [],
-};
+import { fieldReadingOrderOf } from "@/features/scheduling/constraints/constraintTypeCatalogue";
 
 /**
  * Fields the API still takes that the dialog no longer shows: time off earned
@@ -52,11 +14,16 @@ export const HIDDEN_FIELDS: ReadonlyArray<ConstraintField> = [
 	"TIME_OFF_EARNED_PERCENT",
 ];
 
-/** A type's fields in reading order; a field the order does not know keeps its API place after the known ones. */
+/**
+ * A type's fields in the order its sentence reads them (its catalogue
+ * record's `fieldReadingOrder`), so a manager fills them in as they would say
+ * the constraint; the API's field list stays as it is. A field the order does
+ * not know keeps its API place after the known ones.
+ */
 export const fieldsInReadingOrder = (
 	option: Pick<ConstraintTypeOption, "type" | "fields">
 ): Array<ConstraintFieldSpec> => {
-	const order = FIELD_READING_ORDER[option.type];
+	const order = fieldReadingOrderOf(option.type);
 	const placeOf = (spec: ConstraintFieldSpec): number => {
 		const place = order.indexOf(spec.field);
 		return place === -1 ? order.length : place;
