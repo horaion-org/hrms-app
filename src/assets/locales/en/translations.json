@@ -6253,7 +6253,8 @@
 				"restPartTime": "Rest day: none set; the roster follows their availability.",
 				"costAt": "Cost: when the engine chooses who covers a gap, an overtime hour for these people weighs {{times}} a normal hour.",
 				"costSame": "Cost: extra hours for these people weigh the same as normal hours when the engine chooses cover."
-			}
+			},
+			"doesTitle": "What this changes"
 		},
 		"kinds": {
 			"legend": "What kind of week is it?",
@@ -6270,6 +6271,19 @@
 			"shiftWorkDescription": "Shifts of up to {{day}}; overtime counts by the week.",
 			"partTimeDescription": "Under {{line}} a week.",
 			"replaces": "Choosing a kind fills the hours, days and overtime below with its figures."
+		},
+		"sampleWeek": {
+			"title": "A sample week",
+			"off": "off",
+			"rest": "rest",
+			"restExample": "rest*",
+			"varies": "varies",
+			"legend": {
+				"NORMAL": "Normal day",
+				"HALF": "Half day",
+				"OFF": "Not working",
+				"REST": "Rest day"
+			}
 		}
 	},
 	"reports": {

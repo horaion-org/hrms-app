@@ -70,7 +70,12 @@ import {
 	weekFieldsOf,
 	type TermsFormValues,
 } from "@/features/employmentTerms/termsForm";
-import { readBackOf } from "@/features/employmentTerms/termsReadBack";
+import { sampleWeek } from "@/features/employmentTerms/sampleWeek";
+import {
+	readBackOf,
+	termsEffects,
+	termsExample,
+} from "@/features/employmentTerms/termsReadBack";
 import { TermsSummary } from "@/features/employmentTerms/TermsSummary";
 import { useEmploymentTermsActions } from "@/features/employmentTerms/useEmploymentTermsActions";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
@@ -787,7 +792,23 @@ const TermsForm = ({
 						</FormRow>
 					</Disclosure>
 				</form>
-				<TermsSummary className="md:self-start" readBack={readBack} />
+				<TermsSummary
+					className="md:self-start"
+					effects={fields ? termsEffects(fields, reference, t) : []}
+					example={fields ? termsExample(fields, reference, t) : undefined}
+					readBack={readBack}
+					sampleWeek={
+						fields
+							? sampleWeek({
+									daysPerWeek: fields.daysPerWeek,
+									weekMinutes: fields.weekMinutes,
+									dayMinutes: fields.dayMinutes,
+									restDay: fields.restDay,
+									partTime,
+								})
+							: undefined
+					}
+				/>
 			</div>
 		</Dialog>
 	);

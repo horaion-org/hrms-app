@@ -6253,7 +6253,8 @@
 				"restPartTime": "Día de descanso: ninguno fijado; el cuadrante sigue su disponibilidad.",
 				"costAt": "Coste: cuando el motor elige quién cubre un hueco, una hora extra de estas personas pesa {{times}} una hora normal.",
 				"costSame": "Coste: las horas adicionales de estas personas pesan lo mismo que las normales cuando el motor elige la cobertura."
-			}
+			},
+			"doesTitle": "Qué cambia esto"
 		},
 		"kinds": {
 			"legend": "¿Qué tipo de semana es?",
@@ -6270,6 +6271,19 @@
 			"shiftWorkDescription": "Turnos de hasta {{day}}; las horas extra se cuentan por semana.",
 			"partTimeDescription": "Menos de {{line}} a la semana.",
 			"replaces": "Al elegir un tipo, las horas, los días y las horas extra de abajo toman sus cifras."
+		},
+		"sampleWeek": {
+			"title": "Una semana de ejemplo",
+			"off": "libre",
+			"rest": "descanso",
+			"restExample": "descanso*",
+			"varies": "varía",
+			"legend": {
+				"NORMAL": "Día normal",
+				"HALF": "Media jornada",
+				"OFF": "No trabaja",
+				"REST": "Día de descanso"
+			}
 		}
 	},
 	"reports": {

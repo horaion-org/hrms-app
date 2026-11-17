@@ -3,10 +3,15 @@ import i18n from "i18next";
 import {
 	FIVE_DAY_WEEK,
 	REFERENCE,
-	SIX_DAY_SHIFT,
+	PART_TIME_20,
 } from "@/features/employmentTerms/fixtures";
+import { sampleWeek } from "@/features/employmentTerms/sampleWeek";
 import { termsFormValuesOf } from "@/features/employmentTerms/termsForm";
-import { readBackOf } from "@/features/employmentTerms/termsReadBack";
+import {
+	readBackOf,
+	termsEffects,
+	termsExample,
+} from "@/features/employmentTerms/termsReadBack";
 import { TermsSummary } from "@/features/employmentTerms/TermsSummary";
 import "@/common/i18n";
 
@@ -24,6 +29,15 @@ const meta = {
 	args: {
 		className: "max-w-138 px-4",
 		readBack: readBackFor(termsFormValuesOf(FIVE_DAY_WEEK)),
+		sampleWeek: sampleWeek({
+			daysPerWeek: 5,
+			weekMinutes: 2640,
+			dayMinutes: 528,
+			restDay: "SUN",
+			partTime: false,
+		}),
+		example: termsExample(FIVE_DAY_WEEK, REFERENCE, t),
+		effects: termsEffects(FIVE_DAY_WEEK, REFERENCE, t),
 	},
 } satisfies Meta<typeof TermsSummary>;
 
@@ -33,8 +47,19 @@ type Story = StoryObj<typeof meta>;
 
 export const FiveDayWeek: Story = {};
 
-export const ShiftWork: Story = {
-	args: { readBack: readBackFor(termsFormValuesOf(SIX_DAY_SHIFT)) },
+export const PartTime: Story = {
+	args: {
+		readBack: readBackFor(termsFormValuesOf(PART_TIME_20)),
+		sampleWeek: sampleWeek({
+			daysPerWeek: null,
+			weekMinutes: 1200,
+			dayMinutes: null,
+			restDay: "ROSTERED",
+			partTime: true,
+		}),
+		example: termsExample(PART_TIME_20, REFERENCE, t),
+		effects: termsEffects(PART_TIME_20, REFERENCE, t),
+	},
 };
 
 export const Unfinished: Story = {
