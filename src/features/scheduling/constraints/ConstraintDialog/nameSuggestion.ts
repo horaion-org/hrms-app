@@ -1,8 +1,9 @@
 import type { TFunction } from "i18next";
+import type { ConstraintType } from "@/features/scheduling/constraints/api";
 import {
+	isCountedOnShifts,
 	isRetiredConstraintType,
-	type ConstraintType,
-} from "@/features/scheduling/constraints/api";
+} from "@/features/scheduling/constraints/constraintTypeCatalogue";
 import { NAME_MAX_LENGTH } from "@/features/organisation/nameSchema";
 
 /**
@@ -17,10 +18,8 @@ export const nameSuggestion = (
 	// A retired kind is never offered, so it is never named; it keeps its label.
 	if (isRetiredConstraintType(type))
 		return t(`scheduling.constraints.types.${type}`);
-	const usesShift =
-		type === "SHIFT_STAFFING" || type === "SHIFT_STAFFING_WITH_STAND_INS";
 	const name =
-		usesShift && firstShiftName === undefined
+		isCountedOnShifts(type) && firstShiftName === undefined
 			? t(`scheduling.constraints.types.${type}`)
 			: t(`scheduling.constraints.nameSuggestions.${type}`, {
 					shift: firstShiftName,

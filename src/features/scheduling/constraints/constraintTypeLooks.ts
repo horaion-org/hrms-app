@@ -1,51 +1,29 @@
 import type { TFunction } from "i18next";
 import type { Heroicon } from "@/common/types";
 import {
-	BreakIcon,
-	CrossIcon,
-	GenerateScheduleIcon,
-	GridIcon,
-	HistoryIcon,
 	PeopleIcon,
-	PhoneIcon,
 	PlaceholderIcon,
 	SchedulingIcon,
-	SwapIcon,
-	TableIcon,
 	TimeIcon,
 } from "@/components/ui/Icon";
-import {
-	isRetiredConstraintType,
-	type ConstraintCategory,
-	type ConstraintType,
+import type {
+	ConstraintCategory,
+	ConstraintType,
 } from "@/features/scheduling/constraints/api";
+import {
+	CONSTRAINT_TYPE_CATALOGUE,
+	isRetiredConstraintType,
+} from "@/features/scheduling/constraints/constraintTypeCatalogue";
 
 /*
  * How each kind of constraint looks where it is offered or listed: its icon
- * here, and its one-line description and example in the translations
+ * from its catalogue record (`constraintTypeCatalogue.ts`), and its one-line
+ * description and example in the translations
  * (`scheduling.constraints.descriptions.<TYPE>` and `.examples.<TYPE>`), beside
  * its label and sentence. Which kinds exist, their category and their fields
- * come from the API's constraint options; this table only dresses them. A kind
- * without an entry shows a generic icon and its label alone.
+ * come from the API's constraint options; this module only dresses them. A
+ * kind without an icon shows a generic icon and its label alone.
  */
-
-/** The icon of each kind of constraint that has words of its own. */
-const TYPE_ICONS: Partial<Record<ConstraintType, Heroicon>> = {
-	SHIFT_STAFFING: PeopleIcon,
-	SHIFT_STAFFING_WITH_STAND_INS: SwapIcon,
-	DAYS_OFF_PER_PERIOD: SchedulingIcon,
-	AVOID_DAYS_OFF_ON: CrossIcon,
-	MAX_DAYS_WITHOUT_DAY_TYPES: HistoryIcon,
-	DAY_TYPE_DAYS_PER_WEEK: TableIcon,
-	KEEP_DAYS_OFF_TOGETHER: GridIcon,
-	REST_BETWEEN_SHIFTS: BreakIcon,
-	BANNED_SHIFT_PATTERN: CrossIcon,
-	MAX_WORK_HOURS_PER_DAY: TimeIcon,
-	MAX_OVERTIME_HOURS_PER_MONTH: HistoryIcon,
-	MAX_CALL_BACKS_PER_PERSON: PhoneIcon,
-	NO_OVERTIME_WHEN_GENERATING: GenerateScheduleIcon,
-	OVERTIME_STRETCH: TimeIcon,
-};
 
 /** The icon heading each category, where constraints are grouped by what they are for. */
 const CATEGORY_ICONS: Partial<Record<ConstraintCategory, Heroicon>> = {
@@ -62,13 +40,14 @@ export type ConstraintTypeLook = {
 	example?: string;
 };
 
-/** The look of a kind of constraint; one with no entry keeps its label and a generic icon. */
+/** The look of a kind of constraint; one with no icon keeps its label and a generic icon. */
 export const constraintTypeLookOf = (
 	type: ConstraintType,
 	t: TFunction
 ): ConstraintTypeLook => {
 	const label = t(`scheduling.constraints.types.${type}`);
-	const Icon = TYPE_ICONS[type];
+	// A name the app has no record for, such as one a newer API adds, has no icon.
+	const Icon = CONSTRAINT_TYPE_CATALOGUE[type]?.icon;
 	// A retired kind is only read on schedules generated with it, never offered, so it says no more than its label.
 	if (!Icon || isRetiredConstraintType(type))
 		return { Icon: PlaceholderIcon, label };

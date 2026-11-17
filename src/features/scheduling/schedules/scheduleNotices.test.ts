@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
+import { generatedScheduleFixture } from "@/features/scheduling/schedules/fixtures";
 import {
 	rosterShown,
+	scheduleNoticeFactsOf,
 	scheduleNotices,
 	type ScheduleNoticeFacts,
 	type ScheduleNoticeId,
+	type ScheduleWeekFacts,
 } from "./scheduleNotices";
 
 const GENERATED: ScheduleNoticeFacts = {
@@ -81,4 +84,66 @@ describe("scheduleNotices", () => {
 			expect(rosterShown(all)).toBe(shown);
 		}
 	);
+});
+
+describe("scheduleNoticeFactsOf", () => {
+	/** Nothing known of the week: no month read yet. */
+	const UNKNOWN_WEEK: ScheduleWeekFacts = {
+		weekPublishedElsewhere: false,
+		weekPassed: false,
+		monthWeeks: undefined,
+	};
+
+	it("reads a generated roster's own standing", () => {
+		expect(
+			scheduleNoticeFactsOf(
+				generatedScheduleFixture({ status: "GENERATED" }),
+				UNKNOWN_WEEK
+			)
+		).toEqual(GENERATED);
+	});
+
+	it("reads a roster still generating, with no roster yet", () => {
+		expect(
+			scheduleNoticeFactsOf(
+				generatedScheduleFixture({ status: "GENERATION_REQUESTED" }),
+				UNKNOWN_WEEK
+			)
+		).toMatchObject({ generating: true, hasRoster: false });
+	});
+
+	it("passes on what is known of the week", () => {
+		expect(
+			scheduleNoticeFactsOf(generatedScheduleFixture({ status: "GENERATED" }), {
+				...UNKNOWN_WEEK,
+				weekPublishedElsewhere: true,
+				weekPassed: true,
+			})
+		).toMatchObject({ weekPublishedElsewhere: true, weekPassed: true });
+	});
+
+	it.each<[string, ScheduleWeekFacts["monthWeeks"], boolean]>([
+		["its own week says so", [{ scheduleId: "s-1", rulesChanged: true }], true],
+		[
+			"only another schedule's week says so",
+			[
+				{ scheduleId: "s-2", rulesChanged: true },
+				{ scheduleId: "s-1", rulesChanged: false },
+			],
+			false,
+		],
+		[
+			"the month read has no answer",
+			[{ scheduleId: "s-1", rulesChanged: null }],
+			false,
+		],
+		["the month is not read yet", undefined, false],
+	])("says the rules changed only when %s", (_, monthWeeks, rulesChanged) => {
+		expect(
+			scheduleNoticeFactsOf(generatedScheduleFixture({ status: "GENERATED" }), {
+				...UNKNOWN_WEEK,
+				monthWeeks,
+			}).rulesChanged
+		).toBe(rulesChanged);
+	});
 });

@@ -1,5 +1,5 @@
 export {
 	PublishScheduleDialog,
-	type PublishMode,
 	type PublishScheduleDialogProps,
 } from "./PublishScheduleDialog";
+export { publishModeOf, type PublishMode } from "./publishMode";

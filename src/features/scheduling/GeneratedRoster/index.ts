@@ -1,2 +1,2 @@
 export { GeneratedRoster, type GeneratedRosterProps } from "./GeneratedRoster";
-export type { RosterEditing } from "./rosterEditing";
+export { rosterEditingOf, type RosterEditing } from "./rosterEditing";

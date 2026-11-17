@@ -5,6 +5,7 @@ import {
 	CONSTRAINT_TYPES,
 	type ConstraintType,
 } from "@/features/scheduling/constraints/api";
+import { CONSTRAINT_TYPE_CATALOGUE } from "@/features/scheduling/constraints/constraintTypeCatalogue";
 import { requirementTagTone } from "@/features/scheduling/constraints/requirementTagTones";
 import type { PanelItem } from "@/features/scheduling/roster/rosterPanels";
 import type {
@@ -29,29 +30,14 @@ const key = "scheduling.rulesCheck";
  * no setting read by the roster check's label.
  */
 
-/** Each name a rule goes by, and the constraint type a manager sets it as. */
-const RULE_TYPES: ReadonlyMap<string, ConstraintType> = new Map<
-	string,
-	ConstraintType
->([
-	["shift_demand_requirement", "SHIFT_STAFFING"],
-	["shift_demand_with_substitutes", "SHIFT_STAFFING_WITH_STAND_INS"],
-	["shift_presence_requirement", "ROLE_PRESENCE"],
-	["off_requirement_per_horizon", "DAYS_OFF_PER_PERIOD"],
-	["avoid_off_on_weekdays", "AVOID_DAYS_OFF_ON"],
-	["days_not_worked_together", "KEEP_DAYS_OFF_TOGETHER"],
-	["minimum_rest_between_shifts", "REST_BETWEEN_SHIFTS"],
-	["consecutive_day_work_patterns", "BANNED_SHIFT_PATTERN"],
-	["max_days_without_day_types", "MAX_DAYS_WITHOUT_DAY_TYPES"],
-	["days_of_day_types_per_period", "DAY_TYPE_DAYS_PER_WEEK"],
-	["max_work_hours_per_day", "MAX_WORK_HOURS_PER_DAY"],
-	["most_minutes_a_day", "MAX_WORK_HOURS_PER_DAY"],
-	["max_overtime_hours_per_month", "MAX_OVERTIME_HOURS_PER_MONTH"],
-	["most_overtime_minutes_a_month", "MAX_OVERTIME_HOURS_PER_MONTH"],
-	["shortest_part_shift", "SHORTEST_PART_SHIFT"],
-	["most_call_backs_per_person", "MAX_CALL_BACKS_PER_PERSON"],
-	["no_extra_hours_when_generating", "NO_OVERTIME_WHEN_GENERATING"],
-]);
+/** Each name a rule goes by, and the constraint type a manager sets it as (its record's `engineRuleNames`). */
+const RULE_TYPES: ReadonlyMap<string, ConstraintType> = new Map(
+	CONSTRAINT_TYPES.flatMap((type) =>
+		CONSTRAINT_TYPE_CATALOGUE[type].engineRuleNames.map(
+			(rule) => [rule, type] as const
+		)
+	)
+);
 
 /** The engine's rules that are no setting of their own, each with the roster check's label. */
 const LABELLED_RULES = [
@@ -85,7 +71,8 @@ export const NAMED_RULES: ReadonlyArray<string> = [
  * Every rule the engine registers, one per module of its `rostering/constraints`
  * folder (the module name is the rule name). Copied here so a test can fail when
  * the app has no label for one: a new engine rule must be added to this list
- * together with its label (`RULE_TYPES` or `LABELLED_RULES`).
+ * together with its label (a constraint type's `engineRuleNames` in
+ * `constraintTypeCatalogue.ts`, or `LABELLED_RULES`).
  */
 export const ENGINE_RULE_NAMES: ReadonlyArray<string> = [
 	"at_most_one_role_assignment_per_day",
