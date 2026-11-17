@@ -98,6 +98,19 @@ export const formatWeekDates = (
 		}) as RangeFormat
 	).formatRange(dayjs(week.start).toDate(), dayjs(week.end).toDate());
 
+/** A part's days with their weekdays, as the week's schedules are listed, e.g. "Wed, Feb 17 – Fri, Feb 19". */
+export const formatPartDays = (
+	days: { start: string; end: string },
+	language: string
+): string =>
+	(
+		new Intl.DateTimeFormat(language, {
+			weekday: "short",
+			day: "numeric",
+			month: "short",
+		}) as RangeFormat
+	).formatRange(dayjs(days.start).toDate(), dayjs(days.end).toDate());
+
 /**
  * The week that starts in the month before and ends in this one, shown on
  * its Monday's month only; undefined when the month starts on a Monday.

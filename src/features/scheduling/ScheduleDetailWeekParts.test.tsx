@@ -1,4 +1,4 @@
-import { screen } from "@testing-library/react";
+import { screen, within } from "@testing-library/react";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
 import {
@@ -26,7 +26,7 @@ import {
 
 /*
  * The roster page of a schedule covering part of its week (API ADR-0113):
- * what it says of the week's other days.
+ * what it says of the week's other days, and the row of the week's schedules.
  */
 
 beforeAll(async () => {
@@ -160,6 +160,13 @@ describe("the owner's week of 15 February 2027: Wed–Fri, then Sat–Sun", () =
 		expect(
 			screen.getByRole("link", { name: /^Open Feb 20\s?–\s?21, 2027$/ })
 		).toHaveAttribute("href", "/scheduling/s-2");
+		const row = screen.getByRole("navigation", { name: "Schedules this week" });
+		expect(
+			within(row).getByText(/Wed, Feb 17\s?–\s?Fri, Feb 19/)
+		).toHaveAttribute("aria-current", "true");
+		expect(
+			within(row).getByRole("link", { name: /Sat, Feb 20\s?–\s?Sun, Feb 21/ })
+		).toHaveAttribute("href", "/scheduling/s-2");
 	});
 
 	it("given_theWeekendPart_when_shown_then_mondayTuesdayHavePassedAndWednesdayToFridayLinksItsSchedule", async () => {
@@ -189,6 +196,13 @@ describe("the owner's week of 15 February 2027: Wed–Fri, then Sat–Sun", () =
 		expect(
 			screen.getByRole("link", { name: /^Open Feb 17\s?–\s?19, 2027$/ })
 		).toHaveAttribute("href", "/scheduling/s-2");
+		const row = screen.getByRole("navigation", { name: "Schedules this week" });
+		expect(
+			within(row).getByText(/Sat, Feb 20\s?–\s?Sun, Feb 21/)
+		).toHaveAttribute("aria-current", "true");
+		expect(
+			within(row).getByRole("link", { name: /Wed, Feb 17\s?–\s?Fri, Feb 19/ })
+		).toHaveAttribute("href", "/scheduling/s-2");
 	});
 });
 
@@ -199,7 +213,7 @@ describe("a schedule covering part of its week of 12 October 2026", () => {
 		coveredTo: "2026-10-17",
 	};
 
-	it("given_aPartEndingSaturday_when_shown_then_offersScheduleSunday", async () => {
+	it("given_aPartEndingSaturday_when_shown_then_offersScheduleSundayAndNoRowOfSchedules", async () => {
 		vi.useFakeTimers({
 			toFake: ["Date"],
 			now: new Date("2026-10-14T09:00:00+08:00"),
@@ -223,6 +237,9 @@ describe("a schedule covering part of its week of 12 October 2026", () => {
 				/^This schedule covers Oct 12\s?–\s?17, 2026\. Oct 18, 2026 can be scheduled later\.$/
 			)
 		).toBeInTheDocument();
+		expect(
+			screen.queryByRole("navigation", { name: "Schedules this week" })
+		).toBeNull();
 	});
 
 	it("given_aLaterPartExists_when_shown_then_saysItsDayIsInIt_andNoButton", async () => {

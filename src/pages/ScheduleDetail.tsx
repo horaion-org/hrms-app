@@ -32,6 +32,7 @@ import {
 	monthOf,
 } from "@/features/scheduling/months/monthWeeks";
 import {
+	listsWeekParts,
 	rosterWeekLink,
 	rosterWeeksOf,
 } from "@/features/scheduling/months/rosterWeeks";
@@ -84,6 +85,7 @@ import {
 } from "@/features/scheduling/schedules/publishOrder";
 import { partLinesOf } from "@/features/scheduling/schedules/partLines";
 import { WeekPartsCallout } from "@/features/scheduling/schedules/WeekPartsCallout";
+import { WeekPartLinks } from "@/features/scheduling/months/WeekPartLinks";
 import { isoDateIn } from "@/features/scheduling/roster/roster";
 import { scheduleDetailItems } from "@/features/scheduling/schedules/scheduleDetails";
 import {
@@ -491,7 +493,7 @@ const ApiSchedule = ({
 		leave: permissions.mayHandleLeave ? { viewerMembershipId } : undefined,
 	});
 	const schedule = state.schedule;
-	// A part of its week (API ADR-0113): what holds the week's other days.
+	// A part of its week (API ADR-0113): what holds the week's other days, and the week's schedules.
 	const weekParts =
 		scheduleMonth?.weeks.find(
 			(week) => week.periodStart === schedule.periodStart
@@ -747,6 +749,14 @@ const ApiSchedule = ({
 				lines={partLines}
 				mayCreateHere={permissions.mayCreateHere}
 			/>
+			{listsWeekParts(weekParts) && (
+				<WeekPartLinks
+					className="mt-6"
+					currentScheduleId={schedule.scheduleId}
+					departmentId={schedule.departmentId}
+					parts={weekParts}
+				/>
+			)}
 			{rosterShown(noticeFacts) && (
 				<RosterBody
 					approval={trail}

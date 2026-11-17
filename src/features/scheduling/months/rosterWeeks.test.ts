@@ -3,8 +3,10 @@ import { authTestI18n } from "@/features/auth/testingI18n";
 import {
 	monthWeekFixture,
 	scheduleMonthFixture,
+	twoPartWeekFixture,
 } from "@/features/scheduling/months/fixtures";
 import {
+	listsWeekParts,
 	rosterWeekLink,
 	rosterWeeksOf,
 	weekScheduleLink,
@@ -89,5 +91,16 @@ describe("weekScheduleLink", () => {
 		],
 	] as const)("given_a%sSchedule_when_opened_then_goesThere", (state, link) => {
 		expect(weekScheduleLink({ scheduleId: "s-1", state }, "d-1")).toEqual(link);
+	});
+});
+
+describe("listsWeekParts", () => {
+	it("given_twoParts_when_asked_then_listed", () => {
+		expect(listsWeekParts(twoPartWeekFixture())).toBe(true);
+	});
+
+	it("given_onePartOrNone_when_asked_then_notListed", () => {
+		expect(listsWeekParts(twoPartWeekFixture().slice(0, 1))).toBe(false);
+		expect(listsWeekParts([])).toBe(false);
 	});
 });

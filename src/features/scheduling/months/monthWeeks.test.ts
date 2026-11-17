@@ -5,6 +5,7 @@ import {
 	earlierReviewMonth,
 	formatMonth,
 	formatMonthName,
+	formatPartDays,
 	formatWeekDates,
 	mondaysIn,
 	monthChoicesFrom,
@@ -196,5 +197,19 @@ describe("waitingWeekBefore", () => {
 	it("given_noEarlierMonthWithAWeekToReview_when_asked_then_none", () => {
 		expect(waitingWeekBefore([november], "2026-11")).toBeUndefined();
 		expect(waitingWeekBefore([], "2027-01")).toBeUndefined();
+	});
+});
+
+describe("formatPartDays", () => {
+	it("given_aRunOfDays_when_formatted_then_eachEndHasItsWeekday", () => {
+		expect(
+			formatPartDays({ start: "2027-02-17", end: "2027-02-19" }, "en-GB")
+		).toMatch(/^Wed 17 Feb\s?–\s?Fri 19 Feb$/);
+	});
+
+	it("given_oneDay_when_formatted_then_thatDayAlone", () => {
+		expect(
+			formatPartDays({ start: "2027-02-20", end: "2027-02-20" }, "en-GB")
+		).toBe("Sat 20 Feb");
 	});
 });

@@ -4,6 +4,7 @@ import type {
 	MonthWeek,
 	ScheduleMonth,
 	ScheduleMonthSummary,
+	WeekPart,
 } from "@/features/scheduling/months/api";
 
 /*
@@ -155,3 +156,25 @@ export const monthGenerationFixture = (
 	})),
 	...overrides,
 });
+
+/** The owner's week of 15 Feb 2027 in two parts: Wednesday to Friday (s-1), then Saturday and Sunday (s-2). */
+export const twoPartWeekFixture = (): Array<WeekPart> => [
+	{
+		scheduleId: "s-1",
+		name: "Week of 2027-02-15",
+		named: false,
+		coveredFrom: "2027-02-17",
+		coveredTo: "2027-02-19",
+		state: "TO_REVIEW",
+		redoing: false,
+	},
+	{
+		scheduleId: "s-2",
+		name: "Week of 2027-02-15",
+		named: false,
+		coveredFrom: "2027-02-20",
+		coveredTo: "2027-02-21",
+		state: "TENTATIVE",
+		redoing: false,
+	},
+];

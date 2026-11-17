@@ -49,3 +49,7 @@ export const weekScheduleLink = (
 		departmentId,
 		status: state === "DRAFT" ? "DRAFT" : "GENERATED",
 	});
+
+/** Whether a week's schedules are listed by their days: only when it holds more than one (API ADR-0113). */
+export const listsWeekParts = (parts: ReadonlyArray<unknown>): boolean =>
+	parts.length > 1;
