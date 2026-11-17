@@ -404,6 +404,7 @@
 		},
 		"flows": {
 			"add": "Añadir flujo",
+			"name": "Nombre",
 			"appliesTo": "Se aplica a",
 			"steps": "Pasos",
 			"status": "Estado",
