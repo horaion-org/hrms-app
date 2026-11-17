@@ -40,7 +40,7 @@ const LAYER_RULES = [
 		forbidden: ["@/features/", "@/pages/", "@/routes/", "@/routeTree.gen"],
 		checksTestsAndStories: true,
 		remedy:
-			"a shared component knows no feature; pass the value in as a prop, or move the helper to src/common",
+			"a shared component knows no feature; pass the value in as a prop, or move the helper to src/common (a test or story loads copy with import \"@/common/i18n\")",
 	},
 	{
 		layer: "src/features/",
