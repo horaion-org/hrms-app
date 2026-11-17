@@ -35,6 +35,7 @@ export const monthWeekFixture = (
 	scheduleId: "s-1",
 	days: coverDays(overrides.periodStart ?? "2026-11-02"),
 	handChangedDays: 0,
+	queueRefusal: null,
 	...overrides,
 });
 
