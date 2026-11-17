@@ -605,7 +605,9 @@
 			"weekInPast": "Esta semana ya terminó, así que su disponibilidad no se puede cambiar. Elige esta semana o una posterior.",
 			"weekNotMonday": "No encontramos esa semana. Recarga la página y vuelve a elegirla."
 		},
-		"controls": "Controles de disponibilidad"
+		"controls": "Controles de disponibilidad",
+		"saved": "Disponibilidad guardada.",
+		"weekReset": "Esta semana vuelve a seguir la disponibilidad habitual."
 	},
 	"shiftPreferences": {
 		"title": "Preferencias de turno",
@@ -673,7 +675,8 @@
 			"SHIFT_NOT_IN_ROSTER": "El turno no está en este horario",
 			"SHIFT_NOT_ON_DAY": "El turno no se trabaja ese día",
 			"ROLE_NOT_STAFFED": "El turno no necesita este puesto"
-		}
+		},
+		"saved": "Preferencias de turno guardadas."
 	},
 	"dialog": {
 		"close": "Cerrar"
@@ -4509,7 +4512,8 @@
 			"save": "Guardar días",
 			"invalid": "No se pudo guardar un día. Comprueba que su turno sigue en uso e inténtalo de nuevo.",
 			"notDraft": "Este horario ya se generó, así que su punto de partida ya no puede cambiar.",
-			"failed": "No se pudieron guardar los días. Inténtalo de nuevo."
+			"failed": "No se pudieron guardar los días. Inténtalo de nuevo.",
+			"saved": "Días anteriores a esta semana guardados."
 		},
 		"openingHours": {
 			"title": "Horas ya trabajadas este mes (del {{from}} al {{to}})",
@@ -4543,7 +4547,8 @@
 			"published": "Este cuadrante está publicado, así que las horas antes de él ya no pueden cambiar aquí.",
 			"failed": "No se pudieron guardar las horas. Inténtalo de nuevo.",
 			"cancel": "Cancelar",
-			"save": "Guardar horas"
+			"save": "Guardar horas",
+			"saved": "Horas ya trabajadas este mes guardadas."
 		},
 		"issues": {
 			"conflict": "Un conflicto en este día",

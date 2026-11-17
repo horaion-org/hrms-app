@@ -94,6 +94,7 @@ export const useReplaceMyPreferenceDay = (
 	return useMutation({
 		mutationFn: ({ date, shiftIds }) =>
 			replaceMyPreferenceDay(companyId, date, shiftIds),
+		meta: { successMessage: "shiftPreferences.saved" },
 		onSuccess: () =>
 			client.invalidateQueries({
 				queryKey: myPreferenceWeekKey(companyId, weekStartMonday),
@@ -115,6 +116,7 @@ export const useReplaceMemberPreferenceDay = (
 	return useMutation({
 		mutationFn: ({ date, shiftIds }) =>
 			replaceMemberPreferenceDay(companyId, membershipId, date, shiftIds),
+		meta: { successMessage: "shiftPreferences.saved" },
 		onSuccess: () =>
 			Promise.all([
 				client.invalidateQueries({
