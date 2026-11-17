@@ -2,7 +2,7 @@ import { useQueries, useQuery } from "@tanstack/react-query";
 import { Navigate, useNavigate, useSearch } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import type { TFunction } from "i18next";
-import { useCallback, useId, useReducer, useState } from "react";
+import { useCallback, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
@@ -13,7 +13,6 @@ import { ArrowLeftIcon, ArrowRightIcon } from "@/components/ui/Icon";
 import { Stepper, StepperStep } from "@/components/ui/Stepper";
 import { constraintsQuery } from "@/features/scheduling/constraints/api";
 import { useConstraintOptions } from "@/features/scheduling/constraints/useConstraintOptions";
-import { ForecastStep } from "@/features/scheduling/ForecastStep";
 import { OpeningHoursCallout } from "@/features/scheduling/hours/OpeningHoursCallout";
 import { startsAfterFirst } from "@/features/scheduling/hours/openingSummary";
 import { MonthChoiceDialog } from "@/features/scheduling/MonthChoiceDialog";
@@ -35,7 +34,6 @@ import {
 	type MonthSetup,
 } from "@/features/scheduling/months/monthGeneration";
 import {
-	formatMonth,
 	formatMonthName,
 	formatWeekDates,
 	monthChoicesFrom,
@@ -69,14 +67,7 @@ import {
 	type FixLink,
 } from "@/features/scheduling/readiness/ReadinessGateCallout";
 import { useSchedulingReadiness } from "@/features/scheduling/readiness/useSchedulingReadiness";
-import {
-	emptyScheduleDraft,
-	scheduleDraftReducer,
-} from "@/features/scheduling/scheduleDraft";
-import {
-	scheduleQuery,
-	type ScheduleShift,
-} from "@/features/scheduling/schedules/api";
+import { scheduleQuery } from "@/features/scheduling/schedules/api";
 import {
 	monthGenerationRefusal,
 	scheduleRefusalMessage,
@@ -86,10 +77,7 @@ import {
 	useScheduleActions,
 } from "@/features/scheduling/schedules/useSchedule";
 import { SCHEDULING_UNIT_RULES } from "@/features/scheduling/schedules/schedulesUnitRules";
-import {
-	departmentShiftsQuery,
-	type DepartmentShift,
-} from "@/features/scheduling/shifts/api";
+import { departmentShiftsQuery } from "@/features/scheduling/shifts/api";
 import { StartingContextCallout } from "@/features/scheduling/startingContext/StartingContextCallout";
 import {
 	StartingContextSection,
@@ -119,12 +107,6 @@ import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 import { departmentChoices } from "@/features/workspace/unitChoices";
 
 const key = "scheduling.months.create";
-
-/** The Forecast step's rows: the Department's live shifts, each one used. */
-const forecastShiftsOf = (
-	shifts: Array<DepartmentShift>
-): Array<ScheduleShift> =>
-	shifts.map((shift) => ({ ...shift, included: true, frozen: false }));
 
 /**
  * What the month's weeks use, as one line: every week everything, or how
@@ -161,7 +143,7 @@ const monthUsesLine = (
 };
 
 /**
- * Create schedules for a month: Setup, Forecast and Generate, as the week
+ * Create schedules for a month: Setup and Generate, as the week
  * wizard's steps. The URL names the step, the Department and the month;
  * the setup and the per-week choices stay in the page, and nothing is
  * saved before Generate, which posts the month through useGenerateMonth and
@@ -215,11 +197,6 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 		scheduleId: string;
 		dialog: StartingPointDialog;
 	}>();
-	const [forecast, dispatch] = useReducer(
-		scheduleDraftReducer,
-		undefined,
-		emptyScheduleDraft
-	);
 	const [problem, setProblem] = useState("");
 	const setupFormId = useId();
 	// Another Department or month has other weeks: its choices and ticks start again from the defaults.
@@ -714,35 +691,6 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 							// Later steps use exactly the ticks Setup showed.
 							setTicks(ticked);
 							goTo(1, values);
-						}}
-					/>
-				)}
-				{step === "forecast" && (
-					<ForecastStep
-						allocations={forecast.allocations}
-						demand={forecast.demand}
-						mode={forecast.forecastMode}
-						periodLabel={formatMonth(month, language)}
-						shifts={forecastShiftsOf(shifts.data ?? [])}
-						onAllocationChange={(shiftId, jobTitleId, allocated) => {
-							dispatch({
-								type: "allocationChanged",
-								shiftId,
-								jobTitleId,
-								allocated,
-							});
-						}}
-						onAutoFill={() => {
-							dispatch({
-								type: "demandAutoFilled",
-								shifts: forecastShiftsOf(shifts.data ?? []),
-							});
-						}}
-						onDemandChange={(slotStart, jobTitleId, staff) => {
-							dispatch({ type: "demandChanged", slotStart, jobTitleId, staff });
-						}}
-						onModeChange={(mode) => {
-							dispatch({ type: "forecastModeChosen", mode });
 						}}
 					/>
 				)}

@@ -1,5 +1,5 @@
 /** The Create Schedule steps in order; the URL names the current one. */
-export const SCHEDULE_STEPS = ["setup", "forecast", "generate"] as const;
+export const SCHEDULE_STEPS = ["setup", "generate"] as const;
 
 export type ScheduleStep = (typeof SCHEDULE_STEPS)[number];
 

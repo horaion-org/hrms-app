@@ -17,7 +17,6 @@ import { Toast } from "@/components/ui/Toast";
 import { placeOf } from "@/features/organisation/assignmentTargets";
 import { useConstraintOptions } from "@/features/scheduling/constraints/useConstraintOptions";
 import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
-import { ForecastStep } from "@/features/scheduling/ForecastStep";
 import { GenerateStep } from "@/features/scheduling/GenerateStep";
 import {
 	publishedRosterOtherThan,
@@ -155,7 +154,7 @@ const frozenNoticeKey = (
 };
 
 /**
- * The Create Schedule steps: Setup, Forecast and Generate. The URL names the
+ * The Create Schedule steps: Setup and Generate. The URL names the
  * current step and, once Setup is done, the saved draft (`scheduleId` with
  * its `departmentId`, whose routes name it); a later step without a draft
  * sends the person back to Setup. A new draft uses every live shift and
@@ -312,13 +311,6 @@ export const CreateSchedule = (): FunctionComponent => {
 	const notify = (message: string): void => {
 		setToast((previous) => ({ id: (previous?.id ?? 0) + 1, message }));
 	};
-	const changeAllocation = (
-		shiftId: string,
-		jobTitleId: string,
-		allocated: number
-	): void => {
-		dispatch({ type: "allocationChanged", shiftId, jobTitleId, allocated });
-	};
 
 	const current = SCHEDULE_STEPS.indexOf(step);
 	if (current > 0 && named === undefined)
@@ -455,13 +447,11 @@ export const CreateSchedule = (): FunctionComponent => {
 			? offered
 			: withPeriod(offered, chosenStart, today);
 	const period = chosenStart ? periodStartingOn(chosenStart) : firstPeriod;
-	const periodLabel = formatPeriod(period, formattingLocale(i18n));
 	const isLast = current === SCHEDULE_STEPS.length - 1;
 	// Each step is ticked for what the draft holds, not for being behind the current one.
 	const completion = stepCompletion({
 		saved: saved !== undefined,
 		frozen,
-		currentIndex: current,
 	});
 	const busy = scheduleActions.update.isPending || monthGeneration.isPending;
 	const lockedDepartment = saved && {
@@ -655,25 +645,6 @@ export const CreateSchedule = (): FunctionComponent => {
 						readOnly={readOnly}
 						onPeriodChange={setSetupPeriodStart}
 						onSubmit={submitSetup}
-					/>
-				)}
-				{step === "forecast" && (
-					<ForecastStep
-						allocations={draft.allocations}
-						demand={draft.demand}
-						mode={draft.forecastMode}
-						periodLabel={periodLabel}
-						shifts={included}
-						onAllocationChange={changeAllocation}
-						onAutoFill={() => {
-							dispatch({ type: "demandAutoFilled", shifts: included });
-						}}
-						onDemandChange={(slotStart, jobTitleId, staff) => {
-							dispatch({ type: "demandChanged", slotStart, jobTitleId, staff });
-						}}
-						onModeChange={(mode) => {
-							dispatch({ type: "forecastModeChosen", mode });
-						}}
 					/>
 				)}
 				{step === "generate" && (
