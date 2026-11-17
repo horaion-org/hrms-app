@@ -169,6 +169,26 @@ export const leftShortNextLine = (
 		? t(`${key}.leftShortNext`)
 		: undefined;
 
+/**
+ * The toast after applying an option that leaves hours short, which closes
+ * Find cover: "Roster changed. Night on Tue, 24 Nov is still 1 short 23:00 –
+ * 07:00: find cover again for those hours." Nothing for an option that fills
+ * the gap, so the toast says only "Roster changed.".
+ */
+export const stillShortAfterApplying = (
+	option: RepairOption,
+	gap: { shift: string; day: string },
+	t: TFunction
+): string | undefined => {
+	if (!option.feasible || option.leftShort.length === 0) return undefined;
+	return t(`${key}.appliedStillShort`, {
+		count: option.leftShortBy ?? 1,
+		shift: gap.shift,
+		day: gap.day,
+		times: option.leftShort.map((span) => spanText(span, t)).join(", "),
+	});
+};
+
 /** What an option still leaves short: "Still 1 short 07:00 – 09:00"; nothing when it fills the gap. */
 export const leftShortLine = (
 	option: RepairOption,

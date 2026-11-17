@@ -144,7 +144,10 @@ export const GeneratedRoster = ({
 }: GeneratedRosterProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
-	const [applied, setApplied] = useState<RosterChange>();
+	const [applied, setApplied] = useState<{
+		change: RosterChange;
+		stillShort?: string;
+	}>();
 	const sidePanelId = useId();
 	// Issues says what is true now: the last validation's gaps and broken rules over the generation's.
 	const validating = validation !== undefined;
@@ -226,7 +229,8 @@ export const GeneratedRoster = ({
 	};
 	const latestChange = editing && (
 		<LastRosterChange
-			applied={applied}
+			applied={applied?.change}
+			appliedStillShort={applied?.stillShort}
 			notifiesMembers={editing.notifiesMembers}
 			revision={editing.revision}
 			showsLatest={openList === "changes"}
@@ -276,8 +280,8 @@ export const GeneratedRoster = ({
 			onCloseCover={roster.closeCover}
 			onFindCover={editing ? roster.openCover : undefined}
 			onPreviewDays={roster.onPreviewDays}
-			onApplied={(change) => {
-				setApplied(change);
+			onApplied={(change, stillShort) => {
+				setApplied({ change, stillShort });
 				roster.close();
 			}}
 		/>

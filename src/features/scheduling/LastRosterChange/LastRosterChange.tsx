@@ -29,6 +29,11 @@ export type LastRosterChangeProps = {
 	revision: number;
 	/** A change the person just applied: confirmed in a toast that offers Undo. */
 	applied?: RosterChange;
+	/**
+	 * What the toast says instead of "Roster changed." when the change was an
+	 * engine option that leaves hours short: those hours, and to find cover again.
+	 */
+	appliedStillShort?: string;
 	/** The toast went away, by itself or after Undo. */
 	onAppliedDismissed: () => void;
 	/** The roster is published: an undo tells the people whose days it changes back, so it always asks first. */
@@ -56,6 +61,7 @@ export const LastRosterChange = ({
 	target,
 	revision,
 	applied,
+	appliedStillShort,
 	onAppliedDismissed,
 	notifiesMembers = false,
 	showsLatest = true,
@@ -178,7 +184,7 @@ export const LastRosterChange = ({
 					}
 					onDismiss={onAppliedDismissed}
 				>
-					{t(`${key}.applied`)}
+					{appliedStillShort ?? t(`${key}.applied`)}
 				</Toast>
 			)}
 		</>

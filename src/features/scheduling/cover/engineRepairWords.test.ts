@@ -16,6 +16,7 @@ import {
 	leftShortNextLine,
 	moveLine,
 	optionHeadingKey,
+	stillShortAfterApplying,
 	optionsInOrder,
 	repairRefusalOf,
 	type RepairNames,
@@ -105,6 +106,20 @@ describe("leftShortNextLine", () => {
 		);
 		expect(leftShortNextLine(feasibleRepair(), t)).toBeUndefined();
 		expect(leftShortNextLine(infeasibleRepair(), t)).toBeUndefined();
+	});
+});
+
+describe("stillShortAfterApplying", () => {
+	const gap = { shift: "Front Desk AM", day: "Sat, Oct 17" };
+
+	it("says which hours an applied option leaves short, and to find cover again", () => {
+		expect(stillShortAfterApplying(partStretchRepair(), gap, t)).toBe(
+			"Roster changed. Front Desk AM on Sat, Oct 17 is still 1 short 09:00 – 13:00: find cover again for those hours."
+		);
+	});
+
+	it("says nothing more for an option that fills the gap", () => {
+		expect(stillShortAfterApplying(feasibleRepair(), gap, t)).toBeUndefined();
 	});
 });
 

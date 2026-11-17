@@ -47,8 +47,11 @@ export type RosterSidePanelSlotProps = {
 	};
 	onClose: () => void;
 	onPreviewDays: (keys: ReadonlyArray<string>) => void;
-	/** A hand change went through: the roster says so, and the panel closes. */
-	onApplied: (change: RosterChange) => void;
+	/**
+	 * A hand change went through: the roster says so, and the panel closes.
+	 * Find cover adds what an engine option it applied still leaves short.
+	 */
+	onApplied: (change: RosterChange, stillShort?: string) => void;
 	/** Opens Find cover for a short shift; given only where the roster may be changed. */
 	onFindCover?: (gap: CoverGapRequest) => void;
 	/** Closes Find cover back to Issues. */
@@ -157,8 +160,8 @@ export const RosterSidePanelSlot = ({
 				onClose={onCloseCover}
 				onCoverRecorded={onCloseCover}
 				onPreviewDays={onPreviewDays}
-				onApplied={(change) => {
-					onApplied(change);
+				onApplied={(change, stillShort) => {
+					onApplied(change, stillShort);
 					onCloseCover();
 				}}
 			/>

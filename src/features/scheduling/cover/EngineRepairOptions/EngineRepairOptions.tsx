@@ -26,9 +26,10 @@ export type EngineRepairOptionsProps = {
 	/**
 	 * Reviews an option's change in Find cover's own review, before anything
 	 * is applied; without it (a published roster, whose changes go out as
-	 * offers) every option is made by hand.
+	 * offers) every option is made by hand. The option comes with its cells,
+	 * for what it leaves short once applied.
 	 */
-	onReview?: (cells: Array<RosterChangeCell>) => void;
+	onReview?: (cells: Array<RosterChangeCell>, option: RepairOption) => void;
 };
 
 const key = "scheduling.cover.engine";
@@ -43,7 +44,7 @@ const OptionItem = ({
 }: {
 	option: RepairOption;
 	names: RepairNames;
-	onReview?: (cells: Array<RosterChangeCell>) => void;
+	onReview?: (cells: Array<RosterChangeCell>, option: RepairOption) => void;
 	/** The working-time note heads the list for every option, so this one need not repeat it. */
 	warnedAbove: boolean;
 }): FunctionComponent => {
@@ -88,7 +89,7 @@ const OptionItem = ({
 						size="sm"
 						variant="secondary"
 						onClick={() => {
-							onReview(cells);
+							onReview(cells, option);
 						}}
 					>
 						{t(`${key}.review`)}

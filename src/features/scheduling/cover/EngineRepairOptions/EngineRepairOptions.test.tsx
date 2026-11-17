@@ -168,9 +168,10 @@ describe("EngineRepairOptions", () => {
 		await userEvent.click(
 			screen.getByRole("button", { name: "Review this change" })
 		);
-		expect(onReview).toHaveBeenCalledWith([
-			expect.objectContaining({ membershipId: "m-1", kind: "WORK" }),
-		]);
+		expect(onReview).toHaveBeenCalledWith(
+			[expect.objectContaining({ membershipId: "m-1", kind: "WORK" })],
+			expect.objectContaining({ feasible: true })
+		);
 		expect(
 			screen.getAllByText(
 				"The app can’t apply this one: make it by hand on the roster."
@@ -211,13 +212,16 @@ describe("EngineRepairOptions", () => {
 			screen.getByRole("button", { name: "Review this change" })
 		);
 
-		expect(onReview).toHaveBeenCalledWith([
-			expect.objectContaining({
-				membershipId: "m-3",
-				kind: "WORK",
-				stretchAfterMinutes: 120,
-			}),
-		]);
+		expect(onReview).toHaveBeenCalledWith(
+			[
+				expect.objectContaining({
+					membershipId: "m-3",
+					kind: "WORK",
+					stretchAfterMinutes: 120,
+				}),
+			],
+			expect.objectContaining({ kind: "overtime_stretch" })
+		);
 		expect(
 			screen.queryByText(
 				"The app can’t apply this one: make it by hand on the roster."

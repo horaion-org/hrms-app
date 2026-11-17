@@ -4862,6 +4862,8 @@
 				"leftShort_one": "Aún falta {{count}} {{times}}",
 				"leftShort_other": "Aún faltan {{count}} {{times}}",
 				"leftShortNext": "Después de aplicarlo, vuelve a buscar cobertura para las horas que aún faltan.",
+				"appliedStillShort_one": "Cuadrante cambiado. A {{shift}} del {{day}} aún le falta {{count}} {{times}}: vuelve a buscar cobertura para esas horas.",
+				"appliedStillShort_other": "Cuadrante cambiado. A {{shift}} del {{day}} aún le faltan {{count}} {{times}}: vuelve a buscar cobertura para esas horas.",
 				"move": {
 					"REASSIGN": "Mover a {{name}} de {{fromShift}} {{fromDay}} a {{shift}} {{day}}",
 					"CALL_IN": "Llamar a {{name}} para {{shift}} {{day}}",

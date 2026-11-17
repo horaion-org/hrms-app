@@ -11,6 +11,7 @@ import {
 	callInMove,
 	feasibleRepair,
 	infeasibleRepair,
+	partStretchRepair,
 	reassignMove,
 	repairOptionsFixture,
 	stretchMove,
@@ -77,8 +78,8 @@ const Harness = ({
 			<FindCoverPanel
 				{...props}
 				revision={revision}
-				onApplied={(change) => {
-					props.onApplied(change);
+				onApplied={(change, stillShort) => {
+					props.onApplied(change, stillShort);
 					if (movesRevisionOnApply) setRevision(change.toRevision);
 				}}
 			/>
@@ -364,6 +365,71 @@ describe("FindCoverPanel", () => {
 		});
 		expect(calls.find((call) => call.path === CHANGES)?.body).toMatchObject({
 			cells: engineCells,
+		});
+	});
+
+	it("given_anEngineStretchLeavingHoursShort_when_applied_then_theToastWordsSayWhichHoursAndToFindCoverAgain", async () => {
+		stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+			[`POST ${REPAIR_OPTIONS}`]: answer(
+				repairOptionsFixture([partStretchRepair()])
+			),
+			[`POST ${CHANGES}`]: {
+				status: 201,
+				body: envelope(rosterChangeFixture()),
+			},
+		});
+		const { onApplied } = show();
+		const user = userEvent.setup();
+		await screen.findByRole("radio", { name: "Aisha Rahman" });
+		await user.click(screen.getByRole("button", { name: "Ask the engine" }));
+		await user.click(
+			await screen.findByRole("button", { name: "Review this change" })
+		);
+		const apply = screen.getByRole("button", { name: "Apply change" });
+		await waitFor(() => {
+			expect(apply).toBeEnabled();
+		});
+		await user.click(apply);
+
+		await waitFor(() => {
+			expect(onApplied).toHaveBeenCalledWith(
+				expect.objectContaining({ changeId: rosterChangeFixture().changeId }),
+				expect.stringMatching(
+					/^Roster changed\. Front Desk AM on .+ is still 1 short 09:00 – 13:00: find cover again for those hours\.$/
+				)
+			);
+		});
+	});
+
+	it("given_anEngineOptionThatFillsTheGap_when_applied_then_theToastIsThePlainOne", async () => {
+		stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+			[`POST ${REPAIR_OPTIONS}`]: answer(
+				repairOptionsFixture([feasibleRepair([reassignMove()])])
+			),
+			[`POST ${CHANGES}`]: {
+				status: 201,
+				body: envelope(rosterChangeFixture()),
+			},
+		});
+		const { onApplied } = show();
+		const user = userEvent.setup();
+		await screen.findByRole("radio", { name: "Aisha Rahman" });
+		await user.click(screen.getByRole("button", { name: "Ask the engine" }));
+		await user.click(
+			await screen.findByRole("button", { name: "Review this change" })
+		);
+		const apply = screen.getByRole("button", { name: "Apply change" });
+		await waitFor(() => {
+			expect(apply).toBeEnabled();
+		});
+		await user.click(apply);
+
+		await waitFor(() => {
+			expect(onApplied).toHaveBeenCalledWith(expect.anything(), undefined);
 		});
 	});
 

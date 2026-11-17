@@ -46,3 +46,12 @@ export const Default: Story = {};
 
 /** Right after applying: the toast with Undo as well. */
 export const JustApplied: Story = { args: { applied: rosterChangeFixture() } };
+
+/** An engine stretch just applied that leaves hours short: the toast says which, and to find cover again. */
+export const JustAppliedStillShort: Story = {
+	args: {
+		applied: rosterChangeFixture(),
+		appliedStillShort:
+			"Roster changed. Night on Tue, 24 Nov is still 1 short 23:00 – 07:00: find cover again for those hours.",
+	},
+};

@@ -5062,6 +5062,8 @@
 				"leftShort_one": "Still {{count}} short {{times}}",
 				"leftShort_other": "Still {{count}} short {{times}}",
 				"leftShortNext": "After applying it, find cover again for the hours still short.",
+				"appliedStillShort_one": "Roster changed. {{shift}} on {{day}} is still {{count}} short {{times}}: find cover again for those hours.",
+				"appliedStillShort_other": "Roster changed. {{shift}} on {{day}} is still {{count}} short {{times}}: find cover again for those hours.",
 				"move": {
 					"REASSIGN": "Move {{name}} from {{fromShift}} {{fromDay}} to {{shift}} {{day}}",
 					"CALL_IN": "Call in {{name}} for {{shift}} {{day}}",

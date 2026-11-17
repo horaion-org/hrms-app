@@ -28,7 +28,11 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
-const show = (applied?: RosterChange, onAppliedDismissed = vi.fn()): void => {
+const show = (
+	applied?: RosterChange,
+	onAppliedDismissed = vi.fn(),
+	appliedStillShort?: string
+): void => {
 	render(
 		<I18nextProvider i18n={authTestI18n}>
 			<QueryClientProvider
@@ -38,6 +42,7 @@ const show = (applied?: RosterChange, onAppliedDismissed = vi.fn()): void => {
 			>
 				<LastRosterChange
 					applied={applied}
+					appliedStillShort={appliedStillShort}
 					revision={2}
 					target={{
 						companyId: "c-1",
@@ -149,6 +154,22 @@ describe("LastRosterChange", () => {
 
 		expect(await screen.findByRole("status")).toHaveTextContent(
 			"Roster changed.Undo"
+		);
+	});
+
+	it("given_anEngineOptionLeavingHoursShort_when_justApplied_then_theToastSaysWhichAndToFindCoverAgain", async () => {
+		stubApi({
+			[`GET ${CHANGES}/latest`]: {
+				status: 200,
+				body: envelope({ change: null }),
+			},
+		});
+		const stillShort =
+			"Roster changed. Night on Tue, 24 Nov is still 1 short 23:00 – 07:00: find cover again for those hours.";
+		show(rosterChangeFixture(), vi.fn(), stillShort);
+
+		expect(await screen.findByRole("status")).toHaveTextContent(
+			`${stillShort}Undo`
 		);
 	});
 

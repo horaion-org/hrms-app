@@ -8,6 +8,8 @@ import {
 	type CoverOption,
 	type CoverOptions,
 } from "@/features/scheduling/cover/api";
+import type { RepairOption } from "@/features/scheduling/cover/engineRepairApi";
+import { stillShortAfterApplying } from "@/features/scheduling/cover/engineRepairWords";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
 import {
 	useCellCoverOffer,
@@ -61,8 +63,11 @@ export type CoverPanelInput = {
 	coverOffers?: { offers: ReadonlyArray<CoverOffer>; timeZone: string };
 	/** The days the previewed change touches, as `rosterCellKey` names them. */
 	onPreviewDays: (keys: ReadonlyArray<string>) => void;
-	/** A draft's change landed; the roster already shows it. */
-	onApplied: (change: RosterChange) => void;
+	/**
+	 * A draft's change landed; the roster already shows it. With an engine
+	 * option that leaves hours short, the toast's words saying so.
+	 */
+	onApplied: (change: RosterChange, stillShort?: string) => void;
 	/** A recorded yes applied the change; the roster refreshes by itself. */
 	onCoverRecorded?: () => void;
 };
@@ -82,7 +87,7 @@ export type CoverPanel = {
 	/** Whether the change under review is one of the scheduling engine's options instead. */
 	repairChosen: boolean;
 	/** Reviews an engine option's change, as Find cover's cells, in place of the chosen option. */
-	chooseRepair: (cells: Array<RosterChangeCell>) => void;
+	chooseRepair: (cells: Array<RosterChangeCell>, option: RepairOption) => void;
 	/** After the roster moved, reads it again so the list is made afresh; otherwise asks again. */
 	findAgain: () => void;
 	review: {
@@ -151,6 +156,7 @@ export const useCoverPanel = ({
 	// it is dropped with its preview, as a chosen option of the list is when the list is made afresh.
 	const [repairChoice, setRepairChoice] = useState<{
 		cells: Array<RosterChangeCell>;
+		option: RepairOption;
 		revision: number;
 	}>();
 	const repairCells =
@@ -244,6 +250,20 @@ export const useCoverPanel = ({
 		? rosterChangeRefusal(preview.error)
 		: undefined;
 
+	const shiftName = (id: string | null): string =>
+		shifts.find((shift) => shift.shiftId === id)?.name ??
+		assignments.find((row) => row.shift?.shiftId === id)?.shift?.name ??
+		"";
+	/** What the engine option under review leaves short once applied, in the toast's words. */
+	const stillShortOfChoice = (): string | undefined =>
+		repairCells && repairChoice
+			? stillShortAfterApplying(
+					repairChoice.option,
+					{ shift: shiftName(gap.shiftId), day: formatDay(gap.day, language) },
+					t
+				)
+			: undefined;
+
 	/** A new choice starts its review afresh. */
 	const startReview = (): void => {
 		setTickedFor(null);
@@ -262,8 +282,8 @@ export const useCoverPanel = ({
 		},
 		landing,
 		repairChosen: repairCells !== undefined,
-		chooseRepair: (cells): void => {
-			setRepairChoice({ cells, revision });
+		chooseRepair: (cells, option): void => {
+			setRepairChoice({ cells, option, revision });
 			startReview();
 		},
 		findAgain: (): void => {
@@ -274,10 +294,7 @@ export const useCoverPanel = ({
 			names: {
 				member: memberName,
 				// The roster's own days name the shifts worked when the frozen shifts can't be read.
-				shift: (id) =>
-					shifts.find((shift) => shift.shiftId === id)?.name ??
-					assignments.find((row) => row.shift?.shiftId === id)?.shift?.name ??
-					"",
+				shift: shiftName,
 				day: (date) => formatDay(date, language),
 				dayType: (code) => dayTypeInSentence(code, t),
 			},
@@ -304,7 +321,9 @@ export const useCoverPanel = ({
 						checksFingerprint: fingerprint ?? undefined,
 					},
 					{
-						onSuccess: onApplied,
+						onSuccess: (change) => {
+							onApplied(change, stillShortOfChoice());
+						},
 						onError: (error) => {
 							if (rosterChangeRefusal(error) === "checksChanged")
 								void preview.refetch();
