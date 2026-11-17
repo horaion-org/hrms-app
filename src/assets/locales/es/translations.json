@@ -2067,7 +2067,8 @@
 				},
 				"through": "{{name}} ({{source}})",
 				"hiddenPlace": "un lugar que no puedes ver",
-				"unknownRole": "Un rol que no puedes ver"
+				"unknownRole": "Un rol que no puedes ver",
+				"usedAsDefaultDeleteItem": "Eliminar: quítalo antes de Acceso predeterminado"
 			},
 			"title": "Roles de acceso",
 			"caption": "Roles configurados",
@@ -2257,7 +2258,7 @@
 				}
 			},
 			"delete": {
-				"usedAsDefault": "Este rol es acceso predeterminado. Quítalo primero de Acceso predeterminado y luego elimínalo.",
+				"usedAsDefault": "Este rol se da como acceso predeterminado. Quítalo primero en Acceso predeterminado, en esta página, y luego elimínalo.",
 				"title": "Eliminar {{name}}",
 				"description": "Nadie tiene este rol. Eliminarlo no se puede deshacer.",
 				"confirm": "Eliminar rol",

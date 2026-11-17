@@ -187,3 +187,36 @@ export const giveDefaultAccessSummary = (
 			? [t(`${key}.giveDialog.alreadyReceiving`, { count: alreadyReceiving })]
 			: []),
 	].join(" ");
+
+/** How a role's Delete is offered: disabled when it can't succeed, its label naming why when that is a default. */
+export type DeleteRoleOffer = {
+	disabled: boolean;
+	label: "organisation.list.deleteItem" | `${typeof key}.usedAsDefaultDeleteItem`;
+};
+
+/**
+ * Delete for one role. Only a custom role nobody holds can be deleted, and
+ * not while a default still gives it (API ADR-0118): then the item says to
+ * remove it from Default access first, rather than offer a refused delete.
+ * `rules` is undefined while the defaults are unread or unreadable; the
+ * API's refusal then says the same.
+ */
+export const deleteRoleOffer = (
+	role: Pick<AccessRole, "accessRoleId" | "protectedRole" | "holderCount">,
+	rules: ReadonlyArray<DefaultAccessRule> | undefined,
+	mayDelete: boolean
+): DeleteRoleOffer => {
+	const givenByDefault = (rules ?? []).some(
+		(rule) => rule.accessRoleId === role.accessRoleId
+	);
+	return {
+		disabled:
+			!mayDelete ||
+			role.protectedRole ||
+			role.holderCount > 0 ||
+			givenByDefault,
+		label: givenByDefault
+			? `${key}.usedAsDefaultDeleteItem`
+			: "organisation.list.deleteItem",
+	};
+};

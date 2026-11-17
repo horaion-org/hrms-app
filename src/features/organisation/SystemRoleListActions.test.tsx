@@ -268,6 +268,34 @@ describe("Access role list actions", () => {
 		expect(calls.some((call) => call.method === "PUT")).toBe(false);
 	});
 
+	it("won't offer Delete for a role given as default access, and says why", async () => {
+		stubApi({
+			...routes(role({ holderCount: 0 })),
+			"GET /api/v1/companies/c-1/default-access-rules": {
+				status: 200,
+				body: envelope([
+					{
+						defaultAccessRuleId: "d-1",
+						accessRoleId: "r-2",
+						setAt: "COMPANY",
+						branchId: null,
+						departmentId: null,
+						appliesTo: "OWN_BRANCH",
+					},
+				]),
+			},
+		});
+		const menu = await openMenu();
+
+		await waitFor(() => {
+			expect(
+				within(menu).getByRole("menuitem", {
+					name: "Delete: remove it from Default access first",
+				})
+			).toHaveAttribute("aria-disabled", "true");
+		});
+	});
+
 	it("deletes a role nobody holds after asking, and explains a refusal", async () => {
 		const calls = stubApi({
 			...routes(role({ holderCount: 0 })),

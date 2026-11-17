@@ -25,6 +25,7 @@ import type {
 import { CreateSystemRoleDialog } from "@/features/organisation/CreateSystemRoleDialog";
 import {
 	defaultRuleText,
+	deleteRoleOffer,
 	giveDefaultAccessSummary,
 	type DefaultRuleText,
 } from "@/features/organisation/defaultAccess";
@@ -138,6 +139,15 @@ export const SystemRoles = (): FunctionComponent => {
 		},
 		[navigate]
 	);
+	const deleteOffer = useCallback(
+		(role: AccessRole) =>
+			deleteRoleOffer(
+				role,
+				defaults.data,
+				access.can("access_role:delete", COMPANY_SCOPE)
+			),
+		[defaults.data, access]
+	);
 	const [assigning, setAssigning] = useState(false);
 	const [action, setAction] = useState<SystemRoleAction>();
 	// Only roles the person may give, never the System Owner role or an inactive one (API ADR-0108).
@@ -240,17 +250,12 @@ export const SystemRoles = (): FunctionComponent => {
 								)}
 							</OverflowMenuItem>
 							<OverflowMenuItem
-								// Only a role nobody holds can be deleted.
-								disabled={
-									role.protectedRole ||
-									role.holderCount > 0 ||
-									!access.can("access_role:delete", COMPANY_SCOPE)
-								}
+								disabled={deleteOffer(role).disabled}
 								onClick={() => {
 									setAction({ kind: "delete", role });
 								}}
 							>
-								{t("organisation.list.deleteItem")}
+								{t(deleteOffer(role).label)}
 							</OverflowMenuItem>
 						</>
 					),
@@ -261,7 +266,7 @@ export const SystemRoles = (): FunctionComponent => {
 				headerClassName: "w-24",
 			},
 		],
-		[t, access, canCreate, canEdit, navigate, open]
+		[t, canCreate, canEdit, navigate, open, deleteOffer]
 	);
 
 	return (

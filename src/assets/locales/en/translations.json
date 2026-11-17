@@ -2183,7 +2183,8 @@
 				},
 				"through": "{{name}} ({{source}})",
 				"hiddenPlace": "a place you can't see",
-				"unknownRole": "A role you can't see"
+				"unknownRole": "A role you can't see",
+				"usedAsDefaultDeleteItem": "Delete: remove it from Default access first"
 			},
 			"title": "Access roles",
 			"caption": "Configured roles",
@@ -2373,7 +2374,7 @@
 				}
 			},
 			"delete": {
-				"usedAsDefault": "This role is default access. Remove it from Default access first, then delete it.",
+				"usedAsDefault": "This role is given as default access. Remove it under Default access on this page first, then delete it.",
 				"title": "Delete {{name}}",
 				"description": "Nobody holds this role. Deleting it can’t be undone.",
 				"confirm": "Delete role",
