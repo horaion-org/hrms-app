@@ -54,7 +54,7 @@ the code to copy, and the command that proves it was followed.
 
 ```sh
 pnpm lint
-pnpm exec vitest run src/
+pnpm exec vitest run src/ scripts/
 pnpm test:e2e
 pnpm build
 ```
@@ -64,7 +64,7 @@ jobs:
 
 - **Type check & lint:** `pnpm exec tsc`, then `pnpm lint` (the permission contract, quarantine and structure checks,
   then eslint).
-- **Unit tests:** `vitest run src/` in three shards, with one worker per core and a 15 s per-test timeout. The
+- **Unit tests:** `vitest run src/ scripts/` in three shards, with one worker per core and a 15 s per-test timeout. The
   5 s default is too tight on a shared runner.
 
 Both jobs run on Blacksmith runners (backend ADR-0070); setting the repository variable `CI_RUNNER` to
@@ -75,7 +75,7 @@ suite in all three browsers every week (and on demand from the Actions tab) and 
 artifact. To reproduce a CI shard locally:
 
 ```sh
-pnpm exec vitest run src/ --shard=1/3 --testTimeout=15000
+pnpm exec vitest run src/ scripts/ --shard=1/3 --testTimeout=15000
 ```
 
 **The structure checks.** `pnpm lint` also runs `check:feature-cycles`, `check:import-direction`,

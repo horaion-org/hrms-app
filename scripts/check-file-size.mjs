@@ -20,18 +20,20 @@ const EXEMPT_FILE =
  * Never add a file or raise a ceiling; split the file instead.
  */
 const LINE_CEILINGS = {
-	"src/pages/CreateMonthSchedule.tsx": 1081,
+	"src/pages/CreateMonthSchedule.tsx": 965,
 	"src/features/scheduling/schedules/api.ts": 1067,
 	"src/features/scheduling/constraints/ConstraintDialog/ConstraintDialog.tsx": 1024,
 	"src/features/employmentTerms/EmploymentTermsDialog/EmploymentTermsDialog.tsx": 954,
-	"src/pages/ScheduleDetail.tsx": 936,
+	"src/pages/ScheduleDetail.tsx": 854,
 	"src/features/people/ProfileForm/ProfileForm.tsx": 848,
-	"src/pages/CreateSchedule.tsx": 781,
+	"src/pages/CreateSchedule.tsx": 696,
 	"src/features/leave/api.ts": 760,
 	"src/features/scheduling/constraints/ConstraintsTab/ConstraintsTab.tsx": 748,
 	"src/features/organisation/api.ts": 724,
 	"src/features/scheduling/MonthSetupStep/MonthSetupStep.tsx": 675,
 	"src/pages/ScheduleMonth.tsx": 658,
+	// 620 lines today; the extra room is for the constraint type and field names docs/guides/add-a-constraint-type.md
+	// adds here, one line each, until the schemas move to a file of their own.
 	"src/features/scheduling/constraints/api.ts": 641,
 	"src/features/employmentTerms/api.ts": 585,
 	"src/components/ui/DataTable/DataTable.tsx": 576,
