@@ -117,8 +117,7 @@ const placeLineOf = (
 
 /**
  * One need as it reads in the Needed column, with its comparison: "3 Duty
- * Manager", "At most 1 Operator", "1 Team Lead on duty", "At most 2 Agents
- * on duty".
+ * Manager", "At most 1 Operator", "Exactly 2 Agents".
  */
 const needLine = (need: ShiftNeed, t: TFunction): string => {
 	const titles = t("scheduling.constraints.list", {
@@ -127,10 +126,10 @@ const needLine = (need: ShiftNeed, t: TFunction): string => {
 	const comparison: ConstraintComparison =
 		CONSTRAINT_COMPARISONS.find((each) => each === need.comparison) ??
 		"AT_LEAST";
-	const options = { count: need.headcount, titles };
-	return need.onDuty
-		? t(`scheduling.shifts.needs.onDuty.${comparison}`, options)
-		: t(`scheduling.shifts.needs.${comparison}`, options);
+	return t(`scheduling.shifts.needs.${comparison}`, {
+		count: need.headcount,
+		titles,
+	});
 };
 
 /**

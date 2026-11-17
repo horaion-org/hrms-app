@@ -111,7 +111,6 @@ describe("ShiftTable", () => {
 			comparison: "AT_LEAST",
 			headcount: 3,
 			jobTitleNames: ["Clerk"],
-			onDuty: false,
 			ifPossible: false,
 		};
 		render(
@@ -137,13 +136,12 @@ describe("ShiftTable", () => {
 		).toHaveTextContent("Not set");
 	});
 
-	it("given_onDutyNeedsWithEachComparison_when_rendered_then_eachSaysItsComparison", () => {
-		const onDuty = {
-			name: "Agents on duty",
+	it("given_needsWithEachComparison_when_rendered_then_eachSaysItsComparison", () => {
+		const agents = {
+			name: "Agents",
 			departmentId: "d-1",
 			headcount: 2,
 			jobTitleNames: ["Agent"],
-			onDuty: true,
 			ifPossible: false,
 		};
 		render(
@@ -154,9 +152,9 @@ describe("ShiftTable", () => {
 						[
 							"front-desk-am",
 							[
-								{ ...onDuty, constraintId: "c-1", comparison: "AT_LEAST" },
-								{ ...onDuty, constraintId: "c-2", comparison: "AT_MOST" },
-								{ ...onDuty, constraintId: "c-3", comparison: "EXACTLY" },
+								{ ...agents, constraintId: "c-1", comparison: "AT_LEAST" },
+								{ ...agents, constraintId: "c-2", comparison: "AT_MOST" },
+								{ ...agents, constraintId: "c-3", comparison: "EXACTLY" },
 							],
 						],
 					]),
@@ -166,9 +164,9 @@ describe("ShiftTable", () => {
 		);
 
 		const frontDesk = screen.getByRole("row", { name: /Front Desk AM/ });
-		expect(frontDesk).toHaveTextContent("2 Agent on duty");
-		expect(frontDesk).toHaveTextContent("At most 2 Agent on duty");
-		expect(frontDesk).toHaveTextContent("Exactly 2 Agent on duty");
+		expect(frontDesk).toHaveTextContent("2 Agent");
+		expect(frontDesk).toHaveTextContent("At most 2 Agent");
+		expect(frontDesk).toHaveTextContent("Exactly 2 Agent");
 	});
 
 	it("given_noNeeds_when_rendered_then_leavesTheNeededColumnOut", () => {

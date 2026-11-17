@@ -3564,11 +3564,6 @@
 				"AT_LEAST": "{{count}} {{titles}}",
 				"AT_MOST": "Como máximo {{count}} {{titles}}",
 				"EXACTLY": "Exactamente {{count}} {{titles}}",
-				"onDuty": {
-					"AT_LEAST": "{{count}} {{titles}} de servicio",
-					"AT_MOST": "Como máximo {{count}} {{titles}} de servicio",
-					"EXACTLY": "Exactamente {{count}} {{titles}} de servicio"
-				},
 				"ifPossible": "si es posible",
 				"notSet": "Sin fijar",
 				"capacity_one": "Solo {{count}} tiene el puesto",

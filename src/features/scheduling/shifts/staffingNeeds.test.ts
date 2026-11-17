@@ -15,7 +15,6 @@ const rule = (
 	constraintId: "c-1",
 	name: "Cover",
 	departmentId: "d-1",
-	category: "STAFFING",
 	requirement: "MUST",
 	status: "ACTIVE",
 	values: [
@@ -42,18 +41,15 @@ describe("staffingNeedsByShift", () => {
 				comparison: "AT_LEAST",
 				headcount: 2,
 				jobTitleNames: ["Operator", "Senior Operator"],
-				onDuty: false,
 				ifPossible: false,
 			}),
 		]);
 		expect(needs.get("night-2")).toHaveLength(1);
 	});
 
-	it("given_anOnDutyRuleAndAnIfPossibleCap_when_read_then_saySo", () => {
+	it("given_twoRulesOnAShiftOneAnIfPossibleCap_when_read_then_saySo", () => {
 		const needs = staffingNeedsByShift([
-			rule({ constraintId: "c-1", category: "ROLE_COVERAGE" }, ["day"], "1", [
-				"Team Lead",
-			]),
+			rule({ constraintId: "c-1" }, ["day"], "1", ["Team Lead"]),
 			rule(
 				{ constraintId: "c-2", requirement: "SHOULD" },
 				["day"],
@@ -64,7 +60,7 @@ describe("staffingNeedsByShift", () => {
 		]);
 
 		expect(needs.get("day")).toEqual([
-			expect.objectContaining({ onDuty: true, headcount: 1 }),
+			expect.objectContaining({ headcount: 1, ifPossible: false }),
 			expect.objectContaining({ comparison: "AT_MOST", ifPossible: true }),
 		]);
 	});

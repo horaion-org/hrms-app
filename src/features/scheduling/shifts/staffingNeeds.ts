@@ -10,21 +10,13 @@ export type ShiftNeed = {
 	comparison: string;
 	headcount: number;
 	jobTitleNames: Array<string>;
-	/** Someone on duty for the whole shift, rather than people on it. */
-	onDuty: boolean;
 	ifPossible: boolean;
 };
 
 /** What the needs read of a constraint. */
 export type NeedingConstraint = Pick<
 	DepartmentConstraint,
-	| "constraintId"
-	| "name"
-	| "departmentId"
-	| "category"
-	| "requirement"
-	| "status"
-	| "values"
+	"constraintId" | "name" | "departmentId" | "requirement" | "status" | "values"
 >;
 
 const DEFAULT_COMPARISON = "AT_LEAST";
@@ -32,8 +24,7 @@ const DEFAULT_COMPARISON = "AT_LEAST";
 /**
  * What the active constraints ask of each shift, by shift id: every one that
  * names shifts and a headcount, as the API stores them. The kinds that ask
- * for people are told apart by their values, not by a list of type names; a
- * constraint of the "On duty throughout" category reads as on duty.
+ * for people are told apart by their values, not by a list of type names.
  */
 export const staffingNeedsByShift = (
 	constraints: ReadonlyArray<NeedingConstraint>
@@ -55,7 +46,6 @@ export const staffingNeedsByShift = (
 			jobTitleNames: valuesOf("JOB_TITLE").map(
 				(value) => value.name ?? value.value
 			),
-			onDuty: constraint.category === "ROLE_COVERAGE",
 			ifPossible: constraint.requirement === "SHOULD",
 		};
 		for (const shift of shifts)
