@@ -6291,6 +6291,7 @@
 		"range": "Fechas",
 		"failed": "No pudimos cargar esta tabla. Inténtalo de nuevo en un momento.",
 		"loading": "Cargando…",
+		"chooseValidRange": "Elige unas fechas válidas para ver esto.",
 		"hidden": "No tienes acceso a ningún horario aquí.",
 		"rangeProblems": {
 			"inverted": "La fecha final es anterior a la inicial. Vuelve a elegir las fechas.",

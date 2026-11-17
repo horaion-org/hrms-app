@@ -18,6 +18,8 @@ export type ReportSectionProps<T> = {
 	isEmpty: (data: T) => boolean;
 	/** The table, given the read's answer. */
 	children: (data: T) => ReactNode;
+	/** The chosen range can't be asked for, so nothing loads: the section says to choose a valid one. */
+	rangeInvalid?: boolean;
 };
 
 /**
@@ -31,6 +33,7 @@ export const ReportSection = <T,>({
 	findingOf,
 	isEmpty,
 	children,
+	rangeInvalid = false,
 }: ReportSectionProps<T>): FunctionComponent => {
 	const { t } = useTranslation();
 	if (read.status === "hidden") return null;
@@ -61,7 +64,10 @@ export const ReportSection = <T,>({
 					{t(`${key}.failed`)}
 				</p>
 			)}
-			{read.status === "pending" && (
+			{rangeInvalid && (
+				<p className="text-sm text-neutral-700">{t(`${key}.chooseValidRange`)}</p>
+			)}
+			{read.status === "pending" && !rangeInvalid && (
 				<p className="text-sm text-neutral-700">{t(`${key}.loading`)}</p>
 			)}
 			{read.status === "ready" &&

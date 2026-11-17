@@ -6291,6 +6291,7 @@
 		"range": "Dates",
 		"failed": "We couldn’t load this table. Try again in a moment.",
 		"loading": "Loading…",
+		"chooseValidRange": "Choose a valid range to see this.",
 		"hidden": "You don’t have access to any rosters here.",
 		"rangeProblems": {
 			"inverted": "The end date is before the start date. Choose the dates again.",

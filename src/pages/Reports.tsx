@@ -171,6 +171,7 @@ export const Reports = (): FunctionComponent => {
 				findingOf={staffingFinding}
 				id="staffing"
 				isEmpty={(rules) => rules.length === 0}
+				rangeInvalid={!asked}
 				read={staffing}
 			>
 				{(rules) => (
@@ -207,6 +208,7 @@ export const Reports = (): FunctionComponent => {
 				findingOf={(answer) => overtimeFinding(answer.departments)}
 				id="overtime"
 				isEmpty={(answer) => answer.departments.length === 0}
+				rangeInvalid={!asked}
 				read={overtime}
 			>
 				{(answer) => (
@@ -246,6 +248,7 @@ export const Reports = (): FunctionComponent => {
 				findingOf={stabilityFindingOf}
 				id="stability"
 				isEmpty={(departments) => departments.length === 0}
+				rangeInvalid={!asked}
 				read={changes}
 			>
 				{(departments) => (
