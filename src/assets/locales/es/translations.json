@@ -6033,7 +6033,12 @@
 			"partTimeOvertimeNote": "Tiempo parcial según la ley: las horas adicionales hasta {{full}} a la semana (la semana de tiempo completo) se pagan a la tarifa normal. Las horas por encima de {{full}} se pagan a {{times}}.",
 			"dayTooLong_one": "{{week}} en {{days}} día son {{day}} al día, más que la jornada normal más larga de {{max}}. Reduce las horas a la semana o añade días laborables.",
 			"dayTooLong_other": "{{week}} en {{days}} días son {{day}} al día, más que la jornada normal más larga de {{max}}. Reduce las horas a la semana o añade días laborables.",
-			"dailyNeedsDays": "Las horas extra por día necesitan días laborables fijos. Elige los días laborables o desmarca las horas extra por día."
+			"dailyNeedsDays": "Las horas extra por día necesitan días laborables fijos. Elige los días laborables o desmarca las horas extra por día.",
+			"parts": {
+				"workingWeek": "Semana laboral",
+				"extraHoursPay": "Pago de las horas extra",
+				"termsMeaning": "Qué significan estas condiciones"
+			}
 		},
 		"apply": {
 			"title": "¿Cómo se aplica este cambio?",

@@ -71,15 +71,9 @@ import {
 	weekFieldsOf,
 	type TermsFormValues,
 } from "@/features/employmentTerms/termsForm";
-import { sampleWeek } from "@/features/employmentTerms/sampleWeek";
-import {
-	readBackOf,
-	termsEffects,
-	termsExample,
-} from "@/features/employmentTerms/termsReadBack";
-import { TermsSummary } from "@/features/employmentTerms/TermsSummary";
 import { useEmploymentTermsActions } from "@/features/employmentTerms/useEmploymentTermsActions";
 import { RateField } from "@/features/employmentTerms/EmploymentTermsDialog/RateField";
+import { TermsMeaningSection } from "@/features/employmentTerms/EmploymentTermsDialog/TermsMeaningSection";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
 
 /** What a save did, for the list's confirmation. */
@@ -209,7 +203,6 @@ const TermsForm = ({
 		run,
 	} = useCreateFormSubmit(form, FIELDS, onClose);
 	const held = (editing?.holderCount ?? 0) + (editing?.scheduledCount ?? 0);
-	const readBack = readBackOf(values, reference, t, language);
 
 	const startedFrom = presetList.find(
 		(preset) =>
@@ -807,22 +800,11 @@ const TermsForm = ({
 						</FormRow>
 					</Disclosure>
 				</form>
-				<TermsSummary
-					className="md:self-start"
-					effects={fields ? termsEffects(fields, reference, t) : []}
-					example={fields ? termsExample(fields, reference, t) : undefined}
-					readBack={readBack}
-					sampleWeek={
-						fields
-							? sampleWeek({
-									daysPerWeek: fields.daysPerWeek,
-									weekMinutes: fields.weekMinutes,
-									dayMinutes: fields.dayMinutes,
-									restDay: fields.restDay,
-									partTime,
-								})
-							: undefined
-					}
+				<TermsMeaningSection
+					className="max-md:border-t max-md:border-neutral-200 max-md:pt-6 md:self-start"
+					partTime={partTime}
+					reference={reference}
+					values={values}
 				/>
 			</div>
 		</Dialog>

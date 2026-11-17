@@ -6033,7 +6033,12 @@
 			"partTimeOvertimeNote": "Part-time by law: extra hours up to {{full}} a week (a full-timer’s week) are paid at the normal rate. Hours past {{full}} are paid at {{times}}.",
 			"dayTooLong_one": "{{week}} over {{days}} day is {{day}} a day, more than the longest normal day of {{max}}. Lower the hours a week or add working days.",
 			"dayTooLong_other": "{{week}} over {{days}} days is {{day}} a day, more than the longest normal day of {{max}}. Lower the hours a week or add working days.",
-			"dailyNeedsDays": "Overtime by the day needs fixed working days. Choose the working days, or untick overtime by the day."
+			"dailyNeedsDays": "Overtime by the day needs fixed working days. Choose the working days, or untick overtime by the day.",
+			"parts": {
+				"workingWeek": "Working week",
+				"extraHoursPay": "Pay for extra hours",
+				"termsMeaning": "What these terms mean"
+			}
 		},
 		"apply": {
 			"title": "How should this change apply?",
