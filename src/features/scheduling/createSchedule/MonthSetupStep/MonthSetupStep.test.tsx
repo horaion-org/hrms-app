@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { I18nextProvider } from "react-i18next";
 import { describe, expect, it, vi } from "vitest";
@@ -443,6 +443,32 @@ describe("MonthSetupStep", () => {
 					"That is 32 days. A schedule by dates covers up to 31 days. Choose a last day on or before Sat, Dec 19, or make a second schedule for the rest."
 				)
 			).toBeInTheDocument();
+		});
+
+		it("given_theLastDayBeforeTheFirst_when_theFirstDayIsMovedBeforeIt_then_theErrorClears", async () => {
+			const user = userEvent.setup();
+			render(
+				<Harness
+					dates={datesProp()}
+					defaultValues={{
+						...DATES,
+						firstDay: "2026-11-25",
+						lastDay: "2026-11-20",
+					}}
+				/>
+			);
+			await user.click(screen.getByRole("button", { name: "Next" }));
+			const reversed = /^The last day is before the first day\./;
+			expect(await screen.findByText(reversed)).toBeInTheDocument();
+
+			await user.click(screen.getByRole("button", { name: /^First day/ }));
+			await user.click(
+				screen.getByRole("gridcell", { name: /19 November 2026/ })
+			);
+
+			await waitFor(() => {
+				expect(screen.queryByText(reversed)).toBeNull();
+			});
 		});
 
 		it("given_aPlanWithKeptDays_when_shown_then_warnsTheyStay", () => {

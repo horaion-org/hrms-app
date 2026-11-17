@@ -115,6 +115,9 @@ const SETTINGS = [
 	},
 ] as const;
 
+/** The days checked again when one changes: the last day's order and length depend on the first day. */
+const DAYS_CHECKED_AFTER = { firstDay: ["lastDay"], lastDay: [] } as const;
+
 const rangeOf = (week: TickableWeek): TickedRange => ({
 	start: week.periodStart,
 	end: week.periodEnd,
@@ -128,13 +131,11 @@ const PLAN_BADGE_TONES: Record<PlanBadge, BadgeTone> = {
 };
 
 /**
- * "What this creates": each week the dates touch, a line for each run of its
- * days saying whether they stay, are new, or are scheduled again with the
- * run's choices or the week's own; its days (generated days look covered,
- * others have no roster) and New, To redo or Kept. Then how many days are
- * generated and how many more after them, the published days, the days with
- * a schedule that are redone, the rest days scheduled again after new days,
- * and why the dates are refused, if they are.
+ * "What this creates": each week the dates touch, a line for each run of its days saying whether they stay, are
+ * new, or are scheduled again with the run's choices or the week's own; its days (generated days look covered,
+ * others have no roster) and New, To redo or Kept. Then how many days are generated and how many more after them,
+ * the published days, the days with a schedule that are redone, the rest days scheduled again after new days, and
+ * why the dates are refused, if they are.
  */
 const DatesPlanRows = ({ plan }: { plan: DatesPlan }): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -243,12 +244,10 @@ const DatesPlanRows = ({ plan }: { plan: DatesPlan }): FunctionComponent => {
 };
 
 /**
- * Which Department to generate, and for what: a month and which of its
- * weeks (no name: the API names each week), or any dates up to 31 days with
- * an optional name and what generating them creates, week by week; then
- * whether leave counts in the weeks it creates. The Department is chosen as
- * a week's setup chooses it (ScheduleSetupStep): the active ones of the
- * header's Branch where schedules may be created.
+ * Which Department to generate, and for what: a month and which of its weeks (no name: the API names each week), or
+ * any dates up to 31 days with an optional name and what generating them creates, week by week; then whether leave
+ * counts in the weeks it creates. The Department is chosen as a week's setup chooses it (ScheduleSetupStep): the
+ * active ones of the header's Branch where schedules may be created.
  */
 export const MonthSetupStep = ({
 	formId,
@@ -328,7 +327,6 @@ export const MonthSetupStep = ({
 		if (outside) setValue("departmentId", "");
 	}, [outside, setValue]);
 	// A month the manager chose stays, even one equal to the default; until then the page's suggestion is taken.
-	// A month named in the URL gets no suggestion from the page.
 	const [monthChosenByHand, setMonthChosenByHand] = useState(false);
 	useEffect(() => {
 		if (suggestedMonth && !monthChosenByHand) setValue("month", suggestedMonth);
@@ -482,6 +480,7 @@ export const MonthSetupStep = ({
 										<Controller
 											control={control}
 											name={day}
+											rules={{ deps: DAYS_CHECKED_AFTER[day] }}
 											render={({ field }) => (
 												<DatePicker
 													ref={field.ref}
