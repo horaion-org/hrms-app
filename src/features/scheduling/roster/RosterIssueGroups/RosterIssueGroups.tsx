@@ -2,7 +2,6 @@ import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
-import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import {
@@ -13,7 +12,6 @@ import {
 	type RosterIssue,
 } from "@/features/scheduling/roster/rosterIssueGroups";
 import { IssueGroupSection } from "./IssueGroupSection";
-import { GROUP_TONES } from "./issueGroupTones";
 
 const key = "scheduling.issues";
 
@@ -32,9 +30,10 @@ export type RosterIssueGroupsProps = {
 };
 
 /**
- * The Issues tab by what to do: the counts in each group's tone, the
- * validation result, then Must fix, Could not be met and More
- * information (closed until opened), each foldable, ordered by person or by day.
+ * The Issues tab by what to do: the validation result card, then Must fix,
+ * Could not be met and More information (closed until opened), each
+ * foldable and left out when empty, ordered by person or by day. The counts
+ * are the summary line under the panel's title (`IssueSummary`).
  */
 export const RosterIssueGroups = ({
 	issues,
@@ -53,19 +52,8 @@ export const RosterIssueGroups = ({
 	);
 	return (
 		<div className="flex flex-col gap-3">
-			{issues.length > 0 ? (
-				<p className="flex flex-wrap gap-2">
-					{ISSUE_GROUPS.filter((group) => counts[group] > 0).map((group) => (
-						<Badge key={group} tone={GROUP_TONES[group]}>
-							{t(`${key}.summary.${group}`, { count: counts[group] })}
-						</Badge>
-					))}
-				</p>
-			) : null}
 			{validationNote}
-			{groups.length === 0 ? (
-				<p className="text-sm text-neutral-700">{t(`${key}.nothingWrong`)}</p>
-			) : (
+			{groups.length === 0 ? null : (
 				<>
 					<div
 						aria-label={t(`${key}.orderLabel`)}

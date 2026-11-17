@@ -1,5 +1,6 @@
 import { useId, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Badge } from "@/components/ui/Badge";
 import { ChevronDownIcon } from "@/components/ui/Icon";
@@ -10,7 +11,7 @@ import {
 	type RosterIssue,
 } from "@/features/scheduling/roster/rosterIssueGroups";
 import { IssueRow } from "./IssueRow";
-import { GROUP_TONES } from "./issueGroupTones";
+import { GROUP_LOOKS } from "./issueGroupTones";
 
 export type IssueGroupSectionProps = {
 	group: IssueGroup;
@@ -24,8 +25,9 @@ export type IssueGroupSectionProps = {
 };
 
 /**
- * One group, foldable by its heading; folded, a one-line gist of who it
- * names. Open at first, unless it is one of `GROUPS_STARTING_CLOSED`.
+ * One group, foldable by its heading (its tone's icon, title and count);
+ * folded, a one-line gist of who it names. Open at first, unless it is one
+ * of `GROUPS_STARTING_CLOSED`.
  */
 export const IssueGroupSection = ({
 	group,
@@ -38,6 +40,7 @@ export const IssueGroupSection = ({
 	const { t } = useTranslation();
 	const [open, setOpen] = useState(!GROUPS_STARTING_CLOSED.includes(group));
 	const listId = useId();
+	const { badgeTone, icon: GroupIcon, textTone } = GROUP_LOOKS[group];
 	const title = t(`scheduling.issues.groups.${group}`);
 	const gist = t("scheduling.constraints.list", {
 		items: [...new Set(items.map((issue) => issue.who))],
@@ -58,8 +61,9 @@ export const IssueGroupSection = ({
 				}}
 			>
 				<span className="flex items-center gap-2">
+					<GroupIcon className={joinClassNames("size-4 shrink-0", textTone)} />
 					{title}
-					<Badge compact aria-hidden="true" tone={GROUP_TONES[group]}>
+					<Badge compact aria-hidden="true" tone={badgeTone}>
 						{String(items.length)}
 					</Badge>
 				</span>

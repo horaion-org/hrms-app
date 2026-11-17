@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
@@ -39,10 +40,11 @@ export type RosterSidePanelSlotProps = {
 	timeZone: string;
 	/** The viewer's own membership, which decides where a chosen day's leave request opens. */
 	viewerMembershipId?: string;
-	/** The open list: its id for `aria-controls`, a key that starts it afresh, and its sections. */
+	/** The open list: its id for `aria-controls`, a key that starts it afresh, the line under its title, and its sections. */
 	list: {
 		id: string;
 		resetKey: string;
+		summary?: ReactNode;
 		sections: ReadonlyArray<RosterSidePanelSection>;
 	};
 	onClose: () => void;
@@ -183,6 +185,7 @@ export const RosterSidePanelSlot = ({
 				key={list.resetKey}
 				id={list.id}
 				sections={list.sections}
+				summary={list.summary}
 				title={t(ROSTER_SIDE_LISTS[openList].titleKey)}
 				onClose={onClose}
 			/>

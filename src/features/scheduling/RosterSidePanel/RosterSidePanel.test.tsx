@@ -37,6 +37,23 @@ describe("RosterSidePanel", () => {
 		expect(onClose).toHaveBeenCalledTimes(2);
 	});
 
+	it("given_aSummary_when_rendered_then_itSitsUnderTheTitleOutsideTheScrollingList", () => {
+		render(
+			<RosterSidePanel
+				sections={[{ key: "body", content: <p>Body</p> }]}
+				summary={<p>6 to fix</p>}
+				title="Issues"
+				onClose={vi.fn()}
+			/>
+		);
+
+		const summary = screen.getByText("6 to fix");
+		expect(screen.getByRole("heading", { name: "Issues" }).nextSibling).toBe(
+			summary
+		);
+		expect(summary.closest(".overflow-y-auto")).toBeNull();
+	});
+
 	it("given_sections_when_rendered_then_listsTheirItemsAndLeavesEmptyOnesOut", () => {
 		render(
 			<RosterSidePanel
@@ -110,9 +127,10 @@ describe("RosterSidePanel", () => {
 		);
 
 		const panel = screen.getByRole("complementary", { name: "Issues" });
+		// The heading sits with its summary line inside the header bar.
 		const header = screen.getByRole("heading", {
 			name: "Issues",
-		}).parentElement;
+		}).parentElement?.parentElement;
 		const list = screen
 			.getByRole("heading", { name: "Leave and cover" })
 			.closest("section")?.parentElement;

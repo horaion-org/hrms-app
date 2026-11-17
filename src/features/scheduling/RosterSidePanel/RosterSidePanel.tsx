@@ -27,6 +27,8 @@ export type RosterSidePanelProps = {
 	/** Lets the button that opens the panel name it in `aria-controls`. */
 	id?: string;
 	title: string;
+	/** One line under the title that stays while the list scrolls, such as the Issues counts. */
+	summary?: ReactNode;
 	sections: ReadonlyArray<RosterSidePanelSection>;
 	onClose: () => void;
 	className?: string;
@@ -44,6 +46,7 @@ export type RosterSidePanelProps = {
 export const RosterSidePanel = ({
 	id,
 	title,
+	summary,
 	sections,
 	onClose,
 	className,
@@ -68,15 +71,18 @@ export const RosterSidePanel = ({
 			}}
 		>
 			<div className="flex min-h-0 flex-col divide-y divide-neutral-400 overflow-hidden rounded-lg border border-neutral-400">
-				<div className="flex h-14 shrink-0 items-center justify-between px-4">
-					<h2
-						ref={heading}
-						className="font-bold text-neutral-900 outline-none"
-						id={titleId}
-						tabIndex={-1}
-					>
-						{title}
-					</h2>
+				<div className="flex min-h-14 shrink-0 items-center justify-between gap-2 px-4 py-2">
+					<div className="flex min-w-0 flex-col">
+						<h2
+							ref={heading}
+							className="font-bold text-neutral-900 outline-none"
+							id={titleId}
+							tabIndex={-1}
+						>
+							{title}
+						</h2>
+						{summary}
+					</div>
 					<Button
 						aria-label={t("scheduling.detail.closePanel", { title })}
 						variant="icon"

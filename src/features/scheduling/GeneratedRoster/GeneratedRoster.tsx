@@ -14,6 +14,7 @@ import {
 	issueCounts,
 	type RosterIssue,
 } from "@/features/scheduling/roster/rosterIssueGroups";
+import { IssueSummary } from "@/features/scheduling/roster/RosterIssueGroups";
 import { issuesOfRoster } from "@/features/scheduling/roster/rosterIssueSources";
 import {
 	issueNoteLines,
@@ -274,6 +275,10 @@ export const GeneratedRoster = ({
 			list={{
 				id: sidePanelId,
 				resetKey: `${openList ?? ""}|${view.member ?? view.date ?? ""}`,
+				// A header's narrowed list counts only its own, so the whole week's counts stay off it.
+				summary: openList === "issues" && !roster.issuesAbout && (
+					<IssueSummary counts={counts} />
+				),
 				sections: listSections,
 			}}
 			onClose={roster.close}
