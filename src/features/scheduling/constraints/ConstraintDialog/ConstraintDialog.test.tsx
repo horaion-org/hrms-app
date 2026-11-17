@@ -637,8 +637,8 @@ describe("ConstraintDialog", () => {
 		expect(trigger(/^Day 1/)).toBeVisible();
 		expect(trigger(/^Day 2/)).toBeVisible();
 		expect(screen.queryByRole("button", { name: /^Day 3/ })).toBeNull();
-		await pick(user, /^Day 1/, "Overnight Ops");
-		await pick(user, /^Day 2/, "Front Desk AM");
+		await pick(user, /^Day 1/, "Overnight Ops Night");
+		await pick(user, /^Day 2/, "Front Desk AM Front Desk");
 		expect(trigger(/^Day 3/)).toBeVisible();
 		expect(screen.queryByRole("button", { name: /^Day 4/ })).toBeNull();
 		await user.click(submitButton());
@@ -760,6 +760,24 @@ describe("ConstraintDialog", () => {
 		expect(onSave).not.toHaveBeenCalled();
 	});
 
+	it("given_theShiftPicker_when_opened_then_aGroupOfSeveralSaysHowManyShiftsAndAGroupOfOneIsItsShiftsRow", async () => {
+		const user = userEvent.setup();
+		renderDialog();
+		await start(user, "People on a shift");
+
+		await user.click(trigger(/^Shifts/));
+
+		expect(
+			await screen.findByRole("option", { name: "Whole group: Service" })
+		).toHaveTextContent("Service 3 shifts");
+		expect(
+			screen.getByRole("option", { name: "Breakfast Prep Kitchen" })
+		).toBeVisible();
+		expect(
+			screen.queryByRole("option", { name: "Whole group: Kitchen" })
+		).toBeNull();
+	});
+
 	it("given_jobTitlesChosen_when_aWholeShiftGroupIsChosen_then_aJobTitleTheGroupDoesNotAllListIsRemovedAndSaid", async () => {
 		const user = userEvent.setup();
 		renderDialog();
@@ -872,7 +890,7 @@ describe("ConstraintDialog", () => {
 		expect(screen.getByRole("radio", { name: "Must" })).toBeChecked();
 		await pick(user, /^At least, at most or exactly/, "At least");
 		await user.type(screen.getByRole("spinbutton", { name: /^People/ }), "2");
-		await pick(user, /^Shifts/, "Front Desk AM");
+		await pick(user, /^Shifts/, "Front Desk AM Front Desk");
 		await pick(
 			user,
 			/^Job titles that count/,
@@ -926,11 +944,11 @@ describe("ConstraintDialog", () => {
 
 		await chooseType(user, "People on a shift");
 		expect(nameField()).toHaveValue("People on a shift");
-		await pick(user, /^Shifts/, "Front Desk AM");
+		await pick(user, /^Shifts/, "Front Desk AM Front Desk");
 		expect(nameField()).toHaveValue("Front Desk AM staffing");
 
 		await typeName(user, "Morning cover");
-		await pick(user, /^Shifts/, "Breakfast Prep");
+		await pick(user, /^Shifts/, "Breakfast Prep Kitchen");
 		expect(nameField()).toHaveValue("Morning cover");
 	});
 
@@ -949,7 +967,7 @@ describe("ConstraintDialog", () => {
 		const user = userEvent.setup();
 		renderDialog();
 		await start(user, "People on a shift");
-		await pick(user, /^Shifts/, "Front Desk AM");
+		await pick(user, /^Shifts/, "Front Desk AM Front Desk");
 
 		await user.click(trigger(/^Job titles that count/));
 
@@ -987,7 +1005,7 @@ describe("ConstraintDialog", () => {
 		const user = userEvent.setup();
 		renderDialog();
 		await start(user, "People on a shift");
-		await pick(user, /^Shifts/, "Front Desk AM", "Lunch Rush");
+		await pick(user, /^Shifts/, "Front Desk AM Front Desk", "Lunch Rush");
 
 		await user.click(trigger(/^Job titles that count/));
 
@@ -1003,7 +1021,7 @@ describe("ConstraintDialog", () => {
 		const user = userEvent.setup();
 		renderDialog();
 		await start(user, "People on a shift");
-		await pick(user, /^Shifts/, "Concierge Support");
+		await pick(user, /^Shifts/, "Concierge Support Concierge");
 
 		await user.click(trigger(/^Job titles that count/));
 

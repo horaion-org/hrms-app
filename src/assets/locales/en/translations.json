@@ -4033,6 +4033,8 @@
 				"selectAll": "Select all",
 				"noJobTitles": "This department has no active job titles yet. Create one under Organisation first.",
 				"noShifts": "This department has no shifts yet. Add one on the Shifts step first.",
+				"shiftCount_one": "{{count}} shift",
+				"shiftCount_other": "{{count}} shifts",
 				"submit": "Save",
 				"nameRequired": "Enter a constraint name.",
 				"nameLength": "Use {{min}} to {{max}} characters.",

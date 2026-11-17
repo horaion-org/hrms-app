@@ -3833,6 +3833,8 @@
 				"selectAll": "Seleccionar todo",
 				"noJobTitles": "Este departamento aún no tiene puestos activos. Crea uno en Organización primero.",
 				"noShifts": "Este departamento aún no tiene turnos. Añade uno en el paso Turnos primero.",
+				"shiftCount_one": "{{count}} turno",
+				"shiftCount_other": "{{count}} turnos",
 				"submit": "Guardar",
 				"nameRequired": "Escribe un nombre de restricción.",
 				"nameLength": "Usa de {{min}} a {{max}} caracteres.",
