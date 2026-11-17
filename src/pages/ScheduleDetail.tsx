@@ -4,7 +4,6 @@ import {
 	daysAroundPart,
 	partRedoOf,
 } from "@/features/scheduling/dates/datesSetup";
-import { SCHEDULE_CREATE_KEYS } from "@/features/workspace/permissionKeys";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
@@ -75,10 +74,9 @@ import {
 	hasRoster,
 	newestRunFailed,
 	regenerable,
-	rosterEditable,
 	rosterRunId,
-	withdrawable,
 } from "@/features/scheduling/schedules/api";
+import { rosterPagePermissions } from "@/features/scheduling/schedules/rosterPagePermissions";
 import {
 	approvalActionFacts,
 	scheduleActions,
@@ -111,7 +109,6 @@ import {
 	type StartingContext,
 } from "@/features/scheduling/startingContext/api";
 import { runsByMember } from "@/features/scheduling/startingContext/startingGrid";
-import { departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 import {
 	useCurrentCompanyId,
@@ -391,25 +388,15 @@ const ApiSchedule = ({
 		companyId,
 		state.status === "ready" ? state.schedule : undefined
 	);
-	// A generated roster awaiting its decision, or a published one, may be
-	// changed by hand under its own key (hrms-backend-v2 docs/adr/0062, 0063);
-	// the editor reads the frozen shifts it offers through that key, so it
-	// needs no shift:read.
-	const mayEditShifts =
-		state.status === "ready" &&
-		runId !== undefined &&
-		rosterEditable(state.schedule) &&
-		access.can(
-			"schedule:edit_shift",
-			departmentScope(state.schedule.departmentId)
-		);
-	// Validate schedule writes nothing, so whoever may read the roster may ask (hrms-backend-v2
-	// docs/adr/0097): its button joins Issues and Changed. Repair stays with those who may change it.
-	const mayValidate =
-		state.status === "ready" &&
-		runId !== undefined &&
-		rosterEditable(state.schedule) &&
-		access.can("schedule:read", departmentScope(state.schedule.departmentId));
+	// What the viewer may do here, each at the schedule's Department. The roster
+	// editor reads the frozen shifts it offers under its own key, so it needs no
+	// shift:read; Validate schedule joins Issues and Changed, and Repair stays
+	// with those who may change the roster.
+	const permissions = rosterPagePermissions(
+		state.status === "ready" ? state.schedule : undefined,
+		access
+	);
+	const { mayEditShifts, mayValidate } = permissions;
 	const validation = useRosterRulesCheck(
 		mayValidate && runId !== undefined && unit !== undefined
 			? { companyId, unit, scheduleId, runId }
@@ -437,7 +424,9 @@ const ApiSchedule = ({
 	);
 	// A published roster asks the member before adding or moving their work.
 	const publishedForEditing =
-		mayEditShifts && state.schedule.status === "PUBLISHED";
+		mayEditShifts &&
+		state.status === "ready" &&
+		state.schedule.status === "PUBLISHED";
 	const coverOffers = useQuery(
 		coverOffersQuery(companyId, unit, scheduleId, publishedForEditing)
 	);
@@ -446,9 +435,7 @@ const ApiSchedule = ({
 			companyId,
 			unit,
 			scheduleId,
-			showsRoster &&
-				unit !== undefined &&
-				access.can("schedule:read", departmentScope(unit.departmentId))
+			showsRoster && permissions.mayRead
 		)
 	);
 	// Another schedule already published for the week means this one can't be generated again or published.
@@ -459,9 +446,7 @@ const ApiSchedule = ({
 	const publishedWeek = useQuery(
 		publishedWeekQuery(
 			companyId,
-			unit && access.can("schedule:read", departmentScope(unit.departmentId))
-				? unit
-				: undefined,
+			permissions.mayRead ? unit : undefined,
 			awaitingPublication?.periodStart,
 			// A part asks about its own days: an earlier part published doesn't hold it up (API ADR-0113).
 			awaitingPublication && {
@@ -482,8 +467,7 @@ const ApiSchedule = ({
 			companyId,
 			unit?.departmentId ?? "",
 			month,
-			unit !== undefined &&
-				access.can("schedule:read", departmentScope(unit.departmentId))
+			permissions.mayRead
 		)
 	).data;
 	const publishNoteId = useId();
@@ -523,9 +507,6 @@ const ApiSchedule = ({
 						rest: daysText(around.after),
 					})),
 	].filter((line): line is string => typeof line === "string");
-	const mayCreateHere =
-		unit !== undefined &&
-		access.canAll(SCHEDULE_CREATE_KEYS, departmentScope(unit.departmentId));
 	const monthName = month ? formatMonthName(month, formattingLocale(i18n)) : "";
 	if (state.status !== "ready")
 		return (
@@ -542,12 +523,8 @@ const ApiSchedule = ({
 	const openRegenerate =
 		scheduleMonth !== undefined &&
 		!passed &&
-		regenerable(state.schedule) &&
 		weekPublishedBy === undefined &&
-		access.can(
-			"schedule:generate",
-			departmentScope(state.schedule.departmentId)
-		)
+		permissions.mayGenerate
 			? (): void => {
 					setOpenDialog("regenerate");
 				}
@@ -572,10 +549,7 @@ const ApiSchedule = ({
 							}
 						: {}),
 					// Leave choices need the leave keys as well, here at the schedule's Department.
-					...(access.canAll(
-						["leave_request:read", "leave_request:review"],
-						departmentScope(state.schedule.departmentId)
-					)
+					...(permissions.mayHandleLeave
 						? { leave: { viewerMembershipId } }
 						: {}),
 				}
@@ -597,9 +571,7 @@ const ApiSchedule = ({
 		dateStyle: "medium",
 		timeStyle: "short",
 	});
-	const mayReject =
-		decidable(schedule) &&
-		access.can("schedule:publish", departmentScope(schedule.departmentId));
+	const { mayReject } = permissions;
 	const standing = approvalStanding({
 		awaitingDecision: decidable(schedule),
 		publication: schedule.publication,
@@ -610,9 +582,7 @@ const ApiSchedule = ({
 		status: schedule.status,
 		mayPublish: mayReject && weekPublishedBy === undefined,
 		mayReject,
-		mayWithdraw:
-			withdrawable(schedule) &&
-			access.can("schedule:publish", departmentScope(schedule.departmentId)),
+		mayWithdraw: permissions.mayWithdraw,
 		mayRegenerate: openRegenerate !== undefined,
 		hasRoster: rosterShown(noticeFacts),
 		...approvalActionFacts(standing),
@@ -826,7 +796,7 @@ const ApiSchedule = ({
 							{line}
 						</span>
 					))}
-					{remaining && mayCreateHere && (
+					{remaining && permissions.mayCreateHere && (
 						<Button
 							className="mt-2"
 							size="sm"
