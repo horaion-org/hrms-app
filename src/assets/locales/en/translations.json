@@ -5324,6 +5324,7 @@
 				"dayShort_one": "{{day}} {{count}} shift short",
 				"dayShort_other": "{{day}} {{count}} shifts short",
 				"dayNoRoster": "{{day}} no roster",
+				"dayKept": "{{day}} already scheduled, stays as it is",
 				"everyShiftCovered": "Every shift covered",
 				"shiftsShort_one": "{{count}} shift short",
 				"shiftsShort_other": "{{count}} shifts short",

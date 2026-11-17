@@ -82,6 +82,40 @@ describe("planRowOf", () => {
 		]);
 	});
 
+	it("given_theOwnersWeekendAskedAfterAWednesdayToFridayPart_when_laidOut_then_keptDaysLookKeptAndOnlyTheWeekendGenerated", () => {
+		const [week] = datesPlanFixture().weeks;
+
+		const row = planRowOf({
+			...week!,
+			periodStart: "2027-02-15",
+			periodEnd: "2027-02-21",
+			askedFrom: "2027-02-20",
+			askedTo: "2027-02-21",
+			newFrom: "2027-02-20",
+			newTo: "2027-02-21",
+			kept: [
+				{
+					scheduleId: "s-1",
+					coveredFrom: "2027-02-17",
+					coveredTo: "2027-02-19",
+					state: "TO_REVIEW",
+				},
+			],
+		});
+
+		expect(
+			row.days.map((day) => ({ covered: day.covered, kept: day.kept }))
+		).toEqual([
+			{ covered: false, kept: false },
+			{ covered: false, kept: false },
+			{ covered: false, kept: true },
+			{ covered: false, kept: true },
+			{ covered: false, kept: true },
+			{ covered: true, kept: false },
+			{ covered: true, kept: false },
+		]);
+	});
+
 	it("given_newAndRedoneDaysInOneWeek_when_laidOut_then_oneLineEach", () => {
 		const part = (coveredFrom: string, coveredTo: string): PartDays => ({
 			scheduleId: "s-2",

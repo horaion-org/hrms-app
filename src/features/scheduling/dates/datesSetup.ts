@@ -63,13 +63,16 @@ export type PlanLine = { kind: PlanLineKind; days: DayRun };
 /** A week's badge: new days only, days already scheduled redone, or nothing generated. */
 export type PlanBadge = "new" | "redo" | "kept";
 
+/** A day of a plan week's strip: a month card's day, and whether it already has a schedule that stays. */
+export type PlanDay = MonthWeek["days"][number] & { kept: boolean };
+
 /** One week of "What this creates": its asked days, how its seven days look, its lines and its badge. */
 export type PlanRow = {
 	periodStart: string;
 	/** The asked days of this week. */
 	asked: { start: string; end: string };
-	/** Seven days, Monday first: a day generated (new or scheduled again) looks covered, any other has no roster. */
-	days: MonthWeek["days"];
+	/** Seven days, Monday first: a day generated (new or scheduled again) looks covered, a day that stays looks kept, any other has no roster. */
+	days: Array<PlanDay>;
 	/** The week's days the run touches, in day order: consecutive days treated alike make one line. */
 	lines: Array<PlanLine>;
 	badge: PlanBadge;
@@ -125,7 +128,7 @@ const planBadgeOf = (week: DatesPlanWeek): PlanBadge => {
 	return week.newFrom === null ? "kept" : "new";
 };
 
-/** One plan week as a row of "What this creates" (no fourth "kept" look: kept days have no roster mark). */
+/** One plan week as a row of "What this creates": generated days look covered, days that stay look kept. */
 export const planRowOf = (week: DatesPlanWeek): PlanRow => {
 	const days = daysOf(week.periodStart).map((date) => {
 		const kind = lineKindOf(week, date);
@@ -133,6 +136,7 @@ export const planRowOf = (week: DatesPlanWeek): PlanRow => {
 			date,
 			shortShifts: 0,
 			covered: kind !== undefined && kind !== "stays",
+			kept: kind === "stays",
 		};
 	});
 	return {

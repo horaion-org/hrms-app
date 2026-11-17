@@ -533,6 +533,24 @@ describe("MonthSetupStep", () => {
 			).toBeInTheDocument();
 		});
 
+		it("given_aRedoPlan_when_shown_then_theDaysStripReadsKeptDaysApartFromGeneratedOnes", () => {
+			render(
+				<Harness
+					dates={datesProp(datesPlanRedoingFixture())}
+					defaultValues={{
+						...DATES,
+						firstDay: "2026-11-18",
+						lastDay: "2026-11-19",
+					}}
+				/>
+			);
+
+			const table = screen.getByRole("table", { name: "What this creates" });
+			expect(within(table).getByRole("img")).toHaveAccessibleName(
+				"Monday already scheduled, stays as it is, Tuesday already scheduled, stays as it is, Wednesday covered, Thursday covered, Friday covered, Saturday covered, Sunday covered"
+			);
+		});
+
 		it("given_aPlanRefusedAllTaken_when_shown_then_saysChooseALaterFirstDay", () => {
 			const plan = datesPlanFixture({
 				newDays: 0,

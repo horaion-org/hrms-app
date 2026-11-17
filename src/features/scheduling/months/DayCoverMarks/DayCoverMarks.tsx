@@ -6,9 +6,12 @@ import { daysOf } from "@/common/weeks";
 import type { MonthWeek } from "@/features/scheduling/months/api";
 import { dayMarkLooks } from "@/features/scheduling/months/weekStateLooks";
 
+/** One day's cover; `kept` only in a dates preview, for a day that already has a schedule and stays. */
+export type CoverDay = MonthWeek["days"][number] & { kept?: boolean };
+
 export type DayCoverMarksProps = {
 	/** Seven days, Monday first; empty when the week has no roster. */
-	days: MonthWeek["days"];
+	days: ReadonlyArray<CoverDay>;
 	className?: string;
 };
 
@@ -22,10 +25,12 @@ const labelKeys = {
 	covered: "scheduling.months.cover.dayCovered",
 	short: "scheduling.months.cover.dayShort",
 	noRoster: "scheduling.months.cover.dayNoRoster",
+	kept: "scheduling.months.cover.dayKept",
 } as const satisfies Record<MarkLook, string>;
 
-/** A day without a roster entry, or one no part of the week covers, has no roster; otherwise it is short or covered. */
-const lookOf = (day: MonthWeek["days"][number] | undefined): MarkLook => {
+/** A day kept as it is looks kept; one without a roster entry, or one no part covers, has no roster; otherwise short or covered. */
+const lookOf = (day: CoverDay | undefined): MarkLook => {
+	if (day?.kept === true) return "kept";
 	if (day === undefined || !day.covered) return "noRoster";
 	return day.shortShifts > 0 ? "short" : "covered";
 };

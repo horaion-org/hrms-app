@@ -5124,6 +5124,7 @@
 				"dayShort_one": "{{day}}: {{count}} turno con falta de personal",
 				"dayShort_other": "{{day}}: {{count}} turnos con falta de personal",
 				"dayNoRoster": "{{day}} sin cuadrante",
+				"dayKept": "{{day}} ya programado, se mantiene como está",
 				"everyShiftCovered": "Todos los turnos cubiertos",
 				"shiftsShort_one": "{{count}} turno con falta de personal",
 				"shiftsShort_other": "{{count}} turnos con falta de personal",
