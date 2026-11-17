@@ -76,7 +76,10 @@ import {
 	scheduleActions,
 	type ScheduleActionId,
 } from "@/features/scheduling/schedules/scheduleActions";
-import { partLinesOf } from "@/features/scheduling/schedules/partLines";
+import {
+	firstPublishedDayOf,
+	partLinesOf,
+} from "@/features/scheduling/schedules/partLines";
 import { WeekPartsCallout } from "@/features/scheduling/schedules/WeekPartsCallout";
 import { WeekPartLinks } from "@/features/scheduling/months/WeekPartLinks";
 import { isoDateIn } from "@/features/scheduling/roster/roster";
@@ -504,6 +507,7 @@ const ApiSchedule = ({
 				: [],
 			// A redo part in the week (API ADR-0129): this schedule is one, or one redoes some of its days.
 			redo: partRedoOf(schedule, weekParts),
+			firstPublishedDay: firstPublishedDayOf(weekParts),
 		},
 		(days) =>
 			formatPeriod({ start: days.from, end: days.to }, formattingLocale(i18n)),

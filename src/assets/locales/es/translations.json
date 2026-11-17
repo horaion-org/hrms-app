@@ -5450,7 +5450,9 @@
 			"passedBefore_other": "{{days}} ya pasaron y no tienen horario.",
 			"schedulesThisWeek": "Horarios de esta semana",
 			"redoing": "Este horario rehace {{days}}. Hasta que su cuadrante esté listo, el horario actual de la semana conserva esos días.",
-			"beingRedone": "{{days}} se están volviendo a programar. Este cuadrante los conserva hasta que el nuevo esté listo."
+			"beingRedone": "{{days}} se están volviendo a programar. Este cuadrante los conserva hasta que el nuevo esté listo.",
+			"noneBeforePublished_one": "{{days}} no tiene horario. Va antes de días publicados, así que no se puede programar ahora.",
+			"noneBeforePublished_other": "{{days}} no tienen horario. Van antes de días publicados, así que no se pueden programar ahora."
 		}
 	},
 	"workspace": {

@@ -5650,7 +5650,9 @@
 			"passedBefore_other": "{{days}} have passed and have no schedule.",
 			"schedulesThisWeek": "Schedules this week",
 			"redoing": "This schedule redoes {{days}}. Until its roster is ready, the week’s current schedule keeps those days.",
-			"beingRedone": "{{days}} are being scheduled again. This roster keeps them until the new one is ready."
+			"beingRedone": "{{days}} are being scheduled again. This roster keeps them until the new one is ready.",
+			"noneBeforePublished_one": "{{days}} has no schedule. It comes before published days, so it can’t be scheduled now.",
+			"noneBeforePublished_other": "{{days}} have no schedule. They come before published days, so they can’t be scheduled now."
 		}
 	},
 	"colourSwatchPicker": {
