@@ -85,6 +85,49 @@ describe("MonthCard", () => {
 		);
 	});
 
+	it("given_aNamedDatesSchedule_when_shown_then_itsNameAndDates", async () => {
+		const part = {
+			name: "Year-end gala",
+			named: true,
+			state: "TENTATIVE" as const,
+		};
+		const summary = monthSummaryFixture();
+		const card = await renderCard({
+			summary: {
+				...summary,
+				weeks: summary.weeks.map((week) =>
+					week.periodStart === "2026-11-16"
+						? {
+								...week,
+								parts: [
+									{
+										...part,
+										scheduleId: "s-3",
+										coveredFrom: "2026-11-19",
+										coveredTo: "2026-11-22",
+									},
+								],
+							}
+						: week.periodStart === "2026-11-23"
+							? {
+									...week,
+									parts: [
+										{
+											...part,
+											scheduleId: "s-4",
+											coveredFrom: "2026-11-23",
+											coveredTo: "2026-11-28",
+										},
+									],
+								}
+							: week
+				),
+			},
+		});
+
+		expect(card).toHaveTextContent(/Year-end gala · Nov 19\s?–\s?28/);
+	});
+
 	it("given_twoDrafts_when_rendered_then_saysDraftsInThePlural", async () => {
 		const card = await renderCard({
 			summary: monthSummaryFixture({

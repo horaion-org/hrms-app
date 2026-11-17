@@ -1,4 +1,5 @@
 import { useId } from "react";
+import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
@@ -6,6 +7,7 @@ import type { FunctionComponent } from "@/common/types";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import type { MonthWeek } from "@/features/scheduling/months/api";
+import { namedSpansOf } from "@/features/scheduling/dates/datesSetup";
 import { DayCoverMarks } from "@/features/scheduling/months/DayCoverMarks";
 import { formatWeekDates } from "@/features/scheduling/months/monthWeeks";
 import {
@@ -33,6 +35,49 @@ export type WeekCardProps = {
 };
 
 const key = "scheduling.months";
+
+/**
+ * What a week in parts says (API ADR-0113): the days its newest part covers,
+ * named when a manager named it, and which days an earlier part published.
+ * Nothing for a week one schedule covers whole.
+ */
+const partLinesOf = (
+	week: MonthWeek,
+	datesOf: (from: string, to: string) => string,
+	t: TFunction
+): Array<string> => {
+	const { coveredFrom, coveredTo } = week;
+	if (!coveredFrom || !coveredTo) return [];
+	const range = datesOf(coveredFrom, coveredTo);
+	const named = namedSpansOf(week.parts).find(
+		(span) => span.from <= coveredFrom && span.to >= coveredTo
+	);
+	const coversLine =
+		coveredFrom === week.periodStart && coveredTo === week.periodEnd
+			? undefined
+			: named
+				? t(`${key}.cover.coversNamed`, { name: named.name, range })
+				: t(`${key}.cover.covers`, { range });
+	const published = week.parts.filter(
+		(part) => part.state === "PUBLISHED" && part.coveredTo < coveredFrom
+	);
+	const firstPublished = published[0];
+	const lastPublished = published[published.length - 1];
+	const publishedLine =
+		firstPublished && lastPublished
+			? t(`${key}.cover.publishedInPart`, {
+					published: datesOf(
+						firstPublished.coveredFrom,
+						lastPublished.coveredTo
+					),
+					rest: range,
+					state: t(`${key}.states.${week.state}`).toLowerCase(),
+				})
+			: undefined;
+	return [coversLine, publishedLine].filter(
+		(line): line is string => line !== undefined
+	);
+};
 
 /**
  * One week of a Department's month: its dates, its state, its seven days'
@@ -64,6 +109,9 @@ export const WeekCard = ({
 	const shortShifts = week.days.reduce((sum, day) => sum + day.shortShifts, 0);
 	const handChangedDays = week.handChangedDays ?? 0;
 	const dashed = week.state === "TENTATIVE" || week.state === "NOT_GENERATED";
+	const datesOf = (from: string, to: string): string =>
+		formatWeekDates({ start: from, end: to }, formattingLocale(i18n));
+	const partLines = partLinesOf(week, datesOf, t);
 	// A week with a roster whose newest run failed kept its earlier roster (API ADR-0112).
 	const failureLine = !failureMessage
 		? undefined
@@ -99,6 +147,11 @@ export const WeekCard = ({
 					{t(`${key}.states.${week.state}`)}
 				</Badge>
 			</div>
+			{partLines.map((line) => (
+				<p key={line} className="text-sm text-neutral-800">
+					{line}
+				</p>
+			))}
 			{failureLine && <p className="text-sm text-neutral-800">{failureLine}</p>}
 			{week.rulesChanged === true && (
 				<p className="text-sm text-neutral-800">{t(`${key}.rulesChanged`)}</p>

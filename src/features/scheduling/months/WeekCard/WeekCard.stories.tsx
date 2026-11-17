@@ -75,3 +75,38 @@ export const RefusedByTheMonthRun: Story = {
 			"This department has no employees who can be scheduled. Give at least one active member of the department a job title, then try again.",
 	},
 };
+/** A week in two parts: Monday to Wednesday published, the named rest to review. */
+export const PublishedInPart: Story = {
+	args: {
+		week: monthWeekFixture({
+			periodStart: "2026-11-23",
+			periodEnd: "2026-11-29",
+			state: "TO_REVIEW",
+			coveredFrom: "2026-11-26",
+			coveredTo: "2026-11-29",
+			name: "Year-end gala",
+			days: coverDays("2026-11-23").map((day, index) => ({
+				...day,
+				covered: index >= 3,
+			})),
+			parts: [
+				{
+					scheduleId: "s-1",
+					name: "Week of 2026-11-23",
+					named: false,
+					coveredFrom: "2026-11-23",
+					coveredTo: "2026-11-25",
+					state: "PUBLISHED",
+				},
+				{
+					scheduleId: "s-2",
+					name: "Year-end gala",
+					named: true,
+					coveredFrom: "2026-11-26",
+					coveredTo: "2026-11-29",
+					state: "TO_REVIEW",
+				},
+			],
+		}),
+	},
+};

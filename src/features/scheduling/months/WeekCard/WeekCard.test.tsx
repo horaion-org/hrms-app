@@ -265,4 +265,72 @@ describe("WeekCard", () => {
 			expect(screen.queryByText(/failed first/)).toBeNull();
 		});
 	});
+
+	describe("a week in parts", () => {
+		const part = {
+			name: "Week of 2026-11-23",
+			named: false,
+			coveredFrom: "2026-11-23",
+			coveredTo: "2026-11-25",
+		};
+
+		it("given_aPartWeek_when_shown_then_saysWhichDaysItCovers", async () => {
+			const card = await renderCard(
+				monthWeekFixture({
+					periodStart: "2026-11-16",
+					periodEnd: "2026-11-22",
+					state: "TO_REVIEW",
+					coveredFrom: "2026-11-19",
+					coveredTo: "2026-11-22",
+					parts: [
+						{
+							scheduleId: "s-1",
+							name: "Year-end gala",
+							named: true,
+							coveredFrom: "2026-11-19",
+							coveredTo: "2026-11-22",
+							state: "TO_REVIEW",
+						},
+					],
+				})
+			);
+
+			expect(card).toHaveTextContent(/Year-end gala · covers Nov 19\s?–\s?22/);
+		});
+
+		it("given_anEarlierPublishedPart_when_shown_then_saysWhichDaysArePublished", async () => {
+			const card = await renderCard(
+				monthWeekFixture({
+					periodStart: "2026-11-23",
+					periodEnd: "2026-11-29",
+					state: "TO_REVIEW",
+					coveredFrom: "2026-11-26",
+					coveredTo: "2026-11-29",
+					parts: [
+						{ ...part, scheduleId: "s-1", state: "PUBLISHED" },
+						{
+							...part,
+							scheduleId: "s-2",
+							coveredFrom: "2026-11-26",
+							coveredTo: "2026-11-29",
+							state: "TO_REVIEW",
+						},
+					],
+				})
+			);
+
+			expect(card).toHaveTextContent(/Covers Nov 26\s?–\s?29/);
+			expect(card).toHaveTextContent(
+				/Nov 23\s?–\s?25 published · Nov 26\s?–\s?29 to review/
+			);
+		});
+
+		it("given_aWholeWeek_when_shown_then_noPartLine", async () => {
+			const card = await renderCard(
+				monthWeekFixture({ coveredFrom: "2026-11-02", coveredTo: "2026-11-08" })
+			);
+
+			expect(card).not.toHaveTextContent(/Covers|published ·/);
+		});
+	});
 });

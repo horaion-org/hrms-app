@@ -5282,7 +5282,11 @@
 				"shiftsShort_one": "{{count}} shift short",
 				"shiftsShort_other": "{{count}} shifts short",
 				"handChanged_one": "{{count}} day changed by hand",
-				"handChanged_other": "{{count}} days changed by hand"
+				"handChanged_other": "{{count}} days changed by hand",
+				"covers": "Covers {{range}}",
+				"coversNamed": "{{name}} · covers {{range}}",
+				"publishedInPart": "{{published}} published · {{rest}} {{state}}",
+				"namedSpan": "{{name}} · {{range}}"
 			},
 			"actions": {
 				"review": "Review",

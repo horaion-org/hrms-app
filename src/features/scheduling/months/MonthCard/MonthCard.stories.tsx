@@ -69,3 +69,33 @@ export const MixedWithAFailedWeek: Story = {
 export const WaitingOnTheViewer: Story = {
 	args: { waitingOnMe: [approvalInstanceFixture({ subjectId: "s-2" })] },
 };
+/** A named schedule by dates, Thursday 19 to Saturday 28 November, over two weeks. */
+export const NamedDatesSchedule: Story = {
+	args: {
+		summary: monthSummaryFixture({
+			weeks: monthSummaryFixture().weeks.map((each) =>
+				each.periodStart === "2026-11-16" || each.periodStart === "2026-11-23"
+					? {
+							...each,
+							parts: [
+								{
+									scheduleId: `${each.periodStart}-gala`,
+									name: "Year-end gala",
+									named: true,
+									coveredFrom:
+										each.periodStart === "2026-11-16"
+											? "2026-11-19"
+											: "2026-11-23",
+									coveredTo:
+										each.periodStart === "2026-11-16"
+											? "2026-11-22"
+											: "2026-11-28",
+									state: "TENTATIVE",
+								},
+							],
+						}
+					: each
+			),
+		}),
+	},
+};

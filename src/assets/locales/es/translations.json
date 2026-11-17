@@ -5082,7 +5082,11 @@
 				"shiftsShort_one": "{{count}} turno con falta de personal",
 				"shiftsShort_other": "{{count}} turnos con falta de personal",
 				"handChanged_one": "{{count}} día cambiado a mano",
-				"handChanged_other": "{{count}} días cambiados a mano"
+				"handChanged_other": "{{count}} días cambiados a mano",
+				"covers": "Cubre {{range}}",
+				"coversNamed": "{{name}} · cubre {{range}}",
+				"publishedInPart": "{{published}} publicado · {{rest}} {{state}}",
+				"namedSpan": "{{name}} · {{range}}"
 			},
 			"actions": {
 				"review": "Revisar",
