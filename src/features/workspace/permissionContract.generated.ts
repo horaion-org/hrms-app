@@ -3,7 +3,7 @@
 
 /** SHA-256 of the contract file this module was generated from. */
 export const PERMISSION_CONTRACT_SHA256 =
-	"15fd5f597359166cf44d3abf86dfb2eef4093d83b785f9ed08e7f6b525ad42bd";
+	"89cc4f0e62f48c8479a6f6ff2e9d449774cd6bdd2ca694e621ecd4353bd1e826";
 
 /** The places a permission can be assigned at, widest first. */
 export const ASSIGNABLE_SCOPES = ["COMPANY", "BRANCH", "DEPARTMENT"] as const;
@@ -402,6 +402,17 @@ export const PERMISSION_DEFINITIONS = [
 		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
 		prerequisites: [],
 		since: "2026-11-16",
+		worksWith: [],
+		systemRolesOnly: false,
+	},
+	{
+		key: "shift_preference:update",
+		resource: "shift_preference",
+		action: "update",
+		module: "people",
+		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
+		prerequisites: ["shift_preference:read"],
+		since: "2026-11-17",
 		worksWith: [],
 		systemRolesOnly: false,
 	},
@@ -938,6 +949,7 @@ export const PERMISSION_KEYS = [
 	"work_availability:read",
 	"work_availability:update",
 	"shift_preference:read",
+	"shift_preference:update",
 	"member_event:read",
 	"employment_terms:read",
 	"employment_terms:update",
@@ -1020,6 +1032,7 @@ export const ROLE_TEMPLATES = [
 			"work_availability:read",
 			"work_availability:update",
 			"shift_preference:read",
+			"shift_preference:update",
 			"member_event:read",
 			"employment_terms:read",
 			"employment_terms:update",
@@ -1079,6 +1092,7 @@ export const ROLE_TEMPLATES = [
 			"work_availability:read",
 			"work_availability:update",
 			"shift_preference:read",
+			"shift_preference:update",
 			"member_event:read",
 			"member_employment_terms:read",
 			"member_employment_terms:update",
@@ -1138,6 +1152,7 @@ export const ROLE_TEMPLATES = [
 			"work_availability:read",
 			"work_availability:update",
 			"shift_preference:read",
+			"shift_preference:update",
 			"member_event:read",
 			"leave_request:read",
 			"leave_request:review",
