@@ -76,7 +76,12 @@ export const LeaveTypeDialog = ({
 	const name = useWatch({ control, name: "name" });
 	const submit = useCreateFormSubmit(form, FIELDS, onClose);
 	// The API refuses a new kind once any request uses the type, so it is not offered.
-	const kindFixed = (editing?.requestCount ?? 0) > 0;
+	// An earned type (Off in lieu) keeps its kind: it draws on time off earned, and is the only kind shown.
+	const earned = editing?.grantKind === "EARNED";
+	const kindFixed = earned || (editing?.requestCount ?? 0) > 0;
+	const kinds: ReadonlyArray<LeaveGrantKind> = earned
+		? ["EARNED"]
+		: LEAVE_GRANT_KINDS;
 	return (
 		<CreateFormDialog
 			alertRef={submit.alertRef}
@@ -130,7 +135,7 @@ export const LeaveTypeDialog = ({
 							className="grid gap-4"
 							role="radiogroup"
 						>
-							{LEAVE_GRANT_KINDS.map((kind) => (
+							{kinds.map((kind) => (
 								<RadioCard
 									key={kind}
 									checked={field.value === kind}
@@ -145,7 +150,11 @@ export const LeaveTypeDialog = ({
 						</div>
 						{kindFixed && (
 							<p className="text-xs text-neutral-600" id={kindHintId}>
-								{t(`${key}.kindFixed`, { count: editing?.requestCount ?? 0 })}
+								{earned
+									? t(`${key}.kindEarned`)
+									: t(`${key}.kindFixed`, {
+											count: editing?.requestCount ?? 0,
+										})}
 							</p>
 						)}
 					</div>

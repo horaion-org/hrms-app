@@ -2,7 +2,7 @@ import type { TFunction } from "i18next";
 import { z } from "zod";
 import { unitNameSchema } from "@/features/organisation/createSchemas";
 import {
-	LEAVE_GRANT_KINDS,
+	LISTED_GRANT_KINDS,
 	type LeaveGrantKind,
 	type LeaveTypeBody,
 	type ManagedLeaveType,
@@ -25,6 +25,7 @@ export const leaveTypeSchema = (
 	grantKind: z.ZodEnum<{
 		ALLOWANCE: "ALLOWANCE";
 		PER_OCCASION: "PER_OCCASION";
+		EARNED: "EARNED";
 		UNTRACKED: "UNTRACKED";
 	}>;
 	paid: z.ZodBoolean;
@@ -38,7 +39,7 @@ export const leaveTypeSchema = (
 			length: t(`${key}.nameLength`, NAME_LIMITS),
 			characters: t(`${key}.nameCharacters`),
 		}),
-		grantKind: z.enum(LEAVE_GRANT_KINDS),
+		grantKind: z.enum(LISTED_GRANT_KINDS),
 		paid: z.boolean(),
 		requiresReason: z.boolean(),
 		allowsPartDays: z.boolean(),

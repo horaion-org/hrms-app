@@ -1,5 +1,5 @@
 import {
-	LEAVE_GRANT_KINDS,
+	LISTED_GRANT_KINDS,
 	type LeaveGrantKind,
 	type LeaveTypeOrderBody,
 	type ManagedLeaveType,
@@ -18,7 +18,7 @@ export type CatalogueSections = {
 };
 
 const isKnownKind = (kind: string): kind is LeaveGrantKind =>
-	(LEAVE_GRANT_KINDS as ReadonlyArray<string>).includes(kind);
+	(LISTED_GRANT_KINDS as ReadonlyArray<string>).includes(kind);
 
 const byDisplayOrder = (
 	first: ManagedLeaveType,
@@ -36,7 +36,7 @@ export const catalogueSections = (
 		type.status === "ACTIVE" && isKnownKind(type.grantKind);
 	return {
 		system: types.filter((type) => type.system),
-		groups: LEAVE_GRANT_KINDS.map((grantKind) => ({
+		groups: LISTED_GRANT_KINDS.map((grantKind) => ({
 			grantKind,
 			types: companyTypes
 				.filter((type) => isListedActive(type) && type.grantKind === grantKind)

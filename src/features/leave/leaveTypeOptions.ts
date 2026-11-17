@@ -3,7 +3,12 @@ import type { SelectOption } from "@/components/forms/Select";
 import type { CompanyLeaveType } from "@/features/leave/api";
 
 /** The kinds the app groups by, in the order their groups are listed. */
-const GRANT_KINDS = ["ALLOWANCE", "PER_OCCASION", "UNTRACKED"] as const;
+const GRANT_KINDS = [
+	"ALLOWANCE",
+	"PER_OCCASION",
+	"EARNED",
+	"UNTRACKED",
+] as const;
 
 type GrantKind = (typeof GRANT_KINDS)[number];
 

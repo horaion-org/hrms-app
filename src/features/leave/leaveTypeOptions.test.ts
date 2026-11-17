@@ -35,6 +35,28 @@ describe("leaveTypeOptions", () => {
 		});
 	});
 
+	it("given_anEarnedType_when_offered_then_itsGroupHasAHeadingBeforeNoAllowance", () => {
+		const options = leaveTypeOptions(
+			[
+				leaveTypeFixture({
+					code: "UNPAID",
+					name: "Unpaid leave",
+					grantKind: "UNTRACKED",
+				}),
+				leaveTypeFixture({
+					code: "OFF_IN_LIEU",
+					name: "Off in lieu",
+					grantKind: "EARNED",
+				}),
+			],
+			t
+		);
+		expect(options).toEqual([
+			{ value: "OFF_IN_LIEU", label: "Off in lieu", group: "Time off earned" },
+			{ value: "UNPAID", label: "Unpaid leave", group: "No allowance" },
+		]);
+	});
+
 	it("orders by kind, then by the company's order, whatever order it receives", () => {
 		const options = leaveTypeOptions(
 			[
@@ -107,9 +129,9 @@ describe("leaveTypeOptions", () => {
 		const options = leaveTypeOptions(
 			[
 				leaveTypeFixture({
-					code: "TOIL",
-					name: "Time off in lieu",
-					grantKind: "EARNED",
+					code: "STUDY",
+					name: "Study leave",
+					grantKind: "ACCRUED",
 				}),
 				leaveTypeFixture({
 					code: "ANNUAL",
@@ -121,7 +143,7 @@ describe("leaveTypeOptions", () => {
 		);
 		expect(options).toEqual([
 			{ value: "ANNUAL", label: "Annual", group: "Yearly allowance" },
-			{ value: "TOIL", label: "Time off in lieu" },
+			{ value: "STUDY", label: "Study leave" },
 		]);
 	});
 });

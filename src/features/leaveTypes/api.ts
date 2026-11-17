@@ -22,22 +22,33 @@ import {
  * no key.
  */
 
-/** The kinds a type can be given here, in the order the catalogue groups them. */
+/** The kinds a new type can be given here. */
 export const LEAVE_GRANT_KINDS = [
 	"ALLOWANCE",
 	"PER_OCCASION",
 	"UNTRACKED",
 ] as const;
 
+/**
+ * Every kind the catalogue lists, in the API's order. EARNED is Off in
+ * lieu's: drawn from time off earned (API ADR-0126), never chosen here.
+ */
+export const LISTED_GRANT_KINDS = [
+	"ALLOWANCE",
+	"PER_OCCASION",
+	"EARNED",
+	"UNTRACKED",
+] as const;
+
 /** How a leave type is counted. */
-export type LeaveGrantKind = (typeof LEAVE_GRANT_KINDS)[number];
+export type LeaveGrantKind = (typeof LISTED_GRANT_KINDS)[number];
 
 /** The most characters a leave type's name takes. */
 export const LEAVE_TYPE_NAME_MAX_LENGTH = 100;
 
 // A kind or status a newer API adds reads as UNKNOWN instead of failing the whole answer.
 const grantKindSchema = z
-	.enum([...LEAVE_GRANT_KINDS, "UNKNOWN"])
+	.enum([...LISTED_GRANT_KINDS, "UNKNOWN"])
 	.catch("UNKNOWN");
 const leaveTypeStatusSchema = z
 	.enum(["ACTIVE", "INACTIVE", "UNKNOWN"])

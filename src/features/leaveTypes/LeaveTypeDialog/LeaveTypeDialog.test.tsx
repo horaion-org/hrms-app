@@ -222,6 +222,59 @@ describe("LeaveTypeDialog", () => {
 		});
 	});
 
+	it("given_offInLieu_when_edited_then_showsItsEarnedKindFixedAndKeepsIt", async () => {
+		const offInLieu = managedLeaveTypeFixture({
+			leaveTypeId: "lt-off-in-lieu",
+			code: "OFF_IN_LIEU",
+			name: "Off in lieu",
+			grantKind: "EARNED",
+		});
+		const calls = stubApi(
+			routes({
+				[`GET ${LEAVE_TYPES}`]: {
+					status: 200,
+					body: envelope([...LEAVE_TYPE_CATALOGUE_FIXTURE, offInLieu]),
+				},
+				[`PUT ${LEAVE_TYPES}/lt-off-in-lieu`]: {
+					status: 200,
+					body: envelope(offInLieu),
+				},
+			})
+		);
+		const user = userEvent.setup();
+		const panel = await openPanel();
+
+		await user.click(
+			await within(panel).findByRole("button", { name: "Edit Off in lieu" })
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Edit leave type",
+		});
+		const kinds = within(dialog).getByRole("radiogroup", {
+			name: "How it is counted",
+		});
+		expect(
+			within(kinds)
+				.getAllByRole("radio")
+				.map((radio) => radio.getAttribute("value"))
+		).toEqual(["EARNED"]);
+		expect(within(kinds).getByRole("radio")).toBeDisabled();
+		expect(dialog).toHaveTextContent(
+			"It draws on the time off people earn, so how it is counted stays as it is."
+		);
+		await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+		await waitFor(() => {
+			expect(
+				calls.find(
+					(call) =>
+						call.method === "PUT" &&
+						call.path === `${LEAVE_TYPES}/lt-off-in-lieu`
+				)?.body
+			).toMatchObject({ grantKind: "EARNED" });
+		});
+	});
+
 	it("starts a new type taken in part days and sends the switch turned off", async () => {
 		const calls = stubApi(
 			routes({

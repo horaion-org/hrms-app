@@ -128,6 +128,7 @@
 		"grantKinds": {
 			"ALLOWANCE": "Asignación anual",
 			"PER_OCCASION": "Por ocasión",
+			"EARNED": "Tiempo libre ganado",
 			"UNTRACKED": "Sin asignación"
 		},
 		"view": "Ver solicitud de {{name}}",
@@ -984,8 +985,10 @@
 				"kindDescription": {
 					"ALLOWANCE": "Un número fijo de días por año de permisos.",
 					"PER_OCCASION": "Un número fijo de días cada vez que ocurre.",
+					"EARNED": "Se gana con horas extra en condiciones que dan tiempo libre en lugar de pago, y se recupera como Día libre compensatorio.",
 					"UNTRACKED": "No se descuenta de nada."
 				},
+				"kindEarned": "Descuenta del tiempo libre que la gente gana, así que su forma de contarse se queda como está.",
 				"kindFixed_one": "Lo usa {{count}} solicitud, así que no se puede cambiar cómo se cuenta. Añade un tipo nuevo y desactiva este.",
 				"kindFixed_other": "Lo usan {{count}} solicitudes, así que no se puede cambiar cómo se cuenta. Añade un tipo nuevo y desactiva este.",
 				"paid": "Remunerado",

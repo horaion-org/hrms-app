@@ -128,6 +128,7 @@
 		"grantKinds": {
 			"ALLOWANCE": "Yearly allowance",
 			"PER_OCCASION": "Per occasion",
+			"EARNED": "Time off earned",
 			"UNTRACKED": "No allowance"
 		},
 		"view": "View request for {{name}}",
@@ -1764,8 +1765,10 @@
 				"kindDescription": {
 					"ALLOWANCE": "A set number of days each leave year.",
 					"PER_OCCASION": "A set number of days each time it happens.",
+					"EARNED": "Earned by extra hours on terms that give time off instead of pay, and taken back as Off in lieu.",
 					"UNTRACKED": "Not counted against anything."
 				},
+				"kindEarned": "It draws on the time off people earn, so how it is counted stays as it is.",
 				"kindFixed_one": "Used by {{count}} request, so how it is counted can’t change. Add a new type and deactivate this one instead.",
 				"kindFixed_other": "Used by {{count}} requests, so how it is counted can’t change. Add a new type and deactivate this one instead.",
 				"paid": "Paid",
