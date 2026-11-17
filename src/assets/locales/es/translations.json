@@ -4159,6 +4159,7 @@
 			"failedTitle": "Por qué no se generó",
 			"failed": "No se pudo generar este horario.",
 			"infeasible": "Ningún cuadrante podía cumplir todos los turnos y restricciones de este horario.",
+			"regenerationFailed": "No se pudo generar de nuevo: {{reason}} Este es el cuadrante anterior: sigue trabajando con él o vuelve a generarlo.",
 			"code": "Código de error: {{code}}",
 			"engineSaid": "La explicación del motor",
 			"byMember": "Notas por empleado",

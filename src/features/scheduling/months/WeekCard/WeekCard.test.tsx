@@ -134,6 +134,55 @@ describe("WeekCard", () => {
 		).toBeInTheDocument();
 	});
 
+	it("given_aRegenerationThatFailedAndKeptTheRoster_when_rendered_then_saysSoAndStillShowsTheRoster", async () => {
+		render(
+			<MemoryRouterHarness>
+				<WeekCard
+					departmentId="d-1"
+					failureMessage="The engine’s job ended without a roster."
+					week={monthWeekFixture({
+						state: "TO_REVIEW",
+						scheduleId: "s-2",
+						days: coverDays("2026-11-02", { 2: 1 }),
+						failure: {
+							runStatus: "FAILED",
+							errorCode: "job_failed",
+							engineOutcome: null,
+						},
+					})}
+				/>
+			</MemoryRouterHarness>
+		);
+
+		const card = await screen.findByRole("region");
+		expect(
+			within(card).getByText(
+				"Generating again failed: The engine’s job ended without a roster. This is the earlier roster: keep working with it or generate again."
+			)
+		).toBeInTheDocument();
+		expect(card).toHaveTextContent("1 shift short");
+		expect(within(card).getByRole("link", { name: /^Review/ })).toHaveAttribute(
+			"href",
+			"/scheduling/s-2"
+		);
+	});
+
+	it("given_aWeekBeingGeneratedWithAFailureMessage_when_rendered_then_saysNothingOfIt", async () => {
+		render(
+			<MemoryRouterHarness>
+				<WeekCard
+					departmentId="d-1"
+					failureMessage="The engine couldn’t be reached."
+					week={monthWeekFixture({ state: "GENERATING", ...noRoster })}
+				/>
+			</MemoryRouterHarness>
+		);
+
+		expect(await screen.findByRole("region")).not.toHaveTextContent(
+			"The engine couldn’t be reached."
+		);
+	});
+
 	it("given_aWeekTheRunRefused_when_rendered_then_saysNotGeneratedAndWhy", async () => {
 		render(
 			<MemoryRouterHarness>

@@ -18,7 +18,10 @@ import { scheduleViewLink } from "@/features/scheduling/schedules/scheduleViewLi
 
 export type WeekCardProps = {
 	week: MonthWeek;
-	/** Why a failed week gave no roster, in today's failure words. */
+	/**
+	 * Why the week's newest run gave no roster, in today's failure words: a
+	 * failed week, or a week whose regeneration failed and kept its roster.
+	 */
 	failureMessage?: string;
 	/** Why the last month run refused this week, in today's refusal words. */
 	refusal?: string;
@@ -37,7 +40,8 @@ const key = "scheduling.months";
  * week under review, Open on any other week with a schedule (a draft opens
  * its setup, any other its roster), none on a week not generated yet. A
  * tentative or missing week has a dashed frame: it is not final. A failed
- * week says why; a week the last month run refused, or one a month run took
+ * week says why, and so does a week whose regeneration failed and that shows
+ * its earlier roster; a week the last month run refused, or one a month run took
  * out of its queue, says why too (the last run's refusal first); a week whose
  * rules changed since it was generated says so. A week being generated shows
  * its state only.
@@ -60,6 +64,16 @@ export const WeekCard = ({
 	const shortShifts = week.days.reduce((sum, day) => sum + day.shortShifts, 0);
 	const handChangedDays = week.handChangedDays ?? 0;
 	const dashed = week.state === "TENTATIVE" || week.state === "NOT_GENERATED";
+	// A week with a roster whose newest run failed kept its earlier roster (API ADR-0112).
+	const failureLine = !failureMessage
+		? undefined
+		: week.state === "FAILED"
+			? failureMessage
+			: hasRoster(week.state)
+				? t("scheduling.generation.regenerationFailed", {
+						reason: failureMessage,
+					})
+				: undefined;
 	const refusalWords =
 		refusal ??
 		(week.queueRefusal
@@ -85,9 +99,7 @@ export const WeekCard = ({
 					{t(`${key}.states.${week.state}`)}
 				</Badge>
 			</div>
-			{week.state === "FAILED" && failureMessage && (
-				<p className="text-sm text-neutral-800">{failureMessage}</p>
-			)}
+			{failureLine && <p className="text-sm text-neutral-800">{failureLine}</p>}
 			{week.rulesChanged === true && (
 				<p className="text-sm text-neutral-800">{t(`${key}.rulesChanged`)}</p>
 			)}

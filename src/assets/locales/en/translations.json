@@ -4359,6 +4359,7 @@
 			"failedTitle": "Why it wasn’t generated",
 			"failed": "This schedule couldn’t be generated.",
 			"infeasible": "No roster could meet every shift and constraint of this schedule.",
+			"regenerationFailed": "Generating again failed: {{reason}} This is the earlier roster: keep working with it or generate again.",
 			"code": "Error code: {{code}}",
 			"engineSaid": "The engine’s explanation",
 			"byMember": "Notes by member",
