@@ -14,11 +14,11 @@ import {
 } from "@/features/scheduling/constraints/capacityProblems";
 import { useJobTitleHolders } from "@/features/scheduling/constraints/useJobTitleHolders";
 import { useConstraintsInUnits } from "@/features/scheduling/constraints/useConstraintsInUnits";
-import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
+import { departmentUnitOf } from "@/features/scheduling/departmentSetup/departmentUnit";
 import { ReadinessCallout } from "@/features/scheduling/readiness/ReadinessCallout";
 import type { ReturnLink } from "@/features/scheduling/readiness/readinessCopy";
 import { useSchedulingReadiness } from "@/features/scheduling/readiness/useSchedulingReadiness";
-import { initialDepartmentOf } from "@/features/scheduling/setupDepartment";
+import { initialDepartmentOf } from "@/features/scheduling/departmentSetup/setupDepartment";
 import {
 	constraintsNamingShift,
 	deleteCopy,
@@ -42,7 +42,7 @@ import {
 import { useShiftActions } from "@/features/scheduling/shifts/useShiftActions";
 import { useShiftRoleOptions } from "@/features/scheduling/shifts/useShiftRoleOptions";
 import { useShiftsInUnits } from "@/features/scheduling/shifts/useShiftsInUnits";
-import { useDraftCount } from "@/features/scheduling/useDraftCount";
+import { useDraftCount } from "@/features/scheduling/departmentSetup/useDraftCount";
 import { workspaceQuery } from "@/features/workspace/api";
 import { DepartmentFilter } from "@/features/workspace/DepartmentFilter";
 import { departmentChips } from "@/features/workspace/filterChips";

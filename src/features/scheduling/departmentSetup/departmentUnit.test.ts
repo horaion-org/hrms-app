@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
+import { departmentUnitOf } from "@/features/scheduling/departmentSetup/departmentUnit";
 import { schedulingWorkspace } from "@/features/scheduling/schedules/fixtures";
 
 describe("departmentUnitOf", () => {

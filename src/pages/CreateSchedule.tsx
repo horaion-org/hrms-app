@@ -16,7 +16,7 @@ import { Stepper, StepperStep } from "@/components/ui/Stepper";
 import { Toast } from "@/components/ui/Toast";
 import { placeOf } from "@/features/organisation/assignmentTargets";
 import { useConstraintOptions } from "@/features/scheduling/constraints/useConstraintOptions";
-import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
+import { departmentUnitOf } from "@/features/scheduling/departmentSetup/departmentUnit";
 import { GenerateStep } from "@/features/scheduling/GenerateStep";
 import {
 	publishedRosterOtherThan,

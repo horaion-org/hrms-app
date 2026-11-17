@@ -37,7 +37,7 @@ import {
 	showingOf,
 	showingValue,
 } from "@/features/scheduling/constraints/constraintListView";
-import { useSectionFolds } from "@/features/scheduling/useSectionFolds";
+import { useSectionFolds } from "@/features/scheduling/departmentSetup/useSectionFolds";
 import { constraintSectionsOf } from "@/features/scheduling/constraints/constraintSections";
 import {
 	categoryIconOf,
@@ -47,13 +47,13 @@ import { needsAttention } from "@/features/scheduling/constraints/valueProblems"
 import { useConstraintActions } from "@/features/scheduling/constraints/useConstraintActions";
 import { useConstraintOptions } from "@/features/scheduling/constraints/useConstraintOptions";
 import { useConstraintsInUnits } from "@/features/scheduling/constraints/useConstraintsInUnits";
-import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
+import { departmentUnitOf } from "@/features/scheduling/departmentSetup/departmentUnit";
 import { ReadinessCallout } from "@/features/scheduling/readiness/ReadinessCallout";
 import type { ReturnLink } from "@/features/scheduling/readiness/readinessCopy";
 import { useSchedulingReadiness } from "@/features/scheduling/readiness/useSchedulingReadiness";
-import { initialDepartmentOf } from "@/features/scheduling/setupDepartment";
+import { initialDepartmentOf } from "@/features/scheduling/departmentSetup/setupDepartment";
 import { deleteCopy, editNote } from "@/features/scheduling/setupReach";
-import { useDraftCount } from "@/features/scheduling/useDraftCount";
+import { useDraftCount } from "@/features/scheduling/departmentSetup/useDraftCount";
 import { workspaceQuery } from "@/features/workspace/api";
 import { DepartmentFilter } from "@/features/workspace/DepartmentFilter";
 import { departmentChips, filterChip } from "@/features/workspace/filterChips";

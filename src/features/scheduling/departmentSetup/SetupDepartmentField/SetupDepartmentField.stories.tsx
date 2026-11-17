@@ -3,7 +3,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import { storyProviders } from "@/features/organisation/storyApi";
 import { schedulingWorkspace } from "@/features/scheduling/schedules/fixtures";
-import { SetupDepartmentField } from "@/features/scheduling/SetupDepartmentField";
+import { SetupDepartmentField } from "@/features/scheduling/departmentSetup/SetupDepartmentField";
 import { workspaceQuery } from "@/features/workspace/api";
 
 const client = new QueryClient({

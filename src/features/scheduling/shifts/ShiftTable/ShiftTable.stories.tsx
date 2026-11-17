@@ -5,7 +5,7 @@ import {
 	departmentShiftFixture,
 } from "@/features/scheduling/shifts/fixtures";
 import { ShiftTable } from "@/features/scheduling/shifts/ShiftTable";
-import { rememberClosed } from "@/features/scheduling/sectionFolds";
+import { rememberClosed } from "@/features/scheduling/departmentSetup/sectionFolds";
 import "@/common/i18n";
 
 const shifts = SHIFT_FIXTURES.map((shift, index) => ({

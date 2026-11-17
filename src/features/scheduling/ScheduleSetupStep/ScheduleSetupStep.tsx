@@ -11,7 +11,7 @@ import { Select } from "@/components/forms/Select";
 import { Callout } from "@/components/ui/Callout";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { partTimeReadinessQuery } from "@/features/availability/api";
-import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
+import { departmentUnitOf } from "@/features/scheduling/departmentSetup/departmentUnit";
 import { PartTimeReadinessCallout } from "@/features/scheduling/readiness/PartTimeReadinessCallout";
 import {
 	publishedRosterOtherThan,

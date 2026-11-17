@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { initialDepartmentOf } from "@/features/scheduling/setupDepartment";
+import { initialDepartmentOf } from "@/features/scheduling/departmentSetup/setupDepartment";
 
 const KITCHEN = { departmentId: "d-1" };
 const BAR = { departmentId: "d-2" };

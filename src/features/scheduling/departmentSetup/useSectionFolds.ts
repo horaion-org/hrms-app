@@ -2,7 +2,7 @@ import { useState } from "react";
 import {
 	rememberClosed,
 	rememberedClosed,
-} from "@/features/scheduling/sectionFolds";
+} from "@/features/scheduling/departmentSetup/sectionFolds";
 
 /** What a page needs to fold its sections: whether one is open, and the ways to change that. */
 export type SectionFolds = {

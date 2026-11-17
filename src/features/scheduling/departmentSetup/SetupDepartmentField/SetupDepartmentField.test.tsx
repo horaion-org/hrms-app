@@ -8,7 +8,7 @@ import { schedulingWorkspace } from "@/features/scheduling/schedules/fixtures";
 import {
 	SetupDepartmentField,
 	type SetupDepartment,
-} from "@/features/scheduling/SetupDepartmentField";
+} from "@/features/scheduling/departmentSetup/SetupDepartmentField";
 import { workspaceQuery } from "@/features/workspace/api";
 
 const LABELS = {

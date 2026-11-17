@@ -82,7 +82,7 @@ import type { Constraint } from "@/features/scheduling/scheduleDraft";
 import {
 	SetupDepartmentField,
 	type SetupDepartment,
-} from "@/features/scheduling/SetupDepartmentField";
+} from "@/features/scheduling/departmentSetup/SetupDepartmentField";
 import { dayTypeLabel } from "@/features/scheduling/dayTypes";
 import { WEEKDAYS } from "@/features/scheduling/shifts/api";
 import {

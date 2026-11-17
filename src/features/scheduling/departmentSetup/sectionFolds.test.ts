@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import {
 	rememberClosed,
 	rememberedClosed,
-} from "@/features/scheduling/sectionFolds";
+} from "@/features/scheduling/departmentSetup/sectionFolds";
 
 describe("rememberedClosed and rememberClosed", () => {
 	it("given_aRememberedChoice_when_read_then_itsSectionNames", () => {
