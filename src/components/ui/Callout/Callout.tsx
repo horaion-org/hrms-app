@@ -8,12 +8,12 @@ import {
 	WarningIcon,
 } from "@/components/ui/Icon";
 
-export type CalloutTone = "info" | "success" | "warning" | "error";
+export type CalloutTone = "info" | "neutral" | "success" | "warning" | "error";
 
 export type CalloutProps = Omit<ComponentPropsWithRef<"div">, "children"> & {
 	/** The guidance itself; one short sentence reads best. */
 	children: ReactNode;
-	/** Success confirms that something holds; warning draws attention to something to fix before acting, without blocking it; error, to something that blocks. */
+	/** Neutral states a fact with nothing to do yet; success confirms that something holds; warning draws attention to something to fix before acting, without blocking it; error, to something that blocks. */
 	tone?: CalloutTone;
 };
 
@@ -21,6 +21,10 @@ const toneClasses: Record<CalloutTone, { box: string; icon: string }> = {
 	info: {
 		box: "border-ink-blue-400 bg-ink-blue-50",
 		icon: "text-ink-blue-600",
+	},
+	neutral: {
+		box: "border-neutral-400 bg-neutral-100",
+		icon: "text-neutral-700",
 	},
 	success: {
 		box: "border-success-400 bg-success-50",
@@ -38,6 +42,7 @@ const toneClasses: Record<CalloutTone, { box: string; icon: string }> = {
 
 const toneIcons: Record<CalloutTone, typeof InfoIcon> = {
 	info: InfoIcon,
+	neutral: InfoIcon,
 	success: TickIcon,
 	warning: WarningIcon,
 	error: AlertIcon,

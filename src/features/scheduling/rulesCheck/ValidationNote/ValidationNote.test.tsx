@@ -88,7 +88,7 @@ describe("ValidationNote", () => {
 		const ask = show("outOfDate");
 
 		expect(screen.getByRole("note")).toHaveTextContent(copy.outOfDate);
-		expect(screen.getByRole("note")).toHaveClass("bg-ink-blue-50");
+		expect(screen.getByRole("note")).toHaveClass("bg-neutral-100");
 		await userEvent.click(screen.getByRole("button", { name: copy.check }));
 		expect(ask).toHaveBeenCalledOnce();
 	});

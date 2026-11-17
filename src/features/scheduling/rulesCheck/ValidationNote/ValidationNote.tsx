@@ -20,7 +20,7 @@ const key = "scheduling.rulesCheck";
 
 /**
  * The status card at the head of Issues, one short sentence in its own tone:
- * out of date since the schedule changed (info, with Validate schedule); may
+ * out of date since the schedule changed (neutral, with Validate schedule); may
  * be incomplete (warning, with Validate again); broken, counting the rules
  * (error; the rules themselves are rows below); what the engine could not
  * check (info); or holds (success). While validating or refused, a line
@@ -53,7 +53,7 @@ export const ValidationNote = ({
 		);
 	if (standing === "outOfDate")
 		return (
-			<Callout tone="info">
+			<Callout tone="neutral">
 				<span className="block">{t(`${key}.outOfDate`)}</span>
 				<Button
 					className="mt-2"

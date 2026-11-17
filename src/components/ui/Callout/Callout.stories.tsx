@@ -32,6 +32,11 @@ export const Warning: Story = {
 	},
 };
 
+/** A fact with nothing to do yet, in grey. */
+export const Neutral: Story = {
+	args: { tone: "neutral", children: "Changed since this list was made" },
+};
+
 /** Something that holds, confirmed. */
 export const Success: Story = {
 	args: {

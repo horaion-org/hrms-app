@@ -32,6 +32,15 @@ describe("Callout", () => {
 		);
 	});
 
+	it("given_theNeutralTone_when_rendered_then_readsInGrey", () => {
+		render(<Callout tone="neutral">Changed since this list was made</Callout>);
+
+		expect(screen.getByRole("note")).toHaveClass(
+			"border-neutral-400",
+			"bg-neutral-100"
+		);
+	});
+
 	it("given_theSuccessTone_when_rendered_then_confirmsInSuccessColours", () => {
 		render(<Callout tone="success">Validated: no rule broken</Callout>);
 
