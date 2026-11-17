@@ -381,6 +381,7 @@ export const GeneratedRoster = ({
 							editedDays={roster.editedDays}
 							findings={roster.placed}
 							offeredDays={offeredDays}
+							outsideDays={roster.outsideDays}
 							previewDays={roster.previewDays}
 							rows={rows}
 							selectedDayKey={editing ? view.cell : undefined}

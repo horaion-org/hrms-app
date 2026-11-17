@@ -5571,6 +5571,9 @@
 				"reversed": "The last day is before the first day. Choose a last day on or after {{first}}.",
 				"tooLong": "That is {{days}} days. A schedule by dates covers up to {{max}} days. Choose a last day on or before {{last}}, or make a second schedule for the rest."
 			}
+		},
+		"roster": {
+			"notInSchedule": "Not in this schedule"
 		}
 	},
 	"colourSwatchPicker": {

@@ -5371,6 +5371,9 @@
 				"reversed": "El último día es anterior al primero. Elige un último día igual o posterior al {{first}}.",
 				"tooLong": "Son {{days}} días. Un horario por fechas cubre hasta {{max}} días. Elige un último día igual o anterior al {{last}}, o haz un segundo horario para el resto."
 			}
+		},
+		"roster": {
+			"notInSchedule": "No está en este horario"
 		}
 	},
 	"workspace": {

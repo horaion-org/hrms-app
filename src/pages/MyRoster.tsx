@@ -102,7 +102,7 @@ export const MyRosterPage = (): FunctionComponent => {
 				{t(`${key}.title`, {
 					department: data.departmentName,
 					period: formatPeriod(
-						{ start: data.periodStart, end: data.periodEnd },
+						{ start: data.coveredFrom, end: data.coveredTo },
 						language
 					),
 				})}

@@ -50,7 +50,7 @@ import type {
 /** What the roster reads of its schedule: its week, the zone its days are in and, for the findings, its generation. */
 export type RosterSchedule = Pick<
 	Schedule,
-	"periodStart" | "periodEnd" | "timeZone"
+	"periodStart" | "periodEnd" | "coveredFrom" | "coveredTo" | "timeZone"
 > &
 	Partial<Pick<Schedule, "generation">>;
 
@@ -95,6 +95,8 @@ export type RosterView = {
 	days: Array<string>;
 	/** The week's days inside the period, which a phone steps through. */
 	periodDays: Array<string>;
+	/** The week's days the schedule does not cover (API ADR-0113): greyed, with no cells. */
+	outsideDays: Array<string>;
 	/** The one day a phone shows. */
 	shownDay: string | undefined;
 	rows: Array<RosterRow>;
@@ -208,7 +210,8 @@ export const rosterViewOf = ({
 	withSummary,
 	changesLeave,
 }: RosterViewInput): RosterView => {
-	const period = { start: schedule.periodStart, end: schedule.periodEnd };
+	// The days this schedule covers: its whole week, or a run of it (API ADR-0113).
+	const period = { start: schedule.coveredFrom, end: schedule.coveredTo };
 	const week = view.week ?? mondayOf(today);
 	const days = weekDays(period, week);
 	const rows = rosterFromAssignments(assignments, period);
@@ -263,6 +266,7 @@ export const rosterViewOf = ({
 		period,
 		days,
 		periodDays,
+		outsideDays: days.filter((day) => !periodDays.includes(day)),
 		shownDay,
 		rows,
 		findings,

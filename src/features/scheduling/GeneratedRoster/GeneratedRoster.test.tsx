@@ -121,6 +121,8 @@ describe("GeneratedRoster", () => {
 				schedule={{
 					periodStart: schedule.periodStart,
 					periodEnd: schedule.periodEnd,
+					coveredFrom: schedule.coveredFrom,
+					coveredTo: schedule.coveredTo,
 					timeZone: schedule.timeZone,
 				}}
 			/>

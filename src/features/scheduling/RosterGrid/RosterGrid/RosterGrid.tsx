@@ -85,6 +85,8 @@ export type RosterGridProps = {
 	 * (the page's `DaySwitcher` picks it); every day shows when left out.
 	 */
 	shownDay?: string;
+	/** Days of the week this schedule does not cover (API ADR-0113): shown greyed, with no cells to choose. */
+	outsideDays?: ReadonlyArray<string>;
 	className?: string;
 };
 
@@ -121,6 +123,7 @@ export const RosterGrid = ({
 	editedDays,
 	previewDays,
 	offeredDays,
+	outsideDays,
 	compact = false,
 	shownDay,
 	className,
@@ -187,12 +190,18 @@ export const RosterGrid = ({
 					: named,
 		};
 	};
-	/** A day's cell: the shift worked, a day off or leave, or nothing without a row for it. */
+	/** A day's cell: the shift worked, a day off or leave, nothing without a row for it, or a day not in this schedule. */
 	const cellContent = (
 		row: RosterRow,
 		name: string,
 		date: string
 	): ReactNode => {
+		if (outsideDays?.includes(date))
+			return (
+				<span className="flex h-14 w-full items-center justify-center rounded bg-neutral-100 px-1 text-center text-xs text-neutral-700">
+					{t("scheduling.roster.notInSchedule")}
+				</span>
+			);
 		const cell = row.days[date];
 		if (cell === undefined) return null;
 		const key = dayKey(row, date);
