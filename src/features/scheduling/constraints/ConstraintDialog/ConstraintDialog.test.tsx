@@ -9,6 +9,18 @@ import { authTestI18n } from "@/features/auth/testingI18n";
 import { ConstraintDialog } from "@/features/scheduling/constraints/ConstraintDialog";
 import { typeGroupsOf } from "@/features/scheduling/constraints/ConstraintDialog/typeGroups";
 import {
+	changeTypeLink,
+	chooseType,
+	nameField,
+	pick,
+	readyOptions,
+	renderDialog,
+	start,
+	submitButton,
+	trigger,
+	typeName,
+} from "@/features/scheduling/constraints/ConstraintDialog/constraintDialogTesting";
+import {
 	constraintSchema,
 	type ConstraintDialogBody,
 } from "@/features/scheduling/constraints/ConstraintDialog/schema";
@@ -22,15 +34,9 @@ import {
 	MOST_OVERTIME_A_MONTH_FIXTURE,
 	WEEKLY_RULE_FIXTURE,
 } from "@/features/scheduling/constraints/fixtures";
-import type { ConstraintOptionsState } from "@/features/scheduling/constraints/useConstraintOptions";
 import { reachValueOf } from "@/features/workspace/unitReach";
 import { schedulingWorkspace } from "@/features/scheduling/schedules/fixtures";
 import { workspaceQuery } from "@/features/workspace/api";
-
-const options: ConstraintOptionsState = {
-	status: "ready",
-	options: CONSTRAINT_OPTIONS,
-};
 
 const problem = (status: number, errorCode: string): ApiProblemError =>
 	new ApiProblemError({
@@ -40,83 +46,6 @@ const problem = (status: number, errorCode: string): ApiProblemError =>
 		fieldErrors: [],
 		reason: "http",
 	});
-
-const renderDialog = (
-	props: Partial<Parameters<typeof ConstraintDialog>[0]> = {}
-): { onSave: ReturnType<typeof vi.fn>; onClose: ReturnType<typeof vi.fn> } => {
-	const onSave = vi.fn().mockResolvedValue(undefined);
-	const onClose = vi.fn();
-	render(
-		<I18nextProvider i18n={authTestI18n}>
-			<ConstraintDialog
-				options={options}
-				onClose={onClose}
-				onSave={onSave}
-				{...props}
-			/>
-		</I18nextProvider>
-	);
-	return { onSave, onClose };
-};
-
-const trigger = (name: RegExp): HTMLElement =>
-	screen.getByRole("button", { name });
-
-/** Opens a select and picks each option, closing it again. */
-const pick = async (
-	user: ReturnType<typeof userEvent.setup>,
-	name: RegExp,
-	...labels: Array<string>
-): Promise<void> => {
-	await user.click(trigger(name));
-	await labels.reduce(
-		(previous, label) =>
-			previous.then(async () => {
-				await user.click(await screen.findByRole("option", { name: label }));
-			}),
-		Promise.resolve()
-	);
-	if (screen.queryByRole("listbox")) await user.keyboard("{Escape}");
-};
-
-/** Chooses what the constraint decides on the chooser, then goes on to the form. */
-const chooseType = async (
-	user: ReturnType<typeof userEvent.setup>,
-	label: string
-): Promise<void> => {
-	await user.click(await screen.findByRole("radio", { name: label }));
-	await user.click(screen.getByRole("button", { name: "Continue" }));
-};
-
-/** The button that sends the form: Add constraint for a new one, Save for an edit. */
-const submitButton = (): HTMLElement =>
-	screen.getByRole("button", { name: /^(Save|Add constraint)$/ });
-
-/** The link back to the chooser, offered while the kind may change. */
-const changeTypeLink = (): HTMLElement | null =>
-	screen.queryByRole("button", { name: /^Change what it decides/ });
-
-const nameField = (): HTMLElement =>
-	screen.getByRole("textbox", { name: /^Name/ });
-
-/** Replaces the name, suggested or not, with one typed in. */
-const typeName = async (
-	user: ReturnType<typeof userEvent.setup>,
-	name: string
-): Promise<void> => {
-	await user.clear(nameField());
-	await user.type(nameField(), name);
-};
-
-/** Names the constraint and chooses its type, as every new constraint starts. */
-const start = async (
-	user: ReturnType<typeof userEvent.setup>,
-	type: string
-): Promise<void> => {
-	await screen.findByRole("dialog", { name: "Add constraint" });
-	await chooseType(user, type);
-	await typeName(user, "Morning cover");
-};
 
 /** Orchard with Kitchen and Bar, and Marina; the Applies to field chooses from these. */
 const REACH = {
@@ -1487,7 +1416,7 @@ describe("ConstraintDialog with a Department field", () => {
 		const [departmentId, setDepartmentId] = useState(initial);
 		return (
 			<ConstraintDialog
-				options={departmentId ? options : { status: "pending" }}
+				options={departmentId ? readyOptions : { status: "pending" }}
 				department={{
 					kind: "choose",
 					companyId: "c-1",
@@ -1557,7 +1486,7 @@ describe("ConstraintDialog with a Department field", () => {
 			<ConstraintDialog
 				editing={CONSTRAINT_FIXTURES[2]}
 				impactNote="Saving changes this constraint for Front Office and new schedules."
-				options={options}
+				options={readyOptions}
 				department={{
 					kind: "fixed",
 					departmentId: "d-1",
