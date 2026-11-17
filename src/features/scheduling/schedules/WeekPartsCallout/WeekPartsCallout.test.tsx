@@ -65,7 +65,7 @@ describe("WeekPartsCallout", () => {
 
 	it("given_noLines_when_rendered_then_nothing", () => {
 		const { container } = render(
-			<WeekPartsCallout departmentId="d-1" lines={[]} mayCreateHere />
+			<WeekPartsCallout mayCreateHere departmentId="d-1" lines={[]} />
 		);
 
 		expect(container).toBeEmptyDOMElement();
