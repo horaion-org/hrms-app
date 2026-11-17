@@ -53,6 +53,7 @@ import {
 	isPartTimeWeek,
 	overtimeSentence,
 	suggestedTermsName,
+	timeOffPerExtraHour,
 } from "@/features/employmentTerms/summary";
 import {
 	needsApplyChoice,
@@ -289,6 +290,15 @@ const TermsForm = ({
 	const restError = errors.restWeekday?.message;
 	const daysError = errors.daysPerWeek?.message;
 	const paidAsError = errors.extraHoursPaidAs?.message;
+	// "Time off instead" is offered with the API's figure of time off per extra hour (owner decision 11).
+	const timeOffPerHour =
+		reference?.timeOffPerExtraHourPercent != null
+			? timeOffPerExtraHour(reference.timeOffPerExtraHourPercent, t)
+			: undefined;
+	const paidAsChoices: ReadonlyArray<"RATE" | "TIME_OFF" | "NOTHING"> =
+		timeOffPerHour === undefined
+			? ["RATE", "NOTHING"]
+			: ["RATE", "TIME_OFF", "NOTHING"];
 	const restChoice =
 		values.restKind === "ROSTERED" ? ROSTERED : values.restWeekday;
 	const chooseRest = (choice: string): void => {
@@ -670,15 +680,21 @@ const TermsForm = ({
 										className="flex flex-col gap-3"
 										role="radiogroup"
 									>
-										{(["RATE", "NOTHING"] as const).map((choice) => (
+										{paidAsChoices.map((choice) => (
 											<RadioCard
 												key={choice}
 												checked={field.value === choice}
-												description={t(`${key}.paidAs.${choice}Description`)}
 												disabled={isSubmitting}
 												label={t(`${key}.paidAs.${choice}`)}
 												name={`${formId}-paidAs`}
 												value={choice}
+												description={
+													choice === "TIME_OFF"
+														? t(`${key}.paidAs.TIME_OFFDescription`, {
+																time: timeOffPerHour ?? "",
+															})
+														: t(`${key}.paidAs.${choice}Description`)
+												}
 												onChange={() => {
 													field.onChange(choice);
 												}}

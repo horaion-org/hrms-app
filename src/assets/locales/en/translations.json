@@ -5933,6 +5933,8 @@
 				"legend": "How extra hours are paid",
 				"RATE": "Paid at a rate",
 				"RATEDescription": "Set the rate above.",
+				"TIME_OFF": "Time off instead",
+				"TIME_OFFDescription": "{{time}} off for each extra hour worked. Extra hours aren’t paid: they add to a balance, taken back as Off in lieu.",
 				"NOTHING": "Nothing extra",
 				"NOTHINGDescription": "Extra hours are part of the job."
 			},
@@ -6161,6 +6163,7 @@
 				"restRostered": "Rest day: a different day each week, picked by the roster.",
 				"restFixed": "Rest day: {{weekday}}.",
 				"nothingExtra": "Hours past {{week}} a week earn nothing extra.",
+				"timeOff": "Hours past {{week}} a week earn {{time}} off for each extra hour.",
 				"partTimeExtra": "Extra hours are paid at the normal rate up to {{full}} a week, then as overtime.",
 				"partTimeExtraAt": "Extra hours are paid at the normal rate up to {{full}} a week, then at {{times}}.",
 				"afterWeek": "after {{week}} in a week",

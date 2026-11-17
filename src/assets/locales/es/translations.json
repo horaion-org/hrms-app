@@ -5933,6 +5933,8 @@
 				"legend": "Cómo se pagan las horas extra",
 				"RATE": "Pagadas a una tarifa",
 				"RATEDescription": "Indica la tarifa arriba.",
+				"TIME_OFF": "Tiempo libre en su lugar",
+				"TIME_OFFDescription": "{{time}} libre por cada hora extra trabajada. Las horas extra no se pagan: se suman a un saldo que se recupera como Libre por compensación.",
 				"NOTHING": "Nada adicional",
 				"NOTHINGDescription": "Las horas extra forman parte del puesto."
 			},
@@ -6161,6 +6163,7 @@
 				"restRostered": "Día de descanso: un día distinto cada semana, elegido por el cuadrante.",
 				"restFixed": "Día de descanso: {{weekday}}.",
 				"nothingExtra": "Las horas por encima de {{week}} a la semana no suman nada adicional.",
+				"timeOff": "Las horas por encima de {{week}} a la semana dan {{time}} libre por cada hora extra.",
 				"partTimeExtra": "Las horas adicionales se pagan a la tarifa normal hasta {{full}} a la semana, y después como horas extra.",
 				"partTimeExtraAt": "Las horas adicionales se pagan a la tarifa normal hasta {{full}} a la semana, y después a {{times}}.",
 				"afterWeek": "después de {{week}} a la semana",

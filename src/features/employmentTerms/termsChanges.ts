@@ -16,6 +16,8 @@ const WEEK_FIELDS: ReadonlyArray<keyof EmploymentTermsBody & keyof WeekFields> =
 		"restDay",
 		"dailyOvertime",
 		"hoursLimitsApply",
+		// It relabels past extra hours as time off earned, or back (API P4-B2).
+		"extraHoursPaidAs",
 	];
 
 /** Whether the working week changes; only then can it change from a date. */

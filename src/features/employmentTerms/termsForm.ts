@@ -194,9 +194,11 @@ export const termsFormValuesOf = (
 				restDayTimes: timesOrEmpty(start.restDayWorkPercent),
 				dayOffMode: start.dayOffWorkPercent === null ? "NORMAL" : "OWN_RATE",
 				dayOffTimes: timesOrEmpty(start.dayOffWorkPercent),
-				// Time off reads as paid at a rate until the form offers it.
+				// A value a newer API adds reads as paid at a rate.
 				extraHoursPaidAs:
-					start.extraHoursPaidAs === "NOTHING" ? "NOTHING" : "RATE",
+					start.extraHoursPaidAs === "UNKNOWN"
+						? "RATE"
+						: start.extraHoursPaidAs,
 			};
 
 const key = "employmentTerms.dialog";

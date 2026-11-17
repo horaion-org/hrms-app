@@ -7,6 +7,7 @@ import {
 	durationLong,
 	durationShort,
 	formatDays,
+	MINUTES_PER_HOUR,
 } from "@/features/employmentTerms/hours";
 import { formatTimes } from "@/features/employmentTerms/rates";
 
@@ -99,6 +100,10 @@ const restWords = (
 	];
 };
 
+/** The time off one extra hour earns, from the API's figure (a whole percentage of an hour), e.g. "1 h". */
+export const timeOffPerExtraHour = (percent: number, t: TFunction): string =>
+	durationShort(Math.round((percent * MINUTES_PER_HOUR) / 100), t);
+
 /** What extra hours earn, read against the API's figures. */
 const overtimeWords = (
 	fields: WeekFields,
@@ -109,6 +114,17 @@ const overtimeWords = (
 	const week = durationShort(fields.weekMinutes, t);
 	if (!fields.hoursLimitsApply && fields.extraHoursPaidAs === "NOTHING")
 		return [t(`${sentenceKey}.nothingExtra`, { week })];
+	if (
+		!fields.hoursLimitsApply &&
+		fields.extraHoursPaidAs === "TIME_OFF" &&
+		reference.timeOffPerExtraHourPercent !== null
+	)
+		return [
+			t(`${sentenceKey}.timeOff`, {
+				week,
+				time: timeOffPerExtraHour(reference.timeOffPerExtraHourPercent, t),
+			}),
+		];
 	const times =
 		fields.overtimePercent === null
 			? undefined

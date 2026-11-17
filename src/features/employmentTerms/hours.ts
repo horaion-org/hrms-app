@@ -6,7 +6,7 @@ import type { TFunction } from "i18next";
  * "8:48" in a field), never a decimal hour such as 8.8.
  */
 
-const MINUTES_PER_HOUR = 60;
+export const MINUTES_PER_HOUR = 60;
 /**
  * How far from a whole minute typed decimal hours may land and still read as
  * it, so a typed 8.3333 still means 500 minutes.

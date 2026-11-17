@@ -442,6 +442,55 @@ describe("EmploymentTermsSettings", () => {
 			).toBeNull();
 		});
 
+		it("given_covered_when_opened_then_noTimeOffOption", async () => {
+			stubApi(routes(READ_AND_UPDATE));
+			const user = userEvent.setup();
+			const dialog = await openAdd(await open());
+
+			await user.click(
+				within(dialog).getByRole("button", { name: /^Full-time, 5 days/ })
+			);
+
+			expect(
+				within(dialog).queryByRole("radio", { name: /Time off instead/ })
+			).toBeNull();
+		});
+
+		it("given_notCovered_when_timeOffChosen_then_saved", async () => {
+			const calls = stubApi(
+				routes(READ_AND_UPDATE, {
+					[`POST ${TERMS}`]: { status: 201, body: envelope(FIVE_DAY_WEEK) },
+				})
+			);
+			const user = userEvent.setup();
+			const dialog = await openAdd(await open());
+
+			await user.click(within(dialog).getByRole("radio", { name: "No" }));
+			await user.click(
+				within(dialog).getByRole("radio", { name: /Time off instead/ })
+			);
+
+			expect(dialog).toHaveTextContent(
+				"Hours past 44 h a week earn 1 h off for each extra hour."
+			);
+			expect(
+				within(dialog).queryByLabelText("An overtime hour is paid at")
+			).toBeNull();
+			await user.click(
+				within(dialog).getByRole("button", { name: "Add employment terms" })
+			);
+			await waitFor(() => {
+				expect(screen.queryByRole("dialog")).toBeNull();
+			});
+			expect(
+				calls.find((call) => call.method === "POST" && call.path === TERMS)
+					?.body
+			).toMatchObject({
+				hoursLimitsApply: false,
+				extraHoursPaidAs: "TIME_OFF",
+			});
+		});
+
 		it("given_saved_when_posted_then_sends150And200", async () => {
 			const calls = stubApi(
 				routes(READ_AND_UPDATE, {
