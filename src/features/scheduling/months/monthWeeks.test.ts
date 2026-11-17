@@ -3,7 +3,6 @@ import { monthSummaryFixture } from "@/features/scheduling/months/fixtures";
 import {
 	crossingWeekOf,
 	formatMonth,
-	formatMonthName,
 	formatPartDays,
 	formatWeekDates,
 	mondaysIn,
@@ -109,13 +108,6 @@ describe("stateCounts", () => {
 				{ state: "NOT_GENERATED" },
 			])
 		).toEqual({ PUBLISHED: 2, TO_REVIEW: 2 });
-	});
-});
-
-describe("formatMonthName", () => {
-	it("given_november_when_named_then_theMonthAlone", () => {
-		expect(formatMonthName("2026-11", "en")).toBe("November");
-		expect(formatMonthName("2026-11", "es")).toBe("noviembre");
 	});
 });
 

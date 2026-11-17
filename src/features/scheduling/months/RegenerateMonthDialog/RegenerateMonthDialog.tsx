@@ -13,7 +13,7 @@ import {
 	handChangedCoveredWeeks,
 } from "@/features/scheduling/months/monthGeneration";
 import {
-	formatMonthName,
+	formatMonth,
 	formatWeekDates,
 } from "@/features/scheduling/months/monthWeeks";
 import { weekChangedRefusal } from "@/features/scheduling/months/monthCopy";
@@ -57,7 +57,7 @@ export const RegenerateMonthDialog = ({
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
 	const generation = useGenerateMonth(companyId, month, weeks);
-	const monthName = formatMonthName(month.month, language);
+	const monthName = formatMonth(month.month, language);
 	const covered = coveredWeeks(month);
 	const handChanged = handChangedCoveredWeeks(month, weeks);
 	const weekLabel = (week: {

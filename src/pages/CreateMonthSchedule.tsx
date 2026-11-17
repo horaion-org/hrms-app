@@ -44,7 +44,7 @@ import {
 	type MonthSetup,
 } from "@/features/scheduling/months/monthGeneration";
 import {
-	formatMonthName,
+	formatMonth,
 	formatWeekDates,
 	monthChoicesFrom,
 	monthOf,
@@ -405,7 +405,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			},
 		});
 	};
-	const monthName = month ? formatMonthName(month, language) : "";
+	const monthName = month ? formatMonth(month, language) : "";
 	const everything =
 		shifts.data && constraints.data
 			? allOf(shifts.data, constraints.data)

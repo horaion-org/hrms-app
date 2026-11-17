@@ -7,7 +7,7 @@ import type {
 } from "@/features/scheduling/months/api";
 import { weeksNoLongerCovered } from "@/features/scheduling/months/monthGeneration";
 import {
-	formatMonthName,
+	formatMonth,
 	formatWeekDates,
 	stateCounts,
 } from "@/features/scheduling/months/monthWeeks";
@@ -76,7 +76,7 @@ export const weekChangedRefusal = (
 	t: TFunction
 ): string => {
 	const key = "scheduling.months.generate";
-	const monthName = formatMonthName(month.month, language);
+	const monthName = formatMonth(month.month, language);
 	const changed = weeksNoLongerCovered(sent, month);
 	if (changed.length === 0)
 		return t(`${key}.weekChanged`, { month: monthName });

@@ -57,7 +57,10 @@ export const mondaysIn = (month: string): Array<string> => {
 	return mondays;
 };
 
-/** A month in the person's language, e.g. "November 2026". */
+/**
+ * A month in the person's language, always with its year, e.g. "November
+ * 2026": thirteen months are offered, so a name alone would be ambiguous.
+ */
 export const formatMonth = (month: string, language: string): string =>
 	new Intl.DateTimeFormat(language, { month: "long", year: "numeric" }).format(
 		dayjs(`${month}-01`).toDate()
@@ -67,12 +70,6 @@ export const formatMonth = (month: string, language: string): string =>
 export const formatDayAndMonth = (date: string, language: string): string =>
 	new Intl.DateTimeFormat(language, { day: "numeric", month: "short" }).format(
 		dayjs(date).toDate()
-	);
-
-/** A month's name alone in the person's language, e.g. "November". */
-export const formatMonthName = (month: string, language: string): string =>
-	new Intl.DateTimeFormat(language, { month: "long" }).format(
-		dayjs(`${month}-01`).toDate()
 	);
 
 /** How many weeks are in each state; weeks not generated yet are left out. */

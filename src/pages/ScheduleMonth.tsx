@@ -53,7 +53,6 @@ import {
 	crossingWeekOf,
 	formatDayAndMonth,
 	formatMonth,
-	formatMonthName,
 	formatWeekDates,
 	monthOf,
 	shiftMonth,
@@ -147,7 +146,7 @@ const MonthSteps = ({
 					month: formatMonth(previous, language),
 				})}
 			>
-				{formatMonthName(previous, language)}
+				{formatMonth(previous, language)}
 			</Button>
 			<Button
 				params={{ month: next }}
@@ -159,7 +158,7 @@ const MonthSteps = ({
 					month: formatMonth(next, language),
 				})}
 			>
-				{formatMonthName(next, language)}
+				{formatMonth(next, language)}
 			</Button>
 		</div>
 	);
@@ -193,7 +192,7 @@ const CrossingWeekLine = ({
 				]}
 				values={{
 					week: formatWeekDates(week, language),
-					month: formatMonthName(weekMonth, language),
+					month: formatMonth(weekMonth, language),
 				}}
 			/>
 		</p>
@@ -332,7 +331,7 @@ const MonthContent = ({
 		),
 		...(lastAnswer ? refusedWeeks(lastAnswer) : {}),
 	};
-	const monthName = formatMonthName(month, language);
+	const monthName = formatMonth(month, language);
 	const first = weeks[0];
 	const last = weeks[weeks.length - 1];
 	const noSchedule = weeks.every((week) => week.scheduleId === null);

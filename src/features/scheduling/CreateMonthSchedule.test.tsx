@@ -268,7 +268,7 @@ describe("Create schedules for a month", () => {
 		await user.click(next());
 
 		expect(
-			await screen.findByRole("button", { name: "Generate December" })
+			await screen.findByRole("button", { name: "Generate December 2026" })
 		).toBeVisible();
 		expect(
 			screen.queryByRole("region", { name: "Staffing forecast" })
@@ -322,7 +322,7 @@ describe("Create schedules for a month", () => {
 				name: "Select Lunch Rush",
 			})
 		);
-		await user.click(screen.getByRole("button", { name: "Use for December" }));
+		await user.click(screen.getByRole("button", { name: /^Use for December/ }));
 		expect(
 			await screen.findByText(
 				/^3 of 4 weeks use everything of Front Office\. Changed: Dec 14/
@@ -330,7 +330,7 @@ describe("Create schedules for a month", () => {
 		).toBeInTheDocument();
 		await user.click(next());
 		const generate = await screen.findByRole("button", {
-			name: "Generate December",
+			name: "Generate December 2026",
 		});
 		await vi.waitFor(() => {
 			expect(generate).toBeEnabled();
@@ -385,10 +385,10 @@ describe("Create schedules for a month", () => {
 		await user.click(next());
 
 		expect(
-			await screen.findByText("Checking December before you generate…")
+			await screen.findByText("Checking December 2026 before you generate…")
 		).toHaveAttribute("role", "status");
 		expect(
-			screen.queryByRole("button", { name: "Generate December" })
+			screen.queryByRole("button", { name: "Generate December 2026" })
 		).toBeNull();
 	});
 
@@ -404,12 +404,12 @@ describe("Create schedules for a month", () => {
 		await screen.findByText(EVERY_WEEK_LINE);
 		await user.click(next());
 		expect(
-			await screen.findByText("We couldn’t check December before generating.")
+			await screen.findByText(/^We couldn’t check December 2026 before/)
 		).toHaveAttribute("role", "alert");
 		await user.click(screen.getByRole("button", { name: "Try again" }));
 
 		expect(
-			await screen.findByRole("button", { name: "Generate December" })
+			await screen.findByRole("button", { name: "Generate December 2026" })
 		).toBeInTheDocument();
 	});
 
@@ -434,7 +434,7 @@ describe("Create schedules for a month", () => {
 		});
 		await screen.findByText(EVERY_WEEK_LINE);
 		await user.click(next());
-		await screen.findByRole("button", { name: "Generate December" });
+		await screen.findByRole("button", { name: "Generate December 2026" });
 
 		// Someone publishes every ticked week while the wizard is open; the month is read again.
 		publishedSince = true;
@@ -442,7 +442,7 @@ describe("Create schedules for a month", () => {
 			await opened.queryClient.invalidateQueries();
 		});
 
-		const generate = screen.getByRole("button", { name: "Generate December" });
+		const generate = screen.getByRole("button", { name: /^Generate December/ });
 		await waitFor(() => {
 			expect(generate).toHaveAccessibleDescription(
 				"None of the weeks you ticked can be generated any more. Go back to Setup to choose again."
@@ -466,7 +466,7 @@ describe("Create schedules for a month", () => {
 		await screen.findByText(EVERY_WEEK_LINE);
 		await user.click(next());
 		const generate = await screen.findByRole("button", {
-			name: "Generate December",
+			name: "Generate December 2026",
 		});
 		await vi.waitFor(() => {
 			expect(generate).toBeEnabled();
@@ -730,7 +730,7 @@ describe("Create schedules for a month: ticking weeks", () => {
 		await user.click(screen.getByRole("button", { name: "Choose per week" }));
 
 		const tabs = within(
-			await screen.findByRole("tablist", { name: "Weeks of December" })
+			await screen.findByRole("tablist", { name: "Weeks of December 2026" })
 		)
 			.getAllByRole("tab")
 			.map((tab) => tab.textContent?.trim());
@@ -1217,14 +1217,14 @@ describe("Create schedules for a month: where everyone starts", () => {
 
 		await user.click(screen.getByRole("button", { name: "Choose per week" }));
 		expect(
-			within(await screen.findByRole("tablist", { name: "Weeks of December" }))
+			within(await screen.findByRole("tablist", { name: /Weeks of December/ }))
 				.getAllByRole("tab")
 				.map((tab) => tab.textContent?.trim())
 		).not.toContainEqual(expect.stringMatching(/^Dec 7/));
 		await user.click(screen.getByRole("button", { name: "Cancel" }));
 		await user.click(next());
 		const generate = await screen.findByRole("button", {
-			name: "Generate December",
+			name: "Generate December 2026",
 		});
 		await vi.waitFor(() => {
 			expect(generate).toBeEnabled();

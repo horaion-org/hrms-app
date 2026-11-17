@@ -26,11 +26,7 @@ import {
 } from "@/features/scheduling/roster/GeneratedRoster";
 import { GenerationFailurePanel } from "@/features/scheduling/roster/GenerationFailurePanel";
 import { scheduleMonthQuery } from "@/features/scheduling/months/api";
-import {
-	formatMonth,
-	formatMonthName,
-	monthOf,
-} from "@/features/scheduling/months/monthWeeks";
+import { formatMonth, monthOf } from "@/features/scheduling/months/monthWeeks";
 import {
 	listsWeekParts,
 	rosterWeekLink,
@@ -451,7 +447,7 @@ const ApiSchedule = ({
 			permissions.mayRead
 		)
 	).data;
-	const monthName = month ? formatMonthName(month, formattingLocale(i18n)) : "";
+	const monthName = month ? formatMonth(month, formattingLocale(i18n)) : "";
 	if (state.status !== "ready")
 		return (
 			<>

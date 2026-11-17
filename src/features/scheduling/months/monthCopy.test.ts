@@ -68,7 +68,7 @@ describe("weekChangedRefusal", () => {
 				authTestI18n.t
 			)
 		).toMatch(
-			/^The week of 7\s?–\s?13\sDec was published since this page loaded, so it can’t be generated\. The week of 14\s?–\s?20\sDec is over, so it can’t be generated\. Nothing was generated\. The page now shows December as it is; try again for the other weeks\.$/
+			/^The week of 7\s?–\s?13\sDec was published since this page loaded, so it can’t be generated\. The week of 14\s?–\s?20\sDec is over, so it can’t be generated\. Nothing was generated\. The page now shows December 2026 as it is; try again for the other weeks\.$/
 		);
 	});
 
@@ -81,7 +81,7 @@ describe("weekChangedRefusal", () => {
 				authTestI18n.t
 			)
 		).toBe(
-			"A week of December changed since this page loaded, so nothing was generated. The page now shows December as it is; try again."
+			"A week of December 2026 changed since this page loaded, so nothing was generated. The page now shows December 2026 as it is; try again."
 		);
 	});
 });

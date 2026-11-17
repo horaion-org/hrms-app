@@ -217,7 +217,7 @@ it("given_theMonthSteps_when_nextIsChosen_then_decemberOfTheSameDepartmentIsRead
 	expect(
 		screen.getByText("No week of December 2026 has a schedule yet.")
 	).toBeInTheDocument();
-	expect(screen.getByRole("link", { name: "November" })).toHaveAttribute(
+	expect(screen.getByRole("link", { name: "November 2026" })).toHaveAttribute(
 		"href",
 		"/scheduling/months/2026-11?department=d-1"
 	);
@@ -297,16 +297,22 @@ it("given_aMonthNothingWasGeneratedIn_when_generated_then_everyWeekIsSentAndTheM
 	);
 
 	expect(
-		await screen.findByRole("heading", { name: "Before you generate December" })
+		await screen.findByRole("heading", {
+			name: "Before you generate December 2026",
+		})
 	).toBeInTheDocument();
 	expect(screen.getByText("Kitchen has 3 shifts.")).toBeInTheDocument();
-	const generate = screen.getByRole("button", { name: "Generate December" });
+	const generate = screen.getByRole("button", {
+		name: "Generate December 2026",
+	});
 	await vi.waitFor(() => {
 		expect(generate).toBeEnabled();
 	});
 	await userEvent.click(generate);
 
-	expect(await screen.findByText("Generating December…")).toBeInTheDocument();
+	expect(
+		await screen.findByText("Generating December 2026…")
+	).toBeInTheDocument();
 	const post = calls.find(
 		(call) => call.method === "POST" && call.path === `${DECEMBER}/generation`
 	);
@@ -317,7 +323,7 @@ it("given_aMonthNothingWasGeneratedIn_when_generated_then_everyWeekIsSentAndTheM
 		)
 	).toEqual(["2026-12-07", "2026-12-14", "2026-12-21", "2026-12-28"]);
 	expect(
-		screen.queryByRole("heading", { name: "Before you generate December" })
+		screen.queryByRole("heading", { name: "Before you generate December 2026" })
 	).toBeNull();
 	expect(screen.getAllByText("Generating").length).toBeGreaterThanOrEqual(4);
 });
@@ -336,10 +342,10 @@ it("given_theGenerationCheckStillLoading_when_opened_then_saysTheMonthIsBeingChe
 	);
 
 	expect(
-		await screen.findByText("Checking December before you generate…")
+		await screen.findByText("Checking December 2026 before you generate…")
 	).toHaveAttribute("role", "status");
 	expect(
-		screen.queryByRole("button", { name: "Generate December" })
+		screen.queryByRole("button", { name: "Generate December 2026" })
 	).toBeNull();
 });
 
@@ -356,12 +362,16 @@ it("given_aFailedGenerationCheck_when_tryAgainIsChosen_then_theCheckIsReadAgain"
 	);
 
 	expect(
-		await screen.findByText("We couldn’t check December before generating.")
+		await screen.findByText(
+			"We couldn’t check December 2026 before generating."
+		)
 	).toHaveAttribute("role", "alert");
 	await userEvent.click(screen.getByRole("button", { name: "Try again" }));
 
 	expect(
-		await screen.findByRole("heading", { name: "Before you generate December" })
+		await screen.findByRole("heading", {
+			name: "Before you generate December 2026",
+		})
 	).toBeInTheDocument();
 });
 
@@ -389,7 +399,7 @@ it("given_aWeekPublishedSinceTheRead_when_generated_then_namesItWithoutSendingTo
 		"/scheduling/months/2026-12?department=d-1"
 	);
 	const generate = await screen.findByRole("button", {
-		name: "Generate December",
+		name: "Generate December 2026",
 	});
 	await vi.waitFor(() => {
 		expect(generate).toBeEnabled();
@@ -402,7 +412,7 @@ it("given_aWeekPublishedSinceTheRead_when_generated_then_namesItWithoutSendingTo
 		/^The week of Dec 7\s?–\s?13 was published/
 	);
 	expect(alert).toHaveTextContent(
-		"Nothing was generated. The page now shows December as it is; try again for the other weeks."
+		"Nothing was generated. The page now shows December 2026 as it is; try again for the other weeks."
 	);
 	expect(alert).not.toHaveTextContent("Setup");
 });
@@ -423,7 +433,7 @@ it("given_aRefusedWeekInTheAnswer_when_generated_then_itsCardSaysWhy", async () 
 		"/scheduling/months/2026-12?department=d-1"
 	);
 	const generate = await screen.findByRole("button", {
-		name: "Generate December",
+		name: "Generate December 2026",
 	});
 	await vi.waitFor(() => {
 		expect(generate).toBeEnabled();
@@ -618,7 +628,7 @@ it("given_noScheduleGenerate_when_aMonthIsNotGenerated_then_noPanelAndTheNoSched
 		await screen.findByText("No week of December 2026 has a schedule yet.")
 	).toBeInTheDocument();
 	expect(
-		screen.queryByRole("heading", { name: "Before you generate December" })
+		screen.queryByRole("heading", { name: "Before you generate December 2026" })
 	).toBeNull();
 	expect(calls.some((call) => call.path.endsWith("/generation-check"))).toBe(
 		false
@@ -645,7 +655,7 @@ it("given_aCoveredWeekChangedByHand_when_generated_then_asksFirstAndPostsOnConfi
 		"/scheduling/months/2026-12?department=d-1"
 	);
 	const generate = await screen.findByRole("button", {
-		name: "Generate December",
+		name: "Generate December 2026",
 	});
 	await vi.waitFor(() => {
 		expect(generate).toBeEnabled();
@@ -654,14 +664,14 @@ it("given_aCoveredWeekChangedByHand_when_generated_then_asksFirstAndPostsOnConfi
 	await user.click(generate);
 
 	const dialog = await screen.findByRole("dialog", {
-		name: "Regenerate December?",
+		name: "Regenerate December 2026?",
 	});
 	expect(dialog).toHaveTextContent(/Dec 7\s?–\s?13 was changed by hand\./);
 	expect(calls.some((call) => call.path === `${DECEMBER}/generation`)).toBe(
 		false
 	);
 	await user.click(
-		within(dialog).getByRole("button", { name: "Regenerate December" })
+		within(dialog).getByRole("button", { name: "Regenerate December 2026" })
 	);
 	await vi.waitFor(() => {
 		expect(
@@ -690,14 +700,16 @@ describe("regenerating a month whose weeks all have a roster", () => {
 		);
 
 		await user.click(
-			await screen.findByRole("button", { name: "Regenerate December" })
+			await screen.findByRole("button", { name: "Regenerate December 2026" })
 		);
 
 		expect(
-			await screen.findByRole("dialog", { name: "Regenerate December?" })
+			await screen.findByRole("dialog", { name: "Regenerate December 2026?" })
 		).toBeInTheDocument();
 		expect(
-			screen.queryByRole("heading", { name: "Before you generate December" })
+			screen.queryByRole("heading", {
+				name: "Before you generate December 2026",
+			})
 		).toBeNull();
 	});
 
@@ -712,7 +724,7 @@ describe("regenerating a month whose weeks all have a roster", () => {
 			name: "Kitchen · December 2026",
 		});
 		expect(
-			screen.queryByRole("button", { name: "Regenerate December" })
+			screen.queryByRole("button", { name: "Regenerate December 2026" })
 		).toBeNull();
 	});
 
@@ -722,9 +734,11 @@ describe("regenerating a month whose weeks all have a roster", () => {
 			"/scheduling/months/2026-12?department=d-1"
 		);
 
-		expect(await screen.findByText("Generating December…")).toBeInTheDocument();
 		expect(
-			screen.queryByRole("button", { name: "Regenerate December" })
+			await screen.findByText("Generating December 2026…")
+		).toBeInTheDocument();
+		expect(
+			screen.queryByRole("button", { name: "Regenerate December 2026" })
 		).toBeNull();
 	});
 });
@@ -820,10 +834,10 @@ describe("the hours worked this month before its first scheduled week", () => {
 		);
 
 		await user.click(
-			await screen.findByRole("button", { name: "Regenerate December" })
+			await screen.findByRole("button", { name: "Regenerate December 2026" })
 		);
 		const regenerate = await screen.findByRole("dialog", {
-			name: "Regenerate December?",
+			name: "Regenerate December 2026?",
 		});
 		expect(regenerate).toHaveTextContent(
 			"Hours worked before Dec 7 are unknown for 1 person."
@@ -838,7 +852,7 @@ describe("the hours worked this month before its first scheduled week", () => {
 			})
 		).toBeVisible();
 		expect(
-			screen.queryByRole("dialog", { name: "Regenerate December?" })
+			screen.queryByRole("dialog", { name: "Regenerate December 2026?" })
 		).toBeNull();
 	});
 
