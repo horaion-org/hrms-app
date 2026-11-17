@@ -115,9 +115,6 @@ const SETTINGS = [
 	},
 ] as const;
 
-/** The days checked again when one changes: the last day's order and length depend on the first day. */
-const DAYS_CHECKED_AFTER = { firstDay: ["lastDay"], lastDay: [] } as const;
-
 const rangeOf = (week: TickableWeek): TickedRange => ({
 	start: week.periodStart,
 	end: week.periodEnd,
@@ -480,7 +477,10 @@ export const MonthSetupStep = ({
 										<Controller
 											control={control}
 											name={day}
-											rules={{ deps: DAYS_CHECKED_AFTER[day] }}
+											// The last day's order and length depend on the first day, so it is checked again.
+											rules={
+												day === "firstDay" ? { deps: ["lastDay"] } : undefined
+											}
 											render={({ field }) => (
 												<DatePicker
 													ref={field.ref}

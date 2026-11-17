@@ -47,10 +47,10 @@ export type RosterChangeReviewProps = {
 const key = "scheduling.rosterEdit";
 
 /** The button under a refused preview, for each next step. */
-const NEXT_STEP_LABELS: Record<RefusalNextStep, string> = {
+const NEXT_STEP_LABELS = {
 	reload: `${key}.error.reload`,
 	tryAgain: `${key}.tryAgain`,
-};
+} as const satisfies Record<RefusalNextStep, string>;
 
 /**
  * What a change, or the undo of one, would do before it is applied: each day
