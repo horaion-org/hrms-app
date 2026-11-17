@@ -589,7 +589,7 @@
 			},
 			"rejected": "This window was refused. Check that it doesn’t overlap another or crowd its day.",
 			"someRejected": "Some windows were refused. Check the windows marked below.",
-			"notPartTime": "Only part-time members can have availability, and this person isn’t part-time any more. Reload the page.",
+			"notPartTime": "Only part-timers set when they can work, and this person’s employment terms make them full-time. Give them part-time terms, or fewer contracted hours of their own, first.",
 			"forbidden": "You no longer have permission to change this person’s availability.",
 			"failed": "We couldn’t save the availability. Try again.",
 			"weekDescription": "The hours {{name}} can work in the week of {{date}}, in place of their default pattern.",

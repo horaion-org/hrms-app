@@ -17,7 +17,7 @@ const INVALID_WEEKLY_AVAILABILITY = "INVALID_WEEKLY_AVAILABILITY";
  * as `"<status> <errorCode>"`. Every code is named here once.
  */
 export const AVAILABILITY_REFUSAL_CODES = {
-	/** The member is no longer part-time. */
+	/** The member is not part-time by their employment terms (own hours, else the terms' week). */
 	requiresPartTime: "409 AVAILABILITY_REQUIRES_PART_TIME",
 	/** The week asked for has already ended. */
 	weekInPast: "400 AVAILABILITY_WEEK_IN_PAST",

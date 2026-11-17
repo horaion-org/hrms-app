@@ -56,7 +56,7 @@ describe("availabilityRefusal", () => {
 		).toEqual({
 			fields: {},
 			message:
-				"Only part-time members can have availability, and this person isn’t part-time any more. Reload the page.",
+				"Only part-timers set when they can work, and this person’s employment terms make them full-time. Give them part-time terms, or fewer contracted hours of their own, first.",
 			refreshMembers: false,
 		});
 	});

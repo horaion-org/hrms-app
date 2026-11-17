@@ -589,7 +589,7 @@
 			},
 			"rejected": "Esta franja fue rechazada. Comprueba que no se solape con otra ni sobrecargue su día.",
 			"someRejected": "Algunas franjas fueron rechazadas. Revisa las franjas marcadas abajo.",
-			"notPartTime": "Solo las personas a tiempo parcial pueden tener disponibilidad, y esta persona ya no lo es. Recarga la página.",
+			"notPartTime": "Solo las personas a tiempo parcial indican cuándo pueden trabajar, y las condiciones de empleo de esta persona la hacen a tiempo completo. Dale primero condiciones a tiempo parcial, o menos horas contratadas propias.",
 			"forbidden": "Ya no tienes permiso para cambiar la disponibilidad de esta persona.",
 			"failed": "No pudimos guardar la disponibilidad. Inténtalo de nuevo.",
 			"weekDescription": "Las horas en que {{name}} puede trabajar la semana del {{date}}, en lugar de su patrón habitual.",
