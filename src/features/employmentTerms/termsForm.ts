@@ -31,6 +31,12 @@ const MIN_DAY_MINUTES = 30;
 const MIN_RATE_PERCENT = 0;
 const MAX_RATE_PERCENT = 1000;
 
+/** The sanity bounds as messages name them, in times a normal hour. */
+export const RATE_BOUNDS_IN_TIMES = {
+	min: timesOfPercent(MIN_RATE_PERCENT),
+	max: timesOfPercent(MAX_RATE_PERCENT),
+};
+
 /**
  * The terms dialog as it holds its values: numbers as typed text, and the
  * rest day as a kind plus the weekday a fixed one falls on.
@@ -216,10 +222,7 @@ const rateProblem = (text: string, t: TFunction): string | undefined => {
 	const parsed = percentOfTimes(text);
 	if (parsed === "empty" || parsed === "invalid") return t(`${key}.rateInvalid`);
 	if (parsed < MIN_RATE_PERCENT || parsed > MAX_RATE_PERCENT)
-		return t(`${key}.rateRange`, {
-			min: timesOfPercent(MIN_RATE_PERCENT),
-			max: timesOfPercent(MAX_RATE_PERCENT),
-		});
+		return t(`${key}.rateRange`, RATE_BOUNDS_IN_TIMES);
 	return undefined;
 };
 

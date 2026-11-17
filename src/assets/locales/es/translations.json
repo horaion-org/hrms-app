@@ -5984,7 +5984,28 @@
 			"rateInvalid": "Introduce la tarifa como un número de veces una hora normal.",
 			"rateRange": "Introduce una tarifa de {{min}} a {{max}} veces una hora normal.",
 			"rateCovered": "Al personal cubierto por las normas de horario de la Ley de Empleo se le pagan las horas extra a {{minimum}} veces como mínimo. Introduce {{minimum}} o más, o indica que estas condiciones no están sujetas a las normas de horario de la Ley si son para mandos o directivos.",
-			"paidAsCovered": "Al personal cubierto por las normas de horario de la Ley de Empleo se le deben pagar las horas extra, no compensarlas con tiempo libre ni con nada. Elige Pagadas a una tarifa, o indica que estas condiciones no están sujetas a las normas de horario de la Ley si son para mandos o directivos."
+			"paidAsCovered": "Al personal cubierto por las normas de horario de la Ley de Empleo se le deben pagar las horas extra, no compensarlas con tiempo libre ni con nada. Elige Pagadas a una tarifa, o indica que estas condiciones no están sujetas a las normas de horario de la Ley si son para mandos o directivos.",
+			"overtimeRate": "Una hora extra se paga a",
+			"timesUnit": "veces una hora normal",
+			"overtimeRateHintCovered": "El mínimo legal es {{minimum}}. Puedes pagar más.",
+			"overtimeRateHintNotCovered": "No hay mínimo legal para el personal fuera de las normas de horario de la Ley.",
+			"overtimeRateRejected": "Introduce una tarifa de horas extra de {{min}} a {{max}} veces una hora normal, y al menos el mínimo legal para el personal sujeto a las normas de horario de la Ley.",
+			"paidAs": {
+				"legend": "Cómo se pagan las horas extra",
+				"RATE": "Pagadas a una tarifa",
+				"RATEDescription": "Indica la tarifa arriba.",
+				"NOTHING": "Nada adicional",
+				"NOTHINGDescription": "Las horas extra forman parte del puesto."
+			},
+			"restDayRate": "El trabajo en el día de descanso cuenta a",
+			"restDayRateHint": "Por ley, un día de descanso completo trabajado a petición tuya se paga como {{usual}} días, así que {{usual}} es la cifra habitual.",
+			"dayOff": "Trabajo en un día libre",
+			"dayOffMode": {
+				"NORMAL": "Horas normales, y horas extra una vez superada la semana",
+				"OWN_RATE": "Su propia tarifa"
+			},
+			"dayOffRate": "El trabajo en un día libre cuenta a",
+			"dayOffHint": "Un día libre es un día no laborable que no es el día de descanso, como el sábado en una semana de 5 días. La ley no fija una tarifa especial: las horas cuentan para la semana."
 		},
 		"apply": {
 			"title": "¿Cómo se aplica este cambio?",

@@ -235,8 +235,155 @@ describe("EmploymentTermsSettings", () => {
 			dailyOvertime: true,
 			shiftWork: false,
 			hoursLimitsApply: true,
+			overtimePercent: 150,
+			restDayWorkPercent: 200,
+			dayOffWorkPercent: null,
+			extraHoursPaidAs: "RATE",
 		});
 		expect(await screen.findByText("Employment terms added")).toBeVisible();
+	});
+
+	describe("the pay for extra hours", () => {
+		/** Opens Add employment terms once the first kind has filled the form. */
+		const openAdd = async (panel: HTMLElement): Promise<HTMLElement> => {
+			const user = userEvent.setup();
+			await user.click(
+				await within(panel).findByRole("button", {
+					name: "Add employment terms",
+				})
+			);
+			const dialog = await screen.findByRole("dialog", {
+				name: "Add employment terms",
+			});
+			expect(
+				await within(dialog).findByRole("radio", { name: /Fixed hours, 5 days/ })
+			).toBeChecked();
+			return dialog;
+		};
+
+		it("given_newTerms_when_opened_then_overtimeIs1Point5AndRestDay2", async () => {
+			stubApi(routes(READ_AND_UPDATE));
+			const dialog = await openAdd(await open());
+
+			expect(
+				within(dialog).getByLabelText("An overtime hour is paid at")
+			).toHaveValue("1.5");
+			expect(
+				within(dialog).getByLabelText("Work on the rest day counts at")
+			).toHaveValue("2");
+			expect(dialog).toHaveTextContent(
+				"The legal minimum is 1.5. You can pay more."
+			);
+		});
+
+		it("given_1Point2Covered_when_saved_then_errorAtTheField", async () => {
+			const calls = stubApi(routes(READ_AND_UPDATE));
+			const user = userEvent.setup();
+			const dialog = await openAdd(await open());
+
+			const rate = within(dialog).getByLabelText("An overtime hour is paid at");
+			await user.clear(rate);
+			await user.type(rate, "1.2");
+			await user.click(
+				within(dialog).getByRole("button", { name: "Add employment terms" })
+			);
+
+			expect(
+				await within(dialog).findByText(
+					"Staff covered by the Employment Act’s hour rules are paid at least 1.5 times for overtime. Enter 1.5 or more, or say these terms are not under the Act’s hour rules if they are for managers or executives."
+				)
+			).toBeVisible();
+			expect(
+				calls.some((call) => call.method === "POST" && call.path === TERMS)
+			).toBe(false);
+		});
+
+		it("given_notCovered_when_nothingExtraChosen_then_rateHidden", async () => {
+			stubApi(
+				routes(READ_AND_UPDATE, {
+					[`GET ${TERMS}/overview`]: {
+						status: 200,
+						body: envelope(
+							overviewResponse([{ ...FIVE_DAY_WEEK, hoursLimitsApply: false }])
+						),
+					},
+				})
+			);
+			const user = userEvent.setup();
+			const panel = await open();
+			await user.click(
+				await within(await table(panel)).findByRole("button", {
+					name: "Edit Five-day week, 44 h",
+				})
+			);
+			const dialog = await screen.findByRole("dialog", {
+				name: "Edit employment terms",
+			});
+			expect(dialog).toHaveTextContent(
+				"No legal minimum for staff outside the Act’s hour rules."
+			);
+
+			await user.click(within(dialog).getByRole("radio", { name: /Nothing extra/ }));
+
+			expect(
+				within(dialog).queryByLabelText("An overtime hour is paid at")
+			).toBeNull();
+		});
+
+		it("given_saved_when_posted_then_sends150And200", async () => {
+			const calls = stubApi(
+				routes(READ_AND_UPDATE, {
+					[`POST ${TERMS}`]: { status: 201, body: envelope(FIVE_DAY_WEEK) },
+				})
+			);
+			const user = userEvent.setup();
+			const dialog = await openAdd(await open());
+
+			await user.click(
+				within(dialog).getByRole("button", { name: "Add employment terms" })
+			);
+
+			await waitFor(() => {
+				expect(screen.queryByRole("dialog")).toBeNull();
+			});
+			expect(
+				calls.find((call) => call.method === "POST" && call.path === TERMS)?.body
+			).toMatchObject({
+				overtimePercent: 150,
+				restDayWorkPercent: 200,
+				dayOffWorkPercent: null,
+				extraHoursPaidAs: "RATE",
+			});
+		});
+
+		it("given_theApiRefusesTheRate_when_saved_then_itsMessageShowsAtTheField", async () => {
+			stubApi(
+				routes(READ_AND_UPDATE, {
+					[`POST ${TERMS}`]: {
+						status: 400,
+						body: {
+							status: 400,
+							title: "Refused",
+							errorCode: "INVALID_EMPLOYMENT_TERMS",
+							errors: [{ field: "overtimePercent", message: "server prose" }],
+						},
+					},
+				})
+			);
+			const user = userEvent.setup();
+			const dialog = await openAdd(await open());
+
+			await user.click(
+				within(dialog).getByRole("button", { name: "Add employment terms" })
+			);
+
+			expect(
+				await within(dialog).findByText(
+					"Enter an overtime rate from 0 to 10 times a normal hour, and at least the legal minimum for staff under the Act’s hour rules."
+				)
+			).toBeVisible();
+			expect(within(dialog).queryByText("server prose")).toBeNull();
+		});
 	});
 
 	it("explains what is wrong before saving, and sends nothing", async () => {

@@ -5984,7 +5984,28 @@
 			"rateInvalid": "Enter the rate as a number of times a normal hour.",
 			"rateRange": "Enter a rate from {{min}} to {{max}} times a normal hour.",
 			"rateCovered": "Staff covered by the Employment Act’s hour rules are paid at least {{minimum}} times for overtime. Enter {{minimum}} or more, or say these terms are not under the Act’s hour rules if they are for managers or executives.",
-			"paidAsCovered": "Staff covered by the Employment Act’s hour rules must be paid for overtime, not given time off or nothing extra. Choose Paid at a rate, or say these terms are not under the Act’s hour rules if they are for managers or executives."
+			"paidAsCovered": "Staff covered by the Employment Act’s hour rules must be paid for overtime, not given time off or nothing extra. Choose Paid at a rate, or say these terms are not under the Act’s hour rules if they are for managers or executives.",
+			"overtimeRate": "An overtime hour is paid at",
+			"timesUnit": "times a normal hour",
+			"overtimeRateHintCovered": "The legal minimum is {{minimum}}. You can pay more.",
+			"overtimeRateHintNotCovered": "No legal minimum for staff outside the Act’s hour rules.",
+			"overtimeRateRejected": "Enter an overtime rate from {{min}} to {{max}} times a normal hour, and at least the legal minimum for staff under the Act’s hour rules.",
+			"paidAs": {
+				"legend": "How extra hours are paid",
+				"RATE": "Paid at a rate",
+				"RATEDescription": "Set the rate above.",
+				"NOTHING": "Nothing extra",
+				"NOTHINGDescription": "Extra hours are part of the job."
+			},
+			"restDayRate": "Work on the rest day counts at",
+			"restDayRateHint": "By law a full rest day worked at your request pays {{usual}} days’ pay, so {{usual}} is the usual figure.",
+			"dayOff": "Work on a day off",
+			"dayOffMode": {
+				"NORMAL": "Normal hours, then overtime once the week is passed",
+				"OWN_RATE": "Its own rate"
+			},
+			"dayOffRate": "Work on a day off counts at",
+			"dayOffHint": "A day off is a non-working day that is not the rest day, such as Saturday in a 5-day week. The law sets no special rate for it: the hours count towards the week."
 		},
 		"apply": {
 			"title": "How should this change apply?",
