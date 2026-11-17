@@ -21,6 +21,7 @@ The directory contains:
 - `formatDay.ts`: `formatDay`, an ISO date as "Mon, 12 Oct" in the person's language, for scheduling, the dashboard,
   notifications and shift preferences.
 - `weeks.ts`: Monday-first weeks as ISO dates (`mondayOf`, `weeksOf`, `daysOf`), shared by scheduling and availability.
+- `isoDate.ts`: `ISO_DATE_FORMAT`, the dayjs format of an ISO day ("YYYY-MM-DD"); the one home of that format.
 
 ## Memory router (tests and stories)
 
