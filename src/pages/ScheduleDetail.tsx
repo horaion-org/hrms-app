@@ -294,6 +294,7 @@ const ApiSchedule = ({
 	};
 	const access = useAccess();
 	const [openDialog, setOpenDialog] = useState<OpenDialog>();
+	const [shortShifts, setShortShifts] = useState(0);
 	const closeDialog = (): void => {
 		setOpenDialog(undefined);
 	};
@@ -750,6 +751,7 @@ const ApiSchedule = ({
 						(instant) => moment.format(new Date(instant)),
 						t
 					)}
+					onShortShiftsChange={setShortShifts}
 					onViewChange={onViewChange}
 				/>
 			)}
@@ -758,6 +760,7 @@ const ApiSchedule = ({
 					companyId={companyId}
 					mode={publishModeOf(standing, approval.instance?.steps ?? [])}
 					schedule={schedule}
+					shortShifts={shortShifts}
 					onClose={closeDialog}
 					onDone={decided}
 				/>

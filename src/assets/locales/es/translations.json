@@ -4479,7 +4479,9 @@
 				"failed": "No pudimos guardar la decisión. Inténtalo de nuevo.",
 				"approvalPending": "Este cuadrante ya está pendiente de aprobación. Vuelve a cargar la página para ver en qué punto está.",
 				"noApprover": "Un paso del flujo de aprobación de este departamento no tiene a nadie que pueda aprobarlo. Pide a un administrador que lo cambie en Ajustes › Aprobaciones."
-			}
+			},
+			"shortShifts_one": "A {{count}} turno todavía le falta gente, y el personal verá el cuadrante tal como está. Busca cobertura desde Avisos, o publícalo tal como está.",
+			"shortShifts_other": "A {{count}} turnos todavía les falta gente, y el personal verá el cuadrante tal como está. Busca cobertura desde Avisos, o publícalo tal como está."
 		},
 		"startingContext": {
 			"title": "Antes de esta semana",

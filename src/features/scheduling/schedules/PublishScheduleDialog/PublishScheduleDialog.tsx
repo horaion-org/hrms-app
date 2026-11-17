@@ -3,6 +3,7 @@ import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Textarea } from "@/components/forms/Textarea";
+import { Callout } from "@/components/ui/Callout";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { APPROVAL_COMMENT_MAX_LENGTH } from "@/features/approvals/api";
 import { approvalDecisionRefusal } from "@/features/approvals/approvalRefusal";
@@ -25,6 +26,8 @@ export type PublishScheduleDialogProps = {
 	onClose: () => void;
 	/** Called after a submission or an approval, with the sentence the page announces. */
 	onDone?: (announcement: string) => void;
+	/** Shifts still short on the roster: above zero, a warning says so; it never blocks the decision. */
+	shortShifts?: number;
 };
 
 const key = "scheduling.decision";
@@ -99,6 +102,7 @@ export const PublishScheduleDialog = ({
 	mode = { kind: "publish" },
 	onClose,
 	onDone,
+	shortShifts = 0,
 }: PublishScheduleDialogProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const id = useId();
@@ -158,6 +162,11 @@ export const PublishScheduleDialog = ({
 				);
 			}}
 		>
+			{shortShifts > 0 && (
+				<Callout className="mb-6" tone="warning">
+					{t(`${key}.shortShifts`, { count: shortShifts })}
+				</Callout>
+			)}
 			{approving && (
 				<>
 					<label

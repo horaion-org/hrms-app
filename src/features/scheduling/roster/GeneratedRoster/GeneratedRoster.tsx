@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode } from "react";
+import { useEffect, useId, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
@@ -12,6 +12,7 @@ import type { FindingNameSources } from "@/features/scheduling/roster/findings/f
 import { legendOf } from "@/features/scheduling/roster/roster";
 import {
 	issueCounts,
+	shortShiftCount,
 	type RosterIssue,
 } from "@/features/scheduling/roster/rosterIssueGroups";
 import { IssueSummary } from "@/features/scheduling/roster/RosterIssueGroups";
@@ -101,6 +102,8 @@ export type GeneratedRosterProps = {
 	};
 	/** The roster's shift preference outcomes by person and day, said in a chosen day's panel; none without. */
 	preferenceOutcomes?: PreferenceOutcomeLookup;
+	/** Told how many shifts are still short whenever Issues changes, so Publish can warn of them. */
+	onShortShiftsChange?: (count: number) => void;
 };
 
 /** Hours in the summary line keep one decimal at most: "37.5 h". */
@@ -142,6 +145,7 @@ export const GeneratedRoster = ({
 	offeredDays,
 	departmentWeeks,
 	preferenceOutcomes,
+	onShortShiftsChange,
 }: GeneratedRosterProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
@@ -196,6 +200,10 @@ export const GeneratedRoster = ({
 		language,
 	});
 	const counts = issueCounts(issues);
+	const shortShifts = shortShiftCount(issues);
+	useEffect(() => {
+		onShortShiftsChange?.(shortShifts);
+	}, [shortShifts, onShortShiftsChange]);
 	/** Outlines an issue's cell, as the day editor outlines the days it would change, and scrolls to it. */
 	const showIssue = (issue: RosterIssue): void => {
 		const row = rows.find(

@@ -97,11 +97,15 @@ export type RosterIssueInput = {
 	t: TFunction;
 };
 
+/** How every shift-short item's key starts, whoever names the gap. */
+const GAP_KEY_PREFIX = "gap|";
+
 /** One key per shift and day left short, so it is listed once whoever names it. */
 export const gapIssueKey = (
 	shiftId: string | undefined,
 	day: string
-): string | undefined => (shiftId ? `gap|${shiftId}|${day}` : undefined);
+): string | undefined =>
+	shiftId ? `${GAP_KEY_PREFIX}${shiftId}|${day}` : undefined;
 
 /** "09:00" from "2026-10-17T09:00". */
 const clockOf = (dateTime: string): string => dateTime.slice(11, 16);
@@ -112,7 +116,7 @@ const gapIssue = (
 ): RosterIssue => {
 	const shiftId = gap.shiftUuids[0];
 	return {
-		key: gapIssueKey(shiftId, gap.date) ?? `gap|${gap.conflictId}`,
+		key: gapIssueKey(shiftId, gap.date) ?? `${GAP_KEY_PREFIX}${gap.conflictId}`,
 		group: "mustFix",
 		topic: issueTopic("shiftsShort", t),
 		who: t(`${key}.jobShort`, {
@@ -255,6 +259,13 @@ export const issueCounts = (
 	forInformation: issues.filter((issue) => issue.group === "forInformation")
 		.length,
 });
+
+/**
+ * How many shifts are still short, as Issues lists them: one per shift and
+ * day, whether a job title's gap or a person's leave names it. Pure.
+ */
+export const shortShiftCount = (issues: ReadonlyArray<RosterIssue>): number =>
+	issues.filter((issue) => issue.key.startsWith(GAP_KEY_PREFIX)).length;
 
 /** One part of the Issues summary line, drawn in its group's tone. */
 export type IssueSummaryPart = { group: IssueGroup; text: string };
