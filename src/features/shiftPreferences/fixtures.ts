@@ -70,6 +70,7 @@ export const fixtureTeamPage = (): TeamPreferencePage => ({
 		{
 			membershipId: "m-1",
 			displayName: "Alex Example",
+			departmentId: "d-1",
 			days: [
 				{
 					date: FIXTURE_WEEK,
@@ -91,6 +92,7 @@ export const fixtureTeamPageWithFormerMember = (): TeamPreferencePage => {
 			{
 				membershipId: "m-2",
 				displayName: null,
+				departmentId: null,
 				days: [FIXTURE_WEEK, ...REST_OF_THE_WEEK].map((date) => ({
 					date,
 					shifts: [],

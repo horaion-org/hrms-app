@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { dayParameter, shownDayOf } from "@/common/dayView";
 import type { FunctionComponent } from "@/common/types";
@@ -16,6 +16,8 @@ import { WeekNavigator } from "@/components/ui/WeekNavigator";
 import { isPartTime } from "@/features/availability/availabilityModel";
 import { useMyAvailability } from "@/features/availability/useAvailability";
 import { myProfileQuery } from "@/features/people/api";
+import type { TeamMemberWeek } from "@/features/shiftPreferences/api";
+import { MemberShiftPreferencesDialog } from "@/features/shiftPreferences/MemberShiftPreferencesDialog";
 import { MyShiftPreferences } from "@/features/shiftPreferences/MyShiftPreferences";
 import {
 	isPastWeek,
@@ -30,8 +32,12 @@ import { TeamShiftPreferences } from "@/features/shiftPreferences/TeamShiftPrefe
 import { workspaceQuery } from "@/features/workspace/api";
 import { DepartmentFilter } from "@/features/workspace/DepartmentFilter";
 import { departmentChips } from "@/features/workspace/filterChips";
-import { SHIFT_PREFERENCE_READ_KEYS } from "@/features/workspace/permissionKeys";
+import {
+	SHIFT_PREFERENCE_READ_KEYS,
+	SHIFT_PREFERENCE_UPDATE_KEY,
+} from "@/features/workspace/permissionKeys";
 import { retry } from "@/features/workspace/retry";
+import { recordScope } from "@/features/workspace/scopes";
 import { unitSelectionOf } from "@/features/workspace/unitSearch";
 import {
 	offersDepartmentChoice,
@@ -65,7 +71,8 @@ const useAvailableWeekdays = (
  * nothing granted; a part-timer is warned of the days they have no
  * availability on. "Team" is the members of the header's Branch (every
  * Branch in reach under "All branches"), or of one Department of it, for one
- * week, read under `shift_preference:read`. Beneath the tabs, one toolbar
+ * week, read under `shift_preference:read`; a member's week is changed from
+ * their row under `shift_preference:update`. Beneath the tabs, one toolbar
  * holds the team's Department filter and the week. The tab (written once it
  * is known), units and week live in the URL; a week left out is this one,
  * worked out on every render. Any week can be read; only open days are
@@ -97,6 +104,7 @@ export const ShiftPreferences = (): FunctionComponent => {
 		unitSelectionOf(search),
 		SHIFT_PREFERENCES_TEAM_UNIT_RULES
 	);
+	const [editing, setEditing] = useState<TeamMemberWeek | null>(null);
 
 	const show = (next: ShiftPreferencesSearch): void => {
 		void navigate({ search: (previous) => ({ ...previous, ...next }) });
@@ -112,6 +120,11 @@ export const ShiftPreferences = (): FunctionComponent => {
 				replace: true,
 			});
 	}, [tabsKnown, view, search.view, navigate]);
+	// A row is changed where its member is filed, and only in a week still to come; a removed member never.
+	const canEdit = (member: TeamMemberWeek): boolean =>
+		!past &&
+		member.displayName !== null &&
+		access.can(SHIFT_PREFERENCE_UPDATE_KEY, recordScope(member.departmentId));
 
 	const header = (
 		<div>
@@ -224,10 +237,12 @@ export const ShiftPreferences = (): FunctionComponent => {
 								units.branches.length > 0 && (
 									<TeamShiftPreferences
 										branchId={teamUnits.branchId}
+										canEdit={canEdit}
 										companyId={companyId}
 										departmentId={teamUnits.departmentId}
 										shownDay={shownDay}
 										weekStartMonday={week}
+										onEdit={setEditing}
 									/>
 								)
 							)}
@@ -235,6 +250,18 @@ export const ShiftPreferences = (): FunctionComponent => {
 					))}
 				</TabPanels>
 			</Tabs>
+			{editing && (
+				<MemberShiftPreferencesDialog
+					key={editing.membershipId}
+					companyId={companyId}
+					membershipId={editing.membershipId}
+					name={editing.displayName ?? t("scheduling.detail.formerMember")}
+					weekStartMonday={week}
+					onClose={() => {
+						setEditing(null);
+					}}
+				/>
+			)}
 		</div>
 	);
 };

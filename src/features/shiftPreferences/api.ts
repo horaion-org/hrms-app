@@ -15,7 +15,10 @@ import { retry } from "@/features/workspace/retry";
  * The shift preference routes of the API: the caller's own week
  * and one day of it, read and replaced with nothing granted; a Department's
  * members for one week, read under `shift_preference:read`, a page at a time,
- * narrowed by Branch and Department as the availability list is.
+ * narrowed by Branch and Department as the availability list is; and one
+ * member's week, read under `shift_preference:read` and a day of it replaced
+ * under `shift_preference:update` (ADR-0127 of the API), in the same shape as
+ * the caller's own.
  * What a generated roster made of them is read on the roster's side
  * (`features/scheduling/preferenceOutcomes`).
  */
@@ -29,7 +32,7 @@ const choosableShiftSchema = z.object({
 	/** "HH:mm"; an end at or before the start runs past midnight. */
 	startTime: z.string(),
 	endTime: z.string(),
-	/** Whether the caller chose it for this day. */
+	/** Whether the person whose week it is chose it for this day. */
 	preferred: z.boolean(),
 });
 
@@ -55,7 +58,7 @@ const myPreferenceWeekSchema = z.object({
 	days: z.array(preferenceDaySchema),
 });
 
-/** The caller's shift preferences for one week. */
+/** One person's shift preferences for one week: the caller's own, or a member's on the member routes. */
 export type MyPreferenceWeek = z.infer<typeof myPreferenceWeekSchema>;
 
 const preferredShiftSchema = z.object({
@@ -70,6 +73,8 @@ const teamMemberWeekSchema = z.object({
 	membershipId: z.string(),
 	/** Null once the member has been removed; their preferences stay listed. */
 	displayName: z.string().nullable(),
+	/** The Department the member is assigned to; null for none. Left out by an API older than ADR-0127. */
+	departmentId: z.string().nullish(),
 	days: z.array(
 		z.object({
 			date: z.iso.date(),
@@ -154,6 +159,28 @@ export const myPreferenceWeekPath = (
 export const myPreferenceDayPath = (companyId: string, date: string): string =>
 	`${myPreferencesPath(companyId)}/days/${encodeURIComponent(date)}`;
 
+const memberPreferencesPath = (
+	companyId: string,
+	membershipId: string
+): string =>
+	`${companyPath(companyId)}/member-profiles/${encodeURIComponent(membershipId)}/shift-preferences`;
+
+/** One member's week of preferences. */
+export const memberPreferenceWeekPath = (
+	companyId: string,
+	membershipId: string,
+	weekStartMonday: string
+): string =>
+	`${memberPreferencesPath(companyId, membershipId)}/weeks/${encodeURIComponent(weekStartMonday)}`;
+
+/** One day of a member's preferences, replaced as a whole. */
+export const memberPreferenceDayPath = (
+	companyId: string,
+	membershipId: string,
+	date: string
+): string =>
+	`${memberPreferencesPath(companyId, membershipId)}/days/${encodeURIComponent(date)}`;
+
 /** One page of the members of a Branch or Department and their preferences for a week. */
 export const teamPreferencesPath = (
 	companyId: string,
@@ -190,6 +217,32 @@ export const replaceMyPreferenceDay = (
 		body: { shiftIds },
 	});
 
+/** A member's preferences for the week starting `weekStartMonday`, in the shape of the caller's own week. */
+export const fetchMemberPreferenceWeek = (
+	companyId: string,
+	membershipId: string,
+	weekStartMonday: string,
+	signal?: AbortSignal
+): Promise<MyPreferenceWeek> =>
+	apiRequest(
+		memberPreferenceWeekPath(companyId, membershipId, weekStartMonday),
+		myPreferenceWeekSchema,
+		{ signal }
+	);
+
+/** Makes one of a member's days exactly `shiftIds` and returns it as saved; none clears it. */
+export const replaceMemberPreferenceDay = (
+	companyId: string,
+	membershipId: string,
+	date: string,
+	shiftIds: ReadonlyArray<string>
+): Promise<PreferenceDay> =>
+	apiRequest(
+		memberPreferenceDayPath(companyId, membershipId, date),
+		preferenceDaySchema,
+		{ method: "PUT", body: { shiftIds } }
+	);
+
 /** One page of a Branch's or Department's members and their preferences; only members in reach are listed. */
 export const fetchTeamPreferences = (
 	companyId: string,
@@ -211,6 +264,25 @@ export const myPreferenceWeekKey = (
 ): readonly ["shiftPreferences", string, "me", string] =>
 	[...shiftPreferencesRoot(companyId), "me", weekStartMonday] as const;
 
+/** The key of one member's week. */
+export const memberPreferenceWeekKey = (
+	companyId: string,
+	membershipId: string,
+	weekStartMonday: string
+): readonly ["shiftPreferences", string, "member", string, string] =>
+	[
+		...shiftPreferencesRoot(companyId),
+		"member",
+		membershipId,
+		weekStartMonday,
+	] as const;
+
+/** Every page of the team list, of every unit and week. */
+export const teamPreferencesRoot = (
+	companyId: string
+): readonly ["shiftPreferences", string, "team"] =>
+	[...shiftPreferencesRoot(companyId), "team"] as const;
+
 /** The key of one page of the team list; a unit left out is "", every one in reach. */
 export const teamPreferencesKey = (
 	companyId: string,
@@ -225,8 +297,7 @@ export const teamPreferencesKey = (
 	number,
 ] =>
 	[
-		...shiftPreferencesRoot(companyId),
-		"team",
+		...teamPreferencesRoot(companyId),
 		branchId ?? "",
 		departmentId ?? "",
 		weekStartMonday,
@@ -244,6 +315,29 @@ export const myPreferenceWeekQuery = (
 			fetchMyPreferenceWeek(companyId, weekStartMonday, signal),
 		// Own record: never gated by, or withdrawn for, administrative grants.
 		meta: selfMeta(companyId),
+		staleTime: 30_000,
+		retry,
+	});
+
+/** One member's week; the API answers it only under `shift_preference:read` at the member's unit. */
+export const memberPreferenceWeekQuery = (
+	companyId: string,
+	membershipId: string,
+	weekStartMonday: string
+): QueryOptionsFor<
+	MyPreferenceWeek,
+	ReturnType<typeof memberPreferenceWeekKey>
+> =>
+	queryOptions({
+		queryKey: memberPreferenceWeekKey(companyId, membershipId, weekStartMonday),
+		queryFn: ({ signal }): Promise<MyPreferenceWeek> =>
+			fetchMemberPreferenceWeek(
+				companyId,
+				membershipId,
+				weekStartMonday,
+				signal
+			),
+		meta: administrativeMeta(companyId),
 		staleTime: 30_000,
 		retry,
 	});

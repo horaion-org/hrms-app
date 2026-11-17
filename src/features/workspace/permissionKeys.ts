@@ -151,6 +151,13 @@ export const AVAILABILITY_UPDATE_KEY: PermissionKey =
 	"work_availability:update";
 
 /**
+ * Holding this at a member's Department is what lets a person change that
+ * member's shift preferences. A member's own needs nothing granted.
+ */
+export const SHIFT_PREFERENCE_UPDATE_KEY: PermissionKey =
+	"shift_preference:update";
+
+/**
  * Whether a key the API sent is one this app's contract knows. A key it
  * doesn't know is newer than the app: gates may ignore it, but a role's
  * editor keeps it (see `unknownKeys`).

@@ -6,10 +6,14 @@ import {
 } from "@tanstack/react-query";
 import { ApiProblemError } from "@/common/problem";
 import {
+	memberPreferenceWeekKey,
+	memberPreferenceWeekQuery,
 	myPreferenceWeekKey,
 	myPreferenceWeekQuery,
+	replaceMemberPreferenceDay,
 	replaceMyPreferenceDay,
 	teamPreferencesQuery,
+	teamPreferencesRoot,
 	type MyPreferenceWeek,
 	type PreferenceDay,
 	type TeamPreferencePage,
@@ -22,7 +26,7 @@ import { useAccess } from "@/features/workspace/useAccess";
 const isRefused = (error: Error | null): boolean =>
 	error instanceof ApiProblemError && error.status === 403;
 
-/** The caller's own week of preferences. */
+/** One week of preferences: the caller's own, or a member's. */
 export type MyPreferenceWeekState =
 	{ status: "pending" | "error" } | { status: "ready"; week: MyPreferenceWeek };
 
@@ -32,6 +36,20 @@ export const useMyPreferenceWeek = (
 	weekStartMonday: string
 ): MyPreferenceWeekState => {
 	const week = useQuery(myPreferenceWeekQuery(companyId, weekStartMonday));
+	if (week.isError) return { status: "error" };
+	if (week.data === undefined) return { status: "pending" };
+	return { status: "ready", week: week.data };
+};
+
+/** A member's preferences for the week starting `weekStartMonday`, read under `shift_preference:read`. */
+export const useMemberPreferenceWeek = (
+	companyId: string,
+	membershipId: string,
+	weekStartMonday: string
+): MyPreferenceWeekState => {
+	const week = useQuery(
+		memberPreferenceWeekQuery(companyId, membershipId, weekStartMonday)
+	);
 	if (week.isError) return { status: "error" };
 	if (week.data === undefined) return { status: "pending" };
 	return { status: "ready", week: week.data };
@@ -80,5 +98,35 @@ export const useReplaceMyPreferenceDay = (
 			client.invalidateQueries({
 				queryKey: myPreferenceWeekKey(companyId, weekStartMonday),
 			}),
+	});
+};
+
+/**
+ * Replaces one day of a member's week, then reads that week and every page
+ * of the team list again, so the row the manager opened it from shows the
+ * change.
+ */
+export const useReplaceMemberPreferenceDay = (
+	companyId: string,
+	membershipId: string,
+	weekStartMonday: string
+): UseMutationResult<PreferenceDay, Error, DayChange> => {
+	const client = useQueryClient();
+	return useMutation({
+		mutationFn: ({ date, shiftIds }) =>
+			replaceMemberPreferenceDay(companyId, membershipId, date, shiftIds),
+		onSuccess: () =>
+			Promise.all([
+				client.invalidateQueries({
+					queryKey: memberPreferenceWeekKey(
+						companyId,
+						membershipId,
+						weekStartMonday
+					),
+				}),
+				client.invalidateQueries({
+					queryKey: teamPreferencesRoot(companyId),
+				}),
+			]),
 	});
 };

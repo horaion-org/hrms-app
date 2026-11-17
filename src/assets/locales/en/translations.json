@@ -638,7 +638,9 @@
 			"member": "Member",
 			"empty": "No members here.",
 			"failed": "We couldn’t load the team’s shift preferences. Try again.",
-			"hidden": "You don’t have access to anyone’s shift preferences in this company."
+			"hidden": "You don’t have access to anyone’s shift preferences in this company.",
+			"actions": "Actions",
+			"editFor": "Edit {{name}}’s shift preferences"
 		},
 		"dialog": {
 			"save": "Save",
@@ -648,6 +650,16 @@
 			"shiftNotChoosable": "One of these shifts can’t be chosen any more. Close this and try again.",
 			"forbidden": "You can’t change shift preferences here.",
 			"failed": "Your preferences couldn’t be saved. Try again."
+		},
+		"member": {
+			"title": "Edit shift preferences",
+			"description": "The shifts {{name}} would like to work in the week of {{date}}. They’re weighed fairly when the roster is made, but not promised.",
+			"failed": "We couldn’t load {{name}}’s shift preferences. Try again.",
+			"notFound": "This person is no longer in a team you manage. Close this and reload the list.",
+			"forbidden": "You no longer have permission to change this person’s shift preferences. Ask an administrator for access.",
+			"saveFailed": "These preferences couldn’t be saved. Try again.",
+			"noShifts": "No shift that day needs their job title.",
+			"allClosed": "None of these days can be changed: preferences are open from today to eight weeks ahead."
 		},
 		"preference": "Preference",
 		"preferred": "Preferred: {{shifts}}",
@@ -2518,10 +2530,12 @@
 				"name": "Shift preferences",
 				"description": "The shifts each person would like to work on a date.",
 				"actions": {
-					"read": "See people’s shift preferences"
+					"read": "See people’s shift preferences",
+					"update": "Set someone’s shift preferences"
 				},
 				"actionHints": {
-					"read": "The shifts they would like, day by day"
+					"read": "The shifts they would like, day by day",
+					"update": "The shifts they would like on a day, from today to eight weeks ahead"
 				}
 			},
 			"member_event": {

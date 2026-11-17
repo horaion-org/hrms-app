@@ -12,6 +12,7 @@ const meta = {
 		day: MONDAY_WITH_MORNING,
 		dayLabel: "Mon 23 Nov",
 		maxShifts: 5,
+		noShiftsNote: "No shift that day needs your job title.",
 		saving: false,
 		onSave: (): void => {},
 		onClose: (): void => {},

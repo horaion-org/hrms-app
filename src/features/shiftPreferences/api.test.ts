@@ -2,9 +2,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, stubApi } from "@/common/testing/stubApi";
 import {
+	fetchMemberPreferenceWeek,
 	fetchMyPreferenceWeek,
 	fetchTeamPreferences,
+	memberPreferenceWeekKey,
 	myPreferenceWeekKey,
+	replaceMemberPreferenceDay,
 	replaceMyPreferenceDay,
 	TEAM_PAGE_SIZE,
 	teamPreferencesKey,
@@ -19,6 +22,7 @@ import {
 } from "@/features/shiftPreferences/fixtures";
 
 const MINE = "/api/v1/companies/c-1/me/shift-preferences";
+const MEMBER = "/api/v1/companies/c-1/member-profiles/m-1/shift-preferences";
 
 beforeEach(() => {
 	configureApiClient({
@@ -69,6 +73,34 @@ describe("shift preferences API", () => {
 		await replaceMyPreferenceDay("c-1", FIXTURE_WEEK, []);
 
 		expect(calls[0]?.body).toEqual({ shiftIds: [] });
+	});
+
+	it("given_aMemberAndWeek_when_theirWeekIsRead_then_asksTheMembersRouteForThatMondayAndParsesIt", async () => {
+		const calls = stubApi({
+			[`GET ${MEMBER}/weeks/${FIXTURE_WEEK}`]: {
+				status: 200,
+				body: envelope(fixtureWeek()),
+			},
+		});
+
+		await expect(
+			fetchMemberPreferenceWeek("c-1", "m-1", FIXTURE_WEEK)
+		).resolves.toEqual(fixtureWeek());
+		expect(calls[0]?.search).toBe("");
+	});
+
+	it("given_aMembersDay_when_replaced_then_putsItsShiftIdsToTheMembersRouteAndReadsTheDayBack", async () => {
+		const calls = stubApi({
+			[`PUT ${MEMBER}/days/${FIXTURE_WEEK}`]: {
+				status: 200,
+				body: envelope(MONDAY_WITH_MORNING),
+			},
+		});
+
+		await expect(
+			replaceMemberPreferenceDay("c-1", "m-1", FIXTURE_WEEK, ["s-morning"])
+		).resolves.toEqual(MONDAY_WITH_MORNING);
+		expect(calls[0]?.body).toEqual({ shiftIds: ["s-morning"] });
 	});
 
 	it("given_aBranchDepartmentWeekAndPage_when_theTeamListIsAsked_then_namesEachWithThePageSize", () => {
@@ -129,7 +161,7 @@ describe("shift preferences API", () => {
 		]);
 	});
 
-	it("given_anOwnWeekAndATeamPage_when_keyed_then_eachHasItsOwnStableKey", () => {
+	it("given_anOwnWeekATeamPageAndAMembersWeek_when_keyed_then_eachHasItsOwnStableKey", () => {
 		expect(myPreferenceWeekKey("c-1", FIXTURE_WEEK)).toEqual([
 			"shiftPreferences",
 			"c-1",
@@ -143,5 +175,12 @@ describe("shift preferences API", () => {
 				page: 0,
 			})
 		).toEqual(["shiftPreferences", "c-1", "team", "b-1", "", FIXTURE_WEEK, 0]);
+		expect(memberPreferenceWeekKey("c-1", "m-1", FIXTURE_WEEK)).toEqual([
+			"shiftPreferences",
+			"c-1",
+			"member",
+			"m-1",
+			FIXTURE_WEEK,
+		]);
 	});
 });

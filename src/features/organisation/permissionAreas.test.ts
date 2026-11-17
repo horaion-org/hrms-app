@@ -71,7 +71,10 @@ describe("the role editor's areas", () => {
 
 	it("put Reports and Shift preferences in areas of their own", () => {
 		expect(keysOfArea("reports")).toEqual(["report:read"]);
-		expect(keysOfArea("shiftPreferences")).toEqual(["shift_preference:read"]);
+		expect(keysOfArea("shiftPreferences")).toEqual([
+			"shift_preference:read",
+			"shift_preference:update",
+		]);
 		expect(areaOf("leave_duration:update")).toBe("settingsLeave");
 		expect(areaOf("audit_event:read")).toBe("organisation");
 	});

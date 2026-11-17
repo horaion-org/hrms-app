@@ -638,7 +638,9 @@
 			"member": "Miembro",
 			"empty": "No hay miembros aquí.",
 			"failed": "No pudimos cargar las preferencias de turno del equipo. Inténtalo de nuevo.",
-			"hidden": "No tienes acceso a las preferencias de turno de nadie en esta empresa."
+			"hidden": "No tienes acceso a las preferencias de turno de nadie en esta empresa.",
+			"actions": "Acciones",
+			"editFor": "Editar las preferencias de turno de {{name}}"
 		},
 		"dialog": {
 			"save": "Guardar",
@@ -648,6 +650,16 @@
 			"shiftNotChoosable": "Uno de estos turnos ya no se puede elegir. Cierra esto e inténtalo de nuevo.",
 			"forbidden": "No puedes cambiar las preferencias de turno aquí.",
 			"failed": "No se pudieron guardar tus preferencias. Inténtalo de nuevo."
+		},
+		"member": {
+			"title": "Editar preferencias de turno",
+			"description": "Los turnos que a {{name}} le gustaría trabajar en la semana del {{date}}. Se tienen en cuenta de forma justa al hacer el horario, pero no se garantizan.",
+			"failed": "No pudimos cargar las preferencias de turno de {{name}}. Inténtalo de nuevo.",
+			"notFound": "Esta persona ya no está en un equipo que gestionas. Cierra esto y vuelve a cargar la lista.",
+			"forbidden": "Ya no tienes permiso para cambiar las preferencias de turno de esta persona. Pide acceso a un administrador.",
+			"saveFailed": "No se pudieron guardar estas preferencias. Inténtalo de nuevo.",
+			"noShifts": "Ningún turno de ese día necesita su puesto.",
+			"allClosed": "Ninguno de estos días se puede cambiar: las preferencias están abiertas desde hoy hasta ocho semanas después."
 		},
 		"preference": "Preferencia",
 		"preferred": "Preferido: {{shifts}}",
@@ -1329,10 +1341,12 @@
 				"name": "Preferencias de turno",
 				"description": "Los turnos que cada persona querría trabajar en una fecha.",
 				"actions": {
-					"read": "Ver las preferencias de turno de las personas"
+					"read": "Ver las preferencias de turno de las personas",
+					"update": "Indicar las preferencias de turno de alguien"
 				},
 				"actionHints": {
-					"read": "Los turnos que querrían, día a día"
+					"read": "Los turnos que querrían, día a día",
+					"update": "Los turnos que querría en un día, desde hoy hasta ocho semanas después"
 				}
 			},
 			"member_event": {

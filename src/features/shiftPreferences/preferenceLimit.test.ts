@@ -3,6 +3,7 @@ import { MONDAY_WITH_MORNING } from "@/features/shiftPreferences/fixtures";
 import {
 	chosenShiftIds,
 	isAtLimit,
+	preferredShifts,
 	toggledShiftIds,
 } from "@/features/shiftPreferences/preferenceLimit";
 
@@ -11,6 +12,12 @@ const MAX = 2;
 describe("preference limit", () => {
 	it("given_aDay_when_itsChoiceIsRead_then_listsOnlyThePreferredShifts", () => {
 		expect(chosenShiftIds(MONDAY_WITH_MORNING)).toEqual(["s-morning"]);
+	});
+
+	it("given_aDay_when_itsPreferredShiftsAreRead_then_keepsOnlyTheChosenOnes", () => {
+		expect(
+			preferredShifts(MONDAY_WITH_MORNING).map((shift) => shift.name)
+		).toEqual(["Morning"]);
 	});
 
 	it("given_aCountAtOrOverTheMax_when_checked_then_isAtTheLimit", () => {

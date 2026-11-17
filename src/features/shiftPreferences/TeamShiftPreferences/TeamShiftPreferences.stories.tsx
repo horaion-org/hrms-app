@@ -1,5 +1,6 @@
 import { QueryClient } from "@tanstack/react-query";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { fn } from "storybook/test";
 import { storyProviders } from "@/features/organisation/storyApi";
 import { storyCompany } from "@/features/people/storyCompany";
 import { teamPreferencesQuery } from "@/features/shiftPreferences/api";
@@ -10,6 +11,8 @@ import {
 import { TeamShiftPreferences } from "@/features/shiftPreferences/TeamShiftPreferences";
 
 const COMPANY = "story-company";
+/** No row may be changed: the list as someone without the update key sees it. */
+const noRowEditable = (): boolean => false;
 const DEPARTMENT = "d-1";
 /** A Department none of whose members are in the person's reach. */
 const EMPTY_DEPARTMENT = "d-empty";
@@ -38,6 +41,8 @@ const meta = {
 		companyId: COMPANY,
 		departmentId: DEPARTMENT,
 		weekStartMonday: FIXTURE_WEEK,
+		canEdit: noRowEditable,
+		onEdit: fn(),
 	},
 	decorators: [storyCompany(client, COMPANY), storyProviders(client)],
 } satisfies Meta<typeof TeamShiftPreferences>;
@@ -47,6 +52,9 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const OneMember: Story = {};
+
+/** A row the person may change: its edit control opens the member's week. */
+export const Editable: Story = { args: { canEdit: (): boolean => true } };
 
 export const NoMembers: Story = { args: { departmentId: EMPTY_DEPARTMENT } };
 

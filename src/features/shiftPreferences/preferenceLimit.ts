@@ -1,9 +1,16 @@
-import type { PreferenceDay } from "@/features/shiftPreferences/api";
+import type {
+	PreferenceDay,
+	PreferredShift,
+} from "@/features/shiftPreferences/api";
 
 /*
  * The day's limit on preferred shifts, decided without rendering: which are
  * chosen, whether another may be, and the set after a tap.
  */
+
+/** The shifts chosen for a day, in the day's order. */
+export const preferredShifts = (day: PreferenceDay): Array<PreferredShift> =>
+	day.shifts.filter((shift) => shift.preferred);
 
 /** The ids of the shifts chosen for a day, in the day's order. */
 export const chosenShiftIds = (day: PreferenceDay): Array<string> =>
