@@ -4816,7 +4816,8 @@
 				"dayNotes": "Day notes",
 				"startChanged": "Days before changed",
 				"fromGeneration": "Notes from generation"
-			}
+			},
+			"dayRun": "{{from}} – {{to}}"
 		},
 		"rosterMarkers": {
 			"leaveRequested": "Leave requested",

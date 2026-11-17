@@ -4616,7 +4616,8 @@
 				"dayNotes": "Notas del día",
 				"startChanged": "Días anteriores cambiados",
 				"fromGeneration": "Notas de la generación"
-			}
+			},
+			"dayRun": "{{from}} – {{to}}"
 		},
 		"rosterMarkers": {
 			"leaveRequested": "Permiso solicitado",

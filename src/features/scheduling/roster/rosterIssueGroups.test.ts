@@ -5,6 +5,7 @@ import {
 	staffingGapFixture,
 } from "@/features/scheduling/rulesCheck/fixtures";
 import {
+	dayListText,
 	topicCounts,
 	issueCounts,
 	issueSummaryParts,
@@ -280,6 +281,119 @@ describe("issueSummaryParts", () => {
 		expect(
 			issueSummaryParts({ mustFix: 0, notMet: 0, forInformation: 0 }, t)
 		).toEqual([]);
+	});
+});
+
+describe("one broken rule for one person", () => {
+	const WEEK = [
+		"2026-02-01",
+		"2026-02-02",
+		"2026-02-03",
+		"2026-02-04",
+		"2026-02-05",
+		"2026-02-06",
+		"2026-02-07",
+	];
+	const SENTENCE = "Aisha Rahman: 7 days worked in the week, at most 6.";
+	const mostDays = (
+		violations: Array<{
+			employeeId: string;
+			date: string;
+			messages: Array<string>;
+		}>
+	): ReturnType<typeof ruleFixture> =>
+		ruleFixture({ constraintName: "Most days a week", violations });
+
+	it("is one row naming the seven days when the engine says the same each day, counted once", () => {
+		const issues = rosterIssues(
+			input({
+				brokenMusts: [
+					mostDays(
+						[...WEEK].reverse().map((date) => ({
+							employeeId: "mp-1",
+							date,
+							messages: [SENTENCE],
+						}))
+					),
+				],
+			})
+		);
+
+		expect(issues).toHaveLength(1);
+		expect(issues[0]).toMatchObject({
+			who: "Aisha Rahman",
+			day: "2026-02-01",
+			days: WEEK,
+			rule: `scheduling.issues.ruleSentence(${SENTENCE}|Most days a week)`,
+		});
+		expect(issueCounts(issues).mustFix).toBe(1);
+	});
+
+	it("keeps two rows for two different sentences, and for two people", () => {
+		const issues = rosterIssues(
+			input({
+				brokenMusts: [
+					mostDays([
+						{ employeeId: "mp-1", date: WEEK[0]!, messages: [SENTENCE] },
+						{ employeeId: "mp-1", date: WEEK[1]!, messages: ["Another."] },
+						{ employeeId: "mp-2", date: WEEK[0]!, messages: [SENTENCE] },
+					]),
+				],
+			})
+		);
+
+		expect(issues.map((issue) => [issue.who, issue.days])).toEqual([
+			["Aisha Rahman", [WEEK[0]]],
+			["Aisha Rahman", [WEEK[1]]],
+			["Ben Ortiz", [WEEK[0]]],
+		]);
+	});
+
+	it("joins the same in Could not be met, and leaves shifts short one per shift and day", () => {
+		const issues = rosterIssues(
+			input({
+				gaps: [
+					staffingGapFixture(),
+					staffingGapFixture({ conflictId: "c-2", date: "2026-10-18" }),
+				],
+				notMet: [
+					mostDays(
+						WEEK.slice(0, 2).map((date) => ({
+							employeeId: "mp-2",
+							date,
+							messages: ["Works both days."],
+						}))
+					),
+				],
+			})
+		);
+
+		expect(issueCounts(issues)).toEqual({
+			mustFix: 2,
+			notMet: 1,
+			forInformation: 0,
+		});
+	});
+});
+
+describe("dayListText", () => {
+	const formatOne = (day: string): string => `day ${day}`;
+
+	it("writes consecutive days as a run", () => {
+		expect(
+			dayListText(["2026-02-01", "2026-02-02", "2026-02-03"], formatOne, t)
+		).toBe("scheduling.issues.dayRun(day 2026-02-01|day 2026-02-03)");
+	});
+
+	it("lists days that are not consecutive", () => {
+		expect(dayListText(["2026-02-01", "2026-02-03"], formatOne, t)).toBe(
+			"scheduling.constraints.list(day 2026-02-01,day 2026-02-03)"
+		);
+	});
+
+	it("writes one day as itself, and nothing for none", () => {
+		expect(dayListText(["2026-02-01"], formatOne, t)).toBe("day 2026-02-01");
+		expect(dayListText([], formatOne, t)).toBe("");
 	});
 });
 
