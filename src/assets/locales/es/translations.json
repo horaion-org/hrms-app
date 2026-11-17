@@ -2791,6 +2791,12 @@
 			"explanation": "Esta página no existe.",
 			"dashboard": "Ir al panel",
 			"signIn": "Iniciar sesión"
+		},
+		"loading": "Cargando…",
+		"accessUpdating": {
+			"title": "El acceso se está actualizando",
+			"explanation": "Un cambio reciente en tu organización aún se está aplicando al acceso de todos, así que esta página no se puede abrir todavía. Inténtalo de nuevo en unos segundos.",
+			"tryAgain": "Reintentar"
 		}
 	},
 	"people": {

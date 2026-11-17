@@ -37,6 +37,7 @@ import { ListToolbar } from "@/features/organisation/ListToolbar";
 import {
 	actionsColumn,
 	describeList,
+	failedReadProblem,
 	isStatusFilter,
 	nameColumn,
 	statusColumn,
@@ -140,12 +141,7 @@ export const SystemRoles = (): FunctionComponent => {
 		[navigate]
 	);
 	const deleteOffer = useCallback(
-		(role: AccessRole) =>
-			deleteRoleOffer(
-				role,
-				defaults.data,
-				access.can("access_role:delete", COMPANY_SCOPE)
-			),
+		(role: AccessRole) => deleteRoleOffer(role, defaults.data, access),
 		[defaults.data, access]
 	);
 	const [assigning, setAssigning] = useState(false);
@@ -404,9 +400,13 @@ export const SystemRoles = (): FunctionComponent => {
 						</div>
 					)}
 					{defaults.isError ? (
-						<p className="mt-6 text-sm text-error-700" role="alert">
-							{t("organisation.accessRoles.defaults.loadFailed")}
-						</p>
+						<ListProblem
+							problem={failedReadProblem(
+								defaults,
+								t("organisation.accessRoles.defaults.loadFailed"),
+								t
+							)}
+						/>
 					) : (
 						<DataTable
 							className="mt-6"

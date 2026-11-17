@@ -1,6 +1,7 @@
 import type { TFunction } from "i18next";
 import type { ReactNode } from "react";
 import { matchesSearch } from "@/common/matchesSearch";
+import { isDecisionEngineStale } from "@/common/problem";
 import { formatDate } from "@/components/forms/Calendar";
 import type { SelectOption } from "@/components/forms/Select";
 import { Badge } from "@/components/ui/Badge";
@@ -187,6 +188,25 @@ export type ListView<T> = {
 };
 
 const NO_ROWS: Array<never> = [];
+
+/**
+ * A failed read shown in place of its table: the access-update wording
+ * when the API refused it as stale (`stillUpdating`), else `failed`, with
+ * Try again reading it again either way.
+ */
+export const failedReadProblem = (
+	read: { error: unknown; refetch: () => Promise<unknown> },
+	failed: string,
+	t: TFunction
+): NonNullable<ListView<never>["problem"]> => ({
+	message: isDecisionEngineStale(read.error)
+		? t("organisation.list.stillUpdating")
+		: failed,
+	alert: true,
+	retry: (): void => {
+		void read.refetch();
+	},
+});
 
 /**
  * Turns a fetched list into rows filtered by the search, with the copy for

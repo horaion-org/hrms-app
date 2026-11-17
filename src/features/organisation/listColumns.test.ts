@@ -1,10 +1,12 @@
 import type { TFunction } from "i18next";
+import { ApiProblemError } from "@/common/problem";
 import { expect, it, vi } from "vitest";
 import {
 	actionsColumn,
 	branchColumn,
 	createdColumn,
 	describeList,
+	failedReadProblem,
 	nameColumn,
 	statusColumn,
 } from "@/features/organisation/listColumns";
@@ -79,4 +81,31 @@ it("says access is being updated while a refused read waits to try again, not ju
 	);
 
 	expect(view.empty).toBe("organisation.list.waitingForAccess");
+});
+
+it("words a read refused while access is updated as such, with Try again reading it again", () => {
+	const refetch = vi.fn(() => Promise.resolve());
+	const stale = new ApiProblemError({
+		message: "API request refused",
+		status: 503,
+		errorCode: "DECISION_ENGINE_STALE",
+		fieldErrors: [],
+		reason: "http",
+	});
+	const problem = failedReadProblem({ error: stale, refetch }, "Couldn't load", t);
+
+	expect(problem.message).toBe("organisation.list.stillUpdating");
+	problem.retry?.();
+	expect(refetch).toHaveBeenCalledOnce();
+});
+
+it("keeps a screen's own failure wording for any other failed read", () => {
+	const problem = failedReadProblem(
+		{ error: new Error("Failed to fetch"), refetch: () => Promise.resolve() },
+		"Couldn't load",
+		t
+	);
+
+	expect(problem.message).toBe("Couldn't load");
+	expect(problem.retry).toBeDefined();
 });

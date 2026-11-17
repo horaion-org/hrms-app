@@ -71,11 +71,11 @@ const useCatalogueChange = <TVariables, TResult>(
 	return useMutation({
 		mutationFn: change,
 		meta: { successMessage },
-		onSuccess: () =>
-			Promise.all([
-				client.invalidateQueries({ queryKey: ["organisation", companyId] }),
-				client.invalidateQueries({ queryKey: ["people", companyId] }),
-			]),
+		// Reloaded in the background: the change is done when the API answers.
+		onSuccess: () => {
+			void client.invalidateQueries({ queryKey: ["organisation", companyId] });
+			void client.invalidateQueries({ queryKey: ["people", companyId] });
+		},
 	});
 };
 

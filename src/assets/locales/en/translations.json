@@ -968,6 +968,12 @@
 			"explanation": "This page doesn’t exist.",
 			"dashboard": "Go to the dashboard",
 			"signIn": "Sign in"
+		},
+		"loading": "Loading…",
+		"accessUpdating": {
+			"title": "Access is being updated",
+			"explanation": "A recent change to your organisation is still being applied to everyone’s access, so this page can’t open yet. Try again in a few seconds.",
+			"tryAgain": "Try again"
 		}
 	},
 	"people": {

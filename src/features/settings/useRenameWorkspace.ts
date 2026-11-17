@@ -22,12 +22,12 @@ export const useRenameWorkspace = (
 	return useMutation({
 		mutationFn: (name: string) => renameCompany(companyId, name),
 		meta: { successMessage: "settings.general.saved" },
-		onSuccess: async () => {
-			await Promise.all([
+		// In the background: the rename is done when the API answers, so a slow re-read never holds Save.
+		onSuccess: () => {
+			void Promise.all([
 				client.invalidateQueries({ queryKey: workspaceQuery.queryKey }),
 				client.refetchQueries({ queryKey: ["me"], exact: true }),
-			]);
-			await router.invalidate();
+			]).then(() => router.invalidate());
 		},
 	});
 };

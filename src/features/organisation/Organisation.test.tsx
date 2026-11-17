@@ -16,6 +16,8 @@ import {
 } from "@/common/testing/stubApi";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
+import { QueryClient } from "@tanstack/react-query";
+import { queryClient as appQueryClient } from "@/common/query-client";
 
 const REFRESH = "POST /api/v1/public/sessions/refreshes";
 const ME = "GET /api/v1/me";
@@ -482,4 +484,24 @@ it("has no organisation menu without branch:create", async () => {
 	expect(
 		screen.queryByRole("button", { name: "More organisation actions" })
 	).not.toBeInTheDocument();
+});
+
+it("says access is being updated, with Try again, when the workspace read stays refused after a change", async () => {
+	const stale = problemReply(503, "DECISION_ENGINE_STALE", { "Retry-After": "0" });
+	stubApi({
+		[REFRESH]: accessPassReply(),
+		[ME]: currentUserReply(),
+		[WORKSPACE]: stale,
+	});
+	// The app's own query defaults, so the refusal is retried as in the app and then explained.
+	app = await openApp(
+		"/organisation",
+		new QueryClient({ defaultOptions: appQueryClient.getDefaultOptions() })
+	);
+	renderAuthApp(app);
+
+	expect(await screen.findByRole("alert")).toHaveTextContent(
+		"Access is still being updated after a recent change"
+	);
+	expect(screen.getByRole("button", { name: "Try again" })).toBeEnabled();
 });

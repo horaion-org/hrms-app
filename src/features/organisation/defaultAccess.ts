@@ -15,6 +15,7 @@ import {
 	type AssignableScope,
 	incompatibleKeys,
 } from "@/features/workspace/permissionKeys";
+import { COMPANY_SCOPE, type CanAt } from "@/features/workspace/scopes";
 
 const key = "organisation.accessRoles.defaults";
 
@@ -199,13 +200,15 @@ export type DeleteRoleOffer = {
  * not while a default still gives it (API ADR-0118): then the item says to
  * remove it from Default access first, rather than offer a refused delete.
  * `rules` is undefined while the defaults are unread or unreadable; the
- * API's refusal then says the same.
+ * API's refusal then says the same. Deleting needs `access_role:delete` at
+ * the company.
  */
 export const deleteRoleOffer = (
 	role: Pick<AccessRole, "accessRoleId" | "protectedRole" | "holderCount">,
 	rules: ReadonlyArray<DefaultAccessRule> | undefined,
-	mayDelete: boolean
+	access: { can: CanAt }
 ): DeleteRoleOffer => {
+	const mayDelete = access.can("access_role:delete", COMPANY_SCOPE);
 	const givenByDefault = (rules ?? []).some(
 		(rule) => rule.accessRoleId === role.accessRoleId
 	);
