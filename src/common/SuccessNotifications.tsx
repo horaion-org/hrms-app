@@ -8,44 +8,44 @@ import { Toast } from "@/components/ui/Toast";
 declare module "@tanstack/react-query" {
 	interface Register {
 		mutationMeta: {
-			/** Translation key; false when the action already presents its own confirmation. */
+			/**
+			 * Translation key of the confirmation. Without one (or `false`, when
+			 * the action presents its own confirmation) nothing is announced.
+			 */
 			successMessage?: ParseKeys | false;
 		};
 	}
 }
 
-/** One app-level queue, outside the router so successful actions survive navigation. */
+/**
+ * The app's one success toast, outside the router so a confirmation
+ * survives navigation. The newest message replaces the one on screen at
+ * once and gets its own full time, so a confirmation never shows late,
+ * behind older ones.
+ */
 export const SuccessNotifications = (): FunctionComponent => {
 	const client = useQueryClient();
 	const { t } = useTranslation();
 	const nextId = useRef(0);
-	const [messages, setMessages] = useState<Array<{ id: number; key: ParseKeys }>>(
-		[]
-	);
+	const [current, setCurrent] = useState<{ id: number; key: ParseKeys }>();
 
 	useEffect(
 		() =>
 			client.getMutationCache().subscribe((event) => {
 				if (event.type !== "updated" || event.action.type !== "success") return;
 				const key = event.mutation.meta?.successMessage;
-				if (key === false) return;
-				const message = {
-					id: nextId.current++,
-					key: key ?? "notifications.operationSucceeded",
-				};
-				setMessages((previous) => [...previous, message]);
+				if (!key) return;
+				setCurrent({ id: nextId.current++, key });
 			}),
 		[client]
 	);
 
-	const current = messages[0];
 	return current ? (
+		// A new key restarts the toast: its own time, announced once.
 		<Toast
 			key={current.id}
 			onDismiss={() => {
-				setMessages((previous) =>
-					previous.filter(({ id }) => id !== current.id)
-				);
+				setCurrent((shown) => (shown?.id === current.id ? undefined : shown));
 			}}
 		>
 			{t(current.key)}

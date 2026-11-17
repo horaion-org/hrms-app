@@ -45,7 +45,6 @@
 			"COVER_OFFER_SENT": "You’re offered a shift.",
 			"COVER_OFFER_ANSWERED": "Your cover offer was answered."
 		},
-		"operationSucceeded": "Operation completed successfully.",
 		"justNow": "Just now",
 		"delete": "Delete notification",
 		"deleted": "Notification deleted",

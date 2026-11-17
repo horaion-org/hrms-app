@@ -35,22 +35,33 @@ const setup = (): ReturnType<typeof render> & {
 	return { client, view, ...render(view("Editor")) };
 };
 
+/** Runs one successful mutation with `meta`, as an action does. */
+const succeed = (
+	client: QueryClient,
+	meta?: { successMessage?: "leave.apply" | "leave.approve" | "leave.reject" }
+): Promise<unknown> =>
+	client
+		.getMutationCache()
+		.build(client, { mutationFn: () => Promise.resolve(), meta })
+		.execute(undefined);
+
 it("shows one confirmation after success and keeps it when the page changes", async () => {
 	const { client, view, rerender } = setup();
 	await act(async () => {
-		await client
-			.getMutationCache()
-			.build(client, {
-				mutationFn: () => Promise.resolve(),
-			})
-			.execute(undefined);
+		await succeed(client, { successMessage: "leave.apply" });
 	});
 	rerender(view("List"));
-	expect(screen.getByRole("status")).toHaveTextContent(
-		"notifications.operationSucceeded"
-	);
+	expect(screen.getByRole("status")).toHaveTextContent("leave.apply");
 	act(() => {
 		vi.advanceTimersByTime(4000);
+	});
+	expect(screen.queryByRole("status")).not.toBeInTheDocument();
+});
+
+it("announces nothing for an action with no message of its own, never a generic success", async () => {
+	const { client } = setup();
+	await act(async () => {
+		await succeed(client);
 	});
 	expect(screen.queryByRole("status")).not.toBeInTheDocument();
 });
@@ -89,29 +100,31 @@ it("does not announce pending, failed, or explicitly handled operations", async 
 	expect(screen.queryByRole("status")).not.toBeInTheDocument();
 });
 
-it("queues consecutive successes and translates their configured messages", async () => {
+it("shows the newest confirmation at once, replacing the one on screen, for its own full time", async () => {
 	const { client } = setup();
-	await act(async () => {
-		await Promise.all(
-			(["leave.apply", "leave.approve"] as const).map((key) =>
-				client
-					.getMutationCache()
-					.build(client, {
-						mutationFn: () => Promise.resolve(),
-						meta: { successMessage: key },
-					})
-					.execute(undefined)
-			)
-		);
-	});
+	const sendThenWait = async (
+		key: "leave.apply" | "leave.approve" | "leave.reject"
+	): Promise<void> => {
+		await act(async () => {
+			await succeed(client, { successMessage: key });
+		});
+		act(() => {
+			vi.advanceTimersByTime(300);
+		});
+	};
+	await sendThenWait("leave.apply");
+	await sendThenWait("leave.approve");
+	await sendThenWait("leave.reject");
 	expect(screen.getAllByRole("status")).toHaveLength(1);
-	expect(screen.getByRole("status")).toHaveTextContent("leave.apply");
+	expect(screen.getByRole("status")).toHaveTextContent("leave.reject");
+
 	act(() => {
-		vi.advanceTimersByTime(4000);
+		vi.advanceTimersByTime(3500);
 	});
-	expect(screen.getByRole("status")).toHaveTextContent("leave.approve");
+	// 3.8 s after it arrived the newest is still up: its time started when it was shown.
+	expect(screen.getByRole("status")).toHaveTextContent("leave.reject");
 	act(() => {
-		vi.advanceTimersByTime(4000);
+		vi.advanceTimersByTime(500);
 	});
 	expect(screen.queryByRole("status")).not.toBeInTheDocument();
 });
