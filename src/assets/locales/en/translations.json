@@ -4857,6 +4857,7 @@
 				"ROLE_NOT_HELD": "{{name}} can’t work {{shift}}: it’s for other job titles.",
 				"MEMBER_GONE": "{{name}} is no longer a member.",
 				"OUTSIDE_AVAILABILITY": "{{shift}} is outside {{name}}’s availability on {{day}}.",
+				"NO_AVAILABILITY_STATED": "{{name}} hasn’t said when they can work this week. Ask them to add their availability, or add a remark to give them {{shift}} on {{day}} anyway.",
 				"ROSTERED_ELSEWHERE": "{{name}} also works on {{day}} in another roster.",
 				"NOT_SCHEDULABLE_NOW": "{{name}} can no longer be rostered in this department.",
 				"WORKS_ON_DAY_OFF": "{{name}} works on their {{dayType}} on {{day}}.",

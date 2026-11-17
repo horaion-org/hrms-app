@@ -4657,6 +4657,7 @@
 				"ROLE_NOT_HELD": "{{name}} no puede hacer {{shift}}: es para otros puestos.",
 				"MEMBER_GONE": "{{name}} ya no es miembro.",
 				"OUTSIDE_AVAILABILITY": "{{shift}} queda fuera de la disponibilidad de {{name}} el {{day}}.",
+				"NO_AVAILABILITY_STATED": "{{name}} no ha indicado cuándo puede trabajar esta semana. Pídele que añada su disponibilidad, o añade una observación para asignarle {{shift}} el {{day}} de todos modos.",
 				"ROSTERED_ELSEWHERE": "{{name}} también trabaja el {{day}} en otro cuadrante.",
 				"NOT_SCHEDULABLE_NOW": "{{name}} ya no puede programarse en este departamento.",
 				"WORKS_ON_DAY_OFF": "{{name}} trabaja en su {{dayType}} el {{day}}.",
