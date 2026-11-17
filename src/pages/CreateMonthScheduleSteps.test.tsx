@@ -20,16 +20,22 @@ import {
 	CONSTRAINT_FIXTURES,
 	CONSTRAINT_OPTIONS_RESPONSE,
 } from "@/features/scheduling/constraints/fixtures";
+import { midMonthOpenings } from "@/features/scheduling/hours/fixtures";
 import {
 	monthGenerationCheckFixture,
+	scheduleMonthFixture,
 	ungeneratedMonthFixture,
 } from "@/features/scheduling/months/fixtures";
 import { readinessFixture } from "@/features/scheduling/readiness/fixtures";
-import { schedulingWorkspace } from "@/features/scheduling/schedules/fixtures";
+import {
+	scheduleFixture,
+	schedulingWorkspace,
+} from "@/features/scheduling/schedules/fixtures";
 import {
 	SHIFT_FIXTURES,
 	departmentShiftFixture,
 } from "@/features/scheduling/shifts/fixtures";
+import { firstWeek } from "@/features/scheduling/startingContext/fixtures";
 
 /*
  * The month wizard moving between its steps: what Setup holds must survive
@@ -42,6 +48,8 @@ vi.setConfig({ testTimeout: 15_000 });
 const COMPANY = "/api/v1/companies/c-1";
 const DEPARTMENT = `${COMPANY}/branches/b-1/departments/d-1`;
 const DECEMBER = `${COMPANY}/schedule-months/2026-12`;
+const NOVEMBER = `${COMPANY}/schedule-months/2026-11`;
+const SCHEDULES = `${DEPARTMENT}/schedules`;
 const EVERY_KEY = [
 	"schedule:read",
 	"schedule:create",
@@ -51,17 +59,19 @@ const EVERY_KEY = [
 	"constraint:read",
 ];
 
-const reply = (data: unknown): StubReply => ({
-	status: 200,
+let app: OpenedApp | undefined;
+
+const reply = (data: unknown, status = 200): StubReply => ({
+	status,
 	body: envelope(data),
 });
 
-let app: OpenedApp | undefined;
-beforeEach(() => {
-	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
-	// Thursday 12 Nov 2026: November has weeks to schedule, so the page suggests it.
-	vi.useFakeTimers({ toFake: ["Date"], now: new Date(2026, 10, 12) });
-	stubApi({
+/** Opens the app at `entry` with Front Office's lists and December not generated, plus `extra` replies. */
+const open = async (
+	entry: string,
+	extra: Parameters<typeof stubApi>[0] = {}
+): Promise<{ opened: OpenedApp; calls: ReturnType<typeof stubApi> }> => {
+	const calls = stubApi({
 		"POST /api/v1/public/sessions/refreshes": accessPassReply(),
 		"GET /api/v1/me": currentUserReply(),
 		"GET /api/v1/me/workspace": reply(schedulingWorkspace(EVERY_KEY)),
@@ -76,7 +86,31 @@ beforeEach(() => {
 		[`GET ${DEPARTMENT}/constraint-options`]: reply(
 			CONSTRAINT_OPTIONS_RESPONSE
 		),
+		...extra,
 	});
+	app = await openApp(entry);
+	renderAuthApp(app);
+	return { opened: app, calls };
+};
+
+/** From a ready Setup to Generate, then Back to Setup. */
+const toGenerateAndBack = async (
+	user: ReturnType<typeof userEvent.setup>
+): Promise<void> => {
+	const next = screen.getByRole("button", { name: "Next" });
+	await vi.waitFor(() => {
+		expect(next).toBeEnabled();
+	});
+	await user.click(next);
+	await screen.findByRole("button", { name: /^Generate December/ });
+	await user.click(screen.getByRole("button", { name: "Back" }));
+	await screen.findByRole("table", { name: "Weeks" });
+};
+
+beforeEach(() => {
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	// Thursday 12 Nov 2026: November has weeks to schedule, so the page suggests it.
+	vi.useFakeTimers({ toFake: ["Date"], now: new Date(2026, 10, 12) });
 });
 afterEach(() => {
 	app?.disconnect();
@@ -103,8 +137,7 @@ const weekBoxNames = (): Array<string> =>
 describe("Schedule a month: going back from Generate", () => {
 	it("given_aMonthChosenByHand_when_backFromGenerate_then_theSameMonthWeeksAndUrl", async () => {
 		const user = userEvent.setup();
-		app = await openApp("/scheduling/new?department=d-1");
-		renderAuthApp(app);
+		const { opened } = await open("/scheduling/new?department=d-1");
 		await vi.waitFor(() => {
 			expect(monthField()).toHaveTextContent("November 2026");
 		});
@@ -117,22 +150,53 @@ describe("Schedule a month: going back from Generate", () => {
 			name: "Select Mon, Dec 7 to Sun, Dec 13",
 		});
 		const decemberWeeks = weekBoxNames();
-		const next = screen.getByRole("button", { name: "Next" });
-		await vi.waitFor(() => {
-			expect(next).toBeEnabled();
-		});
-		await user.click(next);
-		await screen.findByRole("button", { name: /^Generate December/ });
-		await user.click(screen.getByRole("button", { name: "Back" }));
+		await toGenerateAndBack(user);
 
-		await screen.findByRole("table", { name: "Weeks" });
-		await settled(app.router);
+		await settled(opened.router);
 		expect(monthField()).toHaveTextContent("December 2026");
 		expect(weekBoxNames()).toEqual(decemberWeeks);
-		expect(app.router.state.location.search).toEqual({
+		expect(opened.router.state.location.search).toEqual({
 			step: "setup",
 			department: "d-1",
 			month: "2026-12",
 		});
+	});
+
+	it("given_beforeThisWeekOpenedOnceBySavingTheDraft_when_backFromGenerate_then_itDoesNotOpenByItself", async () => {
+		const user = userEvent.setup();
+		const savedDecember = ungeneratedMonthFixture();
+		await open("/scheduling/new?department=d-1&month=2026-12", {
+			[`GET ${NOVEMBER}`]: reply(scheduleMonthFixture({ weeks: [] })),
+			[`GET ${DECEMBER}`]: [
+				reply(savedDecember),
+				reply({
+					...savedDecember,
+					weeks: savedDecember.weeks.map((week, index) =>
+						index === 0
+							? { ...week, state: "DRAFT", scheduleId: "s-start" }
+							: week
+					),
+				}),
+			],
+			[`POST ${SCHEDULES}`]: reply(
+				scheduleFixture({ scheduleId: "s-start" }),
+				201
+			),
+			[`GET ${SCHEDULES}/s-start/starting-days`]: reply(firstWeek()),
+			[`GET ${SCHEDULES}/s-start/opening-balances`]: reply(midMonthOpenings()),
+		});
+		await user.click(
+			await screen.findByRole("button", { name: "Add last week’s shifts" })
+		);
+		await screen.findByRole("dialog", { name: "Before this week" });
+		await user.keyboard("{Escape}");
+		await vi.waitFor(() => {
+			expect(screen.queryByRole("dialog")).toBeNull();
+		});
+
+		await toGenerateAndBack(user);
+
+		await screen.findByRole("button", { name: /last week/ });
+		expect(screen.queryByRole("dialog")).toBeNull();
 	});
 });
