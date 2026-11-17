@@ -18,7 +18,7 @@ const weeks = weeksOf({ start: "2026-04-13", end: "2026-04-26" });
 /** Three weeks of a Department's month as the roster page lists them; the last has no schedule. */
 const MONTH_WEEKS = [
 	{ start: "2026-11-02", end: "2026-11-08", state: "Published" },
-	{ start: "2026-11-16", end: "2026-11-22", state: "Tentative" },
+	{ start: "2026-11-16", end: "2026-11-22", state: "Generating" },
 	{
 		start: "2026-11-23",
 		end: "2026-11-29",
@@ -191,7 +191,7 @@ describe("RosterWeekBar", () => {
 		const options = screen.getAllByRole("option");
 		expect(options.map((option) => option.textContent)).toEqual([
 			expect.stringMatching(/· Published$/),
-			expect.stringMatching(/· Tentative$/),
+			expect.stringMatching(/· Generating$/),
 			expect.stringMatching(/· Not generated$/),
 		]);
 		expect(options[2]).toHaveAttribute("aria-disabled", "true");
@@ -212,7 +212,7 @@ describe("RosterWeekBar", () => {
 						state: "Not generated",
 						disabled: true,
 					},
-					{ start: "2026-11-16", end: "2026-11-22", state: "Tentative" },
+					{ start: "2026-11-16", end: "2026-11-22", state: "Generating" },
 				]}
 				onToday={vi.fn()}
 				onWeekChange={onWeekChange}

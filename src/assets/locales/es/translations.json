@@ -4463,8 +4463,7 @@
 				"forbidden": "Ya no tienes permiso para publicar o rechazar este cuadrante.",
 				"failed": "No pudimos guardar la decisión. Inténtalo de nuevo.",
 				"approvalPending": "Este cuadrante ya está pendiente de aprobación. Vuelve a cargar la página para ver en qué punto está.",
-				"noApprover": "Un paso del flujo de aprobación de este departamento no tiene a nadie que pueda aprobarlo. Pide a un administrador que lo cambie en Ajustes › Aprobaciones.",
-				"earlierWeekUnpublished": "Publica primero la semana anterior. Las semanas se publican en orden."
+				"noApprover": "Un paso del flujo de aprobación de este departamento no tiene a nadie que pueda aprobarlo. Pide a un administrador que lo cambie en Ajustes › Aprobaciones."
 			}
 		},
 		"startingContext": {
@@ -5112,7 +5111,6 @@
 			"states": {
 				"PUBLISHED": "Publicado",
 				"TO_REVIEW": "Por revisar",
-				"TENTATIVE": "Provisional",
 				"GENERATING": "Generando",
 				"FAILED": "Fallida",
 				"REJECTED": "Rechazado",
@@ -5125,6 +5123,7 @@
 				"dayShort_one": "{{day}}: {{count}} turno con falta de personal",
 				"dayShort_other": "{{day}}: {{count}} turnos con falta de personal",
 				"dayNoRoster": "{{day}} sin cuadrante",
+				"dayKept": "{{day}} ya programado, se mantiene como está",
 				"everyShiftCovered": "Todos los turnos cubiertos",
 				"shiftsShort_one": "{{count}} turno con falta de personal",
 				"shiftsShort_other": "{{count}} turnos con falta de personal",
@@ -5132,7 +5131,6 @@
 				"handChanged_other": "{{count}} días cambiados a mano",
 				"covers": "Cubre {{range}}",
 				"coversNamed": "{{name}} · cubre {{range}}",
-				"publishedInPart": "{{published}} publicado · {{rest}} {{state}}",
 				"namedSpan": "{{name}} · {{range}}"
 			},
 			"actions": {
@@ -5148,8 +5146,6 @@
 				"PUBLISHED_other": "{{count}} publicadas",
 				"TO_REVIEW_one": "{{count}} por revisar",
 				"TO_REVIEW_other": "{{count}} por revisar",
-				"TENTATIVE_one": "{{count}} provisional",
-				"TENTATIVE_other": "{{count}} provisionales",
 				"GENERATING_one": "{{count}} generándose",
 				"GENERATING_other": "{{count}} generándose",
 				"FAILED_one": "{{count}} fallida",
@@ -5171,17 +5167,14 @@
 				"noSchedule": "Ninguna semana de {{month}} tiene horario todavía.",
 				"legendCovered": "Todos los turnos cubiertos",
 				"legendShort": "Falta personal en un turno",
-				"legendTentative": "Provisional: generada, a la espera de que se publique una semana anterior.",
-				"footnote": "El personal solo ve una semana después de publicarla. Las semanas se publican en orden.",
+				"footnote": "El personal solo ve una semana después de publicarla.",
 				"loading": "Cargando el mes…",
 				"loadFailed": "No pudimos cargar este mes. Inténtalo de nuevo.",
-				"unavailable": "Este mes no existe o no tienes permiso para verlo.",
-				"waitingWeek": "Estas semanas esperan a que <0>{{week}}</0> se publique primero."
+				"unavailable": "Este mes no existe o no tienes permiso para verlo."
 			},
 			"waitingOnYou": "Semana del {{week}}: pendiente de ti · paso {{step}} de {{total}} ({{label}})",
 			"hints": {
-				"toReview": "La semana del {{week}} espera tu revisión.",
-				"generatedAhead": "Generado por adelantado. Primero va {{month}}."
+				"toReview": "La semana del {{week}} espera tu revisión."
 			},
 			"tabFailed": "No pudimos cargar los meses. Inténtalo de nuevo.",
 			"tabLoading": "Cargando los meses…",
@@ -5190,7 +5183,6 @@
 			"tabEmptyFiltered": "Ningún mes próximo coincide con tu búsqueda o tus filtros.",
 			"roster": {
 				"unpublished": "<0>Sin publicar.</0> El personal no puede ver esta semana.",
-				"publishFirst": "Publica primero {{week}}. Las semanas se publican en orden.",
 				"weekWithState": "{{week}} · {{state}}"
 			},
 			"generate": {
@@ -5439,7 +5431,14 @@
 			"notInSchedule": "No está en este horario",
 			"coversCallout": "Este horario cubre {{covered}}. {{rest}} se puede programar más adelante.",
 			"remainingButton": "Programar {{rest}}",
-			"otherPart": "{{days}} están en otro horario.",
+			"otherPart_one": "{{days}} está en otro horario.",
+			"otherPart_other": "{{days}} están en otro horario.",
+			"openOtherPart": "Abrir {{days}}",
+			"noneBefore_one": "{{days}} no tiene horario.",
+			"noneBefore_other": "{{days}} no tienen horario.",
+			"passedBefore_one": "{{days}} ya pasó y no tiene horario.",
+			"passedBefore_other": "{{days}} ya pasaron y no tienen horario.",
+			"schedulesThisWeek": "Horarios de esta semana",
 			"redoing": "Este horario rehace {{days}}. Hasta que su cuadrante esté listo, el horario actual de la semana conserva esos días.",
 			"beingRedone": "{{days}} se están volviendo a programar. Este cuadrante los conserva hasta que el nuevo esté listo."
 		}

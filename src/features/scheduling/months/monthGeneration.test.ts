@@ -102,7 +102,7 @@ describe("month generation", () => {
 				}),
 				monthWeekFixture({
 					periodStart: "2026-11-16",
-					state: "TENTATIVE",
+					state: "TO_REVIEW",
 					handChangedDays: 0,
 					includedInMonthGeneration: true,
 				}),
@@ -143,7 +143,7 @@ describe("showsRegenerate", () => {
 					includedInMonthGeneration: true,
 				}),
 				monthWeekFixture({
-					state: "TENTATIVE",
+					state: "TO_REVIEW",
 					includedInMonthGeneration: true,
 				}),
 			],
@@ -174,7 +174,7 @@ describe("showsRegenerate", () => {
 					includedInMonthGeneration: false,
 				}),
 				monthWeekFixture({
-					state: "TENTATIVE",
+					state: "TO_REVIEW",
 					includedInMonthGeneration: true,
 				}),
 			],
@@ -474,7 +474,7 @@ describe("retryWeeksOf", () => {
 					engineOutcome: "INFEASIBLE",
 				},
 			},
-			1: { state: "TENTATIVE", queueRefusal: STOPPED },
+			1: { state: "TO_REVIEW", queueRefusal: STOPPED },
 		});
 
 		expect(retryWeeksOf(month)).toEqual(["2026-12-07", "2026-12-14"]);
@@ -512,7 +512,7 @@ describe("handChangedCoveredWeeks", () => {
 		const month = ungeneratedMonthFixture({
 			weeks: december.weeks.map((week, index) => ({
 				...week,
-				state: "TENTATIVE" as const,
+				state: "TO_REVIEW" as const,
 				handChangedDays: index < 2 ? 1 : 0,
 			})),
 		});

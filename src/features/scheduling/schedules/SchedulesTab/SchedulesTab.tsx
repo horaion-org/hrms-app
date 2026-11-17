@@ -18,7 +18,6 @@ import {
 } from "@/features/scheduling/months/api";
 import { MonthCard } from "@/features/scheduling/months/MonthCard";
 import {
-	earlierReviewMonth,
 	formatMonth,
 	summariesByMonth,
 	summaryRange,
@@ -26,7 +25,7 @@ import {
 import { formatPeriod } from "@/features/scheduling/periods";
 import { ScheduleMenu } from "@/features/scheduling/schedules/ScheduleMenu";
 import type { Schedule } from "@/features/scheduling/schedules/api";
-import { statusLabelKey } from "@/features/scheduling/schedules/publishOrder";
+import { statusLabelKey } from "@/features/scheduling/schedules/rosterStatus";
 import { scheduleStatusTones } from "@/features/scheduling/schedules/scheduleStatusTones";
 import { scheduleViewLink } from "@/features/scheduling/schedules/scheduleViewLink";
 import { useSchedules } from "@/features/scheduling/schedules/useSchedules";
@@ -252,7 +251,6 @@ export const SchedulesTab = ({
 						{monthSummaries.map((summary) => (
 							<MonthCard
 								key={summary.departmentId}
-								reviewMonth={earlierReviewMonth(summaries, summary)}
 								summary={summary}
 								waitingOnMe={waitingOnMe ?? []}
 							/>

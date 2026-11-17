@@ -13,7 +13,6 @@ import type { MonthWeek, WeekState } from "@/features/scheduling/months/api";
 export const weekStateTones: Record<WeekState, BadgeTone> = {
 	PUBLISHED: "success",
 	TO_REVIEW: "warning",
-	TENTATIVE: "neutral",
 	GENERATING: "warning",
 	FAILED: "error",
 	REJECTED: "error",
@@ -22,11 +21,7 @@ export const weekStateTones: Record<WeekState, BadgeTone> = {
 	UNKNOWN: "neutral",
 };
 
-const ROSTER_STATES: ReadonlyArray<WeekState> = [
-	"PUBLISHED",
-	"TO_REVIEW",
-	"TENTATIVE",
-];
+const ROSTER_STATES: ReadonlyArray<WeekState> = ["PUBLISHED", "TO_REVIEW"];
 
 /** Whether a week has a roster to summarise (day marks, cover text, days changed by hand). */
 export const hasRoster = (state: WeekState): boolean =>
@@ -49,10 +44,12 @@ export const weekAction = ({
  * A day's mark on a week card and in the month page's legend. Shape tells
  * them apart as well as colour (as `rosterLooks` marks do): a filled square
  * for every shift covered, a hollow ring for a short day, a dashed square
- * for no roster.
+ * for no roster, and, in a dates preview, a grey square for a day that
+ * already has a schedule and stays as it is.
  */
 export const dayMarkLooks = {
 	covered: "size-3 rounded-sm bg-ink-blue-700",
 	short: "size-3 rounded-full border-2 border-warning-900",
 	noRoster: "size-3 rounded-sm border border-dashed border-neutral-500",
+	kept: "size-3 rounded-sm bg-neutral-400",
 } as const;

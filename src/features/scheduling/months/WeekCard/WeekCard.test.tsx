@@ -8,6 +8,7 @@ import type { MonthWeek } from "@/features/scheduling/months/api";
 import {
 	coverDays,
 	monthWeekFixture,
+	twoPartWeekFixture,
 } from "@/features/scheduling/months/fixtures";
 import { WeekCard } from "@/features/scheduling/months/WeekCard";
 
@@ -267,14 +268,6 @@ describe("WeekCard", () => {
 	});
 
 	describe("a week in parts", () => {
-		const part = {
-			name: "Week of 2026-11-23",
-			named: false,
-			coveredFrom: "2026-11-23",
-			coveredTo: "2026-11-25",
-			redoing: false,
-		};
-
 		it("given_aPartWeek_when_shown_then_saysWhichDaysItCovers", async () => {
 			const card = await renderCard(
 				monthWeekFixture({
@@ -300,31 +293,37 @@ describe("WeekCard", () => {
 			expect(card).toHaveTextContent(/Year-end gala · covers Nov 19\s?–\s?22/);
 		});
 
-		it("given_anEarlierPublishedPart_when_shown_then_saysWhichDaysArePublished", async () => {
+		it("given_twoParts_when_shown_then_listsEachByItsDaysAndStateOpeningItsOwnRoster", async () => {
 			const card = await renderCard(
 				monthWeekFixture({
-					periodStart: "2026-11-23",
-					periodEnd: "2026-11-29",
+					periodStart: "2027-02-15",
+					periodEnd: "2027-02-21",
 					state: "TO_REVIEW",
-					coveredFrom: "2026-11-26",
-					coveredTo: "2026-11-29",
-					parts: [
-						{ ...part, scheduleId: "s-1", state: "PUBLISHED" },
-						{
-							...part,
-							scheduleId: "s-2",
-							coveredFrom: "2026-11-26",
-							coveredTo: "2026-11-29",
-							state: "TO_REVIEW",
-						},
-					],
+					scheduleId: "s-2",
+					coveredFrom: "2027-02-20",
+					coveredTo: "2027-02-21",
+					parts: twoPartWeekFixture(),
 				})
 			);
 
-			expect(card).toHaveTextContent(/Covers Nov 26\s?–\s?29/);
-			expect(card).toHaveTextContent(
-				/Nov 23\s?–\s?25 published · Nov 26\s?–\s?29 to review/
-			);
+			const parts = within(card).getByRole("navigation", {
+				name: "Schedules this week",
+			});
+			expect(
+				within(parts).getByRole("link", {
+					name: /Wed, Feb 17\s?–\s?Fri, Feb 19/,
+				})
+			).toHaveAttribute("href", "/scheduling/s-1");
+			expect(
+				within(parts).getByRole("link", {
+					name: /Sat, Feb 20\s?–\s?Sun, Feb 21/,
+				})
+			).toHaveAttribute("href", "/scheduling/s-2");
+			expect(within(parts).getAllByText("To review")).toHaveLength(2);
+			expect(card).not.toHaveTextContent(/Covers/);
+			expect(
+				within(card).queryByRole("link", { name: /^(Open|Review) Feb 15/ })
+			).toBeNull();
 		});
 
 		it("given_aWholeWeek_when_shown_then_noPartLine", async () => {

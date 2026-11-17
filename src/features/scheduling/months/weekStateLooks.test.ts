@@ -22,10 +22,10 @@ describe("weekStateTones", () => {
 
 describe("hasRoster", () => {
 	it.each(STATES)(
-		"given_%s_when_asked_then_onlyTheThreeRosterStatesHaveOne",
+		"given_%s_when_asked_then_onlyTheTwoRosterStatesHaveOne",
 		(state) => {
 			expect(hasRoster(state)).toBe(
-				["PUBLISHED", "TO_REVIEW", "TENTATIVE"].includes(state)
+				["PUBLISHED", "TO_REVIEW"].includes(state)
 			);
 		}
 	);
@@ -40,7 +40,6 @@ describe("weekAction", () => {
 
 	it.each([
 		"PUBLISHED",
-		"TENTATIVE",
 		"GENERATING",
 		"FAILED",
 		"REJECTED",

@@ -198,7 +198,7 @@ const SKILLS = [
 ];
 
 const schedule = generatedScheduleFixture({ status: "GENERATED" });
-/** Front Office's October around s-3: 5 Oct under review, s-3 tentative after it, 19 Oct not generated yet. */
+/** Front Office's October around s-3: 5 Oct and s-3 both to review, 19 Oct not generated yet. */
 const OCTOBER_MONTH = scheduleMonthFixture({
 	month: "2026-10",
 	departmentName: "Front Office",
@@ -212,7 +212,7 @@ const OCTOBER_MONTH = scheduleMonthFixture({
 		monthWeekFixture({
 			periodStart: "2026-10-12",
 			periodEnd: "2026-10-18",
-			state: "TENTATIVE",
+			state: "TO_REVIEW",
 			scheduleId: "s-3",
 		}),
 		monthWeekFixture({
@@ -225,15 +225,18 @@ const OCTOBER_MONTH = scheduleMonthFixture({
 		}),
 	],
 });
-/** s-3: a generated week held up by an earlier one, so its roster page reads Tentative and holds Publish. */
-const heldUpSchedule = {
+/**
+ * s-3: a generated week after an earlier one still to review, which publishes on its own (API ADR-0130); the API
+ * still sends `waitingForWeek`, always null.
+ */
+const laterWeekSchedule = {
 	...generatedScheduleFixture({ scheduleId: "s-3", status: "GENERATED" }),
 	publication: {
 		requiresApproval: false,
 		stepLabels: [],
 		submission: null,
 		rejectedAtStep: null,
-		waitingForWeek: { periodStart: "2026-10-05", periodEnd: "2026-10-11" },
+		waitingForWeek: null,
 	},
 };
 /** Live shifts of Orchard's Kitchen (d-1) and Bar (d-2), as the shift lists answer them. */
@@ -475,7 +478,7 @@ const ANSWERS: Array<Answer> = [
 		path: /\/constraint-options$/,
 		data: () => CONSTRAINT_OPTIONS_RESPONSE,
 	},
-	{ path: /^(?!\/me).*\/schedules\/s-3$/, data: () => heldUpSchedule },
+	{ path: /^(?!\/me).*\/schedules\/s-3$/, data: () => laterWeekSchedule },
 	{ path: /^(?!\/me).*\/schedules\/s-\d+$/, data: () => schedule },
 	{
 		path: /\/schedules\/s-\d+\/assignments$/,

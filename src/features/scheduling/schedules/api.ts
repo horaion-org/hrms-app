@@ -282,15 +282,6 @@ const scheduleSchema = z
 				rejectedAtStep: rejectedStepSchema
 					.nullish()
 					.transform((value) => value ?? null),
-				/**
-				 * The earlier week of the department Publish waits for: weeks are
-				 * published in order. Null when Publish is not held up, and from an
-				 * API without it.
-				 */
-				waitingForWeek: z
-					.object({ periodStart: z.string(), periodEnd: z.string() })
-					.nullish()
-					.transform((value) => value ?? null),
 			})
 			.nullish()
 			.transform(
@@ -300,7 +291,6 @@ const scheduleSchema = z
 						stepLabels: [],
 						submission: null,
 						rejectedAtStep: null,
-						waitingForWeek: null,
 					}
 			),
 		/**

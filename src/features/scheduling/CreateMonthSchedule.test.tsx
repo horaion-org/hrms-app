@@ -664,12 +664,12 @@ describe("Create schedules for a month: ticking weeks", () => {
 						},
 						{
 							periodStart: "2026-11-23",
-							state: "TENTATIVE",
+							state: "TO_REVIEW",
 							scheduleId: "s-4",
 						},
 						{
 							periodStart: "2026-11-30",
-							state: "TENTATIVE",
+							state: "TO_REVIEW",
 							scheduleId: "s-5",
 						},
 					],

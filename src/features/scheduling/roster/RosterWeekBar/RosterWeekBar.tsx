@@ -17,7 +17,7 @@ import { rosterLooks } from "@/features/scheduling/roster/rosterLooks";
 
 /** A week the bar lists: its dates, with a state and whether it can be chosen when the bar steps through a month. */
 export type RosterWeek = SchedulePeriod & {
-	/** Shown after the dates in the picker, e.g. "Tentative"; none on a member's own roster. */
+	/** Shown after the dates in the picker, e.g. "To review"; none on a member's own roster. */
 	state?: string;
 	/** No schedule to open: listed, not chosen; the arrows step over it. */
 	disabled?: boolean;

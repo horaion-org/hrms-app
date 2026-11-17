@@ -35,7 +35,6 @@ export type NextRosterRow = {
 const STEP_OF_STATE: Record<WeekState, NextRosterStep> = {
 	PUBLISHED: "done",
 	TO_REVIEW: "review",
-	TENTATIVE: "review",
 	GENERATING: "wait",
 	FAILED: "fix",
 	REJECTED: "fix",

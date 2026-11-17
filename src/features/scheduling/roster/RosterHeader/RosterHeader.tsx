@@ -6,7 +6,7 @@ import type { FunctionComponent } from "@/common/types";
 import { Badge } from "@/components/ui/Badge";
 import { formatPeriod } from "@/features/scheduling/periods";
 import type { Schedule } from "@/features/scheduling/schedules/api";
-import { rosterStatusBadge } from "@/features/scheduling/schedules/publishOrder";
+import { rosterStatusBadge } from "@/features/scheduling/schedules/rosterStatus";
 
 export type RosterHeaderProps = {
 	schedule: Schedule;

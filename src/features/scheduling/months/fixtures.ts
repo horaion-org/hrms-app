@@ -4,6 +4,7 @@ import type {
 	MonthWeek,
 	ScheduleMonth,
 	ScheduleMonthSummary,
+	WeekPart,
 } from "@/features/scheduling/months/api";
 
 /*
@@ -41,7 +42,7 @@ export const monthWeekFixture = (
 	...overrides,
 });
 
-/** Kitchen's November: published, to review, two tentative, and one not generated. */
+/** Kitchen's November: published, three to review, and one not generated. */
 export const scheduleMonthFixture = (
 	overrides: Partial<ScheduleMonth> = {}
 ): ScheduleMonth => ({
@@ -63,14 +64,14 @@ export const scheduleMonthFixture = (
 		monthWeekFixture({
 			periodStart: "2026-11-16",
 			periodEnd: "2026-11-22",
-			state: "TENTATIVE",
+			state: "TO_REVIEW",
 			scheduleId: "s-3",
 			days: coverDays("2026-11-16"),
 		}),
 		monthWeekFixture({
 			periodStart: "2026-11-23",
 			periodEnd: "2026-11-29",
-			state: "TENTATIVE",
+			state: "TO_REVIEW",
 			scheduleId: "s-4",
 			days: coverDays("2026-11-23"),
 		}),
@@ -155,3 +156,25 @@ export const monthGenerationFixture = (
 	})),
 	...overrides,
 });
+
+/** The owner's week of 15 Feb 2027 in two parts: Wednesday to Friday (s-1), then Saturday and Sunday (s-2). */
+export const twoPartWeekFixture = (): Array<WeekPart> => [
+	{
+		scheduleId: "s-1",
+		name: "Week of 2027-02-15",
+		named: false,
+		coveredFrom: "2027-02-17",
+		coveredTo: "2027-02-19",
+		state: "TO_REVIEW",
+		redoing: false,
+	},
+	{
+		scheduleId: "s-2",
+		name: "Week of 2027-02-15",
+		named: false,
+		coveredFrom: "2027-02-20",
+		coveredTo: "2027-02-21",
+		state: "TO_REVIEW",
+		redoing: false,
+	},
+];

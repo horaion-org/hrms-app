@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { monthSummaryFixture } from "@/features/scheduling/months/fixtures";
 import {
 	crossingWeekOf,
-	earlierReviewMonth,
 	formatMonth,
 	formatMonthName,
+	formatPartDays,
 	formatWeekDates,
 	mondaysIn,
 	monthChoicesFrom,
@@ -13,7 +13,6 @@ import {
 	stateCounts,
 	summariesByMonth,
 	summaryRange,
-	waitingWeekBefore,
 } from "@/features/scheduling/months/monthWeeks";
 
 describe("monthOf", () => {
@@ -106,10 +105,10 @@ describe("stateCounts", () => {
 				{ state: "PUBLISHED" },
 				{ state: "PUBLISHED" },
 				{ state: "TO_REVIEW" },
-				{ state: "TENTATIVE" },
+				{ state: "TO_REVIEW" },
 				{ state: "NOT_GENERATED" },
 			])
-		).toEqual({ PUBLISHED: 2, TO_REVIEW: 1, TENTATIVE: 1 });
+		).toEqual({ PUBLISHED: 2, TO_REVIEW: 2 });
 	});
 });
 
@@ -130,29 +129,6 @@ describe("crossingWeekOf", () => {
 
 	it("given_marchWhoseFirstIsAMonday_when_asked_then_none", () => {
 		expect(crossingWeekOf("2027-03")).toBeUndefined();
-	});
-});
-
-describe("earlierReviewMonth", () => {
-	const november = monthSummaryFixture();
-	const december = monthSummaryFixture({
-		month: "2026-12",
-		weeks: [
-			{ periodStart: "2026-12-07", state: "TENTATIVE", scheduleId: "s-6" },
-		],
-	});
-
-	it("given_tentativeWeeksAfterAMonthUnderReview_when_asked_then_thatEarlierMonth", () => {
-		expect(earlierReviewMonth([november, december], december)).toBe("2026-11");
-	});
-
-	it("given_theMonthUnderReviewItself_when_asked_then_none", () => {
-		expect(earlierReviewMonth([november, december], november)).toBeUndefined();
-	});
-
-	it("given_anotherDepartmentsReview_when_asked_then_none", () => {
-		const bar = { ...december, departmentId: "d-2", departmentName: "Bar" };
-		expect(earlierReviewMonth([november, bar], bar)).toBeUndefined();
 	});
 });
 
@@ -179,22 +155,16 @@ describe("summariesByMonth", () => {
 	});
 });
 
-describe("waitingWeekBefore", () => {
-	const november = monthSummaryFixture({
-		month: "2026-11",
-		weeks: [
-			{ periodStart: "2026-11-09", state: "PUBLISHED", scheduleId: "s-1" },
-			{ periodStart: "2026-11-16", state: "TO_REVIEW", scheduleId: "s-2" },
-			{ periodStart: "2026-11-23", state: "TENTATIVE", scheduleId: "s-3" },
-		],
+describe("formatPartDays", () => {
+	it("given_aRunOfDays_when_formatted_then_eachEndHasItsWeekday", () => {
+		expect(
+			formatPartDays({ start: "2027-02-17", end: "2027-02-19" }, "en-GB")
+		).toMatch(/^Wed 17 Feb\s?–\s?Fri 19 Feb$/);
 	});
 
-	it("given_aWeekToReviewInAnEarlierMonth_when_asked_then_thatWeek", () => {
-		expect(waitingWeekBefore([november], "2027-01")).toBe("2026-11-16");
-	});
-
-	it("given_noEarlierMonthWithAWeekToReview_when_asked_then_none", () => {
-		expect(waitingWeekBefore([november], "2026-11")).toBeUndefined();
-		expect(waitingWeekBefore([], "2027-01")).toBeUndefined();
+	it("given_oneDay_when_formatted_then_thatDayAlone", () => {
+		expect(
+			formatPartDays({ start: "2027-02-20", end: "2027-02-20" }, "en-GB")
+		).toBe("Sat 20 Feb");
 	});
 });

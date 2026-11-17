@@ -5,6 +5,7 @@ import { beforeAll, describe, expect, it } from "vitest";
 import en from "@/assets/locales/en/translations.json";
 import { DayCoverMarks } from "@/features/scheduling/months/DayCoverMarks";
 import { coverDays } from "@/features/scheduling/months/fixtures";
+import { dayMarkLooks } from "@/features/scheduling/months/weekStateLooks";
 
 beforeAll(async () => {
 	await createInstance()
@@ -50,5 +51,25 @@ describe("DayCoverMarks", () => {
 			"Monday no roster, Tuesday no roster, Wednesday no roster, Thursday no roster, Friday no roster, Saturday no roster, Sunday no roster"
 		);
 		expect(screen.getByRole("img")).toHaveTextContent("MTWTFSS");
+	});
+
+	it("given_keptDaysInADatesPreview_when_shown_then_greyAndReadAsKeptApartFromGeneratedDays", () => {
+		const days = coverDays("2027-02-15").map((day, index) => ({
+			...day,
+			covered: index >= 5,
+			kept: index >= 2 && index <= 4,
+		}));
+		render(<DayCoverMarks days={days} />);
+
+		const marks = screen.getByRole("img");
+		expect(marks.getAttribute("aria-label")).toBe(
+			"Monday no roster, Tuesday no roster, Wednesday already scheduled, stays as it is, Thursday already scheduled, stays as it is, Friday already scheduled, stays as it is, Saturday covered, Sunday covered"
+		);
+		const looks = Array.from(marks.querySelectorAll("span > span")).map(
+			(mark) => mark.className
+		);
+		expect(looks[2]).toBe(dayMarkLooks.kept);
+		expect(looks[5]).toBe(dayMarkLooks.covered);
+		expect(looks[0]).toBe(dayMarkLooks.noRoster);
 	});
 });

@@ -1,11 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import type { DayRun } from "@/features/scheduling/dates/api";
 import {
-	daysAroundPart,
 	partRedoOf,
+	weekRunsAround,
 } from "@/features/scheduling/dates/datesSetup";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import type { DepartmentPath } from "@/common/companyPath";
 import { dateTimeFormatIn } from "@/common/dateTimeFormatIn";
@@ -33,6 +32,7 @@ import {
 	monthOf,
 } from "@/features/scheduling/months/monthWeeks";
 import {
+	listsWeekParts,
 	rosterWeekLink,
 	rosterWeeksOf,
 } from "@/features/scheduling/months/rosterWeeks";
@@ -79,11 +79,10 @@ import {
 	scheduleActions,
 	type ScheduleActionId,
 } from "@/features/scheduling/schedules/scheduleActions";
-import {
-	actionWaitsForEarlierWeek,
-	publishWaitsFor,
-} from "@/features/scheduling/schedules/publishOrder";
 import { partLinesOf } from "@/features/scheduling/schedules/partLines";
+import { WeekPartsCallout } from "@/features/scheduling/schedules/WeekPartsCallout";
+import { WeekPartLinks } from "@/features/scheduling/months/WeekPartLinks";
+import { isoDateIn } from "@/features/scheduling/roster/roster";
 import { scheduleDetailItems } from "@/features/scheduling/schedules/scheduleDetails";
 import {
 	rosterShown,
@@ -452,7 +451,6 @@ const ApiSchedule = ({
 			permissions.mayRead
 		)
 	).data;
-	const publishNoteId = useId();
 	const monthName = month ? formatMonthName(month, formattingLocale(i18n)) : "";
 	if (state.status !== "ready")
 		return (
@@ -490,24 +488,27 @@ const ApiSchedule = ({
 		leave: permissions.mayHandleLeave ? { viewerMembershipId } : undefined,
 	});
 	const schedule = state.schedule;
-	// A part of its week (API ADR-0113): the week's other days, and a way to schedule the days after it.
+	// A part of its week (API ADR-0113): what holds the week's other days, and the week's schedules.
 	const weekParts =
 		scheduleMonth?.weeks.find(
 			(week) => week.periodStart === schedule.periodStart
 		)?.parts ?? [];
-	const around = daysAroundPart(schedule, weekParts);
-	const remaining =
-		around.after && !around.afterTaken ? around.after : undefined;
-	const daysText = (days: DayRun): string =>
-		formatPeriod({ start: days.from, end: days.to }, formattingLocale(i18n));
 	const partLines = partLinesOf(
 		{
 			covered: { from: schedule.coveredFrom, to: schedule.coveredTo },
-			around,
+			// Said once the month read names the week's parts, never guessed before it.
+			runs: scheduleMonth
+				? weekRunsAround(
+						schedule,
+						weekParts,
+						isoDateIn(schedule.timeZone, new Date())
+					)
+				: [],
 			// A redo part in the week (API ADR-0129): this schedule is one, or one redoes some of its days.
 			redo: partRedoOf(schedule, weekParts),
 		},
-		daysText,
+		(days) =>
+			formatPeriod({ start: days.from, end: days.to }, formattingLocale(i18n)),
 		t
 	);
 	const noticeFacts = scheduleNoticeFactsOf(schedule, {
@@ -616,12 +617,6 @@ const ApiSchedule = ({
 			</Callout>
 		),
 	};
-	// Weeks are published in order: Publish (and Submit, and the last step's Approve) waits for an earlier week.
-	const waitsFor = publishWaitsFor(schedule);
-	const primaryWaits =
-		primary !== undefined &&
-		waitsFor !== undefined &&
-		actionWaitsForEarlierWeek(primary.id);
 	const departmentWeeks = scheduleMonth && {
 		weeks: rosterWeeksOf(scheduleMonth, t),
 		onWeekChange: (week: string): void => {
@@ -647,23 +642,11 @@ const ApiSchedule = ({
 						{primary && (
 							<div className="flex flex-col items-end gap-2 max-sm:order-last max-sm:w-full">
 								<Button
-									aria-describedby={primaryWaits ? publishNoteId : undefined}
 									className="max-sm:w-full"
-									disabled={primaryWaits}
 									onClick={runAction[primary.id]}
 								>
 									{t(primary.labelKey, { month: monthName })}
 								</Button>
-								{primaryWaits && (
-									<p
-										className="text-right text-sm text-neutral-700 max-sm:text-left"
-										id={publishNoteId}
-									>
-										{t("scheduling.months.roster.publishFirst", {
-											week: formatPeriod(waitsFor, formattingLocale(i18n)),
-										})}
-									</p>
-								)}
 							</div>
 						)}
 						<ScheduleMenu
@@ -737,32 +720,19 @@ const ApiSchedule = ({
 					{notices[notice]}
 				</div>
 			))}
-			{partLines.length > 0 && (
-				<Callout className="mt-6">
-					{partLines.map((line) => (
-						<span key={line} className="block">
-							{line}
-						</span>
-					))}
-					{remaining && permissions.mayCreateHere && (
-						<Button
-							className="mt-2"
-							size="sm"
-							to="/scheduling/new"
-							variant="secondary"
-							search={{
-								department: schedule.departmentId,
-								for: "dates",
-								firstDay: remaining.from,
-								lastDay: remaining.to,
-							}}
-						>
-							{t("scheduling.roster.remainingButton", {
-								rest: daysText(remaining),
-							})}
-						</Button>
-					)}
-				</Callout>
+			<WeekPartsCallout
+				className="mt-6"
+				departmentId={schedule.departmentId}
+				lines={partLines}
+				mayCreateHere={permissions.mayCreateHere}
+			/>
+			{listsWeekParts(weekParts) && (
+				<WeekPartLinks
+					className="mt-6"
+					currentScheduleId={schedule.scheduleId}
+					departmentId={schedule.departmentId}
+					parts={weekParts}
+				/>
 			)}
 			{rosterShown(noticeFacts) && (
 				<RosterBody

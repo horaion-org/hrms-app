@@ -98,6 +98,19 @@ export const formatWeekDates = (
 		}) as RangeFormat
 	).formatRange(dayjs(week.start).toDate(), dayjs(week.end).toDate());
 
+/** A part's days with their weekdays, as the week's schedules are listed, e.g. "Wed, Feb 17 – Fri, Feb 19". */
+export const formatPartDays = (
+	days: { start: string; end: string },
+	language: string
+): string =>
+	(
+		new Intl.DateTimeFormat(language, {
+			weekday: "short",
+			day: "numeric",
+			month: "short",
+		}) as RangeFormat
+	).formatRange(dayjs(days.start).toDate(), dayjs(days.end).toDate());
+
 /**
  * The week that starts in the month before and ends in this one, shown on
  * its Monday's month only; undefined when the month starts on a Monday.
@@ -111,42 +124,6 @@ export const crossingWeekOf = (month: string): SchedulePeriod | undefined => {
 		end: dayjs(monday).add(6, "day").format(ISO_DATE_FORMAT),
 	};
 };
-
-/**
- * For a month with tentative weeks, the earlier month whose week is under
- * review for the same Department, which comes first; undefined otherwise.
- */
-export const earlierReviewMonth = (
-	summaries: ReadonlyArray<ScheduleMonthSummary>,
-	summary: ScheduleMonthSummary
-): string | undefined => {
-	if (!summary.weeks.some((week) => week.state === "TENTATIVE"))
-		return undefined;
-	const reviewing = summaries.find(
-		(candidate) =>
-			candidate.departmentId === summary.departmentId &&
-			candidate.weeks.some((week) => week.state === "TO_REVIEW")
-	);
-	return reviewing && reviewing.month < summary.month
-		? reviewing.month
-		: undefined;
-};
-
-/**
- * The week an earlier month holds this month's weeks back with: the earliest
- * week to review in a month before `month`, as the publish-in-order rule
- * counts it; none when no earlier month has one.
- */
-export const waitingWeekBefore = (
-	summaries: ReadonlyArray<ScheduleMonthSummary>,
-	month: string
-): string | undefined =>
-	summaries
-		.filter((summary) => summary.month < month)
-		.flatMap((summary) => summary.weeks)
-		.filter((week) => week.state === "TO_REVIEW")
-		.map((week) => week.periodStart)
-		.sort()[0];
 
 /** The summaries grouped by month, earliest first; within a month, in the API's order (Branch, then Department). */
 export const summariesByMonth = (

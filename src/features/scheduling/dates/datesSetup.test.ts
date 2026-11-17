@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
 	datesGenerationBody,
 	datesIn,
-	daysAroundPart,
 	daysBeforeOf,
 	datesProblemOf,
 	maxLastDayOf,
@@ -12,6 +11,7 @@ import {
 	planRowOf,
 	previousBefore,
 	rosterPartBefore,
+	weekRunsAround,
 } from "@/features/scheduling/dates/datesSetup";
 import type { PartDays } from "@/features/scheduling/dates/api";
 import {
@@ -79,6 +79,40 @@ describe("planRowOf", () => {
 			true,
 			true,
 			true,
+		]);
+	});
+
+	it("given_theOwnersWeekendAskedAfterAWednesdayToFridayPart_when_laidOut_then_keptDaysLookKeptAndOnlyTheWeekendGenerated", () => {
+		const [week] = datesPlanFixture().weeks;
+
+		const row = planRowOf({
+			...week!,
+			periodStart: "2027-02-15",
+			periodEnd: "2027-02-21",
+			askedFrom: "2027-02-20",
+			askedTo: "2027-02-21",
+			newFrom: "2027-02-20",
+			newTo: "2027-02-21",
+			kept: [
+				{
+					scheduleId: "s-1",
+					coveredFrom: "2027-02-17",
+					coveredTo: "2027-02-19",
+					state: "TO_REVIEW",
+				},
+			],
+		});
+
+		expect(
+			row.days.map((day) => ({ covered: day.covered, kept: day.kept }))
+		).toEqual([
+			{ covered: false, kept: false },
+			{ covered: false, kept: false },
+			{ covered: false, kept: true },
+			{ covered: false, kept: true },
+			{ covered: false, kept: true },
+			{ covered: true, kept: false },
+			{ covered: true, kept: false },
 		]);
 	});
 
@@ -329,62 +363,132 @@ describe("partRedoOf", () => {
 	});
 });
 
-describe("daysAroundPart", () => {
-	const WEEK = { periodStart: "2026-10-12", periodEnd: "2026-10-18" };
+describe("weekRunsAround", () => {
+	/** A part of the week of Mon 15 Feb 2027, to review unless `overrides` say. */
+	const part = (overrides: Partial<WeekPart>): WeekPart => ({
+		scheduleId: "s-1",
+		name: "Week of 2027-02-15",
+		named: false,
+		coveredFrom: "2027-02-15",
+		coveredTo: "2027-02-21",
+		state: "TO_REVIEW",
+		redoing: false,
+		...overrides,
+	});
+	/** The part as the roster page shows it, with its week's Monday. */
+	const shown = (shownPart: WeekPart): WeekPart & { periodStart: string } => ({
+		...shownPart,
+		periodStart: "2027-02-15",
+	});
+	const BEFORE_THE_WEEK = "2027-02-10";
+	const wednesdayToFriday = part({
+		coveredFrom: "2027-02-17",
+		coveredTo: "2027-02-19",
+	});
+	const saturdayToSunday = part({
+		scheduleId: "s-2",
+		coveredFrom: "2027-02-20",
+		coveredTo: "2027-02-21",
+	});
 
-	it("given_aPartEndingSaturday_when_asked_then_sundayIsFree", () => {
+	it("given_aPartCoveringTheWholeWeek_when_split_then_noRuns", () => {
+		const wholeWeek = part({});
+
 		expect(
-			daysAroundPart(
-				{ ...WEEK, coveredFrom: "2026-10-12", coveredTo: "2026-10-17" },
-				[]
+			weekRunsAround(shown(wholeWeek), [wholeWeek], BEFORE_THE_WEEK)
+		).toEqual([]);
+	});
+
+	it("given_thePartFromWednesdayWithNothingBefore_when_split_then_mondayTuesdayHaveNoneAndTheWeekendIsAnotherPart", () => {
+		expect(
+			weekRunsAround(
+				shown(wednesdayToFriday),
+				[wednesdayToFriday, saturdayToSunday],
+				BEFORE_THE_WEEK
 			)
-		).toEqual({
-			before: undefined,
-			after: { from: "2026-10-18", to: "2026-10-18" },
-			afterTaken: false,
+		).toEqual([
+			{ kind: "noneBefore", days: { from: "2027-02-15", to: "2027-02-16" } },
+			{
+				kind: "otherPart",
+				days: { from: "2027-02-20", to: "2027-02-21" },
+				part: { scheduleId: "s-2", state: "TO_REVIEW" },
+			},
+		]);
+	});
+
+	it("given_thePartWithAnotherPartBeforeIt_when_split_then_mondayTuesdayHaveNoneAndWednesdayToFridayIsAnotherPart", () => {
+		expect(
+			weekRunsAround(
+				shown(saturdayToSunday),
+				[wednesdayToFriday, saturdayToSunday],
+				BEFORE_THE_WEEK
+			)
+		).toEqual([
+			{ kind: "noneBefore", days: { from: "2027-02-15", to: "2027-02-16" } },
+			{
+				kind: "otherPart",
+				days: { from: "2027-02-17", to: "2027-02-19" },
+				part: { scheduleId: "s-1", state: "TO_REVIEW" },
+			},
+		]);
+	});
+
+	it("given_aPartEndingFriday_when_split_then_theWeekendIsStillToSchedule", () => {
+		expect(
+			weekRunsAround(
+				shown(wednesdayToFriday),
+				[wednesdayToFriday],
+				BEFORE_THE_WEEK
+			)
+		).toContainEqual({
+			kind: "noneAfter",
+			days: { from: "2027-02-20", to: "2027-02-21" },
 		});
 	});
 
-	it("given_aRedoPartInsideAWiderPart_when_asked_then_daysAfterAreTaken", () => {
-		const wholeWeek: WeekPart = {
-			scheduleId: "s-1",
-			name: "Week of 2026-10-12",
-			named: false,
-			coveredFrom: "2026-10-12",
-			coveredTo: "2026-10-18",
-			state: "TO_REVIEW",
-			redoing: false,
-		};
-		const redo: WeekPart = {
-			...wholeWeek,
+	it("given_aRedoPartInsideAWiderPart_when_split_then_theWiderPartHoldsTheDaysOnEitherSide", () => {
+		const wholeWeek = part({});
+		const redo = part({
 			scheduleId: "s-2",
-			coveredFrom: "2026-10-14",
-			coveredTo: "2026-10-15",
+			coveredFrom: "2027-02-17",
+			coveredTo: "2027-02-18",
 			state: "GENERATING",
 			redoing: true,
-		};
-
-		expect(daysAroundPart({ ...WEEK, ...redo }, [wholeWeek, redo])).toEqual({
-			before: { from: "2026-10-12", to: "2026-10-13" },
-			after: { from: "2026-10-16", to: "2026-10-18" },
-			afterTaken: true,
 		});
+		const heldByTheWholeWeek = { scheduleId: "s-1", state: "TO_REVIEW" };
+
+		expect(
+			weekRunsAround(shown(redo), [wholeWeek, redo], BEFORE_THE_WEEK)
+		).toEqual([
+			{
+				kind: "otherPart",
+				days: { from: "2027-02-15", to: "2027-02-16" },
+				part: heldByTheWholeWeek,
+			},
+			{
+				kind: "otherPart",
+				days: { from: "2027-02-19", to: "2027-02-21" },
+				part: heldByTheWholeWeek,
+			},
+		]);
 	});
 
-	it("given_aLaterPartFromThursday_when_asked_then_mondayToWednesdayBefore", () => {
+	it("given_todayIsTuesday_when_split_then_mondayHasPassedAndTuesdayHasNone", () => {
 		expect(
-			daysAroundPart(
-				{ ...WEEK, coveredFrom: "2026-10-15", coveredTo: "2026-10-18" },
-				[]
-			)
-		).toEqual({
-			before: { from: "2026-10-12", to: "2026-10-14" },
-			after: undefined,
-			afterTaken: false,
-		});
+			weekRunsAround(
+				shown(wednesdayToFriday),
+				[wednesdayToFriday, saturdayToSunday],
+				"2027-02-16"
+			).slice(0, 2)
+		).toEqual([
+			{
+				kind: "passedBefore",
+				days: { from: "2027-02-15", to: "2027-02-15" },
+			},
+			{ kind: "noneBefore", days: { from: "2027-02-16", to: "2027-02-16" } },
+		]);
 	});
 });
-
 describe("datesGenerationBody", () => {
 	const everything = { shiftIds: ["sh-1", "sh-2"], constraintIds: ["c-1"] };
 	const setup = {
