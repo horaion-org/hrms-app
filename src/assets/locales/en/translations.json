@@ -3938,7 +3938,7 @@
 				"NO_OVERTIME_WHEN_GENERATING": "A generated roster gives nobody overtime past their normal day or week and calls nobody back on a rest day. Shifts it can’t staff without extra hours are left short, and overtime is offered when you ask the engine in Find cover.",
 				"KEEP_DAYS_OFF_TOGETHER": {
 					"ifPossible": "Keep each person’s rest days, days off and leave together where the roster allows.",
-					"must": "Each person’s rest days, days off and leave in a week are together."
+					"must": "Each person’s rest days, days off and leave in each Monday-to-Sunday week are together."
 				},
 				"MAX_DAYS_WITHOUT_DAY_TYPES": {
 					"fullTimers_one": "No full-timer goes more than <DAYS_IN_A_ROW/> day in a row without a <DAY_TYPE/>.",
@@ -4194,7 +4194,7 @@
 				"PAY_RATES": "These rates only guide which roster the engine prefers; they are not used for pay.",
 				"NO_OVERTIME_WHEN_GENERATING": "For example: shifts the team can’t staff without extra hours stay open, and you choose overtime when you ask the engine in Find cover.",
 				"OVERTIME_STRETCH": "For example: no Supervisor is on the Late shift until 16:00, so the Supervisor on Early may stay on for 2 hours. A stretch fills the hours of a short shift it overlaps; it never adds a person to the shift itself.",
-				"KEEP_DAYS_OFF_TOGETHER": "It never costs cover: it only chooses between rosters that are otherwise equal."
+				"KEEP_DAYS_OFF_TOGETHER": "It never costs cover: it only chooses between rosters that are otherwise equal, and it also looks at leave already approved for the days after the roster."
 			},
 			"fieldHints": {
 				"SHIFT": "Choose more than one to count them together each day.",
@@ -4858,6 +4858,7 @@
 				"ROLE_NOT_HELD": "{{name}} can’t work {{shift}}: it’s for other job titles.",
 				"MEMBER_GONE": "{{name}} is no longer a member.",
 				"OUTSIDE_AVAILABILITY": "{{shift}} is outside {{name}}’s availability on {{day}}.",
+				"NO_AVAILABILITY_STATED": "{{name}} hasn’t said when they can work this week. Ask them to add their availability, or add a remark to give them {{shift}} on {{day}} anyway.",
 				"ROSTERED_ELSEWHERE": "{{name}} also works on {{day}} in another roster.",
 				"NOT_SCHEDULABLE_NOW": "{{name}} can no longer be rostered in this department.",
 				"WORKS_ON_DAY_OFF": "{{name}} works on their {{dayType}} on {{day}}.",

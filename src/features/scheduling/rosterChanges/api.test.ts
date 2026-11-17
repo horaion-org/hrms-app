@@ -51,6 +51,19 @@ describe("roster changes client", () => {
 		expect(parsed.ruleCheck).toBe("NOT_CHECKED");
 	});
 
+	it("reads a part-timer with no availability as its own code, not UNKNOWN", async () => {
+		const preview = rosterChangePreviewFixture({
+			checks: [rosterCheckFixture({ code: "NO_AVAILABILITY_STATED" })],
+		});
+		stubApi({
+			[`POST ${CHANGES}/preview`]: { status: 200, body: envelope(preview) },
+		});
+
+		const parsed = await previewRosterChange("c-1", UNIT, "s-1", BODY);
+
+		expect(parsed.checks[0]?.code).toBe("NO_AVAILABILITY_STATED");
+	});
+
 	it("reads an absent cell, a cell's day type and a check's day type, and a kind it doesn't know as OFF", async () => {
 		const [cell] = rosterChangePreviewFixture().cells;
 		stubApi({

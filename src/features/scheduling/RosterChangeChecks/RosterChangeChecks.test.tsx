@@ -47,6 +47,33 @@ describe("RosterChangeChecks", () => {
 		]);
 	});
 
+	it("given_aPartTimerWithNoAvailabilityAndOneOutsideIt_when_rendered_then_eachHasItsOwnSentence", () => {
+		render(
+			<I18nextProvider i18n={authTestI18n}>
+				<RosterChangeChecks
+					names={names}
+					checks={[
+						rosterCheckFixture({
+							code: "NO_AVAILABILITY_STATED",
+							severity: "NEEDS_REMARK",
+						}),
+						rosterCheckFixture({
+							code: "OUTSIDE_AVAILABILITY",
+							severity: "NEEDS_REMARK",
+						}),
+					]}
+				/>
+			</I18nextProvider>
+		);
+
+		expect(
+			screen.getAllByRole("listitem").map((item) => item.textContent)
+		).toEqual([
+			"Needs a remarkAisha Rahman hasn’t said when they can work this week. Ask them to add their availability, or add a remark to give them Front Desk AM on Mon, Oct 12 anyway.",
+			"Needs a remarkFront Desk AM is outside Aisha Rahman’s availability on Mon, Oct 12.",
+		]);
+	});
+
 	it("given_noChecks_when_rendered_then_saysNothingWasFound", () => {
 		render(
 			<I18nextProvider i18n={authTestI18n}>
