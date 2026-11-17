@@ -1,10 +1,19 @@
 import type { TFunction } from "i18next";
 import type {
 	AccessRole,
+	DefaultAccessAppliesTo,
 	DefaultAccessRule,
+	DefaultAccessRuleBody,
 	MemberAccessRoleAssignment,
 } from "@/features/organisation/api";
-import type { PlaceRef } from "@/features/organisation/assignmentTargets";
+import type {
+	AssignmentTarget,
+	PlaceRef,
+} from "@/features/organisation/assignmentTargets";
+import {
+	type AssignableScope,
+	incompatibleKeys,
+} from "@/features/workspace/permissionKeys";
 
 const key = "organisation.accessRoles.defaults";
 
@@ -127,4 +136,41 @@ export const defaultAccessAssignments = (
 			}),
 		})),
 	};
+};
+
+/** The assignment level a reach must suit: a person's own Department, or their own Branch. */
+const LEVEL_OF_REACH: Record<DefaultAccessAppliesTo, AssignableScope> = {
+	OWN_DEPARTMENT: "DEPARTMENT",
+	OWN_BRANCH: "BRANCH",
+};
+
+/**
+ * Whether a role can be default access reaching `appliesTo`, as the API
+ * rules: an active, local, custom role whose every key works at that
+ * level. Keys this app doesn't know are left to the API.
+ */
+export const roleFitsDefault = (
+	role: AccessRole,
+	appliesTo: DefaultAccessAppliesTo
+): boolean =>
+	role.status === "ACTIVE" &&
+	role.kind === "LOCAL" &&
+	!role.protectedRole &&
+	incompatibleKeys(role.permissions, LEVEL_OF_REACH[appliesTo]).length === 0;
+
+/**
+ * A new default's body for a chosen place: the whole company names no
+ * unit, a Branch its id, a Department only its own id (the API resolves
+ * it anywhere in the company).
+ */
+export const defaultAccessBodyOf = (
+	accessRoleId: string,
+	appliesTo: DefaultAccessAppliesTo,
+	place: AssignmentTarget
+): DefaultAccessRuleBody => {
+	if (place.departmentId)
+		return { accessRoleId, appliesTo, departmentId: place.departmentId };
+	if (place.branchId)
+		return { accessRoleId, appliesTo, branchId: place.branchId };
+	return { accessRoleId, appliesTo };
 };

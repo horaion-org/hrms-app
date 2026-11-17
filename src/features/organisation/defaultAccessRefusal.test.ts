@@ -24,7 +24,7 @@ describe("default access refusal mapping", () => {
 		[
 			400,
 			"ACCESS_ROLE_KIND_CONFLICT",
-			"Choose a role for branches and departments.",
+			"Choose a role for branches or departments.",
 		],
 		[400, "ACCESS_ROLE_SCOPE_INCOMPATIBLE", "Remove them from the role"],
 		[409, "DEFAULT_ACCESS_RULE_CONFLICT", "Remove it first"],

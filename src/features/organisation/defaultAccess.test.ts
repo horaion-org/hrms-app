@@ -7,9 +7,11 @@ import type {
 import type { PlaceRef } from "@/features/organisation/assignmentTargets";
 import {
 	defaultAccessAssignments,
+	defaultAccessBodyOf,
 	defaultRuleText,
 	defaultsReaching,
 	defaultSetFor,
+	roleFitsDefault,
 } from "@/features/organisation/defaultAccess";
 
 const t = authTestI18n.t.bind(authTestI18n);
@@ -186,5 +188,70 @@ describe("defaultAccessAssignments", () => {
 				t
 			)
 		).toEqual({ assignments: [], roles: [] });
+	});
+});
+
+describe("roleFitsDefault", () => {
+	it("takes an active local custom role whose keys work at the reach", () => {
+		expect(roleFitsDefault(role("r", "Staff"), "OWN_DEPARTMENT")).toBe(true);
+	});
+
+	it("refuses a company role, a built-in role and a switched-off role", () => {
+		expect(
+			roleFitsDefault(
+				{ ...role("r", "Auditor"), kind: "COMPANY" },
+				"OWN_BRANCH"
+			)
+		).toBe(false);
+		expect(
+			roleFitsDefault(
+				{ ...role("r", "Admin"), protectedRole: true },
+				"OWN_BRANCH"
+			)
+		).toBe(false);
+		expect(
+			roleFitsDefault({ ...role("r", "Old"), status: "INACTIVE" }, "OWN_BRANCH")
+		).toBe(false);
+	});
+
+	it("refuses a branch-only key for their own department but takes it for their own branch", () => {
+		const branchReader = {
+			...role("r", "Branch reader"),
+			permissions: ["branch:read"],
+		};
+		expect(roleFitsDefault(branchReader, "OWN_DEPARTMENT")).toBe(false);
+		expect(roleFitsDefault(branchReader, "OWN_BRANCH")).toBe(true);
+	});
+});
+
+describe("defaultAccessBodyOf", () => {
+	it("names no unit for the company, the branch for a branch, and only the department for a department", () => {
+		expect(
+			defaultAccessBodyOf("r", "OWN_DEPARTMENT", { label: "Whole company" })
+		).toEqual({
+			accessRoleId: "r",
+			appliesTo: "OWN_DEPARTMENT",
+		});
+		expect(
+			defaultAccessBodyOf("r", "OWN_BRANCH", {
+				label: "Harbour",
+				branchId: HARBOUR,
+			})
+		).toEqual({
+			accessRoleId: "r",
+			appliesTo: "OWN_BRANCH",
+			branchId: HARBOUR,
+		});
+		expect(
+			defaultAccessBodyOf("r", "OWN_DEPARTMENT", {
+				label: "Housekeeping",
+				branchId: HARBOUR,
+				departmentId: HOUSEKEEPING,
+			})
+		).toEqual({
+			accessRoleId: "r",
+			appliesTo: "OWN_DEPARTMENT",
+			departmentId: HOUSEKEEPING,
+		});
 	});
 });

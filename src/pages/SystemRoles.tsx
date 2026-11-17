@@ -26,7 +26,9 @@ import {
 	defaultRuleText,
 	type DefaultRuleText,
 } from "@/features/organisation/defaultAccess";
+import { assignmentTargets } from "@/features/organisation/assignmentTargets";
 import { defaultAccessColumns } from "@/features/organisation/defaultAccessColumns";
+import { DefaultAccessDialog } from "@/features/organisation/DefaultAccessDialog";
 import { defaultAccessRefusal } from "@/features/organisation/defaultAccessRefusal";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import {
@@ -41,6 +43,7 @@ import {
 } from "@/features/organisation/listColumns";
 import {
 	defaultAccessRulesQuery,
+	useAddDefaultAccessRule,
 	useRemoveDefaultAccessRule,
 } from "@/features/organisation/useDefaultAccess";
 import { useAccessRoles } from "@/features/organisation/useOrganisationList";
@@ -105,6 +108,8 @@ export const SystemRoles = (): FunctionComponent => {
 	const { data: workspace } = useQuery({ ...workspaceQuery, retry });
 	const [removing, setRemoving] = useState<DefaultAccessRule>();
 	const remove = useRemoveDefaultAccessRule(companyId);
+	const [addingDefault, setAddingDefault] = useState(false);
+	const add = useAddDefaultAccessRule(companyId);
 	const describeDefault = (rule: DefaultAccessRule): DefaultRuleText =>
 		defaultRuleText(
 			rule,
@@ -373,6 +378,18 @@ export const SystemRoles = (): FunctionComponent => {
 					<p className="mt-3 text-sm text-neutral-800">
 						{t("organisation.accessRoles.defaults.description")}
 					</p>
+					{canChangeDefaults && (
+						<div className="mt-6 flex flex-wrap gap-3">
+							<Button
+								variant="secondary"
+								onClick={() => {
+									setAddingDefault(true);
+								}}
+							>
+								{t("organisation.accessRoles.defaults.add")}
+							</Button>
+						</div>
+					)}
 					{defaults.isError ? (
 						<p className="mt-6 text-sm text-error-700" role="alert">
 							{t("organisation.accessRoles.defaults.loadFailed")}
@@ -392,6 +409,25 @@ export const SystemRoles = (): FunctionComponent => {
 						/>
 					)}
 				</section>
+			)}
+			{addingDefault && (
+				<DefaultAccessDialog
+					error={add.error ? defaultAccessRefusal(add.error, t) : undefined}
+					places={assignmentTargets(workspace, companyId, access.can, t)}
+					roles={allRoles.status === "ready" ? allRoles.items : []}
+					submitting={add.isPending}
+					onAdd={(body) => {
+						add.mutate(body, {
+							onSuccess: () => {
+								setAddingDefault(false);
+							},
+						});
+					}}
+					onClose={() => {
+						add.reset();
+						setAddingDefault(false);
+					}}
+				/>
 			)}
 			{removing && (
 				<ConfirmDialog

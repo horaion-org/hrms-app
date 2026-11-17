@@ -2071,6 +2071,20 @@
 		},
 		"accessRoles": {
 			"defaults": {
+				"add": "Add default access",
+				"dialog": {
+					"title": "Add default access",
+					"description": "Everyone who receives default access gets this role, in their own department or branch, while they work in the place you choose.",
+					"submit": "Add default access",
+					"placePlaceholder": "Choose who gets it",
+					"rolePlaceholder": "Choose a role",
+					"appliesToHint": "Added to what they get from the company, their branch and their department. It never takes anything away.",
+					"noRoleFits": {
+						"OWN_DEPARTMENT": "No role can apply to their own department. Use an active role for branches or departments, without branch-only permissions.",
+						"OWN_BRANCH": "No role can apply to their own branch. Use an active role for branches or departments."
+					},
+					"allows": "This role allows"
+				},
 				"title": "Default access",
 				"description": "What people get in their own department or branch without being given a role. Defaults for the whole company, a branch and a department add up; none takes anything away. Everyone added from now on receives default access.",
 				"empty": "No default access yet. People see only their own things until they are given a role.",
@@ -2089,7 +2103,7 @@
 				"refusals": {
 					"invalidRule": "That role or place can’t be used for default access. Choose a custom role of this company and at most one branch or department, then try again.",
 					"inactive": "That role is switched off. Switch it on, or choose another role.",
-					"kind": "A company role can’t be default access. Choose a role for branches and departments.",
+					"kind": "A company role can’t be default access. Choose a role for branches or departments.",
 					"scope": "That role holds permissions that don’t work in a department. Remove them from the role, or apply it to their own branch.",
 					"duplicate": "That role is already default access there. Remove it first to change where it applies.",
 					"placeGone": "That branch or department no longer exists. Choose another place.",

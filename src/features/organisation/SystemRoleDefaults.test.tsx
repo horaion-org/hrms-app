@@ -153,6 +153,9 @@ describe("Default access on Settings › Access roles", () => {
 		expect(
 			within(table).queryByRole("button", { name: /^Remove/ })
 		).not.toBeInTheDocument();
+		expect(
+			screen.queryByRole("button", { name: "Add default access" })
+		).not.toBeInTheDocument();
 	});
 
 	it("leaves the section out for a reader who can't read access roles company-wide", async () => {
@@ -226,6 +229,87 @@ describe("Default access on Settings › Access roles", () => {
 
 		expect(await within(dialog).findByRole("alert")).toHaveTextContent(
 			"Only the System Owner or a System Admin can change default access."
+		);
+	});
+
+	it("adds a default for a department from the dialog, and the list reloads", async () => {
+		const added = {
+			defaultAccessRuleId: "w",
+			accessRoleId: "r-staff",
+			setAt: "DEPARTMENT",
+			branchId: null,
+			departmentId: "d-3",
+			appliesTo: "OWN_DEPARTMENT",
+		};
+		const calls = stubApi({
+			...routes(),
+			[`GET ${DEFAULTS}`]: [
+				{ status: 200, body: envelope(RULES) },
+				{ status: 200, body: envelope([...RULES, added]) },
+			],
+			[`POST ${DEFAULTS}`]: { status: 201, body: envelope(added) },
+		});
+		const table = await open();
+		await userEvent.click(
+			screen.getByRole("button", { name: "Add default access" })
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Add default access",
+		});
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: /^Who gets it/ })
+		);
+		await userEvent.click(
+			await screen.findByRole("option", {
+				name: "Everyone in Tampines › Front",
+			})
+		);
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: /^Role/ })
+		);
+		await userEvent.click(await screen.findByRole("option", { name: "Staff" }));
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: "Add default access" })
+		);
+
+		await waitFor(() => {
+			expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+		});
+		expect(
+			calls.find((call) => call.method === "POST" && call.path === DEFAULTS)
+				?.body
+		).toEqual({
+			accessRoleId: "r-staff",
+			appliesTo: "OWN_DEPARTMENT",
+			departmentId: "d-3",
+		});
+		await waitFor(() => {
+			expect(within(table).getAllByRole("row")).toHaveLength(5);
+		});
+	});
+
+	it("keeps the dialog open with the reason when adding is refused", async () => {
+		stubApi({
+			...routes(),
+			[`POST ${DEFAULTS}`]: problemReply(409, "DEFAULT_ACCESS_RULE_CONFLICT"),
+		});
+		await open();
+		await userEvent.click(
+			screen.getByRole("button", { name: "Add default access" })
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Add default access",
+		});
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: /^Role/ })
+		);
+		await userEvent.click(await screen.findByRole("option", { name: "Staff" }));
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: "Add default access" })
+		);
+
+		expect(await within(dialog).findByRole("alert")).toHaveTextContent(
+			"That role is already default access there. Remove it first to change where it applies."
 		);
 	});
 });

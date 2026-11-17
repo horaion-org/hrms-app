@@ -1964,6 +1964,20 @@
 		},
 		"accessRoles": {
 			"defaults": {
+				"add": "Añadir acceso predeterminado",
+				"dialog": {
+					"title": "Añadir acceso predeterminado",
+					"description": "Quienes reciben el acceso predeterminado obtienen este rol, en su propio departamento o sucursal, mientras trabajan en el lugar que elijas.",
+					"submit": "Añadir acceso predeterminado",
+					"placePlaceholder": "Elige quién lo recibe",
+					"rolePlaceholder": "Elige un rol",
+					"appliesToHint": "Se suma a lo que reciben de la empresa, su sucursal y su departamento. Nunca quita nada.",
+					"noRoleFits": {
+						"OWN_DEPARTMENT": "Ningún rol puede aplicarse a su propio departamento. Usa un rol activo para sucursales o departamentos, sin permisos solo de sucursal.",
+						"OWN_BRANCH": "Ningún rol puede aplicarse a su propia sucursal. Usa un rol activo para sucursales o departamentos."
+					},
+					"allows": "Este rol permite"
+				},
 				"title": "Acceso predeterminado",
 				"description": "Lo que las personas reciben en su propio departamento o sucursal sin que se les dé un rol. Los accesos predeterminados de toda la empresa, de una sucursal y de un departamento se suman; ninguno quita nada. Todas las personas que se añadan a partir de ahora reciben el acceso predeterminado.",
 				"empty": "Aún no hay acceso predeterminado. Las personas solo ven lo suyo hasta que se les da un rol.",
@@ -1982,7 +1996,7 @@
 				"refusals": {
 					"invalidRule": "Ese rol o lugar no se puede usar como acceso predeterminado. Elige un rol personalizado de esta empresa y como mucho una sucursal o un departamento, y vuelve a intentarlo.",
 					"inactive": "Ese rol está desactivado. Actívalo o elige otro rol.",
-					"kind": "Un rol de empresa no puede ser acceso predeterminado. Elige un rol para sucursales y departamentos.",
+					"kind": "Un rol de empresa no puede ser acceso predeterminado. Elige un rol para sucursales o departamentos.",
 					"scope": "Ese rol tiene permisos que no funcionan en un departamento. Quítalos del rol o aplícalo a su propia sucursal.",
 					"duplicate": "Ese rol ya es acceso predeterminado ahí. Quítalo primero para cambiar dónde se aplica.",
 					"placeGone": "Esa sucursal o ese departamento ya no existe. Elige otro lugar.",
