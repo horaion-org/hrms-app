@@ -102,14 +102,23 @@ export const useRemoveDefaultAccessRule = (
 	});
 };
 
-/** Gives default access to people already in the company, all or nothing. */
+/**
+ * Gives default access to people already in the company, all or nothing.
+ * Confirms with a plain toast unless `confirmed` says the caller presents
+ * the counts itself, as the give dialog does.
+ */
 export const useGiveDefaultAccess = (
-	companyId: string
+	companyId: string,
+	{ confirmed = false }: { confirmed?: boolean } = {}
 ): UseMutationResult<GiveDefaultAccessResult, Error, ReadonlyArray<string>> => {
 	const reload = useReloadOrganisation(companyId);
 	return useMutation({
 		mutationFn: (membershipIds) => giveDefaultAccess(companyId, membershipIds),
-		meta: { successMessage: "organisation.accessRoles.defaults.toast.given" },
+		meta: {
+			successMessage: confirmed
+				? false
+				: "organisation.accessRoles.defaults.toast.given",
+		},
 		onSettled: reload,
 	});
 };

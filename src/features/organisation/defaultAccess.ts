@@ -4,6 +4,7 @@ import type {
 	DefaultAccessAppliesTo,
 	DefaultAccessRule,
 	DefaultAccessRuleBody,
+	GiveDefaultAccessResult,
 	MemberAccessRoleAssignment,
 } from "@/features/organisation/api";
 import type {
@@ -174,3 +175,15 @@ export const defaultAccessBodyOf = (
 		return { accessRoleId, appliesTo, branchId: place.branchId };
 	return { accessRoleId, appliesTo };
 };
+
+/** What giving default access did, in a sentence: "Gave default access to 38 people. 2 already had it." */
+export const giveDefaultAccessSummary = (
+	{ given, alreadyReceiving }: GiveDefaultAccessResult,
+	t: TFunction
+): string =>
+	[
+		t(`${key}.giveDialog.given`, { count: given }),
+		...(alreadyReceiving > 0
+			? [t(`${key}.giveDialog.alreadyReceiving`, { count: alreadyReceiving })]
+			: []),
+	].join(" ");

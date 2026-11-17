@@ -1964,6 +1964,30 @@
 		},
 		"accessRoles": {
 			"defaults": {
+				"give": "Dar acceso predeterminado a quienes ya están",
+				"giveDialog": {
+					"title": "Dar acceso predeterminado",
+					"description": "Marca a las personas que ya están y deben recibir el acceso predeterminado; la casilla del encabezado marca a todas las de la lista. Quienes se añadan a partir de ahora lo reciben sin esto.",
+					"submit_one": "Dar acceso predeterminado a {{count}} persona",
+					"submit_other": "Dar acceso predeterminado a {{count}} personas",
+					"search": "Buscar",
+					"searchPlaceholder": "Buscar por nombre o ID de empleado",
+					"department": "Departamento",
+					"allDepartments": "Todos los departamentos",
+					"noDepartment": "Sin departamento",
+					"people": "Personas",
+					"person": "Nombre",
+					"loading": "Cargando personas…",
+					"noPeople": "Nadie coincide.",
+					"capped": "Se muestran las primeras {{count}} de {{total}}. Busca o elige un departamento para llegar a las demás.",
+					"selected_one": "{{count}} persona seleccionada",
+					"selected_other": "{{count}} personas seleccionadas",
+					"peopleFailed": "No pudimos cargar a las personas. Inténtalo de nuevo.",
+					"given_one": "Se dio acceso predeterminado a {{count}} persona.",
+					"given_other": "Se dio acceso predeterminado a {{count}} personas.",
+					"alreadyReceiving_one": "{{count}} ya lo tenía.",
+					"alreadyReceiving_other": "{{count}} ya lo tenían."
+				},
 				"add": "Añadir acceso predeterminado",
 				"dialog": {
 					"title": "Añadir acceso predeterminado",

@@ -2071,6 +2071,30 @@
 		},
 		"accessRoles": {
 			"defaults": {
+				"give": "Give default access to people already here",
+				"giveDialog": {
+					"title": "Give default access",
+					"description": "Tick the people already here who should receive default access; the box in the header ticks everyone listed. People added from now on receive it without this.",
+					"submit_one": "Give default access to {{count}} person",
+					"submit_other": "Give default access to {{count}} people",
+					"search": "Search",
+					"searchPlaceholder": "Search by name or employee ID",
+					"department": "Department",
+					"allDepartments": "All departments",
+					"noDepartment": "No department",
+					"people": "People",
+					"person": "Name",
+					"loading": "Loading people…",
+					"noPeople": "Nobody matches.",
+					"capped": "Showing the first {{count}} of {{total}}. Search or choose a department to reach the others.",
+					"selected_one": "{{count}} person selected",
+					"selected_other": "{{count}} people selected",
+					"peopleFailed": "We couldn’t load the people. Try again.",
+					"given_one": "Gave default access to {{count}} person.",
+					"given_other": "Gave default access to {{count}} people.",
+					"alreadyReceiving_one": "{{count}} already had it.",
+					"alreadyReceiving_other": "{{count}} already had it."
+				},
 				"add": "Add default access",
 				"dialog": {
 					"title": "Add default access",

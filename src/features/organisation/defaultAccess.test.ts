@@ -11,6 +11,7 @@ import {
 	defaultRuleText,
 	defaultsReaching,
 	defaultSetFor,
+	giveDefaultAccessSummary,
 	roleFitsDefault,
 } from "@/features/organisation/defaultAccess";
 
@@ -253,5 +254,16 @@ describe("defaultAccessBodyOf", () => {
 			appliesTo: "OWN_DEPARTMENT",
 			departmentId: HOUSEKEEPING,
 		});
+	});
+});
+
+describe("giveDefaultAccessSummary", () => {
+	it("says how many were given it, and how many already had it", () => {
+		expect(
+			giveDefaultAccessSummary({ given: 38, alreadyReceiving: 2 }, t)
+		).toBe("Gave default access to 38 people. 2 already had it.");
+		expect(giveDefaultAccessSummary({ given: 1, alreadyReceiving: 0 }, t)).toBe(
+			"Gave default access to 1 person."
+		);
 	});
 });

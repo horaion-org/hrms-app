@@ -15,6 +15,7 @@ import { Callout } from "@/components/ui/Callout";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ArrowLeftIcon } from "@/components/ui/Icon";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
+import { Toast } from "@/components/ui/Toast";
 import { mayAssignRole } from "@/features/organisation/accessRoleReadOnly";
 import { placeLabels } from "@/features/organisation/accessSummary";
 import type {
@@ -24,6 +25,7 @@ import type {
 import { CreateSystemRoleDialog } from "@/features/organisation/CreateSystemRoleDialog";
 import {
 	defaultRuleText,
+	giveDefaultAccessSummary,
 	type DefaultRuleText,
 } from "@/features/organisation/defaultAccess";
 import { assignmentTargets } from "@/features/organisation/assignmentTargets";
@@ -47,6 +49,7 @@ import {
 	useRemoveDefaultAccessRule,
 } from "@/features/organisation/useDefaultAccess";
 import { useAccessRoles } from "@/features/organisation/useOrganisationList";
+import { GiveDefaultAccessDialog } from "@/features/people/GiveDefaultAccessDialog";
 import { roleSummaryText } from "@/features/organisation/sectionLevels";
 import { workspaceQuery } from "@/features/workspace/api";
 import { isPermissionKey } from "@/features/workspace/permissionKeys";
@@ -109,6 +112,8 @@ export const SystemRoles = (): FunctionComponent => {
 	const [removing, setRemoving] = useState<DefaultAccessRule>();
 	const remove = useRemoveDefaultAccessRule(companyId);
 	const [addingDefault, setAddingDefault] = useState(false);
+	const [givingDefault, setGivingDefault] = useState(false);
+	const [given, setGiven] = useState<{ id: number; text: string }>();
 	const add = useAddDefaultAccessRule(companyId);
 	const describeDefault = (rule: DefaultAccessRule): DefaultRuleText =>
 		defaultRuleText(
@@ -388,6 +393,14 @@ export const SystemRoles = (): FunctionComponent => {
 							>
 								{t("organisation.accessRoles.defaults.add")}
 							</Button>
+							<Button
+								variant="secondary"
+								onClick={() => {
+									setGivingDefault(true);
+								}}
+							>
+								{t("organisation.accessRoles.defaults.give")}
+							</Button>
 						</div>
 					)}
 					{defaults.isError ? (
@@ -428,6 +441,30 @@ export const SystemRoles = (): FunctionComponent => {
 						setAddingDefault(false);
 					}}
 				/>
+			)}
+			{givingDefault && (
+				<GiveDefaultAccessDialog
+					companyId={companyId}
+					onClose={() => {
+						setGivingDefault(false);
+					}}
+					onGiven={(result) => {
+						setGiven({
+							id: Date.now(),
+							text: giveDefaultAccessSummary(result, t),
+						});
+					}}
+				/>
+			)}
+			{given && (
+				<Toast
+					key={given.id}
+					onDismiss={() => {
+						setGiven(undefined);
+					}}
+				>
+					{given.text}
+				</Toast>
 			)}
 			{removing && (
 				<ConfirmDialog
