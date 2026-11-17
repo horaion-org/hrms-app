@@ -89,7 +89,7 @@ const ALLOWED_DEEP_IMPORTS = [
 	"@/features/scheduling/FindingList/findingToneIcons",
 	"@/features/scheduling/RosterCellPanel/CellPanelFooter",
 	"@/features/scheduling/RosterDayNotes/leaveLinkSearch",
-	"@/features/scheduling/ScheduleSetupStep/chosenDepartment",
+	"@/features/scheduling/createSchedule/ScheduleSetupStep/chosenDepartment",
 	"@/features/scheduling/constraints/ConstraintDialog/typeGroups",
 	"@/features/scheduling/coverOffers/CoverOfferActions/CoverOfferSent",
 	"@/features/settings/LeaveTypesSettings/useMovedArrowFocus",

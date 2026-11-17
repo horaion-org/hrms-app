@@ -17,7 +17,7 @@ import { Toast } from "@/components/ui/Toast";
 import { placeOf } from "@/features/organisation/assignmentTargets";
 import { useConstraintOptions } from "@/features/scheduling/constraints/useConstraintOptions";
 import { departmentUnitOf } from "@/features/scheduling/departmentSetup/departmentUnit";
-import { GenerateStep } from "@/features/scheduling/GenerateStep";
+import { GenerateStep } from "@/features/scheduling/createSchedule/GenerateStep";
 import {
 	publishedRosterOtherThan,
 	publishedWeekQuery,
@@ -75,14 +75,14 @@ import { useScheduleShifts } from "@/features/scheduling/schedules/useScheduleSh
 import {
 	ScheduleSetupStep,
 	type SetupFieldErrors,
-} from "@/features/scheduling/ScheduleSetupStep";
-import type { ScheduleSetupValues } from "@/features/scheduling/setupSchema";
+} from "@/features/scheduling/createSchedule/ScheduleSetupStep";
+import type { ScheduleSetupValues } from "@/features/scheduling/createSchedule/setupSchema";
 import { gateOf } from "@/features/scheduling/readiness/readinessCopy";
 import { ReadinessGateCallout } from "@/features/scheduling/readiness/ReadinessGateCallout";
 import { setupLinksOf } from "@/features/scheduling/readiness/setupLinks";
 import { useSchedulingReadiness } from "@/features/scheduling/readiness/useSchedulingReadiness";
-import { StepActions } from "@/features/scheduling/StepActions";
-import { stepCompletion } from "@/features/scheduling/stepCompletion";
+import { StepActions } from "@/features/scheduling/createSchedule/StepActions";
+import { stepCompletion } from "@/features/scheduling/createSchedule/stepCompletion";
 import { isScheduleStep, SCHEDULE_STEPS } from "@/features/scheduling/steps";
 import {
 	allOf,
@@ -91,7 +91,7 @@ import {
 	weekChoiceProblem,
 	type WeekChoiceIds,
 } from "@/features/scheduling/weekChoice";
-import { WeekChoiceDialog } from "@/features/scheduling/WeekChoiceDialog";
+import { WeekChoiceDialog } from "@/features/scheduling/createSchedule/WeekChoiceDialog";
 import { WeekChoiceSummary } from "@/features/scheduling/WeekChoiceSummary";
 import { workspaceQuery } from "@/features/workspace/api";
 import {

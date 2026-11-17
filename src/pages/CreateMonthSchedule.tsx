@@ -25,7 +25,7 @@ import { constraintsQuery } from "@/features/scheduling/constraints/api";
 import { useConstraintOptions } from "@/features/scheduling/constraints/useConstraintOptions";
 import { OpeningHoursCallout } from "@/features/scheduling/hours/OpeningHoursCallout";
 import { startsAfterFirst } from "@/features/scheduling/hours/openingSummary";
-import { MonthChoiceDialog } from "@/features/scheduling/MonthChoiceDialog";
+import { MonthChoiceDialog } from "@/features/scheduling/createSchedule/MonthChoiceDialog";
 import {
 	monthGenerationCheckQuery,
 	scheduleMonthQuery,
@@ -76,7 +76,7 @@ import {
 	type DatesChoice,
 	MonthSetupStep,
 	type MonthSetupValues,
-} from "@/features/scheduling/MonthSetupStep";
+} from "@/features/scheduling/createSchedule/MonthSetupStep";
 import { gateOf } from "@/features/scheduling/readiness/readinessCopy";
 import { ReadinessGateCallout } from "@/features/scheduling/readiness/ReadinessGateCallout";
 import { setupLinksOf } from "@/features/scheduling/readiness/setupLinks";
@@ -98,7 +98,7 @@ import {
 	StartingContextSection,
 	type StartingPointDialog,
 } from "@/features/scheduling/startingContext/StartingContextSection";
-import { StepActions } from "@/features/scheduling/StepActions";
+import { StepActions } from "@/features/scheduling/createSchedule/StepActions";
 import { isScheduleStep, SCHEDULE_STEPS } from "@/features/scheduling/steps";
 import {
 	allOf,

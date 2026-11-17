@@ -30,7 +30,7 @@ const LINE_CEILINGS = {
 	"src/features/leave/api.ts": 760,
 	"src/features/scheduling/constraints/ConstraintsTab/ConstraintsTab.tsx": 748,
 	"src/features/organisation/api.ts": 724,
-	"src/features/scheduling/MonthSetupStep/MonthSetupStep.tsx": 675,
+	"src/features/scheduling/createSchedule/MonthSetupStep/MonthSetupStep.tsx": 675,
 	"src/pages/ScheduleMonth.tsx": 658,
 	// 620 lines today; the extra room is for the constraint type and field names docs/guides/add-a-constraint-type.md
 	// adds here, one line each, until the schemas move to a file of their own.
