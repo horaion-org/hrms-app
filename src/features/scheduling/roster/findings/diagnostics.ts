@@ -232,3 +232,45 @@ export const diagnosticSentence = (
 			);
 	}
 };
+
+/** Who or what a diagnostic is about, and the day when it names one: the first line of its Issues row. */
+export type DiagnosticSubject = {
+	/** The member's name, else the shift's or job title's, else the kind of note in plain words. */
+	who: string;
+	/** The member it is about, when it names one. */
+	memberProfileId: string | null;
+	/** The ISO day it is about, when it names one. */
+	day: string | null;
+};
+
+/** The ISO day a diagnostic is about: when rest lets someone start, or when a run needs a day type. */
+const dayOfDiagnostic = (diagnostic: FindingsDiagnostic): string | null =>
+	(
+		entityText(diagnostic, "restedAt") ??
+		entityText(diagnostic, "dayTypeNeededBy")
+	)?.slice(0, ISO_DATE_LENGTH) ?? null;
+
+/**
+ * Who or what a diagnostic is about: the member it names, else its shift,
+ * else its job title, else its kind ("Rest carried in from before"). A name
+ * that does not resolve falls back to the kind, never to an id. Pure.
+ */
+export const diagnosticSubject = (
+	diagnostic: FindingsDiagnostic,
+	names: FindingNames | null,
+	t: TFunction
+): DiagnosticSubject => {
+	const memberProfileId = entityText(diagnostic, "employeeId");
+	const shiftId = entityText(diagnostic, "shiftId");
+	const roleId = entityText(diagnostic, "roleId");
+	const nameIn = (
+		lookup: ReadonlyMap<string, string> | undefined,
+		id: string | null
+	): string | undefined => (id === null ? undefined : lookup?.get(id));
+	const who =
+		nameIn(names?.members, memberProfileId) ??
+		nameIn(names?.shifts, shiftId) ??
+		nameIn(names?.jobTitles, roleId) ??
+		diagnosticLabel(diagnostic.code, t);
+	return { who, memberProfileId, day: dayOfDiagnostic(diagnostic) };
+};

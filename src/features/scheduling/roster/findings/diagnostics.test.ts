@@ -4,6 +4,7 @@ import en from "@/assets/locales/en/translations.json";
 import {
 	diagnosticLabel,
 	diagnosticSentence,
+	diagnosticSubject,
 	groupDiagnostics,
 } from "@/features/scheduling/roster/findings/diagnostics";
 import {
@@ -291,5 +292,47 @@ describe("diagnosticSentence", () => {
 		expect(
 			diagnosticSentence(withCode("SHIFT_TOO_SHORT"), named, t, day)
 		).toBeNull();
+	});
+});
+
+describe("diagnosticSubject", () => {
+	const restCarriedIn: FindingsDiagnostic = {
+		...withCode("DEAD_SHIFT"),
+		code: "PRIOR_REST_BLOCKS_SHIFTS",
+		entities: { employeeId: "mp-2", restedAt: "2026-10-12T09:00" },
+	};
+
+	it("given_aMemberAndARestDay_when_read_then_isThePersonOnThatDay", () => {
+		expect(diagnosticSubject(restCarriedIn, named, t)).toEqual({
+			who: "Ben Ong",
+			memberProfileId: "mp-2",
+			day: "2026-10-12",
+		});
+	});
+
+	it("given_aShift_when_read_then_isTheShiftWithNoDay", () => {
+		expect(diagnosticSubject(withCode("DEAD_SHIFT"), named, t)).toEqual({
+			who: "Breakfast Prep",
+			memberProfileId: null,
+			day: null,
+		});
+	});
+
+	it("given_aRunNeedingADayType_when_read_then_isOnTheDayItIsNeededBy", () => {
+		const diagnostic = dayTypeFinding("PRIOR_RUN_NEEDS_DAY_TYPE", {
+			employeeId: "mp-2",
+			dayTypeNeededBy: "2026-10-17",
+		});
+
+		expect(diagnosticSubject(diagnostic, named, t).day).toBe("2026-10-17");
+	});
+
+	it("given_namesThatDoNotResolve_when_read_then_isTheKindOfNote", () => {
+		expect(diagnosticSubject(restCarriedIn, unnamed, t).who).toBe(
+			"Rest carried in from before"
+		);
+		expect(diagnosticSubject(withCode("DEAD_SHIFT"), null, t).who).toBe(
+			"Shifts nobody can take"
+		);
 	});
 });

@@ -80,6 +80,38 @@ describe("issuesOfRoster", () => {
 		expect(issues[0]?.rule).toMatch(/^scheduling\.issues\.leaveShort\(/);
 	});
 
+	it("lists a setup note first by who it is about and its day, in the engine's words without names", () => {
+		const issues = issuesOfRoster(
+			input(
+				{},
+				{
+					findings: {
+						...emptyFindingsFixture(),
+						diagnostics: [
+							{
+								code: "PRIOR_REST_BLOCKS_SHIFTS",
+								severity: "info",
+								audience: "configuration",
+								message: "Rest carried in.",
+								entities: { employeeId: "mp-1", restedAt: "2026-10-12T09:00" },
+							},
+						],
+					},
+				}
+			)
+		);
+
+		expect(issues).toEqual([
+			expect.objectContaining({
+				group: "forInformation",
+				who: "scheduling.findings.codes.PRIOR_REST_BLOCKS_SHIFTS.label",
+				memberProfileId: "mp-1",
+				day: "2026-10-12",
+				rule: "Rest carried in.",
+			}),
+		]);
+	});
+
 	it("lists a day to decide as to fix", () => {
 		const [row] = scheduleAssignmentsFixture();
 		if (!row) throw new Error("fixture changed");

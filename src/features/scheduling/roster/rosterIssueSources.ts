@@ -1,7 +1,10 @@
 import type { TFunction } from "i18next";
 import { formatDay } from "@/common/formatDay";
 import { timeRangeText } from "@/features/leave/dayPortion";
-import { diagnosticSentence } from "@/features/scheduling/roster/findings/diagnostics";
+import {
+	diagnosticSentence,
+	diagnosticSubject,
+} from "@/features/scheduling/roster/findings/diagnostics";
 import {
 	gapIssueKey,
 	rosterIssues,
@@ -210,21 +213,32 @@ const findingIssues = (
 	return [...conflicts, ...errors, ...dayMessages];
 };
 
-/** The engine's notes on the schedule's setup, in the app's words where it knows them. */
-const setupNotes = ({
+/**
+ * The engine's notes on the schedule's setup, for information: who or what
+ * each is about and its day first, then the app's sentence where it knows
+ * the note, else the engine's.
+ */
+const setupNoteIssues = ({
 	roster: { findings, names },
 	t,
 	language,
-}: RosterIssueSourceInput): Array<IssueNote> =>
-	(findings?.diagnostics ?? []).map((diagnostic) => ({
-		title: t("scheduling.issues.rosterNote"),
-		detail:
+}: RosterIssueSourceInput): Array<RosterIssue> =>
+	(findings?.diagnostics ?? []).map((diagnostic) => {
+		const detail =
 			(names &&
 				diagnosticSentence(diagnostic, names, t, (date) =>
 					formatDay(date, language)
 				)) ??
-			diagnostic.message,
-	}));
+			diagnostic.message;
+		return {
+			...diagnosticSubject(diagnostic, names, t),
+			key: `setup|${diagnostic.code}|${detail}`,
+			group: "forInformation",
+			time: null,
+			rule: detail,
+			action: { kind: "show" },
+		};
+	});
 
 /** The musts the check found broken: its named rules, or one for the whole roster when it named none. */
 const brokenMustsOf = (
@@ -245,13 +259,17 @@ export const issuesOfRoster = (
 	const { roster, check, noteLines, t } = input;
 	const saysWho = check !== undefined && validationSaysWho(check);
 	return rosterIssues({
-		extras: [...listIssues(input), ...findingIssues(input, !saysWho)],
+		extras: [
+			...listIssues(input),
+			...findingIssues(input, !saysWho),
+			...setupNoteIssues(input),
+		],
 		gaps: (roster.findings?.conflicts ?? []).filter(
 			(conflict) => conflict.employeeUuid === null
 		),
 		brokenMusts: brokenMustsOf(check),
 		notMet: check?.notMet ?? [],
-		notes: [...noteLines, ...setupNotes(input)],
+		notes: noteLines,
 		memberNames: roster.names?.members ?? new Map<string, string>(),
 		roleNames: roster.names?.jobTitles ?? new Map<string, string>(),
 		ruleNames: roster.names?.rules ?? new Map<string, string>(),
