@@ -5165,7 +5165,7 @@
 			"check": "Validar cuadrante",
 			"loading": "Validando el cuadrante…",
 			"brokenUnnamed": "Este cuadrante incumple una regla de tiempo de trabajo.",
-			"unnamedRule": "Una regla de tiempo de trabajo",
+			"unnamedRule": "Una regla que la app aún no sabe nombrar",
 			"rule": {
 				"most_days_a_week": "Máximo de días a la semana",
 				"overtime_past_the_normal_day": "Horas extra sobre la jornada normal",

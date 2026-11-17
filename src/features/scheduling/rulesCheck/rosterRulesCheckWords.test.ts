@@ -50,7 +50,7 @@ describe("brokenRuleLabel", () => {
 		).toBe("Twelve hours");
 	});
 
-	it("else labels the engine's rule, else says a working-time rule", () => {
+	it("else labels the engine's rule, else says the app has no name for it yet", () => {
 		expect(
 			brokenRuleLabel(
 				{
@@ -70,7 +70,7 @@ describe("brokenRuleLabel", () => {
 				},
 				t
 			)
-		).toBe("A working-time rule");
+		).toBe("A rule the app has no name for yet");
 	});
 
 	it("labels the rule the engine names when a hand edit puts someone on a shift they can't work", () => {
@@ -100,7 +100,7 @@ describe("brokenRuleLabel", () => {
 		for (const rule of NAMED_RULES)
 			expect(
 				brokenRuleLabel({ rule, constraintId: null, constraintName: null }, t)
-			).not.toMatch(/scheduling\.|A working-time rule/);
+			).not.toMatch(/scheduling\.|has no name for yet/);
 	});
 
 	it.each([

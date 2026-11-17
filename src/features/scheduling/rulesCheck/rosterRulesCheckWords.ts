@@ -167,7 +167,7 @@ export const ruleNameLabel = (
 
 /**
  * One broken rule's line: the company's own constraint name, else what the
- * rule is called (`ruleNameLabel`), else a generic "A working-time rule".
+ * rule is called (`ruleNameLabel`), else "A rule the app has no name for yet".
  */
 export const brokenRuleLabel = (
 	// Only its names: a generation's finding names a rule the same way, with no violations of its own.
