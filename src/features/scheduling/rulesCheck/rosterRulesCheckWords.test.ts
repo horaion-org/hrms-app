@@ -10,6 +10,7 @@ import {
 import {
 	brokenRuleCount,
 	brokenRuleLabel,
+	ENGINE_RULE_NAMES,
 	NAMED_RULES,
 	notMetCount,
 	notMetItems,
@@ -70,6 +71,29 @@ describe("brokenRuleLabel", () => {
 				t
 			)
 		).toBe("A working-time rule");
+	});
+
+	it("labels the rule the engine names when a hand edit puts someone on a shift they can't work", () => {
+		expect(
+			brokenRuleLabel(
+				{
+					rule: "impossible_shift_assignment_is_zero",
+					constraintId: null,
+					constraintName: null,
+				},
+				t
+			)
+		).toBe("A shift this person can't work");
+	});
+
+	it("has a label for every rule the engine can report", () => {
+		const unlabelled = ENGINE_RULE_NAMES.filter(
+			(rule) =>
+				!NAMED_RULES.includes(rule) ||
+				(ruleNameLabel(rule, t) ?? "").startsWith("scheduling.")
+		);
+
+		expect(unlabelled).toEqual([]);
 	});
 
 	it("has a label in the translations for every rule it names", () => {

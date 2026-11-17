@@ -5372,7 +5372,17 @@
 				"overtime_past_the_normal_week": "Overtime past the normal week",
 				"overtime_respects_daily_work_cap": "Overtime within the day's limit",
 				"work_minutes_per_period": "Hours per period",
-				"consecutive_day_work_patterns": "Days worked in a row"
+				"impossible_shift_assignment_is_zero": "A shift this person can't work",
+				"at_most_one_role_assignment_per_day": "One shift per person a day",
+				"overtime_requires_base_shift": "Overtime only beside a shift",
+				"overtime_extension_is_contiguous": "Overtime joined to its shift",
+				"shift_preference_fairness": "Fair share of shift preferences",
+				"timeblock_demand_coverage": "Staffing by the hour",
+				"employee_role_requirement_per_horizon": "Days in a role per period",
+				"non_working_day_requires_off_day_type": "A day not worked has a day type",
+				"overtime_credit_partition": "Overtime counted once",
+				"shift_change_penalty_indicator": "Start time change between days",
+				"working_day_follows_shift_assignment": "Working day follows the shifts taken"
 			},
 			"refusal": {
 				"expired": "The engine no longer holds this week’s generation, so it can’t be validated. Regenerating the month checks it again but replaces changes made by hand.",
