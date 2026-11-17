@@ -764,29 +764,49 @@ describe("ConstraintDialog", () => {
 		expect(onSave).not.toHaveBeenCalled();
 	});
 
-	it("given_theShiftPicker_when_opened_then_aGroupOfSeveralSaysHowManyShiftsAndAGroupOfOneIsItsShiftsRow", async () => {
+	it("given_theShiftPicker_when_aGroupChipIsChosen_then_theGroupsSitTogetherAboveTheShiftsAndItsShiftsAreTicked", async () => {
 		const user = userEvent.setup();
 		renderDialog();
 		await start(user, "People on a shift");
 
 		await user.click(trigger(/^Shifts/));
+		const chips = within(
+			await screen.findByRole("group", { name: "Shift groups" })
+		).getAllByRole("option");
+		// Every group together, in the order its first shift is listed; only a group of several says its count.
+		expect(chips.map((chip) => chip.textContent)).toEqual([
+			"Concierge",
+			"Front Desk",
+			"Kitchen",
+			"Night",
+			"Service 3 shifts",
+		]);
+		await user.click(
+			screen.getByRole("option", { name: "Whole group: Service" })
+		);
 
 		expect(
-			await screen.findByRole("option", { name: "Whole group: Service" })
-		).toHaveTextContent("Service 3 shifts");
+			screen.getByRole("option", { name: "Whole group: Service" })
+		).toHaveAttribute("aria-checked", "true");
+		for (const name of [
+			"Lunch Rush Service",
+			"Swing Shift Service",
+			"Closing Crew Service",
+		])
+			expect(screen.getByRole("option", { name })).toHaveAttribute(
+				"aria-selected",
+				"true"
+			);
 		expect(
 			screen.getByRole("option", { name: "Breakfast Prep Kitchen" })
-		).toBeVisible();
-		expect(
-			screen.queryByRole("option", { name: "Whole group: Kitchen" })
-		).toBeNull();
+		).toHaveAttribute("aria-selected", "false");
 	});
 
 	it("given_jobTitlesChosen_when_aWholeShiftGroupIsChosen_then_aJobTitleTheGroupDoesNotAllListIsRemovedAndSaid", async () => {
 		const user = userEvent.setup();
 		renderDialog();
 		await start(user, "People on a shift");
-		await pick(user, /^Shifts/, "Lunch Rush");
+		await pick(user, /^Shifts/, "Lunch Rush Service");
 		await pick(user, /^Job titles that count/, "Cashier");
 
 		await user.click(trigger(/^Shifts/));
@@ -990,11 +1010,11 @@ describe("ConstraintDialog", () => {
 		const user = userEvent.setup();
 		renderDialog();
 		await start(user, "People on a shift");
-		await pick(user, /^Shifts/, "Lunch Rush");
+		await pick(user, /^Shifts/, "Lunch Rush Service");
 		await pick(user, /^Job titles that count/, "Cashier", "Supervisor");
 
 		// Closing Crew takes Supervisor but not Cashier.
-		await pick(user, /^Shifts/, "Closing Crew");
+		await pick(user, /^Shifts/, "Closing Crew Service");
 
 		expect(
 			screen.getByText(
@@ -1009,7 +1029,12 @@ describe("ConstraintDialog", () => {
 		const user = userEvent.setup();
 		renderDialog();
 		await start(user, "People on a shift");
-		await pick(user, /^Shifts/, "Front Desk AM Front Desk", "Lunch Rush");
+		await pick(
+			user,
+			/^Shifts/,
+			"Front Desk AM Front Desk",
+			"Lunch Rush Service"
+		);
 
 		await user.click(trigger(/^Job titles that count/));
 

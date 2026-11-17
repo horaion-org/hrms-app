@@ -352,7 +352,7 @@ export const ConstraintDialog = ({
 			value: jobTitle.jobTitleId,
 			label: jobTitle.name,
 		})),
-		// Under their group's heading, as on the Shifts page, so a whole group can be chosen at once.
+		// Each named with its group, whose chip above the list chooses the whole group at once.
 		SHIFT: (offered?.shifts ?? []).map((shift) => ({
 			value: shift.shiftId,
 			label: shift.name,
@@ -707,6 +707,7 @@ export const ConstraintDialog = ({
 								multiple
 								emptyText={emptyTextOf(spec)}
 								groupCountText={(count) => t(`${key}.shiftCount`, { count })}
+								groupsLabel={t(`${key}.shiftGroups`)}
 								selectAllLabel={t(`${key}.selectAll`)}
 								value={shownValuesOf(spec, value)}
 								wholeGroups={spec.kind === "SHIFT"}

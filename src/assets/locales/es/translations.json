@@ -3844,6 +3844,7 @@
 				"noShifts": "Este departamento aún no tiene turnos. Añade uno en el paso Turnos primero.",
 				"shiftCount_one": "{{count}} turno",
 				"shiftCount_other": "{{count}} turnos",
+				"shiftGroups": "Grupos de turnos",
 				"submit": "Guardar",
 				"nameRequired": "Escribe un nombre de restricción.",
 				"nameLength": "Usa de {{min}} a {{max}} caracteres.",

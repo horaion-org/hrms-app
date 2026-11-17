@@ -4044,6 +4044,7 @@
 				"noShifts": "This department has no shifts yet. Add one on the Shifts step first.",
 				"shiftCount_one": "{{count}} shift",
 				"shiftCount_other": "{{count}} shifts",
+				"shiftGroups": "Shift groups",
 				"submit": "Save",
 				"nameRequired": "Enter a constraint name.",
 				"nameLength": "Use {{min}} to {{max}} characters.",
