@@ -564,7 +564,7 @@ describe("ConstraintDialog", () => {
 			["People on shifts", 2],
 			["On duty throughout", 1],
 			["Days off", 4],
-			["Rest and hours", 6],
+			["Rest and hours", 5],
 		] as const)
 			expect(
 				within(screen.getByRole("radiogroup", { name: category })).getAllByRole(
@@ -593,90 +593,18 @@ describe("ConstraintDialog", () => {
 		).toBeChecked();
 	});
 
-	it("given_payRates_when_chosen_then_explainsThemselvesWithNoFirmnessAndNoTimeOff", async () => {
-		const user = userEvent.setup();
-		const { onSave } = renderDialog();
-		await start(user, "Pay rates for extra hours");
+	// Pay rates moved onto employment terms (ADR-0123 in the API): the API no longer offers the rule, nor does the dialog.
+	it("given_theWorkPolicy_when_addingARule_then_payRatesNotOffered", async () => {
+		renderDialog();
 
+		await screen.findByRole("dialog", { name: "Add constraint" });
 		expect(
-			screen.getByText(
-				"These rates only guide which roster the engine prefers; they are not used for pay."
-			)
+			screen.getByRole("radio", { name: "Rest between shifts" })
 		).toBeVisible();
-		expect(screen.queryByRole("radiogroup", { name: /^How firm/ })).toBeNull();
-		expect(screen.queryByText(/Time off earned/)).toBeNull();
+
 		expect(
-			screen.getByText("0 to 1000. MOM’s rate is 150, 1.5 times a normal hour.")
-		).toBeVisible();
-		await user.type(
-			screen.getByRole("spinbutton", { name: /^An hour of overtime costs/ }),
-			"150"
-		);
-		await user.type(
-			screen.getByRole("spinbutton", {
-				name: /^An hour of work on a rest day costs/,
-			}),
-			"200"
-		);
-		expect(
-			screen.getByRole("radio", { name: "Counts as ordinary hours" })
-		).toBeChecked();
-		await user.click(
-			screen.getByRole("radio", { name: "Costs this % of a normal hour" })
-		);
-		await user.type(
-			screen.getByRole("spinbutton", { name: /^Work on a day off/ }),
-			"120"
-		);
-		expect(
-			screen.getByRole("region", { name: "How it reads" })
-		).toHaveTextContent(
-			"An hour of work on a day off costs 120% of a normal hour."
-		);
-		await user.click(submitButton());
-
-		await waitFor(() => {
-			expect(onSave).toHaveBeenCalledWith(
-				expect.objectContaining({
-					type: "PAY_RATES",
-					requirement: null,
-					values: [
-						{ field: "OVERTIME_PERCENT", value: "150" },
-						{ field: "REST_DAY_WORK_PERCENT", value: "200" },
-						{ field: "DAY_OFF_WORK_PERCENT", value: "120" },
-					],
-				})
-			);
-		});
-	});
-
-	it("given_payRatesWithADayOffCountedAsOrdinary_when_saved_then_sendsNoDayOffRate", async () => {
-		const user = userEvent.setup();
-		const { onSave } = renderDialog();
-		await start(user, "Pay rates for extra hours");
-
-		await user.type(
-			screen.getByRole("spinbutton", { name: /^An hour of overtime costs/ }),
-			"150"
-		);
-		await user.type(
-			screen.getByRole("spinbutton", {
-				name: /^An hour of work on a rest day costs/,
-			}),
-			"200"
-		);
-		await user.click(submitButton());
-
-		await waitFor(() => {
-			expect(onSave).toHaveBeenCalledWith(
-				expect.objectContaining({
-					values: [
-						{ field: "OVERTIME_PERCENT", value: "150" },
-						{ field: "REST_DAY_WORK_PERCENT", value: "200" },
-					],
-				})
-			);
-		});
+			screen.queryByRole("radio", { name: /Pay rates for extra hours/ })
+		).toBeNull();
 	});
 
 	it("given_restBetweenShifts_when_chosen_then_offersMustOrIfPossibleAndSendsTheChoice", async () => {

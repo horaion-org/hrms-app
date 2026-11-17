@@ -310,21 +310,6 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		],
 	},
 	{
-		type: "PAY_RATES",
-		category: "WORKING_HOURS",
-		hasRequirement: false,
-		requirementPolicy: "SETTING",
-		onePerDepartment: true,
-		levels: [...ANY_LEVEL],
-		...ORDINARY,
-		fields: [
-			number("OVERTIME_PERCENT", 0, 1000),
-			number("REST_DAY_WORK_PERCENT", 0, 1000),
-			optionalNumber("TIME_OFF_EARNED_PERCENT", 0, 1000),
-			optionalNumber("DAY_OFF_WORK_PERCENT", 0, 1000),
-		],
-	},
-	{
 		type: "NO_OVERTIME_WHEN_GENERATING",
 		category: "WORKING_HOURS",
 		hasRequirement: false,

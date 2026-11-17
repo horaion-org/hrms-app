@@ -14,5 +14,8 @@ still takes but the app no longer shows (`HIDDEN_FIELDS`, today time off earned)
 sent back unchanged. We chose this over a pay-rates-only form because it stays generic over the API's declarations,
 which is how every other constraint form is built.
 
+Pay rates retired (API ADR-0123): the rates moved onto employment terms, the type is only read on schedules generated
+with it, and `CHOICE_FIELDS` no longer holds its day-off rate.
+
 Security: no new data class; the rates are company settings that only guide which roster the engine prefers and are not
 used for pay. No new permission key; the API remains the access control.

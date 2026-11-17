@@ -45,10 +45,6 @@ describe("fieldsInReadingOrder", () => {
 		["MAX_WORK_HOURS_PER_DAY", ["WORK_HOURS_A_DAY"]],
 		["MAX_OVERTIME_HOURS_PER_MONTH", ["OVERTIME_HOURS_A_MONTH"]],
 		["MAX_CALL_BACKS_PER_PERSON", ["CALL_BACKS", "CALL_BACK_SPAN_DAYS"]],
-		[
-			"PAY_RATES",
-			["OVERTIME_PERCENT", "REST_DAY_WORK_PERCENT", "DAY_OFF_WORK_PERCENT"],
-		],
 		["OVERTIME_STRETCH", ["STRETCH_HOURS"]],
 	])("orders %s's fields as its sentence reads them", (type, order) => {
 		const option = CONSTRAINT_TYPE_OPTIONS.find((each) => each.type === type)!;

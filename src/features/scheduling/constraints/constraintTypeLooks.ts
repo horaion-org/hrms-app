@@ -45,7 +45,6 @@ const TYPE_ICONS: Partial<Record<ConstraintType, Heroicon>> = {
 	MAX_WORK_HOURS_PER_DAY: TimeIcon,
 	MAX_OVERTIME_HOURS_PER_MONTH: HistoryIcon,
 	MAX_CALL_BACKS_PER_PERSON: PhoneIcon,
-	PAY_RATES: TableIcon,
 	NO_OVERTIME_WHEN_GENERATING: GenerateScheduleIcon,
 	OVERTIME_STRETCH: TimeIcon,
 };

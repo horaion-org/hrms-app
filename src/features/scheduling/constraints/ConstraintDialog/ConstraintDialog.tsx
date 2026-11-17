@@ -137,10 +137,6 @@ const HINTED_FIELDS = [
 	"WORK_HOURS_A_DAY",
 	"OVERTIME_HOURS_A_MONTH",
 	"CALL_BACKS",
-	"OVERTIME_PERCENT",
-	"REST_DAY_WORK_PERCENT",
-	"TIME_OFF_EARNED_PERCENT",
-	"DAY_OFF_WORK_PERCENT",
 ] as const satisfies ReadonlyArray<ConstraintField>;
 
 type HintedField = (typeof HINTED_FIELDS)[number];
@@ -153,7 +149,6 @@ const STARTS_IF_POSSIBLE: ReadonlyArray<ConstraintType> = [
 
 /** Numbers a type may leave out, each worded as a choice: what leaving it out means, or a figure. */
 const CHOICE_FIELDS = [
-	"DAY_OFF_WORK_PERCENT",
 	"CALL_BACK_SPAN_DAYS",
 ] as const satisfies ReadonlyArray<ConstraintField>;
 

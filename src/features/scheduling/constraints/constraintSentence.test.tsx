@@ -454,7 +454,8 @@ describe("sentencePartsOf with constraintWords", () => {
 		);
 	});
 
-	it("reads the pay rates with a day off counted as ordinary hours when it has no rate of its own", () => {
+	// Pay rates are retired (ADR-0123 in the API); a schedule generated with the rule still reads it.
+	it("given_aFrozenPayRatesCopy_when_worded_then_stillReads", () => {
 		expect(
 			read("PAY_RATES", [
 				plain("OVERTIME_PERCENT", "150"),

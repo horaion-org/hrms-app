@@ -508,6 +508,7 @@ describe("constraints client", () => {
 			(type) =>
 				type.type === "MAX_CALL_BACKS_PER_PERSON" || type.type === "PAY_RATES"
 		);
+		// Pay rates moved onto employment terms (ADR-0123 in the API), so only the call-back limit is offered.
 
 		expect(
 			settings.map(({ type, addedBySystem, onePerDepartment, fields }) => ({
@@ -524,17 +525,6 @@ describe("constraints client", () => {
 				fields: [
 					["CALL_BACKS", 0, 31],
 					["CALL_BACK_SPAN_DAYS", 2, 31],
-				],
-			},
-			{
-				type: "PAY_RATES",
-				addedBySystem: false,
-				onePerDepartment: true,
-				fields: [
-					["OVERTIME_PERCENT", 0, 1000],
-					["REST_DAY_WORK_PERCENT", 0, 1000],
-					["TIME_OFF_EARNED_PERCENT", 0, 1000],
-					["DAY_OFF_WORK_PERCENT", 0, 1000],
 				],
 			},
 		]);
@@ -562,7 +552,6 @@ describe("constraints client", () => {
 		const policyOf = (type: string): string | undefined =>
 			options.types.find((option) => option.type === type)?.requirementPolicy;
 
-		expect(policyOf("PAY_RATES")).toBe("SETTING");
 		expect(policyOf("NO_OVERTIME_WHEN_GENERATING")).toBe("SETTING");
 		expect(policyOf("REST_BETWEEN_SHIFTS")).toBe("MUST_OR_SHOULD");
 		expect(policyOf("DAY_TYPE_DAYS_PER_WEEK")).toBe("MUST_OR_SHOULD");

@@ -63,10 +63,13 @@ export const CONSTRAINT_TYPES = constraintTypeSchema.options;
 /**
  * Types the API keeps only so a schedule generated with one still reads: never
  * offered, added or edited (ADR-0099 in the API). The shortest part of a shift
- * around leave gave way to each leave duration's own shift choice.
+ * around leave gave way to each leave duration's own shift choice; Pay rates
+ * moved onto employment terms (ADR-0123 in the API), and a schedule generated
+ * with the rule still reads its sentence.
  */
 const RETIRED_CONSTRAINT_TYPES = [
 	"SHORTEST_PART_SHIFT",
+	"PAY_RATES",
 ] as const satisfies ReadonlyArray<ConstraintType>;
 
 type RetiredConstraintType = (typeof RETIRED_CONSTRAINT_TYPES)[number];
