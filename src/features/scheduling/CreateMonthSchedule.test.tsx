@@ -24,6 +24,7 @@ import {
 import type {
 	GenerateMonthBody,
 	MonthWeek,
+	WeekPart,
 } from "@/features/scheduling/months/api";
 import { midMonthOpenings } from "@/features/scheduling/hours/fixtures";
 import {
@@ -162,6 +163,22 @@ const frontOffice = (
 
 const EVERY_WEEK_LINE =
 	"Every week uses all 4 shifts and 5 constraints of Front Office.";
+const LAST_WEEKS_DAYS_UNKNOWN =
+	"Horaion doesn’t know what people worked last week.";
+
+/** A published part of a week, covering `coveredFrom` to `coveredTo`. */
+const publishedPart = (
+	scheduleId: string,
+	coveredFrom: string,
+	coveredTo: string
+): WeekPart => ({
+	scheduleId,
+	name: "Week",
+	named: false,
+	coveredFrom,
+	coveredTo,
+	state: "PUBLISHED",
+});
 
 describe("Create schedules for a month", () => {
 	it("given_aNewVisit_when_opened_then_theMonthSetupWithItsWeeksAndWhatTheyUse", async () => {
@@ -510,6 +527,8 @@ describe("Create schedules for a month: ticking weeks", () => {
 		});
 	const monthField = (): HTMLElement =>
 		screen.getByRole("button", { name: /Month/ });
+	/** The week of 9 Nov, started on Thursday 12 Nov: generated from today on. */
+	const STARTED_WEEK = "Select Mon, Nov 9 to Sun, Nov 15";
 	const chooseMonth = async (
 		user: ReturnType<typeof userEvent.setup>,
 		name: string
@@ -787,6 +806,58 @@ describe("Create schedules for a month: ticking weeks", () => {
 		expect(
 			screen.getByText("Horaion doesn’t know what people worked last week.")
 		).toBeVisible();
+	});
+
+	it("given_aStartedWeekWithNothingRosteredBefore_when_daysBeforeAdded_then_savesItsDraftFromTodayAndOpensItsGrid", async () => {
+		const user = userEvent.setup();
+		const { calls } = await open(NEW_NOVEMBER, {
+			...novemberRoutes(),
+			[`GET ${NOVEMBER}`]: [
+				novemberRead(),
+				novemberRead({
+					"2026-11-09": { state: "DRAFT", scheduleId: "s-start" },
+				}),
+			],
+			[`POST ${SCHEDULES}`]: reply(
+				scheduleFixture({ scheduleId: "s-start" }),
+				201
+			),
+			[`GET ${SCHEDULES}/s-start/starting-days`]: reply(firstWeek()),
+			[`GET ${SCHEDULES}/s-start/opening-balances`]: reply(midMonthOpenings()),
+		});
+
+		await user.click(
+			await screen.findByRole("checkbox", { name: STARTED_WEEK })
+		);
+		await user.click(
+			await screen.findByRole("button", { name: "Add last week’s shifts" })
+		);
+
+		expect(
+			await screen.findByRole("dialog", { name: "Before this week" })
+		).toBeVisible();
+		expect(
+			calls
+				.filter((call) => call.method === "POST" && call.path === SCHEDULES)
+				.map((call) => call.body)
+		).toEqual([
+			{
+				name: "Week of 2026-11-09",
+				periodStart: "2026-11-09",
+				coveredFrom: "2026-11-12",
+				coveredTo: "2026-11-15",
+				includeLeave: true,
+				includedShiftIds: EVERYTHING.shiftIds,
+				includedConstraintIds: EVERYTHING.constraintIds,
+			},
+		]);
+		expect(
+			calls.some(
+				(call) =>
+					call.method === "GET" &&
+					call.path === `${SCHEDULES}/s-start/starting-days`
+			)
+		).toBe(true);
 	});
 
 	it("given_aWeekStartingMonday_when_onSetup_then_noPrompt", async () => {
@@ -1266,8 +1337,6 @@ describe("Create schedules for a month: where everyone starts", () => {
 		).toBeNull();
 	});
 
-	const LAST_WEEKS_DAYS_UNKNOWN =
-		"Horaion doesn’t know what people worked last week.";
 	/** The block under a week's dates line, e.g. /^Dec 21\s?–\s?27$/. */
 	const weekBlock = (dates: RegExp): HTMLElement => {
 		const block = screen.getByText(dates).parentElement;
@@ -1389,6 +1458,32 @@ describe("Create schedules for a month: where everyone starts", () => {
 			"You don’t have permission to create schedules for this department."
 		);
 	});
+
+	it("given_aLaterFirstWeekAfterAWeekWithoutARoster_when_daysBeforeAdded_then_savesThatWeek", async () => {
+		const user = userEvent.setup();
+		const { calls } = await open(NEW_DECEMBER, {
+			[`POST ${SCHEDULES}`]: reply(
+				scheduleFixture({ scheduleId: "s-start" }),
+				201
+			),
+		});
+
+		await screen.findByText(EVERY_WEEK_LINE);
+		await untick(user, "Mon, Dec 7 to Sun, Dec 13");
+		await untick(user, "Mon, Dec 14 to Sun, Dec 20");
+		expect(await screen.findByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeVisible();
+		await user.click(
+			screen.getByRole("button", { name: "Add last week’s shifts" })
+		);
+
+		await vi.waitFor(() => {
+			expect(
+				calls
+					.filter((call) => call.method === "POST" && call.path === SCHEDULES)
+					.map((call) => (call.body as { periodStart: string }).periodStart)
+			).toEqual(["2026-12-21"]);
+		});
+	});
 });
 
 describe("Create schedules for a month: by dates", () => {
@@ -1396,6 +1491,7 @@ describe("Create schedules for a month: by dates", () => {
 	const NOVEMBER = `${COMPANY}/schedule-months/2026-11`;
 	const NEW_DATES =
 		"/scheduling/new?department=d-1&month=2026-12&for=dates&firstDay=2026-11-19&lastDay=2026-11-28";
+	const SCHEDULES = `${DEPARTMENT}/schedules`;
 	const datesRoutes = (
 		plan = datesPlanFixture()
 	): Record<string, StubReply> => ({
@@ -1404,6 +1500,144 @@ describe("Create schedules for a month: by dates", () => {
 		[`GET ${NOVEMBER}/generation-check`]: reply(
 			monthGenerationCheckFixture({ month: "2026-11" })
 		),
+	});
+	const NEW_DATES_FROM_MONDAY =
+		"/scheduling/new?department=d-1&month=2026-12&for=dates&firstDay=2026-11-23&lastDay=2026-11-28";
+	/** Mon 23 – Sat 28 Nov: one new part from the Monday, so the plan names no days before it. */
+	const mondayPlan = (): ReturnType<typeof datesPlanFixture> =>
+		datesPlanFixture({
+			firstDay: "2026-11-23",
+			newDays: 6,
+			weeks: datesPlanFixture().weeks.slice(1),
+			notRosteredBefore: null,
+		});
+	/** November's read holding the week of 16 Nov, the week before the Monday, without a schedule unless `changes` says. */
+	const weekOf16Read = (changes: Partial<MonthWeek> = {}): StubReply =>
+		reply(
+			scheduleMonthFixture({
+				weeks: [
+					monthWeekFixture({
+						periodStart: "2026-11-16",
+						periodEnd: "2026-11-22",
+						state: "NOT_GENERATED",
+						scheduleId: null,
+						days: [],
+						handChangedDays: null,
+						...changes,
+					}),
+				],
+			})
+		);
+	const savedDrafts = (calls: ReturnType<typeof stubApi>): Array<unknown> =>
+		calls
+			.filter((call) => call.method === "POST" && call.path === SCHEDULES)
+			.map((call) => call.body);
+	const addLastWeek = (): HTMLElement | null =>
+		screen.queryByRole("button", { name: "Add last week’s shifts" });
+
+	it("given_datesFromThursdayWithNothingBefore_when_daysBeforeAdded_then_savesTheFirstPartFromThursdayAndOpensItsGrid", async () => {
+		const user = userEvent.setup();
+		const plan = datesPlanFixture();
+		const [first, second] = plan.weeks;
+		const { calls } = await open(NEW_DATES, {
+			...datesRoutes(),
+			[`GET ${DATES}/plan`]: [
+				reply(plan),
+				reply({
+					...plan,
+					weeks: [
+						{ ...first!, action: "GENERATE", draftId: "s-gala" },
+						second!,
+					],
+				}),
+			],
+			[`POST ${SCHEDULES}`]: reply(
+				scheduleFixture({ scheduleId: "s-gala" }),
+				201
+			),
+			[`GET ${SCHEDULES}/s-gala`]: reply(
+				scheduleFixture({
+					scheduleId: "s-gala",
+					periodStart: "2026-11-16",
+					periodEnd: "2026-11-22",
+					coveredFrom: "2026-11-19",
+					coveredTo: "2026-11-22",
+				})
+			),
+			[`GET ${SCHEDULES}/s-gala/starting-days`]: reply(firstWeek()),
+		});
+
+		expect(await screen.findByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeVisible();
+		await user.click(
+			await screen.findByRole("button", { name: "Add last week’s shifts" })
+		);
+
+		expect(
+			await screen.findByRole("dialog", { name: "Before this week" })
+		).toBeVisible();
+		expect(savedDrafts(calls)).toEqual([
+			{
+				name: "Week of 2026-11-16",
+				periodStart: "2026-11-16",
+				coveredFrom: "2026-11-19",
+				coveredTo: "2026-11-22",
+				includeLeave: true,
+				includedShiftIds: EVERYTHING.shiftIds,
+				includedConstraintIds: EVERYTHING.constraintIds,
+			},
+		]);
+		expect(
+			calls.some(
+				(call) =>
+					call.method === "GET" &&
+					call.path === `${SCHEDULES}/s-gala/starting-days`
+			)
+		).toBe(true);
+	});
+
+	it("given_datesFromThursdayAfterARosteredPartOfTheSameWeek_when_onSetup_then_asksNothing", async () => {
+		const plan = datesPlanFixture();
+		const [first, second] = plan.weeks;
+		await open(
+			NEW_DATES,
+			datesRoutes({
+				...plan,
+				weeks: [
+					{
+						...first!,
+						kept: [
+							{
+								scheduleId: "s-part",
+								coveredFrom: "2026-11-16",
+								coveredTo: "2026-11-18",
+								state: "PUBLISHED",
+							},
+						],
+					},
+					second!,
+				],
+				notRosteredBefore: null,
+			})
+		);
+
+		await screen.findByRole("table", { name: "What this creates" });
+		expect(screen.queryByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeNull();
+		expect(addLastWeek()).toBeNull();
+	});
+
+	it("given_datesFromAMondayAfterARosteredWeek_when_onSetup_then_asksNothing", async () => {
+		await open(NEW_DATES_FROM_MONDAY, {
+			...datesRoutes(mondayPlan()),
+			[`GET ${NOVEMBER}`]: weekOf16Read({
+				state: "PUBLISHED",
+				scheduleId: "s-16",
+				parts: [publishedPart("s-16", "2026-11-16", "2026-11-22")],
+			}),
+		});
+
+		await screen.findByRole("table", { name: "What this creates" });
+		expect(screen.queryByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeNull();
+		expect(addLastWeek()).toBeNull();
 	});
 
 	it("given_forDatesInTheLink_when_opened_then_datesPrefilled", async () => {
@@ -1486,7 +1720,6 @@ describe("Create schedules for a month: by dates", () => {
 
 	it("given_restDaysEnteredForEveryone_when_onSetup_then_noPromptAndGeneratePosts", async () => {
 		const user = userEvent.setup();
-		const SCHEDULES = `${DEPARTMENT}/schedules`;
 		const plan = datesPlanFixture();
 		const [first, second] = plan.weeks;
 		const week = firstWeek();
