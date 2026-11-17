@@ -750,6 +750,65 @@ describe("ConstraintDialog", () => {
 		});
 	});
 
+	it("given_callBacks_when_leftEachWeek_then_noSpanIsSent", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog();
+		await start(user, "Call-backs on a rest or off day");
+
+		await user.type(
+			screen.getByRole("spinbutton", { name: /^Most call-backs a person/ }),
+			"2"
+		);
+		expect(
+			screen.getByRole("radio", { name: "Each week (Monday to Sunday)" })
+		).toBeChecked();
+		expect(
+			screen.getByRole("region", { name: "How it reads" })
+		).toHaveTextContent("at most 2 times each week.");
+		await user.click(submitButton());
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					values: [{ field: "CALL_BACKS", value: "2" }],
+				})
+			);
+		});
+	});
+
+	it("given_callBacks_when_countedOverFourDaysInARow_then_theSpanIsSent", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog();
+		await start(user, "Call-backs on a rest or off day");
+
+		await user.type(
+			screen.getByRole("spinbutton", { name: /^Most call-backs a person/ }),
+			"2"
+		);
+		await user.click(
+			screen.getByRole("radio", { name: "Any number of days in a row" })
+		);
+		await user.type(
+			screen.getByRole("spinbutton", { name: /^Counted over/ }),
+			"4"
+		);
+		expect(
+			screen.getByRole("region", { name: "How it reads" })
+		).toHaveTextContent("at most 2 times in any 4 days in a row.");
+		await user.click(submitButton());
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					values: [
+						{ field: "CALL_BACKS", value: "2" },
+						{ field: "CALL_BACK_SPAN_DAYS", value: "4" },
+					],
+				})
+			);
+		});
+	});
+
 	it("given_aStaffingRule_when_aWholeShiftGroupIsChosen_then_everyShiftOfTheGroupIsSavedAndTheirJobTitlesShareNone", async () => {
 		const user = userEvent.setup();
 		const { onSave } = renderDialog();

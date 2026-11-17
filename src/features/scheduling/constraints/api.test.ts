@@ -521,7 +521,10 @@ describe("constraints client", () => {
 				type: "MAX_CALL_BACKS_PER_PERSON",
 				addedBySystem: false,
 				onePerDepartment: true,
-				fields: [["CALL_BACKS", 0, 31]],
+				fields: [
+					["CALL_BACKS", 0, 31],
+					["CALL_BACK_SPAN_DAYS", 2, 31],
+				],
 			},
 			{
 				type: "PAY_RATES",

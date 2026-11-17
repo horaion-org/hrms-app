@@ -49,6 +49,7 @@ const STRICTNESS: Record<ConstraintField, FieldStrictness> = {
 	OVERTIME_HOURS_A_MONTH: "LOWER_IS_STRICTER",
 	PART_SHIFT_MINUTES: "HIGHER_IS_STRICTER",
 	CALL_BACKS: "LOWER_IS_STRICTER",
+	CALL_BACK_SPAN_DAYS: "MUST_MATCH",
 	OVERTIME_PERCENT: "MUST_MATCH",
 	REST_DAY_WORK_PERCENT: "MUST_MATCH",
 	TIME_OFF_EARNED_PERCENT: "MUST_MATCH",
@@ -303,7 +304,10 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		onePerDepartment: true,
 		levels: [...ANY_LEVEL],
 		...ORDINARY,
-		fields: [number("CALL_BACKS", 0, 31)],
+		fields: [
+			number("CALL_BACKS", 0, 31),
+			optionalNumber("CALL_BACK_SPAN_DAYS", 2, 31),
+		],
 	},
 	{
 		type: "PAY_RATES",

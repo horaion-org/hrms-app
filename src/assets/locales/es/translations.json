@@ -3726,8 +3726,8 @@
 				"SHORTEST_PART_SHIFT_one": "Un turno se da junto a un permiso del mismo día solo si se trabaja al menos <PART_SHIFT_MINUTES/> minuto de él.",
 				"SHORTEST_PART_SHIFT_other": "Un turno se da junto a un permiso del mismo día solo si se trabajan al menos <PART_SHIFT_MINUTES/> minutos de él.",
 				"MAX_CALL_BACKS_PER_PERSON_zero": "Nadie es llamado a trabajar en un día de descanso o libre.",
-				"MAX_CALL_BACKS_PER_PERSON_one": "Cualquiera puede ser llamado a trabajar en un día de descanso o libre como máximo <CALL_BACKS/> vez por cuadrante.",
-				"MAX_CALL_BACKS_PER_PERSON_other": "Cualquiera puede ser llamado a trabajar en un día de descanso o libre como máximo <CALL_BACKS/> veces por cuadrante.",
+				"MAX_CALL_BACKS_PER_PERSON_one": "Cualquiera puede ser llamado a trabajar en un día de descanso o libre como máximo <CALL_BACKS/> vez <CALL_BACK_SPAN_DAYS/>.",
+				"MAX_CALL_BACKS_PER_PERSON_other": "Cualquiera puede ser llamado a trabajar en un día de descanso o libre como máximo <CALL_BACKS/> veces <CALL_BACK_SPAN_DAYS/>.",
 				"OVERTIME_STRETCH_one": "Cuando a un turno le falta gente durante algunas horas, alguien del turno justo anterior o posterior puede quedarse más o empezar antes, hasta <STRETCH_HOURS/> hora, y cubre esas horas. Solo se usa al preguntar al motor en Buscar cobertura, nunca al generar un cuadrante.",
 				"OVERTIME_STRETCH_other": "Cuando a un turno le falta gente durante algunas horas, alguien del turno justo anterior o posterior puede quedarse más o empezar antes, hasta <STRETCH_HOURS/> horas, y cubre esas horas. Solo se usa al preguntar al motor en Buscar cobertura, nunca al generar un cuadrante.",
 				"PAY_RATES": {
@@ -3791,7 +3791,8 @@
 				"OVERTIME_PERCENT": "Una hora extra cuesta (% de una hora normal)",
 				"REST_DAY_WORK_PERCENT": "Una hora de trabajo en día de descanso cuesta (% de una hora normal)",
 				"TIME_OFF_EARNED_PERCENT": "Tiempo libre ganado (%)",
-				"DAY_OFF_WORK_PERCENT": "Trabajo en un día libre"
+				"DAY_OFF_WORK_PERCENT": "Trabajo en un día libre",
+				"CALL_BACK_SPAN_DAYS": "Contadas en"
 			},
 			"requirements": {
 				"MUST": "Obligatoria",
@@ -3932,6 +3933,9 @@
 			"periodWeeksInSentence_one": "cada semana",
 			"periodWeeksInSentence_other": "cada {{count}} semanas",
 			"periodToChoose": "en un periodo aún por elegir",
+			"callBackSpanDaysInSentence_one": "en cualquier {{count}} día seguido",
+			"callBackSpanDaysInSentence_other": "en cualesquiera {{count}} días seguidos",
+			"callBackEachWeek": "cada semana",
 			"firmness": {
 				"MUST": "Se cumple siempre. Si las personas y los turnos no alcanzan, el horario muestra dónde falta.",
 				"SHOULD": "Se cumple cuando se puede. El horario muestra dónde no se cumplió."
@@ -3969,12 +3973,17 @@
 				"OVERTIME_PERCENT": "cuánto",
 				"REST_DAY_WORK_PERCENT": "cuánto",
 				"TIME_OFF_EARNED_PERCENT": "cuánto",
-				"DAY_OFF_WORK_PERCENT": "cuánto"
+				"DAY_OFF_WORK_PERCENT": "cuánto",
+				"CALL_BACK_SPAN_DAYS": "cuántos días"
 			},
 			"optionalNumbers": {
 				"DAY_OFF_WORK_PERCENT": {
 					"unset": "Cuenta como horas ordinarias",
 					"set": "Cuesta este % de una hora normal"
+				},
+				"CALL_BACK_SPAN_DAYS": {
+					"unset": "Cada semana (de lunes a domingo)",
+					"set": "Cualquier número de días seguidos"
 				}
 			},
 			"statement": "Restricción",
@@ -3990,7 +3999,7 @@
 				"DAY_TYPE_DAYS_PER_WEEK": "Por ejemplo: Todos tienen al menos 1 Día de descanso cada semana.",
 				"MAX_WORK_HOURS_PER_DAY": "Por ejemplo: Nadie a quien se apliquen los límites de horas de la Ley de Empleo trabaja más de 12 horas en un día, horas extra incluidas.",
 				"MAX_OVERTIME_HOURS_PER_MONTH": "Por ejemplo: Nadie a quien se apliquen los límites de horas de la Ley de Empleo hace más de 72 horas extra en un mes natural.",
-				"MAX_CALL_BACKS_PER_PERSON": "Por ejemplo: Cualquiera puede ser llamado a trabajar en un día de descanso o libre como máximo 2 veces por cuadrante.",
+				"MAX_CALL_BACKS_PER_PERSON": "Por ejemplo: Cualquiera puede ser llamado a trabajar en un día de descanso o libre como máximo 2 veces cada semana.",
 				"PAY_RATES": "Estas tarifas solo orientan qué cuadrante prefiere el motor; no se usan para pagar.",
 				"NO_OVERTIME_WHEN_GENERATING": "Por ejemplo: los turnos que el equipo no puede cubrir sin horas adicionales quedan abiertos, y eliges las horas extra al preguntar al motor en Buscar cobertura.",
 				"OVERTIME_STRETCH": "Por ejemplo: no hay Supervisor en el turno de tarde hasta las 16:00, así que el Supervisor del turno de mañana puede quedarse 2 horas más. Una ampliación cubre las horas de un turno con falta de gente en las que se solapa; nunca suma una persona al propio turno.",
@@ -4013,6 +4022,7 @@
 				"OVERTIME_PERCENT": "De {{min}} a {{max}}. La tarifa del MOM es 150, 1,5 veces una hora normal.",
 				"REST_DAY_WORK_PERCENT": "De {{min}} a {{max}}. La tarifa del MOM es 200, 2 veces una hora normal.",
 				"DAY_OFF_WORK_PERCENT": "De {{min}} a {{max}} cuando un día libre tiene su propia tarifa.",
+				"CALL_BACK_SPAN_DAYS": "De {{min}} a {{max}} días seguidos. También cuentan las llamadas justo antes del cuadrante.",
 				"TIME_OFF_EARNED_PERCENT": "De {{min}} a {{max}}. La tarifa de las horas devueltas como tiempo libre; 100 significa una hora libre por cada hora adicional."
 			},
 			"fixedFirmness": {

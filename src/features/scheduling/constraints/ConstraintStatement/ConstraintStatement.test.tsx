@@ -44,7 +44,7 @@ describe("ConstraintStatement", () => {
 
 		expect(screen.queryByText("Must")).toBeNull();
 		expect(container).toHaveTextContent(
-			"Everyone may be called back to work on a rest or off day at most 2 times in a roster."
+			"Everyone may be called back to work on a rest or off day at most 2 times each week."
 		);
 	});
 

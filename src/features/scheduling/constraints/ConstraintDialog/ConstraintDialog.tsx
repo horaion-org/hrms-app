@@ -154,6 +154,7 @@ const STARTS_IF_POSSIBLE: ReadonlyArray<ConstraintType> = [
 /** Numbers a type may leave out, each worded as a choice: what leaving it out means, or a figure. */
 const CHOICE_FIELDS = [
 	"DAY_OFF_WORK_PERCENT",
+	"CALL_BACK_SPAN_DAYS",
 ] as const satisfies ReadonlyArray<ConstraintField>;
 
 type ChoiceField = (typeof CHOICE_FIELDS)[number];

@@ -305,6 +305,10 @@ const wordOf = (
 		return t("scheduling.constraints.periodWeeksInSentence", {
 			count: Number(value),
 		});
+	if (field === "CALL_BACK_SPAN_DAYS" && value !== "")
+		return t("scheduling.constraints.callBackSpanDaysInSentence", {
+			count: Number(value),
+		});
 	if (isWeekday(value)) return t(`weekdays.${value}`);
 	return value;
 };
@@ -354,6 +358,12 @@ export const constraintWords = (
 	// A days-off rule that kept its period in days has no period in weeks yet (ADR-0097 in the API).
 	if (fields.has("PERIOD_DAYS") && !fields.has("PERIOD_WEEKS"))
 		words.PERIOD_WEEKS = t("scheduling.constraints.periodToChoose");
+	// A call-back limit without a span counts each Monday-to-Sunday week (ADR-0121 in the API).
+	if (
+		constraint.type === "MAX_CALL_BACKS_PER_PERSON" &&
+		!fields.has("CALL_BACK_SPAN_DAYS")
+	)
+		words.CALL_BACK_SPAN_DAYS = t("scheduling.constraints.callBackEachWeek");
 	return words;
 };
 

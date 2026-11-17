@@ -412,17 +412,31 @@ describe("sentencePartsOf with constraintWords", () => {
 	it.each([
 		[
 			"2",
-			"Everyone may be called back to work on a rest or off day at most 2 times in a roster.",
+			"Everyone may be called back to work on a rest or off day at most 2 times each week.",
 		],
 		[
 			"1",
-			"Everyone may be called back to work on a rest or off day at most 1 time in a roster.",
+			"Everyone may be called back to work on a rest or off day at most 1 time each week.",
 		],
 		["0", "Nobody is called back to work on a rest or off day."],
-	])("reads most call-backs of %s", (callBacks, sentence) => {
+	])(
+		"reads most call-backs of %s, each week without a span",
+		(callBacks, sentence) => {
+			expect(
+				read("MAX_CALL_BACKS_PER_PERSON", [plain("CALL_BACKS", callBacks)])
+			).toBe(sentence);
+		}
+	);
+
+	it("reads most call-backs over any number of days in a row", () => {
 		expect(
-			read("MAX_CALL_BACKS_PER_PERSON", [plain("CALL_BACKS", callBacks)])
-		).toBe(sentence);
+			read("MAX_CALL_BACKS_PER_PERSON", [
+				plain("CALL_BACKS", "2"),
+				plain("CALL_BACK_SPAN_DAYS", "4"),
+			])
+		).toBe(
+			"Everyone may be called back to work on a rest or off day at most 2 times in any 4 days in a row."
+		);
 	});
 
 	it.each([

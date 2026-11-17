@@ -115,6 +115,8 @@ const constraintFieldSchema = z.enum([
 	"OVERTIME_HOURS_A_MONTH",
 	"PART_SHIFT_MINUTES",
 	"CALL_BACKS",
+	// Optional: the days in a row call-backs are counted over; none counts each week (ADR-0121 in the API).
+	"CALL_BACK_SPAN_DAYS",
 	"OVERTIME_PERCENT",
 	"REST_DAY_WORK_PERCENT",
 	"TIME_OFF_EARNED_PERCENT",
