@@ -2,15 +2,23 @@
 //
 //   node scripts/check-feature-cycles.mjs   fail on two features (or two scheduling areas) that import each other,
 //                                           unless the pair is listed below, and on a listed pair that no longer
-//                                           does (so the lists only shrink)
+//                                           does (so the lists only shrink); and on an entry at the top of
+//                                           features/scheduling that SCHEDULING_TOP_LEVEL does not list
 //
 // Reads the `@/features/<name>` imports of every source file under src/features, and the
 // `@/features/scheduling/<area>/` imports of every source file inside a scheduling area, leaving out tests and
 // stories. An area is a lowercase folder of features/scheduling, such as `roster` or `constraints`.
 // eslint's import/no-cycle cannot do this here: it checks file cycles, not feature pairs, and eslint-plugin-import
 // 2.32 cannot read TypeScript dependencies under ESLint 10.
+import { readdir } from "node:fs/promises";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { isProduction, readSourceFiles, reportProblems } from "./sourceTree.mjs";
+import {
+	isProduction,
+	readSourceFiles,
+	reportProblems,
+	ROOT,
+} from "./sourceTree.mjs";
 
 const FEATURES_FOLDER = "src/features/";
 const SCHEDULING_FOLDER = "src/features/scheduling/";
@@ -52,6 +60,57 @@ const ALLOWED_AREA_PAIRS = [
 	"roster<->rulesCheck",
 	"roster<->schedules",
 	"schedules<->shifts",
+];
+
+/**
+ * Everything at the top of features/scheduling: its areas (the lowercase folders), the files every area shares, the
+ * page tests, and the entries that stay because areas on both sides read them (src/features/scheduling/README.md,
+ * "Map"). Anything else goes into the area that owns it; a new area is added here.
+ */
+const SCHEDULING_TOP_LEVEL = [
+	"constraints",
+	"cover",
+	"coverOffers",
+	"createSchedule",
+	"dates",
+	"departmentSetup",
+	"hours",
+	"months",
+	"myRoster",
+	"policy",
+	"preferenceOutcomes",
+	"publishedWeek",
+	"readiness",
+	"roster",
+	"rosterChanges",
+	"rulesCheck",
+	"schedules",
+	"shifts",
+	"startingContext",
+	"README.md",
+	"paths.ts",
+	"periods.ts",
+	"periods.test.ts",
+	"dayTypes.ts",
+	"dayTypes.test.ts",
+	"schedulingSearch.ts",
+	"schedulingSearch.test.ts",
+	"CreateMonthSchedule.test.tsx",
+	"CreateSchedule.test.tsx",
+	"MyRoster.test.tsx",
+	"ScheduleDetail.test.tsx",
+	"ScheduleMonth.test.tsx",
+	"Scheduling.test.tsx",
+	"scheduleDraft.ts",
+	"scheduleDraft.test.ts",
+	"weekChoice.ts",
+	"weekChoice.test.ts",
+	"steps.ts",
+	"setupReach.ts",
+	"setupReach.test.ts",
+	"WeekChoiceSummary",
+	"RosterSidePanel",
+	"RosterCellPanel",
 ];
 
 /** How the feature check words its problems: what it pairs, the list it reads, what to do about a new pair. */
@@ -127,6 +186,22 @@ export const compare = (found, allowed, rule) => [
 		.map((pair) => `no longer a cycle, delete it from ${rule.listName}: ${pair}`),
 ];
 
+/** The problems between the entries at the top of features/scheduling and the listed ones. */
+export const topLevelProblems = (entries, listed) => [
+	...entries
+		.filter((entry) => !listed.includes(entry))
+		.map(
+			(entry) =>
+				`${SCHEDULING_FOLDER}${entry} is not listed in SCHEDULING_TOP_LEVEL: move it into the area that owns it (src/features/scheduling/README.md, "Map"), or list a new area there`
+		),
+	...listed
+		.filter((entry) => !entries.includes(entry))
+		.map(
+			(entry) =>
+				`no longer at the top of features/scheduling, delete it from SCHEDULING_TOP_LEVEL: ${entry}`
+		),
+];
+
 const main = async () => {
 	const files = (await readSourceFiles("src/features")).filter(({ path }) =>
 		isProduction(path)
@@ -141,6 +216,10 @@ const main = async () => {
 			bidirectionalPairs(importsByGroup(files, areaOf, importedAreas)),
 			ALLOWED_AREA_PAIRS,
 			AREA_RULE
+		),
+		...topLevelProblems(
+			await readdir(join(ROOT, SCHEDULING_FOLDER)),
+			SCHEDULING_TOP_LEVEL
 		),
 	];
 	reportProblems("feature cycles", problems);

@@ -10,6 +10,7 @@ import {
 	importedAreas,
 	importedFeatures,
 	importsByGroup,
+	topLevelProblems,
 } from "./check-feature-cycles.mjs";
 
 describe("importedFeatures", () => {
@@ -104,6 +105,26 @@ describe("compare", () => {
 	it("says which line to delete when a listed pair is broken", () => {
 		expect(compare([], ["leave<->people"], FEATURE_RULE)).toEqual([
 			"no longer a cycle, delete it from ALLOWED_PAIRS: leave<->people",
+		]);
+	});
+});
+
+describe("topLevelProblems", () => {
+	it("passes when the top level holds exactly the listed entries", () => {
+		expect(topLevelProblems(["roster", "paths.ts"], ["paths.ts", "roster"])).toEqual(
+			[]
+		);
+	});
+
+	it("names an unlisted entry and what to do", () => {
+		expect(topLevelProblems(["roster", "RosterGrid"], ["roster"])).toEqual([
+			'src/features/scheduling/RosterGrid is not listed in SCHEDULING_TOP_LEVEL: move it into the area that owns it (src/features/scheduling/README.md, "Map"), or list a new area there',
+		]);
+	});
+
+	it("says which line to delete when a listed entry is gone", () => {
+		expect(topLevelProblems(["roster"], ["roster", "steps.ts"])).toEqual([
+			"no longer at the top of features/scheduling, delete it from SCHEDULING_TOP_LEVEL: steps.ts",
 		]);
 	});
 });
