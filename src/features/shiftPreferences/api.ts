@@ -32,7 +32,7 @@ const choosableShiftSchema = z.object({
 	/** "HH:mm"; an end at or before the start runs past midnight. */
 	startTime: z.string(),
 	endTime: z.string(),
-	/** Whether the caller chose it for this day. */
+	/** Whether the person whose week it is chose it for this day. */
 	preferred: z.boolean(),
 });
 

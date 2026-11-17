@@ -657,7 +657,9 @@
 			"failed": "We couldn’t load {{name}}’s shift preferences. Try again.",
 			"notFound": "This person is no longer in a team you manage. Close this and reload the list.",
 			"forbidden": "You no longer have permission to change this person’s shift preferences. Ask an administrator for access.",
-			"saveFailed": "These preferences couldn’t be saved. Try again."
+			"saveFailed": "These preferences couldn’t be saved. Try again.",
+			"noShifts": "No shift that day needs their job title.",
+			"allClosed": "None of these days can be changed: preferences are open from today to eight weeks ahead."
 		},
 		"preference": "Preference",
 		"preferred": "Preferred: {{shifts}}",

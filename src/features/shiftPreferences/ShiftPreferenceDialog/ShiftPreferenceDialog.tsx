@@ -23,6 +23,8 @@ export type ShiftPreferenceDialogProps = {
 	/** Saving: the refusal said, if any. */
 	saving: boolean;
 	refusal?: string;
+	/** What the day says when no shift needs the job title, worded for whose day it is. */
+	noShiftsNote: string;
 	/** Warns that the person has no availability that day; choosing stays possible. */
 	unavailableNote?: string;
 	onSave: (shiftIds: Array<string>) => void;
@@ -38,6 +40,7 @@ export const ShiftPreferenceDialog = ({
 	maxShifts,
 	saving,
 	refusal,
+	noShiftsNote,
 	unavailableNote,
 	onSave,
 	onClose,
@@ -79,7 +82,7 @@ export const ShiftPreferenceDialog = ({
 				</Callout>
 			)}
 			{day.shifts.length === 0 ? (
-				<p className="text-sm text-neutral-800">{t(`${key}.noShifts`)}</p>
+				<p className="text-sm text-neutral-800">{noShiftsNote}</p>
 			) : (
 				<div className="flex flex-col gap-3">
 					{day.shifts.map((shift) => (

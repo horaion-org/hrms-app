@@ -140,6 +140,45 @@ describe("MemberShiftPreferencesDialog", () => {
 		).not.toBeInTheDocument();
 	});
 
+	it("given_aWeekNoDayOfWhichCanBeChanged_when_shown_then_saysNoneCanRatherThanSome", async () => {
+		const week = fixtureWeek();
+		stubApi({
+			[WEEK]: weekReply({
+				...week,
+				days: week.days.map((day) => ({ ...day, editable: false })),
+			}),
+		});
+		show();
+
+		expect(
+			await screen.findByText(/^None of these days can be changed/)
+		).toBeInTheDocument();
+		expect(screen.queryByText(/^Some days can’t be changed/)).toBeNull();
+		expect(
+			screen.queryByRole("button", { name: /^Choose shifts for / })
+		).not.toBeInTheDocument();
+	});
+
+	it("given_aDayNoShiftOfWhichNeedsTheMembersJobTitle_when_opened_then_saysSoOfThemNotTheManager", async () => {
+		const user = userEvent.setup();
+		const week = fixtureWeek();
+		stubApi({
+			[WEEK]: weekReply({
+				...week,
+				days: week.days.map((day) =>
+					day.date === FIXTURE_WEEK ? { ...day, shifts: [] } : day
+				),
+			}),
+		});
+		show();
+
+		await user.click(await mondayButton());
+
+		const day = screen.getByRole("dialog", { name: /^Choose shifts for Mon/ });
+		expect(day).toHaveTextContent("No shift that day needs their job title.");
+		expect(day).not.toHaveTextContent("your job title");
+	});
+
 	it("given_theWeekCannotBeRead_when_opened_then_saysSoAsAnAlert", async () => {
 		stubApi({ [WEEK]: problemReply(404, "MEMBER_PROFILE_NOT_FOUND") });
 		show();

@@ -657,7 +657,9 @@
 			"failed": "No pudimos cargar las preferencias de turno de {{name}}. Inténtalo de nuevo.",
 			"notFound": "Esta persona ya no está en un equipo que gestionas. Cierra esto y vuelve a cargar la lista.",
 			"forbidden": "Ya no tienes permiso para cambiar las preferencias de turno de esta persona. Pide acceso a un administrador.",
-			"saveFailed": "No se pudieron guardar estas preferencias. Inténtalo de nuevo."
+			"saveFailed": "No se pudieron guardar estas preferencias. Inténtalo de nuevo.",
+			"noShifts": "Ningún turno de ese día necesita su puesto.",
+			"allClosed": "Ninguno de estos días se puede cambiar: las preferencias están abiertas desde hoy hasta ocho semanas después."
 		},
 		"preference": "Preferencia",
 		"preferred": "Preferido: {{shifts}}",

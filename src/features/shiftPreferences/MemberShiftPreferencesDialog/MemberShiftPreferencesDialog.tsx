@@ -29,6 +29,19 @@ export type MemberShiftPreferencesDialogProps = {
 
 const key = "shiftPreferences";
 
+/** Why some of the week can't be changed: none of it, or only some days; none when every day is open. */
+const closedDaysNoteKey = (
+	days: ReadonlyArray<PreferenceDay>
+):
+	| "shiftPreferences.member.allClosed"
+	| "shiftPreferences.outOfReach"
+	| undefined => {
+	if (days.every((day) => !day.editable))
+		return "shiftPreferences.member.allClosed";
+	if (days.some((day) => !day.editable)) return "shiftPreferences.outOfReach";
+	return undefined;
+};
+
 /**
  * A colleague's preferred shifts for one week, opened from the team list: a
  * row per day, each open day a button that opens the day's editor in place of
@@ -73,10 +86,11 @@ export const MemberShiftPreferencesDialog = ({
 				</div>
 			);
 		const { days } = week.week;
+		const closedDaysNote = closedDaysNoteKey(days);
 		return (
 			<>
-				{days.some((day) => !day.editable) && (
-					<Callout className="mb-4">{t(`${key}.outOfReach`)}</Callout>
+				{closedDaysNote && (
+					<Callout className="mb-4">{t(closedDaysNote)}</Callout>
 				)}
 				<DescriptionList
 					items={days.map((day) => ({
@@ -108,6 +122,7 @@ export const MemberShiftPreferencesDialog = ({
 				day={editing}
 				dayLabel={labelOf(editing)}
 				maxShifts={maxShiftsPerDay}
+				noShiftsNote={t(`${key}.member.noShifts`)}
 				saving={replace.isPending}
 				refusal={
 					replace.error

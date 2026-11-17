@@ -141,6 +141,7 @@ export const MyShiftPreferences = ({
 					day={editing}
 					dayLabel={labelOf(editing)}
 					maxShifts={maxShiftsPerDay}
+					noShiftsNote={t(`${key}.noShifts`)}
 					saving={replace.isPending}
 					refusal={
 						replace.error
