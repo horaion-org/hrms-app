@@ -97,6 +97,28 @@ describe("StartingContextCallout", () => {
 		).toHaveClass("text-ink-blue-700");
 	});
 
+	it("given_aRosterPartCarriedOver_when_shown_then_calmlyNamesItsDays", () => {
+		render(
+			<I18nextProvider i18n={authTestI18n}>
+				<StartingContextCallout
+					enteredCount={0}
+					previous={{
+						kind: "carried",
+						periodStart: "2026-11-16",
+						uncovered: 0,
+						days: { from: "2026-11-16", to: "2026-11-18" },
+					}}
+				/>
+			</I18nextProvider>
+		);
+
+		const note = screen.getByRole("note");
+		expect(note).toHaveClass("bg-ink-blue-50");
+		expect(note).toHaveTextContent(
+			/^Carried over from the roster of Nov 16\s?–\s?18, 2026\.$/
+		);
+	});
+
 	it("given_aDraftThePersonMayNotChange_when_shown_then_stillWarnsButOffersNoControl", () => {
 		show(firstWeek(), 0);
 

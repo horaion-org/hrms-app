@@ -4666,6 +4666,7 @@
 			"noneWithEntries_one": "No roster before this week. Days are added for {{count}} person; everyone else starts rested.",
 			"noneWithEntries_other": "No roster before this week. Days are added for {{count}} people; everyone else starts rested.",
 			"carried": "Carried over from the week of {{week}}.",
+			"carriedFromDays": "Carried over from the roster of {{days}}.",
 			"carriedWithNew_one": "Carried over from the week of {{week}}. {{count}} person isn’t on that roster and starts rested.",
 			"carriedWithNew_other": "Carried over from the week of {{week}}. {{count}} people aren’t on that roster and start rested.",
 			"unknownLastWeek": "Horaion doesn’t know what people worked last week.",

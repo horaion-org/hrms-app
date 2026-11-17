@@ -5,7 +5,7 @@ import {
 	datesIn,
 	datesProblemOf,
 	daysBeforeOf,
-	rosterCoversDayBefore,
+	previousBefore,
 } from "@/features/scheduling/dates/datesSetup";
 import type { PreviousWeek } from "@/features/scheduling/startingContext/startingGrid";
 import { formatPeriod, periodStartingOn } from "@/features/scheduling/periods";
@@ -394,17 +394,19 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 				(byDates ? datesStartOnMonday : startingWeek?.state === "NOT_GENERATED")
 		)
 	);
-	// "Before this week" asks unless a roster covers the day before it: in the week before, or earlier in a started week.
-	const dayBeforeRostered =
-		firstGeneratedDay !== undefined &&
-		rosterCoversDayBefore(firstGeneratedDay, [
+	// "Before this week" asks unless a roster covers the day before the first generated day: in the week
+	// before, earlier in a started week, or a part kept earlier in a dates run's first week.
+	const partsBeforeStart = [
+		...[
 			...(monthBefore.data?.weeks ?? []),
 			...(scheduleMonth.data?.weeks ?? []),
-		]);
+		].flatMap((week) => week.parts),
+		...(datesStart?.kept ?? []),
+	];
 	const previousOfStart: PreviousWeek =
-		weekBefore && dayBeforeRostered
-			? { kind: "carried", periodStart: weekBefore, uncovered: 0 }
-			: { kind: "none" };
+		firstGeneratedDay === undefined
+			? { kind: "none" }
+			: previousBefore(firstGeneratedDay, partsBeforeStart);
 	const mayGenerate = allowedHere("schedule:generate");
 	// A dates run's panel checks the first day's month (its leave counts that month).
 	const checkMonth = byDates ? monthOf(datesChoice.firstDay) : month;
@@ -653,9 +655,9 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 				)}
 			</div>
 		));
-	// Dates from mid-week with nothing rostered before, or from a Monday: the first new part's "Before this
-	// week", as the month's first week has it; the button saves that part as a draft covering its new days,
-	// which the run then generates.
+	// Dates: the first new part's "Before this week", as the month's first week has it (asked when nothing
+	// is rostered the day before, a calm carried line when it is); the button saves that part as a draft
+	// covering its new days, which the run then generates.
 	const saveDatesStart = async (): Promise<void> => {
 		if (!unit || !everything || !datesStart?.newFrom || !datesStart.newTo)
 			return;
@@ -679,10 +681,8 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			setProblem(scheduleRefusalMessage(error, true, t));
 		}
 	};
-	const datesAsksDaysBefore =
-		Boolean(plan?.notRosteredBefore) || datesStartOnMonday;
 	const datesStartingPoint =
-		!unit || !datesAsksDaysBefore ? undefined : datesDraftId !== "" ? (
+		!unit || !datesStart ? undefined : datesDraftId !== "" ? (
 			<StartingContextSection
 				canEdit={allowedHere("schedule:update")}
 				companyId={companyId}
@@ -697,7 +697,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			<StartingContextCallout
 				adding={scheduleActions.create.isPending}
 				enteredCount={0}
-				previous={datesStartOnMonday ? previousOfStart : { kind: "none" }}
+				previous={previousOfStart}
 				unknownDays={daysBeforeStart && datesIn(daysBeforeStart)}
 				onAdd={
 					allowedHere("schedule:create") &&

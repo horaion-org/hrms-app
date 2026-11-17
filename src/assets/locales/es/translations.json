@@ -4466,6 +4466,7 @@
 			"noneWithEntries_one": "No hay cuadrante antes de esta semana. Hay días añadidos para {{count}} persona; las demás empiezan descansadas.",
 			"noneWithEntries_other": "No hay cuadrante antes de esta semana. Hay días añadidos para {{count}} personas; las demás empiezan descansadas.",
 			"carried": "Continúa desde la semana del {{week}}.",
+			"carriedFromDays": "Continúa desde el cuadrante del {{days}}.",
 			"carriedWithNew_one": "Continúa desde la semana del {{week}}. {{count}} persona no figura en ese cuadrante y empieza descansada.",
 			"carriedWithNew_other": "Continúa desde la semana del {{week}}. {{count}} personas no figuran en ese cuadrante y empiezan descansadas.",
 			"unknownLastWeek": "Horaion no sabe qué trabajó cada persona la semana pasada.",

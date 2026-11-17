@@ -7,14 +7,14 @@ import {
 	maxLastDayOf,
 	namedSpansOf,
 	planRowOf,
-	rosterCoversDayBefore,
+	previousBefore,
+	rosterPartBefore,
 } from "@/features/scheduling/dates/datesSetup";
 import {
 	datesPlanFixture,
 	datesPlanWithKeptWeekFixture,
 } from "@/features/scheduling/dates/fixtures";
-import type { MonthWeek, WeekPart } from "@/features/scheduling/months/api";
-import { monthWeekFixture } from "@/features/scheduling/months/fixtures";
+import type { WeekPart } from "@/features/scheduling/months/api";
 
 const TODAY = "2026-11-17";
 
@@ -134,51 +134,55 @@ describe("daysBeforeOf and datesIn", () => {
 	});
 });
 
-describe("rosterCoversDayBefore", () => {
-	/** The week of 9 Nov holding `parts`. */
-	const weekOf9 = (parts: Array<Partial<WeekPart>>): MonthWeek =>
-		monthWeekFixture({
+describe("rosterPartBefore and previousBefore", () => {
+	/** A published part of the week of 9 Nov, the whole week unless `overrides` say. */
+	const part = (overrides: Partial<WeekPart> = {}): WeekPart => ({
+		scheduleId: "s-1",
+		name: "Week of 2026-11-09",
+		named: false,
+		coveredFrom: "2026-11-09",
+		coveredTo: "2026-11-15",
+		state: "PUBLISHED",
+		...overrides,
+	});
+
+	it("given_aMondayAfterAWholeRosteredWeek_when_asked_then_carriedFromThatWeek", () => {
+		expect(rosterPartBefore("2026-11-16", [part()])).toEqual(part());
+		expect(previousBefore("2026-11-16", [part()])).toEqual({
+			kind: "carried",
 			periodStart: "2026-11-09",
-			periodEnd: "2026-11-15",
-			parts: parts.map((overrides) => ({
-				scheduleId: "s-1",
-				name: "Week of 2026-11-09",
-				named: false,
-				coveredFrom: "2026-11-09",
-				coveredTo: "2026-11-15",
-				state: "PUBLISHED",
-				...overrides,
-			})),
+			uncovered: 0,
 		});
-
-	it("given_aMondayAfterAWholeRosteredWeek_when_asked_then_covered", () => {
-		expect(rosterCoversDayBefore("2026-11-16", [weekOf9([{}])])).toBe(true);
 	});
 
-	it("given_aMondayAfterAWeekRosteredOnlyToWednesday_when_asked_then_notCovered", () => {
+	it("given_aMondayAfterAWeekRosteredOnlyToWednesday_when_asked_then_none", () => {
+		const toWednesday = part({ coveredTo: "2026-11-11" });
+
+		expect(rosterPartBefore("2026-11-16", [toWednesday])).toBeUndefined();
+		expect(previousBefore("2026-11-16", [toWednesday])).toEqual({
+			kind: "none",
+		});
+	});
+
+	it("given_aThursdayAfterAPartEndingWednesday_when_asked_then_carriedFromThatPartsDays", () => {
 		expect(
-			rosterCoversDayBefore("2026-11-16", [
-				weekOf9([{ coveredTo: "2026-11-11" }]),
-			])
-		).toBe(false);
+			previousBefore("2026-11-12", [part({ coveredTo: "2026-11-11" })])
+		).toEqual({
+			kind: "carried",
+			periodStart: "2026-11-09",
+			uncovered: 0,
+			days: { from: "2026-11-09", to: "2026-11-11" },
+		});
 	});
 
-	it("given_aThursdayAfterAPartEndingWednesday_when_asked_then_covered", () => {
-		expect(
-			rosterCoversDayBefore("2026-11-12", [
-				weekOf9([{ coveredTo: "2026-11-11" }]),
-			])
-		).toBe(true);
+	it("given_onlyADraftOverTheDayBefore_when_asked_then_none", () => {
+		expect(rosterPartBefore("2026-11-16", [part({ state: "DRAFT" })])).toBe(
+			undefined
+		);
 	});
 
-	it("given_onlyADraftOverTheDayBefore_when_asked_then_notCovered", () => {
-		expect(
-			rosterCoversDayBefore("2026-11-16", [weekOf9([{ state: "DRAFT" }])])
-		).toBe(false);
-	});
-
-	it("given_aWeekWithoutParts_when_asked_then_notCovered", () => {
-		expect(rosterCoversDayBefore("2026-11-16", [weekOf9([])])).toBe(false);
+	it("given_noParts_when_asked_then_none", () => {
+		expect(previousBefore("2026-11-16", [])).toEqual({ kind: "none" });
 	});
 });
 

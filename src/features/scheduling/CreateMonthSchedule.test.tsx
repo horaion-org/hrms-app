@@ -1687,7 +1687,7 @@ describe("Create schedules for a month: by dates", () => {
 		});
 	});
 
-	it("given_datesFromThursdayAfterARosteredPartOfTheSameWeek_when_onSetup_then_asksNothing", async () => {
+	it("given_datesFromThursdayAfterARosteredPartOfTheSameWeek_when_onSetup_then_saysItCarriesOverFromThatPart", async () => {
 		const plan = datesPlanFixture();
 		const [first, second] = plan.weeks;
 		await open(
@@ -1712,7 +1712,11 @@ describe("Create schedules for a month: by dates", () => {
 			})
 		);
 
-		await screen.findByRole("table", { name: "What this creates" });
+		expect(
+			await screen.findByText(
+				/^Carried over from the roster of Nov 16\s?–\s?18, 2026\.$/
+			)
+		).toBeVisible();
 		expect(screen.queryByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeNull();
 		expect(addLastWeek()).toBeNull();
 	});

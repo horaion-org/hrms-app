@@ -4,6 +4,7 @@ import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
+import { formatPeriod } from "@/features/scheduling/periods";
 import type { PreviousWeek } from "@/features/scheduling/startingContext/startingGrid";
 
 export type StartingContextCalloutProps = {
@@ -102,8 +103,14 @@ export const StartingContextCallout = ({
 			</Callout>
 		);
 
-	const carried =
-		previous.uncovered > 0
+	const carried = previous.days
+		? t(`${key}.carriedFromDays`, {
+				days: formatPeriod(
+					{ start: previous.days.from, end: previous.days.to },
+					language
+				),
+			})
+		: previous.uncovered > 0
 			? t(`${key}.carriedWithNew`, {
 					week: weekOf(previous.periodStart),
 					count: previous.uncovered,
