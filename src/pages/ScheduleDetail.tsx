@@ -19,7 +19,6 @@ import { ApprovalTrail } from "@/features/approvals/ApprovalTrail";
 import {
 	approvalMetaLine,
 	approvalStanding,
-	type ApprovalStanding,
 } from "@/features/approvals/approvalStanding";
 import {
 	GeneratedRoster,
@@ -40,7 +39,7 @@ import {
 import { formatPeriod } from "@/features/scheduling/periods";
 import {
 	PublishScheduleDialog,
-	type PublishMode,
+	publishModeOf,
 } from "@/features/scheduling/PublishScheduleDialog";
 import { hasRosterHours } from "@/features/scheduling/hours/rosterHoursRows";
 import {
@@ -260,25 +259,6 @@ type OpenDialog =
 	| "withdrawPublication"
 	| "regenerate"
 	| undefined;
-
-/** What the header's primary button confirms, by where the viewer stands on the roster's approval. */
-const publishModeOf = (
-	standing: ApprovalStanding,
-	instanceSteps: ReadonlyArray<{ stepOrder: number; label: string }>
-): PublishMode => {
-	if (standing.kind === "toSubmit")
-		return { kind: "submit", stepLabels: standing.stepLabels };
-	if (standing.kind === "pending")
-		return {
-			kind: "approve",
-			instanceId: standing.instanceId,
-			step: standing.step,
-			nextLabel: instanceSteps.find(
-				(step) => step.stepOrder === standing.step.order + 1
-			)?.label,
-		};
-	return { kind: "publish" };
-};
 
 /**
  * One schedule read by its id alone. It is read again every

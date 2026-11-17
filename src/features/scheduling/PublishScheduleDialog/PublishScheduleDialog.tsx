@@ -6,32 +6,15 @@ import { Textarea } from "@/components/forms/Textarea";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { APPROVAL_COMMENT_MAX_LENGTH } from "@/features/approvals/api";
 import { approvalDecisionRefusal } from "@/features/approvals/approvalRefusal";
-import {
-	stepSummary,
-	type OpenStep,
-} from "@/features/approvals/approvalStanding";
+import { stepSummary } from "@/features/approvals/approvalStanding";
 import { useApprovalDecisionActions } from "@/features/approvals/useApprovalActions";
+import type { PublishMode } from "@/features/scheduling/PublishScheduleDialog/publishMode";
 import type { Schedule } from "@/features/scheduling/schedules/api";
 import { decisionRefusal } from "@/features/scheduling/schedules/scheduleRefusal";
 import {
 	useReloadScheduling,
 	useScheduleActions,
 } from "@/features/scheduling/schedules/useSchedule";
-
-/**
- * What confirming does: publish in one step (no flow), submit the roster to
- * its flow's steps, or approve the open step of its submission.
- */
-export type PublishMode =
-	| { kind: "publish" }
-	| { kind: "submit"; stepLabels: ReadonlyArray<string> }
-	| {
-			kind: "approve";
-			instanceId: string;
-			step: OpenStep;
-			/** The step asked after this one; none on the last step. */
-			nextLabel?: string;
-	  };
 
 export type PublishScheduleDialogProps = {
 	companyId: string;
