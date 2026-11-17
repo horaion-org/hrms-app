@@ -116,9 +116,10 @@ export const Grouped: Story = {
 };
 
 /**
- * A multiple Select of whole groups, as the constraint dialog's shifts: a
- * group of one is its shift's row, named after it unless it repeats the
- * label; a group of several is headed by a row that chooses or clears it.
+ * A multiple Select of whole groups, as the constraint dialog's shifts: every
+ * group as a chip in one row above the shifts, Late wholly chosen and Night
+ * partly, then each shift as a flat row named with its group unless it
+ * repeats the label.
  */
 export const WholeGroups: Story = {
 	args: {
@@ -126,12 +127,17 @@ export const WholeGroups: Story = {
 		wholeGroups: true,
 		placeholder: "Choose shifts",
 		selectAllLabel: "Select all",
+		groupsLabel: "Shift groups",
 		groupCountText: (count: number) => `${String(count)} shifts`,
+		defaultValue: ["late-a", "late-b", "night-a"],
 		options: [
 			{ value: "morning", label: "Morning", group: "Day" },
 			{ value: "early", label: "Early", group: "Early" },
 			{ value: "late-a", label: "Late A", group: "Late" },
 			{ value: "late-b", label: "Late B", group: "Late" },
+			{ value: "night-a", label: "Night A", group: "Night" },
+			{ value: "night-b", label: "Night B", group: "Night" },
+			{ value: "night-c", label: "Night C", group: "Night" },
 		],
 	},
 };
