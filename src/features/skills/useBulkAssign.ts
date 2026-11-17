@@ -115,10 +115,10 @@ export const useAssignSkill = (
 	return useMutation({
 		mutationFn: (body) => assignSkill(companyId, skillId, body),
 		meta: { successMessage: false },
-		onSuccess: () =>
-			Promise.all([
-				client.invalidateQueries({ queryKey: ["organisation", companyId] }),
-				client.invalidateQueries({ queryKey: ["people", companyId] }),
-			]),
+		// Reloaded in the background: the change is done when the API answers.
+		onSuccess: () => {
+			void client.invalidateQueries({ queryKey: ["organisation", companyId] });
+			void client.invalidateQueries({ queryKey: ["people", companyId] });
+		},
 	});
 };
