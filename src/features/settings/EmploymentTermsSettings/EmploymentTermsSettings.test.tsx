@@ -224,6 +224,25 @@ describe("EmploymentTermsSettings", () => {
 		return dialog;
 	};
 
+	it("given_newTerms_when_opened_then_theThreePartsHaveTheirHeadingsInOrder", async () => {
+		const parts = [
+			"Working week",
+			"Pay for extra hours",
+			"What these terms mean",
+		];
+		stubApi(routes(READ_AND_UPDATE));
+		const dialog = await openAddDialog(userEvent.setup());
+
+		// The read-back's own headings sit inside the last part, so only the parts' headings are kept.
+		const partHeadings = within(dialog)
+			.getAllByRole("heading", { level: 3 })
+			.map((heading) => heading.textContent ?? "")
+			.filter((title) => parts.includes(title));
+		expect(partHeadings).toEqual(parts);
+		for (const part of parts)
+			expect(within(dialog).getByRole("region", { name: part })).toBeVisible();
+	});
+
 	it("given_startFrom5Days_when_clicked_then_fillsAndStepsAside", async () => {
 		stubApi(routes(READ_AND_UPDATE));
 		const user = userEvent.setup();
@@ -384,6 +403,21 @@ describe("EmploymentTermsSettings", () => {
 			expect(dialog).toHaveTextContent(
 				"The legal minimum is 1.5. You can pay more."
 			);
+		});
+
+		/** The owner saw "paid at times a normal hour" with no figure: the unit had squeezed the box shut. */
+		it("given_newTerms_when_opened_then_eachRateIsAVisibleFigureNamedByItsSentence", async () => {
+			stubApi(routes(READ_AND_UPDATE));
+			const dialog = await openAdd(await open());
+
+			for (const [sentence, figure] of [
+				["An overtime hour is paid at times a normal hour", "1.5"],
+				["Work on the rest day counts at times a normal hour", "2"],
+			] as const) {
+				const rate = within(dialog).getByRole("textbox", { name: sentence });
+				expect(rate).toBeVisible();
+				expect(rate).toHaveValue(figure);
+			}
 		});
 
 		it("given_1Point2Covered_when_saved_then_errorAtTheField", async () => {

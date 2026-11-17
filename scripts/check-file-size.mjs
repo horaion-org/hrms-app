@@ -23,7 +23,6 @@ const LINE_CEILINGS = {
 	"src/pages/CreateMonthSchedule.tsx": 966,
 	"src/features/scheduling/schedules/api.ts": 1067,
 	"src/features/scheduling/constraints/ConstraintDialog/ConstraintDialog.tsx": 1024,
-	"src/features/employmentTerms/EmploymentTermsDialog/EmploymentTermsDialog.tsx": 954,
 	"src/pages/ScheduleDetail.tsx": 854,
 	"src/features/people/ProfileForm/ProfileForm.tsx": 849,
 	"src/pages/CreateSchedule.tsx": 696,

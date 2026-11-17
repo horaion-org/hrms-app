@@ -5939,7 +5939,6 @@
 			"daysPerWeek": "Working days a week",
 			"weekHours": "Hours a week",
 			"restDay": "Rest day",
-			"overtime": "Overtime",
 			"name": "Name",
 			"nameHint": "Suggested from your answers until you type one.",
 			"namePlaceholder": "e.g. Five-day week, 44 h",
@@ -5970,7 +5969,6 @@
 			"weekRejected": "Check the hours a week: they are outside what terms may set, or make a day longer than the longest normal day. Lower the hours a week or add working days.",
 			"weekUnchanged": "Nothing changes from a date: the working week is the same. Change the days, hours or rest day first, or use Edit to save a new name or description.",
 			"moreOptions": "More options",
-			"weekHoursUnit": "hours a week",
 			"daysVary": "It varies",
 			"daysOption_one": "{{days}} day",
 			"daysOption_other": "{{days}} days",
@@ -5987,7 +5985,7 @@
 			"paidAs": {
 				"legend": "How extra hours are paid",
 				"RATE": "Paid at a rate",
-				"RATEDescription": "Set the rate above.",
+				"RATEDescription": "Set the rate below.",
 				"TIME_OFF": "Time off instead",
 				"TIME_OFFDescription": "{{time}} off for each extra hour worked. Extra hours aren’t paid: they add to a balance, taken back as Off in lieu.",
 				"NOTHING": "Nothing extra",
@@ -6011,7 +6009,6 @@
 			"startFrom": "Start from",
 			"startFromNote": "A starting point only. Every figure below can be changed.",
 			"startFromChanged": "Changed from the starting point. That is fine: the answers below are what gets saved.",
-			"workingWeek": "Working week",
 			"dayLine": "That is {{day}} a day.",
 			"dayLineHalf": "That is {{day}} a day, with a half day of {{half}}.",
 			"dayLineVaries": "Hours a day vary with the roster.",
@@ -6033,7 +6030,12 @@
 			"partTimeOvertimeNote": "Part-time by law: extra hours up to {{full}} a week (a full-timer’s week) are paid at the normal rate. Hours past {{full}} are paid at {{times}}.",
 			"dayTooLong_one": "{{week}} over {{days}} day is {{day}} a day, more than the longest normal day of {{max}}. Lower the hours a week or add working days.",
 			"dayTooLong_other": "{{week}} over {{days}} days is {{day}} a day, more than the longest normal day of {{max}}. Lower the hours a week or add working days.",
-			"dailyNeedsDays": "Overtime by the day needs fixed working days. Choose the working days, or untick overtime by the day."
+			"dailyNeedsDays": "Overtime by the day needs fixed working days. Choose the working days, or untick overtime by the day.",
+			"parts": {
+				"workingWeek": "Working week",
+				"extraHoursPay": "Pay for extra hours",
+				"termsMeaning": "What these terms mean"
+			}
 		},
 		"apply": {
 			"title": "How should this change apply?",

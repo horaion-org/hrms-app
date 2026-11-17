@@ -5939,7 +5939,6 @@
 			"daysPerWeek": "Días laborables a la semana",
 			"weekHours": "Horas a la semana",
 			"restDay": "Día de descanso",
-			"overtime": "Horas extra",
 			"name": "Nombre",
 			"nameHint": "Sugerido a partir de tus respuestas hasta que escribas uno.",
 			"namePlaceholder": "p. ej., Semana de cinco días, 44 h",
@@ -5970,7 +5969,6 @@
 			"weekRejected": "Revisa las horas a la semana: están fuera de lo que pueden fijar unas condiciones, o dan una jornada más larga que la jornada normal más larga. Reduce las horas a la semana o añade días laborables.",
 			"weekUnchanged": "No hay nada que cambiar desde una fecha: la semana laboral es la misma. Cambia antes los días, las horas o el día de descanso, o usa Editar para guardar un nuevo nombre o descripción.",
 			"moreOptions": "Más opciones",
-			"weekHoursUnit": "horas a la semana",
 			"daysVary": "Varían",
 			"daysOption_one": "{{days}} día",
 			"daysOption_other": "{{days}} días",
@@ -5987,7 +5985,7 @@
 			"paidAs": {
 				"legend": "Cómo se pagan las horas extra",
 				"RATE": "Pagadas a una tarifa",
-				"RATEDescription": "Indica la tarifa arriba.",
+				"RATEDescription": "Indica la tarifa abajo.",
 				"TIME_OFF": "Tiempo libre en su lugar",
 				"TIME_OFFDescription": "{{time}} libre por cada hora extra trabajada. Las horas extra no se pagan: se suman a un saldo que se recupera como Día libre compensatorio.",
 				"NOTHING": "Nada adicional",
@@ -6011,7 +6009,6 @@
 			"startFrom": "Empezar desde",
 			"startFromNote": "Solo un punto de partida. Puedes cambiar cualquier cifra de abajo.",
 			"startFromChanged": "Cambiado respecto al punto de partida. No pasa nada: se guardan las respuestas de abajo.",
-			"workingWeek": "Semana laboral",
 			"dayLine": "Son {{day}} al día.",
 			"dayLineHalf": "Son {{day}} al día, con media jornada de {{half}}.",
 			"dayLineVaries": "Las horas al día varían según el cuadrante.",
@@ -6033,7 +6030,12 @@
 			"partTimeOvertimeNote": "Tiempo parcial según la ley: las horas adicionales hasta {{full}} a la semana (la semana de tiempo completo) se pagan a la tarifa normal. Las horas por encima de {{full}} se pagan a {{times}}.",
 			"dayTooLong_one": "{{week}} en {{days}} día son {{day}} al día, más que la jornada normal más larga de {{max}}. Reduce las horas a la semana o añade días laborables.",
 			"dayTooLong_other": "{{week}} en {{days}} días son {{day}} al día, más que la jornada normal más larga de {{max}}. Reduce las horas a la semana o añade días laborables.",
-			"dailyNeedsDays": "Las horas extra por día necesitan días laborables fijos. Elige los días laborables o desmarca las horas extra por día."
+			"dailyNeedsDays": "Las horas extra por día necesitan días laborables fijos. Elige los días laborables o desmarca las horas extra por día.",
+			"parts": {
+				"workingWeek": "Semana laboral",
+				"extraHoursPay": "Pago de las horas extra",
+				"termsMeaning": "Qué significan estas condiciones"
+			}
 		},
 		"apply": {
 			"title": "¿Cómo se aplica este cambio?",
