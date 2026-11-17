@@ -153,4 +153,67 @@ describe("WeekCard", () => {
 			await screen.findByText("Not generated: Nobody can be scheduled.")
 		).toBeInTheDocument();
 	});
+
+	describe("a week a month run took out of its queue", () => {
+		const stopped = monthWeekFixture({
+			periodStart: "2026-11-09",
+			periodEnd: "2026-11-15",
+			state: "DRAFT",
+			scheduleId: "s-2",
+			...noRoster,
+			queueRefusal: { code: "EARLIER_WEEK_FAILED", at: "2026-11-17T09:20:00Z" },
+		});
+
+		const renderStopped = (
+			props: { refusal?: string; failedWeek?: string },
+			week: MonthWeek = stopped
+		): void => {
+			render(
+				<MemoryRouterHarness>
+					<WeekCard departmentId="d-1" week={week} {...props} />
+				</MemoryRouterHarness>
+			);
+		};
+
+		it("given_anEarlierWeekFailed_when_rendered_then_namesTheFailedWeekAndSaysToTryAgain", async () => {
+			renderStopped({ failedWeek: "Nov 2 – 8" });
+
+			expect(
+				await screen.findByText(
+					"Not generated: The week of Nov 2 – 8 failed first. Try again from this page."
+				)
+			).toBeInTheDocument();
+		});
+
+		it("given_anotherRefusalCode_when_rendered_then_saysThatRefusal", async () => {
+			renderStopped(
+				{},
+				{
+					...stopped,
+					queueRefusal: {
+						code: "SCHEDULE_HAS_NO_EMPLOYEES",
+						at: "2026-11-17T09:20:00Z",
+					},
+				}
+			);
+
+			expect(
+				await screen.findByText(
+					/^Not generated: This department has no employees/
+				)
+			).toBeInTheDocument();
+		});
+
+		it("given_theLastRunAlsoRefusedIt_when_rendered_then_theLastRunsRefusalShows", async () => {
+			renderStopped({
+				refusal: "Nobody can be scheduled.",
+				failedWeek: "Nov 2 – 8",
+			});
+
+			expect(
+				await screen.findByText("Not generated: Nobody can be scheduled.")
+			).toBeInTheDocument();
+			expect(screen.queryByText(/failed first/)).toBeNull();
+		});
+	});
 });

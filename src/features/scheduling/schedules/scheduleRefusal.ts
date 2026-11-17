@@ -182,8 +182,25 @@ export const withdrawalRefusal = (
 const errorCodeOf = (statusAndCode: string): string =>
 	statusAndCode.slice(statusAndCode.indexOf(" ") + 1);
 
-/** The words for each refusal a month's week can meet, reusing the words of generating one week. */
-const WEEK_REFUSAL_WORDS: Record<string, (t: TFunction) => string> = {
+/**
+ * Why a month run took a week out of its queue: a week before it failed after
+ * it was queued (the API's MonthWeekQueue). Not an error response, so no status.
+ */
+export const EARLIER_WEEK_FAILED = "EARLIER_WEEK_FAILED";
+
+/** A code the app doesn't know. */
+const plainGenerationFailure = (t: TFunction): string =>
+	t("scheduling.generate.failed");
+
+/**
+ * The words for each refusal a month's week can meet, reusing the words of
+ * generating one week. `failedWeek` names the week an EARLIER_WEEK_FAILED
+ * points at; without it, that refusal reads as the plain failure.
+ */
+const WEEK_REFUSAL_WORDS: Record<
+	string,
+	(t: TFunction, failedWeek?: string) => string
+> = {
 	[errorCodeOf(codes.hasNoShifts)]: (t) => t("scheduling.generate.noShifts"),
 	[errorCodeOf(codes.hasNoStaffing)]: (t) =>
 		t("scheduling.generate.noStaffing"),
@@ -201,18 +218,24 @@ const WEEK_REFUSAL_WORDS: Record<string, (t: TFunction) => string> = {
 	[errorCodeOf(codes.published)]: (t) => t("scheduling.regenerate.published"),
 	[errorCodeOf(codes.oncePublished)]: (t) =>
 		t("scheduling.regenerate.oncePublished"),
+	[EARLIER_WEEK_FAILED]: (t, failedWeek) =>
+		failedWeek === undefined
+			? plainGenerationFailure(t)
+			: t("scheduling.months.generate.earlierWeekFailed", { week: failedWeek }),
 };
-
-/** A code the app doesn't know. */
-const plainGenerationFailure = (t: TFunction): string =>
-	t("scheduling.generate.failed");
 
 /**
  * The words for an API error code met outside an error object: a week a month
- * run refused. A code the app doesn't know reads as the plain failure.
+ * run refused, or a week taken out of a month run's queue. `failedWeek` is the
+ * failed week's dates, for EARLIER_WEEK_FAILED. A code the app doesn't know
+ * reads as the plain failure.
  */
-export const refusalOfCode = (errorCode: string, t: TFunction): string =>
-	(WEEK_REFUSAL_WORDS[errorCode] ?? plainGenerationFailure)(t);
+export const refusalOfCode = (
+	errorCode: string,
+	t: TFunction,
+	failedWeek?: string
+): string =>
+	(WEEK_REFUSAL_WORDS[errorCode] ?? plainGenerationFailure)(t, failedWeek);
 
 /**
  * Why generating a month was refused as a whole, as one message for the page.

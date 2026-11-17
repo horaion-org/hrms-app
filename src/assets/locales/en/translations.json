@@ -5274,6 +5274,7 @@
 				"generatingTitle": "Generating {{month}}…",
 				"generatingDetail": "The weeks that aren’t published are being worked out. You can leave this page.",
 				"refused": "Not generated: {{reason}}",
+				"earlierWeekFailed": "The week of {{week}} failed first. Try again from this page.",
 				"draftGeneratesMonth": "Generates every week of {{month}} that isn’t published.",
 				"weekStopped": {
 					"PUBLISHED": "The week of {{week}} was published since this page loaded, so it can’t be generated.",
