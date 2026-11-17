@@ -241,6 +241,21 @@ describe("refusalCode", () => {
 });
 
 describe("problemText", () => {
+	it("given_aFullTimeOrPartTimeCell_when_worded_then_saysItFollowsTheTermsAndWasIgnored", () => {
+		expect(
+			problemText(
+				{
+					column: "EMPLOYMENT_TYPE",
+					code: "EMPLOYMENT_TYPE_FOLLOWS_TERMS",
+					severity: "NOTICE",
+				},
+				i18next.getFixedT("en")
+			)
+		).toBe(
+			"Full-time or part-time follows the employment terms, so the cell was ignored. Set their terms on their profile after the import."
+		);
+	});
+
 	it("words the formula problems in English and Spanish", () => {
 		const en = i18next.getFixedT("en");
 		const es = i18next.getFixedT("es");

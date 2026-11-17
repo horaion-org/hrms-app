@@ -1006,6 +1006,7 @@
 				"INTERN": "Intern"
 			},
 			"employmentTypeFromTerms": "From the terms",
+			"employmentTypeFollowsTerms": "Full-time or part-time follows their employment terms. Change their terms, or set their own hours, instead.",
 			"hireDate": "Hire date",
 			"probationEndDate": "Probation end date",
 			"probationBeforeHire": "Choose a date on or after the hire date.",
@@ -1283,7 +1284,7 @@
 				"JOB_TITLE": "Job title: a job title of that department.",
 				"PHONE": "Phone: with the country code, e.g. +6591234567.",
 				"DATE_OF_BIRTH": "Date of birth: a date, or YYYY-MM-DD.",
-				"EMPLOYMENT_TYPE": "Employment type: Full-time, Part-time, Contract or Intern.",
+				"EMPLOYMENT_TYPE": "Employment type: Contract or Intern, or blank. Full-time or part-time follows the employment terms.",
 				"HIRE_DATE": "Hire date: a date, or YYYY-MM-DD.",
 				"PROBATION_END_DATE": "Probation end date: not before the hire date.",
 				"general": "Row 1 must keep the template's column names. Don't merge cells.",
@@ -1448,7 +1449,7 @@
 				"INVALID_DATE": "{{column}}: use a date cell or YYYY-MM-DD, e.g. 2026-01-05.",
 				"DATE_NOT_PAST": "Date of birth must be in the past.",
 				"PROBATION_BEFORE_HIRE": "Probation can't end before the hire date.",
-				"UNKNOWN_EMPLOYMENT_TYPE": "Use Full-time, Part-time, Contract or Intern.",
+				"UNKNOWN_EMPLOYMENT_TYPE": "Use Contract or Intern, or leave it blank. Full-time or part-time follows the employment terms.",
 				"BRANCH_NOT_FOUND": "No branch has this name or code. Copy it from the Lists sheet.",
 				"DEPARTMENT_NOT_FOUND": "This branch has no department of this name.",
 				"JOB_TITLE_NOT_FOUND": "This department has no job title of this name.",
@@ -1466,6 +1467,7 @@
 				"EMPLOYEE_CODE_NOT_FOUND": "No one in this company has this employee code. Leave it blank for someone new.",
 				"EMAIL_OF_ANOTHER_MEMBER": "This email belongs to someone else in the company, not to the person with this employee code.",
 				"POSSIBLE_EXISTING_MEMBER": "Someone already in the company has this name with another email. If it's them, add their employee code to correct their email instead.",
+				"EMPLOYMENT_TYPE_FOLLOWS_TERMS": "Full-time or part-time follows the employment terms, so the cell was ignored. Set their terms on their profile after the import.",
 				"EMPLOYMENT_TERMS_NOT_FOUND": "The company has no employment terms of this name. Pick them from the list.",
 				"EMPLOYMENT_TERMS_INACTIVE": "These employment terms are inactive, so no one new can be given them."
 			},

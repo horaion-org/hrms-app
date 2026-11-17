@@ -93,6 +93,11 @@ export const profileRefusal = (
 				"jobTitleId",
 				t(`${key}.jobTitleNeedsDepartment`)
 			),
+			// Full-time or part-time follows the terms (Part 3); only Contract or Intern is stored.
+			"400 EMPLOYMENT_TYPE_FOLLOWS_TERMS": field(
+				"employmentType",
+				t(`${key}.employmentTypeFollowsTerms`)
+			),
 			"404 REPORTS_TO_NOT_FOUND": {
 				...field("reportsTo", t(`${key}.managerUnavailable`)),
 				refreshMembers: true,

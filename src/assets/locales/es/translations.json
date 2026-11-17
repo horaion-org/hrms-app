@@ -2931,7 +2931,7 @@
 				"JOB_TITLE": "Puesto: un puesto de ese departamento.",
 				"PHONE": "Teléfono: con el código de país, p. ej. +6591234567.",
 				"DATE_OF_BIRTH": "Fecha de nacimiento: una fecha, o AAAA-MM-DD.",
-				"EMPLOYMENT_TYPE": "Tipo de empleo: Full-time, Part-time, Contract o Intern.",
+				"EMPLOYMENT_TYPE": "Tipo de empleo: Contract o Intern, o vacío. El tiempo completo o parcial lo deciden las condiciones de empleo.",
 				"HIRE_DATE": "Fecha de contratación: una fecha, o AAAA-MM-DD.",
 				"PROBATION_END_DATE": "Fin del periodo de prueba: no antes de la contratación.",
 				"general": "La fila 1 debe conservar los nombres de columna de la plantilla. No combines celdas.",
@@ -3096,7 +3096,7 @@
 				"INVALID_DATE": "{{column}}: usa una celda de fecha o AAAA-MM-DD, p. ej. 2026-01-05.",
 				"DATE_NOT_PAST": "La fecha de nacimiento debe ser pasada.",
 				"PROBATION_BEFORE_HIRE": "El periodo de prueba no puede terminar antes de la contratación.",
-				"UNKNOWN_EMPLOYMENT_TYPE": "Usa Full-time, Part-time, Contract o Intern.",
+				"UNKNOWN_EMPLOYMENT_TYPE": "Usa Contract o Intern, o déjalo vacío. El tiempo completo o parcial lo deciden las condiciones de empleo.",
 				"BRANCH_NOT_FOUND": "Ninguna sucursal tiene este nombre o código. Cópialo de la hoja Lists.",
 				"DEPARTMENT_NOT_FOUND": "Esta sucursal no tiene un departamento con este nombre.",
 				"JOB_TITLE_NOT_FOUND": "Este departamento no tiene un puesto con este nombre.",
@@ -3114,6 +3114,7 @@
 				"EMPLOYEE_CODE_NOT_FOUND": "Nadie en esta empresa tiene este código de empleado. Déjalo en blanco para alguien nuevo.",
 				"EMAIL_OF_ANOTHER_MEMBER": "Este correo pertenece a otra persona de la empresa, no a quien tiene este código de empleado.",
 				"POSSIBLE_EXISTING_MEMBER": "Alguien de la empresa ya tiene este nombre con otro correo. Si es esa persona, añade su código de empleado para corregir su correo.",
+				"EMPLOYMENT_TYPE_FOLLOWS_TERMS": "El tiempo completo o parcial lo deciden las condiciones de empleo, así que se ignoró la celda. Asigna sus condiciones en su perfil después de importar.",
 				"EMPLOYMENT_TERMS_NOT_FOUND": "La empresa no tiene condiciones de empleo con este nombre. Elígelas de la lista.",
 				"EMPLOYMENT_TERMS_INACTIVE": "Estas condiciones de empleo están inactivas; no se pueden asignar a nadie nuevo."
 			},
@@ -3236,6 +3237,7 @@
 				"INTERN": "Becario"
 			},
 			"employmentTypeFromTerms": "Según las condiciones",
+			"employmentTypeFollowsTerms": "El tiempo completo o parcial lo deciden sus condiciones de empleo. Cambia sus condiciones, o indica sus propias horas, en su lugar.",
 			"hireDate": "Fecha de contratación",
 			"probationEndDate": "Fin del periodo de prueba",
 			"probationBeforeHire": "Elige una fecha igual o posterior a la fecha de contratación.",

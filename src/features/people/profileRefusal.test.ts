@@ -68,6 +68,11 @@ describe("profileRefusal, adding or editing", () => {
 			"jobTitleId",
 			"people.form.jobTitleNeedsDepartment",
 		],
+		[
+			"400 EMPLOYMENT_TYPE_FOLLOWS_TERMS",
+			"employmentType",
+			"people.form.employmentTypeFollowsTerms",
+		],
 	] as const)("puts %s on %s", (code, field, key) => {
 		expect(profileRefusal(fromCode(code), t)).toEqual({
 			fields: { [field]: copy(key) },
@@ -180,10 +185,7 @@ describe("profileRefusal, editing only", () => {
 describe("profileActionRefusal", () => {
 	it.each([
 		["409 CANNOT_DEACTIVATE_SELF", "people.form.selfDeactivation"],
-		[
-			"409 SYSTEM_OWNER_CANNOT_BE_DEACTIVATED",
-			"people.form.ownerDeactivation",
-		],
+		["409 SYSTEM_OWNER_CANNOT_BE_DEACTIVATED", "people.form.ownerDeactivation"],
 		["409 INVITATION_NOT_PENDING", "people.profile.invitationNotPending"],
 		["502 INVITATION_NOT_DELIVERED", "people.form.invitationNotDelivered"],
 		["404 MEMBER_PROFILE_NOT_FOUND", "people.form.profileMissing"],
