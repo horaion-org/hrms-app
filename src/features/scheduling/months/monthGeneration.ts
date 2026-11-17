@@ -5,6 +5,9 @@ import type {
 	ScheduleMonth,
 	WeekState,
 } from "@/features/scheduling/months/api";
+import type { DatesPlanWeek } from "@/features/scheduling/dates/api";
+import { periodStartingOn } from "@/features/scheduling/periods";
+import type { ScheduleBody } from "@/features/scheduling/schedules/api";
 import { EARLIER_WEEK_FAILED } from "@/features/scheduling/schedules/scheduleRefusal";
 import { rosterPartBefore } from "@/features/scheduling/dates/datesSetup";
 import type { WeekChoiceIds } from "@/features/scheduling/weekChoice";
@@ -254,3 +257,50 @@ export const startingWeeksOf = (
 
 /** The name of a week's draft the app saves: the same words the API names the weeks it creates with. */
 export const weekNameOf = (monday: string): string => `Week of ${monday}`;
+
+/**
+ * What saving a month run's first week as a draft sends, to add its starting
+ * point before the run: the week's name and its choice, with Setup's
+ * settings. A week that has begun is generated from today (owner, API
+ * ADR-0115), so its draft covers today to Sunday.
+ */
+export const startingWeekBody = (
+	monday: string,
+	branchToday: string,
+	weekChoice: WeekChoiceIds,
+	setup: MonthSetup
+): ScheduleBody => ({
+	name: weekNameOf(monday),
+	periodStart: monday,
+	...(monday < branchToday
+		? { coveredFrom: branchToday, coveredTo: periodStartingOn(monday).end }
+		: {}),
+	includeLeave: setup.includeLeave,
+	includedShiftIds: weekChoice.shiftIds,
+	includedConstraintIds: weekChoice.constraintIds,
+});
+
+/**
+ * What saving a dates run's first new part as a draft sends, covering its new
+ * days, which the run then generates: the name Setup holds (else the week's
+ * name), the part's choice and Setup's settings. None while the part has no
+ * new days.
+ */
+export const datesStartBody = (
+	datesStart: Pick<DatesPlanWeek, "periodStart" | "newFrom" | "newTo">,
+	name: string,
+	weekChoice: WeekChoiceIds,
+	setup: MonthSetup
+): ScheduleBody | undefined => {
+	const { periodStart, newFrom, newTo } = datesStart;
+	if (!newFrom || !newTo) return undefined;
+	return {
+		name: name.trim() || weekNameOf(periodStart),
+		periodStart,
+		coveredFrom: newFrom,
+		coveredTo: newTo,
+		includeLeave: setup.includeLeave,
+		includedShiftIds: weekChoice.shiftIds,
+		includedConstraintIds: weekChoice.constraintIds,
+	};
+};

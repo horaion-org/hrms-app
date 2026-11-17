@@ -6,8 +6,10 @@ import {
 	ungeneratedMonthFixture,
 } from "@/features/scheduling/months/fixtures";
 import type { MonthWeek } from "@/features/scheduling/months/api";
+import { datesPlanFixture } from "@/features/scheduling/dates/fixtures";
 import {
 	coveredWeeks,
+	datesStartBody,
 	generateMonthBody,
 	handChangedCoveredWeeks,
 	isGenerating,
@@ -15,6 +17,7 @@ import {
 	retryWeeksOf,
 	showsBeforeGenerate,
 	showsRegenerate,
+	startingWeekBody,
 	startingWeekOf,
 	startingWeeksOf,
 	weekNameOf,
@@ -522,5 +525,101 @@ describe("handChangedCoveredWeeks", () => {
 				(week) => week.periodStart
 			)
 		).toEqual(["2026-12-14"]);
+	});
+});
+
+/** The whole setup of a Department: every shift and constraint. */
+const EVERYTHING = { shiftIds: ["sh-1", "sh-2"], constraintIds: ["c-1"] };
+/** A week's own choice, leaving one shift out. */
+const ONE_SHIFT = { shiftIds: ["sh-1"], constraintIds: ["c-1"] };
+
+describe("startingWeekBody", () => {
+	it("given_aWeekNotBegunYet_when_saved_then_theWholeWeekWithNoCoveredDays", () => {
+		expect(
+			startingWeekBody("2026-12-07", "2026-12-01", EVERYTHING, {
+				includeLeave: true,
+			})
+		).toStrictEqual({
+			name: "Week of 2026-12-07",
+			periodStart: "2026-12-07",
+			includeLeave: true,
+			includedShiftIds: ["sh-1", "sh-2"],
+			includedConstraintIds: ["c-1"],
+		});
+	});
+
+	it("given_aWeekStartingToday_when_saved_then_stillTheWholeWeek", () => {
+		expect(
+			startingWeekBody("2026-12-07", "2026-12-07", ONE_SHIFT, {
+				includeLeave: false,
+			})
+		).toStrictEqual({
+			name: "Week of 2026-12-07",
+			periodStart: "2026-12-07",
+			includeLeave: false,
+			includedShiftIds: ["sh-1"],
+			includedConstraintIds: ["c-1"],
+		});
+	});
+
+	it("given_aWeekThatBeganOnMonday_when_savedOnThursday_then_coversThursdayToSunday", () => {
+		expect(
+			startingWeekBody("2026-11-09", "2026-11-12", EVERYTHING, {
+				includeLeave: true,
+			})
+		).toStrictEqual({
+			name: "Week of 2026-11-09",
+			periodStart: "2026-11-09",
+			coveredFrom: "2026-11-12",
+			coveredTo: "2026-11-15",
+			includeLeave: true,
+			includedShiftIds: ["sh-1", "sh-2"],
+			includedConstraintIds: ["c-1"],
+		});
+	});
+});
+
+describe("datesStartBody", () => {
+	const firstPart = datesPlanFixture().weeks[0]!;
+
+	it("given_noNameInSetup_when_saved_then_theWeeksNameCoveringItsNewDays", () => {
+		expect(
+			datesStartBody(firstPart, "  ", EVERYTHING, { includeLeave: true })
+		).toStrictEqual({
+			name: "Week of 2026-11-16",
+			periodStart: "2026-11-16",
+			coveredFrom: "2026-11-19",
+			coveredTo: "2026-11-22",
+			includeLeave: true,
+			includedShiftIds: ["sh-1", "sh-2"],
+			includedConstraintIds: ["c-1"],
+		});
+	});
+
+	it("given_aNameInSetup_when_saved_then_thatNameTrimmedWithThePartsChoice", () => {
+		expect(
+			datesStartBody(firstPart, " Year-end gala ", ONE_SHIFT, {
+				includeLeave: false,
+			})
+		).toStrictEqual({
+			name: "Year-end gala",
+			periodStart: "2026-11-16",
+			coveredFrom: "2026-11-19",
+			coveredTo: "2026-11-22",
+			includeLeave: false,
+			includedShiftIds: ["sh-1"],
+			includedConstraintIds: ["c-1"],
+		});
+	});
+
+	it("given_aPartWithoutNewDays_when_saved_then_nothingToSend", () => {
+		expect(
+			datesStartBody(
+				{ ...firstPart, newFrom: null, newTo: null },
+				"",
+				EVERYTHING,
+				{ includeLeave: true }
+			)
+		).toBeUndefined();
 	});
 });
