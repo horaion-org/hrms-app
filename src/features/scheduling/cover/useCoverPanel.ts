@@ -74,7 +74,17 @@ export type CoverPanelInput = {
 
 /** Where the list stands: what the panel shows in place of the options. */
 export type CoverPanelStatus =
-	"loading" | "rosterMoved" | "failed" | "closed" | "nobody" | "options";
+	| "loading"
+	| "rosterMoved"
+	| "notEditable"
+	| "failed"
+	| "closed"
+	| "nobody"
+	| "options";
+
+/** The list's refusals that have a status of their own; any other refusal is a plain failure. */
+const REFUSAL_STATUSES: Partial<Record<RosterChangeRefusal, CoverPanelStatus>> =
+	{ revision: "rosterMoved", notEditable: "notEditable" };
 
 export type CoverPanel = {
 	status: CoverPanelStatus;
@@ -116,9 +126,7 @@ const statusOf = (
 	options: CoverOptions | undefined
 ): CoverPanelStatus => {
 	if (query.error)
-		return rosterChangeRefusal(query.error) === "revision"
-			? "rosterMoved"
-			: "failed";
+		return REFUSAL_STATUSES[rosterChangeRefusal(query.error)] ?? "failed";
 	if (!options || query.isPending) return "loading";
 	if (options.gap.shortBy === 0) return "closed";
 	return options.options.length === 0 ? "nobody" : "options";

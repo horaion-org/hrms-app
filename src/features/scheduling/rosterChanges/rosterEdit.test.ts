@@ -229,6 +229,26 @@ describe("swapPartners", () => {
 
 		expect(partners.available.every((row) => row.shift !== null)).toBe(true);
 	});
+
+	it("given_someoneOnTheSameShiftThatDay_when_partnersAreListed_then_notOfferedSinceTheSwapChangesNothing", () => {
+		const aisha = dayOf("m-1", WEDNESDAY);
+		const sameShift: ScheduleAssignment = {
+			...dayOf("m-3", WEDNESDAY),
+			shift: aisha.shift,
+		};
+		const rosterWithTwinShift = roster.map((row) =>
+			row.assignmentId === sameShift.assignmentId ? sameShift : row
+		);
+
+		const partners = swapPartners(rosterWithTwinShift, aisha);
+
+		expect(partners.available.map((row) => row.member?.membershipId)).toEqual(
+			[]
+		);
+		expect(partners.unavailable.map((row) => row.member?.membershipId)).toEqual(
+			["m-2"]
+		);
+	});
 });
 
 describe("applyGate and canApply", () => {

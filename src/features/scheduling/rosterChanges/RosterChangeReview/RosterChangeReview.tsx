@@ -15,7 +15,11 @@ import {
 import { rosterCellText } from "@/features/scheduling/rosterChanges/cellText";
 import type { CheckNames } from "@/features/scheduling/rosterChanges/checkSentence";
 import { applyGate } from "@/features/scheduling/rosterChanges/rosterEdit";
-import type { RosterChangeRefusal } from "@/features/scheduling/rosterChanges/rosterChangeRefusal";
+import {
+	refusalNextStep,
+	type RefusalNextStep,
+	type RosterChangeRefusal,
+} from "@/features/scheduling/rosterChanges/rosterChangeRefusal";
 
 export type RosterChangeReviewProps = {
 	/** The API's preview; undefined while it loads. */
@@ -34,13 +38,19 @@ export type RosterChangeReviewProps = {
 	remarkHint?: string;
 	/** Says rules aren't re-checked; off where the panel already says so in its own words (Find cover). */
 	showsRulesNote?: boolean;
-	/** Why the preview couldn't be read: "revision" (the roster moved) asks for a reload, anything else a retry. */
+	/** Why the preview couldn't be read, in the refusal's own words; a retry only where one can work (refusalNextStep). */
 	previewRefusal?: RosterChangeRefusal;
 	/** Reads the preview again, or reloads the roster after a "revision" refusal. */
 	onRetryPreview?: () => void;
 };
 
 const key = "scheduling.rosterEdit";
+
+/** The button under a refused preview, for each next step. */
+const NEXT_STEP_LABELS = {
+	reload: `${key}.error.reload`,
+	tryAgain: `${key}.tryAgain`,
+} as const satisfies Record<RefusalNextStep, string>;
 
 /**
  * What a change, or the undo of one, would do before it is applied: each day
@@ -68,6 +78,7 @@ export const RosterChangeReview = ({
 	const remarkId = useId();
 	const remarkIds = formRowIds(remarkId);
 	const gate = applyGate(preview?.checks ?? []);
+	const nextStep = previewRefusal && refusalNextStep(previewRefusal);
 	const needsRemark = gate.needsRemark || remarkRequired;
 	return (
 		<div className="flex flex-col gap-3">
@@ -143,15 +154,13 @@ export const RosterChangeReview = ({
 			{previewRefusal && (
 				<div className="flex flex-col items-start gap-2" role="alert">
 					<p className="text-sm text-error-700">
-						{previewRefusal === "revision"
-							? t(`${key}.error.revision`)
-							: t(`${key}.previewFailed`)}
+						{previewRefusal === "failed"
+							? t(`${key}.previewFailed`)
+							: t(`${key}.error.${previewRefusal}`)}
 					</p>
-					{onRetryPreview && (
+					{onRetryPreview && nextStep && (
 						<Button variant="textlink" onClick={onRetryPreview}>
-							{previewRefusal === "revision"
-								? t(`${key}.error.reload`)
-								: t(`${key}.tryAgain`)}
+							{t(NEXT_STEP_LABELS[nextStep])}
 						</Button>
 					)}
 				</div>

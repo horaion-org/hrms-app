@@ -30,10 +30,7 @@ import {
 	handChangedCoveredWeeks,
 	refusedWeeks,
 } from "@/features/scheduling/months/monthGeneration";
-import {
-	formatMonthName,
-	monthOf,
-} from "@/features/scheduling/months/monthWeeks";
+import { formatMonth, monthOf } from "@/features/scheduling/months/monthWeeks";
 import { weekChangedRefusal } from "@/features/scheduling/months/monthCopy";
 import { withRefusedWeeks } from "@/features/scheduling/months/refusedWeeksState";
 import { useGenerateMonth } from "@/features/scheduling/months/useGenerateMonth";
@@ -528,7 +525,7 @@ export const CreateSchedule = (): FunctionComponent => {
 					? t("scheduling.week.problemNote")
 					: nothingToGenerate
 						? t("scheduling.months.generate.nothingToGenerate", {
-								month: formatMonthName(draftMonth, formattingLocale(i18n)),
+								month: formatMonth(draftMonth, formattingLocale(i18n)),
 							})
 						: canGenerate
 							? // The month is still being read: no note.
@@ -645,7 +642,7 @@ export const CreateSchedule = (): FunctionComponent => {
 			{isLast && canGenerateWeek && (
 				<p className="mt-3 text-right text-sm text-neutral-700">
 					{t("scheduling.months.generate.draftGeneratesMonth", {
-						month: formatMonthName(draftMonth, formattingLocale(i18n)),
+						month: formatMonth(draftMonth, formattingLocale(i18n)),
 					})}
 				</p>
 			)}

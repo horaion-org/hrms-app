@@ -11,6 +11,7 @@ import {
 	defaultMonthOf,
 	defaultTicksOf,
 	skippedWeeksOf,
+	suggestedMonthOf,
 	tickableWeekOf,
 	tickableWeeksOf,
 	tickedRangesOf,
@@ -259,6 +260,66 @@ describe("defaultMonthOf", () => {
 
 		expect(defaultMonthOf(["2026-11"], TODAY, [november])).toBe("2026-11");
 	});
+});
+
+describe("suggestedMonthOf", () => {
+	const MONTHS = ["2026-11", "2026-12", "2027-01"];
+	/** Kitchen's November with every week left decided: December is the month to suggest. */
+	const decidedNovember = monthSummaryFixture({
+		weeks: [
+			"2026-11-02",
+			"2026-11-09",
+			STARTED_MONDAY,
+			NEXT_MONDAY,
+			"2026-11-30",
+		].map((periodStart) => ({
+			periodStart,
+			state: "PUBLISHED" as const,
+			scheduleId: "s-1",
+		})),
+	});
+
+	it.each([
+		{
+			case: "nothing settled",
+			monthSettled: false,
+			departmentId: "d-1",
+			summaries: [decidedNovember],
+			expected: "2026-12",
+		},
+		{
+			case: "another Department's summary",
+			monthSettled: false,
+			departmentId: "d-2",
+			summaries: [decidedNovember],
+			expected: "2026-11",
+		},
+		{
+			case: "a settled month (back from Generate, or named in the link)",
+			monthSettled: true,
+			departmentId: "d-1",
+			summaries: [decidedNovember],
+			expected: undefined,
+		},
+		{
+			case: "summaries not read yet",
+			monthSettled: false,
+			departmentId: "d-1",
+			summaries: undefined,
+			expected: undefined,
+		},
+	])(
+		"given_$case_when_suggested_then_$expected",
+		({ monthSettled, departmentId, summaries, expected }) => {
+			expect(
+				suggestedMonthOf(MONTHS, TODAY, {
+					monthSettled,
+					departmentId,
+					summaries,
+				})
+			).toBe(expected);
+		}
+	);
 });
 
 describe("badgeOf", () => {

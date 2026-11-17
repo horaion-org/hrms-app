@@ -4096,8 +4096,8 @@
 				"fixLabel": "Corregir {{name}}",
 				"makeStricter": "Hacer más estricta",
 				"changeHere": "Cambiar aquí",
-				"capacity_one": "Solo {{count}} persona tiene {{titles}}, pero pide {{headcount}}, así que nunca se puede cumplir.",
-				"capacity_other": "Solo {{count}} personas tienen {{titles}}, pero pide {{headcount}}, así que nunca se puede cumplir.",
+				"capacity_one": "Pide {{headcount}}, pero solo {{count}} persona tiene {{titles}}, así que sus turnos quedarán cortos hasta que más personas lo tengan o se baje el número.",
+				"capacity_other": "Pide {{headcount}}, pero solo {{count}} personas tienen {{titles}}, así que sus turnos quedarán cortos hasta que más personas lo tengan o se baje el número.",
 				"locks": {
 					"LOCKED": "Siempre se aplica",
 					"DEFAULT": "Marcada por defecto",
@@ -4277,7 +4277,8 @@
 				"timeZone": "Zona horaria",
 				"byAt": "{{name}} · {{at}}"
 			},
-			"leaveWithTime": "{{leave}} {{time}}"
+			"leaveWithTime": "{{leave}} {{time}}",
+			"regenerateWeek": "Regenerar esta semana"
 		},
 		"myRoster": {
 			"title": "Mi cuadrante · {{department}} · {{period}}",
@@ -4731,12 +4732,14 @@
 				"revision": "Alguien cambió este cuadrante después de que lo abrieras. Revisa tu cambio de nuevo.",
 				"reload": "Volver a cargar",
 				"checksChanged": "Algo cambió desde la comprobación (permisos, disponibilidad o el equipo). Revisa las comprobaciones.",
-				"notEditable": "Este cuadrante no se puede cambiar ahora.",
+				"notEditable": "Este cuadrante no se puede cambiar ahora: solo se puede cambiar un cuadrante generado o publicado. Vuelve a cargar la página para ver en qué punto está.",
 				"refused": "Este cambio no se puede aplicar. Revisa las comprobaciones.",
 				"undoBlocked": "Este cambio ya no se puede deshacer.",
 				"fromLeave": "Lo hizo una decisión de permiso. Cancela el permiso en Permisos.",
 				"forbidden": "Ya no tienes permiso para cambiar este cuadrante.",
-				"failed": "No pudimos aplicar el cambio. Inténtalo de nuevo."
+				"failed": "No pudimos aplicar el cambio. Inténtalo de nuevo.",
+				"invalid": "Este cambio no se puede hacer: no cambia nada, o nombra un día o un turno que no está en este cuadrante. Elige otro cambio.",
+				"fromOffer": "Este cambio vino de una oferta de cobertura que la persona aceptó, así que no se puede deshacer. Haz un cambio nuevo en el cuadrante."
 			},
 			"undoTitle": "¿Deshacer este cambio?",
 			"undoDescription": "Deshacer es un cambio de vuelta: se comprueba igual, y los permisos o la disponibilidad pueden haber cambiado desde entonces.",
@@ -5052,7 +5055,9 @@
 			"collapseAll": "Plegar todo",
 			"expandAll": "Desplegar todo",
 			"attentionOutside_one": "{{count}} más necesita atención fuera de este filtro.",
-			"attentionOutside_other": "{{count}} más necesitan atención fuera de este filtro."
+			"attentionOutside_other": "{{count}} más necesitan atención fuera de este filtro.",
+			"shortRules_one": "{{count}} regla de personal pide más personas de las que tienen sus puestos. Los cuadrantes la siguen usando, pero sus turnos quedarán cortos hasta que más personas tengan los puestos o se baje el número:",
+			"shortRules_other": "{{count}} reglas de personal piden más personas de las que tienen sus puestos. Los cuadrantes las siguen usando, pero sus turnos quedarán cortos hasta que más personas tengan los puestos o se bajen los números:"
 		},
 		"readiness": {
 			"departmentsNotReady_one": "{{count}} departamento no está listo para planificar:",
@@ -5314,10 +5319,12 @@
 				"handChanged_other": "{{weeks}} se cambiaron a mano.",
 				"replaced": "Esos cambios se reemplazan cuando el nuevo cuadrante esté listo.",
 				"keptUntilReady": "El cuadrante actual se mantiene hasta que el nuevo esté listo. Si la generación falla, se queda como está.",
-				"chosenTitle": "¿Generar de nuevo estas semanas?",
 				"chosenConfirm": "Generar de nuevo",
 				"chosenWeeks_one": "La semana del {{first}} y la semana siguiente se vuelven a calcular.",
-				"chosenWeeks_other": "La semana del {{first}} y las {{count}} semanas siguientes se vuelven a calcular."
+				"chosenWeeks_other": "La semana del {{first}} y las {{count}} semanas siguientes se vuelven a calcular.",
+				"chosenTitle_one": "¿Generar esta semana de nuevo?",
+				"chosenTitle_other": "¿Generar de nuevo estas semanas?",
+				"chosenWeeks_zero": "La semana del {{first}} se calcula de nuevo."
 			}
 		},
 		"rosterHours": {

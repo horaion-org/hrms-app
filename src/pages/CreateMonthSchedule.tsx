@@ -8,7 +8,6 @@ import {
 	previousBefore,
 } from "@/features/scheduling/dates/datesSetup";
 import type { PreviousWeek } from "@/features/scheduling/startingContext/startingGrid";
-import { formatPeriod } from "@/features/scheduling/periods";
 import { Navigate, useNavigate, useSearch } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { useCallback, useId, useState } from "react";
@@ -45,15 +44,17 @@ import {
 	type MonthSetup,
 } from "@/features/scheduling/months/monthGeneration";
 import {
-	formatMonthName,
+	formatMonth,
 	formatWeekDates,
 	monthChoicesFrom,
 	monthOf,
 	summaryRange,
 } from "@/features/scheduling/months/monthWeeks";
 import {
+	datesRunHint,
 	monthUsesLine,
 	setupNextNoteOf,
+	tickedWeeksHint,
 	weekRangeText,
 } from "@/features/scheduling/months/monthCopy";
 import { hasRoster } from "@/features/scheduling/months/weekStateLooks";
@@ -62,8 +63,8 @@ import {
 	chosenWeeksNow,
 	defaultMonthOf,
 	defaultTicksOf,
+	suggestedMonthOf,
 	tickableWeeksOf,
-	tickedRangesOf,
 } from "@/features/scheduling/months/weekTicks";
 import { withRefusedWeeks } from "@/features/scheduling/months/refusedWeeksState";
 import {
@@ -179,6 +180,10 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 		scheduleId: string;
 		dialog: StartingPointDialog;
 	}>();
+	// Once its dialog has opened, the saved draft opens nothing by itself again (going back to Setup remounts it).
+	const forgetSavedStart = useCallback((): void => {
+		setSavedStart(undefined);
+	}, []);
 	const [problem, setProblem] = useState("");
 	const setupFormId = useId();
 	// Another Department or month has other weeks: its choices and ticks start again from the defaults.
@@ -236,13 +241,11 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 				allowedHere("schedule:read")
 		)
 	);
-	const suggestedMonth =
-		summaries.data &&
-		defaultMonthOf(
-			months,
-			todayIso,
-			summaries.data.filter((summary) => summary.departmentId === departmentId)
-		);
+	const suggestedMonth = suggestedMonthOf(months, todayIso, {
+		monthSettled: search.month !== undefined || setup !== undefined,
+		departmentId,
+		summaries: summaries.data,
+	});
 	// "Started" follows the branch's today, as the API's "over" does; the browser's date only without its time zone.
 	const branchToday = scheduleMonth.data?.timeZone
 		? isoDateIn(scheduleMonth.data.timeZone, today)
@@ -402,7 +405,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			},
 		});
 	};
-	const monthName = month ? formatMonthName(month, language) : "";
+	const monthName = month ? formatMonth(month, language) : "";
 	const everything =
 		shifts.data && constraints.data
 			? allOf(shifts.data, constraints.data)
@@ -506,6 +509,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 						? startingDraft.schedule.nonWorkingDayTypes
 						: []
 				}
+				onOpenedOnStart={forgetSavedStart}
 			/>
 		) : monthBefore.isPending ? undefined : (
 			// Before the first week's draft exists: the week page's two notices; each button saves the draft first.
@@ -552,6 +556,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 							laterDrafts[laterDraftIds.indexOf(week.scheduleId)]?.data
 								?.nonWorkingDayTypes ?? []
 						}
+						onOpenedOnStart={forgetSavedStart}
 					/>
 				) : (
 					// Before the week's draft exists: the button saves it first, then opens its grid.
@@ -603,6 +608,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 				scheduleId={datesDraftId}
 				showsHours={false}
 				unit={unit}
+				onOpenedOnStart={forgetSavedStart}
 			/>
 		) : (datesStartOnMonday && monthBefore.isPending) ||
 		  !showsDatesStart ? undefined : (
@@ -652,28 +658,6 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 		},
 		t
 	);
-	// The Generate step names the ticked weeks, joined where they touch, as Setup's list does.
-	const tickedHint = t("scheduling.months.generate.panel.hintChosen", {
-		count: ticked.length,
-		ranges: new Intl.ListFormat(language, { type: "conjunction" }).format(
-			tickedRangesOf(ticked).map((range) => weekRangeText(range, language, t))
-		),
-	});
-	// The days a dates run generates, from its first new day to its last.
-	const newDatesWeeks =
-		plan?.weeks.filter((week) => week.newFrom !== null) ?? [];
-	const firstNewDay = newDatesWeeks[0]?.newFrom;
-	const lastNewDay = newDatesWeeks[newDatesWeeks.length - 1]?.newTo;
-	const datesHint =
-		plan && firstNewDay && lastNewDay
-			? t("scheduling.dates.generate.hint", {
-					count: plan.newDays,
-					range: formatPeriod(
-						{ start: firstNewDay, end: lastNewDay },
-						language
-					),
-				})
-			: "";
 	const generateDatesNow = async (values: MonthSetupValues): Promise<void> => {
 		if (!plan || !everything) return;
 		setProblem("");
@@ -886,7 +870,9 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 										byDates ? datesGeneration.isPending : generation.isPending
 									}
 									hint={
-										byDates ? datesHint : ticked.length > 0 ? tickedHint : ""
+										byDates
+											? datesRunHint(plan, language, t)
+											: tickedWeeksHint(ticked, language, t)
 									}
 									waiting={
 										byDates

@@ -4296,8 +4296,8 @@
 				"fixLabel": "Fix {{name}}",
 				"makeStricter": "Make stricter",
 				"changeHere": "Change here",
-				"capacity_one": "Only {{count}} person holds {{titles}}, but it asks for {{headcount}}, so it can never be met.",
-				"capacity_other": "Only {{count}} people hold {{titles}}, but it asks for {{headcount}}, so it can never be met.",
+				"capacity_one": "It asks for {{headcount}}, but only {{count}} person holds {{titles}}, so its shifts will be short until more people hold it or the number is lowered.",
+				"capacity_other": "It asks for {{headcount}}, but only {{count}} people hold {{titles}}, so its shifts will be short until more people hold it or the number is lowered.",
 				"locks": {
 					"LOCKED": "Always applies",
 					"DEFAULT": "Ticked by default",
@@ -4477,7 +4477,8 @@
 				"timeZone": "Time zone",
 				"byAt": "{{name}} · {{at}}"
 			},
-			"leaveWithTime": "{{leave}} {{time}}"
+			"leaveWithTime": "{{leave}} {{time}}",
+			"regenerateWeek": "Regenerate this week"
 		},
 		"myRoster": {
 			"title": "My roster · {{department}} · {{period}}",
@@ -4931,12 +4932,14 @@
 				"revision": "Someone changed this roster since you opened it. Check your change again.",
 				"reload": "Reload roster",
 				"checksChanged": "Something changed since the check (leave, availability or the team). Review the checks again.",
-				"notEditable": "This roster can’t be changed now.",
+				"notEditable": "This roster can’t be changed now: only a generated or published roster can be. Reload the page to see where it stands.",
 				"refused": "This change can’t be applied. Review the checks.",
 				"undoBlocked": "This change can’t be undone any more.",
 				"fromLeave": "Made by a leave decision. Cancel the leave in Leave instead.",
 				"forbidden": "You no longer have permission to change this roster.",
-				"failed": "We couldn’t apply the change. Try again."
+				"failed": "We couldn’t apply the change. Try again.",
+				"invalid": "This change can’t be made: it changes nothing, or names a day or shift that isn’t on this roster. Choose a different change.",
+				"fromOffer": "This change came from a cover offer the person agreed to, so it can’t be undone. Make a new change on the roster instead."
 			},
 			"undoTitle": "Undo this change?",
 			"undoDescription": "An undo is a change back: it is checked the same way, and leave or availability may have changed since.",
@@ -5252,7 +5255,9 @@
 			"collapseAll": "Collapse all",
 			"expandAll": "Expand all",
 			"attentionOutside_one": "{{count}} more needs attention outside this filter.",
-			"attentionOutside_other": "{{count}} more need attention outside this filter."
+			"attentionOutside_other": "{{count}} more need attention outside this filter.",
+			"shortRules_one": "{{count}} staffing rule asks for more people than hold its job titles. Rosters still use it, but its shifts will be short until more people hold the titles or the number is lowered:",
+			"shortRules_other": "{{count}} staffing rules ask for more people than hold their job titles. Rosters still use them, but their shifts will be short until more people hold the titles or the numbers are lowered:"
 		},
 		"readiness": {
 			"departmentsNotReady_one": "{{count}} department isn’t ready to schedule:",
@@ -5514,10 +5519,12 @@
 				"handChanged_other": "{{weeks}} were changed by hand.",
 				"replaced": "Those changes are replaced once the new roster is ready.",
 				"keptUntilReady": "The current roster stays until the new one is ready. If generating fails, it stays as it is.",
-				"chosenTitle": "Generate these weeks again?",
 				"chosenConfirm": "Generate again",
 				"chosenWeeks_one": "The week of {{first}} and the week after it are worked out again.",
-				"chosenWeeks_other": "The week of {{first}} and the {{count}} weeks after it are worked out again."
+				"chosenWeeks_other": "The week of {{first}} and the {{count}} weeks after it are worked out again.",
+				"chosenTitle_one": "Generate this week again?",
+				"chosenTitle_other": "Generate these weeks again?",
+				"chosenWeeks_zero": "The week of {{first}} is worked out again."
 			}
 		},
 		"rosterHours": {

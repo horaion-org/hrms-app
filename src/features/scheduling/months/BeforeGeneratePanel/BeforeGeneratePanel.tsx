@@ -6,7 +6,7 @@ import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { AlertFilledIcon, TickFilledIcon } from "@/components/ui/Icon";
 import type { MonthGenerationCheck } from "@/features/scheduling/months/api";
-import { formatMonthName } from "@/features/scheduling/months/monthWeeks";
+import { formatMonth } from "@/features/scheduling/months/monthWeeks";
 
 /** A link a line offers, drawn by the page with the label the panel chose. */
 export type PanelLink = (label: string) => ReactNode;
@@ -94,7 +94,7 @@ export const BeforeGeneratePanel = ({
 	const titleId = useId();
 	const noteId = useId();
 	const language = formattingLocale(i18n);
-	const monthName = formatMonthName(month, language);
+	const monthName = formatMonth(month, language);
 	const department = check.departmentName;
 	const hasShift = check.shiftCount > 0;
 	const staffing = check.staffingConstraint;

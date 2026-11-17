@@ -68,7 +68,7 @@ describe("ConstraintRow", () => {
 		expect(screen.getByText("Needs attention")).toBeVisible();
 		expect(
 			screen.getByText(
-				"Only 2 people hold Supervisor, but it asks for 3, so it can never be met."
+				"It asks for 3, but only 2 people hold Supervisor, so its shifts will be short until more people hold it or the number is lowered."
 			)
 		).toBeVisible();
 		await user.click(screen.getByRole("button", { name: `Fix ${own.name}` }));

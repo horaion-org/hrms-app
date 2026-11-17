@@ -10,6 +10,7 @@ import type { DepartmentPath } from "@/common/companyPath";
 import { dateTimeFormatIn } from "@/common/dateTimeFormatIn";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
+import { mondayOf } from "@/common/weeks";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { ArrowLeftIcon } from "@/components/ui/Icon";
@@ -26,11 +27,7 @@ import {
 } from "@/features/scheduling/roster/GeneratedRoster";
 import { GenerationFailurePanel } from "@/features/scheduling/roster/GenerationFailurePanel";
 import { scheduleMonthQuery } from "@/features/scheduling/months/api";
-import {
-	formatMonth,
-	formatMonthName,
-	monthOf,
-} from "@/features/scheduling/months/monthWeeks";
+import { formatMonth, monthOf } from "@/features/scheduling/months/monthWeeks";
 import {
 	listsWeekParts,
 	rosterWeekLink,
@@ -451,7 +448,7 @@ const ApiSchedule = ({
 			permissions.mayRead
 		)
 	).data;
-	const monthName = month ? formatMonthName(month, formattingLocale(i18n)) : "";
+	const monthName = month ? formatMonth(month, formattingLocale(i18n)) : "";
 	if (state.status !== "ready")
 		return (
 			<>
@@ -795,9 +792,11 @@ const ApiSchedule = ({
 				/>
 			)}
 			{openDialog === "regenerate" && scheduleMonth && (
+				// The week's page regenerates this week only; the month page regenerates the month.
 				<RegenerateMonthDialog
 					companyId={companyId}
 					month={scheduleMonth}
+					weeks={[mondayOf(schedule.periodStart)]}
 					onClose={closeDialog}
 				/>
 			)}

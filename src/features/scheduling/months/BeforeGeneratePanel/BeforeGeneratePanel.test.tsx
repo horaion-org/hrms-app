@@ -35,14 +35,14 @@ const renderPanel = (
 };
 
 const generate = (): HTMLElement =>
-	screen.getByRole("button", { name: "Generate December" });
+	screen.getByRole("button", { name: "Generate December 2026" });
 
 describe("BeforeGeneratePanel", () => {
 	it("given_aReadyDepartmentWithLeave_when_rendered_then_threeLinesAndGenerateRuns", async () => {
 		const { onGenerate } = renderPanel();
 
 		expect(
-			screen.getByRole("heading", { name: "Before you generate December" })
+			screen.getByRole("heading", { name: "Before you generate December 2026" })
 		).toBeInTheDocument();
 		expect(screen.getByText("Kitchen has 3 shifts.")).toBeInTheDocument();
 		expect(
@@ -52,7 +52,7 @@ describe("BeforeGeneratePanel", () => {
 		).toBeInTheDocument();
 		expect(
 			screen.getByText(
-				"2 people have approved leave in December. 1 more request is waiting for a decision."
+				"2 people have approved leave in December 2026. 1 more request is waiting for a decision."
 			)
 		).toBeInTheDocument();
 		await userEvent.click(generate());
@@ -69,7 +69,7 @@ describe("BeforeGeneratePanel", () => {
 
 		expect(
 			screen.getByText(
-				"No approved leave in December. If people plan to take leave, approve it first: leave approved later changes the roster. 1 request is waiting for a decision."
+				"No approved leave in December 2026. If people plan to take leave, approve it first: leave approved later changes the roster. 1 request is waiting for a decision."
 			)
 		).toBeInTheDocument();
 		expect(generate()).toBeEnabled();
@@ -129,7 +129,7 @@ describe("BeforeGeneratePanel", () => {
 			screen.getByText("Generating works out the week you ticked.")
 		).toBeInTheDocument();
 		expect(
-			screen.queryByText(/^Generating works out every week of December/)
+			screen.queryByText(/^Generating works out every week of December 2026/)
 		).toBeNull();
 	});
 

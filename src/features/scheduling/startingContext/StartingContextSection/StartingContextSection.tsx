@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { DepartmentPath } from "@/common/companyPath";
 import { joinClassNames } from "@/common/joinClassNames";
@@ -35,6 +35,11 @@ export type StartingContextSectionProps = {
 	canEdit: boolean;
 	/** Opens a dialog as soon as the draft has been read, for a caller that just saved the draft to add to it. */
 	openOnStart?: StartingPointDialog;
+	/**
+	 * Called once the dialog has opened on start, so the caller forgets it: a later visit to the step then opens
+	 * nothing by itself, only the dialog's own button does.
+	 */
+	onOpenedOnStart?: () => void;
 	/**
 	 * Whether the hours worked this month show; true when left out. Left out
 	 * for a later week of a month run: a month has one opening per person,
@@ -80,6 +85,7 @@ export const StartingContextSection = ({
 	nonWorkingDayTypes,
 	canEdit,
 	openOnStart,
+	onOpenedOnStart,
 	showsHours = true,
 	daysBefore,
 	className,
@@ -107,6 +113,9 @@ export const StartingContextSection = ({
 		if (openOnStart === "days") setDaysOpen(true);
 		else setHoursOpen(true);
 	}
+	useEffect(() => {
+		if (openedOnStart) onOpenedOnStart?.();
+	}, [openedOnStart, onOpenedOnStart]);
 	if (week.data === undefined) return null;
 	return (
 		<div className={joinClassNames("flex flex-col gap-4", className)}>

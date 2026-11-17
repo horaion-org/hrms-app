@@ -131,6 +131,12 @@ export const FindCoverPanel = ({
 				</Button>
 			</div>
 		),
+		// Not editable now (a draft, a running or failed generation, a rejected roster): looking again can't help.
+		notEditable: () => (
+			<p className="text-sm text-error-700" role="alert">
+				{t("scheduling.rosterEdit.error.notEditable")}
+			</p>
+		),
 		failed: () => (
 			<div className="flex flex-col items-start gap-2" role="alert">
 				<p className="text-sm text-error-700">{t(`${key}.failed`)}</p>

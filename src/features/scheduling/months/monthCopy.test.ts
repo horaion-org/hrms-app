@@ -1,9 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { authTestI18n } from "@/features/auth/testingI18n";
+import { datesPlanFixture } from "@/features/scheduling/dates/fixtures";
 import {
+	datesRunHint,
 	monthUsesLine,
 	setupNextNoteOf,
 	stateCountsLine,
+	tickedWeeksHint,
 	weekChangedRefusal,
 	weekRangeText,
 	type SetupNextFacts,
@@ -65,7 +68,7 @@ describe("weekChangedRefusal", () => {
 				authTestI18n.t
 			)
 		).toMatch(
-			/^The week of 7\s?–\s?13\sDec was published since this page loaded, so it can’t be generated\. The week of 14\s?–\s?20\sDec is over, so it can’t be generated\. Nothing was generated\. The page now shows December as it is; try again for the other weeks\.$/
+			/^The week of 7\s?–\s?13\sDec was published since this page loaded, so it can’t be generated\. The week of 14\s?–\s?20\sDec is over, so it can’t be generated\. Nothing was generated\. The page now shows December 2026 as it is; try again for the other weeks\.$/
 		);
 	});
 
@@ -78,7 +81,7 @@ describe("weekChangedRefusal", () => {
 				authTestI18n.t
 			)
 		).toBe(
-			"A week of December changed since this page loaded, so nothing was generated. The page now shows December as it is; try again."
+			"A week of December 2026 changed since this page loaded, so nothing was generated. The page now shows December 2026 as it is; try again."
 		);
 	});
 });
@@ -166,5 +169,31 @@ describe("setupNextNoteOf", () => {
 		],
 	])("given_%s_when_noted_then_theNoteOrNone", (_, facts, note) => {
 		expect(setupNextNoteOf({ ...ready, ...facts }, authTestI18n.t)).toBe(note);
+	});
+});
+
+describe("tickedWeeksHint", () => {
+	it("given_twoTouchingTickedWeeks_when_said_then_oneRangeAndTheirCount", () => {
+		expect(
+			tickedWeeksHint(["2026-12-07", "2026-12-14"], "en", authTestI18n.t)
+		).toMatch(
+			/^Generating works out the 2 weeks you ticked: Mon.*Dec 7.*Sun.*Dec 20\./
+		);
+	});
+
+	it("given_nothingTicked_when_said_then_nothing", () => {
+		expect(tickedWeeksHint([], "en", authTestI18n.t)).toBe("");
+	});
+});
+
+describe("datesRunHint", () => {
+	it("given_aPlan_when_said_then_itsNewDaysFromTheFirstToTheLast", () => {
+		expect(datesRunHint(datesPlanFixture(), "en", authTestI18n.t)).toMatch(
+			/^Generating works out 10 days, Nov 19\s?–\s?28, 2026\./
+		);
+	});
+
+	it("given_noPlan_when_said_then_nothing", () => {
+		expect(datesRunHint(undefined, "en", authTestI18n.t)).toBe("");
 	});
 });

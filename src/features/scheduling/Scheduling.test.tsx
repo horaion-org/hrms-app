@@ -632,7 +632,7 @@ describe("Scheduling's tabs", () => {
 		).toEqual(["branchId=b-1"]);
 	});
 
-	it("given_jobTitleRead_when_constraintsShown_then_aLiveRuleAskingMoreThanHoldItsTitlesNeedsAttention", async () => {
+	it("given_jobTitleRead_when_constraintsShown_then_aLiveRuleAskingMoreThanHoldItsTitlesWarnsItsShiftsWillBeShort", async () => {
 		/** A Kitchen job title held by `holderCount` people, as the job titles list answers it. */
 		const jobTitle = (jobTitleId: string, holderCount: number): unknown => ({
 			jobTitleId,
@@ -669,7 +669,9 @@ describe("Scheduling's tabs", () => {
 
 		const row = await screen.findByRole("listitem", { name: /Morning cover/ });
 		await waitFor(() => {
-			expect(within(row).getByText("Needs attention")).toBeVisible();
+			expect(
+				within(row).getByText(/^It asks for 2, but only 1 person holds/)
+			).toBeVisible();
 		});
 		// The check reads the live rule, never the generated rosters' staffing read.
 		expect(

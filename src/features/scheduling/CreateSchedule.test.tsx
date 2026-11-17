@@ -736,7 +736,9 @@ describe("Create Schedule: generating", () => {
 			expect(generate).toBeEnabled();
 		});
 		expect(
-			screen.getByText("Generates every week of October that isn’t published.")
+			screen.getByText(
+				"Generates every week of October 2026 that isn’t published."
+			)
 		).toBeVisible();
 
 		await user.click(generate);
@@ -784,7 +786,7 @@ describe("Create Schedule: generating", () => {
 		const generate = screen.getByRole("button", { name: "Generate" });
 		await waitFor(() => {
 			expect(generate).toHaveAccessibleDescription(
-				"No week of October can be generated: each is published, over or being generated."
+				"No week of October 2026 can be generated: each is published, over or being generated."
 			);
 		});
 		expect(generate).toBeDisabled();
@@ -805,11 +807,11 @@ describe("Create Schedule: generating", () => {
 
 		await user.click(generate);
 		const dialog = await screen.findByRole("dialog", {
-			name: "Regenerate October?",
+			name: "Regenerate October 2026?",
 		});
 		expect(writes(calls)).toEqual([`PUT ${SCHEDULE}`]);
 		await user.click(
-			within(dialog).getByRole("button", { name: "Regenerate October" })
+			within(dialog).getByRole("button", { name: "Regenerate October 2026" })
 		);
 
 		await waitFor(() => {

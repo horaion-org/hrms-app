@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState, type ReactElement } from "react";
 import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it, vi } from "vitest";
@@ -35,6 +36,91 @@ describe("RosterSidePanel", () => {
 		await user.keyboard("{Escape}");
 		await user.click(screen.getByRole("button", { name: "Close Issues" }));
 		expect(onClose).toHaveBeenCalledTimes(2);
+	});
+
+	// Opened from a menu, the menu gives focus back to its own button: Escape must still close the panel.
+	it("given_focusOutsideThePanel_when_escapeIsPressed_then_closesAndFocusReturnsToWhatOpenedIt", async () => {
+		const user = userEvent.setup();
+		const onClose = vi.fn();
+		const page = (panelOpen: boolean): ReactElement => (
+			<>
+				<button type="button">More actions</button>
+				{panelOpen && (
+					<RosterSidePanel
+						sections={[{ key: "body", content: <p>Body</p> }]}
+						title="Details"
+						onClose={onClose}
+					/>
+				)}
+			</>
+		);
+		const { rerender } = render(page(false));
+		screen.getByRole("button", { name: "More actions" }).focus();
+		rerender(page(true));
+		screen.getByRole("button", { name: "More actions" }).focus();
+
+		await user.keyboard("{Escape}");
+
+		expect(onClose).toHaveBeenCalledOnce();
+		expect(screen.getByRole("button", { name: "More actions" })).toHaveFocus();
+	});
+
+	it("given_theCloseButton_when_pressed_then_focusReturnsToTheButtonThatOpenedThePanel", async () => {
+		const user = userEvent.setup();
+		/** A toolbar button that opens the panel, as the roster's Issues button does. */
+		const IssuesToggle = (): ReactElement => {
+			const [open, setOpen] = useState(false);
+			return (
+				<>
+					<button
+						type="button"
+						onClick={() => {
+							setOpen(true);
+						}}
+					>
+						Issues
+					</button>
+					{open && (
+						<RosterSidePanel
+							sections={[{ key: "body", content: <p>Body</p> }]}
+							title="Issues"
+							onClose={() => {
+								setOpen(false);
+							}}
+						/>
+					)}
+				</>
+			);
+		};
+		render(<IssuesToggle />);
+		await user.click(screen.getByRole("button", { name: "Issues" }));
+		expect(screen.getByRole("heading", { name: "Issues" })).toHaveFocus();
+
+		await user.click(screen.getByRole("button", { name: "Close Issues" }));
+
+		expect(screen.getByRole("button", { name: "Issues" })).toHaveFocus();
+	});
+
+	it("given_escapeInsideADialog_when_pressed_then_thePanelStaysOpen", async () => {
+		const user = userEvent.setup();
+		const onClose = vi.fn();
+		render(
+			<>
+				<RosterSidePanel
+					sections={[{ key: "body", content: <p>Body</p> }]}
+					title="Issues"
+					onClose={onClose}
+				/>
+				<div role="dialog">
+					<button type="button">In the dialog</button>
+				</div>
+			</>
+		);
+		screen.getByRole("button", { name: "In the dialog" }).focus();
+
+		await user.keyboard("{Escape}");
+
+		expect(onClose).not.toHaveBeenCalled();
 	});
 
 	it("given_aSummary_when_rendered_then_itSitsUnderTheTitleOutsideTheScrollingList", () => {

@@ -35,7 +35,8 @@ afterEach(() => {
 const show = (
 	openOnStart?: StartingPointDialog,
 	showsHours?: boolean,
-	daysBefore?: { from: string; to: string }
+	daysBefore?: { from: string; to: string },
+	onOpenedOnStart?: () => void
 ): void => {
 	const client = new QueryClient({
 		defaultOptions: { queries: { retry: false } },
@@ -52,6 +53,7 @@ const show = (
 					scheduleId="s-1"
 					showsHours={showsHours}
 					unit={UNIT}
+					onOpenedOnStart={onOpenedOnStart}
 				/>
 			</QueryClientProvider>
 		</I18nextProvider>
@@ -115,6 +117,17 @@ describe("StartingContextSection", () => {
 		expect(
 			await screen.findByRole("dialog", { name: "Before this week" })
 		).toBeVisible();
+	});
+
+	it("given_openOnStart_when_theDialogOpens_then_theCallerIsToldOnceSoItNeverOpensByItselfAgain", async () => {
+		stubApi(reads);
+		const onOpenedOnStart = vi.fn();
+		show("days", undefined, undefined, onOpenedOnStart);
+
+		await screen.findByRole("dialog", { name: "Before this week" });
+		await vi.waitFor(() => {
+			expect(onOpenedOnStart).toHaveBeenCalledTimes(1);
+		});
 	});
 
 	it("given_openOnStartHours_when_theDraftIsRead_then_theHoursOpen", async () => {

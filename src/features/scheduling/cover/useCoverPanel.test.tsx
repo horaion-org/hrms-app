@@ -160,6 +160,25 @@ describe("useCoverPanel", () => {
 		});
 	});
 
+	it("given_aRosterThatCannotBeChangedNow_when_listed_then_notEditableRatherThanAFailureToRetry", async () => {
+		stubApi({
+			[`POST ${COVER_OPTIONS}`]: {
+				status: 409,
+				body: {
+					type: "about:blank",
+					title: "Conflict",
+					status: 409,
+					errorCode: "SCHEDULE_ROSTER_NOT_EDITABLE",
+				},
+			},
+		});
+		const { result } = hook();
+
+		await waitFor(() => {
+			expect(result.current.status).toBe("notEditable");
+		});
+	});
+
 	it("given_theShiftCoveredElsewhere_when_listed_then_closed", async () => {
 		stubApi({
 			[`POST ${COVER_OPTIONS}`]: answer(

@@ -114,7 +114,9 @@ const show = (
 	return {
 		dialog: () =>
 			screen.findByRole("dialog", {
-				name: weeks ? "Generate these weeks again?" : "Regenerate November?",
+				name: weeks
+					? "Generate these weeks again?"
+					: "Regenerate November 2026?",
 			}),
 	};
 };
@@ -125,10 +127,10 @@ describe("RegenerateMonthDialog", () => {
 		const dialog = await show(november()).dialog();
 
 		expect(dialog).toHaveTextContent(
-			"All 5 weeks of November are worked out again. Nothing is published yet, so every week can change. The current roster stays until the new one is ready. If generating fails, it stays as it is."
+			"All 5 weeks of November 2026 are worked out again. Nothing is published yet, so every week can change. The current roster stays until the new one is ready. If generating fails, it stays as it is."
 		);
 		expect(
-			within(dialog).getByRole("button", { name: "Regenerate November" })
+			within(dialog).getByRole("button", { name: "Regenerate November 2026" })
 		).not.toHaveClass("bg-error-600");
 	});
 
@@ -142,13 +144,13 @@ describe("RegenerateMonthDialog", () => {
 		).dialog();
 
 		expect(dialog).toHaveTextContent(
-			/The 4 weeks of November that aren’t published are worked out again, from Nov 9\s?–\s?15 on\. The published weeks stay as they are\./
+			/The 4 weeks of November 2026 that aren’t published are worked out again, from Nov 9\s?–\s?15 on\. The published weeks stay as they are\./
 		);
 		expect(dialog).toHaveTextContent(
 			/Nov 16\s?–\s?22 was changed by hand\. Those changes are replaced once the new roster is ready\./
 		);
 		expect(
-			within(dialog).getByRole("button", { name: "Regenerate November" })
+			within(dialog).getByRole("button", { name: "Regenerate November 2026" })
 		).toHaveClass("bg-error-600");
 	});
 
@@ -181,7 +183,7 @@ describe("RegenerateMonthDialog", () => {
 			onStarted
 		).dialog();
 		const confirm = within(dialog).getByRole("button", {
-			name: "Regenerate November",
+			name: "Regenerate November 2026",
 		});
 		await waitFor(() => {
 			expect(confirm).toBeEnabled();
@@ -213,7 +215,7 @@ describe("RegenerateMonthDialog", () => {
 		const dialog = await show(november()).dialog();
 
 		await user.click(
-			within(dialog).getByRole("button", { name: "Regenerate November" })
+			within(dialog).getByRole("button", { name: "Regenerate November 2026" })
 		);
 
 		expect(await within(dialog).findByRole("alert")).toHaveTextContent(

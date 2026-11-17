@@ -1,15 +1,18 @@
 import type { TFunction } from "i18next";
 import { formatDay } from "@/common/formatDay";
+import type { DatesPlan } from "@/features/scheduling/dates/api";
 import type {
 	ScheduleMonth,
 	WeekState,
 } from "@/features/scheduling/months/api";
 import { weeksNoLongerCovered } from "@/features/scheduling/months/monthGeneration";
 import {
-	formatMonthName,
+	formatMonth,
 	formatWeekDates,
 	stateCounts,
 } from "@/features/scheduling/months/monthWeeks";
+import { tickedRangesOf } from "@/features/scheduling/months/weekTicks";
+import { formatPeriod } from "@/features/scheduling/periods";
 import type { Gate } from "@/features/scheduling/readiness/readinessCopy";
 import type { WeekChoiceIds } from "@/features/scheduling/weekChoice";
 
@@ -73,7 +76,7 @@ export const weekChangedRefusal = (
 	t: TFunction
 ): string => {
 	const key = "scheduling.months.generate";
-	const monthName = formatMonthName(month.month, language);
+	const monthName = formatMonth(month.month, language);
 	const changed = weeksNoLongerCovered(sent, month);
 	if (changed.length === 0)
 		return t(`${key}.weekChanged`, { month: monthName });
@@ -164,4 +167,37 @@ export const setupNextNoteOf = (
 	const listsWaiting =
 		departmentName !== undefined && !listsHidden && !facts.listsRead;
 	return listsWaiting || facts.nothingToGenerate ? "" : undefined;
+};
+
+/** The Generate panel's line for the ticked weeks, joined where they touch, as Setup's list names them; empty for none. */
+export const tickedWeeksHint = (
+	ticked: ReadonlyArray<string>,
+	language: string,
+	t: TFunction
+): string =>
+	ticked.length === 0
+		? ""
+		: t("scheduling.months.generate.panel.hintChosen", {
+				count: ticked.length,
+				ranges: new Intl.ListFormat(language, { type: "conjunction" }).format(
+					tickedRangesOf(ticked).map((range) =>
+						weekRangeText(range, language, t)
+					)
+				),
+			});
+
+/** The Generate panel's line for a dates run: its new days, from the first to the last; empty without a plan. */
+export const datesRunHint = (
+	plan: DatesPlan | undefined,
+	language: string,
+	t: TFunction
+): string => {
+	const newWeeks = plan?.weeks.filter((week) => week.newFrom !== null) ?? [];
+	const firstNewDay = newWeeks[0]?.newFrom;
+	const lastNewDay = newWeeks[newWeeks.length - 1]?.newTo;
+	if (!plan || !firstNewDay || !lastNewDay) return "";
+	return t("scheduling.dates.generate.hint", {
+		count: plan.newDays,
+		range: formatPeriod({ start: firstNewDay, end: lastNewDay }, language),
+	});
 };

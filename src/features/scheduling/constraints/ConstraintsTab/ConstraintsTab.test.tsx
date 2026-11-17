@@ -100,6 +100,16 @@ const dutyCover = (
 	],
 });
 
+/** The rule with its shift gone: a roster can't use it until it is fixed. */
+const withShiftGone = (
+	constraint: ReturnType<typeof dutyCover>
+): ReturnType<typeof dutyCover> => ({
+	...constraint,
+	values: constraint.values.map((value) =>
+		value.field === "SHIFT" ? { ...value, problem: "UNAVAILABLE" } : value
+	),
+});
+
 /** How many times the live job titles read was asked for in this test. */
 let jobTitleReads = 0;
 
@@ -426,7 +436,9 @@ describe("ConstraintsTab", () => {
 		expect(screen.queryByRole("tablist")).toBeNull();
 	});
 
-	it("given_aRuleAskingThreeDutyManagersWithTwoHolders_when_listed_then_theBannerNamesItAndItsRowOffersFix", async () => {
+	// A rule asking for more people than hold the title is still used by generation (the roster comes out short),
+	// so it is a warning that says so, not an error claiming no roster can use it.
+	it("given_aRuleAskingThreeDutyManagersWithTwoHolders_when_listed_then_aWarningSaysItsShiftsWillBeShort", async () => {
 		stubApi({
 			[`GET ${KITCHEN}/constraints`]: ok([dutyCover("3")]),
 			...TWO_DUTY_MANAGERS,
@@ -437,22 +449,24 @@ describe("ConstraintsTab", () => {
 		});
 
 		const row = await screen.findByRole("listitem", { name: /Duty cover/ });
-		expect(await within(row).findByText("Needs attention")).toBeVisible();
 		expect(
-			within(row).getByText(
-				"Only 2 people hold Duty Manager, but it asks for 3, so it can never be met."
+			await within(row).findByText(
+				"It asks for 3, but only 2 people hold Duty Manager, so its shifts will be short until more people hold it or the number is lowered."
 			)
 		).toBeVisible();
+		expect(within(row).queryByText("Needs attention")).toBeNull();
 		expect(
-			within(row).getByRole("button", { name: "Fix Duty cover" })
+			within(row).getByRole("button", { name: "Edit Duty cover" })
 		).toBeVisible();
-		expect(
-			screen
-				.getAllByRole("note")
-				.some((note) =>
-					note.textContent?.startsWith("1 constraint needs attention.")
-				)
-		).toBe(true);
+		const notes = screen.getAllByRole("note").map((note) => note.textContent);
+		expect(notes).toContainEqual(
+			expect.stringMatching(
+				/^1 staffing rule asks for more people than hold its job titles\. Rosters still use it, but its shifts will be short/
+			)
+		);
+		expect(notes).not.toContainEqual(
+			expect.stringMatching(/needs attention|can’t use/)
+		);
 	});
 
 	// The owner's case: he lowered the headcount to the two who hold the title; the live rule is what counts.
@@ -487,7 +501,9 @@ describe("ConstraintsTab", () => {
 		});
 
 		const row = await screen.findByRole("listitem", { name: /Day managers/ });
-		expect(await within(row).findByText("Needs attention")).toBeVisible();
+		expect(
+			await within(row).findByText(/^It asks for 3, but only 2 people hold/)
+		).toBeVisible();
 	});
 
 	it("given_atMostMoreThanHold_when_listed_then_neverFlagged", async () => {
@@ -958,7 +974,7 @@ describe("ConstraintsTab: readiness", () => {
 		const user = userEvent.setup();
 		stubApi({
 			[`GET ${KITCHEN}/constraints`]: ok([
-				dutyCover("3"),
+				withShiftGone(dutyCover("2")),
 				{ ...barSupervisor, departmentId: "d-1", requirement: "SHOULD" },
 			]),
 			...TWO_DUTY_MANAGERS,
