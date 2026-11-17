@@ -297,6 +297,16 @@ const scheduleSchema = z.object({
 /** A schedule as the API answers it; its shifts, constraints and roster are read on their own. */
 export type Schedule = z.infer<typeof scheduleSchema>;
 
+/**
+ * Whether a schedule's newest run ended without a roster: FAILED, or
+ * SUCCEEDED with no roster meeting every rule (INFEASIBLE). On a GENERATED
+ * schedule it was a regeneration, and the roster shown is the earlier one
+ * (API ADR-0112).
+ */
+export const newestRunFailed = ({ generation }: Schedule): boolean =>
+	generation !== null &&
+	(generation.status === "FAILED" || generation.engineOutcome === "INFEASIBLE");
+
 /** How often a schedule, or a month, whose generation is in progress is read again. */
 export const GENERATION_POLL_INTERVAL_MS = 15_000;
 

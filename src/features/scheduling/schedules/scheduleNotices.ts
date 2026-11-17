@@ -3,6 +3,7 @@ import type { Schedule } from "@/features/scheduling/schedules/api";
 /** A notice the roster page shows under its header. */
 export type ScheduleNoticeId =
 	| "weekPublished"
+	| "regenerationFailed"
 	| "unpublished"
 	| "rejected"
 	| "generating"
@@ -17,6 +18,8 @@ export type ScheduleNoticeFacts = {
 	/** A run is open, so the roster isn't shown. */
 	generating: boolean;
 	hasRoster: boolean;
+	/** The newest run ended without a roster (`newestRunFailed`). */
+	newestRunFailed: boolean;
 	/** Another schedule is already the week's published roster. */
 	weekPublishedElsewhere: boolean;
 	/** The week ended before today in its branch's time zone, so its rules and roster are final (API ADR-0091). */
@@ -38,6 +41,12 @@ export const SCHEDULE_NOTICES: ReadonlyArray<{
 	{
 		id: "weekPublished",
 		shownWhen: ({ weekPublishedElsewhere }) => weekPublishedElsewhere,
+	},
+	// Generating again failed, so the roster shown is the earlier one (API ADR-0112).
+	{
+		id: "regenerationFailed",
+		shownWhen: ({ status, generating, newestRunFailed }) =>
+			status === "GENERATED" && !generating && newestRunFailed,
 	},
 	// A generated roster on screen is not final: staff see a week only once it is published.
 	{

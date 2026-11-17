@@ -417,6 +417,36 @@ it("says the rules changed since the roster was generated when the month read sa
 	).toBeInTheDocument();
 });
 
+it("says generating again failed and still shows the earlier roster when a regeneration failed", async () => {
+	await openRoster({
+		...signedIn(["schedule:read", "schedule:generate"]),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({
+				status: "GENERATED",
+				generation: generationFixture({
+					runId: "run-2",
+					status: "SUCCEEDED",
+					engineOutcome: "INFEASIBLE",
+				}),
+			})
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		...octoberRead(),
+	});
+
+	expect(
+		await screen.findByText(
+			"Generating again failed: No roster could meet every shift and constraint of this schedule. This is the earlier roster: keep working with it or generate again."
+		)
+	).toBeInTheDocument();
+	expect(
+		await screen.findByRole("table", { name: "Roster" })
+	).toBeInTheDocument();
+	expect(
+		screen.queryByRole("region", { name: "Why it wasn’t generated" })
+	).toBeNull();
+});
+
 it.each(["GENERATED", "PUBLISHED", "REJECTED"] as const)(
 	"offers only View setup, Details and Export roster, and no primary action, on a %s roster to someone who may only read it",
 	async (status) => {

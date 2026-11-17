@@ -60,12 +60,14 @@ import { changedDays } from "@/features/scheduling/roster/rosterSummary";
 import { useRepairWarmUpOnValidate } from "@/features/scheduling/cover/useRepairWarmUp";
 import { coverOffersQuery } from "@/features/scheduling/coverOffers/api";
 import { rosterChangeShiftsQuery } from "@/features/scheduling/rosterChanges/api";
+import { generationFailure } from "@/features/scheduling/roster/generationFailure";
 import { ScheduleMenu } from "@/features/scheduling/ScheduleMenu";
 import {
 	decidable,
 	GENERATION_POLL_INTERVAL_MS,
 	generationInProgress,
 	hasRoster,
+	newestRunFailed,
 	regenerable,
 	rosterEditable,
 	rosterRunId,
@@ -532,6 +534,7 @@ const ApiSchedule = ({
 		status: schedule.status,
 		generating: generationInProgress(schedule),
 		hasRoster: hasRoster(schedule),
+		newestRunFailed: newestRunFailed(schedule),
 		weekPublishedElsewhere: weekPublishedBy !== undefined,
 		weekPassed: passed,
 		rulesChanged:
@@ -604,6 +607,13 @@ const ApiSchedule = ({
 				publishedScheduleId={weekPublishedBy}
 				stage="blocked"
 			/>
+		),
+		regenerationFailed: (
+			<Callout tone="warning">
+				{t("scheduling.generation.regenerationFailed", {
+					reason: generationFailure(schedule.generation, t).message,
+				})}
+			</Callout>
 		),
 		rejected: (
 			<RejectedRosterCallout
