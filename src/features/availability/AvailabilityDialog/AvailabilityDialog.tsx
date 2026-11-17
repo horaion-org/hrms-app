@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { useFieldArray, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
@@ -102,10 +102,26 @@ export const AvailabilityDialog = ({
 	});
 	const {
 		control,
+		getFieldState,
 		handleSubmit,
 		reset,
+		subscribe,
+		trigger,
 		formState: { errors, isSubmitting },
 	} = form;
+	// The form re-checks only the field that changed, but a window's message can
+	// sit on another row (an overlap lands on the later window): while any row
+	// has one, each change checks every window again.
+	useEffect(
+		() =>
+			subscribe({
+				formState: { values: true },
+				callback: (): void => {
+					if (getFieldState("rows").invalid) void trigger("rows");
+				},
+			}),
+		[getFieldState, subscribe, trigger]
+	);
 	const { fields, append, remove } = useFieldArray({ control, name: "rows" });
 	const submit = useCreateFormSubmit(
 		form,
