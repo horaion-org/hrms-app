@@ -53,6 +53,7 @@ import {
 	profileRefusal,
 } from "@/features/people/profileRefusal";
 import { PROFILE_FIELD_WIDTH } from "@/features/people/profileLayout";
+import { InvitationChoice } from "@/features/people/InvitationChoice";
 import { workspaceQuery } from "@/features/workspace/api";
 import { DepartmentSelector } from "@/features/workspace/DepartmentSelector";
 import { retry } from "@/features/workspace/retry";
@@ -318,11 +319,8 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 	const statusError = errors.status?.message;
 	const emailLocked = edit !== undefined && !edit.emailEditable;
 	const readOnlyRoles = edit?.readOnlyRoles;
-	const emailHint = edit
-		? emailLocked
-			? t(`${key}.emailLocked`)
-			: undefined
-		: t(`${key}.emailHint`);
+	// Adding, the invitation's line sits under its own box below the email address.
+	const emailHint = emailLocked ? t(`${key}.emailLocked`) : undefined;
 	const roleHint =
 		edit && edit.otherRoles.length > 0 ? (
 			<>
@@ -539,6 +537,9 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 								{...register("email")}
 							/>
 						</FormRow>
+						{!edit && (
+							<InvitationChoice control={control} disabled={isSubmitting} />
+						)}
 					</div>
 				</Card>
 				<Card icon={RoleIcon} title={t(`${key}.employment`)}>

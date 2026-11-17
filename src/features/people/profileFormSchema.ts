@@ -38,6 +38,8 @@ export type ProfileFormValues = {
 	accessRoleId: string;
 	/** Edited on an existing person only; a new person is always active. */
 	status?: MemberStatus;
+	/** Add employee only: whether the invitation e-mail is sent as the person is added. */
+	sendInvitation?: boolean;
 };
 
 /**
@@ -95,6 +97,7 @@ export const profileFormSchema = (
 			reportsTo: companyMemberSchema.nullable(),
 			accessRoleId: z.string(),
 			status: z.enum(MEMBER_STATUSES).optional(),
+			sendInvitation: z.boolean().optional(),
 		})
 		.refine(
 			({ hireDate, probationEndDate }) =>
@@ -123,4 +126,5 @@ export const EMPTY_PROFILE: ProfileFormValues = {
 	departmentId: "",
 	reportsTo: null,
 	accessRoleId: "",
+	sendInvitation: true,
 };

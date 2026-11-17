@@ -16,7 +16,11 @@ describe("profile request", () => {
 				email: "priya@company.com",
 				jobTitleId: "j-1",
 			})
-		).toStrictEqual({ displayName: "Priya Nair", email: "priya@company.com" });
+		).toStrictEqual({
+			displayName: "Priya Nair",
+			email: "priya@company.com",
+			sendInvitation: true,
+		});
 	});
 	it("leaves out every optional field left empty, and the department and role", () => {
 		expect(
@@ -26,7 +30,11 @@ describe("profile request", () => {
 				email: " priya@company.com ",
 				departmentId: "d-1",
 			})
-		).toStrictEqual({ displayName: "Priya Nair", email: "priya@company.com" });
+		).toStrictEqual({
+			displayName: "Priya Nair",
+			email: "priya@company.com",
+			sendInvitation: true,
+		});
 	});
 
 	it("sends every field filled in, the manager by membership", () => {
@@ -113,6 +121,15 @@ describe("profile update request", () => {
 			accessRoleId: "r-1",
 			status: "ACTIVE",
 		});
+	});
+
+	it("never sends the Add employee invitation choice", () => {
+		expect(
+			profileUpdateRequest({
+				...profileEditValues(kent),
+				sendInvitation: false,
+			})
+		).not.toHaveProperty("sendInvitation");
 	});
 
 	it("sends every field, an empty one as null, and never the employee ID or role", () => {

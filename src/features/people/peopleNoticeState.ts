@@ -3,8 +3,15 @@ import { z } from "zod";
 
 const noticeSchema = z.object({
 	peopleNotice: z.object({
-		/** What happened to the person: added, saved, or their access changed. */
-		kind: z.enum(["added", "saved", "deactivated", "reactivated", "invited"]),
+		/** What happened to the person: added (with or without the invitation), saved, or their access changed. */
+		kind: z.enum([
+			"added",
+			"addedWithoutInvitation",
+			"saved",
+			"deactivated",
+			"reactivated",
+			"invited",
+		]),
 		name: z.string().min(1),
 		/** Set when the person was added or saved but their system role was not changed. */
 		roleNotAssigned: z.boolean(),
