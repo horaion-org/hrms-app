@@ -3,6 +3,7 @@ import { z } from "zod";
 import { isWeekday, type Weekday } from "@/common/weekdays";
 import type {
 	EmploymentTermsBody,
+	ExtraHoursPaidAs,
 	WeekFields,
 } from "@/features/employmentTerms/api";
 import {
@@ -11,6 +12,10 @@ import {
 	hoursInput,
 	parseHours,
 } from "@/features/employmentTerms/hours";
+import {
+	percentOfTimes,
+	timesOfPercent,
+} from "@/features/employmentTerms/rates";
 
 /** The longest name and description terms take, as the API keeps them. */
 export const TERMS_NAME_MAX_LENGTH = 100;
@@ -22,6 +27,9 @@ const ROUNDING_MINUTES = 1;
 const MIN_WEEK_MINUTES = 60;
 const MAX_WEEK_MINUTES = 3600;
 const MIN_DAY_MINUTES = 30;
+/** A rate's sanity bounds, as the API's columns check them: 0 to 10 times a normal hour (no country figure). */
+const MIN_RATE_PERCENT = 0;
+const MAX_RATE_PERCENT = 1000;
 
 /**
  * The terms dialog as it holds its values: numbers as typed text, and the
@@ -38,6 +46,15 @@ export type TermsFormValues = {
 	dailyOvertime: boolean;
 	shiftWork: boolean;
 	hoursLimitsApply: boolean;
+	/** An overtime hour, in times a normal hour as typed ("1.5"). */
+	overtimeTimes: string;
+	/** Work on the rest day, in times a normal hour. */
+	restDayTimes: string;
+	/** A day off worked counts as normal hours until the week is passed, or at its own rate. */
+	dayOffMode: "NORMAL" | "OWN_RATE";
+	dayOffTimes: string;
+	/** How extra hours are paid; time off is offered once its balance exists. */
+	extraHoursPaidAs: Exclude<ExtraHoursPaidAs, "UNKNOWN">;
 };
 
 /** Blank terms: a fixed Sunday rest day and the Act's limits, nothing typed. */
@@ -52,6 +69,11 @@ export const BLANK_TERMS: TermsFormValues = {
 	dailyOvertime: true,
 	shiftWork: false,
 	hoursLimitsApply: true,
+	overtimeTimes: "",
+	restDayTimes: "",
+	dayOffMode: "NORMAL",
+	dayOffTimes: "",
+	extraHoursPaidAs: "RATE",
 };
 
 /** The working days the form offers: "It varies" (null), then ½ to 7 in half days, as the API stores them. */
@@ -78,6 +100,18 @@ const minutesOrNull = (text: string): number | null => {
 	return parsed.kind === "minutes" ? parsed.minutes : null;
 };
 
+const percentOrNull = (text: string): number | null => {
+	const parsed = percentOfTimes(text);
+	return typeof parsed === "number" ? parsed : null;
+};
+
+/**
+ * Whether the overtime rate is asked: whenever the Act's hour limits apply,
+ * and otherwise only for extra hours paid at a rate.
+ */
+export const overtimeRateAsked = (values: TermsFormValues): boolean =>
+	values.hoursLimitsApply || values.extraHoursPaidAs === "RATE";
+
 /** The form's week as the summary reads it, or nothing while the week is incomplete. */
 export const weekFieldsOf = (
 	values: TermsFormValues
@@ -101,6 +135,11 @@ export const weekFieldsOf = (
 			values.dailyOvertime && !values.shiftWork && dayMinutes !== null,
 		shiftWork: values.shiftWork,
 		hoursLimitsApply: values.hoursLimitsApply,
+		overtimePercent: percentOrNull(values.overtimeTimes),
+		restDayWorkPercent: percentOrNull(values.restDayTimes),
+		dayOffWorkPercent:
+			values.dayOffMode === "OWN_RATE" ? percentOrNull(values.dayOffTimes) : null,
+		extraHoursPaidAs: values.extraHoursPaidAs,
 	};
 };
 
@@ -134,7 +173,18 @@ export const termsFormValuesOf = (
 				dailyOvertime: start.dailyOvertime,
 				shiftWork: start.shiftWork,
 				hoursLimitsApply: start.hoursLimitsApply,
+				overtimeTimes: timesOrEmpty(start.overtimePercent),
+				restDayTimes: timesOrEmpty(start.restDayWorkPercent),
+				dayOffMode: start.dayOffWorkPercent === null ? "NORMAL" : "OWN_RATE",
+				dayOffTimes: timesOrEmpty(start.dayOffWorkPercent),
+				// Time off reads as paid at a rate until the form offers it.
+				extraHoursPaidAs:
+					start.extraHoursPaidAs === "NOTHING" ? "NOTHING" : "RATE",
 			};
+
+/** A stored rate as the field shows it, or empty when the API sent none. */
+const timesOrEmpty = (percent: number | null): string =>
+	percent === null ? "" : timesOfPercent(percent);
 
 const key = "employmentTerms.dialog";
 
@@ -161,17 +211,37 @@ const hoursProblem = (
 	return undefined;
 };
 
+/** A typed rate's problem, if any: required, a number such as 1.5, within the sanity bounds. */
+const rateProblem = (text: string, t: TFunction): string | undefined => {
+	const parsed = percentOfTimes(text);
+	if (parsed === "empty" || parsed === "invalid") return t(`${key}.rateInvalid`);
+	if (parsed < MIN_RATE_PERCENT || parsed > MAX_RATE_PERCENT)
+		return t(`${key}.rateRange`, {
+			min: timesOfPercent(MIN_RATE_PERCENT),
+			max: timesOfPercent(MAX_RATE_PERCENT),
+		});
+	return undefined;
+};
+
 /**
  * Mirrors the API's rules for terms (`EmploymentTermsRules`) so most
  * mistakes show before saving, each as a sentence saying what to change: a
  * name, whole-minute hours in range, a week its working days can hold, a
- * day when overtime counts by the day, and a weekday for a fixed rest day.
- * The longest normal day is the country's, so it comes from the API
- * (`maxDayMinutes`); without it the API alone judges it.
+ * day when overtime counts by the day, a weekday for a fixed rest day, and
+ * rates the Employment Act allows. The longest normal day and the lowest
+ * overtime rate for covered staff are the country's, so they come from the
+ * API (`maxDayMinutes`, `minimumCoveredOvertimePercent`); without them the
+ * API alone judges them.
  */
 export const termsFormSchema = (
 	t: TFunction,
-	{ maxDayMinutes = null }: { maxDayMinutes?: number | null } = {}
+	{
+		maxDayMinutes = null,
+		minimumCoveredOvertimePercent = null,
+	}: {
+		maxDayMinutes?: number | null;
+		minimumCoveredOvertimePercent?: number | null;
+	} = {}
 ): z.ZodType<TermsFormValues, TermsFormValues> =>
 	z
 		.object({
@@ -195,6 +265,11 @@ export const termsFormSchema = (
 			dailyOvertime: z.boolean(),
 			shiftWork: z.boolean(),
 			hoursLimitsApply: z.boolean(),
+			overtimeTimes: z.string(),
+			restDayTimes: z.string(),
+			dayOffMode: z.enum(["NORMAL", "OWN_RATE"]),
+			dayOffTimes: z.string(),
+			extraHoursPaidAs: z.enum(["RATE", "TIME_OFF", "NOTHING"]),
 		})
 		.superRefine((values, context) => {
 			const problem = (path: keyof TermsFormValues, message: string): void => {
@@ -219,6 +294,32 @@ export const termsFormSchema = (
 			if (weekProblem) problem("weekHours", weekProblem);
 			if (values.restKind === "FIXED" && values.restWeekday === "")
 				problem("restWeekday", t(`${key}.restDayRequired`));
+			const overtimeProblem = overtimeRateAsked(values)
+				? rateProblem(values.overtimeTimes, t)
+				: undefined;
+			if (overtimeProblem) problem("overtimeTimes", overtimeProblem);
+			const overtime = percentOfTimes(values.overtimeTimes);
+			if (
+				values.hoursLimitsApply &&
+				minimumCoveredOvertimePercent !== null &&
+				typeof overtime === "number" &&
+				overtime < minimumCoveredOvertimePercent
+			)
+				problem(
+					"overtimeTimes",
+					t(`${key}.rateCovered`, {
+						minimum: timesOfPercent(minimumCoveredOvertimePercent),
+					})
+				);
+			if (values.hoursLimitsApply && values.extraHoursPaidAs !== "RATE")
+				problem("extraHoursPaidAs", t(`${key}.paidAsCovered`));
+			const restDayProblem = rateProblem(values.restDayTimes, t);
+			if (restDayProblem) problem("restDayTimes", restDayProblem);
+			const dayOffProblem =
+				values.dayOffMode === "OWN_RATE"
+					? rateProblem(values.dayOffTimes, t)
+					: undefined;
+			if (dayOffProblem) problem("dayOffTimes", dayOffProblem);
 			const days = parseDays(values.daysPerWeek);
 			const day = minutesOrNull(values.dayHours);
 			const week = minutesOrNull(values.weekHours);

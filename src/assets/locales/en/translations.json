@@ -5980,7 +5980,11 @@
 			"weekAboveDays_one": "{{days}} day of {{day}} makes {{made}}, less than the {{week}} normal hours a week. Raise the hours a day or the working days.",
 			"weekAboveDays_other": "{{days}} days of {{day}} make {{made}}, less than the {{week}} normal hours a week. Raise the hours a day or the working days.",
 			"dayRequiredForOvertime": "Enter the normal hours a day, or untick overtime after the normal day.",
-			"dailyOvertimeDescriptionDayOnly": "Hours past {{day}} in a day count as overtime too."
+			"dailyOvertimeDescriptionDayOnly": "Hours past {{day}} in a day count as overtime too.",
+			"rateInvalid": "Enter the rate as a number of times a normal hour.",
+			"rateRange": "Enter a rate from {{min}} to {{max}} times a normal hour.",
+			"rateCovered": "Staff covered by the Employment Act’s hour rules are paid at least {{minimum}} times for overtime. Enter {{minimum}} or more, or say these terms are not under the Act’s hour rules if they are for managers or executives.",
+			"paidAsCovered": "Staff covered by the Employment Act’s hour rules must be paid for overtime, not given time off or nothing extra. Choose Paid at a rate, or say these terms are not under the Act’s hour rules if they are for managers or executives."
 		},
 		"apply": {
 			"title": "How should this change apply?",

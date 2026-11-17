@@ -89,6 +89,35 @@ describe("valuesForKind", () => {
 		expect(kindOf(next, PRESETS, 2100)).toBe("SHIFT_WORK");
 	});
 
+	it("given_payTyped_when_aKindIsChosen_then_thePayIsKept", () => {
+		const current = {
+			...termsFormValuesOf(FIVE_DAY_WEEK),
+			overtimeTimes: "2",
+			dayOffMode: "OWN_RATE" as const,
+			dayOffTimes: "1.75",
+		};
+		const next = valuesForKind(presetOfKind("SHIFT_WORK", PRESETS)!, current);
+		expect(next).toMatchObject({
+			overtimeTimes: "2",
+			restDayTimes: "2",
+			dayOffMode: "OWN_RATE",
+			dayOffTimes: "1.75",
+		});
+	});
+
+	it("given_newTerms_when_aKindIsChosen_then_thePresetsPay", () => {
+		const next = valuesForKind(
+			presetOfKind("FIVE_DAYS", PRESETS)!,
+			termsFormValuesOf(undefined)
+		);
+		expect(next).toMatchObject({
+			overtimeTimes: "1.5",
+			restDayTimes: "2",
+			dayOffMode: "NORMAL",
+			extraHoursPaidAs: "RATE",
+		});
+	});
+
 	it("gives every kind a preset that opens on that same kind", () => {
 		for (const kind of TERMS_KINDS) {
 			const preset = presetOfKind(kind, PRESETS)!;

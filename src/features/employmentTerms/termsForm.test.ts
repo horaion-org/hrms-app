@@ -151,6 +151,63 @@ describe("termsFormSchema", () => {
 	});
 });
 
+describe("the pay", () => {
+	/** The problems with the country's minimum overtime rate for covered staff known, as the dialog checks them. */
+	const payProblemsOf = (values: TermsFormValues): Record<string, string> => {
+		const result = termsFormSchema(t, {
+			minimumCoveredOvertimePercent: 150,
+		}).safeParse(values);
+		if (result.success) return {};
+		return Object.fromEntries(
+			result.error.issues.map((issue) => [String(issue.path[0]), issue.message])
+		);
+	};
+
+	it("given_covered_and1Point2_when_checked_then_saysEnter1Point5OrMore", () => {
+		expect(payProblemsOf({ ...valid, overtimeTimes: "1.2" })).toEqual({
+			overtimeTimes:
+				"Staff covered by the Employment Act’s hour rules are paid at least 1.5 times for overtime. Enter 1.5 or more, or say these terms are not under the Act’s hour rules if they are for managers or executives.",
+		});
+	});
+
+	it("given_notCovered_and1_when_checked_then_ok", () => {
+		expect(
+			payProblemsOf({ ...valid, hoursLimitsApply: false, overtimeTimes: "1" })
+		).toEqual({});
+	});
+
+	it("given_covered_andNothingExtra_when_checked_then_refused", () => {
+		expect(
+			payProblemsOf({ ...valid, extraHoursPaidAs: "NOTHING" })
+		).toHaveProperty("extraHoursPaidAs");
+	});
+
+	it("given_notCovered_andNothingExtra_when_checked_then_theHiddenRateIsNotAsked", () => {
+		expect(
+			payProblemsOf({
+				...valid,
+				hoursLimitsApply: false,
+				extraHoursPaidAs: "NOTHING",
+				overtimeTimes: "",
+			})
+		).toEqual({});
+	});
+
+	it("given_ownDayOffRate_withoutAFigure_when_checked_then_asksForIt", () => {
+		expect(
+			payProblemsOf({ ...valid, dayOffMode: "OWN_RATE", dayOffTimes: "" })
+		).toEqual({
+			dayOffTimes: "Enter the rate as a number of times a normal hour.",
+		});
+	});
+
+	it("given_aRateAbove10Times_when_checked_then_saysTheRange", () => {
+		expect(payProblemsOf({ ...valid, restDayTimes: "10.01" })).toEqual({
+			restDayTimes: "Enter a rate from 0 to 10 times a normal hour.",
+		});
+	});
+});
+
 describe("weekFieldsOf and termsBodyOf", () => {
 	it("round-trips terms through the form", () => {
 		expect(termsBodyOf(termsFormValuesOf(FIVE_DAY_WEEK))).toEqual({
@@ -163,7 +220,17 @@ describe("weekFieldsOf and termsBodyOf", () => {
 			dailyOvertime: true,
 			shiftWork: false,
 			hoursLimitsApply: true,
+			overtimePercent: 150,
+			restDayWorkPercent: 200,
+			dayOffWorkPercent: null,
+			extraHoursPaidAs: "RATE",
 		});
+	});
+
+	it("given_anOwnDayOffRate_when_sent_then_itsPercentage", () => {
+		expect(
+			weekFieldsOf({ ...valid, dayOffMode: "OWN_RATE", dayOffTimes: "1.75" })
+		).toMatchObject({ dayOffWorkPercent: 175 });
 	});
 
 	it("drops daily overtime for shift work", () => {

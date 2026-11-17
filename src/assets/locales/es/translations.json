@@ -5980,7 +5980,11 @@
 			"weekAboveDays_one": "{{days}} día de {{day}} suma {{made}}, menos que las {{week}} normales a la semana. Sube las horas al día o los días laborables.",
 			"weekAboveDays_other": "{{days}} días de {{day}} suman {{made}}, menos que las {{week}} normales a la semana. Sube las horas al día o los días laborables.",
 			"dayRequiredForOvertime": "Escribe las horas normales al día, o desmarca las horas extra después del día normal.",
-			"dailyOvertimeDescriptionDayOnly": "Las horas por encima de {{day}} en un día también son horas extra."
+			"dailyOvertimeDescriptionDayOnly": "Las horas por encima de {{day}} en un día también son horas extra.",
+			"rateInvalid": "Introduce la tarifa como un número de veces una hora normal.",
+			"rateRange": "Introduce una tarifa de {{min}} a {{max}} veces una hora normal.",
+			"rateCovered": "Al personal cubierto por las normas de horario de la Ley de Empleo se le pagan las horas extra a {{minimum}} veces como mínimo. Introduce {{minimum}} o más, o indica que estas condiciones no están sujetas a las normas de horario de la Ley si son para mandos o directivos.",
+			"paidAsCovered": "Al personal cubierto por las normas de horario de la Ley de Empleo se le deben pagar las horas extra, no compensarlas con tiempo libre ni con nada. Elige Pagadas a una tarifa, o indica que estas condiciones no están sujetas a las normas de horario de la Ley si son para mandos o directivos."
 		},
 		"apply": {
 			"title": "¿Cómo se aplica este cambio?",

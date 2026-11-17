@@ -74,18 +74,32 @@ export const kindOf = (
 
 /**
  * The form once a kind is chosen: the preset's week, keeping what the kind
- * does not decide (the name, the description and whether the Act's hour
- * limits apply).
+ * does not decide (the name, the description, whether the Act's hour limits
+ * apply and the pay). New terms, with no pay typed yet, take the preset's
+ * pay, so they start at the country's usual rates.
  */
 export const valuesForKind = (
 	preset: TermsPreset,
 	current: TermsFormValues
-): TermsFormValues => ({
-	...termsFormValuesOf(preset),
-	name: current.name,
-	description: current.description,
-	hoursLimitsApply: current.hoursLimitsApply,
-});
+): TermsFormValues => {
+	const fromPreset = termsFormValuesOf(preset);
+	const payTyped = current.overtimeTimes !== "" || current.restDayTimes !== "";
+	return {
+		...fromPreset,
+		name: current.name,
+		description: current.description,
+		hoursLimitsApply: current.hoursLimitsApply,
+		...(payTyped
+			? {
+					overtimeTimes: current.overtimeTimes,
+					restDayTimes: current.restDayTimes,
+					dayOffMode: current.dayOffMode,
+					dayOffTimes: current.dayOffTimes,
+					extraHoursPaidAs: current.extraHoursPaidAs,
+				}
+			: {}),
+	};
+};
 
 /**
  * A kind's card line, from its preset's figures and the API's part-time
