@@ -78,15 +78,9 @@ import {
 	type SetupFieldErrors,
 } from "@/features/scheduling/ScheduleSetupStep";
 import type { ScheduleSetupValues } from "@/features/scheduling/setupSchema";
-import {
-	fixLinkOf,
-	gateOf,
-	type Gate,
-} from "@/features/scheduling/readiness/readinessCopy";
-import {
-	ReadinessGateCallout,
-	type FixLink,
-} from "@/features/scheduling/readiness/ReadinessGateCallout";
+import { gateOf } from "@/features/scheduling/readiness/readinessCopy";
+import { ReadinessGateCallout } from "@/features/scheduling/readiness/ReadinessGateCallout";
+import { setupLinksOf } from "@/features/scheduling/readiness/setupLinks";
 import { useSchedulingReadiness } from "@/features/scheduling/readiness/useSchedulingReadiness";
 import { StepActions } from "@/features/scheduling/StepActions";
 import { stepCompletion } from "@/features/scheduling/stepCompletion";
@@ -99,10 +93,7 @@ import {
 	type WeekChoiceIds,
 } from "@/features/scheduling/weekChoice";
 import { WeekChoiceDialog } from "@/features/scheduling/WeekChoiceDialog";
-import {
-	WeekChoiceSummary,
-	type SetupLink,
-} from "@/features/scheduling/WeekChoiceSummary";
+import { WeekChoiceSummary } from "@/features/scheduling/WeekChoiceSummary";
 import { workspaceQuery } from "@/features/workspace/api";
 import {
 	SCHEDULE_READ_KEYS,
@@ -481,46 +472,11 @@ export const CreateSchedule = (): FunctionComponent => {
 							frozen
 						)
 					: undefined;
-	// The Scheduling tab that edits the week's department, where its list may be read.
-	const weekUnit = saved;
-	const editLink = (
-		view: SetupLink["search"]["view"],
-		readKey: PermissionKey
-	): SetupLink | undefined =>
-		weekUnit && access.can(readKey, departmentScope(weekUnit.departmentId))
-			? {
-					to: "/scheduling",
-					search: {
-						view,
-						branch: weekUnit.branchId,
-						department: weekUnit.departmentId,
-					},
-				}
-			: undefined;
-	const editShifts = editLink("shifts", "shift:read");
-	const editConstraints = editLink("constraints", "constraint:read");
-	// Whether the person may add what the department lacks there.
-	const canFix = {
-		shifts:
-			weekUnit !== undefined &&
-			access.can("shift:create", departmentScope(weekUnit.departmentId)),
-		constraints:
-			weekUnit !== undefined &&
-			access.can("constraint:create", departmentScope(weekUnit.departmentId)),
-	};
-	// The tab that fixes the gate, carrying the way back; only where that tab may be read.
-	const fixLink = (
-		gate: Gate | undefined,
-		returnTo: Parameters<typeof fixLinkOf>[2]
-	): FixLink | undefined =>
-		gate?.linkTo &&
-		weekUnit &&
-		(gate.linkTo === "shifts" ? editShifts : editConstraints)
-			? {
-					to: "/scheduling",
-					search: fixLinkOf(gate.linkTo, weekUnit, returnTo),
-				}
-			: undefined;
+	// The Scheduling tabs that edit the saved draft's department, where its lists may be read.
+	const { editShifts, editConstraints, canFix, fixLink } = setupLinksOf(
+		saved,
+		allowed
+	);
 	// The week can be chosen from its lists while the setup can change.
 	const canChooseWeek =
 		!frozen && !weekListsHidden && (saved === undefined || canSave);

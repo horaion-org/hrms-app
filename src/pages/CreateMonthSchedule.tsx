@@ -68,15 +68,9 @@ import {
 	MonthSetupStep,
 	type MonthSetupValues,
 } from "@/features/scheduling/MonthSetupStep";
-import {
-	fixLinkOf,
-	gateOf,
-	type Gate,
-} from "@/features/scheduling/readiness/readinessCopy";
-import {
-	ReadinessGateCallout,
-	type FixLink,
-} from "@/features/scheduling/readiness/ReadinessGateCallout";
+import { gateOf } from "@/features/scheduling/readiness/readinessCopy";
+import { ReadinessGateCallout } from "@/features/scheduling/readiness/ReadinessGateCallout";
+import { setupLinksOf } from "@/features/scheduling/readiness/setupLinks";
 import { useSchedulingReadiness } from "@/features/scheduling/readiness/useSchedulingReadiness";
 import { scheduleQuery } from "@/features/scheduling/schedules/api";
 import {
@@ -102,10 +96,7 @@ import {
 	leftOutCount,
 	type WeekChoiceIds,
 } from "@/features/scheduling/weekChoice";
-import {
-	WeekChoiceSummary,
-	type SetupLink,
-} from "@/features/scheduling/WeekChoiceSummary";
+import { WeekChoiceSummary } from "@/features/scheduling/WeekChoiceSummary";
 import { workspaceQuery } from "@/features/workspace/api";
 import {
 	SCHEDULE_CREATE_KEYS,
@@ -476,40 +467,15 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 	const choiceOf = (
 		week: Pick<MonthWeek, "periodStart">
 	): WeekChoiceIds | undefined => choices[week.periodStart] ?? everything;
-	// The Scheduling tab that edits the Department, where its list may be read.
-	const editLink = (
-		view: SetupLink["search"]["view"],
-		readKey: PermissionKey
-	): SetupLink | undefined =>
-		unit && allowedHere(readKey)
-			? {
-					to: "/scheduling",
-					search: {
-						view,
-						branch: unit.branchId,
-						department: unit.departmentId,
-					},
-				}
-			: undefined;
-	const editShifts = editLink("shifts", "shift:read");
-	const editConstraints = editLink("constraints", "constraint:read");
-	const canFix = {
-		shifts: allowedHere("shift:create"),
-		constraints: allowedHere("constraint:create"),
-	};
+	// The Scheduling tabs that edit the Department, where its lists may be read.
+	const { editShifts, editConstraints, canFix, fixLink } = setupLinksOf(
+		unit,
+		allowedHere
+	);
 	// The month stops at Setup while its Department can't roster anyone, as a new week does.
 	const setupGate = readinessRow
 		? gateOf(readinessRow, canFix, "setup")
 		: undefined;
-	const fixLink = (gate: Gate | undefined): FixLink | undefined =>
-		gate?.linkTo &&
-		unit &&
-		(gate.linkTo === "shifts" ? editShifts : editConstraints)
-			? {
-					to: "/scheduling",
-					search: fixLinkOf(gate.linkTo, unit, { next: "create", month }),
-				}
-			: undefined;
 	const usesLine =
 		choice === undefined
 			? undefined
@@ -885,7 +851,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 							setupGate && (
 								<ReadinessGateCallout
 									gate={setupGate}
-									link={fixLink(setupGate)}
+									link={fixLink(setupGate, { next: "create", month })}
 								/>
 							)
 						}
