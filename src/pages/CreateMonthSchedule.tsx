@@ -11,7 +11,6 @@ import type { PreviousWeek } from "@/features/scheduling/startingContext/startin
 import { formatPeriod, periodStartingOn } from "@/features/scheduling/periods";
 import { Navigate, useNavigate, useSearch } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import type { TFunction } from "i18next";
 import { useCallback, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
@@ -50,7 +49,11 @@ import {
 	monthOf,
 	summaryRange,
 } from "@/features/scheduling/months/monthWeeks";
-import { weekRangeText } from "@/features/scheduling/months/monthCopy";
+import {
+	monthUsesLine,
+	setupNextNoteOf,
+	weekRangeText,
+} from "@/features/scheduling/months/monthCopy";
 import { hasRoster } from "@/features/scheduling/months/weekStateLooks";
 import {
 	badgeOf,
@@ -110,40 +113,6 @@ import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 import { departmentChoices } from "@/features/workspace/unitChoices";
 
 const key = "scheduling.months.create";
-
-/**
- * What the month's weeks use, as one line: every week everything, or how
- * many weeks use everything and which leave something out.
- */
-const monthUsesLine = (
-	t: TFunction,
-	weeks: Array<{ label: string; leftOut: number }>,
-	everything: WeekChoiceIds,
-	department: string,
-	language: string
-): string => {
-	const changed = weeks.filter((week) => week.leftOut > 0);
-	if (changed.length === 0)
-		return t(`${key}.usesEveryWeek`, {
-			shifts: t("scheduling.week.shiftsAll", {
-				count: everything.shiftIds.length,
-			}),
-			constraints: t("scheduling.week.constraintCount", {
-				count: everything.constraintIds.length,
-			}),
-			department,
-		});
-	return t(`${key}.usesSomeWeeks`, {
-		count: weeks.length - changed.length,
-		total: weeks.length,
-		department,
-		changed: new Intl.ListFormat(language, { type: "conjunction" }).format(
-			changed.map((week) =>
-				t(`${key}.changedWeek`, { week: week.label, count: week.leftOut })
-			)
-		),
-	});
-};
 
 /**
  * Create schedules for a month: Setup and Generate, as the week
@@ -703,23 +672,20 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			}}
 		/>
 	);
-	// Why Setup's Next waits: the gate, lists the person may not see, lists still loading or no week ticked (no note).
-	const listsWaiting =
-		unit !== undefined &&
-		!listsHidden &&
-		(everything === undefined || scheduleMonth.data === undefined);
-	// The list itself says to tick a week, so Next waits without a note.
-	const nothingTicked = tickable !== undefined && ticked.length === 0;
-	const setupNextNote = setupGate
-		? t(setupGate.nextNoteKey, { department: setupGate.department })
-		: listsHidden && choice
-			? t("scheduling.week.listsHiddenNote", { department: choice.name })
-			: listsWaiting ||
-				  (byDates
-						? !plan || plan.refusal !== null || plan.newDays === 0
-						: nothingTicked)
-				? ""
-				: undefined;
+	// Why Setup's Next waits: the gate, lists the person may not see, lists still loading or nothing to generate.
+	const setupNextNote = setupNextNoteOf(
+		{
+			gate: setupGate,
+			departmentName: choice?.name,
+			listsHidden,
+			listsRead: everything !== undefined && scheduleMonth.data !== undefined,
+			// The list itself says to tick a week, so Next waits without a note.
+			nothingToGenerate: byDates
+				? !plan || plan.refusal !== null || plan.newDays === 0
+				: tickable !== undefined && ticked.length === 0,
+		},
+		t
+	);
 	// The Generate step names the ticked weeks, joined where they touch, as Setup's list does.
 	const tickedHint = t("scheduling.months.generate.panel.hintChosen", {
 		count: ticked.length,
