@@ -47,7 +47,7 @@ import {
 	type RosterHoursState,
 } from "@/features/scheduling/hours/useRosterHours";
 import { useRosterPreferenceOutcomes } from "@/features/scheduling/preferenceOutcomes/usePreferenceOutcomes";
-import { RegenerateMonthDialog } from "@/features/scheduling/RegenerateMonthDialog";
+import { RegenerateMonthDialog } from "@/features/scheduling/months/RegenerateMonthDialog";
 import { RejectedRosterCallout } from "@/features/scheduling/RejectedRosterCallout";
 import { RejectScheduleDialog } from "@/features/scheduling/RejectScheduleDialog";
 import {
@@ -57,7 +57,7 @@ import {
 import { PublishedWeekCallout } from "@/features/scheduling/publishedWeek/PublishedWeekCallout";
 import type { RosterSearch } from "@/features/scheduling/roster/rosterSearch";
 import { RosterHeader } from "@/features/scheduling/RosterHeader";
-import { RosterHours } from "@/features/scheduling/RosterHours";
+import { RosterHours } from "@/features/scheduling/hours/RosterHours";
 import { useRosterRulesCheck } from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
 import { validationStanding } from "@/features/scheduling/rulesCheck/issuesFromValidation";
 import { changedDays } from "@/features/scheduling/roster/rosterSummary";

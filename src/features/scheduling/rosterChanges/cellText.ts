@@ -1,6 +1,6 @@
 import type { TFunction } from "i18next";
 import { dayTypeLabel } from "@/features/scheduling/dayTypes";
-import { formatTimeRange } from "@/features/scheduling/formatShift";
+import { formatTimeRange } from "@/features/scheduling/shifts/formatShift";
 import { stretchedTimes } from "@/features/scheduling/roster/shiftStretch";
 import type {
 	RosterCellValue,

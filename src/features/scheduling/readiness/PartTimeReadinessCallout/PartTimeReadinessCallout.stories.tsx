@@ -3,7 +3,7 @@ import { I18nextProvider } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { withMemoryRouter } from "@/components/utils/MemoryRouterHarness";
 import { authTestI18n } from "@/features/auth/testingI18n";
-import { PartTimeReadinessCallout } from "@/features/scheduling/PartTimeReadinessCallout";
+import { PartTimeReadinessCallout } from "@/features/scheduling/readiness/PartTimeReadinessCallout";
 
 const meta = {
 	title: "Features/Scheduling/PartTimeReadinessCallout",

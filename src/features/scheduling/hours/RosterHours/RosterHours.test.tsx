@@ -8,7 +8,7 @@ import {
 	partTimerWeek,
 	rosterHours,
 } from "@/features/scheduling/hours/fixtures";
-import { RosterHours } from "@/features/scheduling/RosterHours";
+import { RosterHours } from "@/features/scheduling/hours/RosterHours";
 import { scheduleAssignmentsFixture } from "@/features/scheduling/schedules/fixtures";
 
 beforeAll(async () => {

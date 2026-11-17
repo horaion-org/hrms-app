@@ -44,7 +44,7 @@ import {
 	stoppedWeeksOf,
 } from "@/features/scheduling/months/monthGeneration";
 import { refusedWeeksFrom } from "@/features/scheduling/months/refusedWeeksState";
-import { RegenerateMonthDialog } from "@/features/scheduling/RegenerateMonthDialog";
+import { RegenerateMonthDialog } from "@/features/scheduling/months/RegenerateMonthDialog";
 import {
 	type GenerateMonth,
 	useGenerateMonth,

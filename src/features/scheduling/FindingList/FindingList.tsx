@@ -5,7 +5,7 @@ import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
-import { formatTimeRange } from "@/features/scheduling/formatShift";
+import { formatTimeRange } from "@/features/scheduling/shifts/formatShift";
 import { formatDay } from "@/common/formatDay";
 import { conflictClockTimes } from "@/features/scheduling/roster/findings/conflictTimes";
 import { diagnosticSentence } from "@/features/scheduling/roster/findings/diagnostics";

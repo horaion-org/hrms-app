@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { MemoryRouterHarness } from "@/components/utils/MemoryRouterHarness";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import type { MemberWithoutAvailability } from "@/features/availability/api";
-import { PartTimeReadinessCallout } from "@/features/scheduling/PartTimeReadinessCallout";
+import { PartTimeReadinessCallout } from "@/features/scheduling/readiness/PartTimeReadinessCallout";
 
 /** The Department's team availability for the schedule's week: the period starts on Wednesday 11 Nov. */
 const TEAM_WEEK =

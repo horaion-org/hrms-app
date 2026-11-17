@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { CloseIcon } from "@/components/ui/Icon";
 import { dayTypeInSentence } from "@/features/scheduling/dayTypes";
-import { formatTimeRange } from "@/features/scheduling/formatShift";
+import { formatTimeRange } from "@/features/scheduling/shifts/formatShift";
 import type { RosterShiftCell } from "@/features/scheduling/roster/roster";
 import { paidShiftHours } from "@/features/scheduling/shifts/shiftHours";
 import type { SchedulePreferenceOutcome } from "@/features/shiftPreferences/api";

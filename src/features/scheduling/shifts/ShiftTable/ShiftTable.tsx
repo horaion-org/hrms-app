@@ -16,7 +16,7 @@ import {
 	formatDays,
 	formatPaidHours,
 	formatTimeRange,
-} from "@/features/scheduling/formatShift";
+} from "@/features/scheduling/shifts/formatShift";
 import type { ScheduleShift } from "@/features/scheduling/schedules/api";
 import { WEEKDAYS } from "@/features/scheduling/shifts/api";
 import { ShiftDayAxis } from "@/features/scheduling/shifts/ShiftDayAxis";

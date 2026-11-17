@@ -1,7 +1,7 @@
 import type { TFunction } from "i18next";
 import { timeRangeText } from "@/features/leave/dayPortion";
 import { dayTypeInSentence } from "@/features/scheduling/dayTypes";
-import { formatTimeRange } from "@/features/scheduling/formatShift";
+import { formatTimeRange } from "@/features/scheduling/shifts/formatShift";
 import {
 	findingWeight,
 	strongestTone,

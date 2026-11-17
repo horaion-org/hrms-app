@@ -13,7 +13,7 @@ import {
 } from "@/features/scheduling/coverOffers/coverOfferRules";
 import { payText } from "@/features/scheduling/coverOffers/coverOfferWords";
 import { useCoverOfferActions } from "@/features/scheduling/coverOffers/useCoverOfferActions";
-import { formatTimeRange } from "@/features/scheduling/formatShift";
+import { formatTimeRange } from "@/features/scheduling/shifts/formatShift";
 import { formatDay } from "@/common/formatDay";
 import type { RosterChangeTarget } from "@/features/scheduling/rosterChanges/useRosterChangeActions";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";

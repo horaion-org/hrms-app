@@ -38,7 +38,7 @@ import { weekChangedRefusal } from "@/features/scheduling/months/monthCopy";
 import { withRefusedWeeks } from "@/features/scheduling/months/refusedWeeksState";
 import { useGenerateMonth } from "@/features/scheduling/months/useGenerateMonth";
 import { PublishedWeekCallout } from "@/features/scheduling/publishedWeek/PublishedWeekCallout";
-import { RegenerateMonthDialog } from "@/features/scheduling/RegenerateMonthDialog";
+import { RegenerateMonthDialog } from "@/features/scheduling/months/RegenerateMonthDialog";
 import { StartingContextSection } from "@/features/scheduling/startingContext/StartingContextSection";
 import {
 	defaultPeriod,

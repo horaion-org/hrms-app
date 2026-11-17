@@ -14,7 +14,7 @@ import { MyCoverOffers } from "@/features/scheduling/coverOffers/MyCoverOffers";
 import { GeneratedRoster } from "@/features/scheduling/GeneratedRoster";
 import { myRosterQuery } from "@/features/scheduling/myRoster/api";
 import { useMyRosterPreferenceOutcomes } from "@/features/scheduling/preferenceOutcomes/usePreferenceOutcomes";
-import { MyRosterChanges } from "@/features/scheduling/MyRosterChanges";
+import { MyRosterChanges } from "@/features/scheduling/myRoster/MyRosterChanges";
 import { formatPeriod } from "@/features/scheduling/periods";
 import {
 	useCurrentCompanyId,

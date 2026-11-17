@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { I18nextProvider } from "react-i18next";
 import { describe, expect, it } from "vitest";
 import { authTestI18n } from "@/features/auth/testingI18n";
-import { MyRosterChanges } from "@/features/scheduling/MyRosterChanges";
+import { MyRosterChanges } from "@/features/scheduling/myRoster/MyRosterChanges";
 import { editedAssignmentFixture } from "@/features/scheduling/rosterChanges/fixtures";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 import { scheduleAssignmentsFixture } from "@/features/scheduling/schedules/fixtures";

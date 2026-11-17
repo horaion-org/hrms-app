@@ -8,7 +8,7 @@ import { Callout } from "@/components/ui/Callout";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { Dialog } from "@/components/ui/Dialog";
 import { dayTypeLabel } from "@/features/scheduling/dayTypes";
-import { formatTimeRange } from "@/features/scheduling/formatShift";
+import { formatTimeRange } from "@/features/scheduling/shifts/formatShift";
 import { formatDay } from "@/common/formatDay";
 import type {
 	EnteredDay,

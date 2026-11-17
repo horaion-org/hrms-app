@@ -19,7 +19,7 @@ import {
 	monthWeekFixture,
 	scheduleMonthFixture,
 } from "@/features/scheduling/months/fixtures";
-import { RegenerateMonthDialog } from "@/features/scheduling/RegenerateMonthDialog";
+import { RegenerateMonthDialog } from "@/features/scheduling/months/RegenerateMonthDialog";
 import { departmentShiftFixture } from "@/features/scheduling/shifts/fixtures";
 
 const KITCHEN = "/api/v1/companies/c-1/branches/b-1/departments/d-1";

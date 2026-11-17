@@ -8,7 +8,7 @@ import {
 	monthWeekFixture,
 	scheduleMonthFixture,
 } from "@/features/scheduling/months/fixtures";
-import { RegenerateMonthDialog } from "@/features/scheduling/RegenerateMonthDialog";
+import { RegenerateMonthDialog } from "@/features/scheduling/months/RegenerateMonthDialog";
 
 const client = new QueryClient({
 	defaultOptions: { queries: { retry: false } },

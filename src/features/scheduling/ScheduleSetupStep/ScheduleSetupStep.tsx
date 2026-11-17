@@ -12,7 +12,7 @@ import { Callout } from "@/components/ui/Callout";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { partTimeReadinessQuery } from "@/features/availability/api";
 import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
-import { PartTimeReadinessCallout } from "@/features/scheduling/PartTimeReadinessCallout";
+import { PartTimeReadinessCallout } from "@/features/scheduling/readiness/PartTimeReadinessCallout";
 import {
 	publishedRosterOtherThan,
 	publishedWeekQuery,

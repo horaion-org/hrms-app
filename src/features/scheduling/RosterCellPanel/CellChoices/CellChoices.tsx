@@ -4,7 +4,7 @@ import type { FunctionComponent } from "@/common/types";
 import { RadioCard } from "@/components/forms/RadioCard";
 import { Select } from "@/components/forms/Select";
 import { dayTypeLabel } from "@/features/scheduling/dayTypes";
-import { formatTimeRange } from "@/features/scheduling/formatShift";
+import { formatTimeRange } from "@/features/scheduling/shifts/formatShift";
 import {
 	assignmentCell,
 	rosterCellText,

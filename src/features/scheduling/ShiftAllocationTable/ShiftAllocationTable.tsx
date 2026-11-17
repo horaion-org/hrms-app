@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { NumberStepper } from "@/components/forms/NumberStepper";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
-import { formatDays, formatTimeRange } from "@/features/scheduling/formatShift";
+import { formatDays, formatTimeRange } from "@/features/scheduling/shifts/formatShift";
 import {
 	allocatedStaff,
 	allocatedTo,
