@@ -80,6 +80,7 @@ import {
 	MonthSetupStep,
 	type MonthSetupValues,
 } from "@/features/scheduling/createSchedule/MonthSetupStep";
+import { openingScheduleFor } from "@/features/scheduling/createSchedule/setupSchema";
 import { gateOf } from "@/features/scheduling/readiness/readinessCopy";
 import { ReadinessGateCallout } from "@/features/scheduling/readiness/ReadinessGateCallout";
 import { setupLinksOf } from "@/features/scheduling/readiness/setupLinks";
@@ -155,7 +156,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 	const [setup, setSetup] = useState<MonthSetupValues>();
 	const setupDefaults: MonthSetupValues = setup ?? {
 		departmentId: search.department ?? "",
-		scheduleFor: search.for ?? "month",
+		scheduleFor: openingScheduleFor(search),
 		firstDay: search.firstDay ?? "",
 		lastDay: search.lastDay ?? "",
 		name: "",
