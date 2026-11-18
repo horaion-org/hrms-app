@@ -2,4 +2,11 @@ export {
 	ApplyForSomeoneDialog,
 	type ApplyForSomeoneDialogProps,
 } from "@/features/people/ApplyForSomeoneDialog/ApplyForSomeoneDialog";
-export type { PersonToApplyFor } from "@/features/people/ApplyForSomeoneDialog/peopleToApplyFor";
+export {
+	ALL_DEPARTMENTS,
+	type DepartmentToChoose,
+	personDescription,
+	type PersonToApplyFor,
+	shownDepartment,
+	withDepartmentNames,
+} from "@/features/people/ApplyForSomeoneDialog/peopleToApplyFor";

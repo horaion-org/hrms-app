@@ -144,11 +144,22 @@ const groupNoteOf = (option: SelectOption): string | undefined =>
 const RowText = ({
 	text,
 	note,
+	description,
 }: {
 	text: string;
 	note: string | undefined;
-}): FunctionComponent =>
-	note === undefined ? (
+	description?: string;
+}): FunctionComponent => {
+	if (note === undefined && description !== undefined)
+		return (
+			<span className="flex min-w-0 flex-col">
+				<span className="truncate">{text}</span>{" "}
+				<span className="truncate text-xs font-normal text-neutral-600">
+					{description}
+				</span>
+			</span>
+		);
+	return note === undefined ? (
 		<span className="truncate">{text}</span>
 	) : (
 		<span className="flex min-w-0 flex-1 items-baseline gap-2">
@@ -158,6 +169,7 @@ const RowText = ({
 			</span>
 		</span>
 	);
+};
 
 const statusFocusClasses =
 	"focus:outline-2 focus:outline-solid focus:outline-offset-2 focus:outline-ink-blue-500";
@@ -268,7 +280,8 @@ export const Select = (props: SelectProps): FunctionComponent => {
 			disabled={option.disabled}
 			value={option.value}
 			className={joinClassNames(
-				"flex h-10 items-center justify-between gap-3 px-4 text-sm select-none pointer-coarse:min-h-11",
+				"flex items-center justify-between gap-3 px-4 text-sm select-none pointer-coarse:min-h-11",
+				option.description === undefined ? "h-10" : "min-h-10 py-1.5",
 				option.disabled
 					? "cursor-not-allowed text-neutral-500"
 					: "cursor-pointer text-neutral-800 data-focus:bg-neutral-100"
@@ -276,7 +289,11 @@ export const Select = (props: SelectProps): FunctionComponent => {
 		>
 			{({ selected }) => (
 				<>
-					<RowText note={note} text={option.label} />
+					<RowText
+						description={option.description}
+						note={note}
+						text={option.label}
+					/>
 					<span className="size-5 shrink-0">
 						{props.multiple ? (
 							selected ? (

@@ -441,6 +441,46 @@ describe("Leave", () => {
 		);
 	});
 
+	it("narrows the people search to the Department chosen in Apply leave", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({ ...routes(), [PEOPLE]: pageReply([]) });
+		// Main branch holds Sales and Kitchen; the key is held company-wide.
+		await open("/leave?view=requests&branch=b-1");
+		await screen.findByText("Aisha Rahman");
+
+		await user.click(screen.getByRole("button", { name: "Apply leave" }));
+		const dialog = await screen.findByRole("dialog", { name: "Apply leave" });
+		const department = within(dialog).getByRole("button", {
+			name: "Department",
+		});
+		expect(department).toHaveTextContent("All departments");
+		await user.click(department);
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual(["All departments", "Kitchen", "Sales"]);
+		await user.click(screen.getByRole("option", { name: "Kitchen" }));
+
+		await waitFor(() => {
+			const people = searchesOf(calls, "/api/v1/companies/c-1/member-profiles");
+			expect(people[people.length - 1]).toContain("departmentId=d-2");
+		});
+	});
+
+	it("offers no Department choice in Apply leave where the key is held at one Department only", async () => {
+		const user = userEvent.setup();
+		stubApi({ ...routes(workspaceReply(ALL, true)), [PEOPLE]: pageReply([]) });
+		await open("/leave?view=requests&branch=b-1");
+
+		await user.click(
+			await screen.findByRole("button", { name: "Apply leave" })
+		);
+		const dialog = await screen.findByRole("dialog", { name: "Apply leave" });
+
+		expect(
+			within(dialog).queryByRole("button", { name: "Department" })
+		).not.toBeInTheDocument();
+	});
+
 	it("applies on behalf of someone the person may apply for, and shows a refusal on the dates", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi({
@@ -481,7 +521,9 @@ describe("Leave", () => {
 		});
 		await user.click(within(dialog).getByRole("button", { name: "Employee" }));
 		await user.click(
-			await screen.findByRole("option", { name: "Aisha Rahman · EMP-10517" })
+			await screen.findByRole("option", {
+				name: "Aisha Rahman Sales · EMP-10517",
+			})
 		);
 		await waitFor(() => {
 			expect(

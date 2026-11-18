@@ -358,7 +358,7 @@ it("applies for the chosen employee with the chosen type and dates, and shows a 
 	expect(employees.onSearch).toHaveBeenCalledWith("A");
 	await user.click(screen.getByRole("button", { name: "Employee" }));
 	await user.click(
-		screen.getByRole("option", { name: "Aisha Rahman · EMP-10517" })
+		screen.getByRole("option", { name: "Aisha Rahman EMP-10517" })
 	);
 	await user.click(screen.getByRole("button", { name: "Type" }));
 	await user.click(screen.getByRole("option", { name: "Sick leave" }));

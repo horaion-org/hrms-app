@@ -108,4 +108,95 @@ describe("ApplyForSomeoneDialog", () => {
 
 		expect(onClose).toHaveBeenCalled();
 	});
+
+	it("tells two people with the same name apart by the line under it", async () => {
+		const user = userEvent.setup();
+		renderDialog({
+			maySetFor: () => true,
+			people: [
+				{ ...ALEX, departmentName: "Sales", employeeCode: "EMP-1" },
+				{
+					membershipId: "m-9",
+					displayName: "Alex Example",
+					departmentName: "Kitchen",
+					jobTitleName: "Cook",
+				},
+			],
+		});
+
+		await user.click(
+			within(dialog()).getByRole("button", { name: "Employee" })
+		);
+
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual(["Alex Example Sales · EMP-1", "Alex Example Kitchen · Cook"]);
+	});
+
+	describe("with people in more than one Department", () => {
+		const SALES_ALEX = {
+			...ALEX,
+			departmentId: "d-1",
+			departmentName: "Sales",
+		};
+		const KITCHEN_ALEX = {
+			membershipId: "m-9",
+			displayName: "Alex Example",
+			departmentId: "d-2",
+			departmentName: "Kitchen",
+		};
+
+		it("narrows to the Department chosen, hiding the other's person of the same name", async () => {
+			const user = userEvent.setup();
+			renderDialog({
+				maySetFor: () => true,
+				people: [SALES_ALEX, KITCHEN_ALEX],
+			});
+			const department = within(dialog()).getByRole("button", {
+				name: "Department",
+			});
+			expect(department).toHaveTextContent("All departments");
+
+			await user.click(department);
+			expect(
+				screen.getAllByRole("option").map((option) => option.textContent)
+			).toEqual(["All departments", "Kitchen", "Sales"]);
+			await user.click(screen.getByRole("option", { name: "Kitchen" }));
+			await user.click(
+				within(dialog()).getByRole("button", { name: "Employee" })
+			);
+
+			expect(
+				screen.getAllByRole("option").map((option) => option.textContent)
+			).toEqual(["Alex Example Kitchen"]);
+		});
+
+		it("starts on the page's Department when someone offered is filed there", async () => {
+			const user = userEvent.setup();
+			renderDialog({
+				departmentId: "d-1",
+				maySetFor: () => true,
+				people: [SALES_ALEX, KITCHEN_ALEX],
+			});
+
+			await user.click(
+				within(dialog()).getByRole("button", { name: "Employee" })
+			);
+
+			expect(
+				screen.getAllByRole("option").map((option) => option.textContent)
+			).toEqual(["Alex Example Sales"]);
+		});
+
+		it("offers no Department a person allowed is not filed at, and no choice for one Department", () => {
+			renderDialog({
+				maySetFor: (person) => person.membershipId === SALES_ALEX.membershipId,
+				people: [SALES_ALEX, KITCHEN_ALEX],
+			});
+
+			expect(
+				within(dialog()).queryByRole("button", { name: "Department" })
+			).not.toBeInTheDocument();
+		});
+	});
 });

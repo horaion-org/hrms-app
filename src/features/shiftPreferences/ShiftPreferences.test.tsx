@@ -449,7 +449,10 @@ const applyFor = async (
 		name: "Apply shift preferences",
 	});
 	await user.click(within(step).getByRole("button", { name: "Employee" }));
-	await user.click(await screen.findByRole("option", { name }));
+	// An option's name is the person's name, then the line that tells them apart.
+	await user.click(
+		await screen.findByRole("option", { name: new RegExp(`^${name}`) })
+	);
 	await user.click(within(step).getByRole("button", { name: "Continue" }));
 };
 
@@ -506,7 +509,7 @@ describe("ShiftPreferences: applying for someone", () => {
 		await user.click(within(step).getByRole("button", { name: "Employee" }));
 		expect(
 			(await screen.findAllByRole("option")).map((option) => option.textContent)
-		).toEqual(["Alex Example"]);
+		).toEqual(["Alex Example Sales"]);
 		await user.keyboard("{Escape}");
 		await user.type(
 			within(step).getByRole("searchbox", { name: "Search employees" }),
@@ -544,7 +547,7 @@ describe("ShiftPreferences: applying for someone", () => {
 		await user.click(within(step).getByRole("button", { name: "Employee" }));
 
 		expect(
-			await screen.findByRole("option", { name: "Bea Kitchen" })
+			await screen.findByRole("option", { name: /^Bea Kitchen/ })
 		).toBeVisible();
 		expect(
 			calls.filter((call) => call.path === TEAM_PATH).map((call) => call.search)

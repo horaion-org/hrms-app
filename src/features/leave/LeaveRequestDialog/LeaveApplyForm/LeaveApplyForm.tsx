@@ -7,13 +7,11 @@ import type { Refusal } from "@/common/refusal";
 import type { FunctionComponent } from "@/common/types";
 import { DatePicker } from "@/components/forms/DatePicker";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
-import { Input } from "@/components/forms/Input";
 import { Select } from "@/components/forms/Select";
 import { Textarea } from "@/components/forms/Textarea";
 import { TimeSelect } from "@/components/forms/TimeSelect";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
-import { SearchIcon } from "@/components/ui/Icon";
 import { Dialog } from "@/components/ui/Dialog";
 import {
 	LEAVE_NOTES_MAX_LENGTH,
@@ -37,19 +35,14 @@ import {
 	myTimeOffBalanceQuery,
 } from "@/features/employmentTerms/timeOffBalance";
 import type { LeaveRequestBody } from "@/features/leave/types";
+import {
+	ApplyEmployeePicker,
+	type ApplyEmployees,
+} from "./ApplyEmployeePicker";
 import { RosteredDaysNotice } from "../RosteredDaysNotice";
-import { remarksText } from "./remarksText";
 
-/** The people offered when applying: a search the caller owns and its current answer. */
-export type ApplyEmployees = {
-	search: string;
-	onSearch: (text: string) => void;
-	options: Array<{
-		membershipId: string;
-		displayName: string;
-		employeeCode: string;
-	}>;
-};
+export type { ApplyEmployees } from "./ApplyEmployeePicker";
+import { remarksText } from "./remarksText";
 
 export type LeaveApplyFormProps = {
 	/**
@@ -119,7 +112,6 @@ export const LeaveApplyForm = ({
 		(person) => person.membershipId === membershipId
 	);
 	const fields = refusal?.fields ?? {};
-	const employeeError = fields.employee ? `${id}-employee-error` : undefined;
 	const remarksIds = formRowIds(`${id}-remarks`);
 	// Until the person is known there is nothing to offer: the types depend on their Department.
 	const personKnown = own || chosen !== undefined;
@@ -250,52 +242,13 @@ export const LeaveApplyForm = ({
 					</p>
 				)}
 				{!own && (
-					<div className="space-y-2">
-						<p className="text-sm font-medium" id={`${id}-employee`}>
-							{t("leave.employee")}
-						</p>
-						{/* A name lookup: no saved entries over the list, and a Search key on a phone's keyboard. */}
-						<Input
-							aria-label={t("leave.searchEmployee")}
-							autoComplete="off"
-							enterKeyHint="search"
-							leadingIcon={<SearchIcon />}
-							placeholder={t("leave.searchEmployee")}
-							type="search"
-							value={employees.search}
-							onChange={(event) => {
-								employees.onSearch(event.target.value);
-							}}
-						/>
-						<Select
-							aria-describedby={employeeError}
-							aria-labelledby={`${id}-employee`}
-							className="w-full"
-							placeholder={t("leave.chooseEmployee")}
-							status={fields.employee ? "error" : undefined}
-							value={membershipId}
-							options={employees.options.map((person) => ({
-								value: person.membershipId,
-								label: `${person.displayName} · ${person.employeeCode}`,
-							}))}
-							onChange={setMembershipId}
-						/>
-						{employees.options.length === 0 &&
-							employees.search.trim() !== "" && (
-								<p className="text-sm text-neutral-700">
-									{t("leave.noEmployees")}
-								</p>
-							)}
-						{fields.employee && (
-							<p
-								className="text-sm text-error-700"
-								id={`${id}-employee-error`}
-								role="alert"
-							>
-								{fields.employee}
-							</p>
-						)}
-					</div>
+					<ApplyEmployeePicker
+						employees={employees}
+						error={fields.employee}
+						id={id}
+						membershipId={membershipId}
+						onChoose={setMembershipId}
+					/>
 				)}
 				<div className="space-y-2">
 					<p className="text-sm font-medium" id={`${id}-type`}>

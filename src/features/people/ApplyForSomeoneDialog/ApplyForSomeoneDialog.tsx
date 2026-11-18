@@ -6,7 +6,14 @@ import { Select } from "@/components/forms/Select";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { SearchIcon } from "@/components/ui/Icon";
-import { peopleToApplyFor, type PersonToApplyFor } from "./peopleToApplyFor";
+import {
+	ALL_DEPARTMENTS,
+	departmentChoices,
+	peopleToApplyFor,
+	personDescription,
+	shownDepartment,
+	type PersonToApplyFor,
+} from "./peopleToApplyFor";
 
 export type ApplyForSomeoneDialogProps<Person extends PersonToApplyFor> = {
 	/** The area's Apply action, e.g. "Apply shift preferences". */
@@ -15,6 +22,8 @@ export type ApplyForSomeoneDialogProps<Person extends PersonToApplyFor> = {
 	people: ReadonlyArray<Person> | undefined;
 	/** Why the people could not be listed; shown in place of the choice. */
 	problem?: string;
+	/** The page's own Department filter, which the picker starts on when someone offered is filed there. */
+	departmentId?: string;
 	/** Whether the caller may set this person's record, as the area's own row action decides. */
 	maySetFor: (person: Person) => boolean;
 	/** Goes on to the area's own dialog for the chosen person. */
@@ -27,13 +36,17 @@ const key = "people.applyFor";
 /**
  * The first step of applying for someone else, as Leave's "Apply leave"
  * starts: a name search over the people the caller may set for, and a
- * choice of one of them. It only chooses; the area's own dialog for that
+ * choice of one of them, each named with their Department, job title and
+ * employee code as far as the area's list knows them. With people offered
+ * in more than one Department, a Department choice narrows the list; its
+ * Departments come from the people already allowed, so it never widens it. It only chooses; the area's own dialog for that
  * person collects and sends.
  */
 export const ApplyForSomeoneDialog = <Person extends PersonToApplyFor>({
 	title,
 	people,
 	problem,
+	departmentId: pageDepartmentId,
 	maySetFor,
 	onChoose,
 	onClose,
@@ -42,7 +55,16 @@ export const ApplyForSomeoneDialog = <Person extends PersonToApplyFor>({
 	const id = useId();
 	const [search, setSearch] = useState("");
 	const [membershipId, setMembershipId] = useState("");
-	const offered = peopleToApplyFor(people ?? [], search, maySetFor);
+	const [pickedDepartment, setPickedDepartment] = useState<string>();
+	const departments = departmentChoices(
+		peopleToApplyFor(people ?? [], "", maySetFor)
+	);
+	const department = shownDepartment(
+		pickedDepartment,
+		departments,
+		pageDepartmentId
+	);
+	const offered = peopleToApplyFor(people ?? [], search, maySetFor, department);
 	const chosen = offered.find((person) => person.membershipId === membershipId);
 	const loaded = people !== undefined && problem === undefined;
 	const searched = search.trim() !== "";
@@ -76,19 +98,35 @@ export const ApplyForSomeoneDialog = <Person extends PersonToApplyFor>({
 					<p className="text-sm font-medium" id={`${id}-employee`}>
 						{t(`${key}.employee`)}
 					</p>
-					{/* A name lookup: no saved entries over the list, and a Search key on a phone's keyboard. */}
-					<Input
-						aria-label={t(`${key}.search`)}
-						autoComplete="off"
-						enterKeyHint="search"
-						leadingIcon={<SearchIcon />}
-						placeholder={t(`${key}.search`)}
-						type="search"
-						value={search}
-						onChange={(event) => {
-							setSearch(event.target.value);
-						}}
-					/>
+					<div className="flex flex-col gap-2 sm:flex-row">
+						{/* A name lookup: no saved entries over the list, and a Search key on a phone's keyboard. */}
+						<Input
+							aria-label={t(`${key}.search`)}
+							autoComplete="off"
+							enterKeyHint="search"
+							leadingIcon={<SearchIcon />}
+							placeholder={t(`${key}.search`)}
+							type="search"
+							value={search}
+							onChange={(event) => {
+								setSearch(event.target.value);
+							}}
+						/>
+						{departments.length > 1 && (
+							<Select
+								aria-label={t(`${key}.department`)}
+								value={department}
+								options={[
+									{ value: ALL_DEPARTMENTS, label: t(`${key}.allDepartments`) },
+									...departments.map((choice) => ({
+										value: choice.departmentId,
+										label: choice.name,
+									})),
+								]}
+								onChange={setPickedDepartment}
+							/>
+						)}
+					</div>
 					<Select
 						aria-labelledby={`${id}-employee`}
 						className="w-full"
@@ -98,6 +136,7 @@ export const ApplyForSomeoneDialog = <Person extends PersonToApplyFor>({
 						options={offered.map((person) => ({
 							value: person.membershipId,
 							label: person.displayName,
+							description: personDescription(person),
 						}))}
 						onChange={setMembershipId}
 					/>

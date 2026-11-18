@@ -1524,6 +1524,8 @@
 		"applyFor": {
 			"employee": "Employee",
 			"search": "Search employees",
+			"department": "Department",
+			"allDepartments": "All departments",
 			"choose": "Choose an employee",
 			"loading": "Loading people…",
 			"noMatches": "No one you may apply for matches this search.",

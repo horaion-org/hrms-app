@@ -37,7 +37,6 @@ const LINE_CEILINGS = {
 	"src/features/employmentTerms/api.ts": 585,
 	"src/components/ui/DataTable/DataTable.tsx": 576,
 	"src/features/people/api.ts": 570,
-	"src/pages/Leave.tsx": 527,
 	"src/components/forms/Calendar/Calendar/Calendar.test.tsx": 3049,
 	"src/features/scheduling/ScheduleDetail.test.tsx": 2610,
 	"src/features/scheduling/CreateMonthSchedule.test.tsx": 2060,
