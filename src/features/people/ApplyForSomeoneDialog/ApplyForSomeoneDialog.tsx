@@ -6,7 +6,11 @@ import { Select } from "@/components/forms/Select";
 import { Button } from "@/components/ui/Button";
 import { Dialog } from "@/components/ui/Dialog";
 import { SearchIcon } from "@/components/ui/Icon";
-import { peopleToApplyFor, type PersonToApplyFor } from "./peopleToApplyFor";
+import {
+	peopleToApplyFor,
+	personDescription,
+	type PersonToApplyFor,
+} from "./peopleToApplyFor";
 
 export type ApplyForSomeoneDialogProps<Person extends PersonToApplyFor> = {
 	/** The area's Apply action, e.g. "Apply shift preferences". */
@@ -27,7 +31,8 @@ const key = "people.applyFor";
 /**
  * The first step of applying for someone else, as Leave's "Apply leave"
  * starts: a name search over the people the caller may set for, and a
- * choice of one of them. It only chooses; the area's own dialog for that
+ * choice of one of them, each named with their Department, job title and
+ * employee code as far as the area's list knows them. It only chooses; the area's own dialog for that
  * person collects and sends.
  */
 export const ApplyForSomeoneDialog = <Person extends PersonToApplyFor>({
@@ -98,6 +103,7 @@ export const ApplyForSomeoneDialog = <Person extends PersonToApplyFor>({
 						options={offered.map((person) => ({
 							value: person.membershipId,
 							label: person.displayName,
+							description: personDescription(person),
 						}))}
 						onChange={setMembershipId}
 					/>

@@ -108,4 +108,28 @@ describe("ApplyForSomeoneDialog", () => {
 
 		expect(onClose).toHaveBeenCalled();
 	});
+
+	it("tells two people with the same name apart by the line under it", async () => {
+		const user = userEvent.setup();
+		renderDialog({
+			maySetFor: () => true,
+			people: [
+				{ ...ALEX, departmentName: "Sales", employeeCode: "EMP-1" },
+				{
+					membershipId: "m-9",
+					displayName: "Alex Example",
+					departmentName: "Kitchen",
+					jobTitleName: "Cook",
+				},
+			],
+		});
+
+		await user.click(
+			within(dialog()).getByRole("button", { name: "Employee" })
+		);
+
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual(["Alex Example Sales · EMP-1", "Alex Example Kitchen · Cook"]);
+	});
 });

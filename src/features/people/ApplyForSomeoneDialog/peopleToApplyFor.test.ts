@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { peopleToApplyFor, type PersonToApplyFor } from "./peopleToApplyFor";
+import {
+	peopleToApplyFor,
+	personDescription,
+	withDepartmentNames,
+	type PersonToApplyFor,
+} from "./peopleToApplyFor";
 
 const ALEX = { membershipId: "m-1", displayName: "Alex Example" };
 const BEA = { membershipId: "m-2", displayName: "Bea Kitchen" };
@@ -53,5 +58,61 @@ describe("peopleToApplyFor", () => {
 		},
 	])("$name", ({ search, maySetFor, expected }) => {
 		expect(peopleToApplyFor(PEOPLE, search, maySetFor)).toEqual(expected);
+	});
+});
+
+describe("personDescription", () => {
+	it.each([
+		{
+			name: "every part known",
+			person: {
+				...ALEX,
+				departmentName: "Sales",
+				jobTitleName: "Cashier",
+				employeeCode: "EMP-1",
+			},
+			expected: "Sales · Cashier · EMP-1",
+		},
+		{
+			name: "a missing part is left out, never blank",
+			person: {
+				...ALEX,
+				departmentName: null,
+				jobTitleName: "Cashier",
+				employeeCode: "",
+			},
+			expected: "Cashier",
+		},
+		{ name: "nothing known", person: ALEX, expected: undefined },
+	])("$name", ({ person, expected }) => {
+		expect(personDescription(person)).toBe(expected);
+	});
+});
+
+describe("withDepartmentNames", () => {
+	const DEPARTMENTS = [{ departmentId: "d-1", name: "Sales" }];
+
+	it.each([
+		{
+			name: "names a Department the page knows",
+			person: { ...ALEX, departmentId: "d-1" },
+			expected: "Sales",
+		},
+		{
+			name: "keeps a name the list carried",
+			person: { ...ALEX, departmentId: "d-1", departmentName: "Front" },
+			expected: "Front",
+		},
+		{
+			name: "leaves an unknown Department unnamed",
+			person: { ...ALEX, departmentId: "d-9" },
+			expected: null,
+		},
+		{ name: "a person filed nowhere", person: ALEX, expected: null },
+	])("$name", ({ person, expected }) => {
+		expect(
+			withDepartmentNames<PersonToApplyFor>([person], DEPARTMENTS)[0]
+				?.departmentName
+		).toBe(expected);
 	});
 });

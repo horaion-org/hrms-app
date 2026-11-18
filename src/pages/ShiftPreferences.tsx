@@ -19,7 +19,10 @@ import { WeekNavigator } from "@/components/ui/WeekNavigator";
 import { isPartTime } from "@/features/availability/availabilityModel";
 import { useMyAvailability } from "@/features/availability/useAvailability";
 import { myProfileQuery } from "@/features/people/api";
-import { ApplyForSomeoneDialog } from "@/features/people/ApplyForSomeoneDialog";
+import {
+	ApplyForSomeoneDialog,
+	withDepartmentNames,
+} from "@/features/people/ApplyForSomeoneDialog";
 import type { TeamMemberWeek } from "@/features/shiftPreferences/api";
 import { MemberShiftPreferencesDialog } from "@/features/shiftPreferences/MemberShiftPreferencesDialog";
 import { MyShiftPreferences } from "@/features/shiftPreferences/MyShiftPreferences";
@@ -300,7 +303,12 @@ export const ShiftPreferences = (): FunctionComponent => {
 			{choosingMember && (
 				<ApplyForSomeoneDialog
 					maySetFor={maySetFor}
-					people={wholeTeam.status === "ready" ? wholeTeam.members : undefined}
+					// The team list names a member's Department by id only; the header's units name it.
+					people={
+						wholeTeam.status === "ready"
+							? withDepartmentNames(wholeTeam.members, units.departments)
+							: undefined
+					}
 					problem={teamProblemKey && t(teamProblemKey)}
 					title={t("shiftPreferences.apply")}
 					onChoose={(member) => {
