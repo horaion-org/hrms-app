@@ -322,6 +322,48 @@ describe("WeekCard", () => {
 			expect(within(parts).getAllByText("To review")).toHaveLength(2);
 			expect(card).not.toHaveTextContent(/Covers/);
 			expect(
+				within(card).getByRole("link", { name: /^Review Feb 15/ })
+			).toHaveAttribute("href", "/scheduling/s-1");
+		});
+
+		it("given_anEarlierPartToReviewAndThePublishedNewest_when_shown_then_toReviewWithReviewOnTheEarlierPart", async () => {
+			const [toReview, newest] = twoPartWeekFixture();
+			const card = await renderCard(
+				monthWeekFixture({
+					periodStart: "2027-02-15",
+					periodEnd: "2027-02-21",
+					state: "PUBLISHED",
+					scheduleId: "s-2",
+					parts: [toReview!, { ...newest!, state: "PUBLISHED" }],
+				})
+			);
+
+			const parts = within(card).getByRole("navigation", {
+				name: "Schedules this week",
+			});
+			expect(within(card).getAllByText("To review")).toHaveLength(2);
+			expect(within(parts).getByText("Published")).toBeInTheDocument();
+			expect(
+				within(card).getByRole("link", { name: /^Review Feb 15/ })
+			).toHaveAttribute("href", "/scheduling/s-1");
+		});
+
+		it("given_severalPartsAllPublished_when_shown_then_publishedAndNoOpenBesideTheList", async () => {
+			const parts = twoPartWeekFixture().map((part) => ({
+				...part,
+				state: "PUBLISHED" as const,
+			}));
+			const card = await renderCard(
+				monthWeekFixture({
+					periodStart: "2027-02-15",
+					periodEnd: "2027-02-21",
+					scheduleId: "s-2",
+					parts,
+				})
+			);
+
+			expect(within(card).getAllByText("Published")).toHaveLength(3);
+			expect(
 				within(card).queryByRole("link", { name: /^(Open|Review) Feb 15/ })
 			).toBeNull();
 		});

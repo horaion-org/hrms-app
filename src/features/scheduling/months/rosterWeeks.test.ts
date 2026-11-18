@@ -71,6 +71,25 @@ describe("rosterWeekLink", () => {
 		});
 	});
 
+	it("given_aWeekOfSeveralSchedulesWhoseNewestIsPublished_when_chosen_then_thePartToReviewAndItsState", () => {
+		const [toReview, newest] = twoPartWeekFixture();
+		const month = scheduleMonthFixture({
+			weeks: [
+				monthWeekFixture({
+					state: "PUBLISHED",
+					scheduleId: "s-2",
+					parts: [toReview!, { ...newest!, state: "PUBLISHED" }],
+				}),
+			],
+		});
+
+		expect(rosterWeekLink(month, "2026-11-02")).toEqual({
+			to: "/scheduling/$scheduleId",
+			params: { scheduleId: "s-1" },
+		});
+		expect(rosterWeeksOf(month, authTestI18n.t)[0]?.state).toBe("To review");
+	});
+
 	it("given_aWeekWithoutASchedule_when_chosen_then_nowhere", () => {
 		expect(rosterWeekLink(NOVEMBER, "2026-11-30")).toBeUndefined();
 	});
