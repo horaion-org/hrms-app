@@ -4,6 +4,10 @@ import { mondayOf } from "@/common/weeks";
 import type { WeekState } from "@/features/scheduling/months/api";
 import { lastPublishedPartStartOf } from "@/features/scheduling/schedules/partLines";
 import {
+	daysOfRun,
+	stripRunsOf,
+} from "@/features/scheduling/timeline/rosterStrip";
+import {
 	scheduleViewLink,
 	type ScheduleViewLink,
 } from "@/features/scheduling/schedules/scheduleViewLink";
@@ -36,9 +40,6 @@ export type TimelineSchedule = {
 
 /** A run of days, both ends included. */
 export type DayRun = { firstDay: string; lastDay: string };
-
-/** Above this many schedules to review, the needs list names them in one line. */
-const MOST_REVIEW_LINES = 2;
 
 const addDays = (day: string, count: number): string =>
 	dayjs(day).add(count, "day").format(ISO_DATE_FORMAT);
@@ -200,8 +201,11 @@ export const timelineScheduleLink = (
 
 /** One line of the "needs you" list, as data. */
 export type NeedLine =
-	| { kind: "reviewOne"; scheduleId: string; name: string }
-	| { kind: "reviewMany"; count: number; names: Array<string> }
+	| ({
+			kind: "toReview";
+			/** The schedules holding these days, in day order: what Publish publishes. */
+			scheduleIds: Array<string>;
+	  } & DayRun)
 	| ({
 			kind: "noSchedule";
 			/** False for days before a published part of their week, which the API refuses to schedule. */
@@ -262,35 +266,34 @@ const gapLinesOf = (
 };
 
 /**
- * What needs the manager in the window: the schedules to review (one line
- * each, or one line for all above two), then the runs of days from today on
- * that no schedule covers, each saying whether the API lets them be scheduled.
+ * What needs the manager in the window: each run of days to review, as the
+ * status strip shows them, then the runs of days from today on that no
+ * schedule covers, each saying whether the API lets them be scheduled.
  */
 export const needsOf = (
 	schedules: ReadonlyArray<TimelineSchedule>,
 	window: DayRun,
 	today: string
 ): Array<NeedLine> => {
-	const toReview = schedules.filter(
-		(schedule) =>
-			schedule.status === "TO_REVIEW" &&
-			touches(schedule, window.firstDay, window.lastDay)
-	);
-	const reviewLines: Array<NeedLine> =
-		toReview.length > MOST_REVIEW_LINES
-			? [
-					{
-						kind: "reviewMany",
-						count: toReview.length,
-						names: toReview.map((schedule) => schedule.name),
-					},
-				]
-			: toReview.map((schedule) => ({
-					kind: "reviewOne",
-					scheduleId: schedule.id,
-					name: schedule.name,
-				}));
+	const reviewLines: Array<NeedLine> = stripRunsOf(schedules, daysOfRun(window))
+		.filter((run) => run.state === "TO_REVIEW")
+		.map((run) => ({
+			kind: "toReview",
+			firstDay: run.firstDay,
+			lastDay: run.lastDay,
+			scheduleIds: run.pieces.map((piece) => piece.schedule.id),
+		}));
 	const firstOpenDay = today > window.firstDay ? today : window.firstDay;
 	const gapLines = gapLinesOf(schedules, firstOpenDay, window.lastDay);
 	return [...reviewLines, ...gapLines];
+};
+
+/** The first run of days the needs list offers to generate, which the header's Generate opens with; none when no day is free. */
+export const firstFreeRunOf = (
+	lines: ReadonlyArray<NeedLine>
+): DayRun | undefined => {
+	const free = lines.find(
+		(line) => line.kind === "noSchedule" && line.schedulable
+	);
+	return free && { firstDay: free.firstDay, lastDay: free.lastDay };
 };

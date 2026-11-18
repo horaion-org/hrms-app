@@ -5829,7 +5829,13 @@
 				"noSchedule": "No schedule for {{days}}.",
 				"review": "Review",
 				"createSchedule": "Create schedule",
-				"noScheduleBeforePublished": "No schedule for {{days}}. Days before a published schedule in the same week cannot be scheduled."
+				"noScheduleBeforePublished": "No schedule for {{days}}. Days before a published schedule in the same week cannot be scheduled.",
+				"toReview_one": "{{days}} is to review. Staff can't see it yet.",
+				"toReview_other": "{{days}} are to review. Staff can't see them yet.",
+				"publish": "Publish",
+				"noRoster_one": "{{days}} has no roster.",
+				"noRoster_other": "{{days}} have no roster.",
+				"generate": "Generate"
 			},
 			"notice": {
 				"showingOne": "Showing only {{name}}. Other schedules are dimmed.",

@@ -5629,7 +5629,13 @@
 				"noSchedule": "Sin horario para {{days}}.",
 				"review": "Revisar",
 				"createSchedule": "Crear horario",
-				"noScheduleBeforePublished": "Sin horario para {{days}}. Los días anteriores a un horario publicado de la misma semana no se pueden programar."
+				"noScheduleBeforePublished": "Sin horario para {{days}}. Los días anteriores a un horario publicado de la misma semana no se pueden programar.",
+				"toReview_one": "{{days}} está por revisar. El personal aún no lo ve.",
+				"toReview_other": "{{days}} están por revisar. El personal aún no los ve.",
+				"publish": "Publicar",
+				"noRoster_one": "{{days}} no tiene cuadrante.",
+				"noRoster_other": "{{days}} no tienen cuadrante.",
+				"generate": "Generar"
 			},
 			"notice": {
 				"showingOne": "Mostrando solo {{name}}. Los demás horarios aparecen atenuados.",

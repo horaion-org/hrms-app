@@ -295,9 +295,6 @@ export const DepartmentSchedulePage = (): FunctionComponent => {
 					departmentId={departmentId}
 					lines={needsOf(timeline.schedules, { firstDay, lastDay }, today)}
 					mayCreate={mayCreate}
-					onReview={(schedule) => {
-						changeSearch({ schedule });
-					}}
 				/>
 			</div>
 		</>

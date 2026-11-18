@@ -197,11 +197,13 @@ it("shows fourteen day columns once zoomed to two weeks", async () => {
 	).toHaveLength(15);
 });
 
-it("names the schedule to review in the needs list", async () => {
+it("names the days to review in the needs list", async () => {
 	await openTimeline("from=2026-10-12");
 
 	expect(
-		screen.getByText("Early days is ready to review.")
+		screen.getByText(
+			/^Oct 12\s?–\s?14, 2026 are to review\. Staff can't see them yet\.$/
+		)
 	).toBeInTheDocument();
 });
 
@@ -291,26 +293,23 @@ const openBeforeTheWeek = async (weekend: Partial<WeekPart>): Promise<void> => {
 	await screen.findByRole("heading", { level: 2, name: "Needs you" });
 };
 
-/** Thursday lies before the published (or once published) weekend part: the API refuses it, so no Create schedule. */
+/** Thursday lies before the published (or once published) weekend part: the API refuses it, so no Generate. */
 it.each([
 	["published", { state: "PUBLISHED" as const }],
 	["published once", { state: "TO_REVIEW" as const, publishedOnce: true }],
-])(
-	"offers no Create schedule for days before a %s part",
-	async (_, weekend) => {
-		await openBeforeTheWeek(weekend);
+])("offers no Generate for days before a %s part", async (_, weekend) => {
+	await openBeforeTheWeek(weekend);
 
-		expect(
-			await screen.findByText(
-				/^No schedule for Oct 15, 2026\. Days before a published schedule in the same week cannot be scheduled\.$/
-			)
-		).toBeInTheDocument();
-		const needs = screen.getByRole("region", { name: "Needs you" });
-		expect(
-			within(needs).queryByRole("link", { name: "Create schedule" })
-		).not.toBeInTheDocument();
-	}
-);
+	expect(
+		await screen.findByText(
+			/^No schedule for Oct 15, 2026\. Days before a published schedule in the same week cannot be scheduled\.$/
+		)
+	).toBeInTheDocument();
+	const needs = screen.getByRole("region", { name: "Needs you" });
+	expect(
+		within(needs).queryByRole("link", { name: "Generate" })
+	).not.toBeInTheDocument();
+});
 
 /** While a roster is still being read the grid says it is loading, not that no one is rostered. */
 it("says the rosters are loading while their reads are on the way", async () => {
