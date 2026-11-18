@@ -44,6 +44,27 @@ describe("schedules by dates client", () => {
 		);
 	});
 
+	it("given_aPlanWithAndWithoutPeople_when_parsed_then_anOlderApiListsNobody", async () => {
+		// Undefined is left out of the JSON reply, as an older API sends it.
+		const older = { ...datesPlanFixture(), people: undefined };
+		stubApi({
+			[`GET ${DATES}/plan`]: [
+				{ status: 200, body: envelope(datesPlanFixture()) },
+				{ status: 200, body: envelope(older) },
+			],
+		});
+
+		const plan = await fetchDatesPlan("c-1", "d-1", DAYS);
+		const olderPlan = await fetchDatesPlan("c-1", "d-1", DAYS);
+
+		expect(plan.people.map((person) => person.memberProfileId)).toEqual([
+			"m-1",
+			"m-2",
+			"m-3",
+		]);
+		expect(olderPlan.people).toEqual([]);
+	});
+
 	it("given_anActionANewerApiAdds_when_parsed_then_readsAsUnknown", async () => {
 		const plan = datesPlanFixture();
 		stubApi({

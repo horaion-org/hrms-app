@@ -307,6 +307,8 @@ export const scheduleSchema = z
 		 * API, which takes a day off without a type.
 		 */
 		nonWorkingDayTypes: z.array(z.string()).catch([]),
+		/** The chosen people's member profile ids; null rosters everyone, as does an older API that sends none. */
+		memberProfileIds: z.array(z.string()).nullable().default(null),
 		createdAt: z.string(),
 		updatedAt: z.string(),
 	})
@@ -426,6 +428,8 @@ export type ScheduleBody = {
 	includeLeave: boolean;
 	includedShiftIds: Array<string>;
 	includedConstraintIds: Array<string>;
+	/** The chosen people's member profile ids; absent rosters everyone. */
+	memberProfileIds?: Array<string>;
 };
 
 /** Creates a DRAFT schedule for a Department. */

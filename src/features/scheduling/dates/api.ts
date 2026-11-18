@@ -70,6 +70,16 @@ const datesPlanWeekSchema = z.object({
 /** One week the dates touch, and what generating them does with it. */
 export type DatesPlanWeek = z.infer<typeof datesPlanWeekSchema>;
 
+/** A person the Department can roster on the first day, whom the manager may choose for the schedule. */
+const planPersonSchema = z.object({
+	memberProfileId: z.string(),
+	displayName: z.string(),
+	jobTitleName: z.string().nullable(),
+});
+
+/** A person the plan lists. */
+export type PlanPerson = z.infer<typeof planPersonSchema>;
+
 export const datesPlanSchema = z.object({
 	firstDay: z.string(),
 	lastDay: z.string(),
@@ -94,6 +104,8 @@ export const datesPlanSchema = z.object({
 			scheduledDays: daysSchema.nullable(),
 		})
 		.nullable(),
+	/** Everyone the Department can roster on the first day, by name; an older API sends none and the People row hides. */
+	people: z.array(planPersonSchema).default([]),
 });
 
 /** What generating a Department's dates would do, week by week. */
@@ -131,6 +143,8 @@ export type GenerateDatesBody = {
 	name?: string;
 	includeLeave: boolean;
 	newWeeks: Array<NewWeek>;
+	/** The chosen people's member profile ids; absent rosters everyone. */
+	memberProfileIds?: Array<string>;
 };
 
 /** The dates' query: the Department is a query parameter, never in the path. */
