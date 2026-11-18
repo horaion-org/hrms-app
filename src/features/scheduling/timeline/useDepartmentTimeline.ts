@@ -44,7 +44,9 @@ const isRefused = (error: unknown): boolean =>
 /**
  * Reads the Department's months that cover `firstDay` to `lastDay`, then each
  * schedule touching those days and its roster, through the month, schedule
- * and assignments reads the other scheduling pages use.
+ * and assignments reads the other scheduling pages use. While a part is being
+ * generated the month and that schedule are read again, as on the month and
+ * schedule pages.
  */
 export const useDepartmentTimeline = (
 	companyId: string,
@@ -74,7 +76,10 @@ export const useDepartmentTimeline = (
 	).flat();
 	const scheduleReads = useQueries({
 		queries: schedules.map((schedule) =>
-			scheduleQuery(companyId, unit, schedule.id, allowed)
+			// Read again while generating, as the schedule page does, so its roster appears once ready.
+			scheduleQuery(companyId, unit, schedule.id, allowed, {
+				pollWhileGenerating: true,
+			})
 		),
 	});
 	const rosterReads = useQueries({

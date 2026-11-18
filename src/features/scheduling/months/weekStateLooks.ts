@@ -28,6 +28,19 @@ export const hasRoster = (state: WeekState): boolean =>
 	ROSTER_STATES.includes(state);
 
 /**
+ * Whether any week is still being generated, by its newest state or by any of
+ * its parts: the month read is read again while one is.
+ */
+export const anyWeekGenerating = (
+	weeks: ReadonlyArray<Pick<MonthWeek, "state" | "parts">>
+): boolean =>
+	weeks.some(
+		(week) =>
+			week.state === "GENERATING" ||
+			week.parts.some((part) => part.state === "GENERATING")
+	);
+
+/**
  * Whether a week card shows its cover summary (shifts short, days changed by
  * hand): when the week's newest part has a roster, or, on a week of several
  * schedules, when an earlier part has one and the month read sent the week's

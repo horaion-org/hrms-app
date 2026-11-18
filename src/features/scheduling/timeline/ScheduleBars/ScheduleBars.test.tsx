@@ -1,4 +1,5 @@
 import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it } from "vitest";
@@ -37,5 +38,47 @@ describe("ScheduleBars", () => {
 		expect(within(bars).getByText("Weekend")).toBeInTheDocument();
 		expect(within(bars).getByText("To review")).toBeInTheDocument();
 		expect(bars.children).toHaveLength(1);
+	});
+
+	/** A schedule not ready yet wears the month page's words for its state. */
+	it.each([
+		["GENERATING", "Generating"],
+		["FAILED", "Generation failed"],
+		["REJECTED", "Rejected"],
+		["NOT_GENERATED", "Not generated"],
+	] as const)("shows a %s schedule as %s", async (status, words) => {
+		const [early] = twoTimelineSchedules();
+		render(
+			<MemoryRouterHarness>
+				<ScheduleBars
+					days={FIXTURE_WEEK}
+					schedules={[{ ...early!, status }]}
+					onShowOnly={() => {}}
+				/>
+			</MemoryRouterHarness>
+		);
+		expect(await screen.findByText(words)).toBeInTheDocument();
+	});
+
+	/** A failed schedule's bar still opens its page, where the failure is explained. */
+	it("keeps Open schedule on a failed schedule's menu", async () => {
+		const [early] = twoTimelineSchedules();
+		render(
+			<MemoryRouterHarness>
+				<ScheduleBars
+					days={FIXTURE_WEEK}
+					schedules={[{ ...early!, status: "FAILED" }]}
+					onShowOnly={() => {}}
+				/>
+			</MemoryRouterHarness>
+		);
+		await userEvent.click(
+			await screen.findByRole("button", {
+				name: /Early week, Generation failed/,
+			})
+		);
+		expect(
+			await screen.findByRole("menuitem", { name: "Open schedule" })
+		).toBeInTheDocument();
 	});
 });

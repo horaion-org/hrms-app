@@ -9,6 +9,7 @@ import {
 	twoPartWeekFixture,
 } from "@/features/scheduling/months/fixtures";
 import {
+	anyWeekGenerating,
 	hasRoster,
 	showsCoverSummary,
 	weekAction,
@@ -107,5 +108,30 @@ describe("showsCoverSummary", () => {
 		["noPartWithARoster", week("GENERATING", ["FAILED"], true), false],
 	])("given_%s_when_asked_then_%s", (_case, given, shows) => {
 		expect(showsCoverSummary(given)).toBe(shows);
+	});
+});
+
+describe("anyWeekGenerating", () => {
+	const [first, second] = twoPartWeekFixture();
+	it.each([
+		["aWeekGenerating", [{ state: "GENERATING" as const, parts: [] }], true],
+		[
+			"anEarlierPartGenerating",
+			[
+				{
+					state: "PUBLISHED" as const,
+					parts: [{ ...first!, state: "GENERATING" as const }, second!],
+				},
+			],
+			true,
+		],
+		[
+			"nothingGenerating",
+			[{ state: "TO_REVIEW" as const, parts: [first!, second!] }],
+			false,
+		],
+		["noWeeks", [], false],
+	])("given_%s_then_%s", (_, weeks, expected) => {
+		expect(anyWeekGenerating(weeks)).toBe(expected);
 	});
 });
