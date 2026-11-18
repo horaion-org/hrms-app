@@ -9,6 +9,7 @@ import { formatDayAndMonth } from "@/features/scheduling/months/monthWeeks";
 import { formatPeriod } from "@/features/scheduling/periods";
 import { dayMarkLooks } from "@/features/scheduling/schedules/dayMarkLooks";
 import {
+	dayCountOfRun,
 	showsYear,
 	type DepartmentCardEntry,
 	type PublishedStanding,
@@ -32,7 +33,7 @@ const PUBLISHED_LINE_KEYS = {
 
 /**
  * A card line that names a day: a link to the Department's timeline on that
- * day's week, by the route's path as "Open schedule" links (schedules/ may
+ * day's week, by the route's path as "Open roster" links (schedules/ may
  * not import timeline/).
  */
 const DayLink = ({
@@ -63,9 +64,9 @@ const DayLink = ({
 };
 
 /**
- * One Department on the Scheduling landing: Open schedule, a bar per day
- * from today, how far it is published, what is to review, where the
- * schedules stop, and what waits on the manager.
+ * One Department on the Scheduling landing: Open roster, a bar per day
+ * from today, how far it is published, how many days are to review, where
+ * the roster stops, and which days wait for the manager to publish.
  */
 export const DepartmentCard = ({
 	card,
@@ -152,7 +153,7 @@ export const DepartmentCard = ({
 						day={card.firstToReviewDay}
 						dayText={dayText(card.firstToReviewDay)}
 					>
-						{t(`${key}.toReview`, { count: card.toReviewCount })}
+						{t(`${key}.toReviewDays`, { count: card.toReviewDays })}
 					</DayLink>
 				)}
 			</p>
@@ -170,9 +171,15 @@ export const DepartmentCard = ({
 				)}
 			</p>
 			<p className="text-sm text-neutral-800">
-				{card.nextToReview === undefined
+				{card.waitingDays === undefined
 					? t(`${key}.nothingWaiting`)
-					: t(`${key}.waiting`, { name: card.nextToReview })}
+					: t(`${key}.waitingDays`, {
+							days: formatPeriod(
+								{ start: card.waitingDays.from, end: card.waitingDays.to },
+								language
+							),
+							count: dayCountOfRun(card.waitingDays),
+						})}
 			</p>
 		</section>
 	);

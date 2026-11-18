@@ -13,7 +13,6 @@ import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Callout } from "@/components/ui/Callout";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
-import { Tab, TabList, Tabs } from "@/components/ui/Tabs";
 import type { DatesPlan, DayRun } from "@/features/scheduling/dates/api";
 import type { MonthSetupDates } from "@/features/scheduling/createSchedule/MonthSetupStep/monthSetupDates";
 import {
@@ -46,10 +45,9 @@ import { chosenOutsideOffered } from "@/features/scheduling/createSchedule/Sched
 import {
 	createScheduleWordingOf,
 	monthSetupSchema,
-	SCHEDULE_FOR,
 	type MonthSetupValues,
-	type ScheduleFor,
 } from "@/features/scheduling/createSchedule/setupSchema";
+import { DatesQuickChoices } from "@/features/scheduling/createSchedule/DatesQuickChoices";
 import { PlanRowDates } from "@/features/scheduling/createSchedule/PlanRowDates";
 import { StepPanel } from "@/features/scheduling/createSchedule/StepPanel";
 import { workspaceQuery } from "@/features/workspace/api";
@@ -115,6 +113,9 @@ const SETTINGS = [
 
 /** The last day's order and length depend on the first day: a change to the first day checks the last again. */
 const FIRST_DAY_RULES: { deps: Array<"lastDay"> } = { deps: ["lastDay"] };
+
+/** A quick choice fills the two days as typing them would: checked at once and marked changed. */
+const QUICK_CHOICE_SET = { shouldValidate: true, shouldDirty: true };
 
 const rangeOf = (week: TickableWeek): TickedRange => ({
 	start: week.periodStart,
@@ -432,34 +433,6 @@ export const MonthSetupStep = ({
 							)}
 						/>
 					</FormRow>
-					<div className="flex flex-col gap-2">
-						<span className="text-sm font-normal text-neutral-800">
-							{t("scheduling.months.setup.scheduleFor")}
-						</span>
-						<Controller
-							control={control}
-							name="scheduleFor"
-							render={({ field }) => (
-								<Tabs
-									selectedIndex={SCHEDULE_FOR.indexOf(field.value)}
-									onChange={(index) => {
-										field.onChange(SCHEDULE_FOR[index] ?? "month");
-									}}
-								>
-									<TabList
-										aria-label={t("scheduling.months.setup.scheduleFor")}
-										className="-ml-1"
-									>
-										{SCHEDULE_FOR.map((each: ScheduleFor) => (
-											<Tab key={each}>
-												{t(`scheduling.months.setup.${each}`)}
-											</Tab>
-										))}
-									</TabList>
-								</Tabs>
-							)}
-						/>
-					</div>
 					{scheduleFor === "dates" && (
 						<div className="flex flex-col gap-8">
 							<div className="flex flex-col gap-8 sm:flex-row">
@@ -512,6 +485,15 @@ export const MonthSetupStep = ({
 									</FormRow>
 								))}
 							</div>
+							{today !== "" && (
+								<DatesQuickChoices
+									today={today}
+									onChoose={(range) => {
+										setValue("firstDay", range.firstDay, QUICK_CHOICE_SET);
+										setValue("lastDay", range.lastDay, QUICK_CHOICE_SET);
+									}}
+								/>
+							)}
 							<FormRow
 								className="sm:w-[37rem]"
 								error={errors.name?.message}
@@ -532,7 +514,6 @@ export const MonthSetupStep = ({
 									{...register("name")}
 								/>
 							</FormRow>
-							{dates?.people}
 							{dates?.pending && (
 								<p className="text-sm text-neutral-800" role="status">
 									{t("scheduling.dates.setup.checking")}

@@ -31,6 +31,9 @@ export type PublishedStanding = "upTo" | "notFromThisWeek" | "nothing";
 /** A Department the manager can see, as the landing's Filters offer it. */
 export type CardDepartment = { departmentId: string; name: string };
 
+/** A run of consecutive days, both included. */
+export type CardDayRun = { from: string; to: string };
+
 /** What one Department's card shows; a day is an ISO date, undefined when there is none. */
 export type DepartmentCardEntry = {
 	departmentId: string;
@@ -38,13 +41,13 @@ export type DepartmentCardEntry = {
 	/** The last day of the published run from the Monday of today's week. */
 	publishedUpTo: string | undefined;
 	publishedStanding: PublishedStanding;
-	/** Schedules to review that end on or after this week's Monday; earlier ones are left out. */
-	toReviewCount: number;
+	/** How many days are to review from this week's Monday on; earlier ones are left out. */
+	toReviewDays: number;
+	/** The first run of days to review from this week's Monday on: what waits to be published. */
+	waitingDays: CardDayRun | undefined;
 	/** The last day any schedule covers. */
 	scheduledUpTo: string | undefined;
-	/** The name of the first schedule to review, in day order. */
-	nextToReview: string | undefined;
-	/** The first day of that schedule, where the card's "to review" line opens the timeline. */
+	/** The first day to review, where the card's "to review" line opens the timeline. */
 	firstToReviewDay: string | undefined;
 	dayStrip: Array<{ day: string; mark: DayMark }>;
 };
@@ -52,7 +55,6 @@ export type DepartmentCardEntry = {
 /** One schedule of a Department, by the days it covers. */
 type CoveredSchedule = {
 	scheduleId: string;
-	name: string | undefined;
 	firstDay: string;
 	lastDay: string;
 	state: WeekState;
@@ -68,7 +70,6 @@ const schedulesOfWeek = (week: WeekSummary): Array<CoveredSchedule> => {
 	if (week.parts && week.parts.length > 0)
 		return week.parts.map((part) => ({
 			scheduleId: part.scheduleId,
-			name: part.name,
 			firstDay: part.coveredFrom,
 			lastDay: part.coveredTo,
 			state: part.state,
@@ -78,7 +79,6 @@ const schedulesOfWeek = (week: WeekSummary): Array<CoveredSchedule> => {
 	return [
 		{
 			scheduleId: week.scheduleId,
-			name: undefined,
 			firstDay: week.periodStart,
 			lastDay: addDays(week.periodStart, DAYS_IN_WEEK - 1),
 			state: week.state,
@@ -130,6 +130,33 @@ const publishedRunEnd = (
 	return lastPublished;
 };
 
+/** The days to review from `firstDay` to `lastDay`, in day order; none when `lastDay` is undefined. */
+const toReviewDaysBetween = (
+	schedules: ReadonlyArray<CoveredSchedule>,
+	firstDay: string,
+	lastDay: string | undefined
+): Array<string> => {
+	const days: Array<string> = [];
+	if (lastDay === undefined) return days;
+	for (let day = firstDay; day <= lastDay; day = addDays(day, 1))
+		if (dayMarkOf(stateOfDay(schedules, day)) === "toReview") days.push(day);
+	return days;
+};
+
+/** The first run of consecutive days among `days`, which are in day order; undefined when there is none. */
+export const firstRunOf = (
+	days: ReadonlyArray<string>
+): CardDayRun | undefined => {
+	const from = days[0];
+	if (from === undefined) return undefined;
+	let to = from;
+	for (const day of days.slice(1)) {
+		if (day !== addDays(to, 1)) break;
+		to = day;
+	}
+	return { from, to };
+};
+
 /** Which published line the card shows, from the run from this week and whether any schedule is published. */
 export const publishedStandingOf = (
 	publishedUpTo: string | undefined,
@@ -138,6 +165,10 @@ export const publishedStandingOf = (
 	if (publishedUpTo !== undefined) return "upTo";
 	return anyPublished ? "notFromThisWeek" : "nothing";
 };
+
+/** How many days a run holds. */
+export const dayCountOfRun = (run: CardDayRun): number =>
+	dayjs(run.to).diff(dayjs(run.from), "day") + 1;
 
 /** Whether a card day shows its year: only when it is not today's year. */
 export const showsYear = (day: string, today: string): boolean =>
@@ -149,13 +180,12 @@ const cardOf = (
 	schedules: ReadonlyArray<CoveredSchedule>,
 	today: string
 ): DepartmentCardEntry => {
-	// Only schedules from this week on: the timeline the card opens shows no earlier week.
+	// Only days from this week on: the timeline the card opens shows no earlier week.
 	const thisMonday = mondayOf(today);
-	const toReview = schedules.filter(
-		(schedule) =>
-			schedule.state === "TO_REVIEW" && schedule.lastDay >= thisMonday
-	);
 	const lastDays = schedules.map((schedule) => schedule.lastDay).sort();
+	const scheduledUpTo = lastDays[lastDays.length - 1];
+	const toReview = toReviewDaysBetween(schedules, thisMonday, scheduledUpTo);
+	const waitingDays = firstRunOf(toReview);
 	const publishedUpTo = publishedRunEnd(schedules, thisMonday);
 	const anyPublished = schedules.some(
 		(schedule) => schedule.state === "PUBLISHED"
@@ -165,10 +195,10 @@ const cardOf = (
 		departmentName: department.name,
 		publishedUpTo,
 		publishedStanding: publishedStandingOf(publishedUpTo, anyPublished),
-		toReviewCount: toReview.length,
-		scheduledUpTo: lastDays[lastDays.length - 1],
-		nextToReview: toReview[0]?.name,
-		firstToReviewDay: toReview[0]?.firstDay,
+		toReviewDays: toReview.length,
+		waitingDays,
+		scheduledUpTo,
+		firstToReviewDay: waitingDays?.from,
 		dayStrip: Array.from({ length: DAY_STRIP_LENGTH }, (_, index) => {
 			const day = addDays(today, index);
 			return { day, mark: dayMarkOf(stateOfDay(schedules, day)) };

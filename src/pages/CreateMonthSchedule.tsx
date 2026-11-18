@@ -85,7 +85,6 @@ import {
 	createScheduleWordingOf,
 	openingScheduleFor,
 } from "@/features/scheduling/createSchedule/setupSchema";
-import { usePeopleChoice } from "@/features/scheduling/createSchedule/PeopleChoiceDialog";
 import { gateOf } from "@/features/scheduling/readiness/readinessCopy";
 import { ReadinessGateCallout } from "@/features/scheduling/readiness/ReadinessGateCallout";
 import { setupLinksOf } from "@/features/scheduling/readiness/setupLinks";
@@ -324,8 +323,6 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			datesDraftId !== "" && allowedHere("schedule:read")
 		)
 	);
-	// Who the dates roster: everyone, or the people chosen; a saved first draft's own once it exists.
-	const people = usePeopleChoice(choice, plan, datesDraft.data);
 	const laterStartingWeeks = scheduleMonth.data
 		? startingWeeksOf(scheduleMonth.data, ticked).filter(
 				(week) => week !== startingWeek
@@ -597,8 +594,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			datesStart,
 			datesChoice.name,
 			choices[datesStart.periodStart] ?? everything,
-			settings,
-			people.idsToSend
+			settings
 		);
 		if (!body) return;
 		setProblem("");
@@ -617,7 +613,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 		mayCreate: allowedHere("schedule:create"),
 		mayUpdate: allowedHere("schedule:update"),
 		listsRead: everything !== undefined,
-		peopleProblem: people.problem,
+		peopleProblem: undefined,
 	});
 	const datesStartingPoint =
 		!unit || !datesStart ? undefined : datesDraftId !== "" ? (
@@ -674,12 +670,9 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 			departmentName: choice?.name,
 			listsHidden,
 			listsRead: everything !== undefined && scheduleMonth.data !== undefined,
-			// The list itself says to tick a week, and the People line its problem, so Next waits without a note.
+			// The list itself says to tick a week, so Next waits without a note.
 			nothingToGenerate: byDates
-				? !plan ||
-					plan.refusal !== null ||
-					plan.newDays === 0 ||
-					people.problem !== undefined
+				? !plan || plan.refusal !== null || plan.newDays === 0
 				: tickable !== undefined && ticked.length === 0,
 		},
 		t
@@ -691,7 +684,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 		setProblem("");
 		try {
 			const answer = await datesGeneration.generate(
-				datesGenerationBody(values, plan, choices, everything, people.idsToSend)
+				datesGenerationBody(values, plan, choices, everything)
 			);
 			await navigate({
 				...departmentTimelineLink(values.departmentId, values.firstDay),
@@ -775,8 +768,6 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 							plan,
 							pending: datesValid && datesPlan.isPending,
 							today: branchToday,
-							people: people.line,
-							redoRefused: people.problem === "daysTaken",
 						}}
 						departmentExtras={
 							setupGate && (

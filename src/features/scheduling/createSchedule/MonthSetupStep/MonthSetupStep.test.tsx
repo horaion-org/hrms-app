@@ -358,80 +358,53 @@ describe("MonthSetupStep", () => {
 
 			render(<Harness dates={datesProp()} defaultValues={DATES} />);
 			expect(
-				screen.getByText("Select the department and the days to generate.")
+				screen.getByText("Select the department and the days to roster.")
 			).toBeInTheDocument();
 		});
 
-		it("given_aPeopleLine_when_datesChosen_then_shownAfterTheNameAndNotInMonth", () => {
-			const dates = {
-				plan: datesPlanFixture(),
-				pending: false,
-				today: TODAY,
-				people: <p>Everyone in Kitchen, 3 people</p>,
-			};
-			const { unmount } = render(
-				<Harness dates={dates} defaultValues={DATES} />
-			);
-
-			expect(
-				screen
-					.getByRole("textbox", { name: /Name/ })
-					.compareDocumentPosition(
-						screen.getByText("Everyone in Kitchen, 3 people")
-					) & Node.DOCUMENT_POSITION_FOLLOWING
-			).toBeTruthy();
-			unmount();
-			render(<Harness dates={dates} />);
-			expect(screen.queryByText("Everyone in Kitchen, 3 people")).toBeNull();
-		});
-
-		it("given_aNewSetup_when_shown_then_monthIsChosen", () => {
+		it("given_monthInTheDefaults_when_shown_then_theMonthFieldAndNoDates", () => {
 			render(<Harness />);
 
-			expect(screen.getByRole("tab", { name: "Month" })).toHaveAttribute(
-				"aria-selected",
-				"true"
-			);
+			expect(screen.getByRole("button", { name: /Month/ })).toBeInTheDocument();
 			expect(screen.queryByText("First day")).toBeNull();
 		});
 
-		it("given_monthChosen_when_shown_then_theMonthFieldComesAfterTheChoice", () => {
-			render(<Harness />);
-
-			const choice = screen.getByRole("tablist", { name: "Schedule for" });
-			expect(
-				choice.compareDocumentPosition(
-					screen.getByRole("button", { name: /Month/ })
-				) & Node.DOCUMENT_POSITION_FOLLOWING
-			).toBeTruthy();
-		});
-
-		it("given_datesChosen_when_shown_then_theFirstDayFieldComesAfterTheChoice", () => {
+		it("given_datesInTheDefaults_when_shown_then_theDayFieldsAndNoMonth", () => {
 			render(<Harness dates={datesProp()} defaultValues={DATES} />);
 
-			const choice = screen.getByRole("tablist", { name: "Schedule for" });
-			expect(
-				choice.compareDocumentPosition(screen.getByText("First day")) &
-					Node.DOCUMENT_POSITION_FOLLOWING
-			).toBeTruthy();
+			expect(screen.getByText("First day")).toBeInTheDocument();
+			expect(screen.queryByRole("button", { name: /Month/ })).toBeNull();
 		});
 
-		it("given_datesChosen_when_shown_then_firstLastNameAndThePlanRows", async () => {
-			const user = userEvent.setup();
-			const onDatesChange = vi.fn();
-			render(<Harness dates={datesProp()} onDatesChange={onDatesChange} />);
+		it.each([
+			{ case: "month", defaultValues: DEFAULTS },
+			{ case: "dates", defaultValues: DATES },
+		])("given_$case_when_shown_then_noScheduleForChoice", ({ defaultValues }) => {
+			render(<Harness dates={datesProp()} defaultValues={defaultValues} />);
 
-			await user.click(screen.getByRole("tab", { name: "Dates" }));
+			expect(screen.queryByRole("tablist")).toBeNull();
+			expect(screen.queryByText("Schedule for")).toBeNull();
+		});
+
+		it("given_datesChosen_when_shown_then_firstLastNameAndThePlanRows", () => {
+			const onDatesChange = vi.fn();
+			render(
+				<Harness
+					dates={datesProp()}
+					defaultValues={{ ...DEFAULTS, scheduleFor: "dates" }}
+					onDatesChange={onDatesChange}
+				/>
+			);
 
 			expect(screen.getByText("First day")).toBeInTheDocument();
 			expect(screen.getByText("Last day")).toBeInTheDocument();
 			expect(
-				screen.getByText("Optional. Shown on the weeks these dates create.")
+				screen.getByText("Optional. Shown only in History.")
 			).toBeInTheDocument();
-			const table = screen.getByRole("table", { name: "What this creates" });
+			const table = screen.getByRole("table", { name: "What generating does" });
 			expect(within(table).getAllByRole("row")).toHaveLength(3);
 			expect(
-				within(table).getByText(/^Nov 19\s?–\s?22, 2026 with your choices$/)
+				within(table).getByText(/^Nov 19\s?–\s?22, 2026: empty, will be filled\.$/)
 			).toBeInTheDocument();
 			expect(within(table).getAllByText("New")).toHaveLength(2);
 			expect(
@@ -443,6 +416,37 @@ describe("MonthSetupStep", () => {
 				lastDay: "",
 				name: "",
 			});
+		});
+
+		it("given_aQuickChoice_when_pressed_then_bothDaysAreFilledAndNothingElse", async () => {
+			const user = userEvent.setup();
+			const onDatesChange = vi.fn();
+			render(
+				<Harness
+					dates={datesProp()}
+					defaultValues={{ ...DATES, name: "Year-end gala" }}
+					onDatesChange={onDatesChange}
+				/>
+			);
+
+			await user.click(screen.getByRole("button", { name: "Next week" }));
+
+			// Today is Tuesday 17 November 2026: next week is Monday 23 to Sunday 29.
+			await waitFor(() => {
+				expect(onDatesChange).toHaveBeenLastCalledWith({
+					scheduleFor: "dates",
+					firstDay: "2026-11-23",
+					lastDay: "2026-11-29",
+					name: "Year-end gala",
+				});
+			});
+			expect(screen.queryByRole("alert")).toBeNull();
+		});
+
+		it("given_monthInTheDefaults_when_shown_then_noQuickChoices", () => {
+			render(<Harness dates={datesProp()} />);
+
+			expect(screen.queryByRole("group", { name: "Quick choices" })).toBeNull();
 		});
 
 		it("given_aPastFirstDay_when_validated_then_saysChooseTodayOrLater", async () => {
@@ -476,7 +480,7 @@ describe("MonthSetupStep", () => {
 
 			expect(
 				await screen.findByText(
-					"That is 32 days. A schedule by dates covers up to 31 days. Choose a last day on or before Sat, Dec 19, or make a second schedule for the rest."
+					"That is 32 days. One run covers up to 31 days. Choose a last day on or before Sat, Dec 19, then generate the rest in a second run."
 				)
 			).toBeInTheDocument();
 		});
@@ -516,7 +520,7 @@ describe("MonthSetupStep", () => {
 			);
 
 			expect(
-				screen.getByText(/^Nov 23\s?–\s?29, 2026 stay as they are$/)
+				screen.getByText(/^Nov 23\s?–\s?29, 2026: stays as it is\.$/)
 			).toBeInTheDocument();
 			expect(screen.getByText("Kept")).toBeInTheDocument();
 			expect(
@@ -552,7 +556,7 @@ describe("MonthSetupStep", () => {
 				)
 			).toBeInTheDocument();
 			expect(
-				screen.queryByText(/already have a schedule\. It stays/)
+				screen.queryByText(/are to review\. Their roster stays/)
 			).toBeNull();
 		});
 
@@ -585,7 +589,7 @@ describe("MonthSetupStep", () => {
 
 			expect(
 				within(
-					screen.getByRole("table", { name: "What this creates" })
+					screen.getByRole("table", { name: "What generating does" })
 				).getByText(
 					"3 changes made by hand to this week’s roster will be replaced."
 				)
@@ -619,24 +623,24 @@ describe("MonthSetupStep", () => {
 				/>
 			);
 
-			const table = screen.getByRole("table", { name: "What this creates" });
+			const table = screen.getByRole("table", { name: "What generating does" });
 			expect(
-				within(table).getByText(/^Nov 16\s?–\s?17, 2026 stay as they are$/)
+				within(table).getByText(/^Nov 16\s?–\s?17, 2026: stays as it is\.$/)
 			).toBeInTheDocument();
 			expect(
 				within(table).getByText(
-					/^Nov 18\s?–\s?19, 2026 scheduled again with your choices$/
+					/^Nov 18\s?–\s?19, 2026: to review, will be worked out again\.$/
 				)
 			).toBeInTheDocument();
 			expect(
 				within(table).getByText(
-					/^Nov 20\s?–\s?22, 2026 scheduled again with the week’s own shifts and rules$/
+					/^Nov 20\s?–\s?22, 2026: to review, will be worked out again after the new days\.$/
 				)
 			).toBeInTheDocument();
 			expect(within(table).getByText("To redo")).toBeInTheDocument();
 			expect(
 				within(table).getByText(
-					/^This week will be 3 schedules: Nov 16\s?–\s?17, 2026, Nov 18\s?–\s?19, 2026,? and Nov 20\s?–\s?22, 2026\. Each is reviewed and published on its own\.$/
+					/^These days are reviewed and published in 3 parts: Nov 16\s?–\s?17, 2026, Nov 18\s?–\s?19, 2026,? and Nov 20\s?–\s?22, 2026\.$/
 				)
 			).toBeInTheDocument();
 			expect(
@@ -646,21 +650,15 @@ describe("MonthSetupStep", () => {
 			).toBeInTheDocument();
 			expect(
 				screen.getByText(
-					/^Nov 18\s?–\s?19, 2026 already have a schedule\. It stays until the new days are ready\. Then they are replaced, and the rest of their week is scheduled again\. Days that have been published are never touched\.$/
+					/^Nov 18\s?–\s?19, 2026 are to review\. Their roster stays until the new one is ready, then it is replaced and the rest of their week is worked out again\. Published days are never touched\.$/
 				)
 			).toBeInTheDocument();
 		});
 
 		it.each([
 			{ case: "everyone keeps the redo note", redoRefused: false, notes: 1 },
-			{
-				case: "people chosen over scheduled days drop it",
-				redoRefused: true,
-				notes: 0,
-			},
+			{ case: "a refused redo drops it", redoRefused: true, notes: 0 },
 		])("given_aRedoPlan_when_$case", ({ redoRefused, notes }) => {
-			const peopleProblem =
-				"These days already have a schedule. Choose days with no schedule, or roster everyone.";
 			render(
 				<Harness
 					dates={{
@@ -668,7 +666,6 @@ describe("MonthSetupStep", () => {
 						pending: false,
 						today: TODAY,
 						redoRefused,
-						people: redoRefused && <p role="alert">{peopleProblem}</p>,
 					}}
 					defaultValues={{
 						...DATES,
@@ -679,12 +676,11 @@ describe("MonthSetupStep", () => {
 			);
 
 			expect(
-				screen.queryAllByText(/It stays until the new days are ready/)
+				screen.queryAllByText(/roster stays until the new one is ready/)
 			).toHaveLength(notes);
 			expect(screen.queryAllByText(/more days? after them/)).toHaveLength(
 				notes
 			);
-			expect(screen.queryAllByText(peopleProblem)).toHaveLength(1 - notes);
 		});
 
 		it("given_aRedoPlan_when_shown_then_theDaysStripReadsKeptDaysApartFromGeneratedOnes", () => {
@@ -699,7 +695,7 @@ describe("MonthSetupStep", () => {
 				/>
 			);
 
-			const table = screen.getByRole("table", { name: "What this creates" });
+			const table = screen.getByRole("table", { name: "What generating does" });
 			expect(within(table).getByRole("img")).toHaveAccessibleName(
 				"Monday already scheduled, stays as it is, Tuesday already scheduled, stays as it is, Wednesday covered, Thursday covered, Friday covered, Saturday covered, Sunday covered"
 			);
@@ -747,12 +743,12 @@ describe("MonthSetupStep", () => {
 				screen.getByText(/which have been published and stay as they are\./)
 			).toBeInTheDocument();
 			expect(
-				screen.queryByRole("table", { name: "What this creates" })
+				screen.queryByRole("table", { name: "What generating does" })
 			).toBeNull();
 			expect(screen.queryByText(/This week will be/)).toBeNull();
 			expect(screen.queryByText(/\d+ days? to generate/)).toBeNull();
 			expect(
-				screen.queryByText(/It stays until the new days are ready/)
+				screen.queryByText(/roster stays until the new one is ready/)
 			).toBeNull();
 		});
 	});

@@ -38,9 +38,9 @@ const publishedAhead: DepartmentCardEntry = {
 	departmentName: "Front Desk",
 	publishedUpTo: "2026-12-06",
 	publishedStanding: "upTo",
-	toReviewCount: 0,
+	toReviewDays: 0,
+	waitingDays: undefined,
 	scheduledUpTo: "2026-12-06",
-	nextToReview: undefined,
 	firstToReviewDay: undefined,
 	dayStrip: strip(19, 0),
 };
@@ -58,21 +58,21 @@ type Story = StoryObj<typeof meta>;
 
 /** Published up to Sunday 6 December, nothing waiting. */
 export const PublishedAhead: Story = {};
-/** Published this week, two schedules to review after it. */
-export const SchedulesToReview: Story = {
+/** Published this week, the two weeks after it to review. */
+export const DaysToReview: Story = {
 	args: {
 		card: {
 			...publishedAhead,
 			publishedUpTo: "2026-11-22",
-			toReviewCount: 2,
-			nextToReview: "Week of 23 Nov",
+			toReviewDays: 14,
+			waitingDays: { from: "2026-11-23", to: "2026-12-06" },
 			firstToReviewDay: "2026-11-23",
 			dayStrip: strip(5, 14),
 		},
 	},
 };
-/** A Department with no schedule at all. */
-export const NoScheduleYet: Story = {
+/** A Department with no roster at all. */
+export const NoRosterYet: Story = {
 	args: {
 		card: {
 			...publishedAhead,

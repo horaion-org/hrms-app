@@ -15,15 +15,15 @@ beforeAll(async () => {
 
 const TODAY = "2026-11-18";
 
-/** Front Desk published through 22 Nov, two schedules to review, scheduled to 6 Dec. */
+/** Front Desk published through 22 Nov, five days to review from 25 Nov, rostered to 6 Dec. */
 const frontDesk: DepartmentCardEntry = {
 	departmentId: "d-1",
 	departmentName: "Front Desk",
 	publishedUpTo: "2026-11-22",
 	publishedStanding: "upTo",
-	toReviewCount: 2,
+	toReviewDays: 5,
+	waitingDays: { from: "2026-11-25", to: "2026-11-29" },
 	scheduledUpTo: "2026-12-06",
-	nextToReview: "Week of 23 Nov",
 	firstToReviewDay: "2026-11-25",
 	dayStrip: [{ day: TODAY, mark: "published" }],
 };
@@ -34,9 +34,9 @@ const security: DepartmentCardEntry = {
 	departmentName: "Security",
 	publishedUpTo: undefined,
 	publishedStanding: "nothing",
-	toReviewCount: 0,
+	toReviewDays: 0,
+	waitingDays: undefined,
 	scheduledUpTo: undefined,
-	nextToReview: undefined,
 	firstToReviewDay: undefined,
 	dayStrip: [{ day: TODAY, mark: "none" }],
 };
@@ -56,10 +56,23 @@ describe("DepartmentCard", () => {
 		const card = await renderCard(frontDesk);
 
 		expect(card).toHaveTextContent("Published up to Nov 22");
-		expect(card).toHaveTextContent("2 schedules to review");
-		expect(card).toHaveTextContent("Nothing scheduled after Dec 6");
+		expect(card).toHaveTextContent("5 days to review");
+		expect(card).toHaveTextContent("Nothing rostered after Dec 6");
 		expect(card).toHaveTextContent(
-			"Week of 23 Nov is waiting for your review."
+			/Nov 25\s?–\s?29, 2026 are waiting for you to publish\./
+		);
+	});
+
+	it("given_oneDayToReview_when_rendered_then_theDayIsWaiting", async () => {
+		const card = await renderCard({
+			...frontDesk,
+			toReviewDays: 1,
+			waitingDays: { from: "2026-11-25", to: "2026-11-25" },
+		});
+
+		expect(card).toHaveTextContent("1 day to review");
+		expect(card).toHaveTextContent(
+			"Nov 25, 2026 is waiting for you to publish."
 		);
 	});
 
@@ -68,7 +81,7 @@ describe("DepartmentCard", () => {
 
 		expect(card).toHaveTextContent("Nothing published yet");
 		expect(card).toHaveTextContent("Nothing to review");
-		expect(card).toHaveTextContent("No schedule yet");
+		expect(card).toHaveTextContent("No roster yet");
 		expect(card).toHaveTextContent("Nothing is waiting for you.");
 	});
 
@@ -79,7 +92,7 @@ describe("DepartmentCard", () => {
 		});
 
 		expect(card).toHaveTextContent("Published up to Nov 22");
-		expect(card).toHaveTextContent("Nothing scheduled after Dec 5, 2027");
+		expect(card).toHaveTextContent("Nothing rostered after Dec 5, 2027");
 	});
 
 	it("given_publishedOnlyLater_when_rendered_then_saysNotPublishedFromThisWeek", async () => {
@@ -92,23 +105,23 @@ describe("DepartmentCard", () => {
 		expect(card).not.toHaveTextContent("Nothing published yet");
 	});
 
-	it("given_openSchedule_when_rendered_then_linksToTheDepartmentTimeline", async () => {
+	it("given_openRoster_when_rendered_then_linksToTheDepartmentTimeline", async () => {
 		const card = await renderCard(frontDesk);
 
 		expect(
-			within(card).getByRole("link", { name: "Open the Front Desk schedule" })
+			within(card).getByRole("link", { name: "Open the Front Desk roster" })
 		).toHaveAttribute("href", "/scheduling/department?department=d-1");
 	});
 
 	/** Each line that names a day opens the timeline on that day's week; the others stay plain text. */
 	it.each([
 		["Published up to Nov 22", "Nov 22", "2026-11-16"],
-		["2 schedules to review", "Nov 25", "2026-11-23"],
-		["Nothing scheduled after Dec 6", "Dec 6", "2026-11-30"],
+		["5 days to review", "Nov 25", "2026-11-23"],
+		["Nothing rostered after Dec 6", "Dec 6", "2026-11-30"],
 	])("links %s to the week of %s", async (text, day, from) => {
 		const card = await renderCard(frontDesk);
 		const link = within(card).getByRole("link", {
-			name: `Open the Front Desk schedule at ${day}`,
+			name: `Open the Front Desk roster at ${day}`,
 		});
 		expect(link).toHaveTextContent(text);
 		expect(link).toHaveAttribute(
