@@ -9,4 +9,6 @@ export type SelectOption = {
 	 * each option's row names its group instead.
 	 */
 	group?: string;
+	/** A muted second line under the label that tells options with the same label apart, e.g. a person's Department. */
+	description?: string;
 };

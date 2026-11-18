@@ -76,6 +76,28 @@ describe("Select", () => {
 		}
 	);
 
+	it("shows an option's description as a second line under its label", async () => {
+		const user = userEvent.setup();
+		render(
+			<Select
+				aria-label="Person"
+				options={[
+					{ value: "m-1", label: "Alex Tan", description: "Sales · EMP-1" },
+					{ value: "m-2", label: "Alex Tan", description: "Kitchen · EMP-2" },
+				]}
+			/>
+		);
+
+		await user.click(screen.getByRole("button", { name: "Person" }));
+
+		expect(
+			screen.getByRole("option", { name: "Alex Tan Sales · EMP-1" })
+		).toBeVisible();
+		expect(
+			screen.getByRole("option", { name: "Alex Tan Kitchen · EMP-2" })
+		).toBeVisible();
+	});
+
 	it("selects every enabled option from Select All and clears them on a second click", async () => {
 		const user = userEvent.setup();
 		const onChange = vi.fn();
