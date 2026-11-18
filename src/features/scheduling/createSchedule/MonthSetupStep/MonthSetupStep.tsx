@@ -13,7 +13,6 @@ import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import { Callout } from "@/components/ui/Callout";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
-import { Tab, TabList, Tabs } from "@/components/ui/Tabs";
 import type { DatesPlan, DayRun } from "@/features/scheduling/dates/api";
 import type { MonthSetupDates } from "@/features/scheduling/createSchedule/MonthSetupStep/monthSetupDates";
 import {
@@ -46,9 +45,7 @@ import { chosenOutsideOffered } from "@/features/scheduling/createSchedule/Sched
 import {
 	createScheduleWordingOf,
 	monthSetupSchema,
-	SCHEDULE_FOR,
 	type MonthSetupValues,
-	type ScheduleFor,
 } from "@/features/scheduling/createSchedule/setupSchema";
 import { PlanRowDates } from "@/features/scheduling/createSchedule/PlanRowDates";
 import { StepPanel } from "@/features/scheduling/createSchedule/StepPanel";
@@ -432,34 +429,6 @@ export const MonthSetupStep = ({
 							)}
 						/>
 					</FormRow>
-					<div className="flex flex-col gap-2">
-						<span className="text-sm font-normal text-neutral-800">
-							{t("scheduling.months.setup.scheduleFor")}
-						</span>
-						<Controller
-							control={control}
-							name="scheduleFor"
-							render={({ field }) => (
-								<Tabs
-									selectedIndex={SCHEDULE_FOR.indexOf(field.value)}
-									onChange={(index) => {
-										field.onChange(SCHEDULE_FOR[index] ?? "month");
-									}}
-								>
-									<TabList
-										aria-label={t("scheduling.months.setup.scheduleFor")}
-										className="-ml-1"
-									>
-										{SCHEDULE_FOR.map((each: ScheduleFor) => (
-											<Tab key={each}>
-												{t(`scheduling.months.setup.${each}`)}
-											</Tab>
-										))}
-									</TabList>
-								</Tabs>
-							)}
-						/>
-					</div>
 					{scheduleFor === "dates" && (
 						<div className="flex flex-col gap-8">
 							<div className="flex flex-col gap-8 sm:flex-row">

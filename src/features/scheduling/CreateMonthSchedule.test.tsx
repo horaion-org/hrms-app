@@ -1857,10 +1857,10 @@ describe("Create schedules for a month: by dates", () => {
 		expect(
 			await screen.findByRole("table", { name: "What this creates" })
 		).toBeInTheDocument();
-		expect(screen.getByRole("tab", { name: "Dates" })).toHaveAttribute(
-			"aria-selected",
-			"true"
-		);
+		expect(screen.getByText("First day")).toBeInTheDocument();
+		expect(
+			screen.queryByRole("tablist", { name: "Schedule for" })
+		).toBeNull();
 		expect(calls.find((call) => call.path === `${DATES}/plan`)?.search).toBe(
 			"departmentId=d-1&firstDay=2026-11-19&lastDay=2026-11-28"
 		);

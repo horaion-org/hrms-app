@@ -362,43 +362,39 @@ describe("MonthSetupStep", () => {
 			).toBeInTheDocument();
 		});
 
-		it("given_aNewSetup_when_shown_then_monthIsChosen", () => {
+		it("given_monthInTheDefaults_when_shown_then_theMonthFieldAndNoDates", () => {
 			render(<Harness />);
 
-			expect(screen.getByRole("tab", { name: "Month" })).toHaveAttribute(
-				"aria-selected",
-				"true"
-			);
+			expect(screen.getByRole("button", { name: /Month/ })).toBeInTheDocument();
 			expect(screen.queryByText("First day")).toBeNull();
 		});
 
-		it("given_monthChosen_when_shown_then_theMonthFieldComesAfterTheChoice", () => {
-			render(<Harness />);
-
-			const choice = screen.getByRole("tablist", { name: "Schedule for" });
-			expect(
-				choice.compareDocumentPosition(
-					screen.getByRole("button", { name: /Month/ })
-				) & Node.DOCUMENT_POSITION_FOLLOWING
-			).toBeTruthy();
-		});
-
-		it("given_datesChosen_when_shown_then_theFirstDayFieldComesAfterTheChoice", () => {
+		it("given_datesInTheDefaults_when_shown_then_theDayFieldsAndNoMonth", () => {
 			render(<Harness dates={datesProp()} defaultValues={DATES} />);
 
-			const choice = screen.getByRole("tablist", { name: "Schedule for" });
-			expect(
-				choice.compareDocumentPosition(screen.getByText("First day")) &
-					Node.DOCUMENT_POSITION_FOLLOWING
-			).toBeTruthy();
+			expect(screen.getByText("First day")).toBeInTheDocument();
+			expect(screen.queryByRole("button", { name: /Month/ })).toBeNull();
 		});
 
-		it("given_datesChosen_when_shown_then_firstLastNameAndThePlanRows", async () => {
-			const user = userEvent.setup();
-			const onDatesChange = vi.fn();
-			render(<Harness dates={datesProp()} onDatesChange={onDatesChange} />);
+		it.each([
+			{ case: "month", defaultValues: DEFAULTS },
+			{ case: "dates", defaultValues: DATES },
+		])("given_$case_when_shown_then_noScheduleForChoice", ({ defaultValues }) => {
+			render(<Harness dates={datesProp()} defaultValues={defaultValues} />);
 
-			await user.click(screen.getByRole("tab", { name: "Dates" }));
+			expect(screen.queryByRole("tablist")).toBeNull();
+			expect(screen.queryByText("Schedule for")).toBeNull();
+		});
+
+		it("given_datesChosen_when_shown_then_firstLastNameAndThePlanRows", () => {
+			const onDatesChange = vi.fn();
+			render(
+				<Harness
+					dates={datesProp()}
+					defaultValues={{ ...DEFAULTS, scheduleFor: "dates" }}
+					onDatesChange={onDatesChange}
+				/>
+			);
 
 			expect(screen.getByText("First day")).toBeInTheDocument();
 			expect(screen.getByText("Last day")).toBeInTheDocument();
