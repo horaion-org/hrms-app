@@ -23,8 +23,12 @@ export type CoverUnavailableItem = {
 };
 
 export type CoverOptionListProps = {
-	/** The options, best first; the first is marked Suggested. */
+	/** The options, in the order to show them. */
 	options: ReadonlyArray<CoverOptionItem>;
+	/** The membership id of the one option marked Suggested; nobody is marked when left out. */
+	suggested?: string;
+	/** One line under the heading: what the order means, and what it does not check. */
+	note?: string;
 	/** The chosen option's membership id. */
 	selected: string | undefined;
 	onSelect: (membershipId: string) => void;
@@ -38,13 +42,16 @@ export type CoverOptionListProps = {
 const key = "scheduling.cover.list";
 
 /**
- * Who could cover a short shift: the options as radio cards, best first and
- * the first marked Suggested, five at a time with "Show more", then a
+ * Who could cover a short shift: the options as radio cards in the order
+ * given, with a line saying what that order means and the one named as
+ * `suggested` marked Suggested, five at a time with "Show more", then a
  * collapsed "Can't help" list with each person's reason. The disclosure is a
  * real button, so every reason is reachable without hovering.
  */
 export const CoverOptionList = ({
 	options,
+	suggested,
+	note,
 	selected,
 	onSelect,
 	unavailable,
@@ -53,6 +60,7 @@ export const CoverOptionList = ({
 }: CoverOptionListProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const headingId = useId();
+	const noteId = useId();
 	const cantHelpId = useId();
 	const [showAll, setShowAll] = useState(false);
 	const [cantHelpShown, setCantHelpShown] = useState(unavailableOpen);
@@ -66,12 +74,18 @@ export const CoverOptionList = ({
 					<h3 className="text-sm font-medium text-neutral-800" id={headingId}>
 						{t(`${key}.whoCovers`)}
 					</h3>
+					{note && (
+						<p className="text-sm text-neutral-700" id={noteId}>
+							{note}
+						</p>
+					)}
 					<div
+						aria-describedby={note ? noteId : undefined}
 						aria-labelledby={headingId}
 						className="flex flex-col gap-2"
 						role="radiogroup"
 					>
-						{shown.map((option, index) => (
+						{shown.map((option) => (
 							<RadioCard
 								key={option.membershipId}
 								checked={selected === option.membershipId}
@@ -80,7 +94,7 @@ export const CoverOptionList = ({
 								value={option.membershipId}
 								description={
 									<>
-										{index === 0 && (
+										{option.membershipId === suggested && (
 											<Badge compact className="mb-1">
 												{t(`${key}.suggested`)}
 											</Badge>
