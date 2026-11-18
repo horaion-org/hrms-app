@@ -160,3 +160,42 @@ export const daysLeftBeforeOf = (
 			? [action.days]
 			: []
 	);
+
+/** What deleting a part of its week leaves behind, as the delete dialog says it. */
+export type DeleteLeaves = {
+	/** This part's days, which have no roster once it is gone; none when no other part shares its week. */
+	daysWithoutRoster?: DayRun;
+	/** The later parts' days, worked out from this part's days and left as they are. */
+	laterDays?: DayRun;
+};
+
+/**
+ * What deleting the part covering `covered` leaves of its week (`parts`, the
+ * week read's parts, this one included): only when other parts share the
+ * week, its days with no roster, and the later parts' days, which were worked
+ * out from them and are not changed. Pure.
+ */
+export const deleteLeavesOf = (
+	scheduleId: string,
+	covered: DayRun,
+	parts: ReadonlyArray<
+		Pick<WeekPart, "scheduleId" | "coveredFrom" | "coveredTo">
+	>
+): DeleteLeaves => {
+	const others = parts.filter((part) => part.scheduleId !== scheduleId);
+	if (others.length === 0) return {};
+	const later = others
+		.filter((part) => part.coveredFrom > covered.to)
+		.sort((first, second) =>
+			first.coveredFrom.localeCompare(second.coveredFrom)
+		);
+	const firstLater = later[0];
+	const lastLater = later[later.length - 1];
+	return {
+		daysWithoutRoster: covered,
+		laterDays:
+			firstLater && lastLater
+				? { from: firstLater.coveredFrom, to: lastLater.coveredTo }
+				: undefined,
+	};
+};

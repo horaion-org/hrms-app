@@ -4433,7 +4433,10 @@
 			"published": "Este horario está publicado, así que no se puede eliminar. Cambia sus días en el cuadrante.",
 			"gone": "Este horario ya no existe.",
 			"forbidden": "Ya no tienes permiso para eliminar este horario.",
-			"failed": "No pudimos eliminar el horario. Inténtalo de nuevo."
+			"failed": "No pudimos eliminar el horario. Inténtalo de nuevo.",
+			"leavesNoRoster": "{{days}} se quedará sin cuadrante.",
+			"laterWorkedOut_one": "{{later}} se calculó a partir de esos días y se queda como está; programa {{days}} de nuevo para rehacerlo.",
+			"laterWorkedOut_other": "{{later}} se calcularon a partir de esos días y se quedan como están; programa {{days}} de nuevo para rehacerlos."
 		},
 		"regenerate": {
 			"retry": "Generar de nuevo",

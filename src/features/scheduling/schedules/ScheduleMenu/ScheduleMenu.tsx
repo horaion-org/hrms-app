@@ -6,6 +6,7 @@ import { saveFile } from "@/common/saveFile";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { OverflowMenu, OverflowMenuItem } from "@/components/ui/OverflowMenu";
+import type { WeekPart } from "@/features/scheduling/months/api";
 import { DeleteScheduleDialog } from "@/features/scheduling/schedules/DeleteScheduleDialog";
 import {
 	deletable,
@@ -23,6 +24,8 @@ export type ScheduleMenuProps = {
 	withExport?: boolean;
 	/** After the schedule is deleted; the list needs nothing, the roster leaves. */
 	onDeleted?: () => void;
+	/** The week's parts where the caller has read them, so Delete says what it leaves behind. */
+	weekParts?: ReadonlyArray<WeekPart>;
 	/**
 	 * The roster page's own items (`OverflowMenuItem`s), listed before Export
 	 * and Delete: Reject, Regenerate, View setup and Details. Each is given
@@ -43,6 +46,7 @@ export const ScheduleMenu = ({
 	schedule,
 	withExport = false,
 	onDeleted,
+	weekParts,
 	children,
 }: ScheduleMenuProps): FunctionComponent => {
 	const { t } = useTranslation();
@@ -125,6 +129,7 @@ export const ScheduleMenu = ({
 				<DeleteScheduleDialog
 					companyId={companyId}
 					schedule={schedule}
+					weekParts={weekParts}
 					onClose={closeDeleteDialog}
 					onDeleted={() => {
 						closeDeleteDialog();

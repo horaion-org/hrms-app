@@ -4633,7 +4633,10 @@
 			"published": "This schedule is published, so it can’t be deleted. Change its days on the roster instead.",
 			"gone": "This schedule no longer exists.",
 			"forbidden": "You no longer have permission to delete this schedule.",
-			"failed": "We couldn’t delete the schedule. Try again."
+			"failed": "We couldn’t delete the schedule. Try again.",
+			"leavesNoRoster": "{{days}} will have no roster.",
+			"laterWorkedOut_one": "{{later}} was worked out from them and stays as it is; schedule {{days}} again to redo it.",
+			"laterWorkedOut_other": "{{later}} were worked out from them and stay as they are; schedule {{days}} again to redo them."
 		},
 		"regenerate": {
 			"retry": "Generate again",

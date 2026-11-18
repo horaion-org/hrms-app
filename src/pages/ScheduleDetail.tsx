@@ -659,6 +659,7 @@ const ApiSchedule = ({
 							withExport
 							companyId={companyId}
 							schedule={schedule}
+							weekParts={weekParts}
 							onDeleted={() => {
 								void navigate({ to: "/scheduling" });
 							}}

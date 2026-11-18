@@ -224,6 +224,32 @@ describe("the owner's week of 15 February 2027: Wed–Fri, then Sat–Sun", () =
 		).toBeNull();
 	});
 
+	it("given_theWednesdayToFridayPartWithALaterOne_when_deleting_then_saysWhatItLeavesBehind", async () => {
+		vi.useFakeTimers({
+			toFake: ["Date"],
+			now: new Date("2027-02-10T09:00:00+08:00"),
+		});
+		await openPart({
+			...WEEK,
+			shown: wednesdayToFriday,
+			parts: [
+				part({ ...wednesdayToFriday }),
+				part({ scheduleId: "s-2", ...saturdayToSunday }),
+			],
+			permissions: ["schedule:read", "schedule:delete"],
+		});
+		const user = userEvent.setup();
+
+		await user.click(
+			await screen.findByRole("button", { name: /More actions/ })
+		);
+		await user.click(await screen.findByRole("menuitem", { name: "Delete" }));
+
+		expect(await screen.findByRole("dialog")).toHaveTextContent(
+			/This can’t be undone\. Feb 17\s?–\s?19, 2027 will have no roster\. Feb 20\s?–\s?21, 2027 were worked out from them and stay as they are; schedule Feb 17\s?–\s?19, 2027 again to redo them\./
+		);
+	});
+
 	it("given_theWeekendPart_when_shown_then_mondayTuesdayHavePassedAndWednesdayToFridayLinksItsSchedule", async () => {
 		vi.useFakeTimers({
 			toFake: ["Date"],

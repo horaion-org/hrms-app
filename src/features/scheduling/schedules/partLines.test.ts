@@ -4,6 +4,7 @@ import type { DayRun } from "@/features/scheduling/dates/api";
 import type { WeekRun } from "@/features/scheduling/dates/datesSetup";
 import {
 	daysLeftBeforeOf,
+	deleteLeavesOf,
 	firstPublishedDayOf,
 	partLinesOf,
 	type PartLine,
@@ -217,4 +218,71 @@ describe("daysLeftBeforeOf", () => {
 			expected
 		);
 	});
+});
+
+describe("deleteLeavesOf", () => {
+	const MONDAY_TO_TUESDAY = {
+		scheduleId: "s-0",
+		coveredFrom: "2027-02-15",
+		coveredTo: "2027-02-16",
+	};
+	const WEDNESDAY_TO_FRIDAY = {
+		scheduleId: "s-1",
+		coveredFrom: "2027-02-17",
+		coveredTo: "2027-02-19",
+	};
+	const SATURDAY = {
+		scheduleId: "s-2",
+		coveredFrom: "2027-02-20",
+		coveredTo: "2027-02-20",
+	};
+	const SUNDAY = {
+		scheduleId: "s-3",
+		coveredFrom: "2027-02-21",
+		coveredTo: "2027-02-21",
+	};
+	const daysOf = (part: typeof MONDAY_TO_TUESDAY): DayRun => ({
+		from: part.coveredFrom,
+		to: part.coveredTo,
+	});
+
+	it.each([
+		{
+			case: "the only part of its week",
+			shown: WEDNESDAY_TO_FRIDAY,
+			parts: [WEDNESDAY_TO_FRIDAY],
+			expected: {},
+		},
+		{
+			case: "a middle part",
+			shown: WEDNESDAY_TO_FRIDAY,
+			parts: [MONDAY_TO_TUESDAY, WEDNESDAY_TO_FRIDAY, SATURDAY, SUNDAY],
+			expected: {
+				daysWithoutRoster: daysOf(WEDNESDAY_TO_FRIDAY),
+				laterDays: { from: "2027-02-20", to: "2027-02-21" },
+			},
+		},
+		{
+			case: "the first part with a later one",
+			shown: MONDAY_TO_TUESDAY,
+			parts: [MONDAY_TO_TUESDAY, WEDNESDAY_TO_FRIDAY],
+			expected: {
+				daysWithoutRoster: daysOf(MONDAY_TO_TUESDAY),
+				laterDays: daysOf(WEDNESDAY_TO_FRIDAY),
+			},
+		},
+		{
+			case: "the last part",
+			shown: SUNDAY,
+			parts: [WEDNESDAY_TO_FRIDAY, SUNDAY],
+			expected: { daysWithoutRoster: daysOf(SUNDAY), laterDays: undefined },
+		},
+	])(
+		"given_$case_when_deleted_then_saysWhatItLeaves",
+		({ shown, parts, expected }) => {
+			expect(deleteLeavesOf(shown.scheduleId, daysOf(shown), parts)).toEqual(
+				expected
+			);
+		}
+	);
 });
