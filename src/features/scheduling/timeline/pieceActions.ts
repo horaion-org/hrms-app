@@ -48,6 +48,18 @@ export const pieceMenuOf = (facts: PieceFacts): Array<PieceMenuItem> => {
 	];
 };
 
+/** The items that put a roster forward: publishing it, sending it for approval, or approving its open step. */
+const PUBLISHING_ITEMS: ReadonlyArray<PieceMenuItem> = [
+	"publish",
+	"submit",
+	"approve",
+	"approveAndPublish",
+];
+
+/** Whether a piece's menu offers to put its roster forward, so Publish outside the menu may offer it too. */
+export const offersPublishing = (menu: ReadonlyArray<PieceMenuItem>): boolean =>
+	menu.some((item) => PUBLISHING_ITEMS.includes(item));
+
 /** The words of each menu item: "these days" on the roster, the approval's own words for a step's decision. */
 export const PIECE_MENU_LABELS = {
 	open: "scheduling.timeline.piece.open",

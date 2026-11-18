@@ -1,6 +1,6 @@
 import { getRouteApi, useRouterState } from "@tanstack/react-router";
 import dayjs from "dayjs";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import { ISO_DATE_FORMAT } from "@/common/isoDate";
@@ -12,19 +12,20 @@ import { ArrowLeftIcon } from "@/components/ui/Icon";
 import { datesRunOf } from "@/features/scheduling/months/datesRunState";
 import { formatPeriod } from "@/features/scheduling/periods";
 import { isoDateIn } from "@/features/scheduling/roster/roster";
+import { PublishDaysDialog } from "@/features/scheduling/timeline/PublishDaysDialog";
+import { toReviewPiecesOf } from "@/features/scheduling/timeline/rosterStrip";
+import { StatusStrip } from "@/features/scheduling/timeline/StatusStrip";
 import {
-	awaitingPublication,
 	branchWeekFrom,
+	firstFreeRunOf,
 	needsOf,
 	shiftWindow,
-	shownScheduleIn,
-	timelineScheduleLink,
-	type TimelineSchedule,
 	type TimelineView,
 	windowDays,
 } from "@/features/scheduling/timeline/timeline";
 import { TimelineGrid } from "@/features/scheduling/timeline/TimelineGrid";
 import { TimelineNeeds } from "@/features/scheduling/timeline/TimelineNeeds";
+import { piecesOf } from "@/features/scheduling/timeline/timelineRows";
 import { TimelineToolbar } from "@/features/scheduling/timeline/TimelineToolbar";
 import { useDepartmentTimeline } from "@/features/scheduling/timeline/useDepartmentTimeline";
 import { SCHEDULE_CREATE_KEYS } from "@/features/workspace/permissionKeys";
@@ -85,7 +86,7 @@ export const DepartmentScheduleProblem = (): FunctionComponent => {
 	);
 };
 
-/** On arrival from a run by dates: which days are being generated, in the month page's words. */
+/** On arrival from a run by dates: which days are being generated. */
 const DatesRunCallout = (): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const days = datesRunOf(
@@ -94,7 +95,7 @@ const DatesRunCallout = (): FunctionComponent => {
 	if (!days) return null;
 	return (
 		<Callout>
-			{t("scheduling.months.page.datesRun.generating", {
+			{t(`${key}.generatingDays`, {
 				days: formatPeriod(
 					{ start: days.from, end: days.to },
 					formattingLocale(i18n)
@@ -104,53 +105,10 @@ const DatesRunCallout = (): FunctionComponent => {
 	);
 };
 
-/** With one schedule shown alone: which, a way to its page and back to all; otherwise the unpublished ones named. */
-const TimelineNotice = ({
-	departmentId,
-	schedules,
-	shownScheduleId,
-	onShowAll,
-}: {
-	departmentId: string;
-	schedules: ReadonlyArray<TimelineSchedule>;
-	shownScheduleId?: string;
-	onShowAll: () => void;
-}): FunctionComponent => {
-	const { t } = useTranslation();
-	const shown = schedules.find((schedule) => schedule.id === shownScheduleId);
-	if (shown)
-		return (
-			<Callout tone="neutral">
-				<span className="flex flex-wrap items-center gap-3">
-					<span>{t(`${key}.notice.showingOne`, { name: shown.name })}</span>
-					<Button
-						{...timelineScheduleLink(shown, departmentId)}
-						size="sm"
-						variant="secondary"
-					>
-						{t(`${key}.notice.openSchedule`)}
-					</Button>
-					<Button size="sm" variant="secondary" onClick={onShowAll}>
-						{t(`${key}.notice.showAll`)}
-					</Button>
-				</span>
-			</Callout>
-		);
-	const unpublished = awaitingPublication(schedules);
-	if (unpublished.length === 0) return null;
-	return (
-		<Callout tone="info">
-			{t(`${key}.notice.unpublished`, {
-				names: unpublished.map((schedule) => schedule.name).join(", "),
-			})}
-		</Callout>
-	);
-};
-
 /**
- * One Department's schedules at `/scheduling/department?department=…`: bars
- * over the day columns, one grid of people by day built from all of them,
- * and what needs the manager.
+ * One Department's roster at `/scheduling/department?department=…`: what
+ * needs the manager, then one grid of people by day with the status strip
+ * under its dates. The header generates days and publishes the days to review.
  */
 export const DepartmentSchedulePage = (): FunctionComponent => {
 	const { t } = useTranslation();
@@ -158,6 +116,8 @@ export const DepartmentSchedulePage = (): FunctionComponent => {
 	const search = route.useSearch();
 	const navigate = route.useNavigate();
 	const access = useAccess();
+	// The schedules a Publish (header or needs list) is asked for; none while no publish dialog is open.
+	const [publishing, setPublishing] = useState<ReadonlyArray<string>>();
 	const departmentId = search.department ?? "";
 	const view = search.view ?? DEFAULT_VIEW;
 	// The branch's time zone is known only once read, so the default window starts from the device's week (moved below).
@@ -172,6 +132,10 @@ export const DepartmentSchedulePage = (): FunctionComponent => {
 	);
 	const mayCreate = access.canAll(
 		SCHEDULE_CREATE_KEYS,
+		departmentScope(departmentId)
+	);
+	const mayPublish = access.can(
+		"schedule:publish",
 		departmentScope(departmentId)
 	);
 
@@ -215,11 +179,14 @@ export const DepartmentSchedulePage = (): FunctionComponent => {
 				)}
 			</>
 		);
-	// A `schedule=` naming no schedule in the window (the window moved on) counts as none, everywhere below.
-	const shownScheduleId = shownScheduleIn(timeline.schedules, search.schedule);
 	const today = timeline.timeZone
 		? isoDateIn(timeline.timeZone, new Date())
 		: dayjs().format(ISO_DATE_FORMAT);
+	const needs = needsOf(timeline.schedules, { firstDay, lastDay }, today);
+	const toReviewIds = toReviewPiecesOf(timeline.schedules, {
+		firstDay,
+		lastDay,
+	}).map((piece) => piece.schedule.id);
 	return (
 		<>
 			<BackLink department={departmentId} />
@@ -231,26 +198,44 @@ export const DepartmentSchedulePage = (): FunctionComponent => {
 						</h1>
 						<p className="text-sm text-neutral-800">{t(`${key}.subtitle`)}</p>
 					</div>
-					{mayCreate && (
-						<Button
-							search={{ department: departmentId, for: "dates" }}
-							to="/scheduling/new"
-						>
-							{t(`${key}.createSchedule`)}
-						</Button>
-					)}
+					<div className="flex flex-wrap items-center gap-3">
+						{mayPublish && toReviewIds.length > 0 && (
+							<Button
+								variant="secondary"
+								onClick={() => {
+									setPublishing(toReviewIds);
+								}}
+							>
+								{t(`${key}.publish`)}
+							</Button>
+						)}
+						{mayCreate && (
+							// Opens on the first days with no roster that can be generated, when there are any.
+							<Button
+								to="/scheduling/new"
+								search={{
+									department: departmentId,
+									for: "dates",
+									...firstFreeRunOf(needs),
+								}}
+							>
+								{t(`${key}.createSchedule`)}
+							</Button>
+						)}
+					</div>
 				</header>
 				<DatesRunCallout />
+				<TimelineNeeds
+					departmentId={departmentId}
+					lines={needs}
+					mayCreate={mayCreate}
+					onPublish={mayPublish ? setPublishing : undefined}
+				/>
 				<TimelineToolbar
 					firstDay={firstDay}
-					schedules={timeline.schedules}
-					shownScheduleId={shownScheduleId}
 					view={view}
 					onFromChange={(from) => {
 						changeSearch({ from });
-					}}
-					onScheduleChange={(schedule) => {
-						changeSearch({ schedule });
 					}}
 					onStep={(step) => {
 						changeSearch({ from: shiftWindow(firstDay, view, step) });
@@ -262,41 +247,33 @@ export const DepartmentSchedulePage = (): FunctionComponent => {
 						changeSearch({ view: nextView });
 					}}
 				/>
-				<TimelineNotice
-					departmentId={departmentId}
-					schedules={timeline.schedules}
-					shownScheduleId={shownScheduleId}
-					onShowAll={() => {
-						changeSearch({ schedule: undefined });
-					}}
-				/>
 				<TimelineGrid
 					days={days}
-					departmentId={departmentId}
 					rosters={timeline.rosters}
 					rows={timeline.rows}
 					schedules={timeline.schedules}
-					shownScheduleId={shownScheduleId}
 					view={view}
-					deleting={{
-						companyId,
-						targets: timeline.deleteTargets,
-						// The lists refresh through the dialog; a schedule shown alone that is gone no longer is.
-						onDeleted: (scheduleId) => {
-							if (search.schedule === scheduleId)
-								changeSearch({ schedule: undefined });
-						},
-					}}
-					onShowOnly={(schedule) => {
-						changeSearch({ schedule });
-					}}
-				/>
-				<TimelineNeeds
-					departmentId={departmentId}
-					lines={needsOf(timeline.schedules, { firstDay, lastDay }, today)}
-					mayCreate={mayCreate}
+					statusRow={
+						<StatusStrip
+							companyId={companyId}
+							days={days}
+							departmentId={departmentId}
+							pieces={timeline.pieces}
+							schedules={timeline.schedules}
+							view={view}
+						/>
+					}
 				/>
 			</div>
+			{publishing && (
+				<PublishDaysDialog
+					companyId={companyId}
+					pieces={piecesOf(timeline.pieces, publishing)}
+					onClose={() => {
+						setPublishing(undefined);
+					}}
+				/>
+			)}
 		</>
 	);
 };

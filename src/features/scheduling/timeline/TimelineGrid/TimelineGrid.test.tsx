@@ -31,14 +31,17 @@ const renderGrid = (
 		<MemoryRouterHarness>
 			<TimelineGrid
 				days={FIXTURE_WEEK}
-				deleting={{ companyId: "c-1", targets: {}, onDeleted: () => {} }}
-				departmentId="d-1"
 				rosters="loaded"
 				rows={[timelineRowFixture()]}
 				schedules={twoTimelineSchedules()}
 				shownScheduleId={shownScheduleId}
 				view={view}
-				onShowOnly={() => {}}
+				statusRow={
+					<tr>
+						<th scope="row">Status</th>
+						<td colSpan={FIXTURE_WEEK.length}>The strip</td>
+					</tr>
+				}
 			/>
 		</MemoryRouterHarness>
 	);
@@ -48,7 +51,7 @@ const renderGrid = (
 describe("TimelineGrid", () => {
 	/** Each zoom level shows only what fits: time over name, the name, or the initial; and its empty-day mark. */
 	it.each([
-		["week", ["09:00 – 17:00", "Morning"], "No schedule", "Mon", "Feb 8"],
+		["week", ["09:00 – 17:00", "Morning"], "No roster", "Mon", "Feb 8"],
 		["two", ["Morning"], "–", "Mon", "8"],
 		["four", ["M"], "·", "M", "8"],
 	] as const)(
@@ -62,19 +65,19 @@ describe("TimelineGrid", () => {
 				)
 			).toEqual(lines);
 			expect(
-				within(row).getByTitle(/Thu, Feb 11: No schedule$/)
+				within(row).getByTitle(/Thu, Feb 11: No roster$/)
 			).toHaveTextContent(emptyDay);
 			const [, mondayHeader] = screen.getAllByRole("columnheader");
 			expect(mondayHeader).toHaveTextContent(`${weekday}${date}`);
 		}
 	);
 
-	/** A short tile keeps its full words: person, day, shift, schedule and state. */
+	/** A short tile keeps its full words: person, day, shift and state; one roster has no schedule to name. */
 	it("names each cell in full", async () => {
 		const row = await renderGrid("four");
 		expect(
 			within(row).getByTitle(
-				"Aisha Rahman, Fri, Feb 12: Morning 09:00 – 17:00, Weekend, To review"
+				"Aisha Rahman, Fri, Feb 12: Morning 09:00 – 17:00, To review"
 			)
 		).toHaveTextContent("M");
 	});
@@ -84,6 +87,16 @@ describe("TimelineGrid", () => {
 		const [early, late] = within(row).getAllByTitle(/Morning/);
 		expect(early).toHaveClass("opacity-40");
 		expect(late).not.toHaveClass("opacity-40");
+	});
+
+	/** The status strip's row sits in the table head, under the dates and above the people. */
+	it("shows the status row in the head, under the dates", async () => {
+		await renderGrid("week");
+		const [dates, status] = within(
+			screen.getByRole("table").querySelector("thead")!
+		).getAllByRole("row");
+		expect(within(dates!).getAllByRole("columnheader")).toHaveLength(8);
+		expect(status).toHaveTextContent("StatusThe strip");
 	});
 
 	/** The Staff cell reads as the roster page's; four weeks keeps only the name and job title. */

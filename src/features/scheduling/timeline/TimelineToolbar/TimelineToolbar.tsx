@@ -3,17 +3,12 @@ import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { mondayOf } from "@/common/weeks";
 import { DatePicker } from "@/components/forms/DatePicker";
-import { Select } from "@/components/forms/Select";
 import { Button } from "@/components/ui/Button";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/ui/Icon";
 import {
 	DAYS_IN_VIEW,
-	type TimelineSchedule,
 	type TimelineView,
 } from "@/features/scheduling/timeline/timeline";
-
-/** The value of the schedule select that shows every schedule. */
-const ALL_SCHEDULES = "";
 
 const VIEWS = Object.keys(DAYS_IN_VIEW) as Array<TimelineView>;
 
@@ -25,33 +20,25 @@ export type TimelineToolbarProps = {
 	view: TimelineView;
 	/** The first day shown (ISO date), the date control's value. */
 	firstDay: string;
-	schedules: ReadonlyArray<TimelineSchedule>;
-	/** The schedule shown alone, or undefined for all. */
-	shownScheduleId?: string;
 	onToday: () => void;
 	/** Moves the window one view's length earlier (-1) or later (1). */
 	onStep: (step: 1 | -1) => void;
 	/** Opens the window on a new first day: the Monday of the day picked in "Go to date". */
 	onFromChange: (from: string) => void;
 	onViewChange: (view: TimelineView) => void;
-	/** Shows one schedule alone, or every schedule with undefined. */
-	onScheduleChange: (scheduleId: string | undefined) => void;
 };
 
 /**
- * Today, earlier and later days (styled as the week navigator), "Go to date",
- * the schedule select and the zoom as one joined control.
+ * Today, earlier and later days (styled as the week navigator), "Go to date"
+ * and the zoom as one joined control.
  */
 export const TimelineToolbar = ({
 	view,
 	firstDay,
-	schedules,
-	shownScheduleId,
 	onToday,
 	onStep,
 	onFromChange,
 	onViewChange,
-	onScheduleChange,
 }: TimelineToolbarProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const key = "scheduling.timeline.toolbar";
@@ -91,21 +78,6 @@ export const TimelineToolbar = ({
 				value={firstDay}
 				onChange={(day) => {
 					if (day !== "") onFromChange(mondayOf(day));
-				}}
-			/>
-			<Select
-				aria-label={t(`${key}.schedule`)}
-				className="w-56"
-				value={shownScheduleId ?? ALL_SCHEDULES}
-				options={[
-					{ value: ALL_SCHEDULES, label: t(`${key}.allSchedules`) },
-					...schedules.map((schedule) => ({
-						value: schedule.id,
-						label: schedule.name,
-					})),
-				]}
-				onChange={(value) => {
-					onScheduleChange(value === ALL_SCHEDULES ? undefined : value);
 				}}
 			/>
 			{/* One joined control, as the approved design draws it; the app has no segmented control to reuse. */}

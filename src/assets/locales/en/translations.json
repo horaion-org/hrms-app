@@ -5776,8 +5776,10 @@
 		"timeline": {
 			"backLink": "Back to Scheduling",
 			"title": "{{department}} Schedule",
-			"subtitle": "One timeline for the team. Each schedule is published on its own.",
-			"createSchedule": "Create schedule",
+			"subtitle": "One roster for the team. Generate any days, review them, then publish them.",
+			"createSchedule": "Generate",
+			"publish": "Publish",
+			"generatingDays": "Generating {{days}}…",
 			"loading": "Loading the schedules…",
 			"loadFailed": "The schedules couldn't be loaded. Reload the page to try again.",
 			"unavailable": "This department's schedules aren't available to you. Choose a department from Scheduling.",
@@ -5807,13 +5809,13 @@
 				"staff": "Staff",
 				"noStaff": "No one is rostered in these days yet.",
 				"emptyDay": {
-					"noSchedule": "No schedule",
+					"noSchedule": "No roster",
 					"dash": "–",
 					"dot": "·"
 				},
-				"cellLabel": "{{name}}, {{day}}: {{what}}, {{schedule}}, {{state}}",
-				"notRosteredLabel": "{{name}}, {{day}}: not rostered, {{schedule}}, {{state}}",
-				"noScheduleLabel": "{{name}}, {{day}}: No schedule",
+				"cellLabel": "{{name}}, {{day}}: {{what}}, {{state}}",
+				"notRosteredLabel": "{{name}}, {{day}}: not rostered, {{state}}",
+				"noScheduleLabel": "{{name}}, {{day}}: No roster",
 				"short": {
 					"dayOff": "Off",
 					"restDay": "Rest"
@@ -5860,6 +5862,13 @@
 				"withdraw": "Withdraw these days",
 				"regenerate": "Generate these days again",
 				"delete": "Delete these days"
+			},
+			"publishDays": {
+				"title": "Publish which days?",
+				"intro": "These days are to review. Staff see them once you publish them.",
+				"none": "Nothing is to review in the days shown.",
+				"publishNamed": "Publish {{days}}",
+				"close": "Close"
 			},
 			"notice": {
 				"showingOne": "Showing only {{name}}. Other schedules are dimmed.",

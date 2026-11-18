@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+	offersPublishing,
 	type PieceFacts,
 	type PieceMenuItem,
 	pieceMenuOf,
@@ -105,5 +106,20 @@ describe("pieceMenuOf", () => {
 		["to review, for a reader", {}, ["open"]],
 	])("%s offers %j", (_, facts, expected) => {
 		expect(pieceMenuOf({ ...NOTHING, ...facts })).toEqual(expected);
+	});
+});
+
+describe("offersPublishing", () => {
+	/** Publish outside the menu follows the menu: offered only where one of its items puts the roster forward. */
+	it.each<[Array<PieceMenuItem>, boolean]>([
+		[["open", "publish", "regenerate", "delete"], true],
+		[["open", "submit"], true],
+		[["open", "approve"], true],
+		[["open", "approveAndPublish"], true],
+		[["open", "regenerate", "delete"], false],
+		[["open", "withdraw"], false],
+		[["setup", "delete"], false],
+	])("a menu of %j offers publishing: %s", (menu, expected) => {
+		expect(offersPublishing(menu)).toBe(expected);
 	});
 });

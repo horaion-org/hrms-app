@@ -11,6 +11,7 @@ import { timelineRowFixture } from "@/features/scheduling/timeline/fixtures";
 import {
 	hoursOfRow,
 	monthsOfWindow,
+	piecesOf,
 	rostersReadOf,
 	weekPartsOf,
 	timelinePiecesOf,
@@ -176,5 +177,15 @@ describe("timelinePiecesOf", () => {
 			},
 			"s-march": { schedule: inMarch, weekParts: [], month: undefined },
 		});
+	});
+
+	/** A schedule named twice (its days split by a redo) is listed once; one not read yet is left out. */
+	it("picks the pieces read among the ids, once each and in order", () => {
+		const pieces = timelinePiecesOf([inFebruary, inMarch], [february]);
+		expect(
+			piecesOf(pieces, ["s-march", "s-unread", "s-read", "s-march"]).map(
+				(piece) => piece.schedule.scheduleId
+			)
+		).toEqual(["s-march", "s-read"]);
 	});
 });

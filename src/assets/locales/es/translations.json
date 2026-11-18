@@ -5576,8 +5576,10 @@
 		"timeline": {
 			"backLink": "Volver a Programación",
 			"title": "Horario de {{department}}",
-			"subtitle": "Una línea de tiempo para el equipo. Cada horario se publica por separado.",
-			"createSchedule": "Crear horario",
+			"subtitle": "Un solo cuadrante para el equipo. Genera los días que quieras, revísalos y publícalos.",
+			"createSchedule": "Generar",
+			"publish": "Publicar",
+			"generatingDays": "Generando {{days}}…",
 			"loading": "Cargando los horarios…",
 			"loadFailed": "No se pudieron cargar los horarios. Recarga la página para intentarlo de nuevo.",
 			"unavailable": "Los horarios de este departamento no están disponibles para ti. Elige un departamento en Programación.",
@@ -5607,13 +5609,13 @@
 				"staff": "Personal",
 				"noStaff": "Aún no hay nadie en el horario de estos días.",
 				"emptyDay": {
-					"noSchedule": "Sin horario",
+					"noSchedule": "Sin cuadrante",
 					"dash": "–",
 					"dot": "·"
 				},
-				"cellLabel": "{{name}}, {{day}}: {{what}}, {{schedule}}, {{state}}",
-				"notRosteredLabel": "{{name}}, {{day}}: sin turno, {{schedule}}, {{state}}",
-				"noScheduleLabel": "{{name}}, {{day}}: Sin horario",
+				"cellLabel": "{{name}}, {{day}}: {{what}}, {{state}}",
+				"notRosteredLabel": "{{name}}, {{day}}: sin turno, {{state}}",
+				"noScheduleLabel": "{{name}}, {{day}}: Sin cuadrante",
 				"short": {
 					"dayOff": "Libre",
 					"restDay": "Desc."
@@ -5660,6 +5662,13 @@
 				"withdraw": "Retirar estos días",
 				"regenerate": "Generar estos días de nuevo",
 				"delete": "Eliminar estos días"
+			},
+			"publishDays": {
+				"title": "¿Qué días publicar?",
+				"intro": "Estos días están por revisar. El personal los ve cuando los publicas.",
+				"none": "No hay nada por revisar en los días mostrados.",
+				"publishNamed": "Publicar {{days}}",
+				"close": "Cerrar"
 			},
 			"notice": {
 				"showingOne": "Mostrando solo {{name}}. Los demás horarios aparecen atenuados.",

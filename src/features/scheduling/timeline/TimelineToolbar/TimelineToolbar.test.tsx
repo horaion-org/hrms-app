@@ -4,7 +4,6 @@ import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import en from "@/assets/locales/en/translations.json";
-import { twoTimelineSchedules } from "@/features/scheduling/timeline/fixtures";
 import { TimelineToolbar } from "@/features/scheduling/timeline/TimelineToolbar";
 
 beforeAll(async () => {
@@ -25,10 +24,8 @@ describe("TimelineToolbar", () => {
 		render(
 			<TimelineToolbar
 				firstDay="2027-02-08"
-				schedules={twoTimelineSchedules()}
 				view="week"
 				onFromChange={() => {}}
-				onScheduleChange={() => {}}
 				onStep={onStep}
 				onToday={onToday}
 				onViewChange={onViewChange}
@@ -59,10 +56,8 @@ describe("TimelineToolbar", () => {
 		render(
 			<TimelineToolbar
 				firstDay="2026-12-14"
-				schedules={twoTimelineSchedules()}
 				view="two"
 				onFromChange={onFromChange}
-				onScheduleChange={() => {}}
 				onStep={() => {}}
 				onToday={() => {}}
 				onViewChange={() => {}}

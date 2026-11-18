@@ -165,3 +165,13 @@ export const timelinePiecesOf = (
 			},
 		])
 	);
+
+/** The pieces read among `scheduleIds`, once each and in that order: what Publish over those schedules offers. */
+export const piecesOf = (
+	pieces: Record<string, TimelinePiece>,
+	scheduleIds: ReadonlyArray<string>
+): Array<TimelinePiece> =>
+	[...new Set(scheduleIds)].flatMap((scheduleId) => {
+		const piece = pieces[scheduleId];
+		return piece ? [piece] : [];
+	});
