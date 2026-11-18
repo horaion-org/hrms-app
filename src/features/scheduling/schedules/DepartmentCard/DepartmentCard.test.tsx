@@ -70,6 +70,16 @@ describe("DepartmentCard", () => {
 		expect(card).toHaveTextContent("Nothing is waiting for you.");
 	});
 
+	it("given_daysInAnotherYear_when_rendered_then_theyNameTheirYear", async () => {
+		const card = await renderCard({
+			...frontDesk,
+			scheduledUpTo: "2027-12-05",
+		});
+
+		expect(card).toHaveTextContent("Published up to Nov 22");
+		expect(card).toHaveTextContent("Nothing scheduled after Dec 5, 2027");
+	});
+
 	it("given_publishedOnlyLater_when_rendered_then_saysNotPublishedFromThisWeek", async () => {
 		const card = await renderCard({
 			...security,

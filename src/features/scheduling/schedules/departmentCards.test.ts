@@ -8,6 +8,7 @@ import {
 	DAY_STRIP_LENGTH,
 	dayMarkOf,
 	departmentCards,
+	showsYear,
 	type DepartmentCardEntry,
 } from "@/features/scheduling/schedules/departmentCards";
 
@@ -179,6 +180,16 @@ describe("departmentCards", () => {
 			publishedUpTo: "2026-11-22",
 			scheduledUpTo: "2026-11-22",
 		});
+	});
+});
+
+describe("showsYear", () => {
+	it.each([
+		{ day: "2026-12-05", shows: false },
+		{ day: "2027-12-05", shows: true },
+		{ day: "2025-12-29", shows: true },
+	])("$day from 18 Nov 2026 shows its year: $shows", ({ day, shows }) => {
+		expect(showsYear(day, TODAY)).toBe(shows);
 	});
 });
 

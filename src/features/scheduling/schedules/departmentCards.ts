@@ -136,6 +136,10 @@ export const publishedStandingOf = (
 	return anyPublished ? "notFromThisWeek" : "nothing";
 };
 
+/** Whether a card day shows its year: only when it is not today's year. */
+export const showsYear = (day: string, today: string): boolean =>
+	dayjs(day).year() !== dayjs(today).year();
+
 /** One Department's card from its schedules and today's date. */
 const cardOf = (
 	department: CardDepartment,

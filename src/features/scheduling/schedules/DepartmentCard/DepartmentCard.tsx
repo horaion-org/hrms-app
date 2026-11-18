@@ -5,10 +5,12 @@ import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { formatDayAndMonth } from "@/features/scheduling/months/monthWeeks";
+import { formatPeriod } from "@/features/scheduling/periods";
 import { dayMarkLooks } from "@/features/scheduling/schedules/dayMarkLooks";
-import type {
-	DepartmentCardEntry,
-	PublishedStanding,
+import {
+	showsYear,
+	type DepartmentCardEntry,
+	type PublishedStanding,
 } from "@/features/scheduling/schedules/departmentCards";
 
 export type DepartmentCardProps = {
@@ -40,7 +42,11 @@ export const DepartmentCard = ({
 	const { t, i18n } = useTranslation();
 	const titleId = useId();
 	const language = formattingLocale(i18n);
-	const dayText = (day: string): string => formatDayAndMonth(day, language);
+	// A day of another year names it, as the history's periods do; this year's reads short.
+	const dayText = (day: string): string =>
+		showsYear(day, today)
+			? formatPeriod({ start: day, end: day }, language)
+			: formatDayAndMonth(day, language);
 	// Published only up to a day before today, or not from this week: staff are not covered from today.
 	const publishedFallsShort =
 		card.publishedUpTo === undefined || card.publishedUpTo < today;
