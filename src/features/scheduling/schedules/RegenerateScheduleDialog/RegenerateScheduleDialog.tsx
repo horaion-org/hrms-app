@@ -41,7 +41,10 @@ export const RegenerateScheduleDialog = ({
 	const { days, laterDays, partOfWeek, oncePublished } = regeneration;
 	const partLines = partOfWeek
 		? [
-				t(`${key}.partDays`, { days: daysText(days) }),
+				t(`${key}.partDays`, {
+					days: daysText(days),
+					count: dayCountOf(days.from, days.to),
+				}),
 				laterDays &&
 					t(`${key}.laterPartsAfter`, {
 						days: daysText(laterDays),

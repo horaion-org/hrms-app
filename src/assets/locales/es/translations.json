@@ -4292,7 +4292,7 @@
 			"leaveWithTime": "{{leave}} {{time}}",
 			"regenerateWeek": "Regenerar esta semana",
 			"regenerateDays": "Regenerar estos días",
-			"laterPartPublished": "Un horario posterior de esta semana está publicado y se calculó a partir de estos días, así que este no se puede generar de nuevo. Cambia su cuadrante a mano."
+			"laterPartPublished": "Un horario posterior de esta semana ya se ha publicado y se calculó a partir de estos días, así que este no se puede generar de nuevo. Cambia su cuadrante a mano."
 		},
 		"myRoster": {
 			"title": "Mi cuadrante · {{department}} · {{period}}",
@@ -4452,14 +4452,15 @@
 			"inProgress": "Este horario se está generando. Inténtalo de nuevo cuando termine la ejecución.",
 			"published": "Este cuadrante está publicado, así que no se puede regenerar ni eliminar. Cambia sus días en el cuadrante.",
 			"oncePublished": "Se avisó al personal de cambios en este cuadrante mientras estaba publicado, así que no se puede generar de nuevo. Corrígelo con cambios en el cuadrante, o elimínalo y vuelve a programar sus días.",
-			"laterPartPublished": "Un horario posterior de esta semana está publicado y se calculó a partir de estos días, así que este no se puede generar de nuevo. Cambia su cuadrante a mano.",
+			"laterPartPublished": "Un horario posterior de esta semana ya se ha publicado y se calculó a partir de estos días, así que este no se puede generar de nuevo. Cambia su cuadrante a mano.",
 			"oncePublishedTitle": "¿Generar de nuevo este cuadrante publicado?",
 			"oncePublishedSeen": "El personal vio este cuadrante mientras estaba publicado.",
 			"oncePublishedReplaced": "Cualquier turno puede cambiar, y se reemplaza cada cambio hecho a mano desde entonces.",
 			"oncePublishedPublishAgain": "Publica de nuevo el nuevo cuadrante para que el personal lo vea.",
 			"confirm": "Generar de nuevo",
 			"partTitle": "¿Generar de nuevo estos días?",
-			"partDays": "Se vuelven a calcular {{days}}. El cuadrante actual se mantiene hasta que el nuevo esté listo.",
+			"partDays_one": "Se vuelve a calcular {{days}}. El cuadrante actual se mantiene hasta que el nuevo esté listo.",
+			"partDays_other": "Se vuelven a calcular {{days}}. El cuadrante actual se mantiene hasta que el nuevo esté listo.",
 			"laterPartsAfter_one": "{{days}} se calculó a partir de estos días, así que se genera de nuevo después de ellos.",
 			"laterPartsAfter_other": "{{days}} se calcularon a partir de estos días, así que se generan de nuevo después de ellos."
 		},

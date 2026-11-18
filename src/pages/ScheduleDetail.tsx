@@ -78,7 +78,7 @@ import {
 	type ScheduleActionId,
 } from "@/features/scheduling/schedules/scheduleActions";
 import {
-	firstPublishedDayOf,
+	lastPublishedPartStartOf,
 	daysLeftBeforeOf,
 	partLinesOf,
 } from "@/features/scheduling/schedules/partLines";
@@ -514,7 +514,7 @@ const ApiSchedule = ({
 				: [],
 			// A redo part in the week (API ADR-0129): this schedule is one, or one redoes some of its days.
 			redo: partRedoOf(schedule, weekParts),
-			firstPublishedDay: firstPublishedDayOf(
+			lastPublishedPartStart: lastPublishedPartStartOf(
 				weekParts,
 				schedule.publicationWithdrawnAt ? [schedule.scheduleId] : []
 			),

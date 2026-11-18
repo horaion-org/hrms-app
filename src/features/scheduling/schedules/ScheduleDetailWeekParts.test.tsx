@@ -307,6 +307,45 @@ describe("the owner's week of 15 February 2027: Wed–Fri, then Sat–Sun", () =
 		).toBeNull();
 	});
 
+	// The tester's week: Mon–Tue shown, Wed–Fri empty, the weekend published (or published and withdrawn).
+	it.each([
+		["published", { state: "PUBLISHED" as const }],
+		["published once", { publishedOnce: true }],
+	])(
+		"given_theGapAfterThisPartBeforeAPart_%s_when_shown_then_saysWhyWithoutScheduleLink",
+		async (_, published) => {
+			vi.useFakeTimers({
+				toFake: ["Date"],
+				now: new Date("2027-02-10T09:00:00+08:00"),
+			});
+			const mondayToTuesday = {
+				coveredFrom: "2027-02-15",
+				coveredTo: "2027-02-16",
+			};
+			await openPart({
+				...WEEK,
+				shown: mondayToTuesday,
+				parts: [
+					part({ ...mondayToTuesday }),
+					part({ scheduleId: "s-2", ...saturdayToSunday, ...published }),
+				],
+			});
+
+			expect(
+				await screen.findByText(
+					/^Feb 17\s?–\s?19, 2027 have no schedule\. They come before days that have been published, so they can’t be scheduled now\.$/
+				)
+			).toBeInTheDocument();
+			expect(screen.queryByText(/can be scheduled later/)).toBeNull();
+			expect(
+				screen.queryByRole("link", { name: /^Schedule Feb 17/ })
+			).toBeNull();
+			expect(
+				screen.queryByRole("button", { name: /^Schedule Feb 17/ })
+			).toBeNull();
+		}
+	);
+
 	it("given_theWeekendPart_when_shown_then_mondayTuesdayHavePassedAndWednesdayToFridayLinksItsSchedule", async () => {
 		vi.useFakeTimers({
 			toFake: ["Date"],

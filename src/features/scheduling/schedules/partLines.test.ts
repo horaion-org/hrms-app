@@ -7,7 +7,7 @@ import {
 	coversPartOfWeek,
 	daysLeftBeforeOf,
 	deleteLeavesOf,
-	firstPublishedDayOf,
+	lastPublishedPartStartOf,
 	partLinesOf,
 	type PartLine,
 	type PartLinesSource,
@@ -49,7 +49,7 @@ describe("partLinesOf", () => {
 			"days before a published part",
 			{
 				runs: [{ kind: "noneBefore", days: MONDAY_TUESDAY }],
-				firstPublishedDay: "2027-02-17",
+				lastPublishedPartStart: "2027-02-17",
 			},
 			[
 				{
@@ -61,7 +61,7 @@ describe("partLinesOf", () => {
 			"days after a published part, before this one",
 			{
 				runs: [{ kind: "noneBefore", days: MONDAY_TUESDAY }],
-				firstPublishedDay: "2027-02-15",
+				lastPublishedPartStart: "2027-02-15",
 			},
 			[
 				{
@@ -82,6 +82,64 @@ describe("partLinesOf", () => {
 		[
 			"days after still to schedule",
 			{ runs: [{ kind: "noneAfter", days: WEEKEND }] },
+			[
+				{
+					text: "scheduling.roster.coversCallout(2027-02-17..2027-02-19|2027-02-20..2027-02-21)",
+					action: {
+						kind: "scheduleDays",
+						days: WEEKEND,
+						label: "scheduling.roster.remainingButton(2027-02-20..2027-02-21)",
+					},
+				},
+			],
+		],
+		[
+			"days after this part before a published part",
+			{
+				runs: [{ kind: "noneAfter", days: WEEKEND }],
+				lastPublishedPartStart: "2027-02-21",
+			},
+			[
+				{
+					text: "scheduling.roster.noneBeforePublished(2027-02-20..2027-02-21|2)",
+				},
+			],
+		],
+		[
+			"days after the week's last part, with an earlier part published",
+			{
+				runs: [{ kind: "noneAfter", days: WEEKEND }],
+				lastPublishedPartStart: "2027-02-15",
+			},
+			[
+				{
+					text: "scheduling.roster.coversCallout(2027-02-17..2027-02-19|2027-02-20..2027-02-21)",
+					action: {
+						kind: "scheduleDays",
+						days: WEEKEND,
+						label: "scheduling.roster.remainingButton(2027-02-20..2027-02-21)",
+					},
+				},
+			],
+		],
+		[
+			"days before this part, between an earlier and a later published part",
+			{
+				runs: [{ kind: "noneBefore", days: MONDAY_TUESDAY }],
+				lastPublishedPartStart: "2027-02-20",
+			},
+			[
+				{
+					text: "scheduling.roster.noneBeforePublished(2027-02-15..2027-02-16|2)",
+				},
+			],
+		],
+		[
+			"days after the latest published part",
+			{
+				runs: [{ kind: "noneAfter", days: WEEKEND }],
+				lastPublishedPartStart: "2027-02-17",
+			},
 			[
 				{
 					text: "scheduling.roster.coversCallout(2027-02-17..2027-02-19|2027-02-20..2027-02-21)",
@@ -138,7 +196,7 @@ describe("partLinesOf", () => {
 	});
 });
 
-describe("firstPublishedDayOf", () => {
+describe("lastPublishedPartStartOf", () => {
 	it.each([
 		{
 			case: "no part published",
@@ -149,6 +207,7 @@ describe("firstPublishedDayOf", () => {
 			expected: undefined,
 		},
 		{
+			// The latest-starting one: any day before it has a published part starting after it.
 			case: "two published parts",
 			parts: [
 				{ scheduleId: "s-3", state: "PUBLISHED", coveredFrom: "2027-02-19" },
@@ -156,7 +215,7 @@ describe("firstPublishedDayOf", () => {
 				{ scheduleId: "s-2", state: "PUBLISHED", coveredFrom: "2027-02-17" },
 			],
 			withdrawn: [],
-			expected: "2027-02-17",
+			expected: "2027-02-19",
 		},
 		// Taken back, it reads as to review again, but the API still counts it as published.
 		{
@@ -183,7 +242,7 @@ describe("firstPublishedDayOf", () => {
 	] as const)(
 		"given_$case_when_read_then_$expected",
 		({ parts, withdrawn, expected }) => {
-			expect(firstPublishedDayOf(parts, withdrawn)).toBe(expected);
+			expect(lastPublishedPartStartOf(parts, withdrawn)).toBe(expected);
 		}
 	);
 });
@@ -214,7 +273,7 @@ describe("daysLeftBeforeOf", () => {
 			case: "days before a published part",
 			source: {
 				runs: [{ kind: "noneBefore", days: MONDAY_TUESDAY }],
-				firstPublishedDay: "2027-02-17",
+				lastPublishedPartStart: "2027-02-17",
 			},
 			expected: [],
 		},
@@ -317,6 +376,19 @@ describe("deleteLeavesOf", () => {
 			shown: WEDNESDAY_TO_FRIDAY,
 			parts: [WEDNESDAY_TO_FRIDAY, SATURDAY],
 			withdrawn: [SATURDAY.scheduleId],
+			expected: {
+				daysWithoutRoster: daysOf(WEDNESDAY_TO_FRIDAY),
+				publishedLater: daysOf(SATURDAY),
+			},
+		},
+		{
+			case: "a middle part before two published parts, naming the nearest",
+			shown: WEDNESDAY_TO_FRIDAY,
+			parts: [
+				WEDNESDAY_TO_FRIDAY,
+				{ ...SATURDAY, state: "PUBLISHED" },
+				{ ...SUNDAY, state: "PUBLISHED" },
+			],
 			expected: {
 				daysWithoutRoster: daysOf(WEDNESDAY_TO_FRIDAY),
 				publishedLater: daysOf(SATURDAY),
