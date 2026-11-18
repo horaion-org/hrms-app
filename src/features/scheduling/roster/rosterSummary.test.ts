@@ -5,6 +5,7 @@ import { scheduleAssignmentsFixture } from "@/features/scheduling/schedules/fixt
 import {
 	byDayThenName,
 	changedDays,
+	hasHandChanges,
 	daysToDecide,
 	issueCount,
 	leaveAndCoverDays,
@@ -177,6 +178,40 @@ describe("changedDays", () => {
 			"2026-10-13 Ben Ong",
 			"2026-10-13 Chen Wei",
 		]);
+	});
+});
+
+describe("hasHandChanges", () => {
+	const [first, ...rest] = scheduleAssignmentsFixture();
+	const handChanged = [
+		{
+			...first!,
+			lastChange: {
+				changeId: "rc-1",
+				appliedAt: "2026-10-10T09:00:00Z",
+				appliedBy: null,
+				remark: null,
+				before: {
+					kind: "OFF" as const,
+					dayType: "OFF",
+					shift: null,
+					jobTitle: null,
+				},
+			},
+		},
+		...rest,
+	];
+
+	it.each([
+		["a roster still loading", { status: "pending" } as const, false],
+		["a roster as generated", { status: "ready", items: rest } as const, false],
+		[
+			"a roster with a day changed by hand",
+			{ status: "ready", items: handChanged } as const,
+			true,
+		],
+	])("reads %s", (_case, assignments, expected) => {
+		expect(hasHandChanges(assignments)).toBe(expected);
 	});
 });
 

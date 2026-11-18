@@ -93,7 +93,8 @@ export const rosterRulesCheckKey = (
 
 /**
  * The check at `revision`, asked for only once `asked` (the engine takes a
- * moment, so a button asks); never cached past its use.
+ * moment); never cached past its use, and never asked again by itself when
+ * the window regains focus or the network returns.
  */
 export const rosterRulesCheckQuery = (
 	target: RosterChangeTarget,
@@ -114,4 +115,6 @@ export const rosterRulesCheckQuery = (
 		staleTime: 0,
 		gcTime: 0,
 		retry: false,
+		refetchOnWindowFocus: false,
+		refetchOnReconnect: false,
 	});

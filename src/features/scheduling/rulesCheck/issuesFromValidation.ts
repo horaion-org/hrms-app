@@ -3,7 +3,10 @@ import type {
 	RuleViolation,
 } from "@/features/scheduling/rulesCheck/rosterRulesCheckApi";
 import { brokenRuleCount } from "@/features/scheduling/rulesCheck/rosterRulesCheckWords";
-import type { LastValidation } from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
+import type {
+	LastValidation,
+	RosterValidation,
+} from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
 import type { RosterSchedule } from "@/features/scheduling/roster/rosterView";
 import type { GenerationFindings } from "@/features/scheduling/schedules/api";
 
@@ -46,6 +49,48 @@ export const changesUnchecked = (
 	standing: ValidationStanding,
 	last: LastValidation | undefined
 ): boolean => standing === "outOfDate" && last === undefined;
+
+/** What leads the Issues heading while its list is not the validated truth: a check running, or hand changes left unchecked. */
+export type ValidationLead = "validating" | "unchecked";
+
+/**
+ * What leads the Issues heading: "validating" while a check runs; "unchecked"
+ * while hand changes have no validation in this visit (none could be asked,
+ * or the ask failed or was refused); nothing otherwise, and nothing for
+ * someone who may not validate.
+ */
+export const validationLead = (
+	standing: ValidationStanding,
+	validation: RosterValidation | undefined
+): ValidationLead | undefined => {
+	if (!validation) return undefined;
+	if (validation.status === "loading") return "validating";
+	return changesUnchecked(standing, validation.last) ? "unchecked" : undefined;
+};
+
+/**
+ * Whether the page should validate the roster now, without being asked: the
+ * viewer may validate this roster (Validate schedule's own target: the
+ * permission, a roster that may be changed, its run and unit known), its hand
+ * changes are unchecked in this visit, and nothing was asked at this revision
+ * yet (an ask in flight, answered or refused is never repeated).
+ */
+export const validatesOnOpen = ({
+	mayValidate,
+	revision,
+	last,
+	hasChanges,
+	askedAt,
+}: {
+	mayValidate: boolean;
+	revision: number;
+	last: LastValidation | undefined;
+	hasChanges: boolean;
+	askedAt: number | undefined;
+}): boolean =>
+	mayValidate &&
+	askedAt !== revision &&
+	changesUnchecked(validationStanding({ revision, last, hasChanges }), last);
 
 /** Findings with nothing in them, for a run that stored none, so validated gaps still have a list to join. */
 const NO_FINDINGS: GenerationFindings = {

@@ -9,6 +9,8 @@ import {
 	changesUnchecked,
 	findingsShown,
 	scheduleWithFindingsShown,
+	validatesOnOpen,
+	validationLead,
 	validationStanding,
 } from "@/features/scheduling/rulesCheck/issuesFromValidation";
 import {
@@ -65,6 +67,108 @@ describe("changesUnchecked", () => {
 	] as const)("reads %s", (_case, standing, lastValidation, expected) => {
 		expect(changesUnchecked(standing, lastValidation)).toBe(expected);
 	});
+});
+
+describe("validationLead", () => {
+	const last = { revision: 1, check: rulesCheckFixture() };
+	const ask = (): void => {};
+
+	it.each([
+		["no validation for this viewer", "outOfDate", undefined, undefined],
+		[
+			"a check running",
+			"outOfDate",
+			{ status: "loading", ask, revision: 1 },
+			"validating",
+		],
+		[
+			"hand changes nothing validated",
+			"outOfDate",
+			{ status: "idle", ask, revision: 1 },
+			"unchecked",
+		],
+		[
+			"an ask that was refused",
+			"outOfDate",
+			{ status: "refused", refusal: "failed", ask, revision: 1 },
+			"unchecked",
+		],
+		[
+			"validated at an earlier revision",
+			"outOfDate",
+			{ status: "idle", ask, last, revision: 2 },
+			undefined,
+		],
+		[
+			"validated at the revision on screen",
+			"current",
+			{ status: "ready", check: last.check, ask, last, revision: 1 },
+			undefined,
+		],
+	] as const)("%s", (_case, standing, validation, expected) => {
+		expect(validationLead(standing, validation)).toBe(expected);
+	});
+});
+
+describe("validatesOnOpen", () => {
+	const last = { revision: 1, check: rulesCheckFixture() };
+
+	it.each([
+		[
+			"hand changes, nothing asked: asks",
+			true,
+			undefined,
+			true,
+			undefined,
+			true,
+		],
+		[
+			"without leave to validate: never",
+			false,
+			undefined,
+			true,
+			undefined,
+			false,
+		],
+		[
+			"no hand changes: nothing to check",
+			true,
+			undefined,
+			false,
+			undefined,
+			false,
+		],
+		[
+			"validated in this visit: the button takes over",
+			true,
+			last,
+			true,
+			undefined,
+			false,
+		],
+		["already asked at this revision: once", true, undefined, true, 2, false],
+		[
+			"asked at an earlier revision: asks again",
+			true,
+			undefined,
+			true,
+			1,
+			true,
+		],
+	] as const)(
+		"%s",
+		(_case, mayValidate, lastValidation, hasChanges, askedAt, expected) => {
+			expect(
+				validatesOnOpen({
+					mayValidate,
+					revision: 2,
+					last: lastValidation,
+					hasChanges,
+					askedAt,
+				})
+			).toBe(expected);
+		}
+	);
 });
 
 describe("findingsShown", () => {

@@ -93,6 +93,15 @@ describe("ValidationNote", () => {
 		expect(ask).toHaveBeenCalledOnce();
 	});
 
+	it("keeps the warning above the reason when the check of unvalidated hand changes is refused, Validate schedule the retry", async () => {
+		const ask = show("outOfDate", { status: "refused", refusal: "failed" });
+
+		expect(screen.getByRole("note")).toHaveTextContent(copy.changesUnchecked);
+		expect(screen.getByRole("alert")).toHaveTextContent(copy.refusal.failed);
+		await userEvent.click(screen.getByRole("button", { name: copy.check }));
+		expect(ask).toHaveBeenCalledOnce();
+	});
+
 	it("says the list is out of date, with Validate schedule right there", async () => {
 		const ask = show("outOfDate", {
 			last: { revision: 0, check: rulesCheckFixture() },

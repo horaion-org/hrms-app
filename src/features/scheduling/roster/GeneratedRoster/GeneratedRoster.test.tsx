@@ -7,7 +7,8 @@ import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
 import en from "@/assets/locales/en/translations.json";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { stubApi } from "@/common/testing/stubApi";
+import { configureApiClient, resetApiClient } from "@/common/api-client";
+import { envelope, stubApi } from "@/common/testing/stubApi";
 import { coverOfferFixture } from "@/features/scheduling/coverOffers/fixtures";
 import {
 	GeneratedRoster,
@@ -19,9 +20,10 @@ import {
 	rulesCheckFixture,
 	staffingGapFixture,
 } from "@/features/scheduling/rulesCheck/fixtures";
-import type {
-	RosterRulesCheckState,
-	RosterValidation,
+import {
+	useRosterRulesCheck,
+	type RosterRulesCheckState,
+	type RosterValidation,
 } from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
 import {
 	emptyFindingsFixture,
@@ -827,6 +829,72 @@ describe("GeneratedRoster", () => {
 			expect(within(panel).getByRole("note")).toHaveTextContent(
 				en.scheduling.rulesCheck.changesUnchecked
 			);
+		});
+
+		it("given_aReloadOfAHandChangedRosterWithIssuesOpen_when_shown_then_itValidatesByItselfAndListsTheCheckedIssues", async () => {
+			configureApiClient({
+				accessToken: () => Promise.resolve("test-pass"),
+				renew: () => Promise.resolve({ kind: "expired" }),
+				onUnauthenticated: () => {},
+			});
+			const check = rulesCheckFixture({
+				staffingGaps: [
+					staffingGapFixture({
+						conflictId: "validated-2",
+						date: "2026-10-16",
+						start: "2026-10-16T14:00",
+						end: "2026-10-16T22:00",
+						message: NEW_GAP,
+						shiftUuids: ["swing-shift-copy"],
+					}),
+				],
+			});
+			const calls = stubApi({
+				[`POST /api/v1/companies/c-1/branches/b-1/departments/d-1/schedules/s-1/roster-check`]:
+					{ status: 200, body: envelope(check) },
+			});
+			const [first, ...rest] = scheduleAssignmentsFixture();
+			const handChanged = {
+				...first!,
+				lastChange: {
+					changeId: "rc-1",
+					appliedAt: "2026-10-10T09:00:00Z",
+					appliedBy: null,
+					remark: null,
+					before: { kind: "OFF", dayType: "OFF", shift: null, jobTitle: null },
+				},
+			} as const;
+			/** The page after a reload: Validate schedule's own hook, told the roster has hand changes. */
+			const ReloadedRoster = (): ReactElement => {
+				const validation = useRosterRulesCheck(editing.target, 1, true);
+				return (
+					<GeneratedRoster
+						assignments={[handChanged, ...rest]}
+						editing={editing}
+						schedule={schedule}
+						validation={validation}
+						view={{ week: "2026-10-12", panel: "issues" }}
+						onViewChange={() => {}}
+					/>
+				);
+			};
+			render(
+				<QueryClientProvider client={new QueryClient()}>
+					<ReloadedRoster />
+				</QueryClientProvider>
+			);
+
+			// The grid is there at once, and the list says it is being validated.
+			expect(screen.getByRole("table", { name: "Roster" })).toBeVisible();
+			const panel = screen.getByRole("complementary", { name: "Issues" });
+			expect(panel).toHaveTextContent(en.scheduling.rulesCheck.loading);
+
+			expect(await within(panel).findByText(/14:00–22:00/)).toBeVisible();
+			expect(panel).not.toHaveTextContent(GENERATED_GAP);
+			expect(panel).not.toHaveTextContent("Changes not validated");
+			expect(calls).toHaveLength(1);
+			resetApiClient();
+			vi.unstubAllGlobals();
 		});
 
 		it("given_staffingTheEngineCouldNotWorkOut_when_issuesOpens_then_saysSoAndKeepsTheGenerationsList", async () => {

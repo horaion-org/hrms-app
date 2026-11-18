@@ -6,6 +6,7 @@ import {
 	type RosterStats,
 } from "@/features/scheduling/roster/roster";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
+import type { AssignmentList } from "@/features/scheduling/schedules/useScheduleAssignments";
 
 /** What the summary line reads: the roster's counts and its hours. */
 export type RosterFigures = RosterStats & { hours: number };
@@ -188,3 +189,7 @@ export const changedDays = (
 	assignments: ReadonlyArray<ScheduleAssignment>
 ): Array<ScheduleAssignment> =>
 	assignments.filter((row) => row.lastChange && row.member).sort(byDayThenName);
+
+/** Whether the roster, once read, has any day changed by hand since generation. */
+export const hasHandChanges = (assignments: AssignmentList): boolean =>
+	assignments.status === "ready" && changedDays(assignments.items).length > 0;
