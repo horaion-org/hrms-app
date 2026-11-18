@@ -29,6 +29,10 @@ import {
 	type ScheduleBody,
 } from "@/features/scheduling/schedules/api";
 import {
+	regenerableOncePublished,
+	regenerateSchedule,
+} from "@/features/scheduling/schedules/regeneration";
+import {
 	generatedScheduleFixture,
 	generationFindingsFixture,
 	generationFixture,
@@ -371,6 +375,26 @@ describe("schedules client", () => {
 		expect(calls[0]?.body).toBeUndefined();
 	});
 
+	it("generates a withdrawn roster again through its own route, with no body", async () => {
+		const requested = generatedScheduleFixture({
+			status: "GENERATION_REQUESTED",
+		});
+		const calls = stubApi({
+			[`POST ${SCHEDULES}/s-1/regeneration`]: {
+				status: 200,
+				body: envelope(requested),
+			},
+		});
+
+		await expect(regenerateSchedule("c-1", UNIT, "s-1")).resolves.toEqual(
+			requested
+		);
+		expect(calls.map((call) => `${call.method} ${call.path}`)).toEqual([
+			`POST ${SCHEDULES}/s-1/regeneration`,
+		]);
+		expect(calls[0]?.body).toBeUndefined();
+	});
+
 	it("rejects a roster with its trimmed reason and reads the schedule back", async () => {
 		const rejected = generatedScheduleFixture({ status: "REJECTED" });
 		const calls = stubApi({
@@ -548,6 +572,40 @@ describe("a schedule's generation", () => {
 	])("knows whether %s can be generated again", (_, schedule, expected) => {
 		expect(regenerable(schedule)).toBe(expected);
 	});
+
+	it.each([
+		[
+			"a withdrawn roster",
+			generatedScheduleFixture({
+				status: "GENERATED",
+				publicationWithdrawnAt: "2026-10-13T09:00:00Z",
+			}),
+			true,
+		],
+		[
+			"a published roster",
+			generatedScheduleFixture({ status: "PUBLISHED" }),
+			false,
+		],
+		[
+			"a roster rejected after its publication was withdrawn",
+			generatedScheduleFixture({
+				status: "REJECTED",
+				publicationWithdrawnAt: "2026-10-13T09:00:00Z",
+			}),
+			true,
+		],
+		[
+			"a never-published roster",
+			generatedScheduleFixture({ status: "GENERATED" }),
+			false,
+		],
+	])(
+		"knows whether %s may be asked to generate again through its own route",
+		(_, schedule, expected) => {
+			expect(regenerableOncePublished(schedule)).toBe(expected);
+		}
+	);
 
 	it.each([
 		["a draft", scheduleFixture(), undefined],
@@ -1145,7 +1203,11 @@ describe("schedule refusals", () => {
 		],
 		[
 			"SCHEDULE_ONCE_PUBLISHED",
-			"This roster was published once, so it can’t be regenerated. Change its days on the roster instead.",
+			"Staff were told of changes to this roster while it was published, so it can’t be generated again. Correct it with roster changes, or delete it and schedule its days again.",
+		],
+		[
+			"SCHEDULE_LATER_PART_PUBLISHED",
+			"A later schedule of this week is published, and it was worked out from these days, so this one can’t be generated again. Change its roster by hand instead.",
 		],
 	])(
 		"words a month week refused with %s in a week's own words",

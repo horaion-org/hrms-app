@@ -4643,7 +4643,13 @@
 			"cancel": "Cancel",
 			"inProgress": "This schedule is being generated. Try again once the run finishes.",
 			"published": "This roster is published, so it can’t be regenerated or deleted. Change its days on the roster instead.",
-			"oncePublished": "This roster was published once, so it can’t be regenerated. Change its days on the roster instead."
+			"oncePublished": "Staff were told of changes to this roster while it was published, so it can’t be generated again. Correct it with roster changes, or delete it and schedule its days again.",
+			"laterPartPublished": "A later schedule of this week is published, and it was worked out from these days, so this one can’t be generated again. Change its roster by hand instead.",
+			"oncePublishedTitle": "Generate this published roster again?",
+			"oncePublishedSeen": "Staff saw this roster while it was published.",
+			"oncePublishedReplaced": "Every shift may change, and every change made by hand since is replaced.",
+			"oncePublishedPublishAgain": "Publish the new roster again for staff to see it.",
+			"oncePublishedConfirm": "Generate again"
 		},
 		"export": {
 			"menu": "Export roster",

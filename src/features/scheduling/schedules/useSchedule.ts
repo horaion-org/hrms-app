@@ -24,6 +24,7 @@ import {
 	type ScheduleBody,
 	type SchedulePolling,
 } from "@/features/scheduling/schedules/api";
+import { regenerateSchedule } from "@/features/scheduling/schedules/regeneration";
 import { departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 
@@ -119,6 +120,8 @@ export type ScheduleActions = {
 	submit: UseMutationResult<Schedule, Error, Decided>;
 	reject: UseMutationResult<Schedule, Error, Rejected>;
 	withdraw: UseMutationResult<Schedule, Error, Withdrawn>;
+	/** Generate a withdrawn roster again through its own route (API ADR-0134). */
+	regenerate: UseMutationResult<Schedule, Error, Decided>;
 };
 
 /**
@@ -209,6 +212,14 @@ export const useScheduleActions = (companyId: string): ScheduleActions => {
 			meta: { successMessage: "scheduling.decision.withdrawn" },
 			mutationFn: ({ unit, scheduleId, remark }: Withdrawn) =>
 				withdrawPublication(companyId, unit, scheduleId, remark),
+			onSuccess: saved,
+			onError: reload,
+		}),
+		regenerate: useMutation({
+			// The page shows the new run's progress itself.
+			meta: { successMessage: false },
+			mutationFn: ({ unit, scheduleId }: Decided) =>
+				regenerateSchedule(companyId, unit, scheduleId),
 			onSuccess: saved,
 			onError: reload,
 		}),

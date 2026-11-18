@@ -5,6 +5,7 @@ import {
 	withdrawable,
 	type Schedule,
 } from "@/features/scheduling/schedules/api";
+import { regenerableOncePublished } from "@/features/scheduling/schedules/regeneration";
 import { SCHEDULE_CREATE_KEYS } from "@/features/workspace/permissionKeys";
 import { departmentScope } from "@/features/workspace/scopes";
 import type { Access } from "@/features/workspace/useAccess";
@@ -27,6 +28,8 @@ export type RosterPagePermissions = {
 	mayWithdraw: boolean;
 	/** Generate the week again, unless it passed or is published elsewhere: it is regenerable. */
 	mayGenerate: boolean;
+	/** Generate a withdrawn roster again through its own route (API ADR-0134). */
+	mayRegenerateOncePublished: boolean;
 	/** Read the schedule's Department's rosters: the week's other parts, its month and where people started. */
 	mayRead: boolean;
 	/** Create a schedule at the Department, for the days after a part. */
@@ -42,6 +45,7 @@ const NOTHING: RosterPagePermissions = {
 	mayReject: false,
 	mayWithdraw: false,
 	mayGenerate: false,
+	mayRegenerateOncePublished: false,
 	mayRead: false,
 	mayCreateHere: false,
 	mayHandleLeave: false,
@@ -68,6 +72,9 @@ export const rosterPagePermissions = (
 			withdrawable(schedule) && access.can("schedule:publish", department),
 		mayGenerate:
 			regenerable(schedule) && access.can("schedule:generate", department),
+		mayRegenerateOncePublished:
+			regenerableOncePublished(schedule) &&
+			access.can("schedule:generate", department),
 		mayRead: access.can("schedule:read", department),
 		mayCreateHere: access.canAll(SCHEDULE_CREATE_KEYS, department),
 		mayHandleLeave: access.canAll(

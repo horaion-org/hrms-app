@@ -224,7 +224,7 @@ export const withCoveredDays = <
 	coveredTo: read.coveredTo ?? read.periodEnd,
 });
 
-const scheduleSchema = z
+export const scheduleSchema = z
 	.object({
 		scheduleId: z.string(),
 		companyId: z.string(),
