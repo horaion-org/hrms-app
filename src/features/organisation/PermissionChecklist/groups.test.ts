@@ -1,6 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { createInstance, type TFunction } from "i18next";
+import { beforeAll, describe, expect, it } from "vitest";
+import en from "@/assets/locales/en/translations.json";
 import {
+	hintKeyOf,
 	keysFor,
+	labelKeyOf,
 	missingUses,
 	scopeHintOf,
 	selectionForKind,
@@ -168,5 +172,35 @@ describe("what a permission's screens use", () => {
 			missingUses(["schedule:create"], ["schedule:create", "shift:read"])
 		).toEqual([]);
 		expect(missingUses(["schedule:create"], [])).toEqual([]);
+	});
+});
+
+describe("how the role editor words applying for someone else", () => {
+	let t: TFunction;
+	beforeAll(async () => {
+		const i18n = createInstance();
+		await i18n.init({ lng: "en", resources: { en: { translation: en } } });
+		t = i18n.t;
+	});
+
+	it.each([
+		{
+			key: "leave_request:create",
+			label: "Apply for leave for someone else",
+			hint: "Applying for oneself needs nothing",
+		},
+		{
+			key: "shift_preference:update",
+			label: "Apply shift preferences for someone else",
+			hint: "From today to eight weeks ahead; setting one’s own needs nothing",
+		},
+		{
+			key: "work_availability:update",
+			label: "Apply availability for someone else",
+			hint: "Their weekly pattern or one week; setting one’s own needs nothing",
+		},
+	] as const)("words $key as Leave words its own", ({ key, label, hint }) => {
+		expect(t(labelKeyOf(key))).toBe(label);
+		expect(t(hintKeyOf(key))).toBe(hint);
 	});
 });

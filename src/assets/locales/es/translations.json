@@ -607,6 +607,7 @@
 			"weekNotMonday": "No encontramos esa semana. Recarga la página y vuelve a elegirla."
 		},
 		"controls": "Controles de disponibilidad",
+		"apply": "Indicar disponibilidad",
 		"saved": "Disponibilidad guardada.",
 		"weekReset": "Esta semana vuelve a seguir la disponibilidad habitual."
 	},
@@ -615,6 +616,7 @@
 		"pageSubtitle": "Los turnos que a las personas les gustaría trabajar, semana a semana.",
 		"views": "Vistas de preferencias de turno",
 		"controls": "Controles de preferencias de turno",
+		"apply": "Indicar preferencias de turno",
 		"noBranches": "Añade una sucursal a la organización antes de consultar las preferencias de turno del equipo.",
 		"mine": {
 			"tab": "Mis preferencias"
@@ -1330,11 +1332,11 @@
 				"description": "Las horas en que cada persona a tiempo parcial puede trabajar en una semana, y quién no tiene ninguna.",
 				"actions": {
 					"read": "Ver la disponibilidad de las personas a tiempo parcial",
-					"update": "Definir la disponibilidad de alguien"
+					"update": "Indicar la disponibilidad en nombre de otra persona"
 				},
 				"actionHints": {
 					"read": "Sus horas semanales, y quién no tiene ninguna",
-					"update": "Su patrón semanal y los cambios de una semana"
+					"update": "Su patrón semanal o una semana; indicar la propia no necesita nada"
 				}
 			},
 			"shift_preference": {
@@ -1342,11 +1344,11 @@
 				"description": "Los turnos que cada persona querría trabajar en una fecha.",
 				"actions": {
 					"read": "Ver las preferencias de turno de las personas",
-					"update": "Indicar las preferencias de turno de alguien"
+					"update": "Indicar preferencias de turno en nombre de otra persona"
 				},
 				"actionHints": {
 					"read": "Los turnos que querrían, día a día",
-					"update": "Los turnos que querría en un día, desde hoy hasta ocho semanas después"
+					"update": "Desde hoy hasta ocho semanas después; indicar las propias no necesita nada"
 				}
 			},
 			"member_event": {
@@ -3342,6 +3344,16 @@
 			"all": "Todos",
 			"pending": "Aún no (invitado)",
 			"accepted": "Sí"
+		},
+		"applyFor": {
+			"employee": "Empleado",
+			"search": "Buscar empleados",
+			"choose": "Elige un empleado",
+			"loading": "Cargando personas…",
+			"noMatches": "Nadie para quien puedas solicitar coincide con esta búsqueda.",
+			"nobody": "Aquí no hay nadie para quien puedas solicitar. Elige otra sucursal u otro departamento e inténtalo de nuevo.",
+			"cancel": "Cancelar",
+			"continue": "Continuar"
 		}
 	},
 	"numberStepper": {

@@ -607,6 +607,7 @@
 			"weekNotMonday": "That week couldn’t be found. Reload the page and choose the week again."
 		},
 		"controls": "Availability controls",
+		"apply": "Apply availability",
 		"saved": "Availability saved.",
 		"weekReset": "This week follows the usual availability again."
 	},
@@ -615,6 +616,7 @@
 		"pageSubtitle": "The shifts people would like to work, week by week.",
 		"views": "Shift preference views",
 		"controls": "Shift preference controls",
+		"apply": "Apply shift preferences",
 		"noBranches": "Add a branch to the organisation before reading the team’s shift preferences.",
 		"mine": {
 			"tab": "My preferences"
@@ -1518,6 +1520,16 @@
 			"all": "Everyone",
 			"pending": "Not yet (invited)",
 			"accepted": "Yes"
+		},
+		"applyFor": {
+			"employee": "Employee",
+			"search": "Search employees",
+			"choose": "Choose an employee",
+			"loading": "Loading people…",
+			"noMatches": "No one you may apply for matches this search.",
+			"nobody": "There’s no one here you may apply for. Choose another branch or department, then try again.",
+			"cancel": "Cancel",
+			"continue": "Continue"
 		}
 	},
 	"settings": {
@@ -2542,11 +2554,11 @@
 				"description": "The hours each part-time person can work in a week, and who has none set.",
 				"actions": {
 					"read": "See part-timers’ availability",
-					"update": "Set someone’s availability"
+					"update": "Apply availability for someone else"
 				},
 				"actionHints": {
 					"read": "Their weekly hours, and who has none set",
-					"update": "Their weekly pattern and changes for a week"
+					"update": "Their weekly pattern or one week; setting one’s own needs nothing"
 				}
 			},
 			"shift_preference": {
@@ -2554,11 +2566,11 @@
 				"description": "The shifts each person would like to work on a date.",
 				"actions": {
 					"read": "See people’s shift preferences",
-					"update": "Set someone’s shift preferences"
+					"update": "Apply shift preferences for someone else"
 				},
 				"actionHints": {
 					"read": "The shifts they would like, day by day",
-					"update": "The shifts they would like on a day, from today to eight weeks ahead"
+					"update": "From today to eight weeks ahead; setting one’s own needs nothing"
 				}
 			},
 			"member_event": {

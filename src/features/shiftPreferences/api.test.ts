@@ -10,6 +10,7 @@ import {
 	replaceMemberPreferenceDay,
 	replaceMyPreferenceDay,
 	TEAM_PAGE_SIZE,
+	teamPagesAfterFirst,
 	teamPreferencesKey,
 	teamPreferencesPath,
 } from "@/features/shiftPreferences/api";
@@ -115,6 +116,26 @@ describe("shift preferences API", () => {
 			`/api/v1/companies/c-1/shift-preferences?weekStartMonday=${FIXTURE_WEEK}&branchId=b-1&departmentId=d-1&page=2&size=${TEAM_PAGE_SIZE}`
 		);
 	});
+
+	it.each([
+		{ name: "noMembersNeedNoMorePages", total: 0, pages: [] },
+		{ name: "oneFullPageNeedsNoMore", total: TEAM_PAGE_SIZE, pages: [] },
+		{
+			name: "oneMoreMemberNeedsASecondPage",
+			total: TEAM_PAGE_SIZE + 1,
+			pages: [1],
+		},
+		{
+			name: "threePagesNeedTheSecondAndThird",
+			total: TEAM_PAGE_SIZE * 3,
+			pages: [1, 2],
+		},
+	])(
+		"given_aTeamListTotal_when_itsLaterPagesAreAsked_then_$name",
+		({ total, pages }) => {
+			expect(teamPagesAfterFirst(total)).toEqual(pages);
+		}
+	);
 
 	it("given_noUnit_when_theTeamListIsAsked_then_leavesBothOutForEveryUnitInReach", () => {
 		expect(

@@ -6,11 +6,13 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { dayParameter, shownDayOf } from "@/common/dayView";
 import type { FunctionComponent } from "@/common/types";
-import { daysOf, mondayOf } from "@/common/weeks";
+import { daysOf, mondayOf, openWeekOf } from "@/common/weeks";
+import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { FiltersPopover } from "@/components/ui/FiltersPopover";
 import { DaySwitcher } from "@/components/ui/DaySwitcher";
+import { PlusIcon } from "@/components/ui/Icon";
 import { PageToolbar } from "@/components/ui/PageToolbar";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
 import { WeekNavigator } from "@/components/ui/WeekNavigator";
@@ -34,6 +36,7 @@ import {
 	type TeamAvailabilityList,
 } from "@/features/availability/useAvailability";
 import { myProfileQuery } from "@/features/people/api";
+import { ApplyForSomeoneDialog } from "@/features/people/ApplyForSomeoneDialog";
 import { workspaceQuery } from "@/features/workspace/api";
 import {
 	AVAILABILITY_READ_KEYS,
@@ -72,12 +75,13 @@ const problemKeyOf = (
  * part-timer's own week and pattern, changed with nothing granted. "Team"
  * is the part-timers of the header's Branch (every Branch in reach under
  * "All branches") for one week, read through the person's grants, with
- * editing on the rows they may change. Beneath the tabs, one toolbar holds
- * the team's Department filter and the week. The tab (written once it is
- * known), units and week live in the URL; a week left out is this one,
- * worked out on every render. Any week can be read; only this week and
- * later ones are edited. Page-level composition only: the parts live in
- * `features/availability`.
+ * editing on the rows they may change, or by "Apply availability", which
+ * chooses the part-timer first, as Leave's "Apply leave" does. Beneath the
+ * tabs, one toolbar holds the team's Department filter, the week and that
+ * action. The tab (written once it is known), units and week live in the
+ * URL; a week left out is this one, worked out on every render. Any week can
+ * be read; only this week and later ones are edited. Page-level composition
+ * only: the parts live in `features/availability`.
  */
 export const Availability = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
@@ -114,6 +118,18 @@ export const Availability = (): FunctionComponent => {
 		view === "team"
 	);
 	const [editing, setEditing] = useState<MemberWeek | null>(null);
+	const [choosingMember, setChoosingMember] = useState(false);
+	// A member's week opens in the first week still open: a row opens only in an open week, so there it is the
+	// week shown; applying from a week that has ended opens this week.
+	const openWeek = openWeekOf(week, today);
+	const openWeekTeam = useAvailabilityList(
+		companyId,
+		units.branches.length > 0
+			? availabilityQueryOf(selectedUnits(units), openWeek)
+			: undefined,
+		choosingMember
+	);
+	const openWeekTeamProblem = problemKeyOf(openWeekTeam);
 
 	const show = (next: AvailabilitySearch): void => {
 		void navigate({ search: (previous) => ({ ...previous, ...next }) });
@@ -126,10 +142,11 @@ export const Availability = (): FunctionComponent => {
 				replace: true,
 			});
 	}, [view, search.view, navigate]);
-	// A row is changed where its member is filed, and only in a week still to come.
-	const canEdit = (member: MemberWeek): boolean =>
-		!past &&
+	// A member is set for where they are filed.
+	const maySetFor = (member: MemberWeek): boolean =>
 		access.can(AVAILABILITY_UPDATE_KEY, recordScope(member.departmentId));
+	// A row is changed only in a week still to come.
+	const canEdit = (member: MemberWeek): boolean => !past && maySetFor(member);
 	const editsAnywhere = access.canAnywhere(AVAILABILITY_UPDATE_KEY);
 
 	const header = (
@@ -176,6 +193,18 @@ export const Availability = (): FunctionComponent => {
 					t
 				)
 			: [];
+	const applyAction = view === "team" &&
+		editsAnywhere &&
+		units.branches.length > 0 && (
+			<Button
+				leadingIcon={<PlusIcon />}
+				onClick={() => {
+					setChoosingMember(true);
+				}}
+			>
+				{t("availability.apply")}
+			</Button>
+		);
 	return (
 		<div>
 			{header}
@@ -199,6 +228,7 @@ export const Availability = (): FunctionComponent => {
 					))}
 				</TabList>
 				<PageToolbar
+					actions={applyAction}
 					className="mt-6 mb-8"
 					label={t("availability.controls")}
 					chips={
@@ -280,12 +310,29 @@ export const Availability = (): FunctionComponent => {
 					))}
 				</TabPanels>
 			</Tabs>
+			{choosingMember && (
+				<ApplyForSomeoneDialog
+					maySetFor={maySetFor}
+					problem={openWeekTeamProblem && t(openWeekTeamProblem.key)}
+					title={t("availability.apply")}
+					people={
+						openWeekTeam.status === "ready" ? openWeekTeam.members : undefined
+					}
+					onChoose={(member) => {
+						setChoosingMember(false);
+						setEditing(member);
+					}}
+					onClose={() => {
+						setChoosingMember(false);
+					}}
+				/>
+			)}
 			{editing && (
 				<MemberAvailabilityDialog
 					key={editing.membershipId}
 					companyId={companyId}
 					member={editing}
-					weekStartMonday={week}
+					weekStartMonday={openWeek}
 					onClose={() => {
 						setEditing(null);
 					}}

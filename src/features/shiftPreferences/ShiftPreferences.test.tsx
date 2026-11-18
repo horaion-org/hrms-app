@@ -1,7 +1,9 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import dayjs from "dayjs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import { effectiveWorkspace } from "@/common/testing/effectiveWorkspace";
 import {
 	currentUserReply,
@@ -22,8 +24,10 @@ import {
 	weeklyAvailabilityFixture,
 } from "@/features/availability/fixtures";
 import {
+	FIXTURE_WEEK,
 	fixtureTeamPage,
 	fixtureWeek,
+	MONDAY_WITH_MORNING,
 } from "@/features/shiftPreferences/fixtures";
 import {
 	TEAM_PAGE_SIZE,
@@ -319,5 +323,208 @@ describe("ShiftPreferences", () => {
 				.getAllByRole("button")
 				.map((button) => button.getAttribute("aria-label"))
 		).toEqual(["Edit Alex Example’s shift preferences"]);
+	});
+});
+
+/** A team row of `fixtureTeamPage`'s week for another member. */
+const teamMemberOf = (
+	membershipId: string,
+	displayName: string | null,
+	departmentId: string | null
+): TeamMemberWeek => ({
+	...fixtureTeamPage().content[0]!,
+	membershipId,
+	displayName,
+	departmentId,
+});
+
+/** A team list reply of `members`, all on one page. */
+const teamReply = (members: Array<TeamMemberWeek>): StubReply => ({
+	status: 200,
+	body: envelope({ content: members, page: { totalElements: members.length } }),
+});
+
+/** Alex's week as a member, read for this week. */
+const ALEX_WEEK = `GET ${MEMBERS_PATH}/m-1/shift-preferences/weeks/${mondayOf(new Date())}`;
+
+/** Opens "Apply shift preferences", chooses `name` and goes on to their week. */
+const applyFor = async (
+	user: ReturnType<typeof userEvent.setup>,
+	name: string
+): Promise<void> => {
+	await user.click(
+		await screen.findByRole("button", { name: "Apply shift preferences" })
+	);
+	const step = await screen.findByRole("dialog", {
+		name: "Apply shift preferences",
+	});
+	await user.click(within(step).getByRole("button", { name: "Employee" }));
+	await user.click(await screen.findByRole("option", { name }));
+	await user.click(within(step).getByRole("button", { name: "Continue" }));
+};
+
+describe("ShiftPreferences: applying for someone", () => {
+	it("offers Apply on the Team tab to someone holding the update key", async () => {
+		const user = userEvent.setup();
+		stubApi(routes("FULL_TIME", workspaceReply([READ, UPDATE])));
+		await open("/shift-preferences");
+		await screen.findByRole("table", { name: "Shift preferences" });
+
+		// As Leave places "Apply leave": with the team, not on the person's own week.
+		expect(
+			screen.queryByRole("button", { name: "Apply shift preferences" })
+		).not.toBeInTheDocument();
+		await user.click(screen.getByRole("tab", { name: "Team" }));
+
+		expect(
+			await screen.findByRole("button", { name: "Apply shift preferences" })
+		).toBeVisible();
+	});
+
+	it("does not offer Apply without the update key", async () => {
+		stubApi(routes("FULL_TIME", workspaceReply([READ])));
+		await open("/shift-preferences?view=team");
+
+		const table = await screen.findByRole("table", {
+			name: "Team shift preferences",
+		});
+		await within(table).findByText("Alex Example");
+		expect(
+			screen.queryByRole("button", { name: "Apply shift preferences" })
+		).not.toBeInTheDocument();
+	});
+
+	it("searches only the members the person may set for", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			...routes("FULL_TIME", workspaceReply([READ], [UPDATE])),
+			[`GET ${TEAM_PATH}`]: teamReply([
+				teamMemberOf("m-1", "Alex Example", "d-1"),
+				teamMemberOf("m-2", "Bea Kitchen", "d-2"),
+				teamMemberOf("m-3", null, "d-1"),
+			]),
+		});
+		await open("/shift-preferences?view=team");
+
+		await user.click(
+			await screen.findByRole("button", { name: "Apply shift preferences" })
+		);
+		const step = await screen.findByRole("dialog", {
+			name: "Apply shift preferences",
+		});
+		// Sales holds the update key; Kitchen does not, and a removed member is never offered.
+		await user.click(within(step).getByRole("button", { name: "Employee" }));
+		expect(
+			(await screen.findAllByRole("option")).map((option) => option.textContent)
+		).toEqual(["Alex Example"]);
+		await user.keyboard("{Escape}");
+		await user.type(
+			within(step).getByRole("searchbox", { name: "Search employees" }),
+			"Bea"
+		);
+		expect(
+			within(step).getByText("No one you may apply for matches this search.")
+		).toBeVisible();
+	});
+
+	it("finds a member on a later page of the team list", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...routes("FULL_TIME", workspaceReply([READ, UPDATE])),
+			[`GET ${TEAM_PATH}`]: (call) => ({
+				status: 200,
+				body: envelope({
+					content: [
+						call.search.includes("page=1")
+							? teamMemberOf("m-2", "Bea Kitchen", "d-2")
+							: teamMemberOf("m-1", "Alex Example", "d-1"),
+					],
+					page: { totalElements: TEAM_PAGE_SIZE + 1 },
+				}),
+			}),
+		});
+		await open("/shift-preferences?view=team");
+
+		await user.click(
+			await screen.findByRole("button", { name: "Apply shift preferences" })
+		);
+		const step = await screen.findByRole("dialog", {
+			name: "Apply shift preferences",
+		});
+		await user.click(within(step).getByRole("button", { name: "Employee" }));
+
+		expect(
+			await screen.findByRole("option", { name: "Bea Kitchen" })
+		).toBeVisible();
+		expect(
+			calls.filter((call) => call.path === TEAM_PATH).map((call) => call.search)
+		).toContain(teamSearch().replace("page=0", "page=1"));
+	});
+
+	it("opens the chosen member's week and saves it as their row does", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...routes("FULL_TIME", workspaceReply([READ, UPDATE])),
+			[ALEX_WEEK]: { status: 200, body: envelope(fixtureWeek()) },
+			[`PUT ${MEMBERS_PATH}/m-1/shift-preferences/days/${FIXTURE_WEEK}`]: {
+				status: 200,
+				body: envelope(MONDAY_WITH_MORNING),
+			},
+		});
+		await open("/shift-preferences?view=team");
+
+		await applyFor(user, "Alex Example");
+		const week = await screen.findByRole("dialog", {
+			name: "Edit shift preferences",
+		});
+		expect(week).toHaveTextContent("Alex Example");
+		await user.click(
+			await within(week).findByRole("button", {
+				name: /^Choose shifts for Mon/,
+			})
+		);
+		const day = screen.getByRole("dialog", { name: /^Choose shifts for Mon/ });
+		await user.click(within(day).getByRole("checkbox", { name: /^Late/ }));
+		await user.click(within(day).getByRole("button", { name: "Save" }));
+
+		// The same request as the row's, so the same confirmation ("Shift preferences saved.", shiftPreferenceConfirmations.test.tsx).
+		await waitFor(() => {
+			expect(calls.some((call) => call.method === "PUT")).toBe(true);
+		});
+		expect(
+			calls
+				.filter((call) => call.method === "PUT")
+				.map((call) => ({ path: call.path, body: call.body }))
+		).toEqual([
+			{
+				path: `${MEMBERS_PATH}/m-1/shift-preferences/days/${FIXTURE_WEEK}`,
+				body: { shiftIds: ["s-morning", "s-late"] },
+			},
+		]);
+	});
+
+	it("applies for this week when the week shown has ended", async () => {
+		const user = userEvent.setup();
+		const thisWeek = mondayOf(new Date());
+		const weekEnded = dayjs(thisWeek)
+			.subtract(2, "week")
+			.format(ISO_DATE_FORMAT);
+		const calls = stubApi({
+			...routes("FULL_TIME", workspaceReply([READ, UPDATE])),
+			[ALEX_WEEK]: { status: 200, body: envelope(fixtureWeek()) },
+		});
+		await open(`/shift-preferences?view=team&week=${weekEnded}`);
+
+		await applyFor(user, "Alex Example");
+
+		expect(
+			await screen.findByRole("dialog", { name: "Edit shift preferences" })
+		).toBeVisible();
+		await waitFor(() => {
+			expect(calls.some((call) => `GET ${call.path}` === ALEX_WEEK)).toBe(true);
+		});
+		expect(
+			calls.filter((call) => call.path === TEAM_PATH).map((call) => call.search)
+		).toContain(teamSearch());
 	});
 });
