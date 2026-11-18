@@ -194,5 +194,32 @@ describe("issuesOfRoster", () => {
 		);
 
 		expect(issues.map((issue) => issue.group)).toEqual(["notMet", "mustFix"]);
+		// A generation's error names no rule: that is what its advice goes by.
+		expect(issues.map((issue) => issue.subject)).toEqual([
+			{ kind: "generationError" },
+			{ kind: "generationError" },
+		]);
+	});
+
+	it("carries the rule behind a clash that names a person, and none for the roster's own lists", () => {
+		const row = leaveGapRow();
+		const clash = staffingGapFixture({
+			employeeUuid: "mp-1",
+			sourceRule: "at_most_one_role_assignment_per_day",
+		});
+		const issues = issuesOfRoster(
+			input(
+				{},
+				{
+					toDecide: [row],
+					findings: { ...emptyFindingsFixture(), conflicts: [clash] },
+				}
+			)
+		);
+
+		expect(issues.map((issue) => issue.subject)).toEqual([
+			undefined,
+			{ kind: "rule", rule: "at_most_one_role_assignment_per_day" },
+		]);
 	});
 });

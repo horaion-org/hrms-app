@@ -31,6 +31,13 @@ export const GROUPS_STARTING_CLOSED: ReadonlyArray<IssueGroup> = [
 export type IssueAction =
 	{ kind: "show" } | { kind: "findCover"; gap: CoverGapRequest };
 
+/**
+ * What stands behind an item, which its advice is chosen by: a rule by the
+ * engine's name for it, or a generation's error, which names no rule.
+ */
+export type IssueSubject =
+	{ kind: "rule"; rule: string } | { kind: "generationError" };
+
 /** One row of the Issues tab: who or what and when on its first line, why and what to do on its second. */
 export type RosterIssue = {
 	key: string;
@@ -50,6 +57,8 @@ export type RosterIssue = {
 	/** What kind of fact it is, in a few plain words ("Shifts short"), which a folded group counts by. */
 	topic: string;
 	action: IssueAction;
+	/** The rule or engine error behind the item; left out for the roster's own lists and notes. */
+	subject?: IssueSubject;
 };
 
 /** A note with nothing to fix: a short title, then what it means and what to do, and its kind. */
@@ -139,6 +148,7 @@ const gapIssue = (
 		action: shiftId
 			? { kind: "findCover", gap: { shiftId, day: gap.date } }
 			: { kind: "show" },
+		subject: { kind: "rule", rule: gap.sourceRule },
 	};
 };
 
@@ -189,6 +199,7 @@ const placelessRuleIssue = (
 	rule:
 		messages.length > 0 ? messages.join(" ") : t(PLACELESS_REASON_KEYS[group]),
 	action: { kind: "show" },
+	subject: { kind: "rule", rule: rule.rule },
 });
 
 type RuleViolation = NonNullable<BrokenRule["violations"]>[number];
@@ -253,6 +264,7 @@ const ruleIssues = (
 			time: null,
 			rule: ruleReason(group, ruleName, messages, t),
 			action: { kind: "show" },
+			subject: { kind: "rule", rule: rule.rule },
 		})
 	);
 	// A violation missing its person or its day stands alone, as it can't be joined to another.
@@ -276,6 +288,7 @@ const ruleIssues = (
 				time: null,
 				rule: ruleReason(group, ruleName, violation.messages, t),
 				action: { kind: "show" },
+				subject: { kind: "rule", rule: rule.rule },
 			};
 		}),
 	];

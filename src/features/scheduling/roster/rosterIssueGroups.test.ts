@@ -71,6 +71,21 @@ describe("rosterIssues", () => {
 		expect(issue?.action).toEqual({ kind: "show" });
 	});
 
+	it("carries the engine's rule behind each gap and each rule's item, which its advice is chosen by", () => {
+		const gap = staffingGapFixture();
+		const placeless = ruleFixture({ rule: "most_days_a_week" });
+		const issues = rosterIssues(
+			input({ gaps: [gap], brokenMusts: [brokenMust], notMet: [placeless] })
+		);
+
+		expect(issues.map((issue) => issue.subject)).toEqual([
+			{ kind: "rule", rule: gap.sourceRule },
+			{ kind: "rule", rule: brokenMust.rule },
+			{ kind: "rule", rule: brokenMust.rule },
+			{ kind: "rule", rule: "most_days_a_week" },
+		]);
+	});
+
 	it("lists each person and day a broken must names, to fix, saying a must is broken and naming the rule last", () => {
 		const issues = rosterIssues(input({ brokenMusts: [brokenMust] }));
 

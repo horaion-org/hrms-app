@@ -194,6 +194,7 @@ const findingIssues = (
 			time: null,
 			rule: conflict.message ?? t("scheduling.issues.conflict"),
 			action: { kind: "show" },
+			subject: { kind: "rule", rule: conflict.sourceRule },
 		}));
 	const errors = (withErrors ? findings.errors : []).flatMap((violation) =>
 		violation.messages.map((message): RosterIssue => ({
@@ -207,6 +208,7 @@ const findingIssues = (
 			time: null,
 			rule: message,
 			action: { kind: "show" },
+			subject: { kind: "generationError" },
 		}))
 	);
 	// A day's message from the engine names something to look at, not to fix.
