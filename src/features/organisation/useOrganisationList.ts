@@ -5,6 +5,7 @@ import {
 	type UseQueryResult,
 } from "@tanstack/react-query";
 import { ApiProblemError, isDecisionEngineStale } from "@/common/problem";
+import { isWaitingOnAccessUpdate } from "@/common/queryRetry";
 import type { ListPage } from "@/common/schemas";
 import type { PermissionKey } from "@/features/workspace/permissionKeys";
 import {
@@ -46,7 +47,11 @@ export type OrganisationList<T> =
 			/** Reads the list again. */
 			retry: () => void;
 	  }
-	| ({ status: "ready" } & ListPage<T>);
+	| ({
+			status: "ready";
+			/** A re-read is waiting on an access update; the rows shown may be out of date. */
+			stillUpdating?: boolean;
+	  } & ListPage<T>);
 
 /** A failed read as a list state: whether the API is still updating access, and how to read it again. */
 const failedRead = (
@@ -91,9 +96,13 @@ export const useOrganisationList = <T>(
 	if (list.data === undefined)
 		return {
 			status: "pending",
-			stillUpdating: isDecisionEngineStale(list.failureReason),
+			stillUpdating: isWaitingOnAccessUpdate(list),
 		};
-	return { status: "ready", ...list.data };
+	return {
+		status: "ready",
+		...list.data,
+		stillUpdating: isWaitingOnAccessUpdate(list),
+	};
 };
 
 export const useBranches = (

@@ -185,6 +185,8 @@ export type ListView<T> = {
 	problem?: { message: string; alert: boolean; retry?: () => void };
 	/** Set when the API holds more rows than one page returns. */
 	truncated?: string;
+	/** Shown above the rows while a re-read waits on an access update. */
+	updating?: string;
 };
 
 const NO_ROWS: Array<never> = [];
@@ -254,6 +256,9 @@ export const describeList = <T extends { name: string }>(
 				: list.items;
 			return {
 				rows,
+				updating: list.stillUpdating
+					? t("organisation.list.waitingForAccess")
+					: undefined,
 				empty:
 					search.trim() || filtered
 						? t("organisation.list.noMatches")

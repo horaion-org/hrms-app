@@ -23,6 +23,8 @@ import es from "@/assets/locales/es/translations.json";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
+import { QueryClient } from "@tanstack/react-query";
+import { queryClient as appQueryClient } from "@/common/query-client";
 
 const REFRESH = "POST /api/v1/public/sessions/refreshes";
 const ME = "GET /api/v1/me";
@@ -1369,4 +1371,43 @@ describe("Organisation navigation", () => {
 			within(navigation).getByRole("link", { name: "Organisation" })
 		).toHaveAttribute("data-status", "active");
 	});
+});
+
+it("keeps the rows and says access is being updated while a re-read is refused, then shows the new rows", async () => {
+	stubApi({
+		...baseRoutes(),
+		[BRANCHES]: [
+			pageReply([branch("b-1", "Main Branch", "INACTIVE")]),
+			problemReply(503, "DECISION_ENGINE_STALE", { "Retry-After": "1" }),
+			pageReply([branch("b-1", "Main Branch", "ACTIVE")]),
+		],
+	});
+	// The app's own query defaults, so the refusal waits its Retry-After as in the app.
+	app = await openApp(
+		"/organisation/branches",
+		new QueryClient({ defaultOptions: appQueryClient.getDefaultOptions() })
+	);
+	renderAuthApp(app);
+	expect(await screen.findAllByText("Inactive")).not.toHaveLength(0);
+
+	void app.queryClient.invalidateQueries({ queryKey: ["organisation"] });
+
+	expect(
+		await screen.findByText(
+			"Access is being updated after a recent change. Trying again in a few seconds…"
+		)
+	).toBeInTheDocument();
+	// The old rows stay on screen meanwhile.
+	expect(screen.getAllByText("Inactive")).not.toHaveLength(0);
+	await waitFor(
+		() => {
+			expect(screen.queryAllByText("Inactive")).toHaveLength(0);
+		},
+		{ timeout: 3_000 }
+	);
+	expect(
+		screen.queryByText(
+			"Access is being updated after a recent change. Trying again in a few seconds…"
+		)
+	).not.toBeInTheDocument();
 });
