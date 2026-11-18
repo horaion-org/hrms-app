@@ -5204,6 +5204,10 @@
 				"previousMonth": "Mes anterior, {{month}}",
 				"nextMonth": "Mes siguiente, {{month}}",
 				"crossingWeek": "{{week}} está en la página de <0>{{month}}</0>.",
+				"datesRun": {
+					"generating": "Se están generando los horarios del {{days}}.",
+					"otherMonth": "{{days}} están en la página de <0>{{month}}</0>."
+				},
 				"noSchedule": "Ninguna semana de {{month}} tiene horario todavía.",
 				"legendCovered": "Todos los turnos cubiertos",
 				"legendShort": "Falta personal en un turno",
@@ -5308,6 +5312,8 @@
 				"chosen_other": "{{count}} semanas: {{ranges}}",
 				"startedNote": "{{week}} ya ha empezado. Se genera desde hoy: {{range}}.",
 				"rosterWaitingNote": "{{week}} tiene un horario pendiente de revisión. Generar de nuevo lo sustituye.",
+				"rosterWaitingPartNote_one": "{{week}} tiene un horario pendiente de revisión. Generar de nuevo sustituye solo {{replaced}}. {{staying}} se queda como está: usa Fechas para volver a programarlo.",
+				"rosterWaitingPartNote_other": "{{week}} tiene un horario pendiente de revisión. Generar de nuevo sustituye solo {{replaced}}. {{staying}} se quedan como están: usa Fechas para volver a programarlos.",
 				"rosterRejectedNote": "{{week}} tiene un horario rechazado. Generar de nuevo lo sustituye.",
 				"skippedNote": "{{week}} queda fuera y no tiene horario. Las horas trabajadas esa semana no cuentan para las horas extra de este mes salvo que un horario la cubra.",
 				"noneTicked": "Marca al menos una semana para programar.",
@@ -5445,6 +5451,7 @@
 				"newLine": "{{days}} con tus opciones",
 				"redoneLine": "{{days}} se vuelven a programar con tus opciones",
 				"weeksOwnLine": "{{days}} se vuelven a programar con los turnos y reglas de su semana",
+				"schedulesLine": "Esta semana serán {{number}} horarios: {{days}}. Cada uno se revisa y se publica por separado.",
 				"new": "Nueva",
 				"kept": "Se mantiene",
 				"redo": "Por rehacer",

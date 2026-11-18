@@ -5404,6 +5404,10 @@
 				"previousMonth": "Previous month, {{month}}",
 				"nextMonth": "Next month, {{month}}",
 				"crossingWeek": "{{week}} is in <0>{{month}}</0>’s page.",
+				"datesRun": {
+					"generating": "Schedules for {{days}} are being generated.",
+					"otherMonth": "{{days}} are on the <0>{{month}}</0> page."
+				},
 				"noSchedule": "No week of {{month}} has a schedule yet.",
 				"legendCovered": "Every shift covered",
 				"legendShort": "A shift is short",
@@ -5508,6 +5512,8 @@
 				"chosen_other": "{{count}} weeks: {{ranges}}",
 				"startedNote": "{{week}} has already started. It is generated from today on: {{range}}.",
 				"rosterWaitingNote": "{{week}} has a roster waiting for review. Generating again replaces it.",
+				"rosterWaitingPartNote_one": "{{week}} has a roster waiting for review. Generating again replaces {{replaced}} only. {{staying}} stays as it is: use Dates to schedule it again.",
+				"rosterWaitingPartNote_other": "{{week}} has a roster waiting for review. Generating again replaces {{replaced}} only. {{staying}} stay as they are: use Dates to schedule them again.",
 				"rosterRejectedNote": "{{week}} has a rejected roster. Generating again replaces it.",
 				"skippedNote": "{{week}} is left out and has no roster. Hours worked that week don’t count towards this month’s overtime unless a roster covers it.",
 				"noneTicked": "Tick at least one week to schedule.",
@@ -5645,6 +5651,7 @@
 				"newLine": "{{days}} with your choices",
 				"redoneLine": "{{days}} scheduled again with your choices",
 				"weeksOwnLine": "{{days}} scheduled again with the week’s own shifts and rules",
+				"schedulesLine": "This week will be {{number}} schedules: {{days}}. Each is reviewed and published on its own.",
 				"new": "New",
 				"kept": "Kept",
 				"redo": "To redo",

@@ -1,10 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
+	type WeekPart,
 	type WeekState,
 	weekStateSchema,
 } from "@/features/scheduling/months/api";
-import { monthSummaryFixture } from "@/features/scheduling/months/fixtures";
+import {
+	monthSummaryFixture,
+	twoPartWeekFixture,
+} from "@/features/scheduling/months/fixtures";
 import {
 	badgeOf,
 	chosenWeeksNow,
@@ -15,6 +19,7 @@ import {
 	tickableWeekOf,
 	tickableWeeksOf,
 	tickedRangesOf,
+	splitReplacementOf,
 } from "@/features/scheduling/months/weekTicks";
 import { weekStateTones } from "@/features/scheduling/months/weekStateLooks";
 
@@ -374,4 +379,49 @@ describe("chosenWeeksNow", () => {
 			replacing: [],
 		});
 	});
+});
+
+describe("splitReplacementOf", () => {
+	const [wednesdayToFriday, weekend] = twoPartWeekFixture();
+	/** The week of 15 Feb 2027 to review, its newest part `scheduleId`. */
+	const week = (
+		scheduleId: string | null,
+		parts: Array<WeekPart> = twoPartWeekFixture()
+	): Parameters<typeof splitReplacementOf>[0] => ({
+		periodStart: "2027-02-15",
+		state: "TO_REVIEW",
+		scheduleId,
+		parts,
+	});
+
+	it.each([
+		[
+			"theNewestLast",
+			week("s-2"),
+			{
+				replaced: { from: "2027-02-20", to: "2027-02-21" },
+				staying: [{ from: "2027-02-17", to: "2027-02-19" }],
+			},
+		],
+		[
+			"theNewestFirst",
+			week("s-1"),
+			{
+				replaced: { from: "2027-02-17", to: "2027-02-19" },
+				staying: [{ from: "2027-02-20", to: "2027-02-21" }],
+			},
+		],
+		["oneSchedule", week("s-1", [wednesdayToFriday!]), undefined],
+		["noParts", week(null, []), undefined],
+		[
+			"aNewestNotAmongTheParts",
+			week("s-9", [wednesdayToFriday!, weekend!]),
+			undefined,
+		],
+	])(
+		"given_%s_when_asked_then_whatAMonthRunReplaces",
+		(_case, given, replacement) => {
+			expect(splitReplacementOf(given)).toEqual(replacement);
+		}
+	);
 });

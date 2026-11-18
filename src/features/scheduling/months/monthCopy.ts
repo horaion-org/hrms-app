@@ -1,6 +1,6 @@
 import type { TFunction } from "i18next";
 import { formatDay } from "@/common/formatDay";
-import type { DatesPlan } from "@/features/scheduling/dates/api";
+import type { DatesPlan, DayRun } from "@/features/scheduling/dates/api";
 import type {
 	ScheduleMonth,
 	WeekState,
@@ -11,7 +11,11 @@ import {
 	formatWeekDates,
 	stateCounts,
 } from "@/features/scheduling/months/monthWeeks";
-import { tickedRangesOf } from "@/features/scheduling/months/weekTicks";
+import {
+	tickedRangesOf,
+	type TickableWeek,
+} from "@/features/scheduling/months/weekTicks";
+import { dayCountOfRuns } from "@/features/scheduling/dates/datesSetup";
 import { formatPeriod } from "@/features/scheduling/periods";
 import type { Gate } from "@/features/scheduling/readiness/readinessCopy";
 import type { WeekChoiceIds } from "@/features/scheduling/weekChoice";
@@ -56,6 +60,38 @@ export const weekRangeText = (
 		from: formatDay(range.start, language),
 		to: formatDay(range.end, language),
 	});
+
+/**
+ * What Generate says of a chosen week that holds a roster: generating again
+ * replaces it; on a week of several schedules, only the newest part's days,
+ * the other days staying as they are for Dates to schedule again.
+ */
+export const replacingNoteOf = (
+	week: TickableWeek,
+	language: string,
+	t: TFunction
+): string => {
+	const weekText = weekRangeText(
+		{ start: week.periodStart, end: week.periodEnd },
+		language,
+		t
+	);
+	if (week.note === "rosterRejected")
+		return t("scheduling.months.setup.rosterRejectedNote", { week: weekText });
+	const split = week.splitReplacement;
+	if (!split)
+		return t("scheduling.months.setup.rosterWaitingNote", { week: weekText });
+	const runText = (run: DayRun): string =>
+		formatPeriod({ start: run.from, end: run.to }, language);
+	return t("scheduling.months.setup.rosterWaitingPartNote", {
+		week: weekText,
+		replaced: runText(split.replaced),
+		staying: new Intl.ListFormat(language, { type: "conjunction" }).format(
+			split.staying.map(runText)
+		),
+		count: dayCountOfRuns(split.staying),
+	});
+};
 
 /** Why a week a run sent can't be generated now, as the month read shows it. */
 const whyNotGenerated = (

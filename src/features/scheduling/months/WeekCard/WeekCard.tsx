@@ -12,6 +12,7 @@ import { DayCoverMarks } from "@/features/scheduling/months/DayCoverMarks";
 import { formatWeekDates } from "@/features/scheduling/months/monthWeeks";
 import { listsWeekParts } from "@/features/scheduling/months/rosterWeeks";
 import { WeekPartLinks } from "@/features/scheduling/months/WeekPartLinks";
+import { weekHeadline } from "@/features/scheduling/months/weekHeadline";
 import {
 	hasRoster,
 	weekAction,
@@ -66,8 +67,10 @@ const coversLineOf = (
  * cover and how many were changed by hand, and one action: Review on the
  * week under review, Open on any other week with a schedule (a draft opens
  * its setup, any other its roster), none on a week not generated yet. A week
- * of several schedules lists each by its days and state, each opening its
- * own roster, in place of the one action. A
+ * of several schedules shows the state of its part needing attention first
+ * (a published newest part never hides an earlier one to review), lists
+ * each part by its days and state, each opening its own roster, and offers
+ * Review on the first part to review. A
  * week not generated has a dashed frame: it is not final. A failed
  * week says why, and so does a week whose regeneration failed and that shows
  * its earlier roster; a week the last month run refused, or one a month run took
@@ -89,7 +92,8 @@ export const WeekCard = ({
 		{ start: week.periodStart, end: week.periodEnd },
 		formattingLocale(i18n)
 	);
-	const action = weekAction(week);
+	const headline = weekHeadline(week);
+	const action = weekAction(headline);
 	const shortShifts = week.days.reduce((sum, day) => sum + day.shortShifts, 0);
 	const handChangedDays = week.handChangedDays ?? 0;
 	const dashed = week.state === "NOT_GENERATED";
@@ -128,8 +132,8 @@ export const WeekCard = ({
 				<h2 className="text-base font-bold text-neutral-900" id={titleId}>
 					{dates}
 				</h2>
-				<Badge tone={weekStateTones[week.state]}>
-					{t(`${key}.states.${week.state}`)}
+				<Badge tone={weekStateTones[headline.state]}>
+					{t(`${key}.states.${headline.state}`)}
 				</Badge>
 			</div>
 			{coversLine && <p className="text-sm text-neutral-800">{coversLine}</p>}
@@ -162,30 +166,33 @@ export const WeekCard = ({
 					parts={week.parts}
 				/>
 			)}
-			{!severalParts && action && week.scheduleId && (
-				<Button
-					{...scheduleViewLink({
-						scheduleId: week.scheduleId,
-						departmentId,
-						// Only a draft opens elsewhere (its setup); every other week opens its roster.
-						status: week.state === "DRAFT" ? "DRAFT" : "GENERATED",
-					})}
-					className="mt-auto self-start"
-					variant={action === "review" ? "primary" : "secondary"}
-					aria-label={t(
-						action === "review"
-							? `${key}.actions.reviewWeek`
-							: `${key}.actions.openWeek`,
-						{ week: dates }
-					)}
-				>
-					{t(
-						action === "review"
-							? `${key}.actions.review`
-							: `${key}.actions.open`
-					)}
-				</Button>
-			)}
+			{/* A week of several schedules opens each from its list; Review still leads to the part to review. */}
+			{action &&
+				headline.scheduleId &&
+				(!severalParts || action === "review") && (
+					<Button
+						{...scheduleViewLink({
+							scheduleId: headline.scheduleId,
+							departmentId,
+							// Only a draft opens elsewhere (its setup); every other week opens its roster.
+							status: headline.state === "DRAFT" ? "DRAFT" : "GENERATED",
+						})}
+						className="mt-auto self-start"
+						variant={action === "review" ? "primary" : "secondary"}
+						aria-label={t(
+							action === "review"
+								? `${key}.actions.reviewWeek`
+								: `${key}.actions.openWeek`,
+							{ week: dates }
+						)}
+					>
+						{t(
+							action === "review"
+								? `${key}.actions.review`
+								: `${key}.actions.open`
+						)}
+					</Button>
+				)}
 		</section>
 	);
 };

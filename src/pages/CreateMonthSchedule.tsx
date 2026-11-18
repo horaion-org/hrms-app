@@ -53,6 +53,7 @@ import {
 import {
 	datesRunHint,
 	monthUsesLine,
+	replacingNoteOf,
 	setupNextNoteOf,
 	tickedWeeksHint,
 	weekRangeText,
@@ -66,6 +67,7 @@ import {
 	suggestedMonthOf,
 	tickableWeeksOf,
 } from "@/features/scheduling/months/weekTicks";
+import { withDatesRun } from "@/features/scheduling/months/datesRunState";
 import { withRefusedWeeks } from "@/features/scheduling/months/refusedWeeksState";
 import {
 	partsBeforeStartOf,
@@ -679,7 +681,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 				to: "/scheduling/months/$month",
 				params: { month: monthOf(values.firstDay) },
 				search: { department: values.departmentId },
-				state: withRefusedWeeks(refusedWeeks(answer)),
+				state: withDatesRun(refusedWeeks(answer), values),
 			});
 		} catch (error) {
 			setProblem(datesGenerationRefusal(error, t));
@@ -829,18 +831,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 										className="mb-4"
 										tone="warning"
 									>
-										{t(
-											week.note === "rosterRejected"
-												? "scheduling.months.setup.rosterRejectedNote"
-												: "scheduling.months.setup.rosterWaitingNote",
-											{
-												week: weekRangeText(
-													{ start: week.periodStart, end: week.periodEnd },
-													language,
-													t
-												),
-											}
-										)}
+										{replacingNoteOf(week, language, t)}
 									</Callout>
 								))}
 							{check.isPending && (
