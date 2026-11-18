@@ -1,12 +1,8 @@
 import type { BadgeTone } from "@/components/ui/Badge";
 import type { TimelineView } from "@/features/scheduling/timeline/timeline";
 
-/** The Staff column's width, shared by the bars and the grid so their day columns line up. */
-const STAFF_COLUMN_WIDTH = "12rem";
-
-/** The grid columns of the timeline: the Staff column, then one per day shown. */
-export const timelineColumns = (dayCount: number): string =>
-	`${STAFF_COLUMN_WIDTH} repeat(${dayCount}, minmax(0, 1fr))`;
+/** The Staff column of the timeline's table, as the roster grid's: the bar lanes' label and each person. */
+export const staffCellClasses = "bg-neutral-50 px-3 py-2 text-left";
 
 /** A schedule's status dot, coloured as its status badge is. */
 export const statusDotLooks: Record<BadgeTone, string> = {

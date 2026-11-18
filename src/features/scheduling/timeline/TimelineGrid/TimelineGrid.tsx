@@ -13,6 +13,7 @@ import {
 	rosterLooks,
 	shiftTileStyle,
 } from "@/features/scheduling/roster/rosterLooks";
+import { ScheduleBars } from "@/features/scheduling/timeline/ScheduleBars";
 import {
 	scheduleOfDay,
 	type TimelineSchedule,
@@ -20,7 +21,7 @@ import {
 } from "@/features/scheduling/timeline/timeline";
 import {
 	shiftTextOfView,
-	timelineColumns,
+	staffCellClasses,
 } from "@/features/scheduling/timeline/timelineLooks";
 import type { TimelineRow } from "@/features/scheduling/timeline/timelineRows";
 
@@ -32,6 +33,8 @@ export type TimelineGridProps = {
 	view: TimelineView;
 	/** The one schedule shown in full; cells of the others are dimmed. All in full when absent. */
 	shownScheduleId?: string;
+	/** "Show only this schedule" was chosen on a bar. */
+	onShowOnly: (scheduleId: string) => void;
 };
 
 const tileClasses =
@@ -57,7 +60,7 @@ const DayCell = ({
 	schedules,
 	view,
 	shownScheduleId,
-}: Omit<TimelineGridProps, "days" | "rows"> & {
+}: Pick<TimelineGridProps, "schedules" | "view" | "shownScheduleId"> & {
 	row: TimelineRow;
 	day: string;
 }): FunctionComponent => {
@@ -100,74 +103,93 @@ const DayCell = ({
 	);
 };
 
-/** People by day across every schedule shown: a Staff column, then one column per day. */
+/**
+ * The timeline as one table, in the roster grid's bordered container: a header
+ * row of days, the schedules' bar lanes, then one row per person.
+ */
 export const TimelineGrid = ({
 	days,
 	rows,
 	schedules,
 	view,
 	shownScheduleId,
+	onShowOnly,
 }: TimelineGridProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const dayHeading = new Intl.DateTimeFormat(formattingLocale(i18n), {
 		weekday: "short",
 		day: "numeric",
 	});
-	const columns = { gridTemplateColumns: timelineColumns(days.length) };
 	return (
-		<div aria-label={t("scheduling.timeline.grid.label")} role="table">
-			<div
-				className="grid gap-1 border-b border-neutral-400 pb-1"
-				role="row"
-				style={columns}
-			>
-				<span
-					className="text-sm font-semibold text-neutral-900"
-					role="columnheader"
-				>
-					{t("scheduling.timeline.grid.staff")}
-				</span>
-				{days.map((day) => (
-					<span
-						key={day}
-						className="truncate text-center text-xs font-semibold text-neutral-800"
-						role="columnheader"
-					>
-						{dayHeading.format(dayjs(day).toDate())}
-					</span>
-				))}
-			</div>
-			{rows.length === 0 && (
-				<p className="py-4 text-sm text-neutral-800">
-					{t("scheduling.timeline.grid.noStaff")}
-				</p>
-			)}
-			{rows.map((row) => (
-				<div
-					key={row.key}
-					className="grid gap-1 py-1"
-					role="row"
-					style={columns}
-				>
-					<span
-						className="min-w-0 truncate text-sm text-neutral-900"
-						role="rowheader"
-					>
-						{row.name ?? t("scheduling.detail.formerMember")}
-					</span>
-					{days.map((day) => (
-						<span key={day} className="min-w-0" role="cell">
-							<DayCell
-								day={day}
-								row={row}
-								schedules={schedules}
-								shownScheduleId={shownScheduleId}
-								view={view}
-							/>
-						</span>
+		<div className="min-w-0 overflow-x-auto rounded-lg border border-neutral-400">
+			<table className="w-full table-fixed border-collapse text-neutral-900">
+				<caption className="sr-only">
+					{t("scheduling.timeline.grid.label")}
+				</caption>
+				<colgroup>
+					<col className="w-28 sm:w-50" />
+				</colgroup>
+				<thead>
+					<tr className="bg-neutral-200">
+						<th
+							className="h-12 bg-neutral-200 px-3 text-left text-sm font-bold"
+							scope="col"
+						>
+							{t("scheduling.timeline.grid.staff")}
+						</th>
+						{days.map((day) => (
+							<th
+								key={day}
+								className="h-12 truncate px-1 text-center text-xs font-bold"
+								scope="col"
+							>
+								{dayHeading.format(dayjs(day).toDate())}
+							</th>
+						))}
+					</tr>
+				</thead>
+				<tbody>
+					<ScheduleBars
+						days={days}
+						schedules={schedules}
+						onShowOnly={onShowOnly}
+					/>
+					{rows.length === 0 && (
+						<tr className="border-t border-neutral-400">
+							<td
+								className="px-3 py-4 text-sm text-neutral-800"
+								colSpan={days.length + 1}
+							>
+								{t("scheduling.timeline.grid.noStaff")}
+							</td>
+						</tr>
+					)}
+					{rows.map((row) => (
+						<tr key={row.key} className="border-t border-neutral-400">
+							<th
+								scope="row"
+								className={joinClassNames(
+									staffCellClasses,
+									"truncate text-sm font-normal"
+								)}
+							>
+								{row.name ?? t("scheduling.detail.formerMember")}
+							</th>
+							{days.map((day) => (
+								<td key={day} className="p-1">
+									<DayCell
+										day={day}
+										row={row}
+										schedules={schedules}
+										shownScheduleId={shownScheduleId}
+										view={view}
+									/>
+								</td>
+							))}
+						</tr>
 					))}
-				</div>
-			))}
+				</tbody>
+			</table>
 		</div>
 	);
 };

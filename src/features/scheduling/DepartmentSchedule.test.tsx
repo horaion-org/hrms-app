@@ -135,9 +135,17 @@ it("shows two schedules in one week as two bars, their cells, and No schedule on
 	expect(
 		screen.getByRole("heading", { level: 1, name: "Kitchen Schedule" })
 	).toBeInTheDocument();
-	const bars = screen.getByRole("group", { name: "Schedules" });
-	expect(within(bars).getByText("Early days")).toBeInTheDocument();
-	expect(within(bars).getByText("Weekend")).toBeInTheDocument();
+	const lane = screen
+		.getByRole("rowheader", { name: "Schedules" })
+		.closest("tr")!;
+	const barCells = within(lane).getAllByRole("cell");
+	expect(barCells.map((cell) => cell.getAttribute("colspan"))).toEqual([
+		"3",
+		"1",
+		"3",
+	]);
+	expect(within(barCells[0]!).getByText("Early days")).toBeInTheDocument();
+	expect(within(barCells[2]!).getByText("Weekend")).toBeInTheDocument();
 	await vi.waitFor(() => {
 		expect(cellsOf(row, "s-1")).toHaveLength(3);
 		expect(cellsOf(row, "s-2")).toHaveLength(3);

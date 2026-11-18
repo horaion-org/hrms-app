@@ -11,7 +11,6 @@ import { ArrowLeftIcon } from "@/components/ui/Icon";
 import { datesRunOf } from "@/features/scheduling/months/datesRunState";
 import { formatPeriod } from "@/features/scheduling/periods";
 import { isoDateIn } from "@/features/scheduling/roster/roster";
-import { ScheduleBars } from "@/features/scheduling/timeline/ScheduleBars";
 import {
 	needsOf,
 	shiftWindow,
@@ -243,19 +242,15 @@ export const DepartmentSchedulePage = (): FunctionComponent => {
 						changeSearch({ schedule: undefined });
 					}}
 				/>
-				<ScheduleBars
-					days={days}
-					schedules={timeline.schedules}
-					onShowOnly={(schedule) => {
-						changeSearch({ schedule });
-					}}
-				/>
 				<TimelineGrid
 					days={days}
 					rows={timeline.rows}
 					schedules={timeline.schedules}
 					shownScheduleId={search.schedule}
 					view={view}
+					onShowOnly={(schedule) => {
+						changeSearch({ schedule });
+					}}
 				/>
 				<TimelineNeeds
 					departmentId={departmentId}
