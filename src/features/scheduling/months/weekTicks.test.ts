@@ -53,6 +53,28 @@ describe("tickableWeekOf", () => {
 		});
 	});
 
+	// Published, then taken back: the week read says so (publishedOnce); a month run leaves it as it is.
+	it("given_aWeekPublishedOnce_when_read_then_untickedWithItsOwnNote", () => {
+		const [part] = twoPartWeekFixture();
+		expect(
+			tickableWeekOf(
+				{
+					periodStart: NEXT_MONDAY,
+					state: "TO_REVIEW",
+					includedInMonthGeneration: true,
+					scheduleId: part!.scheduleId,
+					parts: [{ ...part!, publishedOnce: true }],
+				},
+				TODAY
+			)
+		).toMatchObject({
+			look: "TO_REVIEW",
+			canTick: true,
+			tickedByDefault: false,
+			note: "oncePublished",
+		});
+	});
+
 	it("given_aGeneratingWeek_when_read_then_lockedAsGenerating", () => {
 		expect(
 			tickableWeekOf(weekOf(NEXT_MONDAY, "GENERATING", false), TODAY)

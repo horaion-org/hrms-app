@@ -167,6 +167,19 @@ describe("firstPublishedDayOf", () => {
 			withdrawn: ["s-1"],
 			expected: "2027-02-17",
 		},
+		{
+			case: "a part the week read says was published once",
+			parts: [
+				{
+					scheduleId: "s-2",
+					state: "TO_REVIEW",
+					coveredFrom: "2027-02-19",
+					publishedOnce: true,
+				},
+			],
+			withdrawn: [],
+			expected: "2027-02-19",
+		},
 	] as const)(
 		"given_$case_when_read_then_$expected",
 		({ parts, withdrawn, expected }) => {
@@ -310,6 +323,15 @@ describe("deleteLeavesOf", () => {
 			},
 		},
 		{
+			case: "a middle part before a withdrawn part, known through publishedOnce",
+			shown: WEDNESDAY_TO_FRIDAY,
+			parts: [WEDNESDAY_TO_FRIDAY, { ...SATURDAY, publishedOnce: true }],
+			expected: {
+				daysWithoutRoster: daysOf(WEDNESDAY_TO_FRIDAY),
+				publishedLater: daysOf(SATURDAY),
+			},
+		},
+		{
 			case: "a middle part before a withdrawn part the caller doesn't know of",
 			shown: WEDNESDAY_TO_FRIDAY,
 			parts: [WEDNESDAY_TO_FRIDAY, SATURDAY],
@@ -321,7 +343,7 @@ describe("deleteLeavesOf", () => {
 	] as Array<{
 		case: string;
 		shown: typeof WEDNESDAY_TO_FRIDAY;
-		parts: Array<typeof WEDNESDAY_TO_FRIDAY>;
+		parts: Array<typeof WEDNESDAY_TO_FRIDAY & { publishedOnce?: boolean }>;
 		withdrawn?: Array<string>;
 		expected: object;
 	}>)(

@@ -93,6 +93,21 @@ describe("weekGapsOf", () => {
 			],
 		],
 		[
+			"aGapBeforeAPartWithdrawnKnownThroughPublishedOnce",
+			((): Parameters<typeof weekGapsOf>[0] => {
+				const week = weekWithParts(["TO_REVIEW", "TO_REVIEW"]);
+				const [first, last] = week.parts;
+				return { ...week, parts: [first!, { ...last!, publishedOnce: true }] };
+			})(),
+			"2027-02-01",
+			[
+				{
+					days: { from: "2027-02-10", to: "2027-02-12" },
+					kind: "beforePublished",
+				},
+			],
+		],
+		[
 			"aGapAfterAPublishedPart",
 			weekWithParts(["PUBLISHED", "TO_REVIEW"]),
 			"2027-02-01",

@@ -284,6 +284,29 @@ describe("the owner's week of 15 February 2027: Wed–Fri, then Sat–Sun", () =
 		);
 	});
 
+	// The week read says a later part was published once (its publication withdrawn): no Schedule button.
+	it("given_aLaterPartPublishedOnce_when_shown_then_mondayTuesdaySayWhyWithoutScheduleButton", async () => {
+		vi.useFakeTimers({
+			toFake: ["Date"],
+			now: new Date("2027-02-10T09:00:00+08:00"),
+		});
+		await openPart({
+			...WEEK,
+			shown: wednesdayToFriday,
+			parts: [part({ ...wednesdayToFriday, publishedOnce: true })],
+		});
+
+		expect(
+			await screen.findByText(
+				/^Feb 15\s?–\s?16, 2027 have no schedule\. They come before days that have been published, so they can’t be scheduled now\.$/
+			)
+		).toBeInTheDocument();
+		expect(screen.queryByRole("link", { name: /^Schedule Feb 15/ })).toBeNull();
+		expect(
+			screen.queryByRole("button", { name: /^Schedule Feb 15/ })
+		).toBeNull();
+	});
+
 	it("given_theWeekendPart_when_shown_then_mondayTuesdayHavePassedAndWednesdayToFridayLinksItsSchedule", async () => {
 		vi.useFakeTimers({
 			toFake: ["Date"],

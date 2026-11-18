@@ -24,7 +24,8 @@ import { weekStateTones } from "@/features/scheduling/months/weekStateLooks";
 export type WeekLook = WeekState | "OVER" | "STARTED";
 
 /** Why a tickable week starts unticked, said under the list when it is ticked. */
-export type TickNote = "started" | "rosterWaiting" | "rosterRejected";
+export type TickNote =
+	"started" | "rosterWaiting" | "rosterRejected" | "oncePublished";
 
 /** One week of the list. */
 export type TickableWeek = {
@@ -91,6 +92,10 @@ const tickedByDefault = (look: WeekLook): TickRule => ({
 	note: undefined,
 });
 
+/** The week's newest part, whose state the week shows; none for a week with no schedule or from a summary. */
+const newestPartOf = (week: WeekToTick): WeekPart | undefined =>
+	week.parts?.find((part) => part.scheduleId === week.scheduleId);
+
 /** The first rule that matches wins; a week with a roster is never ticked by default. */
 const tickRuleOf = (
 	week: WeekToTick,
@@ -103,6 +108,9 @@ const tickRuleOf = (
 	const open = week.includedInMonthGeneration ?? periodEnd >= today;
 	if (!open) return locked("OVER");
 	if (week.state === "UNKNOWN") return locked("UNKNOWN");
+	// Published once (its publication withdrawn): a month run leaves it as it is, so it is never ticked for one.
+	if (newestPartOf(week)?.publishedOnce === true)
+		return untickedWithNote(week.state, "oncePublished");
 	if (week.state === "TO_REVIEW")
 		return untickedWithNote(week.state, "rosterWaiting");
 	if (week.state === "REJECTED")
@@ -153,7 +161,7 @@ export const splitReplacementOf = (
 	week: WeekToTick
 ): SplitReplacement | undefined => {
 	const parts = week.parts ?? [];
-	const newest = parts.find((part) => part.scheduleId === week.scheduleId);
+	const newest = newestPartOf(week);
 	if (!newest) return undefined;
 	if (parts.length === 1) return partialReplacementOf(week, newest);
 	return {
@@ -215,7 +223,10 @@ export const chosenWeeksNow = (
 		kept: kept.map((week) => week.periodStart),
 		dropped: chosenWeeks.filter((week) => !week.canTick),
 		replacing: kept.filter(
-			(week) => week.note === "rosterWaiting" || week.note === "rosterRejected"
+			(week) =>
+				week.note === "rosterWaiting" ||
+				week.note === "rosterRejected" ||
+				week.note === "oncePublished"
 		),
 	};
 };

@@ -5544,7 +5544,8 @@
 				"noneOpen": "No week of {{month}} can be scheduled: each is published, over or being generated. Choose another month.",
 				"validation": {
 					"month": "Choose a month."
-				}
+				},
+				"oncePublishedNote": "{{week}} was published once, so a month run leaves it as it is. Open it to generate it again or to change it by hand."
 			},
 			"create": {
 				"everything": "Every week uses every shift and constraint of {{department}}.",

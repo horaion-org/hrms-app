@@ -21,19 +21,23 @@ export type PartLinesSource = {
 
 /**
  * The first day of the week a part that has been published covers, or none:
- * days before it can't be scheduled (API ADR-0129). The API counts a part
- * whose publication was withdrawn as published too (`WeekRedos.countsAsPublished`);
- * the week read doesn't say which parts those are, so the caller names the
- * ones it knows (`withdrawnScheduleIds`, such as the schedule on screen).
+ * days before it can't be scheduled (API ADR-0129). A part counts when it is
+ * published or the week read says it was published once (`publishedOnce`: its
+ * publication withdrawn), as the API's `WeekRedos.countsAsPublished` does;
+ * `withdrawnScheduleIds` names any the caller knows of another way (the
+ * schedule on screen, against an older API).
  */
 export const firstPublishedDayOf = (
-	parts: ReadonlyArray<Pick<WeekPart, "scheduleId" | "state" | "coveredFrom">>,
+	parts: ReadonlyArray<
+		Pick<WeekPart, "scheduleId" | "state" | "coveredFrom" | "publishedOnce">
+	>,
 	withdrawnScheduleIds: ReadonlyArray<string> = []
 ): string | undefined =>
 	parts
 		.filter(
 			(part) =>
 				part.state === "PUBLISHED" ||
+				part.publishedOnce === true ||
 				withdrawnScheduleIds.includes(part.scheduleId)
 		)
 		.map((part) => part.coveredFrom)
@@ -188,7 +192,10 @@ export const deleteLeavesOf = (
 	scheduleId: string,
 	covered: DayRun,
 	parts: ReadonlyArray<
-		Pick<WeekPart, "scheduleId" | "state" | "coveredFrom" | "coveredTo">
+		Pick<
+			WeekPart,
+			"scheduleId" | "state" | "coveredFrom" | "coveredTo" | "publishedOnce"
+		>
 	>,
 	withdrawnScheduleIds: ReadonlyArray<string> = []
 ): DeleteLeaves => {

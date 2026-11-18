@@ -290,3 +290,25 @@ describe("replacingNoteOf", () => {
 		}
 	);
 });
+
+describe("replacingNoteOf, for a week published once", () => {
+	it("given_aWeekPublishedOnce_when_said_then_aMonthRunLeavesIt", () => {
+		expect(
+			replacingNoteOf(
+				{
+					periodStart: "2026-12-07",
+					periodEnd: "2026-12-13",
+					state: "TO_REVIEW",
+					look: "TO_REVIEW",
+					canTick: true,
+					tickedByDefault: false,
+					note: "oncePublished",
+				},
+				"en",
+				authTestI18n.t
+			)
+		).toMatch(
+			/ was published once, so a month run leaves it as it is\. Open it to generate it again or to change it by hand\.$/
+		);
+	});
+});

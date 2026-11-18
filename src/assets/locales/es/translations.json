@@ -5344,7 +5344,8 @@
 				"noneOpen": "Ninguna semana de {{month}} se puede programar: cada una está publicada, terminada o generándose. Elige otro mes.",
 				"validation": {
 					"month": "Elige un mes."
-				}
+				},
+				"oncePublishedNote": "{{week}} se publicó una vez, así que una ejecución del mes la deja como está. Ábrela para generarla de nuevo o cambiarla a mano."
 			},
 			"create": {
 				"everything": "Todas las semanas usan todos los turnos y restricciones de {{department}}.",
