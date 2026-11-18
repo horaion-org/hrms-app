@@ -53,6 +53,7 @@ import {
 import {
 	datesRunHint,
 	monthUsesLine,
+	replacingNoteOf,
 	setupNextNoteOf,
 	tickedWeeksHint,
 	weekRangeText,
@@ -830,18 +831,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 										className="mb-4"
 										tone="warning"
 									>
-										{t(
-											week.note === "rosterRejected"
-												? "scheduling.months.setup.rosterRejectedNote"
-												: "scheduling.months.setup.rosterWaitingNote",
-											{
-												week: weekRangeText(
-													{ start: week.periodStart, end: week.periodEnd },
-													language,
-													t
-												),
-											}
-										)}
+										{replacingNoteOf(week, language, t)}
 									</Callout>
 								))}
 							{check.isPending && (

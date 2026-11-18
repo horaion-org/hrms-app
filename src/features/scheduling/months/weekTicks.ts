@@ -1,8 +1,10 @@
 import dayjs from "dayjs";
 import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import type { BadgeTone } from "@/components/ui/Badge";
+import type { DayRun } from "@/features/scheduling/dates/api";
 import type {
 	ScheduleMonthSummary,
+	WeekPart,
 	WeekState,
 } from "@/features/scheduling/months/api";
 import { rosterCarriesOver } from "@/features/scheduling/months/monthGeneration";
@@ -33,13 +35,45 @@ export type TickableWeek = {
 	canTick: boolean;
 	tickedByDefault: boolean;
 	note: TickNote | undefined;
+	/** On a week of several schedules: the days a month run generates again, and the days it leaves. */
+	splitReplacement?: SplitReplacement;
 };
+
+/**
+ * What a month run does with a week of several schedules: it generates its
+ * newest part again (`replaced`) and leaves the other parts' days (`staying`)
+ * as they are, in day order.
+ */
+export type SplitReplacement = { replaced: DayRun; staying: Array<DayRun> };
 
 /** A week as the month read or a month summary gives it. */
 type WeekToTick = {
 	periodStart: string;
 	state: WeekState;
 	includedInMonthGeneration?: boolean | null;
+	/** The newest part's schedule, whose state the week shows. */
+	scheduleId?: string | null;
+	parts?: ReadonlyArray<WeekPart>;
+};
+
+/** The days of a part as a run. */
+const daysOfPart = (part: WeekPart): DayRun => ({
+	from: part.coveredFrom,
+	to: part.coveredTo,
+});
+
+/** What a month run replaces in a week of several schedules; undefined for a week of one or none. */
+export const splitReplacementOf = (
+	week: WeekToTick
+): SplitReplacement | undefined => {
+	const parts = week.parts ?? [];
+	if (parts.length < 2) return undefined;
+	const newest = parts.find((part) => part.scheduleId === week.scheduleId);
+	if (!newest) return undefined;
+	return {
+		replaced: daysOfPart(newest),
+		staying: parts.filter((part) => part !== newest).map(daysOfPart),
+	};
 };
 
 /** What the rules decide for one week. */
@@ -104,6 +138,7 @@ export const tickableWeekOf = (
 		periodEnd,
 		state: week.state,
 		...tickRuleOf(week, periodEnd, today),
+		splitReplacement: splitReplacementOf(week),
 	};
 };
 

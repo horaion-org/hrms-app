@@ -5307,6 +5307,8 @@
 				"chosen_other": "{{count}} semanas: {{ranges}}",
 				"startedNote": "{{week}} ya ha empezado. Se genera desde hoy: {{range}}.",
 				"rosterWaitingNote": "{{week}} tiene un horario pendiente de revisión. Generar de nuevo lo sustituye.",
+				"rosterWaitingPartNote_one": "{{week}} tiene un horario pendiente de revisión. Generar de nuevo sustituye solo {{replaced}}. {{staying}} se queda como está: usa Fechas para volver a programarlo.",
+				"rosterWaitingPartNote_other": "{{week}} tiene un horario pendiente de revisión. Generar de nuevo sustituye solo {{replaced}}. {{staying}} se quedan como están: usa Fechas para volver a programarlos.",
 				"rosterRejectedNote": "{{week}} tiene un horario rechazado. Generar de nuevo lo sustituye.",
 				"skippedNote": "{{week}} queda fuera y no tiene horario. Las horas trabajadas esa semana no cuentan para las horas extra de este mes salvo que un horario la cubra.",
 				"noneTicked": "Marca al menos una semana para programar.",

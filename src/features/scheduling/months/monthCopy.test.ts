@@ -4,6 +4,7 @@ import { datesPlanFixture } from "@/features/scheduling/dates/fixtures";
 import {
 	datesRunHint,
 	monthUsesLine,
+	replacingNoteOf,
 	setupNextNoteOf,
 	stateCountsLine,
 	tickedWeeksHint,
@@ -13,6 +14,7 @@ import {
 } from "@/features/scheduling/months/monthCopy";
 import type { Gate } from "@/features/scheduling/readiness/readinessCopy";
 import { ungeneratedMonthFixture } from "@/features/scheduling/months/fixtures";
+import type { TickableWeek } from "@/features/scheduling/months/weekTicks";
 
 describe("stateCountsLine", () => {
 	it("given_aMonthsWeeks_when_said_then_publishedFirstAndPluralsByCount", () => {
@@ -196,4 +198,55 @@ describe("datesRunHint", () => {
 	it("given_noPlan_when_said_then_nothing", () => {
 		expect(datesRunHint(undefined, "en", authTestI18n.t)).toBe("");
 	});
+});
+
+describe("replacingNoteOf", () => {
+	const week = (overrides: Partial<TickableWeek> = {}): TickableWeek => ({
+		periodStart: "2027-02-15",
+		periodEnd: "2027-02-21",
+		state: "TO_REVIEW",
+		look: "TO_REVIEW",
+		canTick: true,
+		tickedByDefault: false,
+		note: "rosterWaiting",
+		...overrides,
+	});
+
+	it.each([
+		[
+			"aWeekOfOneSchedule",
+			week(),
+			/^Mon,? Feb 15 to Sun,? Feb 21 has a roster waiting for review\. Generating again replaces it\.$/,
+		],
+		[
+			"aRejectedWeek",
+			week({ note: "rosterRejected" }),
+			/^Mon,? Feb 15 to Sun,? Feb 21 has a rejected roster\. Generating again replaces it\.$/,
+		],
+		[
+			"aWeekOfTwoSchedules",
+			week({
+				splitReplacement: {
+					replaced: { from: "2027-02-20", to: "2027-02-21" },
+					staying: [{ from: "2027-02-17", to: "2027-02-19" }],
+				},
+			}),
+			/^Mon,? Feb 15 to Sun,? Feb 21 has a roster waiting for review\. Generating again replaces Feb 20\s?–\s?21, 2027 only\. Feb 17\s?–\s?19, 2027 stay as they are: use Dates to schedule them again\.$/,
+		],
+		[
+			"aWeekWhoseOtherScheduleIsOneDay",
+			week({
+				splitReplacement: {
+					replaced: { from: "2027-02-16", to: "2027-02-21" },
+					staying: [{ from: "2027-02-15", to: "2027-02-15" }],
+				},
+			}),
+			/replaces Feb 16\s?–\s?21, 2027 only\. Feb 15, 2027 stays as it is: use Dates to schedule it again\.$/,
+		],
+	])(
+		"given_%s_when_noted_then_saysWhatGeneratingReplaces",
+		(_case, given, note) => {
+			expect(replacingNoteOf(given, "en-US", authTestI18n.t)).toMatch(note);
+		}
+	);
 });

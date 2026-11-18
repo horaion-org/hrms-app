@@ -5507,6 +5507,8 @@
 				"chosen_other": "{{count}} weeks: {{ranges}}",
 				"startedNote": "{{week}} has already started. It is generated from today on: {{range}}.",
 				"rosterWaitingNote": "{{week}} has a roster waiting for review. Generating again replaces it.",
+				"rosterWaitingPartNote_one": "{{week}} has a roster waiting for review. Generating again replaces {{replaced}} only. {{staying}} stays as it is: use Dates to schedule it again.",
+				"rosterWaitingPartNote_other": "{{week}} has a roster waiting for review. Generating again replaces {{replaced}} only. {{staying}} stay as they are: use Dates to schedule them again.",
 				"rosterRejectedNote": "{{week}} has a rejected roster. Generating again replaces it.",
 				"skippedNote": "{{week}} is left out and has no roster. Hours worked that week don’t count towards this month’s overtime unless a roster covers it.",
 				"noneTicked": "Tick at least one week to schedule.",
