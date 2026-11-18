@@ -76,14 +76,18 @@ export const replacingNoteOf = (
 		language,
 		t
 	);
-	if (week.note === "rosterRejected")
-		return t("scheduling.months.setup.rosterRejectedNote", { week: weekText });
+	const rejected = week.note === "rosterRejected";
 	const split = week.splitReplacement;
 	if (!split)
-		return t("scheduling.months.setup.rosterWaitingNote", { week: weekText });
+		return rejected
+			? t("scheduling.months.setup.rosterRejectedNote", { week: weekText })
+			: t("scheduling.months.setup.rosterWaitingNote", { week: weekText });
 	const runText = (run: DayRun): string =>
 		formatPeriod({ start: run.from, end: run.to }, language);
-	return t("scheduling.months.setup.rosterWaitingPartNote", {
+	const partKey = rejected
+		? "scheduling.months.setup.rosterRejectedPartNote"
+		: "scheduling.months.setup.rosterWaitingPartNote";
+	return t(partKey, {
 		week: weekText,
 		replaced: runText(split.replaced),
 		staying: new Intl.ListFormat(language, { type: "conjunction" }).format(

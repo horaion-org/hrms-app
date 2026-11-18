@@ -234,6 +234,17 @@ describe("replacingNoteOf", () => {
 			/^Mon,? Feb 15 to Sun,? Feb 21 has a roster waiting for review\. Generating again replaces Feb 20\s?–\s?21, 2027 only\. Feb 17\s?–\s?19, 2027 stay as they are: use Dates to schedule them again\.$/,
 		],
 		[
+			"aRejectedWeekOfTwoSchedules",
+			week({
+				note: "rosterRejected",
+				splitReplacement: {
+					replaced: { from: "2027-02-20", to: "2027-02-21" },
+					staying: [{ from: "2027-02-17", to: "2027-02-19" }],
+				},
+			}),
+			/^Mon,? Feb 15 to Sun,? Feb 21 has a rejected roster\. Generating again replaces Feb 20\s?–\s?21, 2027 only\. Feb 17\s?–\s?19, 2027 stay as they are: use Dates to schedule them again\.$/,
+		],
+		[
 			"aWeekWhoseOtherScheduleIsOneDay",
 			week({
 				splitReplacement: {
