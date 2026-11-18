@@ -4600,8 +4600,8 @@
 				},
 				"OFF_BLOCK_HISTORY_MISSING": {
 					"label": "Days before not sent",
-					"sentence": "{{member}}: some days before this schedule in a days-off period were not sent, so they are counted as days that could have been off.",
-					"wholeSchedule": "Some days before this schedule in a days-off period were not sent, so they are counted as days that could have been off."
+					"sentence": "{{member}}: some days before this schedule in a days-off period were not filled in, so they are counted as worked. Fill them in if a day off was given then.",
+					"wholeSchedule": "Some days before this schedule in a days-off period were not filled in, so they are counted as worked. Fill them in if a day off was given then."
 				}
 			},
 			"marker": {
@@ -4706,8 +4706,8 @@
 			"unknownLastWeek": "Horaion doesn’t know what people worked last week.",
 			"unknownLastWeekRisk": "Without it, everyone is treated as rested, so someone who worked Sunday night could be given Monday morning.",
 			"unknownDaysAndLastWeek": "Horaion doesn’t know what people worked on {{days}}, or the week before.",
-			"unknownDaysRisk": "Mark any rest days already given, so the week’s rest day counts them. Left unknown, they count as days nobody worked.",
-			"unknownDaysLeft": "Still unknown for some people: {{days}}. Left unknown, they count as days nobody worked.",
+			"unknownDaysRisk": "Mark any rest days or days off already given, so the week counts them. Left unknown, they count as days worked.",
+			"unknownDaysLeft": "Still unknown for some people: {{days}}. Left unknown, they count as days worked.",
 			"addShifts": "Add last week’s shifts",
 			"editShifts": "Edit last week’s shifts",
 			"notKnown": "Not known",

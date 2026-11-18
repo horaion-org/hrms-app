@@ -4400,8 +4400,8 @@
 				},
 				"OFF_BLOCK_HISTORY_MISSING": {
 					"label": "Días anteriores no enviados",
-					"sentence": "{{member}}: algunos días antes de este horario dentro de un periodo de días libres no se enviaron, así que se cuentan como días que podrían haber sido libres.",
-					"wholeSchedule": "Algunos días antes de este horario dentro de un periodo de días libres no se enviaron, así que se cuentan como días que podrían haber sido libres."
+					"sentence": "{{member}}: algunos días antes de este horario dentro de un periodo de días libres no se rellenaron, así que se cuentan como trabajados. Rellénalos si se dio un día libre entonces.",
+					"wholeSchedule": "Algunos días antes de este horario dentro de un periodo de días libres no se rellenaron, así que se cuentan como trabajados. Rellénalos si se dio un día libre entonces."
 				}
 			},
 			"marker": {
@@ -4506,8 +4506,8 @@
 			"unknownLastWeek": "Horaion no sabe qué trabajó cada persona la semana pasada.",
 			"unknownLastWeekRisk": "Sin esto, todos se tratan como descansados, así que a quien trabajó el domingo por la noche se le podría asignar el lunes por la mañana.",
 			"unknownDaysAndLastWeek": "Horaion no sabe qué trabajó cada persona el {{days}} ni la semana anterior.",
-			"unknownDaysRisk": "Marca los días de descanso ya dados, para que el descanso de la semana los cuente. Si quedan sin saberse, cuentan como días en que nadie trabajó.",
-			"unknownDaysLeft": "Aún sin saberse para algunas personas: {{days}}. Si quedan así, cuentan como días en que nadie trabajó.",
+			"unknownDaysRisk": "Marca los días de descanso o libres ya dados, para que la semana los cuente. Si quedan sin saberse, cuentan como días trabajados.",
+			"unknownDaysLeft": "Aún sin saberse para algunas personas: {{days}}. Si quedan así, cuentan como días trabajados.",
 			"addShifts": "Añadir los turnos de la semana pasada",
 			"editShifts": "Editar los turnos de la semana pasada",
 			"notKnown": "Desconocido",
