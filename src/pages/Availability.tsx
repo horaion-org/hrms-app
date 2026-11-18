@@ -312,6 +312,7 @@ export const Availability = (): FunctionComponent => {
 			</Tabs>
 			{choosingMember && (
 				<ApplyForSomeoneDialog
+					departmentId={units.department?.departmentId}
 					maySetFor={maySetFor}
 					problem={openWeekTeamProblem && t(openWeekTeamProblem.key)}
 					title={t("availability.apply")}

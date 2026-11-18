@@ -3348,6 +3348,8 @@
 		"applyFor": {
 			"employee": "Empleado",
 			"search": "Buscar empleados",
+			"department": "Departamento",
+			"allDepartments": "Todos los departamentos",
 			"choose": "Elige un empleado",
 			"loading": "Cargando personas…",
 			"noMatches": "Nadie para quien puedas solicitar coincide con esta búsqueda.",

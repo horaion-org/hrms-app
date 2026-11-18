@@ -300,17 +300,18 @@ export const ShiftPreferences = (): FunctionComponent => {
 					))}
 				</TabPanels>
 			</Tabs>
+			{/* The team list names a member's Department by id only; the header's units name it. */}
 			{choosingMember && (
 				<ApplyForSomeoneDialog
+					departmentId={units.department?.departmentId}
 					maySetFor={maySetFor}
-					// The team list names a member's Department by id only; the header's units name it.
+					problem={teamProblemKey && t(teamProblemKey)}
+					title={t("shiftPreferences.apply")}
 					people={
 						wholeTeam.status === "ready"
 							? withDepartmentNames(wholeTeam.members, units.departments)
 							: undefined
 					}
-					problem={teamProblemKey && t(teamProblemKey)}
-					title={t("shiftPreferences.apply")}
 					onChoose={(member) => {
 						setChoosingMember(false);
 						setEditing(member);
