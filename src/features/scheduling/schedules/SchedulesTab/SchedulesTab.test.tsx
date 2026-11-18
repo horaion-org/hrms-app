@@ -125,7 +125,7 @@ describe("SchedulesTab", () => {
 			name: "Kitchen",
 		});
 		expect(
-			within(kitchen).getByRole("link", { name: "Open the Kitchen schedule" })
+			within(kitchen).getByRole("link", { name: "Open the Kitchen roster" })
 		).toHaveAttribute("href", "/scheduling/department?department=d-2");
 		expect(
 			within(departments).getAllByRole("region", { name: "Front Office" })
@@ -230,11 +230,14 @@ describe("SchedulesTab", () => {
 		).toBeInTheDocument();
 	});
 
-	it("given_schedulesToReview_when_rendered_then_theDepartmentCardCountsThem", async () => {
+	it("given_daysToReview_when_rendered_then_theDepartmentCardCountsThemAndSaysWhichWait", async () => {
 		show();
 
 		const kitchen = await screen.findByRole("region", { name: "Kitchen" });
-		expect(kitchen).toHaveTextContent(/\d+ schedules? to review/);
+		expect(kitchen).toHaveTextContent("14 days to review");
+		expect(kitchen).toHaveTextContent(
+			/Nov 16\s?–\s?29, 2026 are waiting for you to publish\./
+		);
 	});
 
 	it("given_aSearch_when_typed_then_narrowsTheDepartmentCards", async () => {
@@ -262,7 +265,7 @@ describe("SchedulesTab", () => {
 		show(vi.fn(), ["schedule:read"], "GENERATION_REQUESTED", []);
 
 		const kitchen = await screen.findByRole("region", { name: "Kitchen" });
-		expect(kitchen).toHaveTextContent("No schedule yet");
+		expect(kitchen).toHaveTextContent("No roster yet");
 		expect(kitchen).toHaveTextContent("Nothing published yet");
 	});
 

@@ -6,8 +6,10 @@ import type {
 } from "@/features/scheduling/months/api";
 import {
 	DAY_STRIP_LENGTH,
+	dayCountOfRun,
 	dayMarkOf,
 	departmentCards,
+	firstRunOf,
 	showsYear,
 	type DepartmentCardEntry,
 } from "@/features/scheduling/schedules/departmentCards";
@@ -63,9 +65,9 @@ describe("departmentCards", () => {
 		expect(empty).toMatchObject({
 			departmentName: "Security",
 			publishedUpTo: undefined,
-			toReviewCount: 0,
+			toReviewDays: 0,
+			waitingDays: undefined,
 			scheduledUpTo: undefined,
-			nextToReview: undefined,
 			firstToReviewDay: undefined,
 		});
 		expect(empty?.dayStrip).toHaveLength(DAY_STRIP_LENGTH);
@@ -130,7 +132,7 @@ describe("departmentCards", () => {
 		expect(frontDeskCard([summary])?.publishedStanding).toBe(standing);
 	});
 
-	it("leaves out a schedule to review that ended before this week, and keeps a far-future one", () => {
+	it("leaves out days to review before this week, and keeps far-future ones", () => {
 		const card = frontDeskCard([
 			november([
 				[
@@ -144,13 +146,13 @@ describe("departmentCards", () => {
 			]),
 		]);
 		expect(card).toMatchObject({
-			toReviewCount: 1,
-			nextToReview: "Far week",
+			toReviewDays: 7,
+			waitingDays: { from: "2027-10-04", to: "2027-10-10" },
 			firstToReviewDay: "2027-10-04",
 		});
 	});
 
-	it("counts the schedules to review and names the first in day order", () => {
+	it("counts the days to review, and runs two adjacent schedules to review together", () => {
 		const card = frontDeskCard([
 			november([
 				[
@@ -164,8 +166,8 @@ describe("departmentCards", () => {
 			]),
 		]);
 		expect(card).toMatchObject({
-			toReviewCount: 2,
-			nextToReview: "Week 47",
+			toReviewDays: 10,
+			waitingDays: { from: "2026-11-16", to: "2026-11-25" },
 			firstToReviewDay: "2026-11-16",
 			scheduledUpTo: "2026-11-25",
 		});
@@ -189,6 +191,57 @@ describe("departmentCards", () => {
 	])("names the first day to review: %s", (_, parts, expected) => {
 		const card = frontDeskCard([november([["2026-11-23", parts]])]);
 		expect(card?.firstToReviewDay).toBe(expected);
+	});
+
+	it.each([
+		{
+			case: "days to review either side of published days: the first run waits",
+			parts: [
+				part("Start", "2026-11-16", "2026-11-18", "TO_REVIEW"),
+				part("Middle", "2026-11-19", "2026-11-20", "PUBLISHED"),
+				part("End", "2026-11-21", "2026-11-22", "TO_REVIEW"),
+			],
+			toReviewDays: 5,
+			waitingDays: { from: "2026-11-16", to: "2026-11-18" },
+		},
+		{
+			case: "one day to review is a run of that day",
+			parts: [
+				part("Week", "2026-11-16", "2026-11-21", "PUBLISHED"),
+				part("Sunday", "2026-11-22", "2026-11-22", "TO_REVIEW"),
+			],
+			toReviewDays: 1,
+			waitingDays: { from: "2026-11-22", to: "2026-11-22" },
+		},
+		{
+			case: "days to review being generated again are not to review",
+			parts: [
+				{
+					...part("Old", "2026-11-16", "2026-11-22", "TO_REVIEW"),
+					redoing: true,
+				},
+				part("New", "2026-11-16", "2026-11-22", "GENERATING"),
+			],
+			toReviewDays: 0,
+			waitingDays: undefined,
+		},
+		{
+			case: "drafts, failed and generating days are not to review",
+			parts: [
+				part("Draft", "2026-11-16", "2026-11-17", "DRAFT"),
+				part("Failed", "2026-11-18", "2026-11-19", "FAILED"),
+				part("Generating", "2026-11-20", "2026-11-22", "GENERATING"),
+			],
+			toReviewDays: 0,
+			waitingDays: undefined,
+		},
+	])("days to review: $case", ({ parts, toReviewDays, waitingDays }) => {
+		const card = frontDeskCard([november([["2026-11-16", parts]])]);
+		expect(card).toMatchObject({
+			toReviewDays,
+			waitingDays,
+			firstToReviewDay: waitingDays?.from,
+		});
 	});
 
 	it("marks each strip day from today by the schedule holding it", () => {
@@ -222,6 +275,38 @@ describe("departmentCards", () => {
 			publishedUpTo: "2026-11-22",
 			scheduledUpTo: "2026-11-22",
 		});
+	});
+});
+
+describe("firstRunOf", () => {
+	it.each([
+		{ case: "no day", days: [], run: undefined },
+		{
+			case: "one day",
+			days: ["2026-11-30"],
+			run: { from: "2026-11-30", to: "2026-11-30" },
+		},
+		{
+			case: "days in a row over a month's end",
+			days: ["2026-11-29", "2026-11-30", "2026-12-01"],
+			run: { from: "2026-11-29", to: "2026-12-01" },
+		},
+		{
+			case: "a gap ends the run",
+			days: ["2026-11-16", "2026-11-17", "2026-11-19", "2026-11-20"],
+			run: { from: "2026-11-16", to: "2026-11-17" },
+		},
+	])("$case", ({ days, run }) => {
+		expect(firstRunOf(days)).toEqual(run);
+	});
+});
+
+describe("dayCountOfRun", () => {
+	it.each([
+		{ from: "2026-11-22", to: "2026-11-22", count: 1 },
+		{ from: "2026-11-25", to: "2026-12-01", count: 7 },
+	])("$from to $to holds $count", ({ from, to, count }) => {
+		expect(dayCountOfRun({ from, to })).toBe(count);
 	});
 });
 

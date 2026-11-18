@@ -104,7 +104,7 @@ it("shows a card per department, read from this week's month to 12 months ahead"
 	});
 	expect(
 		within(departments).getAllByRole("link", {
-			name: "Open the Front Office schedule",
+			name: "Open the Front Office roster",
 		})[0]
 	).toHaveAttribute("href", "/scheduling/department?department=d-1");
 	expect(screen.queryByRole("region", { name: "November 2026" })).toBeNull();

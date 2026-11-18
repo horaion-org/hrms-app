@@ -5647,25 +5647,29 @@
 			"backFromSchedule": "Volver al horario del departamento",
 			"departments": "Departamentos",
 			"card": {
-				"open": "Abrir horario",
-				"openNamed": "Abrir el horario de {{department}}",
+				"open": "Abrir cuadrante",
+				"openNamed": "Abrir el cuadrante de {{department}}",
 				"publishedUpTo": "Publicado hasta el {{day}}",
 				"nothingPublished": "Nada publicado todavía",
 				"toReview_one": "{{count}} horario por revisar",
 				"toReview_other": "{{count}} horarios por revisar",
+				"toReviewDays_one": "{{count}} día por revisar",
+				"toReviewDays_other": "{{count}} días por revisar",
+				"waitingDays_one": "{{days}} espera a que lo publiques.",
+				"waitingDays_other": "{{days}} esperan a que los publiques.",
 				"nothingToReview": "Nada por revisar",
-				"scheduledUpTo": "Nada programado después del {{day}}",
-				"noSchedule": "Aún no hay horario",
+				"scheduledUpTo": "Nada en el cuadrante después del {{day}}",
+				"noSchedule": "Aún no hay cuadrante",
 				"waiting": "{{name}} espera tu revisión.",
 				"nothingWaiting": "No hay nada esperándote.",
 				"legend": {
 					"title": "Cada barra es un día, desde hoy:",
 					"published": "Publicado",
 					"toReview": "Por revisar",
-					"none": "Sin horario"
+					"none": "Sin cuadrante"
 				},
 				"notPublishedFromThisWeek": "Sin publicar desde esta semana",
-				"openAt": "Abrir el horario de {{department}} en {{day}}"
+				"openAt": "Abrir el cuadrante de {{department}} en {{day}}"
 			},
 			"cardsLoading": "Cargando los departamentos…",
 			"cardsFailed": "No se pudieron cargar los departamentos. Inténtalo de nuevo.",

@@ -5847,25 +5847,29 @@
 			"backFromSchedule": "Back to the department schedule",
 			"departments": "Departments",
 			"card": {
-				"open": "Open schedule",
-				"openNamed": "Open the {{department}} schedule",
+				"open": "Open roster",
+				"openNamed": "Open the {{department}} roster",
 				"publishedUpTo": "Published up to {{day}}",
 				"nothingPublished": "Nothing published yet",
 				"toReview_one": "{{count}} schedule to review",
 				"toReview_other": "{{count}} schedules to review",
+				"toReviewDays_one": "{{count}} day to review",
+				"toReviewDays_other": "{{count}} days to review",
+				"waitingDays_one": "{{days}} is waiting for you to publish.",
+				"waitingDays_other": "{{days}} are waiting for you to publish.",
 				"nothingToReview": "Nothing to review",
-				"scheduledUpTo": "Nothing scheduled after {{day}}",
-				"noSchedule": "No schedule yet",
+				"scheduledUpTo": "Nothing rostered after {{day}}",
+				"noSchedule": "No roster yet",
 				"waiting": "{{name}} is waiting for your review.",
 				"nothingWaiting": "Nothing is waiting for you.",
 				"legend": {
 					"title": "Each bar is a day, from today:",
 					"published": "Published",
 					"toReview": "To review",
-					"none": "No schedule"
+					"none": "No roster"
 				},
 				"notPublishedFromThisWeek": "Not published from this week",
-				"openAt": "Open the {{department}} schedule at {{day}}"
+				"openAt": "Open the {{department}} roster at {{day}}"
 			},
 			"cardsLoading": "Loading the departments…",
 			"cardsFailed": "The departments couldn’t be loaded. Please try again.",
