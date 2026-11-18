@@ -6,10 +6,8 @@ import {
 	partStretchRepair,
 } from "@/features/scheduling/cover/engineRepairFixtures";
 import { coverOptionsFixture } from "@/features/scheduling/cover/fixtures";
-import {
-	coverWithEngine,
-	NO_SHIFT_PART_TIME,
-} from "@/features/scheduling/cover/coverWithEngine";
+import { NO_SHIFT_PART_TIME } from "@/features/scheduling/cover/notAssignedWords";
+import { coverWithEngine } from "@/features/scheduling/cover/coverWithEngine";
 import {
 	frontDeskSundayLateCase,
 	profileIdIn,

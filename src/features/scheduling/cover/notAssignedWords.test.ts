@@ -44,6 +44,10 @@ describe("notAssignedReasonLine", () => {
 		["works_another_shift", "Already on another shift that day."],
 		["breaks_unnamed_rule", "Would break a working-time rule."],
 		["not_checked", "Not checked in time."],
+		[
+			"no_shift_part_time",
+			"Part-time with no shift that day. The engine doesn’t call in part-timers: choose them under Who covers.",
+		],
 		["on_training", "Cannot take this shift."],
 	])("words %s", (code, line) => {
 		expect(notAssignedReasonLine(reason(code), t)).toBe(line);

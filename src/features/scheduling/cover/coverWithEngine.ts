@@ -10,7 +10,10 @@ import type {
 	RepairOption,
 } from "@/features/scheduling/cover/engineRepairApi";
 import { optionHeadingKey } from "@/features/scheduling/cover/engineRepairWords";
-import { couldTakeTheShift } from "@/features/scheduling/cover/notAssignedWords";
+import {
+	couldTakeTheShift,
+	NO_SHIFT_PART_TIME,
+} from "@/features/scheduling/cover/notAssignedWords";
 
 /*
  * "Who covers" once the engine has answered, pure: the backend's list ranks
@@ -29,9 +32,6 @@ const ON_LEAVE = "on_leave";
 
 /** The engine's reason for someone not available for the shift's hours. */
 const OUTSIDE_AVAILABILITY = "outside_availability";
-
-/** The app's own reason, in place of the engine's "on leave", for a part-timer with no shift that day. */
-export const NO_SHIFT_PART_TIME = "no_shift_part_time";
 
 /** The engine's reasons that do not refuse a candidate of the backend's list. */
 const REASONS_THAT_DO_NOT_REFUSE: ReadonlyArray<string> = [

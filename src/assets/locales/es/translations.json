@@ -5022,6 +5022,7 @@
 						"works_another_shift": "Ya tiene otro turno ese día.",
 						"breaks_unnamed_rule": "Incumpliría una norma de tiempo de trabajo.",
 						"not_checked": "No se comprobó a tiempo.",
+						"no_shift_part_time": "A tiempo parcial y sin turno ese día. El motor no llama a personal a tiempo parcial: elígelo en Quién cubre.",
 						"needs_overtime": "Solo como horas extra, que no se asignan al generar un cuadrante."
 					},
 					"breaksRule": "Incumpliría: {{rule}}",
