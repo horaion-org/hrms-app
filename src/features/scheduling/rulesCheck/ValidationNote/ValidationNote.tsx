@@ -21,6 +21,23 @@ export type ValidationNoteProps = {
 
 const key = "scheduling.rulesCheck";
 
+/** The warning that hand changes are not validated, so the list is only the generation's, with Validate schedule as its main action. */
+const ChangesUncheckedWarning = ({
+	onValidate,
+}: {
+	onValidate: () => void;
+}): FunctionComponent => {
+	const { t } = useTranslation();
+	return (
+		<Callout tone="warning">
+			<span className="block">{t(`${key}.changesUnchecked`)}</span>
+			<Button className="mt-2" size="sm" variant="primary" onClick={onValidate}>
+				{t(`${key}.check`)}
+			</Button>
+		</Callout>
+	);
+};
+
 /**
  * The status card at the head of Issues, one short sentence in its own tone:
  * hand changes not validated in this visit, so the list is only the
@@ -29,8 +46,9 @@ const key = "scheduling.rulesCheck";
  * be incomplete (warning, with Validate again); broken, counting the rules
  * (error; the rules themselves are rows below); what the engine could not
  * check (info); or holds (success). While validating or refused, a line
- * saying so. Nothing while the list is still the generation's and nothing
- * has changed.
+ * saying so; a refused check of unvalidated hand changes keeps the warning
+ * above that line, its Validate schedule the retry. Nothing while the list is
+ * still the generation's and nothing has changed.
  */
 export const ValidationNote = ({
 	standing,
@@ -42,6 +60,18 @@ export const ValidationNote = ({
 			<p aria-live="polite" className="text-neutral-800">
 				{t(`${key}.loading`)}
 			</p>
+		);
+	if (
+		validation.status === "refused" &&
+		changesUnchecked(standing, validation.last)
+	)
+		return (
+			<div className="flex flex-col gap-2">
+				<ChangesUncheckedWarning onValidate={validation.ask} />
+				<p className="text-neutral-800" role="alert">
+					{t(`${key}.refusal.${validation.refusal}`)}
+				</p>
+			</div>
 		);
 	if (validation.status === "refused")
 		return (
@@ -57,19 +87,7 @@ export const ValidationNote = ({
 			</div>
 		);
 	if (changesUnchecked(standing, validation.last))
-		return (
-			<Callout tone="warning">
-				<span className="block">{t(`${key}.changesUnchecked`)}</span>
-				<Button
-					className="mt-2"
-					size="sm"
-					variant="primary"
-					onClick={validation.ask}
-				>
-					{t(`${key}.check`)}
-				</Button>
-			</Callout>
-		);
+		return <ChangesUncheckedWarning onValidate={validation.ask} />;
 	if (standing === "outOfDate")
 		return (
 			<Callout tone="neutral">
