@@ -17,6 +17,7 @@ const GENERATED: ScheduleNoticeFacts = {
 	weekPublishedElsewhere: false,
 	weekPassed: false,
 	rulesChanged: false,
+	laterPartPublished: false,
 };
 
 describe("scheduleNotices", () => {
@@ -40,6 +41,12 @@ describe("scheduleNotices", () => {
 			"a generated roster whose week has passed",
 			{ weekPassed: true },
 			["unpublished", "weekPassed"],
+			true,
+		],
+		[
+			"a part whose later part is published",
+			{ laterPartPublished: true },
+			["unpublished", "laterPartPublished"],
 			true,
 		],
 		[
@@ -91,6 +98,7 @@ describe("scheduleNoticeFactsOf", () => {
 	const UNKNOWN_WEEK: ScheduleWeekFacts = {
 		weekPublishedElsewhere: false,
 		weekPassed: false,
+		laterPartPublished: false,
 		monthWeeks: undefined,
 	};
 

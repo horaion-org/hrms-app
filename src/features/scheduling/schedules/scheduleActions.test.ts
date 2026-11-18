@@ -12,6 +12,7 @@ const NOTHING: ScheduleActionFacts = {
 	mayReject: false,
 	mayWithdraw: false,
 	mayRegenerate: false,
+	regeneratesPart: false,
 	hasRoster: true,
 	approvalStanding: "none",
 	isLastStep: false,
@@ -21,6 +22,22 @@ const NOTHING: ScheduleActionFacts = {
 const ALL = { mayPublish: true, mayReject: true, mayRegenerate: true };
 
 describe("scheduleActions", () => {
+	it.each([
+		[false, "scheduling.detail.regenerateWeek"],
+		[true, "scheduling.detail.regenerateDays"],
+	])(
+		"labels Regenerate of a part of its week (%s) by what it regenerates",
+		(regeneratesPart, labelKey) => {
+			const { primary } = scheduleActions({
+				...NOTHING,
+				status: "REJECTED",
+				mayRegenerate: true,
+				regeneratesPart,
+			});
+			expect(primary).toMatchObject({ id: "regenerate", labelKey });
+		}
+	);
+
 	it.each<
 		[
 			string,

@@ -4290,7 +4290,9 @@
 				"byAt": "{{name}} · {{at}}"
 			},
 			"leaveWithTime": "{{leave}} {{time}}",
-			"regenerateWeek": "Regenerar esta semana"
+			"regenerateWeek": "Regenerar esta semana",
+			"regenerateDays": "Regenerar estos días",
+			"laterPartPublished": "Un horario posterior de esta semana está publicado y se calculó a partir de estos días, así que este no se puede generar de nuevo. Cambia su cuadrante a mano."
 		},
 		"myRoster": {
 			"title": "Mi cuadrante · {{department}} · {{period}}",
@@ -4451,7 +4453,11 @@
 			"oncePublishedSeen": "El personal vio este cuadrante mientras estaba publicado.",
 			"oncePublishedReplaced": "Cualquier turno puede cambiar, y se reemplaza cada cambio hecho a mano desde entonces.",
 			"oncePublishedPublishAgain": "Publica de nuevo el nuevo cuadrante para que el personal lo vea.",
-			"oncePublishedConfirm": "Generar de nuevo"
+			"confirm": "Generar de nuevo",
+			"partTitle": "¿Generar de nuevo estos días?",
+			"partDays": "Se vuelven a calcular {{days}}. El cuadrante actual se mantiene hasta que el nuevo esté listo.",
+			"laterPartsAfter_one": "{{days}} se calculó a partir de estos días, así que se genera de nuevo después de ellos.",
+			"laterPartsAfter_other": "{{days}} se calcularon a partir de estos días, así que se generan de nuevo después de ellos."
 		},
 		"export": {
 			"menu": "Exportar cuadrante",

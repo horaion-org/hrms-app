@@ -45,8 +45,8 @@ import {
 } from "@/features/scheduling/hours/useRosterHours";
 import { useRosterPreferenceOutcomes } from "@/features/scheduling/preferenceOutcomes/usePreferenceOutcomes";
 import { RegenerateMonthDialog } from "@/features/scheduling/months/RegenerateMonthDialog";
-import { RegenerateOncePublishedDialog } from "@/features/scheduling/schedules/RegenerateOncePublishedDialog";
-import { regenerableOncePublished } from "@/features/scheduling/schedules/regeneration";
+import { RegenerateScheduleDialog } from "@/features/scheduling/schedules/RegenerateScheduleDialog";
+import { regenerationOf } from "@/features/scheduling/schedules/regeneration";
 import { RejectedRosterCallout } from "@/features/scheduling/schedules/RejectedRosterCallout";
 import { RejectScheduleDialog } from "@/features/scheduling/schedules/RejectScheduleDialog";
 import {
@@ -69,7 +69,6 @@ import { ScheduleMenu } from "@/features/scheduling/schedules/ScheduleMenu";
 import {
 	decidable,
 	GENERATION_POLL_INTERVAL_MS,
-	regenerable,
 	rosterRunId,
 } from "@/features/scheduling/schedules/api";
 import { rosterPagePermissions } from "@/features/scheduling/schedules/rosterPagePermissions";
@@ -259,7 +258,7 @@ type OpenDialog =
 	| "withdraw"
 	| "withdrawPublication"
 	| "regenerate"
-	| "regenerateOncePublished"
+	| "regenerateSchedule"
 	| undefined;
 
 /**
@@ -468,21 +467,26 @@ const ApiSchedule = ({
 		);
 	// A passed week's rules and roster are final, so it is never generated again (API ADR-0091).
 	const passed = weekPassed(state.schedule, new Date());
-	// A withdrawn roster regenerates through its own route (API ADR-0134); otherwise
-	// regenerating names the month's weeks, so it waits for the month's read.
-	const openRegenerate =
-		permissions.mayRegenerateOncePublished && !passed
-			? (): void => {
-					setOpenDialog("regenerateOncePublished");
-				}
-			: scheduleMonth !== undefined &&
-				  !passed &&
-				  weekPublishedBy === undefined &&
-				  permissions.mayGenerate
-				? (): void => {
-						setOpenDialog("regenerate");
-					}
-				: undefined;
+	const schedule = state.schedule;
+	// A part of its week (API ADR-0113): what holds the week's other days, and the week's schedules.
+	const weekParts =
+		scheduleMonth?.weeks.find(
+			(week) => week.periodStart === schedule.periodStart
+		)?.parts ?? [];
+	// A part or a withdrawn roster takes its own route, a whole week the month run (API ADR-0134, 0135).
+	const regeneration = regenerationOf(schedule, weekParts, {
+		weekPassed: passed,
+		monthRead: scheduleMonth !== undefined,
+		weekPublishedElsewhere: weekPublishedBy !== undefined,
+		...permissions,
+	});
+	const openRegenerate = regeneration.offered
+		? (): void => {
+				setOpenDialog(
+					regeneration.path === "monthRun" ? "regenerate" : "regenerateSchedule"
+				);
+			}
+		: undefined;
 	const editing = rosterEditingOf({
 		target: editTarget,
 		schedule: state.schedule,
@@ -497,12 +501,6 @@ const ApiSchedule = ({
 		// Leave choices need the leave keys as well, here at the schedule's Department.
 		leave: permissions.mayHandleLeave ? { viewerMembershipId } : undefined,
 	});
-	const schedule = state.schedule;
-	// A part of its week (API ADR-0113): what holds the week's other days, and the week's schedules.
-	const weekParts =
-		scheduleMonth?.weeks.find(
-			(week) => week.periodStart === schedule.periodStart
-		)?.parts ?? [];
 	const partLines = partLinesOf(
 		{
 			covered: { from: schedule.coveredFrom, to: schedule.coveredTo },
@@ -528,6 +526,7 @@ const ApiSchedule = ({
 	const noticeFacts = scheduleNoticeFactsOf(schedule, {
 		weekPublishedElsewhere: weekPublishedBy !== undefined,
 		weekPassed: passed,
+		laterPartPublished: regeneration.path === "laterPartPublished",
 		monthWeeks: scheduleMonth?.weeks,
 	});
 	const moment = dateTimeFormatIn(formattingLocale(i18n), schedule.timeZone, {
@@ -547,6 +546,7 @@ const ApiSchedule = ({
 		mayReject,
 		mayWithdraw: permissions.mayWithdraw,
 		mayRegenerate: openRegenerate !== undefined,
+		regeneratesPart: regeneration.partOfWeek,
 		hasRoster: rosterShown(noticeFacts),
 		...approvalActionFacts(standing),
 	});
@@ -603,9 +603,7 @@ const ApiSchedule = ({
 			<RejectedRosterCallout
 				rejectedStep={schedule.publication.rejectedAtStep?.stepLabel}
 				schedule={schedule}
-				showsNextStep={
-					regenerable(schedule) || regenerableOncePublished(schedule)
-				}
+				showsNextStep={openRegenerate !== undefined}
 			/>
 		),
 		generating: (
@@ -623,6 +621,7 @@ const ApiSchedule = ({
 		),
 		draft: <Callout>{t(`${key}.draft`)}</Callout>,
 		weekPassed: <Callout>{t(`${key}.weekPassed`)}</Callout>,
+		laterPartPublished: <Callout>{t(`${key}.laterPartPublished`)}</Callout>,
 		rulesChanged: <Callout>{t(`${key}.rulesChanged`)}</Callout>,
 		unpublished: (
 			<Callout>
@@ -818,11 +817,11 @@ const ApiSchedule = ({
 					onClose={closeDialog}
 				/>
 			)}
-			{openDialog === "regenerateOncePublished" && unit && (
-				<RegenerateOncePublishedDialog
+			{openDialog === "regenerateSchedule" && (
+				<RegenerateScheduleDialog
 					companyId={companyId}
-					scheduleId={scheduleId}
-					unit={unit}
+					regeneration={regeneration}
+					schedule={schedule}
 					onClose={closeDialog}
 				/>
 			)}
