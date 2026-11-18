@@ -462,6 +462,43 @@ describe("WeekCard", () => {
 			);
 		});
 
+		it("given_aGapBeforeAPublishedPart_when_shown_then_saysWhyAndOffersNothing", async () => {
+			const [part] = twoPartWeekFixture();
+			const card = await renderForScheduler(
+				monthWeekFixture({
+					periodStart: "2027-02-08",
+					periodEnd: "2027-02-14",
+					state: "TO_REVIEW",
+					days: coverDays("2027-02-08").map((day, index) => ({
+						...day,
+						covered: index < 2 || index > 4,
+					})),
+					parts: [
+						{
+							...part!,
+							scheduleId: "s-1",
+							coveredFrom: "2027-02-08",
+							coveredTo: "2027-02-09",
+						},
+						{
+							...part!,
+							scheduleId: "s-2",
+							coveredFrom: "2027-02-13",
+							coveredTo: "2027-02-14",
+							state: "PUBLISHED",
+						},
+					],
+				})
+			);
+
+			expect(card).toHaveTextContent(
+				/Wed, Feb 10\s?–\s?Fri, Feb 12 have no schedule\. They come before days that have been published, so they can’t be scheduled now\./
+			);
+			expect(
+				within(card).queryByRole("link", { name: /^Schedule / })
+			).toBeNull();
+		});
+
 		it("given_aWeekWithoutASchedule_when_shown_then_schedulesTheWholeWeek", async () => {
 			const card = await renderForScheduler(
 				monthWeekFixture({
