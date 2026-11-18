@@ -29,7 +29,10 @@ import { NAME_MAX_LENGTH } from "@/features/organisation/nameSchema";
 import { formatPeriod } from "@/features/scheduling/periods";
 import { datesRefusalText } from "@/features/scheduling/schedules/scheduleRefusal";
 import type { MonthSetup } from "@/features/scheduling/months/monthGeneration";
-import { weekRangeText } from "@/features/scheduling/months/monthCopy";
+import {
+	newestPublishedNoteOf,
+	weekRangeText,
+} from "@/features/scheduling/months/monthCopy";
 import { formatMonth } from "@/features/scheduling/months/monthWeeks";
 import {
 	badgeOf,
@@ -355,7 +358,13 @@ export const MonthSetupStep = ({
 				header: t("scheduling.months.setup.stateColumn"),
 				cell: (week): FunctionComponent => {
 					const badge = badgeOf(week.look);
-					return <Badge tone={badge.tone}>{t(badge.key)}</Badge>;
+					const note = newestPublishedNoteOf(week, language, t);
+					return (
+						<span className="flex flex-col items-start gap-1">
+							<Badge tone={badge.tone}>{t(badge.key)}</Badge>
+							{note && <span className="text-xs text-neutral-700">{note}</span>}
+						</span>
+					);
 				},
 			},
 		],

@@ -5352,6 +5352,7 @@
 				"validation": {
 					"month": "Elige un mes."
 				},
+				"newestPublishedNote": "Una ejecución del mes deja esta semana: su horario más reciente, {{published}}, está publicado. Trabaja sus otros días desde sus propios horarios en la página del mes.",
 				"oncePublishedNote": "{{week}} se publicó una vez, así que una ejecución del mes la deja como está. Ábrela para generarla de nuevo o cambiarla a mano."
 			},
 			"create": {

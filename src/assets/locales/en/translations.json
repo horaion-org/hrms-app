@@ -5552,6 +5552,7 @@
 				"validation": {
 					"month": "Choose a month."
 				},
+				"newestPublishedNote": "A month run leaves this week: its newest schedule, {{published}}, has been published. Work on its other days from their own schedules on the month page.",
 				"oncePublishedNote": "{{week}} was published once, so a month run leaves it as it is. Open it to generate it again or to change it by hand."
 			},
 			"create": {
