@@ -5539,6 +5539,9 @@
 			"beingRedone": "{{days}} se están volviendo a programar. Este cuadrante los conserva hasta que el nuevo esté listo.",
 			"noneBeforePublished_one": "{{days}} no tiene horario. Va antes de días que ya se han publicado, así que no se puede programar ahora.",
 			"noneBeforePublished_other": "{{days}} no tienen horario. Van antes de días que ya se han publicado, así que no se pueden programar ahora."
+		},
+		"timeline": {
+			"title": "Horario del departamento"
 		}
 	},
 	"workspace": {

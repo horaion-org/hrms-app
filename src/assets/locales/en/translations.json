@@ -5739,6 +5739,9 @@
 			"beingRedone": "{{days}} are being scheduled again. This roster keeps them until the new one is ready.",
 			"noneBeforePublished_one": "{{days}} has no schedule. It comes before days that have been published, so it can’t be scheduled now.",
 			"noneBeforePublished_other": "{{days}} have no schedule. They come before days that have been published, so they can’t be scheduled now."
+		},
+		"timeline": {
+			"title": "Department schedule"
 		}
 	},
 	"colourSwatchPicker": {
