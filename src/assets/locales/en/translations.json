@@ -5741,7 +5741,31 @@
 			"noneBeforePublished_other": "{{days}} have no schedule. They come before days that have been published, so they can’t be scheduled now."
 		},
 		"timeline": {
-			"title": "Department schedule"
+			"title": "Department schedule",
+			"departments": "Departments",
+			"card": {
+				"open": "Open schedule",
+				"openNamed": "Open the {{department}} schedule",
+				"publishedUpTo": "Published up to {{day}}",
+				"nothingPublished": "Nothing published yet",
+				"toReview_one": "{{count}} schedule to review",
+				"toReview_other": "{{count}} schedules to review",
+				"nothingToReview": "Nothing to review",
+				"scheduledUpTo": "Nothing scheduled after {{day}}",
+				"noSchedule": "No schedule yet",
+				"waiting": "{{name}} is waiting for your review.",
+				"nothingWaiting": "Nothing is waiting for you.",
+				"legend": {
+					"title": "Each bar is a day, from today:",
+					"published": "Published",
+					"toReview": "To review",
+					"none": "No schedule"
+				}
+			},
+			"cardsLoading": "Loading the departments…",
+			"cardsFailed": "The departments couldn’t be loaded. Please try again.",
+			"cardsEmpty": "No department is in your reach. Ask an administrator for access to one.",
+			"cardsEmptyFiltered": "No department matches your search or filters. Clear them to see every department."
 		}
 	},
 	"colourSwatchPicker": {

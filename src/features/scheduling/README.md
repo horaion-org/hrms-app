@@ -29,6 +29,7 @@ Each area has one job. `SCHEDULING_TOP_LEVEL` in `scripts/check-feature-cycles.m
 | `schedules/` | One schedule and the list of them: their API, standing, actions, menu, dialogs and the Schedules tab |
 | `months/` | Schedules by month: month summaries, generating a month, the month page's cards |
 | `dates/` | Schedules of any dates, up to 31 days: their API and setup |
+| `timeline/` | One department's schedules on one timeline, and the landing's card per department |
 | `readiness/` | Whether a department can be rostered, and the links that fix it |
 | `startingContext/` | What each member was doing in the days before a schedule's period |
 | `hours/` | Opening balances and a roster's hours per person |

@@ -87,6 +87,7 @@ const SCHEDULING_TOP_LEVEL = [
 	"schedules",
 	"shifts",
 	"startingContext",
+	"timeline",
 	"README.md",
 	"paths.ts",
 	"periods.ts",

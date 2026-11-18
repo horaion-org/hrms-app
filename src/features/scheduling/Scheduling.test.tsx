@@ -77,7 +77,7 @@ it("shows API history and links to the saved schedule", async () => {
 	).toHaveAttribute("href", expect.stringContaining("departmentId=d-1"));
 });
 
-it("groups the schedules by month, from this week's month to 12 months ahead", async () => {
+it("shows a card per department, read from this week's month to 12 months ahead", async () => {
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
 	vi.useFakeTimers({ now: new Date(2026, 10, 12), toFake: ["Date"] });
 	const calls = stubApi({
@@ -99,12 +99,15 @@ it("groups the schedules by month, from this week's month to 12 months ahead", a
 	app = await openApp("/scheduling");
 	renderAuthApp(app);
 
-	const november = await screen.findByRole("region", { name: "November 2026" });
+	const departments = await screen.findByRole("region", {
+		name: "Departments",
+	});
 	expect(
-		within(november).getByRole("link", {
-			name: "Open Front Office, November 2026",
-		})
-	).toHaveAttribute("href", "/scheduling/months/2026-11?department=d-1");
+		within(departments).getAllByRole("link", {
+			name: "Open the Front Office schedule",
+		})[0]
+	).toHaveAttribute("href", "/scheduling/department?department=d-1");
+	expect(screen.queryByRole("region", { name: "November 2026" })).toBeNull();
 	const read = calls.find(
 		(call) => call.path === "/api/v1/companies/c-1/schedule-months"
 	);
