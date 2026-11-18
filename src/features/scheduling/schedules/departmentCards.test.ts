@@ -66,6 +66,7 @@ describe("departmentCards", () => {
 			toReviewCount: 0,
 			scheduledUpTo: undefined,
 			nextToReview: undefined,
+			firstToReviewDay: undefined,
 		});
 		expect(empty?.dayStrip).toHaveLength(DAY_STRIP_LENGTH);
 		expect(empty?.dayStrip.every((day) => day.mark === "none")).toBe(true);
@@ -145,8 +146,29 @@ describe("departmentCards", () => {
 		expect(card).toMatchObject({
 			toReviewCount: 2,
 			nextToReview: "Week 47",
+			firstToReviewDay: "2026-11-16",
 			scheduledUpTo: "2026-11-25",
 		});
+	});
+
+	it.each([
+		[
+			"the first in day order",
+			[
+				part("Week 48", "2026-11-25", "2026-11-27", "TO_REVIEW"),
+				part("Published", "2026-11-23", "2026-11-24", "PUBLISHED"),
+				part("Week 48 end", "2026-11-28", "2026-11-29", "TO_REVIEW"),
+			],
+			"2026-11-25",
+		],
+		[
+			"none without a schedule to review",
+			[part("Published", "2026-11-23", "2026-11-29", "PUBLISHED")],
+			undefined,
+		],
+	])("names the first day to review: %s", (_, parts, expected) => {
+		const card = frontDeskCard([november([["2026-11-23", parts]])]);
+		expect(card?.firstToReviewDay).toBe(expected);
 	});
 
 	it("marks each strip day from today by the schedule holding it", () => {

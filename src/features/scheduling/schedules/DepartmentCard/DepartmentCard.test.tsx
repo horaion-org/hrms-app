@@ -24,6 +24,7 @@ const frontDesk: DepartmentCardEntry = {
 	toReviewCount: 2,
 	scheduledUpTo: "2026-12-06",
 	nextToReview: "Week of 23 Nov",
+	firstToReviewDay: "2026-11-25",
 	dayStrip: [{ day: TODAY, mark: "published" }],
 };
 
@@ -36,6 +37,7 @@ const security: DepartmentCardEntry = {
 	toReviewCount: 0,
 	scheduledUpTo: undefined,
 	nextToReview: undefined,
+	firstToReviewDay: undefined,
 	dayStrip: [{ day: TODAY, mark: "none" }],
 };
 
@@ -96,5 +98,28 @@ describe("DepartmentCard", () => {
 		expect(
 			within(card).getByRole("link", { name: "Open the Front Desk schedule" })
 		).toHaveAttribute("href", "/scheduling/department?department=d-1");
+	});
+
+	/** Each line that names a day opens the timeline on that day's week; the others stay plain text. */
+	it.each([
+		["Published up to Nov 22", "Nov 22", "2026-11-16"],
+		["2 schedules to review", "Nov 25", "2026-11-23"],
+		["Nothing scheduled after Dec 6", "Dec 6", "2026-11-30"],
+	])("links %s to the week of %s", async (text, day, from) => {
+		const card = await renderCard(frontDesk);
+		const link = within(card).getByRole("link", {
+			name: `Open the Front Desk schedule at ${day}`,
+		});
+		expect(link).toHaveTextContent(text);
+		expect(link).toHaveAttribute(
+			"href",
+			`/scheduling/department?department=d-1&from=${from}`
+		);
+	});
+
+	it("leaves the lines that name no day as plain text", async () => {
+		const card = await renderCard(security);
+		expect(within(card).getAllByRole("link")).toHaveLength(1);
+		expect(card).toHaveTextContent("Nothing published yet");
 	});
 });

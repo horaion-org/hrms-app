@@ -43,6 +43,8 @@ export type DepartmentCardEntry = {
 	scheduledUpTo: string | undefined;
 	/** The name of the first schedule to review, in day order. */
 	nextToReview: string | undefined;
+	/** The first day of that schedule, where the card's "to review" line opens the timeline. */
+	firstToReviewDay: string | undefined;
 	dayStrip: Array<{ day: string; mark: DayMark }>;
 };
 
@@ -162,6 +164,7 @@ const cardOf = (
 		toReviewCount: toReview.length,
 		scheduledUpTo: lastDays[lastDays.length - 1],
 		nextToReview: toReview[0]?.name,
+		firstToReviewDay: toReview[0]?.firstDay,
 		dayStrip: Array.from({ length: DAY_STRIP_LENGTH }, (_, index) => {
 			const day = addDays(today, index);
 			return { day, mark: dayMarkOf(stateOfDay(schedules, day)) };

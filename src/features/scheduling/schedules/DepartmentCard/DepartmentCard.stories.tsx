@@ -41,6 +41,7 @@ const publishedAhead: DepartmentCardEntry = {
 	toReviewCount: 0,
 	scheduledUpTo: "2026-12-06",
 	nextToReview: undefined,
+	firstToReviewDay: undefined,
 	dayStrip: strip(19, 0),
 };
 
@@ -65,6 +66,7 @@ export const SchedulesToReview: Story = {
 			publishedUpTo: "2026-11-22",
 			toReviewCount: 2,
 			nextToReview: "Week of 23 Nov",
+			firstToReviewDay: "2026-11-23",
 			dayStrip: strip(5, 14),
 		},
 	},

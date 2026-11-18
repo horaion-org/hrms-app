@@ -5645,7 +5645,8 @@
 					"toReview": "Por revisar",
 					"none": "Sin horario"
 				},
-				"notPublishedFromThisWeek": "Sin publicar desde esta semana"
+				"notPublishedFromThisWeek": "Sin publicar desde esta semana",
+				"openAt": "Abrir el horario de {{department}} en {{day}}"
 			},
 			"cardsLoading": "Cargando los departamentos…",
 			"cardsFailed": "No se pudieron cargar los departamentos. Inténtalo de nuevo.",
