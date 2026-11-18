@@ -5477,8 +5477,8 @@
 				"lockedNext": "Cambia el cuadrante desde «Revisar y editar estos días» y después publica.",
 				"warnTitle_one": "Se incumple {{count}} regla. Aun así puedes publicar:",
 				"warnTitle_other": "Se incumplen {{count}} reglas. Aun así puedes publicar:",
-				"ruleLine_one": "{{rule}} · {{count}} persona y día",
-				"ruleLine_other": "{{rule}} · {{count}} personas y días",
+				"ruleLine_one": "{{rule}} · {{count}} persona",
+				"ruleLine_other": "{{rule}} · {{count}} personas",
 				"unchecked": "No se pudieron comprobar las reglas ahora. Aun así puedes publicar."
 			},
 			"check": "Validar cuadrante",

@@ -9,9 +9,9 @@ import {
 	holdsPublishBack,
 	type LocksRead,
 	PUBLISH_CHECK_WAIT_MS,
+	peopleCountOf,
 	type PublishCheck,
 	publishCheckOf,
-	violationCountOf,
 } from "@/features/scheduling/rulesCheck/publishCheck";
 import {
 	type BrokenRule,
@@ -37,7 +37,7 @@ export type CheckedPublishDialogProps = Omit<
 
 const key = "scheduling.rulesCheck.publishCheck";
 
-/** The broken rules as a list: each by its name, with how many people and days it is broken for when the check says. */
+/** The broken rules as a list: each by its name, with how many people it is broken for when the check says. */
 const RuleList = ({
 	rules,
 }: {
@@ -48,7 +48,7 @@ const RuleList = ({
 		<ul className="mt-2 list-disc pl-5">
 			{rules.map((rule, index) => {
 				const name = brokenRuleLabel(rule, t);
-				const count = violationCountOf(rule);
+				const count = peopleCountOf(rule);
 				return (
 					// Two broken rules may share a name and an id, so the place in the list tells them apart.
 					<li key={`${rule.rule}-${index}`}>

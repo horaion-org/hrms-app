@@ -10,8 +10,8 @@ import {
 	holdsPublishBack,
 	type LocksRead,
 	type PublishCheck,
+	peopleCountOf,
 	publishCheckOf,
-	violationCountOf,
 } from "@/features/scheduling/rulesCheck/publishCheck";
 
 const LOCKS = [
@@ -132,22 +132,35 @@ describe("gapsOf", () => {
 	});
 });
 
-describe("violationCountOf", () => {
+describe("peopleCountOf", () => {
 	const violation = { employeeId: "m-1", date: "2026-10-12", messages: [] };
 
-	/** One person on three days counts three; a violation naming no days counts one. */
+	/** A weekly rule names one person once per day of the week: that is still one person. */
 	it.each([
 		["the engine could not say who", null, 0],
 		["one person on one day", [violation], 1],
+		[
+			"one person on five days, a day at a time",
+			["12", "13", "14", "15", "16"].map((day) => ({
+				...violation,
+				date: `2026-10-${day}`,
+			})),
+			1,
+		],
 		[
 			"one person on three days and another on one",
 			[
 				{ ...violation, days: ["2026-10-12", "2026-10-13", "2026-10-14"] },
 				{ ...violation, employeeId: "m-2" },
 			],
-			4,
+			2,
+		],
+		[
+			"a day's entry naming no person, beside one person",
+			[{ ...violation, employeeId: null }, violation],
+			1,
 		],
 	])("counts %s", (_, violations, expected) => {
-		expect(violationCountOf(ruleFixture({ violations }))).toBe(expected);
+		expect(peopleCountOf(ruleFixture({ violations }))).toBe(expected);
 	});
 });

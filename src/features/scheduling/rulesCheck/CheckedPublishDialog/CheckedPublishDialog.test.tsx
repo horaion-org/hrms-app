@@ -34,7 +34,7 @@ const [LOCKED, UNLOCKED] = frozenConstraintsFixture().map(
 	(constraint, index) => ({ ...constraint, locked: index === 0 })
 );
 
-/** A broken rule tied to `constraint`, for two people and days. */
+/** A broken rule tied to `constraint`, for two people, the first on two days. */
 const ruleOf = (
 	constraint: NonNullable<typeof LOCKED>
 ): ReturnType<typeof ruleFixture> =>
@@ -43,6 +43,7 @@ const ruleOf = (
 		constraintName: constraint.name,
 		violations: [
 			{ employeeId: "m-1", date: "2026-10-12", messages: [] },
+			{ employeeId: "m-1", date: "2026-10-13", messages: [] },
 			{ employeeId: "m-2", date: "2026-10-13", messages: [] },
 		],
 	});
@@ -141,9 +142,7 @@ describe("CheckedPublishDialog", () => {
 				"A locked company rule is broken, so these days can't be published yet:"
 			)
 		).toBeVisible();
-		expect(
-			screen.getByText(`${LOCKED!.name} · 2 people and days`)
-		).toBeVisible();
+		expect(screen.getByText(`${LOCKED!.name} · 2 people`)).toBeVisible();
 		expect(
 			screen.getByText(
 				'Change the roster from "Review and edit these days", then publish.'
@@ -161,9 +160,7 @@ describe("CheckedPublishDialog", () => {
 		expect(
 			await screen.findByText("1 rule is broken. You can still publish:")
 		).toBeVisible();
-		expect(
-			screen.getByText(`${UNLOCKED!.name} · 2 people and days`)
-		).toBeVisible();
+		expect(screen.getByText(`${UNLOCKED!.name} · 2 people`)).toBeVisible();
 		expect(screen.queryByText(/locked company rule/)).not.toBeInTheDocument();
 		expect(publishButton()).toBeEnabled();
 	});

@@ -129,9 +129,7 @@ describe("publishing from the roster page", () => {
 				"A locked company rule is broken, so these days can't be published yet:"
 			)
 		).toBeVisible();
-		expect(
-			within(dialog).getByText(`${LOCKED.name} · 1 person and day`)
-		).toBeVisible();
+		expect(within(dialog).getByText(`${LOCKED.name} · 1 person`)).toBeVisible();
 		expect(
 			within(dialog).getByText(
 				'Change the roster from "Review and edit these days", then publish.'
