@@ -2,7 +2,10 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
-import type { ValidationStanding } from "@/features/scheduling/rulesCheck/issuesFromValidation";
+import {
+	changesUnchecked,
+	type ValidationStanding,
+} from "@/features/scheduling/rulesCheck/issuesFromValidation";
 import {
 	brokenRuleCount,
 	RETRYABLE_CHECK_REFUSALS,
@@ -20,7 +23,9 @@ const key = "scheduling.rulesCheck";
 
 /**
  * The status card at the head of Issues, one short sentence in its own tone:
- * out of date since the schedule changed (neutral, with Validate schedule); may
+ * hand changes not validated in this visit, so the list is only the
+ * generation's (warning, with Validate schedule as the main action); out of
+ * date since the schedule changed (neutral, with Validate schedule); may
  * be incomplete (warning, with Validate again); broken, counting the rules
  * (error; the rules themselves are rows below); what the engine could not
  * check (info); or holds (success). While validating or refused, a line
@@ -50,6 +55,20 @@ export const ValidationNote = ({
 					</Button>
 				)}
 			</div>
+		);
+	if (changesUnchecked(standing, validation.last))
+		return (
+			<Callout tone="warning">
+				<span className="block">{t(`${key}.changesUnchecked`)}</span>
+				<Button
+					className="mt-2"
+					size="sm"
+					variant="primary"
+					onClick={validation.ask}
+				>
+					{t(`${key}.check`)}
+				</Button>
+			</Callout>
 		);
 	if (standing === "outOfDate")
 		return (

@@ -6,6 +6,7 @@ import {
 } from "@/features/scheduling/rulesCheck/fixtures";
 import {
 	brokenRuleIssueCount,
+	changesUnchecked,
 	findingsShown,
 	scheduleWithFindingsShown,
 	validationStanding,
@@ -45,6 +46,24 @@ describe("validationStanding", () => {
 				hasChanges,
 			})
 		).toBe(expected);
+	});
+});
+
+describe("changesUnchecked", () => {
+	const last = { revision: 1, check: rulesCheckFixture() };
+
+	it.each([
+		[
+			"out of date, never validated in this visit",
+			"outOfDate",
+			undefined,
+			true,
+		],
+		["out of date, validated at an earlier revision", "outOfDate", last, false],
+		["as generated", "asGenerated", undefined, false],
+		["current", "current", last, false],
+	] as const)("reads %s", (_case, standing, lastValidation, expected) => {
+		expect(changesUnchecked(standing, lastValidation)).toBe(expected);
 	});
 });
 

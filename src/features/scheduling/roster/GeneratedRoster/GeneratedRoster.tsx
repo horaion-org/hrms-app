@@ -40,6 +40,7 @@ import {
 } from "@/features/scheduling/roster/RosterWeekBar";
 import {
 	brokenRuleIssueCount,
+	changesUnchecked,
 	scheduleWithFindingsShown,
 	validationStanding,
 } from "@/features/scheduling/rulesCheck/issuesFromValidation";
@@ -288,7 +289,10 @@ export const GeneratedRoster = ({
 				resetKey: `${openList ?? ""}|${view.member ?? view.date ?? ""}`,
 				// A header's narrowed list counts only its own, so the whole week's counts stay off it.
 				summary: openList === "issues" && !roster.issuesAbout && (
-					<IssueSummary counts={counts} />
+					<IssueSummary
+						changesUnchecked={validating && changesUnchecked(standing, last)}
+						counts={counts}
+					/>
 				),
 				sections: listSections,
 			}}

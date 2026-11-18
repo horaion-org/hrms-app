@@ -37,6 +37,16 @@ export const validationStanding = ({
 	return hasChanges ? "outOfDate" : "asGenerated";
 };
 
+/**
+ * Whether the list is out of date with no validation in this visit: hand
+ * changes nothing has checked yet (a validation is not kept past a reload),
+ * so the list holds only what the generation found and must not read as clean.
+ */
+export const changesUnchecked = (
+	standing: ValidationStanding,
+	last: LastValidation | undefined
+): boolean => standing === "outOfDate" && last === undefined;
+
 /** Findings with nothing in them, for a run that stored none, so validated gaps still have a list to join. */
 const NO_FINDINGS: GenerationFindings = {
 	scheduleStatus: "",

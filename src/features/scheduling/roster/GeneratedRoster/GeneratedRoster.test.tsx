@@ -794,6 +794,41 @@ describe("GeneratedRoster", () => {
 			expect(ask).toHaveBeenCalledTimes(2);
 		});
 
+		it("given_handChangesNotValidatedInThisVisit_when_issuesOpens_then_itsHeadingAndNoteWarnTheChangesAreUnchecked", async () => {
+			const user = userEvent.setup();
+			const [first, ...rest] = scheduleAssignmentsFixture();
+			const handChanged = {
+				...first!,
+				lastChange: {
+					changeId: "rc-1",
+					appliedAt: "2026-10-10T09:00:00Z",
+					appliedBy: { membershipId: "m-9", displayName: "Moses Lee" },
+					remark: null,
+					before: { kind: "OFF", dayType: "OFF", shift: null, jobTitle: null },
+				},
+			} as const;
+			render(
+				<QueryClientProvider client={new QueryClient()}>
+					<Roster
+						assignments={[handChanged, ...rest]}
+						editing={editing}
+						schedule={schedule}
+						validation={{ status: "idle", ask: vi.fn(), revision: 1 }}
+					/>
+				</QueryClientProvider>
+			);
+
+			await user.click(screen.getByRole("button", { name: /^Issues: / }));
+
+			const panel = screen.getByRole("complementary", { name: "Issues" });
+			expect(within(panel).getByText("Changes not validated")).toHaveClass(
+				"text-warning-800"
+			);
+			expect(within(panel).getByRole("note")).toHaveTextContent(
+				en.scheduling.rulesCheck.changesUnchecked
+			);
+		});
+
 		it("given_staffingTheEngineCouldNotWorkOut_when_issuesOpens_then_saysSoAndKeepsTheGenerationsList", async () => {
 			const user = userEvent.setup();
 			const check = rulesCheckFixture({
