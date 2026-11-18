@@ -2554,11 +2554,11 @@
 				"description": "The hours each part-time person can work in a week, and who has none set.",
 				"actions": {
 					"read": "See part-timers’ availability",
-					"update": "Set someone’s availability"
+					"update": "Apply availability for someone else"
 				},
 				"actionHints": {
 					"read": "Their weekly hours, and who has none set",
-					"update": "Their weekly pattern and changes for a week"
+					"update": "Their weekly pattern or one week; setting one’s own needs nothing"
 				}
 			},
 			"shift_preference": {
@@ -2566,11 +2566,11 @@
 				"description": "The shifts each person would like to work on a date.",
 				"actions": {
 					"read": "See people’s shift preferences",
-					"update": "Set someone’s shift preferences"
+					"update": "Apply shift preferences for someone else"
 				},
 				"actionHints": {
 					"read": "The shifts they would like, day by day",
-					"update": "The shifts they would like on a day, from today to eight weeks ahead"
+					"update": "From today to eight weeks ahead; setting one’s own needs nothing"
 				}
 			},
 			"member_event": {
