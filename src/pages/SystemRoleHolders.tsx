@@ -156,6 +156,8 @@ export type SystemRoleHoldersProps = {
 	holders: Array<AccessRoleAssignmentRow> | undefined;
 	/** Why the list couldn't be loaded, with Try again; shown in its place. */
 	holdersProblem?: ListView<never>["problem"];
+	/** A re-read waits on an access update; the rows shown may be out of date. */
+	holdersUpdating?: boolean;
 };
 
 /**
@@ -169,6 +171,7 @@ export const SystemRoleHolders = ({
 	role,
 	holders,
 	holdersProblem,
+	holdersUpdating = false,
 }: SystemRoleHoldersProps): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const access = useAccess();
@@ -212,6 +215,11 @@ export const SystemRoleHolders = ({
 				</p>
 			)}
 			{holdersProblem && <ListProblem problem={holdersProblem} />}
+			{holdersUpdating && (
+				<p className="mt-6 text-sm text-neutral-700" role="status">
+					{t("organisation.list.waitingForAccess")}
+				</p>
+			)}
 			<AccessRoleAssignments
 				assignments={holders ?? []}
 				canChange={canChangePerson}

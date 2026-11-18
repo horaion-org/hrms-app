@@ -2,6 +2,7 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { getRouteApi, type ErrorComponentProps } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { ApiProblemError } from "@/common/problem";
+import { isWaitingOnAccessUpdate } from "@/common/queryRetry";
 import type { FunctionComponent } from "@/common/types";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -128,6 +129,7 @@ export const SystemRoleEditor = (): FunctionComponent => {
 					<TabPanel>
 						<SystemRoleHolders
 							holders={holders.data}
+							holdersUpdating={isWaitingOnAccessUpdate(holders)}
 							role={role}
 							holdersProblem={
 								holders.isError
