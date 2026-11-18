@@ -2,6 +2,7 @@ import type {
 	DatesGeneration,
 	DatesPlan,
 	PartDays,
+	PlanPerson,
 } from "@/features/scheduling/dates/api";
 
 /*
@@ -9,6 +10,21 @@ import type {
  * default is the design's example: Kitchen (d-1), Thursday 19 to Saturday
  * 28 November 2026, nothing rostered before.
  */
+
+/** Kitchen's three people the plan lists. */
+export const PLAN_PEOPLE: Array<PlanPerson> = [
+	{
+		memberProfileId: "m-1",
+		displayName: "Avery Example",
+		jobTitleName: "Cook",
+	},
+	{
+		memberProfileId: "m-2",
+		displayName: "Blake Example",
+		jobTitleName: "Cook",
+	},
+	{ memberProfileId: "m-3", displayName: "Casey Example", jobTitleName: null },
+];
 
 /** Thu 19 – Sat 28 Nov: two new parts, Monday to Wednesday of the first week not rostered. */
 export const datesPlanFixture = (
@@ -49,6 +65,7 @@ export const datesPlanFixture = (
 	],
 	notRosteredBefore: { from: "2026-11-16", to: "2026-11-18" },
 	refusal: null,
+	people: PLAN_PEOPLE,
 	...overrides,
 });
 
@@ -121,6 +138,7 @@ export const datesPlanRedoingFixture = (): DatesPlan => ({
 	],
 	notRosteredBefore: null,
 	refusal: null,
+	people: PLAN_PEOPLE,
 });
 
 /** Both weeks of `datesPlanFixture` started. */

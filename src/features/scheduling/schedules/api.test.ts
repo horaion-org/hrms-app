@@ -207,6 +207,24 @@ describe("schedules client", () => {
 		]);
 	});
 
+	it("reads a schedule's chosen people, and everyone (null) from an API without them", async () => {
+		const chosen = { ...scheduleFixture(), memberProfileIds: ["m-1", "m-2"] };
+		// Undefined is left out of the JSON reply, as an API without the field sends it.
+		const older = { ...scheduleFixture(), memberProfileIds: undefined };
+		stubApi({
+			[`GET ${SCHEDULES}/s-1`]: [
+				{ status: 200, body: envelope(chosen) },
+				{ status: 200, body: envelope(older) },
+			],
+		});
+
+		const read = await fetchSchedule("c-1", UNIT, "s-1");
+		const olderRead = await fetchSchedule("c-1", UNIT, "s-1");
+
+		expect(read.memberProfileIds).toEqual(["m-1", "m-2"]);
+		expect(olderRead.memberProfileIds).toBeNull();
+	});
+
 	it("sends a part's covered days when saving one", async () => {
 		const calls = stubApi({
 			[`POST ${SCHEDULES}`]: { status: 201, body: envelope(scheduleFixture()) },

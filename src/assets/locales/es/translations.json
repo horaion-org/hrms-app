@@ -5479,7 +5479,9 @@
 				"changed": "Los días cambiaron desde que Configuración los leyó, así que no se generó nada. Vuelve a Configuración para verlos como están ahora.",
 				"unavailable": "No puedes programar este departamento. Elige un departamento que programes.",
 				"forbidden": "No tienes permiso para generar horarios en este departamento.",
-				"failed": "No pudimos generar estas fechas. Inténtalo de nuevo."
+				"failed": "No pudimos generar estas fechas. Inténtalo de nuevo.",
+				"memberGone": "Alguien que elegiste ya no puede incluirse en este departamento, así que no se creó nada. Vuelve a Configuración y elige de nuevo a las personas.",
+				"chosenPeopleGone": "Ninguna de las personas elegidas para este horario puede incluirse ya. Elimina este horario y programa sus días de nuevo con personas del departamento."
 			},
 			"setup": {
 				"firstDay": "Primer día",
@@ -5526,6 +5528,21 @@
 			"create": {
 				"title": "Crear horario",
 				"subtitle": "Elige un departamento y los días, luego genera. Después revisas y publicas cada horario."
+			},
+			"people": {
+				"title": "Elegir personas",
+				"intro": "Las personas que dejes fuera no reciben turnos de este horario.",
+				"tableLabel": "Personas de {{department}}",
+				"name": "Nombre",
+				"jobTitle": "Puesto",
+				"apply": "Usar estas personas",
+				"cancel": "Cancelar",
+				"nobodyChosen": "Elige al menos una persona.",
+				"everyone": "Todos en {{department}}, {{count}} personas",
+				"chosen": "{{chosen}} de {{count}} personas",
+				"choose": "Elegir personas",
+				"daysTaken": "Estos días ya tienen un horario. Elige días sin horario o incluye a todos.",
+				"savedDraft": "Los primeros días están guardados como borrador con estas personas, así que todo el periodo las mantiene. Elimina ese borrador para elegir de nuevo."
 			}
 		},
 		"roster": {

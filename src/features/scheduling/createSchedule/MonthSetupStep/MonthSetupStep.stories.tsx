@@ -14,6 +14,7 @@ import {
 	datesPlanWithKeptWeekFixture,
 } from "@/features/scheduling/dates/fixtures";
 import { MonthSetupStep } from "@/features/scheduling/createSchedule/MonthSetupStep";
+import { WeekChoiceSummary } from "@/features/scheduling/WeekChoiceSummary";
 import { schedulingWorkspace } from "@/features/scheduling/schedules/fixtures";
 import { workspaceQuery } from "@/features/workspace/api";
 
@@ -128,6 +129,26 @@ export const DatesNothingRostered: Story = {
 			name: "Year-end gala",
 		},
 		dates: { plan: datesPlanFixture(), pending: false, today: "2026-11-17" },
+	},
+};
+
+/** The same dates rostering two of Kitchen's three people: the page's People line sits after the name. */
+export const DatesTwoOfThreePeople: Story = {
+	name: "Dates, two of three people",
+	args: {
+		...DatesNothingRostered.args,
+		dates: {
+			plan: datesPlanFixture(),
+			pending: false,
+			today: "2026-11-17",
+			people: (
+				<WeekChoiceSummary
+					actionLabel="Choose people"
+					line="2 of 3 people"
+					onAction={fn()}
+				/>
+			),
+		},
 	},
 };
 

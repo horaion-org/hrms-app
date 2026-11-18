@@ -441,14 +441,16 @@ export type DatesRunSetup = {
 
 /**
  * What generating the dates sends: Setup's days, its name when one is given,
- * and a choice for every week the plan creates, the week's own or else
- * `everything`, in the plan's order.
+ * a choice for every week the plan creates, the week's own or else
+ * `everything`, in the plan's order, and the chosen people only when some
+ * are (absent rosters everyone).
  */
 export const datesGenerationBody = (
 	setup: DatesRunSetup,
 	plan: Pick<DatesPlan, "weeks">,
 	choices: MonthChoices,
-	everything: WeekChoiceIds
+	everything: WeekChoiceIds,
+	memberProfileIds?: Array<string>
 ): GenerateDatesBody => ({
 	firstDay: setup.firstDay,
 	lastDay: setup.lastDay,
@@ -464,4 +466,5 @@ export const datesGenerationBody = (
 				includedConstraintIds: weekChoice.constraintIds,
 			};
 		}),
+	...(memberProfileIds === undefined ? {} : { memberProfileIds }),
 });

@@ -15,6 +15,7 @@ import { Checkbox } from "@/components/ui/Checkbox";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { Tab, TabList, Tabs } from "@/components/ui/Tabs";
 import type { DatesPlan, DayRun } from "@/features/scheduling/dates/api";
+import type { MonthSetupDates } from "@/features/scheduling/createSchedule/MonthSetupStep/monthSetupDates";
 import {
 	dayCountOfRuns,
 	MAX_DAYS_BY_DATES,
@@ -64,14 +65,6 @@ export type MonthSetupWeeks = {
 	rows: Array<TickableWeek>;
 	ticked: Array<string>;
 	onTickedChange: (ticked: Array<string>) => void;
-};
-
-/** What the page knows of the chosen dates: their plan, whether it is loading, and the branch's today. */
-export type MonthSetupDates = {
-	/** Undefined until both days are valid and the plan is read. */
-	plan: DatesPlan | undefined;
-	pending: boolean;
-	today: string;
 };
 
 /** What Setup schedules for, and the chosen days. */
@@ -536,6 +529,7 @@ export const MonthSetupStep = ({
 									{...register("name")}
 								/>
 							</FormRow>
+							{dates?.people}
 							{dates?.pending && (
 								<p className="text-sm text-neutral-800" role="status">
 									{t("scheduling.dates.setup.checking")}

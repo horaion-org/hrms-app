@@ -65,6 +65,7 @@ export const scheduleFixture = (overrides: Partial<Schedule> = {}): Schedule =>
 			rejectedAtStep: null,
 		},
 		publicationWithdrawnAt: null,
+		memberProfileIds: null,
 		nonWorkingDayTypes: ["OFF", "REST"],
 		generation: null,
 		createdAt: "2026-10-08T09:00:00Z",
