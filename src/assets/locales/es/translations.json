@@ -5601,7 +5601,11 @@
 				},
 				"cellLabel": "{{name}}, {{day}}: {{what}}, {{schedule}}, {{state}}",
 				"notRosteredLabel": "{{name}}, {{day}}: sin turno, {{schedule}}, {{state}}",
-				"noScheduleLabel": "{{name}}, {{day}}: Sin horario"
+				"noScheduleLabel": "{{name}}, {{day}}: Sin horario",
+				"short": {
+					"dayOff": "Libre",
+					"restDay": "Desc."
+				}
 			},
 			"needs": {
 				"heading": "Requiere tu atención",

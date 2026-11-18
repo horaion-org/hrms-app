@@ -44,6 +44,8 @@ export type ZoomLooks = {
 	};
 	/** A shift tile: its time over its name, its name, or its initial. */
 	shiftText: "timeOverName" | "name" | "initial";
+	/** Whether a day off or rest day shows its short word ("Off", "Rest"), to fit a narrow column. */
+	shortDayWords: boolean;
 	emptyDay: EmptyDayMark;
 	/** A bar names its schedule from this many days wide. */
 	barNameFromDays: number;
@@ -60,6 +62,7 @@ export const ZOOM_LOOKS: Record<TimelineView, ZoomLooks> = {
 	week: {
 		dayHeader: { weekday: "short", date: { day: "numeric", month: "short" } },
 		shiftText: "timeOverName",
+		shortDayWords: false,
 		emptyDay: "noSchedule",
 		barNameFromDays: 1,
 		barBadgeFromDays: 3,
@@ -69,6 +72,7 @@ export const ZOOM_LOOKS: Record<TimelineView, ZoomLooks> = {
 	two: {
 		dayHeader: { weekday: "short", date: { day: "numeric" } },
 		shiftText: "name",
+		shortDayWords: true,
 		emptyDay: "dash",
 		barNameFromDays: 1,
 		barBadgeFromDays: 5,
@@ -78,6 +82,7 @@ export const ZOOM_LOOKS: Record<TimelineView, ZoomLooks> = {
 	four: {
 		dayHeader: { weekday: "narrow", date: { day: "numeric" } },
 		shiftText: "initial",
+		shortDayWords: false,
 		emptyDay: "dot",
 		barNameFromDays: 3,
 		barBadgeFromDays: null,
@@ -99,22 +104,53 @@ export const barContentOf = (
 	};
 };
 
+/** The day types with a short word (`scheduling.timeline.grid.short.*`); a day off the API gives no type is a day off. */
+const SHORT_DAY_WORDS: Record<string, "dayOff" | "restDay"> = {
+	OFF: "dayOff",
+	REST: "restDay",
+};
+const UNTYPED_DAY_OFF = "OFF";
+
+/** A day without a shift in the roster's own word, or its short word where the zoom wants one and it has one. */
+const dayWordOf = (
+	cell: Exclude<RosterCell, { kind: "shift" }>,
+	view: TimelineView,
+	t: TFunction
+): string => {
+	const short =
+		ZOOM_LOOKS[view].shortDayWords && cell.kind === "off"
+			? SHORT_DAY_WORDS[cell.dayType ?? UNTYPED_DAY_OFF]
+			: undefined;
+	return short
+		? t(`scheduling.timeline.grid.short.${short}`)
+		: dayWithoutShiftTileText(cell, t);
+};
+
+/**
+ * One line of a tile. A shift's time may break onto two lines, as the roster
+ * page's tile does on a phone, so it is never cut; any other line is cut short.
+ */
+export type TileLine = { text: string; isTime: boolean };
+
 /**
  * The lines a cell's tile shows in `view`: a shift's time over its name, its
- * name, or its initial; any other day in the roster's own word, or its initial.
+ * name, or its initial; any other day in the roster's own word (short in two
+ * weeks), or its initial.
  */
 export const cellLinesOf = (
 	cell: RosterCell,
 	view: TimelineView,
 	t: TFunction
-): Array<string> => {
-	const word =
-		cell.kind === "shift" ? cell.name : dayWithoutShiftTileText(cell, t);
+): Array<TileLine> => {
+	const word = cell.kind === "shift" ? cell.name : dayWordOf(cell, view, t);
 	const shown = ZOOM_LOOKS[view].shiftText;
-	if (shown === "initial") return [word.charAt(0)];
+	if (shown === "initial") return [{ text: word.charAt(0), isTime: false }];
 	if (shown === "timeOverName" && cell.kind === "shift")
-		return [shiftTimeText(cell, t), cell.name];
-	return [word];
+		return [
+			{ text: shiftTimeText(cell, t), isTime: true },
+			{ text: cell.name, isTime: false },
+		];
+	return [{ text: word, isTime: false }];
 };
 
 /** A day as cell and bar labels name it, e.g. "Mon, Nov 23". */

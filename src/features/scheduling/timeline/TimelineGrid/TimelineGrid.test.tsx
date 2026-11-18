@@ -102,4 +102,23 @@ describe("TimelineGrid", () => {
 		});
 		expect(within(row).getByRole("rowheader")).toHaveClass("sticky", "left-0");
 	});
+
+	/** A tile's screen-reader label stays inside its tile, so the table scrolls in its container and never widens the page. */
+	it("places every screen-reader label in a positioned tile", async () => {
+		const row = await renderGrid("four");
+		const labels = row.querySelectorAll(".sr-only");
+		expect(labels.length).toBe(7);
+		for (const label of labels)
+			expect(label.parentElement).toHaveClass("relative");
+	});
+
+	/** In Week view the time breaks onto two lines in a narrow column, as the roster page's tile does, never cut short. */
+	it("lets the Week view's time wrap instead of cutting it", async () => {
+		const row = await renderGrid("week");
+		const [monday] = within(row).getAllByTitle(/Morning/);
+		const time = within(monday!).getByText("09:00 – 17:00");
+		expect(time).toHaveClass("text-balance", "whitespace-normal");
+		expect(time).not.toHaveClass("truncate");
+		expect(monday).toHaveClass("min-h-12");
+	});
 });

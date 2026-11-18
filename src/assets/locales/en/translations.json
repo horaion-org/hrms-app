@@ -5801,7 +5801,11 @@
 				},
 				"cellLabel": "{{name}}, {{day}}: {{what}}, {{schedule}}, {{state}}",
 				"notRosteredLabel": "{{name}}, {{day}}: not rostered, {{schedule}}, {{state}}",
-				"noScheduleLabel": "{{name}}, {{day}}: No schedule"
+				"noScheduleLabel": "{{name}}, {{day}}: No schedule",
+				"short": {
+					"dayOff": "Off",
+					"restDay": "Rest"
+				}
 			},
 			"needs": {
 				"heading": "Needs you",
