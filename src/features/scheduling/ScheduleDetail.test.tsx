@@ -200,9 +200,11 @@ it("opens an older link that also names the department, reading the schedule by 
 	);
 	expect(readsOf(calls, SCHEDULE_READ)).toHaveLength(1);
 	expect(readsOf(calls, SCHEDULE)).toHaveLength(0);
-	expect(screen.getByRole("link", { name: "October 2026" })).toHaveAttribute(
+	expect(
+		screen.getByRole("link", { name: "Back to the department schedule" })
+	).toHaveAttribute(
 		"href",
-		"/scheduling/months/2026-10?department=d-1"
+		"/scheduling/department?department=d-1&from=2026-10-12"
 	);
 });
 
@@ -2400,7 +2402,7 @@ describe("the roster in its month", () => {
 			day: dayjs(row.day).add(days, "day").format("YYYY-MM-DD"),
 		}));
 	};
-	it("goes back to its month and steps to another week of it, the arrows staying in the month", async () => {
+	it("goes back to its department timeline and steps to another week of its month, the arrows staying in the month", async () => {
 		const calls = await openRoster({
 			...signedIn(),
 			[`GET ${SCHEDULE_READ}`]: ok(
@@ -2422,8 +2424,13 @@ describe("the roster in its month", () => {
 		const user = userEvent.setup();
 
 		expect(
-			await screen.findByRole("link", { name: "October 2026" })
-		).toHaveAttribute("href", "/scheduling/months/2026-10?department=d-1");
+			await screen.findByRole("link", {
+				name: "Back to the department schedule",
+			})
+		).toHaveAttribute(
+			"href",
+			"/scheduling/department?department=d-1&from=2026-10-12"
+		);
 		expect(readsOf(calls, OCTOBER)[0]?.search).toBe("departmentId=d-1");
 		await waitFor(() => {
 			expect(screen.getByRole("button", { name: "Week" })).toHaveTextContent(
