@@ -277,7 +277,7 @@ describe("Create Schedule: opening and setup", () => {
 		const { opened } = await open("/scheduling");
 
 		await user.click(
-			await screen.findByRole("link", { name: "Create schedule" })
+			await screen.findByRole("link", { name: "Generate" })
 		);
 		// The shell's first navigation into the wizard outlasts the default wait.
 		expect(
@@ -307,7 +307,7 @@ describe("Create Schedule: opening and setup", () => {
 				name: "Scheduling",
 			})
 		).toBeVisible();
-		expect(screen.queryByRole("link", { name: "Create schedule" })).toBeNull();
+		expect(screen.queryByRole("link", { name: "Generate" })).toBeNull();
 	});
 
 	it("given_aLaterStepWithoutADraft_when_linkedTo_then_returnsToSetup", async () => {

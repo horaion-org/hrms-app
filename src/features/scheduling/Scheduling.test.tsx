@@ -66,7 +66,7 @@ it("shows API history and links to the saved schedule", async () => {
 	app = await openApp("/scheduling");
 	renderAuthApp(app);
 	const history = await screen.findByRole("table", {
-		name: "Schedule history",
+		name: "History",
 	});
 	const row = within(history).getByRole("row", { name: /API schedule/ });
 	expect(within(row).getAllByText("Draft")[0]).toBeInTheDocument();
@@ -158,7 +158,7 @@ it("labels and tones every API status in the history", async () => {
 	app = await openApp("/scheduling");
 	renderAuthApp(app);
 	const history = await screen.findByRole("table", {
-		name: "Schedule history",
+		name: "History",
 	});
 	for (const { status, label, background } of statuses) {
 		const row = within(history).getByRole("row", {
@@ -211,7 +211,7 @@ it("opens a draft in the wizard and any other schedule's roster, from its histor
 	app = await openApp("/scheduling");
 	renderAuthApp(app);
 	const history = await screen.findByRole("table", {
-		name: "Schedule history",
+		name: "History",
 	});
 	for (const { status, href } of views) {
 		const name = /^View the Front Office schedule for /;
@@ -240,7 +240,7 @@ const listOf = (schedules: Array<Schedule>): StubReply => ({
 /** The history's "More actions" menu for schedule s-1, opened. */
 const openRowMenu = async (): Promise<void> => {
 	const history = await screen.findByRole("table", {
-		name: "Schedule history",
+		name: "History",
 	});
 	await userEvent.click(
 		within(history).getByRole("button", {
@@ -275,7 +275,7 @@ it("offers no row menu without schedule:delete", async () => {
 		]),
 	});
 
-	await screen.findByRole("table", { name: "Schedule history" });
+	await screen.findByRole("table", { name: "History" });
 	expect(
 		screen.queryByRole("button", {
 			name: "More actions for Front Office - Week 42",
@@ -384,7 +384,7 @@ it("lists the header's one Branch and narrows it to a Department through Filters
 		[`GET ${SCHEDULES_PATH}`]: listOf([scheduleFixture()]),
 	});
 	const user = userEvent.setup();
-	await screen.findByRole("table", { name: "Schedule history" });
+	await screen.findByRole("table", { name: "History" });
 
 	// One Branch in reach: the header names it as text.
 	expect(
@@ -426,7 +426,7 @@ it("lists every Branch once All branches is chosen, with every Department under 
 	app = await openApp("/scheduling");
 	renderAuthApp(app);
 	const user = userEvent.setup();
-	await screen.findByRole("table", { name: "Schedule history" });
+	await screen.findByRole("table", { name: "History" });
 
 	expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
 		"Orchard"
@@ -474,7 +474,7 @@ it("offers no Filters while the header Branch has only one Department to choose"
 	app = await openApp("/scheduling?branch=b-1");
 	renderAuthApp(app);
 	const user = userEvent.setup();
-	await screen.findByRole("table", { name: "Schedule history" });
+	await screen.findByRole("table", { name: "History" });
 	expect(screen.getByRole("button", { name: "Filters" })).toBeVisible();
 
 	await user.click(screen.getByRole("button", { name: "Branch" }));

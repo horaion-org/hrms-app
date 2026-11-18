@@ -3364,7 +3364,7 @@
 	},
 	"scheduling": {
 		"overview": {
-			"createSchedule": "Crear horario",
+			"createSchedule": "Generar",
 			"generated": "Se solicitó la generación de {{name}}.",
 			"title": "Programación",
 			"subtitle": "Los horarios, y los turnos y las restricciones con los que se crean.",
@@ -3385,9 +3385,9 @@
 				"UNKNOWN": "Desconocido"
 			},
 			"history": {
-				"title": "Historial de horarios",
+				"title": "Historial",
 				"partOfWeek": "Parte de la semana del {{week}}",
-				"description": "Consulta horarios completados y asignaciones de personal anteriores.",
+				"description": "Un registro de lo que se generó y se publicó, y para qué días. El cuadrante es uno por departamento.",
 				"name": "Nombre",
 				"date": "Periodo",
 				"createdAt": "Creado el",

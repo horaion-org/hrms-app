@@ -3564,7 +3564,7 @@
 	},
 	"scheduling": {
 		"overview": {
-			"createSchedule": "Create schedule",
+			"createSchedule": "Generate",
 			"generated": "Generation requested for {{name}}.",
 			"title": "Scheduling",
 			"subtitle": "Schedules, and the shifts and constraints they are built from.",
@@ -3585,9 +3585,9 @@
 				"UNKNOWN": "Unknown"
 			},
 			"history": {
-				"title": "Schedule history",
+				"title": "History",
 				"partOfWeek": "Part of the week of {{week}}",
-				"description": "View saved schedules across your departments.",
+				"description": "A log of what was generated and published, and for which days. The roster itself is one per department.",
 				"name": "Name",
 				"date": "Period",
 				"createdAt": "Created at",
