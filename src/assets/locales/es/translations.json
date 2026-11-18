@@ -4416,6 +4416,10 @@
 					"label": "Descanso que viene de antes",
 					"sentence": "{{member}} solo puede empezar desde las {{time}} del {{day}}, por el descanso tras su último turno, que terminó el {{endDay}} a las {{endTime}}."
 				},
+				"NEXT_SHIFT_REST_BLOCKS_SHIFTS": {
+					"label": "Descanso antes del siguiente horario",
+					"sentence": "{{member}} solo puede hacer turnos que terminen como máximo a las {{time}} del {{day}}, por el descanso antes de su siguiente turno después de este horario, que empezaba el {{startDay}} a las {{startTime}} cuando se generó este horario."
+				},
 				"OFF_BLOCK_HISTORY_MISSING": {
 					"label": "Días anteriores sin rellenar",
 					"sentence": "{{member}}: algunos días antes de este horario dentro de un periodo de días libres no se rellenaron, así que se cuentan como trabajados. Rellénalos si se dio un día libre entonces.",
@@ -4564,7 +4568,8 @@
 			"notDraft": "Este horario ya se generó, así que su punto de partida ya no puede cambiar.",
 			"failed": "No se pudieron guardar los días. Inténtalo de nuevo.",
 			"unknownDays": "Horaion no sabe qué trabajó cada persona el {{days}}.",
-			"saved": "Días anteriores a esta semana guardados."
+			"saved": "Días anteriores a esta semana guardados.",
+			"fittedAroundAfter": "Los turnos ya asignados en los 7 días después de este horario se mantienen; aquí no se da a nadie un turno que deje poco descanso antes de ellos."
 		},
 		"openingHours": {
 			"title": "Horas ya trabajadas este mes (del {{from}} al {{to}})",

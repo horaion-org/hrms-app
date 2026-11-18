@@ -76,7 +76,8 @@ const problemKeyOf = (
  * Where everyone starts on the Generate step, in two parts: the line about
  * last week with the grid to add its days, and, below it, the hours people
  * already worked this month with their own dialog (OpeningHoursSection).
- * Each saves on its own.
+ * Each saves on its own. Under the line about last week, one fixed sentence
+ * says the shifts already rostered in the 7 days after stay as they are.
  */
 export const StartingContextSection = ({
 	companyId,
@@ -133,6 +134,9 @@ export const StartingContextSection = ({
 						: undefined
 				}
 			/>
+			<p className="text-sm text-neutral-700">
+				{t("scheduling.startingContext.fittedAroundAfter")}
+			</p>
 			{showsHours && (
 				<OpeningHoursSection
 					canEdit={canEdit}

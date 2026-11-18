@@ -4616,6 +4616,10 @@
 					"label": "Rest carried in from before",
 					"sentence": "{{member}} can only start from {{time}} on {{day}}, because of rest after their last shift, which ended {{endDay}} at {{endTime}}."
 				},
+				"NEXT_SHIFT_REST_BLOCKS_SHIFTS": {
+					"label": "Rest needed before the next schedule",
+					"sentence": "{{member}} can only work shifts that end by {{time}} on {{day}}, because of rest before their next shift after this schedule, which started {{startDay}} at {{startTime}} when this schedule was generated."
+				},
 				"OFF_BLOCK_HISTORY_MISSING": {
 					"label": "Days before not filled in",
 					"sentence": "{{member}}: some days before this schedule in a days-off period were not filled in, so they are counted as worked. Fill them in if a day off was given then.",
@@ -4764,7 +4768,8 @@
 			"notDraft": "This schedule has already been generated, so its starting point can no longer change.",
 			"failed": "The days couldn’t be saved. Try again.",
 			"unknownDays": "Horaion doesn’t know what people worked on {{days}}.",
-			"saved": "Days before this week saved."
+			"saved": "Days before this week saved.",
+			"fittedAroundAfter": "Shifts already rostered in the 7 days after this schedule stay as they are; nobody is given a shift here that leaves too little rest before them."
 		},
 		"openingHours": {
 			"title": "Hours already worked this month ({{from}} to {{to}})",
