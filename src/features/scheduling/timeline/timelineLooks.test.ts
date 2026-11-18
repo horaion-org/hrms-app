@@ -11,6 +11,10 @@ import {
 
 const t = authTestI18n.t.bind(authTestI18n);
 const restDay: RosterCell = { kind: "off", dayType: "REST" };
+const dayOff: RosterCell = { kind: "off", dayType: "OFF" };
+const untypedDayOff: RosterCell = { kind: "off", dayType: null };
+/** A day type with no short word keeps its own word. */
+const publicHoliday: RosterCell = { kind: "off", dayType: "PUBLIC_HOLIDAY" };
 
 describe("barContentOf", () => {
 	it.each([
@@ -32,6 +36,10 @@ describe("cellLinesOf", () => {
 		["two", morningShift("a-1"), ["Morning"]],
 		["four", morningShift("a-1"), ["M"]],
 		["week", restDay, ["Rest day"]],
+		["two", restDay, ["Rest"]],
+		["two", dayOff, ["Off"]],
+		["two", untypedDayOff, ["Off"]],
+		["two", publicHoliday, ["Public holiday"]],
 		["four", restDay, ["R"]],
 	] as const)("a %s cell shows its lines", (view, cell, expected) => {
 		expect(cellLinesOf(cell, view, t)).toEqual(expected);
