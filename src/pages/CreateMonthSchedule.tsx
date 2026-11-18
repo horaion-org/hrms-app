@@ -80,7 +80,10 @@ import {
 	MonthSetupStep,
 	type MonthSetupValues,
 } from "@/features/scheduling/createSchedule/MonthSetupStep";
-import { openingScheduleFor } from "@/features/scheduling/createSchedule/setupSchema";
+import {
+	createScheduleWordingOf,
+	openingScheduleFor,
+} from "@/features/scheduling/createSchedule/setupSchema";
 import { gateOf } from "@/features/scheduling/readiness/readinessCopy";
 import { ReadinessGateCallout } from "@/features/scheduling/readiness/ReadinessGateCallout";
 import { setupLinksOf } from "@/features/scheduling/readiness/setupLinks";
@@ -729,10 +732,10 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 				{t("scheduling.create.back")}
 			</Button>
 			<h1 className="mt-4 text-4xl font-medium text-neutral-900">
-				{t("scheduling.months.create.title")}
+				{t(createScheduleWordingOf(datesChoice.scheduleFor).title)}
 			</h1>
 			<p className="mt-3 text-sm text-neutral-800">
-				{t("scheduling.months.create.subtitle")}
+				{t(createScheduleWordingOf(datesChoice.scheduleFor).subtitle)}
 			</p>
 			<Stepper
 				className="mt-12"
