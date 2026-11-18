@@ -40,6 +40,18 @@ export type ScheduleState =
 const refused = (error: unknown, status: number): boolean =>
 	error instanceof ApiProblemError && error.status === status;
 
+/** How old a cached schedule read may be to count as made for this visit: the route's own read lands just before the page mounts. */
+const ENTRY_READ_MAX_AGE_MS = 2_000;
+
+/**
+ * Whether a page opening on a cached schedule reads it again, however fresh
+ * the cache calls it: yes when the read is older than the visit. Its days,
+ * roster and revision may have changed since (a later run took some of its
+ * days), and a change sent at the old revision is refused.
+ */
+export const readAgainOnEntry = (readAt: number, now: number): boolean =>
+	now - readAt > ENTRY_READ_MAX_AGE_MS;
+
 /**
  * `unit` or `scheduleId` undefined asks for nothing and stays pending.
  * `polling` reads it again while its generation is in progress.
@@ -81,7 +93,8 @@ export const useSchedule = (
  * when `schedule:read` is held nowhere in the company or the API refuses with
  * a 403; `missing` when the API answers 404, which is also its answer for a
  * schedule outside the Departments where the key is held. `polling` reads it
- * again while its generation is in progress.
+ * again while its generation is in progress. A page opening on a read cached
+ * before the visit reads it again (`readAgainOnEntry`).
  */
 export const useCompanySchedule = (
 	companyId: string,
@@ -90,9 +103,11 @@ export const useCompanySchedule = (
 ): ScheduleState => {
 	const access = useAccess();
 	const allowed = access.canAnywhere("schedule:read");
-	const schedule = useQuery(
-		companyScheduleQuery(companyId, scheduleId, allowed, polling)
-	);
+	const schedule = useQuery({
+		...companyScheduleQuery(companyId, scheduleId, allowed, polling),
+		refetchOnMount: (query) =>
+			readAgainOnEntry(query.state.dataUpdatedAt, Date.now()) && "always",
+	});
 
 	if (access.status !== "ready") return { status: access.status };
 	if (!allowed) return { status: "hidden" };

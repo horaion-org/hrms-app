@@ -208,3 +208,15 @@ export const scheduleReadPolls = (
 	state === "GENERATING" ||
 	rosterAwaited(state, read) ||
 	(read !== undefined && generationInProgress(read));
+
+/**
+ * Whether the month lists other days for the schedule than its own read
+ * covers: the read is from before a later run took some of its days, so its
+ * days, its roster and its revision are the old ones.
+ */
+export const coveredDaysBehind = (
+	listed: Pick<TimelineSchedule, "firstDay" | "lastDay">,
+	read: Schedule | undefined
+): boolean =>
+	read !== undefined &&
+	(read.coveredFrom !== listed.firstDay || read.coveredTo !== listed.lastDay);
