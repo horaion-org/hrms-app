@@ -326,7 +326,7 @@ describe("WeekCard", () => {
 			);
 
 			const parts = within(card).getByRole("navigation", {
-				name: "Schedules this week",
+				name: "This week’s parts",
 			});
 			expect(
 				within(parts).getByRole("link", {
@@ -358,7 +358,7 @@ describe("WeekCard", () => {
 			);
 
 			const parts = within(card).getByRole("navigation", {
-				name: "Schedules this week",
+				name: "This week’s parts",
 			});
 			expect(within(card).getAllByText("To review")).toHaveLength(2);
 			expect(within(parts).getByText("Published")).toBeInTheDocument();

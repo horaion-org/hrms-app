@@ -96,7 +96,7 @@ const openPublishDialog = async (
 	await user.click(
 		await screen.findByRole("button", { name: "Publish roster" })
 	);
-	const dialog = screen.getByRole("dialog", { name: "Publish this roster?" });
+	const dialog = screen.getByRole("dialog", { name: "Publish these days?" });
 	return { calls, dialog, user };
 };
 

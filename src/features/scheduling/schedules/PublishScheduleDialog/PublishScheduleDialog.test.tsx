@@ -33,7 +33,7 @@ it("says a part of a week becomes final for its own days", () => {
 	);
 
 	expect(
-		screen.getByRole("dialog", { name: "Publish this roster?" })
+		screen.getByRole("dialog", { name: "Publish these days?" })
 	).toHaveTextContent(
 		/Publishing makes this roster final for its days \(Oct 14\s?–\s?16, 2026\)\. It can’t be regenerated/
 	);
@@ -43,7 +43,7 @@ it("says a whole-week schedule becomes final for its week", () => {
 	renderDialog(generatedScheduleFixture({ status: "GENERATED" }));
 
 	expect(
-		screen.getByRole("dialog", { name: "Publish this roster?" })
+		screen.getByRole("dialog", { name: "Publish these days?" })
 	).toHaveTextContent(
 		"Publishing makes this roster final for its week. It can’t be regenerated"
 	);

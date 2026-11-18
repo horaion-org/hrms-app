@@ -91,7 +91,7 @@ describe("PublishDaysDialog", () => {
 		renderDialog(piecesToReview(1));
 
 		expect(
-			await screen.findByRole("dialog", { name: "Publish this roster?" })
+			await screen.findByRole("dialog", { name: "Publish these days?" })
 		).toHaveTextContent(/for its days \(Oct 12\s?–\s?14, 2026\)/);
 	});
 
@@ -120,7 +120,7 @@ describe("PublishDaysDialog", () => {
 		);
 
 		expect(
-			await screen.findByRole("dialog", { name: "Publish this roster?" })
+			await screen.findByRole("dialog", { name: "Publish these days?" })
 		).toHaveTextContent(/for its days \(Oct 16\s?–\s?18, 2026\)/);
 	});
 

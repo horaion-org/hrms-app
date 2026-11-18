@@ -230,7 +230,7 @@ const SCHEDULE_PATH =
 
 /** The delete dialog names the fixture's department and week (12 – 18 Oct 2026), as en-US writes it. */
 const DELETE_TITLE =
-	/^Delete the Front Office schedule for Oct 12\s?–\s?18, 2026\?$/;
+	/^Delete the Front Office roster for Oct 12\s?–\s?18, 2026\?$/;
 
 const listOf = (schedules: Array<Schedule>): StubReply => ({
 	status: 200,
@@ -299,10 +299,10 @@ it("deletes a schedule from its history row after a danger confirm naming its de
 		name: DELETE_TITLE,
 	});
 	expect(dialog).toHaveTextContent(
-		/This removes the Front Office schedule for .+, with its roster\. This can’t be undone\./
+		/This removes the Front Office roster for .+\. This can’t be undone\./
 	);
 	const confirm = within(dialog).getByRole("button", {
-		name: "Delete schedule",
+		name: "Delete these days",
 	});
 	expect(confirm).toHaveClass("bg-error-600");
 	await user.click(confirm);
@@ -333,7 +333,7 @@ it("explains why a schedule being generated can't be deleted yet", async () => {
 		"This schedule is being generated. You can delete it once the run finishes."
 	);
 	expect(
-		within(dialog).getByRole("button", { name: "Delete schedule" })
+		within(dialog).getByRole("button", { name: "Delete these days" })
 	).toBeDisabled();
 	const footerClose = within(dialog)
 		.getAllByRole("button", { name: "Close" })
@@ -362,7 +362,7 @@ it("shows a refused delete inside the dialog and keeps it open", async () => {
 		name: DELETE_TITLE,
 	});
 	await user.click(
-		within(dialog).getByRole("button", { name: "Delete schedule" })
+		within(dialog).getByRole("button", { name: "Delete these days" })
 	);
 
 	expect(await within(dialog).findByRole("alert")).toHaveTextContent(

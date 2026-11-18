@@ -96,13 +96,13 @@ describe("RosterGrid", () => {
 		const row = screen.getAllByRole("row")[1]!;
 		const cells = within(row).getAllByRole("cell");
 		for (const cell of cells.slice(0, 3)) {
-			expect(cell).toHaveTextContent("Not in this schedule");
+			expect(cell).toHaveTextContent("Not in these days");
 			expect(within(cell).queryByRole("button")).toBeNull();
 		}
-		await user.click(within(cells[0]!).getByText("Not in this schedule"));
+		await user.click(within(cells[0]!).getByText("Not in these days"));
 		expect(onDaySelect).not.toHaveBeenCalled();
 		expect(onAssignmentSelect).not.toHaveBeenCalled();
-		expect(cells[3]).not.toHaveTextContent("Not in this schedule");
+		expect(cells[3]).not.toHaveTextContent("Not in these days");
 	});
 
 	it("given_aNonWorkingDayWithoutAType_when_rendered_then_showsOff", () => {

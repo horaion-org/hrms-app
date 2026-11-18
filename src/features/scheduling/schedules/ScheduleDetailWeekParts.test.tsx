@@ -154,7 +154,7 @@ describe("the owner's week of 15 February 2027: Wed–Fri, then Sat–Sun", () =
 
 		expect(
 			await screen.findByText(
-				/^Feb 20\s?–\s?21, 2027 are in another schedule\.$/
+				/^Feb 20\s?–\s?21, 2027 are a separate part of the roster\.$/
 			)
 		).toBeInTheDocument();
 		expect(
@@ -163,7 +163,7 @@ describe("the owner's week of 15 February 2027: Wed–Fri, then Sat–Sun", () =
 		expect(
 			screen.getByRole("link", { name: /^Open Feb 20\s?–\s?21, 2027$/ })
 		).toHaveAttribute("href", "/scheduling/s-2");
-		const row = screen.getByRole("navigation", { name: "Schedules this week" });
+		const row = screen.getByRole("navigation", { name: "This week’s parts" });
 		expect(
 			within(row).getByText(/Wed, Feb 17\s?–\s?Fri, Feb 19/)
 		).toHaveAttribute("aria-current", "true");
@@ -189,7 +189,7 @@ describe("the owner's week of 15 February 2027: Wed–Fri, then Sat–Sun", () =
 		await user.click(
 			await screen.findByRole("button", { name: "Publish roster" })
 		);
-		const dialog = screen.getByRole("dialog", { name: "Publish this roster?" });
+		const dialog = screen.getByRole("dialog", { name: "Publish these days?" });
 		expect(dialog).toHaveTextContent(
 			/Feb 15\s?–\s?16, 2027 have no schedule, and once this roster is published they can’t be scheduled\. Schedule Feb 15\s?–\s?16, 2027 first, or publish as it is\./
 		);
@@ -365,7 +365,7 @@ describe("the owner's week of 15 February 2027: Wed–Fri, then Sat–Sun", () =
 
 		expect(
 			await screen.findByText(
-				/^Feb 17\s?–\s?19, 2027 are in another schedule\.$/
+				/^Feb 17\s?–\s?19, 2027 are a separate part of the roster\.$/
 			)
 		).toBeInTheDocument();
 		expect(
@@ -376,7 +376,7 @@ describe("the owner's week of 15 February 2027: Wed–Fri, then Sat–Sun", () =
 		expect(
 			screen.getByRole("link", { name: /^Open Feb 17\s?–\s?19, 2027$/ })
 		).toHaveAttribute("href", "/scheduling/s-2");
-		const row = screen.getByRole("navigation", { name: "Schedules this week" });
+		const row = screen.getByRole("navigation", { name: "This week’s parts" });
 		expect(
 			within(row).getByText(/Sat, Feb 20\s?–\s?Sun, Feb 21/)
 		).toHaveAttribute("aria-current", "true");
@@ -418,7 +418,7 @@ describe("a schedule covering part of its week of 12 October 2026", () => {
 			)
 		).toBeInTheDocument();
 		expect(
-			screen.queryByRole("navigation", { name: "Schedules this week" })
+			screen.queryByRole("navigation", { name: "This week’s parts" })
 		).toBeNull();
 	});
 
@@ -438,7 +438,7 @@ describe("a schedule covering part of its week of 12 October 2026", () => {
 		});
 
 		expect(
-			await screen.findByText("Oct 18, 2026 is in another schedule.")
+			await screen.findByText("Oct 18, 2026 is a separate part of the roster.")
 		).toBeInTheDocument();
 		expect(screen.queryByRole("link", { name: /^Schedule Oct/ })).toBeNull();
 	});

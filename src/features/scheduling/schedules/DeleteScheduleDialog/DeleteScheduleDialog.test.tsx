@@ -31,10 +31,10 @@ it("names only the days a part of a week covers", () => {
 
 	expect(
 		screen.getByRole("dialog", {
-			name: /^Delete the Front Office schedule for Oct 14\s?–\s?16, 2026\?$/,
+			name: /^Delete the Front Office roster for Oct 14\s?–\s?16, 2026\?$/,
 		})
 	).toHaveTextContent(
-		/This removes the Front Office schedule for Oct 14\s?–\s?16, 2026, with its roster\./
+		/This removes the Front Office roster for Oct 14\s?–\s?16, 2026\. This can’t be undone\./
 	);
 });
 
@@ -43,9 +43,9 @@ it("names the whole week for a schedule that covers its week", () => {
 
 	expect(
 		screen.getByRole("dialog", {
-			name: /^Delete the Front Office schedule for Oct 12\s?–\s?18, 2026\?$/,
+			name: /^Delete the Front Office roster for Oct 12\s?–\s?18, 2026\?$/,
 		})
 	).toHaveTextContent(
-		/This removes the Front Office schedule for Oct 12\s?–\s?18, 2026, with its roster\./
+		/This removes the Front Office roster for Oct 12\s?–\s?18, 2026\. This can’t be undone\./
 	);
 });

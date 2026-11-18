@@ -346,9 +346,9 @@ it("deletes the schedule from the header's menu and goes back to the overview", 
 	await user.click(
 		within(
 			screen.getByRole("dialog", {
-				name: /^Delete the Front Office schedule for Oct 12\s?–\s?18, 2026\?$/,
+				name: /^Delete the Front Office roster for Oct 12\s?–\s?18, 2026\?$/,
 			})
-		).getByRole("button", { name: "Delete schedule" })
+		).getByRole("button", { name: "Delete these days" })
 	);
 
 	// Deleting returns to the department timeline from the schedule's week, not the overview.
@@ -889,7 +889,7 @@ it("publishes a generated roster after a confirm, then says who published it", a
 	await user.click(
 		await screen.findByRole("button", { name: "Publish roster" })
 	);
-	const dialog = screen.getByRole("dialog", { name: "Publish this roster?" });
+	const dialog = screen.getByRole("dialog", { name: "Publish these days?" });
 	expect(dialog).toHaveTextContent(
 		"It can’t be regenerated or deleted afterwards"
 	);
@@ -1077,7 +1077,7 @@ it("shows a refused decision inside the dialog and keeps it open", async () => {
 	await user.click(
 		await screen.findByRole("button", { name: "Publish roster" })
 	);
-	const dialog = screen.getByRole("dialog", { name: "Publish this roster?" });
+	const dialog = screen.getByRole("dialog", { name: "Publish these days?" });
 	await confirmOnceChecked(user, dialog, "Publish roster");
 
 	expect(await within(dialog).findByRole("alert")).toHaveTextContent(
@@ -1124,7 +1124,7 @@ it("withdraws a published roster's publication with a remark, back to To review"
 
 	await chooseFromMenu(user, "Withdraw publication");
 	const dialog = screen.getByRole("dialog", {
-		name: "Withdraw this roster’s publication?",
+		name: "Withdraw these days?",
 	});
 	const confirm = within(dialog).getByRole("button", {
 		name: "Withdraw publication",
@@ -1171,7 +1171,7 @@ it("shows a refused withdrawal remark on its field and keeps the dialog open", a
 
 	await chooseFromMenu(user, "Withdraw publication");
 	const dialog = screen.getByRole("dialog", {
-		name: "Withdraw this roster’s publication?",
+		name: "Withdraw these days?",
 	});
 	await user.type(
 		within(dialog).getByRole("textbox", {
@@ -1265,7 +1265,7 @@ it("given_aShiftStillShort_when_publishing_then_theDialogWarnsWithTheCountAndSti
 	await user.click(
 		await screen.findByRole("button", { name: "Publish roster" })
 	);
-	const dialog = screen.getByRole("dialog", { name: "Publish this roster?" });
+	const dialog = screen.getByRole("dialog", { name: "Publish these days?" });
 	expect(dialog).toHaveTextContent(
 		"1 shift is still short of people, and staff will see the roster as it is. Find cover for it from Issues, or publish as it is."
 	);
@@ -1298,7 +1298,7 @@ it("given_noShiftShort_when_publishing_then_noWarning", async () => {
 	);
 
 	expect(
-		screen.getByRole("dialog", { name: "Publish this roster?" })
+		screen.getByRole("dialog", { name: "Publish these days?" })
 	).not.toHaveTextContent(/still short/);
 });
 

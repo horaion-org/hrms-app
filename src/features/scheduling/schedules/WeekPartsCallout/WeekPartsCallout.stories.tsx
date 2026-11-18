@@ -13,7 +13,7 @@ const meta = {
 		lines: [
 			{ text: "Feb 15 – 16, 2027 have no schedule." },
 			{
-				text: "Feb 20 – 21, 2027 are in another schedule.",
+				text: "Feb 20 – 21, 2027 are a separate part of the roster.",
 				action: {
 					kind: "openSchedule",
 					part: { scheduleId: "s-2", state: "TO_REVIEW" },

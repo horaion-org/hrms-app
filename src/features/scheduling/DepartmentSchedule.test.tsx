@@ -242,7 +242,7 @@ it("names the days to review in the needs list, and Publish opens their publish 
 	await userEvent.click(within(needs).getByRole("button", { name: "Publish" }));
 
 	expect(
-		await screen.findByRole("dialog", { name: "Publish this roster?" })
+		await screen.findByRole("dialog", { name: "Publish these days?" })
 	).toHaveTextContent(/for its days \(Oct 12\s?–\s?14, 2026\)/);
 });
 
@@ -254,7 +254,7 @@ it("opens the one piece to review's publish dialog from the header's Publish", a
 	await userEvent.click(headerPublish!);
 
 	expect(
-		await screen.findByRole("dialog", { name: "Publish this roster?" })
+		await screen.findByRole("dialog", { name: "Publish these days?" })
 	).toHaveTextContent(/for its days \(Oct 12\s?–\s?14, 2026\)/);
 });
 
