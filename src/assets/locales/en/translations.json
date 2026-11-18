@@ -5630,6 +5630,17 @@
 			"loadFailed": "Couldn’t load the hours."
 		},
 		"rulesCheck": {
+			"publishCheck": {
+				"checking": "Checking the rules before publishing…",
+				"lockedTitle_one": "A locked company rule is broken, so these days can't be published yet:",
+				"lockedTitle_other": "{{count}} locked company rules are broken, so these days can't be published yet:",
+				"lockedNext": "Change the roster from \"Review and edit these days\", then publish.",
+				"warnTitle_one": "{{count}} rule is broken. You can still publish:",
+				"warnTitle_other": "{{count}} rules are broken. You can still publish:",
+				"ruleLine_one": "{{rule}} · {{count}} person and day",
+				"ruleLine_other": "{{rule}} · {{count}} people and days",
+				"unchecked": "The rules couldn't be checked just now. You can still publish."
+			},
 			"check": "Validate schedule",
 			"loading": "Validating the schedule…",
 			"brokenUnnamed": "This roster breaks a working-time rule.",
@@ -5783,8 +5794,10 @@
 		"timeline": {
 			"backLink": "Back to Scheduling",
 			"title": "{{department}} Schedule",
-			"subtitle": "One timeline for the team. Each schedule is published on its own.",
-			"createSchedule": "Create schedule",
+			"subtitle": "One roster for the team. Generate any days, review them, then publish them.",
+			"createSchedule": "Generate",
+			"publish": "Publish",
+			"generatingDays": "Generating {{days}}…",
 			"loading": "Loading the schedules…",
 			"loadFailed": "The schedules couldn't be loaded. Reload the page to try again.",
 			"unavailable": "This department's schedules aren't available to you. Choose a department from Scheduling.",
@@ -5814,13 +5827,13 @@
 				"staff": "Staff",
 				"noStaff": "No one is rostered in these days yet.",
 				"emptyDay": {
-					"noSchedule": "No schedule",
+					"noSchedule": "No roster",
 					"dash": "–",
 					"dot": "·"
 				},
-				"cellLabel": "{{name}}, {{day}}: {{what}}, {{schedule}}, {{state}}",
-				"notRosteredLabel": "{{name}}, {{day}}: not rostered, {{schedule}}, {{state}}",
-				"noScheduleLabel": "{{name}}, {{day}}: No schedule",
+				"cellLabel": "{{name}}, {{day}}: {{what}}, {{state}}",
+				"notRosteredLabel": "{{name}}, {{day}}: not rostered, {{state}}",
+				"noScheduleLabel": "{{name}}, {{day}}: No roster",
 				"short": {
 					"dayOff": "Off",
 					"restDay": "Rest"
@@ -5836,7 +5849,44 @@
 				"noSchedule": "No schedule for {{days}}.",
 				"review": "Review",
 				"createSchedule": "Create schedule",
-				"noScheduleBeforePublished": "No schedule for {{days}}. Days before a published schedule in the same week cannot be scheduled."
+				"noScheduleBeforePublished": "No schedule for {{days}}. Days before a published schedule in the same week cannot be scheduled.",
+				"toReview_one": "{{days}} is to review. Staff can't see it yet.",
+				"toReview_other": "{{days}} are to review. Staff can't see them yet.",
+				"publish": "Publish",
+				"noRoster_one": "{{days}} has no roster.",
+				"noRoster_other": "{{days}} have no roster.",
+				"generate": "Generate"
+			},
+			"strip": {
+				"label": "Status",
+				"states": {
+					"PUBLISHED": "Published",
+					"TO_REVIEW": "To review",
+					"GENERATING": "Generating…",
+					"FAILED": "Generation failed",
+					"REJECTED": "Rejected",
+					"DRAFT": "Not generated yet",
+					"NONE": "No roster",
+					"UNKNOWN": "Unknown"
+				},
+				"segment": "{{days}}: {{state}}"
+			},
+			"piece": {
+				"menuLabel": "Actions for {{days}}",
+				"open": "Review and edit these days",
+				"setup": "Finish setting up these days",
+				"publish": "Publish these days",
+				"submit": "Send these days for approval",
+				"withdraw": "Withdraw these days",
+				"regenerate": "Generate these days again",
+				"delete": "Delete these days"
+			},
+			"publishDays": {
+				"title": "Publish which days?",
+				"intro": "These days are to review. Staff see them once you publish them.",
+				"none": "Nothing is to review in the days shown.",
+				"publishNamed": "Publish {{days}}",
+				"close": "Close"
 			},
 			"notice": {
 				"showingOne": "Showing only {{name}}. Other schedules are dimmed.",
@@ -5844,7 +5894,7 @@
 				"showAll": "Show all schedules",
 				"unpublished": "Not published yet: {{names}}. Each one is published from its own page."
 			},
-			"backFromSchedule": "Back to the department schedule",
+			"backFromSchedule": "Back to the roster",
 			"departments": "Departments",
 			"card": {
 				"open": "Open roster",

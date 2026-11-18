@@ -17,35 +17,72 @@ beforeAll(async () => {
 		});
 });
 
+/** Renders two days to review and one free day, for someone who may create, with `onPublish` when given. */
+const renderNeeds = (
+	onPublish?: (scheduleIds: ReadonlyArray<string>) => void
+): void => {
+	render(
+		<MemoryRouterHarness>
+			<TimelineNeeds
+				mayCreate
+				departmentId="d-1"
+				lines={[
+					{
+						kind: "toReview",
+						firstDay: "2027-02-12",
+						lastDay: "2027-02-13",
+						scheduleIds: ["s-late"],
+					},
+					{
+						kind: "noSchedule",
+						schedulable: true,
+						firstDay: "2027-02-11",
+						lastDay: "2027-02-11",
+					},
+					{
+						kind: "noSchedule",
+						schedulable: false,
+						firstDay: "2027-02-14",
+						lastDay: "2027-02-14",
+					},
+				]}
+				onPublish={onPublish}
+			/>
+		</MemoryRouterHarness>
+	);
+};
+
 describe("TimelineNeeds", () => {
-	/** Review shows the schedule alone; open days link to Create schedule by dates. */
+	/** Publish names the schedules holding the days; a free day links to Generate by dates; a blocked day has no action. */
 	it("gives each line its one action", async () => {
-		const onReview = vi.fn();
-		render(
-			<MemoryRouterHarness>
-				<TimelineNeeds
-					mayCreate
-					departmentId="d-1"
-					lines={[
-						{ kind: "reviewOne", scheduleId: "s-late", name: "Weekend" },
-						{
-							kind: "noSchedule",
-							schedulable: true,
-							firstDay: "2027-02-11",
-							lastDay: "2027-02-11",
-						},
-					]}
-					onReview={onReview}
-				/>
-			</MemoryRouterHarness>
+		const onPublish = vi.fn();
+		renderNeeds(onPublish);
+		expect(
+			await screen.findByText(
+				/^Feb 12\s?–\s?13, 2027 are to review\. Staff can't see them yet\.$/
+			)
+		).toBeInTheDocument();
+		await userEvent.click(screen.getByRole("button", { name: "Publish" }));
+		expect(onPublish).toHaveBeenCalledWith(["s-late"]);
+		expect(screen.getByText("Feb 11, 2027 has no roster.")).toBeInTheDocument();
+		expect(screen.getByRole("link", { name: "Generate" })).toHaveAttribute(
+			"href",
+			expect.stringContaining("firstDay=2027-02-11")
 		);
 		expect(
-			await screen.findByText("Weekend is ready to review.")
+			screen.getByText(
+				"No schedule for Feb 14, 2027. Days before a published schedule in the same week cannot be scheduled."
+			)
 		).toBeInTheDocument();
-		await userEvent.click(screen.getByRole("button", { name: "Review" }));
-		expect(onReview).toHaveBeenCalledWith("s-late");
+		expect(screen.getAllByRole("link")).toHaveLength(1);
+	});
+
+	/** Without the publish key the page passes no `onPublish`, so the days are named with no button. */
+	it("offers no Publish to someone who may not publish", async () => {
+		renderNeeds();
+		expect(await screen.findByText(/are to review/)).toBeInTheDocument();
 		expect(
-			screen.getByRole("link", { name: "Create schedule" })
-		).toHaveAttribute("href", expect.stringContaining("firstDay=2027-02-11"));
+			screen.queryByRole("button", { name: "Publish" })
+		).not.toBeInTheDocument();
 	});
 });

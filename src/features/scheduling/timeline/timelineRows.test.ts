@@ -6,12 +6,15 @@ import {
 } from "@/features/scheduling/months/fixtures";
 import type { ScheduleMonth } from "@/features/scheduling/months/api";
 import type { RosterRow } from "@/features/scheduling/roster/roster";
+import { scheduleFixture } from "@/features/scheduling/schedules/fixtures";
 import { timelineRowFixture } from "@/features/scheduling/timeline/fixtures";
 import {
 	hoursOfRow,
 	monthsOfWindow,
+	piecesOf,
 	rostersReadOf,
 	weekPartsOf,
+	timelinePiecesOf,
 	timelineRowsOf,
 	timelineSchedulesOf,
 } from "@/features/scheduling/timeline/timelineRows";
@@ -140,5 +143,49 @@ describe("weekPartsOf", () => {
 		["a week not read", "2027-02-22", 0],
 	])("%s", (_, periodStart, count) => {
 		expect(weekPartsOf([month], periodStart)).toHaveLength(count);
+	});
+});
+
+describe("timelinePiecesOf", () => {
+	const february = scheduleMonthFixture({
+		month: "2027-02",
+		weeks: [
+			monthWeekFixture({
+				periodStart: "2027-02-15",
+				parts: twoPartWeekFixture(),
+			}),
+		],
+	});
+	const inFebruary = scheduleFixture({
+		scheduleId: "s-read",
+		periodStart: "2027-02-15",
+		periodEnd: "2027-02-21",
+	});
+	const inMarch = scheduleFixture({
+		scheduleId: "s-march",
+		periodStart: "2027-03-01",
+		periodEnd: "2027-03-07",
+	});
+
+	/** A schedule whose month is not read yet is still a piece, with no parts and no month. */
+	it("gives each schedule its week's parts and its month, by id", () => {
+		expect(timelinePiecesOf([inFebruary, inMarch], [february])).toEqual({
+			"s-read": {
+				schedule: inFebruary,
+				weekParts: twoPartWeekFixture(),
+				month: february,
+			},
+			"s-march": { schedule: inMarch, weekParts: [], month: undefined },
+		});
+	});
+
+	/** A schedule named twice (its days split by a redo) is listed once; one not read yet is left out. */
+	it("picks the pieces read among the ids, once each and in order", () => {
+		const pieces = timelinePiecesOf([inFebruary, inMarch], [february]);
+		expect(
+			piecesOf(pieces, ["s-march", "s-unread", "s-read", "s-march"]).map(
+				(piece) => piece.schedule.scheduleId
+			)
+		).toEqual(["s-march", "s-read"]);
 	});
 });

@@ -3,9 +3,11 @@ import {
 	awaitingPublication,
 	branchWeekFrom,
 	daysWithoutSchedule,
+	firstFreeRunOf,
 	isDimmed,
 	laneCellsOf,
 	lanesOf,
+	type NeedLine,
 	needsOf,
 	scheduleOfDay,
 	shiftWindow,
@@ -117,11 +119,16 @@ describe("needsOf", () => {
 	const toReview = (id: string, firstDay: string): TimelineSchedule =>
 		schedule(id, firstDay, firstDay, "TO_REVIEW");
 
-	it("lists each of up to two schedules to review, then the open days from today", () => {
+	it("lists the days to review, then the open days from today", () => {
 		expect(
 			needsOf([early, toReview("r1", "2027-02-12")], window, "2027-02-09")
 		).toEqual([
-			{ kind: "reviewOne", scheduleId: "r1", name: "Name r1" },
+			{
+				kind: "toReview",
+				firstDay: "2027-02-12",
+				lastDay: "2027-02-12",
+				scheduleIds: ["r1"],
+			},
 			{
 				kind: "noSchedule",
 				schedulable: true,
@@ -137,23 +144,31 @@ describe("needsOf", () => {
 		]);
 	});
 
-	it("names more than two schedules to review in one line", () => {
+	/** Adjacent schedules to review read as one run of days; a run apart from it is its own line. */
+	it("joins adjacent schedules to review into one line of days", () => {
 		const reviews = [
 			toReview("r1", "2027-02-08"),
 			toReview("r2", "2027-02-09"),
-			toReview("r3", "2027-02-10"),
+			toReview("r3", "2027-02-11"),
 		];
 		expect(needsOf([...reviews, late], window, "2027-02-01")).toEqual([
 			{
-				kind: "reviewMany",
-				count: 3,
-				names: ["Name r1", "Name r2", "Name r3"],
+				kind: "toReview",
+				firstDay: "2027-02-08",
+				lastDay: "2027-02-09",
+				scheduleIds: ["r1", "r2"],
+			},
+			{
+				kind: "toReview",
+				firstDay: "2027-02-11",
+				lastDay: "2027-02-11",
+				scheduleIds: ["r3"],
 			},
 			{
 				kind: "noSchedule",
 				schedulable: false, // Before the published weekend part.
-				firstDay: "2027-02-11",
-				lastDay: "2027-02-11",
+				firstDay: "2027-02-10",
+				lastDay: "2027-02-10",
 			},
 		]);
 	});
@@ -167,6 +182,46 @@ describe("needsOf", () => {
 				lastDay: "2027-02-14",
 			},
 		]);
+	});
+});
+
+describe("firstFreeRunOf", () => {
+	const review: NeedLine = {
+		kind: "toReview",
+		firstDay: "2027-02-08",
+		lastDay: "2027-02-09",
+		scheduleIds: ["r1"],
+	};
+	const blocked: NeedLine = {
+		kind: "noSchedule",
+		schedulable: false,
+		firstDay: "2027-02-10",
+		lastDay: "2027-02-10",
+	};
+	const free: NeedLine = {
+		kind: "noSchedule",
+		schedulable: true,
+		firstDay: "2027-02-13",
+		lastDay: "2027-02-14",
+	};
+	const laterFree: NeedLine = {
+		...free,
+		firstDay: "2027-02-20",
+		lastDay: "2027-02-21",
+	};
+
+	/** Only days the API lets be scheduled are offered; days to review and days before a published part are not. */
+	it.each([
+		["no line", [], undefined],
+		["only days to review", [review], undefined],
+		["only days that can't be scheduled", [blocked], undefined],
+		[
+			"the first free run after other lines",
+			[review, blocked, free, laterFree],
+			{ firstDay: "2027-02-13", lastDay: "2027-02-14" },
+		],
+	] as const)("gives %s", (_, lines, expected) => {
+		expect(firstFreeRunOf(lines)).toEqual(expected);
 	});
 });
 

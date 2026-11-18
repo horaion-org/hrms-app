@@ -5430,6 +5430,17 @@
 			"loadFailed": "No se pudieron cargar las horas."
 		},
 		"rulesCheck": {
+			"publishCheck": {
+				"checking": "Comprobando las reglas antes de publicar…",
+				"lockedTitle_one": "Se incumple una regla bloqueada de la empresa, así que estos días aún no se pueden publicar:",
+				"lockedTitle_other": "Se incumplen {{count}} reglas bloqueadas de la empresa, así que estos días aún no se pueden publicar:",
+				"lockedNext": "Cambia el cuadrante desde «Revisar y editar estos días» y después publica.",
+				"warnTitle_one": "Se incumple {{count}} regla. Aun así puedes publicar:",
+				"warnTitle_other": "Se incumplen {{count}} reglas. Aun así puedes publicar:",
+				"ruleLine_one": "{{rule}} · {{count}} persona y día",
+				"ruleLine_other": "{{rule}} · {{count}} personas y días",
+				"unchecked": "No se pudieron comprobar las reglas ahora. Aun así puedes publicar."
+			},
 			"check": "Validar cuadrante",
 			"loading": "Validando el cuadrante…",
 			"brokenUnnamed": "Este cuadrante incumple una regla de tiempo de trabajo.",
@@ -5583,8 +5594,10 @@
 		"timeline": {
 			"backLink": "Volver a Programación",
 			"title": "Horario de {{department}}",
-			"subtitle": "Una línea de tiempo para el equipo. Cada horario se publica por separado.",
-			"createSchedule": "Crear horario",
+			"subtitle": "Un solo cuadrante para el equipo. Genera los días que quieras, revísalos y publícalos.",
+			"createSchedule": "Generar",
+			"publish": "Publicar",
+			"generatingDays": "Generando {{days}}…",
 			"loading": "Cargando los horarios…",
 			"loadFailed": "No se pudieron cargar los horarios. Recarga la página para intentarlo de nuevo.",
 			"unavailable": "Los horarios de este departamento no están disponibles para ti. Elige un departamento en Programación.",
@@ -5614,13 +5627,13 @@
 				"staff": "Personal",
 				"noStaff": "Aún no hay nadie en el horario de estos días.",
 				"emptyDay": {
-					"noSchedule": "Sin horario",
+					"noSchedule": "Sin cuadrante",
 					"dash": "–",
 					"dot": "·"
 				},
-				"cellLabel": "{{name}}, {{day}}: {{what}}, {{schedule}}, {{state}}",
-				"notRosteredLabel": "{{name}}, {{day}}: sin turno, {{schedule}}, {{state}}",
-				"noScheduleLabel": "{{name}}, {{day}}: Sin horario",
+				"cellLabel": "{{name}}, {{day}}: {{what}}, {{state}}",
+				"notRosteredLabel": "{{name}}, {{day}}: sin turno, {{state}}",
+				"noScheduleLabel": "{{name}}, {{day}}: Sin cuadrante",
 				"short": {
 					"dayOff": "Libre",
 					"restDay": "Desc."
@@ -5636,7 +5649,44 @@
 				"noSchedule": "Sin horario para {{days}}.",
 				"review": "Revisar",
 				"createSchedule": "Crear horario",
-				"noScheduleBeforePublished": "Sin horario para {{days}}. Los días anteriores a un horario publicado de la misma semana no se pueden programar."
+				"noScheduleBeforePublished": "Sin horario para {{days}}. Los días anteriores a un horario publicado de la misma semana no se pueden programar.",
+				"toReview_one": "{{days}} está por revisar. El personal aún no lo ve.",
+				"toReview_other": "{{days}} están por revisar. El personal aún no los ve.",
+				"publish": "Publicar",
+				"noRoster_one": "{{days}} no tiene cuadrante.",
+				"noRoster_other": "{{days}} no tienen cuadrante.",
+				"generate": "Generar"
+			},
+			"strip": {
+				"label": "Estado",
+				"states": {
+					"PUBLISHED": "Publicado",
+					"TO_REVIEW": "Por revisar",
+					"GENERATING": "Generando…",
+					"FAILED": "Generación fallida",
+					"REJECTED": "Rechazado",
+					"DRAFT": "Aún sin generar",
+					"NONE": "Sin cuadrante",
+					"UNKNOWN": "Desconocido"
+				},
+				"segment": "{{days}}: {{state}}"
+			},
+			"piece": {
+				"menuLabel": "Acciones para {{days}}",
+				"open": "Revisar y editar estos días",
+				"setup": "Terminar de configurar estos días",
+				"publish": "Publicar estos días",
+				"submit": "Enviar estos días para aprobación",
+				"withdraw": "Retirar estos días",
+				"regenerate": "Generar estos días de nuevo",
+				"delete": "Eliminar estos días"
+			},
+			"publishDays": {
+				"title": "¿Qué días publicar?",
+				"intro": "Estos días están por revisar. El personal los ve cuando los publicas.",
+				"none": "No hay nada por revisar en los días mostrados.",
+				"publishNamed": "Publicar {{days}}",
+				"close": "Cerrar"
 			},
 			"notice": {
 				"showingOne": "Mostrando solo {{name}}. Los demás horarios aparecen atenuados.",
@@ -5644,7 +5694,7 @@
 				"showAll": "Mostrar todos los horarios",
 				"unpublished": "Aún sin publicar: {{names}}. Cada uno se publica desde su propia página."
 			},
-			"backFromSchedule": "Volver al horario del departamento",
+			"backFromSchedule": "Volver al cuadrante",
 			"departments": "Departamentos",
 			"card": {
 				"open": "Abrir cuadrante",

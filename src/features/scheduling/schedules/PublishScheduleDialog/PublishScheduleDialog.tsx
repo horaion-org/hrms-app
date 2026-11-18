@@ -1,5 +1,5 @@
 import type { TFunction } from "i18next";
-import { useId, useState } from "react";
+import { type ReactNode, useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
@@ -35,6 +35,10 @@ export type PublishScheduleDialogProps = {
 	shortShifts?: number;
 	/** Days before this part with no schedule (`daysLeftBeforeOf`): a warning says publishing leaves them unschedulable. */
 	daysLeftBefore?: ReadonlyArray<DayRun>;
+	/** Holds confirming back, e.g. while a check runs or because it found what must be fixed first. */
+	confirmDisabled?: boolean;
+	/** What a check made before publishing says, shown above the dialog's own warnings. */
+	checkNote?: ReactNode;
 };
 
 const key = "scheduling.decision";
@@ -114,6 +118,8 @@ export const PublishScheduleDialog = ({
 	onDone,
 	shortShifts = 0,
 	daysLeftBefore = [],
+	confirmDisabled = false,
+	checkNote,
 }: PublishScheduleDialogProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
@@ -164,6 +170,7 @@ export const PublishScheduleDialog = ({
 	return (
 		<ConfirmDialog
 			cancelLabel={t(`${key}.cancel`)}
+			confirmDisabled={confirmDisabled}
 			confirmLabel={copy.confirm}
 			description={copy.description}
 			error={error}
@@ -188,6 +195,7 @@ export const PublishScheduleDialog = ({
 				);
 			}}
 		>
+			{checkNote}
 			{daysLeftBefore.length > 0 && (
 				<Callout className="mb-6" tone="warning">
 					{t(`${key}.daysLeftBefore`, {

@@ -23,6 +23,8 @@ import {
 	rostersReadOf,
 	type RosterReadStep,
 	type RostersRead,
+	type TimelinePiece,
+	timelinePiecesOf,
 	timelineSchedulesOf,
 	type TimelineRow,
 	weekPartsOf,
@@ -50,6 +52,8 @@ export type DepartmentTimeline =
 			 * dialog takes them; by schedule id.
 			 */
 			deleteTargets: Record<string, DeleteTarget>;
+			/** Every schedule read so far, with its week's parts and its month, as its actions take them; by schedule id. */
+			pieces: Record<string, TimelinePiece>;
 	  };
 
 /** What the delete dialog needs of one schedule: the schedule itself and its week's parts. */
@@ -156,6 +160,10 @@ export const useDepartmentTimeline = (
 						]
 					: []
 			)
+		),
+		pieces: timelinePiecesOf(
+			scheduleReads.flatMap((read) => (read.data ? [read.data] : [])),
+			monthsRead
 		),
 	};
 };

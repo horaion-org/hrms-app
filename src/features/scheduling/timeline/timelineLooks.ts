@@ -5,6 +5,8 @@ import {
 	type RosterCell,
 	shiftTimeText,
 } from "@/features/scheduling/roster/roster";
+import { weekStateTones } from "@/features/scheduling/months/weekStateLooks";
+import type { StripState } from "@/features/scheduling/timeline/rosterStrip";
 import type { TimelineView } from "@/features/scheduling/timeline/timeline";
 
 /*
@@ -32,6 +34,18 @@ export const statusDotLooks: Record<BadgeTone, string> = {
 	neutral: "bg-neutral-500",
 };
 
+/** A band of the status strip, coloured as its state's status badge is. */
+export const stripBandLooks: Record<BadgeTone, string> = {
+	success: "bg-success-100 text-success-900",
+	warning: "bg-warning-100 text-neutral-900",
+	error: "bg-error-100 text-error-900",
+	neutral: "bg-neutral-200 text-neutral-800",
+};
+
+/** The tone of a strip state: its week state's own, and neutral where there is no roster. */
+export const stripToneOf = (state: StripState): BadgeTone =>
+	state === "NONE" ? "neutral" : weekStateTones[state];
+
 /** What a day with no schedule shows: words, an en dash or a middle dot (`scheduling.timeline.grid.emptyDay.*`). */
 export type EmptyDayMark = "noSchedule" | "dash" | "dot";
 
@@ -51,6 +65,8 @@ export type ZoomLooks = {
 	barNameFromDays: number;
 	/** A bar wears its status badge from this many days wide; never when null. */
 	barBadgeFromDays: number | null;
+	/** A band of the status strip shows its state word from this many days wide. */
+	stripWordFromDays: number;
 	/** Whether the Staff cell shows the avatar and the hours, as the roster grid does. */
 	staffDetails: boolean;
 	/** The narrowest a day column gets, in pixels; below it the table scrolls sideways. */
@@ -66,6 +82,7 @@ export const ZOOM_LOOKS: Record<TimelineView, ZoomLooks> = {
 		emptyDay: "noSchedule",
 		barNameFromDays: 1,
 		barBadgeFromDays: 3,
+		stripWordFromDays: 1,
 		staffDetails: true,
 		minDayColumnPixels: 92,
 	},
@@ -76,6 +93,7 @@ export const ZOOM_LOOKS: Record<TimelineView, ZoomLooks> = {
 		emptyDay: "dash",
 		barNameFromDays: 1,
 		barBadgeFromDays: 5,
+		stripWordFromDays: 2,
 		staffDetails: true,
 		minDayColumnPixels: 44,
 	},
@@ -86,6 +104,7 @@ export const ZOOM_LOOKS: Record<TimelineView, ZoomLooks> = {
 		emptyDay: "dot",
 		barNameFromDays: 3,
 		barBadgeFromDays: null,
+		stripWordFromDays: 3,
 		staffDetails: false,
 		minDayColumnPixels: 26,
 	},
@@ -103,6 +122,10 @@ export const barContentOf = (
 			looks.barBadgeFromDays !== null && span >= looks.barBadgeFromDays,
 	};
 };
+
+/** Whether a band `span` days wide has room for its state word in `view`; its full words stay in its name and `title`. */
+export const showsStripWord = (view: TimelineView, span: number): boolean =>
+	span >= ZOOM_LOOKS[view].stripWordFromDays;
 
 /** The day types with a short word (`scheduling.timeline.grid.short.*`); a day off the API gives no type is a day off. */
 const SHORT_DAY_WORDS: Record<string, "dayOff" | "restDay"> = {

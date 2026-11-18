@@ -201,7 +201,7 @@ it("opens an older link that also names the department, reading the schedule by 
 	expect(readsOf(calls, SCHEDULE_READ)).toHaveLength(1);
 	expect(readsOf(calls, SCHEDULE)).toHaveLength(0);
 	expect(
-		screen.getByRole("link", { name: "Back to the department schedule" })
+		screen.getByRole("link", { name: "Back to the roster" })
 	).toHaveAttribute(
 		"href",
 		"/scheduling/department?department=d-1&from=2026-10-12"
@@ -2425,7 +2425,7 @@ describe("the roster in its month", () => {
 
 		expect(
 			await screen.findByRole("link", {
-				name: "Back to the department schedule",
+				name: "Back to the roster",
 			})
 		).toHaveAttribute(
 			"href",

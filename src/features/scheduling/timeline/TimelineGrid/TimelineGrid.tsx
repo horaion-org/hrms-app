@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import type { TFunction } from "i18next";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
@@ -14,10 +15,6 @@ import {
 	rosterLooks,
 	shiftTileStyle,
 } from "@/features/scheduling/roster/rosterLooks";
-import {
-	type BarDeleting,
-	ScheduleBars,
-} from "@/features/scheduling/timeline/ScheduleBars";
 import {
 	isDimmed,
 	scheduleOfDay,
@@ -39,10 +36,6 @@ import {
 } from "@/features/scheduling/timeline/timelineRows";
 
 export type TimelineGridProps = {
-	/** What a bar's Delete needs. */
-	deleting: BarDeleting;
-	/** The Department shown, which a draft's setup link names. */
-	departmentId: string;
 	/** The ISO dates shown, one column each. */
 	days: ReadonlyArray<string>;
 	rows: ReadonlyArray<TimelineRow>;
@@ -50,8 +43,8 @@ export type TimelineGridProps = {
 	view: TimelineView;
 	/** The one schedule shown in full; cells of the others are dimmed. All in full when absent. */
 	shownScheduleId?: string;
-	/** "Show only this schedule" was chosen on a bar. */
-	onShowOnly: (scheduleId: string) => void;
+	/** The status strip's row (`StatusStrip`), shown in the table head under the dates. */
+	statusRow: ReactNode;
 	/** Whether every roster is read; while loading or after a failure the grid says so rather than "No one is rostered". */
 	rosters: RostersRead;
 };
@@ -72,7 +65,7 @@ const dayWords = (cell: RosterCell, t: TFunction): string =>
 
 /**
  * One person's day: their tile, an empty day of a schedule, or the empty-day
- * mark where no schedule covers it. Its full words are its `title` and label.
+ * mark where no roster covers it. Its full words are its `title` and label.
  */
 const DayCell = ({
 	row,
@@ -113,12 +106,7 @@ const DayCell = ({
 	const state = t(`scheduling.months.states.${owner.status}`);
 	const dimmed = isDimmed(owner.id, shownScheduleId);
 	if (!timelineCell) {
-		const label = t(`${key}.notRosteredLabel`, {
-			name,
-			day: dayName,
-			schedule: owner.name,
-			state,
-		});
+		const label = t(`${key}.notRosteredLabel`, { name, day: dayName, state });
 		return (
 			<span
 				className={joinClassNames(tileClasses, dimmed && "opacity-40")}
@@ -133,7 +121,6 @@ const DayCell = ({
 		name,
 		day: dayName,
 		what: dayWords(cell, t),
-		schedule: owner.name,
 		state,
 	});
 	return (
@@ -225,18 +212,16 @@ const StatusRow = ({
 );
 
 /**
- * The timeline as one table, in the roster grid's bordered container: a header
- * row of days, the schedules' bar lanes, then one row per person.
+ * The roster as one table, in the roster grid's bordered container: a header
+ * row of days with the status strip under it, then one row per person.
  */
 export const TimelineGrid = ({
-	deleting,
-	departmentId,
 	days,
 	rows,
 	schedules,
 	view,
 	shownScheduleId,
-	onShowOnly,
+	statusRow,
 	rosters,
 }: TimelineGridProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -288,17 +273,9 @@ export const TimelineGrid = ({
 							</th>
 						))}
 					</tr>
+					{statusRow}
 				</thead>
 				<tbody>
-					<ScheduleBars
-						days={days}
-						deleting={deleting}
-						departmentId={departmentId}
-						schedules={schedules}
-						shownScheduleId={shownScheduleId}
-						view={view}
-						onShowOnly={onShowOnly}
-					/>
 					{rosters === "failed" && (
 						<StatusRow alert days={days}>
 							{t(`${key}.rostersFailed`)}
