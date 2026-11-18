@@ -1,6 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
+import { mondayOf } from "@/common/weeks";
+import { DatePicker } from "@/components/forms/DatePicker";
 import { Select } from "@/components/forms/Select";
 import { Button } from "@/components/ui/Button";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/ui/Icon";
@@ -21,24 +23,33 @@ const zoomOptionClasses =
 
 export type TimelineToolbarProps = {
 	view: TimelineView;
+	/** The first day shown (ISO date), the date control's value. */
+	firstDay: string;
 	schedules: ReadonlyArray<TimelineSchedule>;
 	/** The schedule shown alone, or undefined for all. */
 	shownScheduleId?: string;
 	onToday: () => void;
 	/** Moves the window one view's length earlier (-1) or later (1). */
 	onStep: (step: 1 | -1) => void;
+	/** Opens the window on a new first day: the Monday of the day picked in "Go to date". */
+	onFromChange: (from: string) => void;
 	onViewChange: (view: TimelineView) => void;
 	/** Shows one schedule alone, or every schedule with undefined. */
 	onScheduleChange: (scheduleId: string | undefined) => void;
 };
 
-/** Today, earlier and later days (styled as the week navigator), the schedule select and the zoom as one joined control. */
+/**
+ * Today, earlier and later days (styled as the week navigator), "Go to date",
+ * the schedule select and the zoom as one joined control.
+ */
 export const TimelineToolbar = ({
 	view,
+	firstDay,
 	schedules,
 	shownScheduleId,
 	onToday,
 	onStep,
+	onFromChange,
 	onViewChange,
 	onScheduleChange,
 }: TimelineToolbarProps): FunctionComponent => {
@@ -73,6 +84,15 @@ export const TimelineToolbar = ({
 			>
 				<ChevronRightIcon />
 			</Button>
+			<DatePicker
+				className="w-44"
+				label={t(`${key}.goToDate`)}
+				mode="single"
+				value={firstDay}
+				onChange={(day) => {
+					if (day !== "") onFromChange(mondayOf(day));
+				}}
+			/>
 			<Select
 				aria-label={t(`${key}.schedule`)}
 				className="w-56"

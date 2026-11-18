@@ -5784,7 +5784,8 @@
 					"four": "4 weeks"
 				},
 				"schedule": "Schedule",
-				"allSchedules": "All schedules"
+				"allSchedules": "All schedules",
+				"goToDate": "Go to date"
 			},
 			"bars": {
 				"label": "Schedules",

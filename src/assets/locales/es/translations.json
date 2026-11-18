@@ -5584,7 +5584,8 @@
 					"four": "4 semanas"
 				},
 				"schedule": "Horario",
-				"allSchedules": "Todos los horarios"
+				"allSchedules": "Todos los horarios",
+				"goToDate": "Ir a la fecha"
 			},
 			"bars": {
 				"label": "Horarios",
