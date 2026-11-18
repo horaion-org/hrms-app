@@ -124,6 +124,68 @@ describe("RosterIssueGroups", () => {
 		expect(within(row).getAllByRole("button")).toHaveLength(1);
 	});
 
+	it("says what to do under a broken rest rule, with the hours its sentence states", () => {
+		const issue = rosterIssueFixture({
+			rule: "Soren Mbeki: less than 12 hours of rest after the shift on 2026-12-10: 8 hours given. Rule: Rest 12 hours between shifts",
+			subject: { kind: "rule", rule: "minimum_rest_between_shifts" },
+		});
+		render(<RosterIssueGroups issues={[issue]} onShow={vi.fn()} />);
+
+		const row = screen.getByText(issue.rule).closest("li");
+		expect(row).toHaveTextContent(
+			"What to do: Change one of the two shifts so they are at least 12 hours apart, or give a day off between them."
+		);
+		// The advice adds a line, not an action: the row keeps its one Show.
+		expect(within(row as HTMLElement).getAllByRole("button")).toHaveLength(1);
+		expect(
+			within(row as HTMLElement).getByRole("button", { name: copy.show })
+		).toBeInTheDocument();
+	});
+
+	it("adds the neighbouring days when the next shift is in the schedule after this one", () => {
+		const issue = rosterIssueFixture({
+			rule: "Soren Mbeki: less than 12 hours of rest after the shift on 2026-12-13, before the next shift, which is in the schedule after this one. Rule: Rest between shifts",
+			subject: { kind: "rule", rule: "minimum_rest_between_shifts" },
+		});
+		render(<RosterIssueGroups issues={[issue]} />);
+
+		expect(
+			screen.getByText(
+				"What to do: Change one of the two shifts so they are at least 12 hours apart, or give a day off between them. You can also change the neighbouring days, in the schedule before or after this one."
+			)
+		).toBeVisible();
+	});
+
+	it("says to press Find cover under a staffing gap, and keeps its Find cover action", () => {
+		const gap = rosterIssuesFixture()[0];
+		if (!gap) throw new Error("fixture has a gap");
+		render(<RosterIssueGroups issues={[gap]} onFindCover={vi.fn()} />);
+
+		const row = screen.getByText(gap.rule).closest("li");
+		expect(row).toHaveTextContent(
+			"What to do: Press Find cover to see who can take it, or ask the engine for options."
+		);
+		expect(
+			within(row as HTMLElement).getByRole("button", { name: "Find cover" })
+		).toBeInTheDocument();
+	});
+
+	it("draws no advice line for an issue with nothing to advise", () => {
+		render(
+			<RosterIssueGroups
+				issues={[
+					rosterIssueFixture(),
+					rosterIssueFixture({
+						key: "unknown",
+						subject: { kind: "rule", rule: "a_rule_added_tomorrow" },
+					}),
+				]}
+			/>
+		);
+
+		expect(screen.queryByText(/What to do:/)).toBeNull();
+	});
+
 	it("orders by person or by day with two small text buttons, the choice pressed", async () => {
 		render(<RosterIssueGroups issues={rosterIssuesFixture()} />);
 

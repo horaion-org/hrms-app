@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import {
 	CONSTRAINT_TYPES,
 	type ConstraintType,
@@ -11,6 +12,8 @@ import type { RosterIssue } from "@/features/scheduling/roster/rosterIssueGroups
  * words live under `scheduling.issues.advice`; an item with nothing honest
  * to advise gets none.
  */
+
+const key = "scheduling.issues.advice";
 
 /** Every line of advice, by its key under `scheduling.issues.advice`. */
 export const ISSUE_ADVICE_KEYS = [
@@ -178,4 +181,17 @@ export const issueAdviceOf = (issue: RosterIssue): IssueAdvice | undefined => {
 			issue.rule.includes(clause)
 		),
 	};
+};
+
+/**
+ * The advice as the row's one line: "What to do:", its sentence, and the
+ * neighbouring days when the engine's sentence reaches into them.
+ */
+export const issueAdviceLine = (advice: IssueAdvice, t: TFunction): string => {
+	const sentence = t(`${key}.${advice.key}`, advice.values);
+	return t(`${key}.lead`, {
+		advice: advice.neighbouringDays
+			? t(`${key}.withNeighbouringDays`, { advice: sentence })
+			: sentence,
+	});
 };
