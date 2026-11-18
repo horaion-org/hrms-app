@@ -300,7 +300,7 @@ export const ShiftPreferences = (): FunctionComponent => {
 					))}
 				</TabPanels>
 			</Tabs>
-			{/* The team list names a member's Department by id only; the header's units name it. */}
+			{/* The team list names a member's Department by id only; the header's units name it and its Branch. */}
 			{choosingMember && (
 				<ApplyForSomeoneDialog
 					departmentId={units.department?.departmentId}

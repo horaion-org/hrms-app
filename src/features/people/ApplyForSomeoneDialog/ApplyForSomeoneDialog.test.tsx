@@ -199,4 +199,56 @@ describe("ApplyForSomeoneDialog", () => {
 			).not.toBeInTheDocument();
 		});
 	});
+
+	it("names two same-named Departments with their Branch first, in the filter and under each person", async () => {
+		const user = userEvent.setup();
+		renderDialog({
+			maySetFor: () => true,
+			people: [
+				{
+					...ALEX,
+					departmentId: "d-1",
+					departmentName: "Kitchen",
+					branchName: "Orchard",
+				},
+				{
+					membershipId: "m-9",
+					displayName: "Alex Example",
+					departmentId: "d-2",
+					departmentName: "Kitchen",
+					branchName: "Tampines",
+				},
+				{
+					...BEA,
+					departmentId: "d-3",
+					departmentName: "Sales",
+					branchName: "Orchard",
+				},
+			],
+		});
+
+		await user.click(
+			within(dialog()).getByRole("button", { name: "Department" })
+		);
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual([
+			"All departments",
+			"Orchard › Kitchen",
+			"Tampines › Kitchen",
+			"Sales",
+		]);
+		await user.keyboard("{Escape}");
+		await user.click(
+			within(dialog()).getByRole("button", { name: "Employee" })
+		);
+
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual([
+			"Alex Example Orchard › Kitchen",
+			"Alex Example Tampines › Kitchen",
+			"Bea Kitchen Sales",
+		]);
+	});
 });

@@ -2,8 +2,10 @@ import { describe, expect, it } from "vitest";
 import {
 	ALL_DEPARTMENTS,
 	departmentChoices,
+	labelledDepartmentChoices,
 	peopleToApplyFor,
 	personDescription,
+	sharedDepartmentNames,
 	shownDepartment,
 	withDepartmentNames,
 	type PersonToApplyFor,
@@ -220,5 +222,76 @@ describe("shownDepartment", () => {
 		},
 	])("$name", ({ picked, page, expected }) => {
 		expect(shownDepartment(picked, CHOICES, page)).toBe(expected);
+	});
+});
+
+/** Names a Department with its Branch first, as the app's own words do. */
+const withBranch = (branch: string, department: string): string =>
+	`${branch} › ${department}`;
+
+describe("labelledDepartmentChoices", () => {
+	const ORCHARD_KITCHEN = {
+		departmentId: "d-1",
+		name: "Kitchen",
+		branchName: "Orchard",
+	};
+	const TAMPINES_KITCHEN = {
+		departmentId: "d-2",
+		name: "Kitchen",
+		branchName: "Tampines",
+	};
+	const SALES = { departmentId: "d-3", name: "Sales", branchName: "Orchard" };
+	const UNKNOWN_BRANCH_KITCHEN = { departmentId: "d-4", name: "Kitchen" };
+
+	it.each([
+		{
+			name: "unique names stay as they are",
+			choices: [ORCHARD_KITCHEN, SALES],
+			expected: ["Kitchen", "Sales"],
+		},
+		{
+			name: "two Departments of one name both get their Branch first",
+			choices: [ORCHARD_KITCHEN, TAMPINES_KITCHEN, SALES],
+			expected: ["Orchard › Kitchen", "Tampines › Kitchen", "Sales"],
+		},
+		{
+			name: "a shared name with no Branch known stays unprefixed and is kept",
+			choices: [ORCHARD_KITCHEN, UNKNOWN_BRANCH_KITCHEN],
+			expected: ["Orchard › Kitchen", "Kitchen"],
+		},
+	])("$name", ({ choices, expected }) => {
+		expect(
+			labelledDepartmentChoices(choices, withBranch).map(
+				(choice) => choice.label
+			)
+		).toEqual(expected);
+	});
+});
+
+describe("personDescription with shared Department names", () => {
+	const shared = sharedDepartmentNames([
+		{ name: "Kitchen" },
+		{ name: "Kitchen" },
+		{ name: "Sales" },
+	]);
+
+	it.each([
+		{
+			name: "a shared name gets the person's Branch first",
+			person: { ...ALEX, departmentName: "Kitchen", branchName: "Tampines" },
+			expected: "Tampines › Kitchen",
+		},
+		{
+			name: "a unique name stays as it is",
+			person: { ...ALEX, departmentName: "Sales", branchName: "Orchard" },
+			expected: "Sales",
+		},
+		{
+			name: "a shared name with no Branch known stays unprefixed",
+			person: { ...ALEX, departmentName: "Kitchen" },
+			expected: "Kitchen",
+		},
+	])("$name", ({ person, expected }) => {
+		expect(personDescription(person, shared, withBranch)).toBe(expected);
 	});
 });
