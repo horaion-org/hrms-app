@@ -5687,7 +5687,7 @@
 				"showAll": "Mostrar todos los horarios",
 				"unpublished": "Aún sin publicar: {{names}}. Cada uno se publica desde su propia página."
 			},
-			"backFromSchedule": "Volver al horario del departamento",
+			"backFromSchedule": "Volver al cuadrante",
 			"departments": "Departamentos",
 			"card": {
 				"open": "Abrir horario",

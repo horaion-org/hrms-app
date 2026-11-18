@@ -5887,7 +5887,7 @@
 				"showAll": "Show all schedules",
 				"unpublished": "Not published yet: {{names}}. Each one is published from its own page."
 			},
-			"backFromSchedule": "Back to the department schedule",
+			"backFromSchedule": "Back to the roster",
 			"departments": "Departments",
 			"card": {
 				"open": "Open schedule",
