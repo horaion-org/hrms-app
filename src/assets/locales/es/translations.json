@@ -5608,7 +5608,8 @@
 					"published": "Publicado",
 					"toReview": "Por revisar",
 					"none": "Sin horario"
-				}
+				},
+				"notPublishedFromThisWeek": "Sin publicar desde esta semana"
 			},
 			"cardsLoading": "Cargando los departamentos…",
 			"cardsFailed": "No se pudieron cargar los departamentos. Inténtalo de nuevo.",

@@ -5808,7 +5808,8 @@
 					"published": "Published",
 					"toReview": "To review",
 					"none": "No schedule"
-				}
+				},
+				"notPublishedFromThisWeek": "Not published from this week"
 			},
 			"cardsLoading": "Loading the departments…",
 			"cardsFailed": "The departments couldn’t be loaded. Please try again.",

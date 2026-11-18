@@ -20,6 +20,7 @@ const frontDesk: DepartmentCardEntry = {
 	departmentId: "d-1",
 	departmentName: "Front Desk",
 	publishedUpTo: "2026-11-22",
+	publishedStanding: "upTo",
 	toReviewCount: 2,
 	scheduledUpTo: "2026-12-06",
 	nextToReview: "Week of 23 Nov",
@@ -31,6 +32,7 @@ const security: DepartmentCardEntry = {
 	departmentId: "d-2",
 	departmentName: "Security",
 	publishedUpTo: undefined,
+	publishedStanding: "nothing",
 	toReviewCount: 0,
 	scheduledUpTo: undefined,
 	nextToReview: undefined,
@@ -66,6 +68,16 @@ describe("DepartmentCard", () => {
 		expect(card).toHaveTextContent("Nothing to review");
 		expect(card).toHaveTextContent("No schedule yet");
 		expect(card).toHaveTextContent("Nothing is waiting for you.");
+	});
+
+	it("given_publishedOnlyLater_when_rendered_then_saysNotPublishedFromThisWeek", async () => {
+		const card = await renderCard({
+			...security,
+			publishedStanding: "notFromThisWeek",
+		});
+
+		expect(card).toHaveTextContent("Not published from this week");
+		expect(card).not.toHaveTextContent("Nothing published yet");
 	});
 
 	it("given_openSchedule_when_rendered_then_linksToTheDepartmentTimeline", async () => {

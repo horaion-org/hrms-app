@@ -95,6 +95,39 @@ describe("departmentCards", () => {
 		).toBe(publishedUpTo);
 	});
 
+	it.each([
+		{
+			case: "a published run from this week says how far",
+			weeks: [
+				["2026-11-16", [part("Now", "2026-11-16", "2026-11-22", "PUBLISHED")]],
+			],
+			standing: "upTo",
+		},
+		{
+			case: "a schedule published later, none from this week, is not published from this week",
+			weeks: [
+				["2026-11-16", [part("Now", "2026-11-16", "2026-11-22", "TO_REVIEW")]],
+				[
+					"2026-11-30",
+					[part("Later", "2026-11-30", "2026-12-06", "PUBLISHED")],
+				],
+			],
+			standing: "notFromThisWeek",
+		},
+		{
+			case: "no schedule published anywhere is nothing published",
+			weeks: [
+				["2026-11-16", [part("Now", "2026-11-16", "2026-11-22", "TO_REVIEW")]],
+			],
+			standing: "nothing",
+		},
+	] as const)("publishedStanding: $case", ({ weeks, standing }) => {
+		const summary = november(
+			weeks.map(([monday, parts]) => [monday, [...parts]])
+		);
+		expect(frontDeskCard([summary])?.publishedStanding).toBe(standing);
+	});
+
 	it("counts the schedules to review and names the first in day order", () => {
 		const card = frontDeskCard([
 			november([
