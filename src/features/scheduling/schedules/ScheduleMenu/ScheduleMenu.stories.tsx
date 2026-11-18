@@ -39,7 +39,7 @@ const openDelete = async (canvasElement: HTMLElement): Promise<HTMLElement> => {
 	);
 	await userEvent.click(await page.findByRole("menuitem", { name: "Delete" }));
 	return page.findByRole("dialog", {
-		name: /^Delete the Front Office schedule for /,
+		name: /^Delete the Front Office roster for /,
 	});
 };
 
@@ -75,7 +75,7 @@ export const BeingGenerated: Story = {
 	play: async ({ canvasElement }) => {
 		const dialog = await openDelete(canvasElement);
 		await expect(
-			within(dialog).getByRole("button", { name: "Delete schedule" })
+			within(dialog).getByRole("button", { name: "Delete these days" })
 		).toBeDisabled();
 	},
 };

@@ -7,7 +7,7 @@ import {
 } from "@/features/scheduling/schedules/WeekPartsCallout";
 
 const OTHER_PART_LINE = {
-	text: "Feb 20 – 21, 2027 are in another schedule.",
+	text: "Feb 20 – 21, 2027 are a separate part of the roster.",
 	action: {
 		kind: "openSchedule",
 		part: { scheduleId: "s-2", state: "TO_REVIEW" },

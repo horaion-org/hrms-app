@@ -136,7 +136,7 @@ it("given_aWeekOfTwoSchedules_when_shown_then_itsCardListsBothEachOpeningItsOwnR
 	);
 
 	const parts = await screen.findByRole("navigation", {
-		name: "Schedules this week",
+		name: "This week’s parts",
 	});
 	expect(
 		within(parts)

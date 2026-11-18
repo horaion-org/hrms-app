@@ -534,7 +534,7 @@ it("shows the waiting submission's message when publishing directly is refused",
 	await user.click(
 		await screen.findByRole("button", { name: "Publish roster" })
 	);
-	const dialog = screen.getByRole("dialog", { name: "Publish this roster?" });
+	const dialog = screen.getByRole("dialog", { name: "Publish these days?" });
 	await confirmOnceChecked(user, dialog, "Publish roster");
 
 	expect(await within(dialog).findByRole("alert")).toHaveTextContent(

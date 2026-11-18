@@ -30,7 +30,7 @@ const renderLinks = async (
 			/>
 		</MemoryRouterHarness>
 	);
-	return screen.findByRole("navigation", { name: "Schedules this week" });
+	return screen.findByRole("navigation", { name: "This week’s parts" });
 };
 
 describe("WeekPartLinks", () => {

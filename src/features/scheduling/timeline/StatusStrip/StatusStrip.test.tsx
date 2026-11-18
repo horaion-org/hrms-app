@@ -127,7 +127,7 @@ describe("StatusStrip", () => {
 		);
 
 		expect(
-			await screen.findByRole("dialog", { name: "Publish this roster?" })
+			await screen.findByRole("dialog", { name: "Publish these days?" })
 		).toBeVisible();
 	});
 
