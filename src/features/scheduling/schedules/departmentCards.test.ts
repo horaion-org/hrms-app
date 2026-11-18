@@ -130,6 +130,26 @@ describe("departmentCards", () => {
 		expect(frontDeskCard([summary])?.publishedStanding).toBe(standing);
 	});
 
+	it("leaves out a schedule to review that ended before this week, and keeps a far-future one", () => {
+		const card = frontDeskCard([
+			november([
+				[
+					"2026-11-02",
+					[part("Past week", "2026-11-02", "2026-11-08", "TO_REVIEW")],
+				],
+				[
+					"2027-10-04",
+					[part("Far week", "2027-10-04", "2027-10-10", "TO_REVIEW")],
+				],
+			]),
+		]);
+		expect(card).toMatchObject({
+			toReviewCount: 1,
+			nextToReview: "Far week",
+			firstToReviewDay: "2027-10-04",
+		});
+	});
+
 	it("counts the schedules to review and names the first in day order", () => {
 		const card = frontDeskCard([
 			november([

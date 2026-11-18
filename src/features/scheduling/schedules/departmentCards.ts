@@ -38,6 +38,7 @@ export type DepartmentCardEntry = {
 	/** The last day of the published run from the Monday of today's week. */
 	publishedUpTo: string | undefined;
 	publishedStanding: PublishedStanding;
+	/** Schedules to review that end on or after this week's Monday; earlier ones are left out. */
 	toReviewCount: number;
 	/** The last day any schedule covers. */
 	scheduledUpTo: string | undefined;
@@ -148,11 +149,14 @@ const cardOf = (
 	schedules: ReadonlyArray<CoveredSchedule>,
 	today: string
 ): DepartmentCardEntry => {
+	// Only schedules from this week on: the timeline the card opens shows no earlier week.
+	const thisMonday = mondayOf(today);
 	const toReview = schedules.filter(
-		(schedule) => schedule.state === "TO_REVIEW"
+		(schedule) =>
+			schedule.state === "TO_REVIEW" && schedule.lastDay >= thisMonday
 	);
 	const lastDays = schedules.map((schedule) => schedule.lastDay).sort();
-	const publishedUpTo = publishedRunEnd(schedules, mondayOf(today));
+	const publishedUpTo = publishedRunEnd(schedules, thisMonday);
 	const anyPublished = schedules.some(
 		(schedule) => schedule.state === "PUBLISHED"
 	);
