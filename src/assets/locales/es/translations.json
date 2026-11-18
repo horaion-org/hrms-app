@@ -4424,6 +4424,12 @@
 					"label": "Días anteriores sin rellenar",
 					"sentence": "{{member}}: algunos días antes de este horario dentro de un periodo de días libres no se rellenaron, así que se cuentan como trabajados. Rellénalos si se dio un día libre entonces.",
 					"wholeSchedule": "Algunos días antes de este horario dentro de un periodo de días libres no se rellenaron, así que se cuentan como trabajados. Rellénalos si se dio un día libre entonces."
+				},
+				"DAY_TYPE_BLOCK_HISTORY_MISSING": {
+					"label": "Los días anteriores a estos días no se rellenaron (días de descanso)"
+				},
+				"DAYS_A_WEEK_HISTORY_MISSING": {
+					"label": "Los días anteriores a estos días no se rellenaron (días a la semana)"
 				}
 			},
 			"marker": {
