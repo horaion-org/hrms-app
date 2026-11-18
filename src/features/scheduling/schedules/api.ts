@@ -93,6 +93,8 @@ export const findingsViolationSchema = z.object({
 	employeeId: z.string().nullable(),
 	/** The day it is about, or null for a member's entry. */
 	date: z.string().nullable(),
+	/** Validate schedule's every day for the person, `date` the first; a generation's findings send none. */
+	days: z.array(z.string()).optional(),
 	messages: z.array(z.string()),
 });
 

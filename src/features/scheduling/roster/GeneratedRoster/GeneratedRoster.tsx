@@ -204,16 +204,19 @@ export const GeneratedRoster = ({
 	useEffect(() => {
 		onShortShiftsChange?.(shortShifts);
 	}, [shortShifts, onShortShiftsChange]);
-	/** Outlines an issue's cell, as the day editor outlines the days it would change, and scrolls to it. */
+	/** Outlines every day of an issue's cells, as the day editor outlines the days it would change, and scrolls to the first. */
 	const showIssue = (issue: RosterIssue): void => {
 		const row = rows.find(
 			(candidate) => candidate.memberProfileId === issue.memberProfileId
 		);
-		if (!row?.membershipId || !issue.day) return;
-		const cellKey = rosterCellKey(row.membershipId, issue.day);
-		roster.onPreviewDays([cellKey]);
+		const membershipId = row?.membershipId;
+		if (!membershipId || !issue.day) return;
+		const cellKeys = (issue.days ?? [issue.day]).map((day) =>
+			rosterCellKey(membershipId, day)
+		);
+		roster.onPreviewDays(cellKeys);
 		document
-			.querySelector(`[data-cell="${CSS.escape(cellKey)}"]`)
+			.querySelector(`[data-cell="${CSS.escape(cellKeys[0] ?? "")}"]`)
 			?.scrollIntoView({ block: "nearest", inline: "nearest" });
 	};
 
