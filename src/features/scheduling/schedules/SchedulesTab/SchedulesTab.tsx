@@ -27,9 +27,9 @@ import { schedulingNoticeFrom } from "@/features/scheduling/schedules/scheduling
 import {
 	departmentCards,
 	type DepartmentCardEntry,
-} from "@/features/scheduling/timeline/departmentCards";
-import { dayMarkLooks } from "@/features/scheduling/timeline/dayMarkLooks";
-import { DepartmentCard } from "@/features/scheduling/timeline/DepartmentCard";
+} from "@/features/scheduling/schedules/departmentCards";
+import { dayMarkLooks } from "@/features/scheduling/schedules/dayMarkLooks";
+import { DepartmentCard } from "@/features/scheduling/schedules/DepartmentCard";
 import { Can } from "@/features/workspace/Can";
 import { DepartmentFilter } from "@/features/workspace/DepartmentFilter";
 import { departmentChips } from "@/features/workspace/filterChips";

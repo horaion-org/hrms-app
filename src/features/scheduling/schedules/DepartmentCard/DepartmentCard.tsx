@@ -5,8 +5,8 @@ import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { formatDayAndMonth } from "@/features/scheduling/months/monthWeeks";
-import { dayMarkLooks } from "@/features/scheduling/timeline/dayMarkLooks";
-import type { DepartmentCardEntry } from "@/features/scheduling/timeline/departmentCards";
+import { dayMarkLooks } from "@/features/scheduling/schedules/dayMarkLooks";
+import type { DepartmentCardEntry } from "@/features/scheduling/schedules/departmentCards";
 
 export type DepartmentCardProps = {
 	card: DepartmentCardEntry;

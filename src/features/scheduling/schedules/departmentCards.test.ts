@@ -9,7 +9,7 @@ import {
 	dayMarkOf,
 	departmentCards,
 	type DepartmentCardEntry,
-} from "@/features/scheduling/timeline/departmentCards";
+} from "@/features/scheduling/schedules/departmentCards";
 
 const frontDesk = { departmentId: "dept-1", name: "Front Desk" };
 const security = { departmentId: "dept-2", name: "Security" };

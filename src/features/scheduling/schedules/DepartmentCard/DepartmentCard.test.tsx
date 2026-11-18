@@ -4,8 +4,8 @@ import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it } from "vitest";
 import en from "@/assets/locales/en/translations.json";
 import { MemoryRouterHarness } from "@/components/utils/MemoryRouterHarness";
-import type { DepartmentCardEntry } from "@/features/scheduling/timeline/departmentCards";
-import { DepartmentCard } from "@/features/scheduling/timeline/DepartmentCard";
+import type { DepartmentCardEntry } from "@/features/scheduling/schedules/departmentCards";
+import { DepartmentCard } from "@/features/scheduling/schedules/DepartmentCard";
 
 beforeAll(async () => {
 	await createInstance()
