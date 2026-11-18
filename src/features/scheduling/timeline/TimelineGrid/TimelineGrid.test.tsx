@@ -93,4 +93,13 @@ describe("TimelineGrid", () => {
 		expect(within(staff).getByText("Cook")).toBeInTheDocument();
 		expect(within(staff).queryByText("16 hrs") !== null).toBe(shown);
 	});
+
+	/** Narrow screens scroll the table sideways at each zoom's narrowest day column, keeping the Staff column in view. */
+	it("keeps a minimum width per zoom and a sticky Staff column", async () => {
+		const row = await renderGrid("two");
+		expect(screen.getByRole("table")).toHaveStyle({
+			minWidth: "calc(var(--staff-column) + 308px)",
+		});
+		expect(within(row).getByRole("rowheader")).toHaveClass("sticky", "left-0");
+	});
 });

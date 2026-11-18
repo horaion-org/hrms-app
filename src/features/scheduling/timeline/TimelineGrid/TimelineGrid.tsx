@@ -24,6 +24,8 @@ import {
 	cellLinesOf,
 	LABEL_DAY_FORMAT,
 	staffCellClasses,
+	staffColumnClasses,
+	tableMinWidthOf,
 	ZOOM_LOOKS,
 } from "@/features/scheduling/timeline/timelineLooks";
 import {
@@ -204,15 +206,22 @@ export const TimelineGrid = ({
 		dayName.format(dayjs(day).toDate());
 	return (
 		<div className="min-w-0 overflow-x-auto rounded-lg border border-neutral-400">
-			<table className="w-full table-fixed border-collapse text-neutral-900">
+			<table
+				style={{ minWidth: tableMinWidthOf(view, days.length) }}
+				className={joinClassNames(
+					"w-full table-fixed border-collapse text-neutral-900",
+					staffColumnClasses
+				)}
+			>
 				<caption className="sr-only">{t(`${key}.label`)}</caption>
 				<colgroup>
-					<col className="w-28 sm:w-50" />
+					<col className="w-(--staff-column)" />
 				</colgroup>
 				<thead>
 					<tr className="bg-neutral-200">
+						{/* The Staff column stays in view while the days scroll, as in the roster grid. */}
 						<th
-							className="h-12 bg-neutral-200 px-3 text-left text-sm font-bold"
+							className="sticky left-0 z-10 h-12 bg-neutral-200 px-3 text-left text-sm font-bold"
 							scope="col"
 						>
 							{t(`${key}.staff`)}

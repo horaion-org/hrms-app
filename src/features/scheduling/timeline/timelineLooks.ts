@@ -13,8 +13,16 @@ import type { TimelineView } from "@/features/scheduling/timeline/timeline";
  * accessible name and `title`, so nothing is lost when the text is short.
  */
 
-/** The Staff column of the timeline's table, as the roster grid's: the bar lanes' label and each person. */
-export const staffCellClasses = "bg-neutral-50 px-3 py-2 text-left";
+/**
+ * The Staff column of the timeline's table, as the roster grid's: the bar
+ * lanes' label and each person. It stays in view while the days scroll.
+ */
+export const staffCellClasses =
+	"sticky left-0 z-10 bg-neutral-50 px-3 py-2 text-left";
+
+/** The Staff column's width, as the roster grid's: narrower on a phone. Read by the table's minimum width. */
+export const staffColumnClasses =
+	"[--staff-column:7rem] sm:[--staff-column:12.5rem]";
 
 /** A schedule's status dot, coloured as its status badge is. */
 export const statusDotLooks: Record<BadgeTone, string> = {
@@ -43,6 +51,8 @@ export type ZoomLooks = {
 	barBadgeFromDays: number | null;
 	/** Whether the Staff cell shows the avatar and the hours, as the roster grid does. */
 	staffDetails: boolean;
+	/** The narrowest a day column gets, in pixels; below it the table scrolls sideways. */
+	minDayColumnPixels: number;
 };
 
 /** Each zoom level's looks. */
@@ -54,6 +64,7 @@ export const ZOOM_LOOKS: Record<TimelineView, ZoomLooks> = {
 		barNameFromDays: 1,
 		barBadgeFromDays: 3,
 		staffDetails: true,
+		minDayColumnPixels: 92,
 	},
 	two: {
 		dayHeader: { weekday: "short", date: { day: "numeric" } },
@@ -62,6 +73,7 @@ export const ZOOM_LOOKS: Record<TimelineView, ZoomLooks> = {
 		barNameFromDays: 1,
 		barBadgeFromDays: 5,
 		staffDetails: true,
+		minDayColumnPixels: 44,
 	},
 	four: {
 		dayHeader: { weekday: "narrow", date: { day: "numeric" } },
@@ -70,6 +82,7 @@ export const ZOOM_LOOKS: Record<TimelineView, ZoomLooks> = {
 		barNameFromDays: 3,
 		barBadgeFromDays: null,
 		staffDetails: false,
+		minDayColumnPixels: 26,
 	},
 };
 
@@ -110,3 +123,7 @@ export const LABEL_DAY_FORMAT: Intl.DateTimeFormatOptions = {
 	day: "numeric",
 	month: "short",
 };
+
+/** The table's minimum width: the Staff column and each day at its narrowest, so narrow screens scroll, not squeeze. */
+export const tableMinWidthOf = (view: TimelineView, dayCount: number): string =>
+	`calc(var(--staff-column) + ${dayCount * ZOOM_LOOKS[view].minDayColumnPixels}px)`;

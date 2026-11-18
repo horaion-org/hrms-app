@@ -5,6 +5,7 @@ import { morningShift } from "@/features/scheduling/timeline/fixtures";
 import {
 	barContentOf,
 	cellLinesOf,
+	tableMinWidthOf,
 	ZOOM_LOOKS,
 } from "@/features/scheduling/timeline/timelineLooks";
 
@@ -52,4 +53,14 @@ describe("ZOOM_LOOKS", () => {
 			).toBe(true);
 		}
 	);
+});
+
+describe("tableMinWidthOf", () => {
+	it.each([
+		["week", 7, "calc(var(--staff-column) + 644px)"],
+		["two", 14, "calc(var(--staff-column) + 616px)"],
+		["four", 28, "calc(var(--staff-column) + 728px)"],
+	] as const)("%s over %i days is %s", (view, days, expected) => {
+		expect(tableMinWidthOf(view, days)).toBe(expected);
+	});
 });
