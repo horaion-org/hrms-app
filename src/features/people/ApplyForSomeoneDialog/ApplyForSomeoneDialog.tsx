@@ -8,9 +8,12 @@ import { Dialog } from "@/components/ui/Dialog";
 import { SearchIcon } from "@/components/ui/Icon";
 import {
 	ALL_DEPARTMENTS,
+	branchFirst,
 	departmentChoices,
+	labelledDepartmentChoices,
 	peopleToApplyFor,
 	personDescription,
+	sharedDepartmentNames,
 	shownDepartment,
 	type PersonToApplyFor,
 } from "./peopleToApplyFor";
@@ -64,6 +67,9 @@ export const ApplyForSomeoneDialog = <Person extends PersonToApplyFor>({
 		departments,
 		pageDepartmentId
 	);
+	// A Department name two choices share is told apart by its Branch, in the filter and under each person.
+	const withBranch = branchFirst(t);
+	const sharedNames = sharedDepartmentNames(departments);
 	const offered = peopleToApplyFor(people ?? [], search, maySetFor, department);
 	const chosen = offered.find((person) => person.membershipId === membershipId);
 	const loaded = people !== undefined && problem === undefined;
@@ -118,10 +124,12 @@ export const ApplyForSomeoneDialog = <Person extends PersonToApplyFor>({
 								value={department}
 								options={[
 									{ value: ALL_DEPARTMENTS, label: t(`${key}.allDepartments`) },
-									...departments.map((choice) => ({
-										value: choice.departmentId,
-										label: choice.name,
-									})),
+									...labelledDepartmentChoices(departments, withBranch).map(
+										(choice) => ({
+											value: choice.departmentId,
+											label: choice.label,
+										})
+									),
 								]}
 								onChange={setPickedDepartment}
 							/>
@@ -136,7 +144,7 @@ export const ApplyForSomeoneDialog = <Person extends PersonToApplyFor>({
 						options={offered.map((person) => ({
 							value: person.membershipId,
 							label: person.displayName,
-							description: personDescription(person),
+							description: personDescription(person, sharedNames, withBranch),
 						}))}
 						onChange={setMembershipId}
 					/>

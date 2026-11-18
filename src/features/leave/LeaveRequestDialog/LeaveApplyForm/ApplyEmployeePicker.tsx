@@ -5,7 +5,10 @@ import { Select } from "@/components/forms/Select";
 import { SearchIcon } from "@/components/ui/Icon";
 import {
 	ALL_DEPARTMENTS,
+	branchFirst,
+	labelledDepartmentChoices,
 	personDescription,
+	sharedDepartmentNames,
 	type DepartmentToChoose,
 } from "@/features/people/ApplyForSomeoneDialog";
 
@@ -26,6 +29,7 @@ export type ApplyEmployees = {
 		displayName: string;
 		employeeCode: string;
 		departmentName?: string | null;
+		branchName?: string | null;
 		jobTitleName?: string | null;
 	}>;
 };
@@ -55,6 +59,9 @@ export const ApplyEmployeePicker = ({
 }: ApplyEmployeePickerProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const departments = employees.departments ?? [];
+	// A Department name two choices share is told apart by its Branch, in the filter and under each person.
+	const withBranch = branchFirst(t);
+	const sharedNames = sharedDepartmentNames(departments);
 	return (
 		<div className="space-y-2">
 			<p className="text-sm font-medium" id={`${id}-employee`}>
@@ -82,10 +89,9 @@ export const ApplyEmployeePicker = ({
 							value: ALL_DEPARTMENTS,
 							label: t("people.applyFor.allDepartments"),
 						},
-						...departments.map((choice) => ({
-							value: choice.departmentId,
-							label: choice.name,
-						})),
+						...labelledDepartmentChoices(departments, withBranch).map(
+							(choice) => ({ value: choice.departmentId, label: choice.label })
+						),
 					]}
 					onChange={employees.onDepartment}
 				/>
@@ -100,7 +106,7 @@ export const ApplyEmployeePicker = ({
 				options={employees.options.map((person) => ({
 					value: person.membershipId,
 					label: person.displayName,
-					description: personDescription(person),
+					description: personDescription(person, sharedNames, withBranch),
 				}))}
 				onChange={onChoose}
 			/>

@@ -36,7 +36,10 @@ import {
 	type TeamAvailabilityList,
 } from "@/features/availability/useAvailability";
 import { myProfileQuery } from "@/features/people/api";
-import { ApplyForSomeoneDialog } from "@/features/people/ApplyForSomeoneDialog";
+import {
+	ApplyForSomeoneDialog,
+	withDepartmentNames,
+} from "@/features/people/ApplyForSomeoneDialog";
 import { workspaceQuery } from "@/features/workspace/api";
 import {
 	AVAILABILITY_READ_KEYS,
@@ -310,6 +313,7 @@ export const Availability = (): FunctionComponent => {
 					))}
 				</TabPanels>
 			</Tabs>
+			{/* The list names a member's Department but not its Branch; the header's units name that. */}
 			{choosingMember && (
 				<ApplyForSomeoneDialog
 					departmentId={units.department?.departmentId}
@@ -317,7 +321,9 @@ export const Availability = (): FunctionComponent => {
 					problem={openWeekTeamProblem && t(openWeekTeamProblem.key)}
 					title={t("availability.apply")}
 					people={
-						openWeekTeam.status === "ready" ? openWeekTeam.members : undefined
+						openWeekTeam.status === "ready"
+							? withDepartmentNames(openWeekTeam.members, units.departments)
+							: undefined
 					}
 					onChoose={(member) => {
 						setChoosingMember(false);
