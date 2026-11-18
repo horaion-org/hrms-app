@@ -3982,8 +3982,8 @@
 				"MAX_CALL_BACKS_PER_PERSON_zero": "Nobody is called back to work on a rest or off day.",
 				"MAX_CALL_BACKS_PER_PERSON_one": "Everyone may be called back to work on a rest or off day at most <CALL_BACKS/> time <CALL_BACK_SPAN_DAYS/>.",
 				"MAX_CALL_BACKS_PER_PERSON_other": "Everyone may be called back to work on a rest or off day at most <CALL_BACKS/> times <CALL_BACK_SPAN_DAYS/>.",
-				"OVERTIME_STRETCH_one": "When a shift is short for some hours, someone on the shift just before or after it may stay on or start early by up to <STRETCH_HOURS/> hour, and fills those hours. Used only when you ask the engine in Find cover, never when a roster is generated.",
-				"OVERTIME_STRETCH_other": "When a shift is short for some hours, someone on the shift just before or after it may stay on or start early by up to <STRETCH_HOURS/> hours, and fills those hours. Used only when you ask the engine in Find cover, never when a roster is generated.",
+				"OVERTIME_STRETCH_one": "When a shift is short for some hours, someone on the shift just before or after it may stay on or start early by up to <STRETCH_HOURS/> hour, and fills those hours. Used only when you ask the engine in Find cover, never when a roster is generated. It applies to rosters generated after it is added; regenerate an existing roster to use it.",
+				"OVERTIME_STRETCH_other": "When a shift is short for some hours, someone on the shift just before or after it may stay on or start early by up to <STRETCH_HOURS/> hours, and fills those hours. Used only when you ask the engine in Find cover, never when a roster is generated. It applies to rosters generated after it is added; regenerate an existing roster to use it.",
 				"PAY_RATES": {
 					"rates": "An hour of overtime costs <OVERTIME_PERCENT/>% of a normal hour, and an hour of work on a rest day <REST_DAY_WORK_PERCENT/>%.",
 					"dayOffOrdinary": "Work on a day off counts as ordinary hours.",
@@ -4306,7 +4306,7 @@
 				"MAX_OVERTIME_HOURS_PER_MONTH": "How much overtime one person may be given in a month.",
 				"MAX_CALL_BACKS_PER_PERSON": "How often someone may be called in on a rest or off day.",
 				"NO_OVERTIME_WHEN_GENERATING": "Generated rosters leave shifts open rather than add overtime.",
-				"OVERTIME_STRETCH": "Lets someone already working stay on or start early to fill the hours of a short shift. Used only when you ask the engine in Find cover, never when a roster is generated."
+				"OVERTIME_STRETCH": "Lets someone already working stay on or start early to fill the hours of a short shift. Used only when you ask the engine in Find cover, never when a roster is generated. It applies to rosters generated after it is added; regenerate an existing roster to use it."
 			},
 			"categoryDescriptions": {
 				"STAFFING": "Who must be on each shift, and how many.",

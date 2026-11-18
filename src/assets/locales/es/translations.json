@@ -3782,8 +3782,8 @@
 				"MAX_CALL_BACKS_PER_PERSON_zero": "Nadie es llamado a trabajar en un día de descanso o libre.",
 				"MAX_CALL_BACKS_PER_PERSON_one": "Cualquiera puede ser llamado a trabajar en un día de descanso o libre como máximo <CALL_BACKS/> vez <CALL_BACK_SPAN_DAYS/>.",
 				"MAX_CALL_BACKS_PER_PERSON_other": "Cualquiera puede ser llamado a trabajar en un día de descanso o libre como máximo <CALL_BACKS/> veces <CALL_BACK_SPAN_DAYS/>.",
-				"OVERTIME_STRETCH_one": "Cuando a un turno le falta gente durante algunas horas, alguien del turno justo anterior o posterior puede quedarse más o empezar antes, hasta <STRETCH_HOURS/> hora, y cubre esas horas. Solo se usa al preguntar al motor en Buscar cobertura, nunca al generar un cuadrante.",
-				"OVERTIME_STRETCH_other": "Cuando a un turno le falta gente durante algunas horas, alguien del turno justo anterior o posterior puede quedarse más o empezar antes, hasta <STRETCH_HOURS/> horas, y cubre esas horas. Solo se usa al preguntar al motor en Buscar cobertura, nunca al generar un cuadrante.",
+				"OVERTIME_STRETCH_one": "Cuando a un turno le falta gente durante algunas horas, alguien del turno justo anterior o posterior puede quedarse más o empezar antes, hasta <STRETCH_HOURS/> hora, y cubre esas horas. Solo se usa al preguntar al motor en Buscar cobertura, nunca al generar un cuadrante. Se aplica a los cuadrantes generados después de añadirla; vuelve a generar un cuadrante existente para usarla.",
+				"OVERTIME_STRETCH_other": "Cuando a un turno le falta gente durante algunas horas, alguien del turno justo anterior o posterior puede quedarse más o empezar antes, hasta <STRETCH_HOURS/> horas, y cubre esas horas. Solo se usa al preguntar al motor en Buscar cobertura, nunca al generar un cuadrante. Se aplica a los cuadrantes generados después de añadirla; vuelve a generar un cuadrante existente para usarla.",
 				"PAY_RATES": {
 					"rates": "Una hora extra cuesta el <OVERTIME_PERCENT/> % de una hora normal, y una hora de trabajo en día de descanso el <REST_DAY_WORK_PERCENT/> %.",
 					"dayOffOrdinary": "El trabajo en un día libre cuenta como horas ordinarias.",
@@ -4106,7 +4106,7 @@
 				"MAX_OVERTIME_HOURS_PER_MONTH": "Cuántas horas extra puede recibir una persona al mes.",
 				"MAX_CALL_BACKS_PER_PERSON": "Cada cuánto se puede llamar a alguien en un día de descanso o libre.",
 				"NO_OVERTIME_WHEN_GENERATING": "Los cuadrantes generados dejan turnos abiertos en vez de añadir horas extra.",
-				"OVERTIME_STRETCH": "Permite que alguien que ya trabaja se quede más o empiece antes para cubrir las horas de un turno con falta de gente. Solo se usa al preguntar al motor en Buscar cobertura, nunca al generar un cuadrante."
+				"OVERTIME_STRETCH": "Permite que alguien que ya trabaja se quede más o empiece antes para cubrir las horas de un turno con falta de gente. Solo se usa al preguntar al motor en Buscar cobertura, nunca al generar un cuadrante. Se aplica a los cuadrantes generados después de añadirla; vuelve a generar un cuadrante existente para usarla."
 			},
 			"categoryDescriptions": {
 				"STAFFING": "Quién debe estar en cada turno, y cuántos.",

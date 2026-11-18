@@ -443,11 +443,11 @@ describe("sentencePartsOf with constraintWords", () => {
 	it.each([
 		[
 			"1",
-			"When a shift is short for some hours, someone on the shift just before or after it may stay on or start early by up to 1 hour, and fills those hours. Used only when you ask the engine in Find cover, never when a roster is generated.",
+			"When a shift is short for some hours, someone on the shift just before or after it may stay on or start early by up to 1 hour, and fills those hours. Used only when you ask the engine in Find cover, never when a roster is generated. It applies to rosters generated after it is added; regenerate an existing roster to use it.",
 		],
 		[
 			"2",
-			"When a shift is short for some hours, someone on the shift just before or after it may stay on or start early by up to 2 hours, and fills those hours. Used only when you ask the engine in Find cover, never when a roster is generated.",
+			"When a shift is short for some hours, someone on the shift just before or after it may stay on or start early by up to 2 hours, and fills those hours. Used only when you ask the engine in Find cover, never when a roster is generated. It applies to rosters generated after it is added; regenerate an existing roster to use it.",
 		],
 	])("reads an overtime stretch of %s hours", (hours, sentence) => {
 		expect(read("OVERTIME_STRETCH", [plain("STRETCH_HOURS", hours)])).toBe(

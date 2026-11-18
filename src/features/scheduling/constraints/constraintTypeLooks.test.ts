@@ -11,6 +11,7 @@ import {
 	constraintTypeLookOf,
 } from "@/features/scheduling/constraints/constraintTypeLooks";
 import type { ConstraintType } from "@/features/scheduling/constraints/api";
+import { authTestI18n } from "@/features/auth/testingI18n";
 
 /** Answers each key with itself, so a test reads which copy was asked for. */
 const t = ((key: string) => key) as unknown as TFunction;
@@ -32,6 +33,14 @@ describe("constraintTypeLookOf", () => {
 			description: "scheduling.constraints.descriptions.BANNED_SHIFT_PATTERN",
 			example: "scheduling.constraints.examples.BANNED_SHIFT_PATTERN",
 		});
+	});
+
+	it("given_overtimeStretch_when_described_then_saysWhichRostersItAppliesTo", () => {
+		expect(
+			constraintTypeLookOf("OVERTIME_STRETCH", authTestI18n.t).description
+		).toMatch(
+			/Used only when you ask the engine in Find cover, never when a roster is generated\. It applies to rosters generated after it is added; regenerate an existing roster to use it\.$/
+		);
 	});
 
 	it("given_aKindWithNoEntry_when_looked_then_aGenericIconAndItsLabelOnly", () => {
