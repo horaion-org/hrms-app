@@ -4,7 +4,10 @@ import dayjs from "dayjs";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
 import { ISO_DATE_FORMAT } from "@/common/isoDate";
-import { effectiveWorkspace } from "@/common/testing/effectiveWorkspace";
+import {
+	companyWideWorkspace,
+	effectiveWorkspace,
+} from "@/common/testing/effectiveWorkspace";
 import {
 	currentUserReply,
 	openApp,
@@ -274,6 +277,93 @@ describe("ShiftPreferences", () => {
 			).toBe(true);
 		});
 	});
+
+	it.each([
+		["All branches", "all", ""],
+		["one Branch", "b-1", "&branchId=b-1"],
+	])(
+		"saves a member's day under %s, closing the day, confirming it and showing the new shift on their row",
+		async (_scope, branch, branchSearch) => {
+			const user = userEvent.setup();
+			const savedPage = fixtureTeamPage();
+			savedPage.content[0]!.days[0] = {
+				date: FIXTURE_WEEK,
+				shifts: [
+					{ shiftId: "s-morning", name: "Morning" },
+					{ shiftId: "s-late", name: "Late" },
+				],
+			};
+			const calls = stubApi({
+				...routes("FULL_TIME", {
+					status: 200,
+					body: envelope(companyWideWorkspace([READ, UPDATE])),
+				}),
+				// The list as it was, then as the save left it.
+				[`GET ${TEAM_PATH}`]: [
+					{ status: 200, body: envelope(fixtureTeamPage()) },
+					{ status: 200, body: envelope(savedPage) },
+				],
+				[`GET ${MEMBERS_PATH}/m-1/shift-preferences/weeks/${FIXTURE_WEEK}`]: {
+					status: 200,
+					body: envelope(fixtureWeek()),
+				},
+				[`PUT ${MEMBERS_PATH}/m-1/shift-preferences/days/${FIXTURE_WEEK}`]: {
+					status: 200,
+					body: envelope(MONDAY_WITH_MORNING),
+				},
+			});
+			const opened = await open(
+				`/shift-preferences?view=team&branch=${branch}&week=${FIXTURE_WEEK}`
+			);
+			await user.click(
+				await screen.findByRole("button", {
+					name: "Edit Alex Example’s shift preferences",
+				})
+			);
+			const week = await screen.findByRole("dialog", {
+				name: "Edit shift preferences",
+			});
+			await user.click(
+				await within(week).findByRole("button", {
+					name: /^Choose shifts for Mon/,
+				})
+			);
+			const day = screen.getByRole("dialog", {
+				name: /^Choose shifts for Mon/,
+			});
+			await user.click(within(day).getByRole("checkbox", { name: /^Late/ }));
+
+			await user.click(within(day).getByRole("button", { name: "Save" }));
+
+			// The save settles with its confirmation, the one the app's toast shows ("Shift preferences saved.").
+			await waitFor(() => {
+				expect(
+					opened.queryClient
+						.getMutationCache()
+						.getAll()
+						.map((save) => [save.state.status, save.meta?.successMessage])
+				).toEqual([["success", "shiftPreferences.saved"]]);
+			});
+			await waitFor(() => {
+				expect(
+					screen.queryByRole("dialog", { name: /^Choose shifts for Mon/ })
+				).not.toBeInTheDocument();
+			});
+			// The row behind the member's week now shows Late; the open week hides the table from roles.
+			const table = screen.getByRole("table", {
+				name: "Team shift preferences",
+				hidden: true,
+			});
+			expect(await within(table).findByText(/Late/)).toBeInTheDocument();
+			// The header's scope is read before and after the save: no Branch under All branches.
+			const listSearch = `weekStartMonday=${FIXTURE_WEEK}${branchSearch}&page=0&size=${TEAM_PAGE_SIZE}`;
+			expect(
+				calls
+					.filter((call) => call.path === TEAM_PATH)
+					.map((call) => call.search)
+			).toEqual([listSearch, listSearch]);
+		}
+	);
 
 	it("offers no edit control without the update key", async () => {
 		stubApi(routes("FULL_TIME", workspaceReply([READ])));

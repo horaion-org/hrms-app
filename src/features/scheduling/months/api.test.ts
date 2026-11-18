@@ -1,3 +1,4 @@
+import { QueryClient, QueryObserver } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, stubApi } from "@/common/testing/stubApi";
@@ -8,6 +9,7 @@ import {
 	generateMonth,
 	monthGenerationCheckQuery,
 	scheduleMonthQuery,
+	scheduleMonthsKey,
 	scheduleMonthSummariesQuery,
 } from "@/features/scheduling/months/api";
 import {
@@ -95,9 +97,10 @@ describe("schedule months client", () => {
 		expect(typeof scheduleMonthQuery("c-1", "d-1", "2026-11").queryFn).toBe(
 			"function"
 		);
-		expect(
-			typeof scheduleMonthQuery("c-1", "d-1", "2026-11", false).queryFn
-		).not.toBe("function");
+		// Gated by `enabled`, so an observer that may not read never takes the query function from one that may.
+		expect(scheduleMonthQuery("c-1", "d-1", "2026-11", false).enabled).toBe(
+			false
+		);
 		expect(
 			typeof scheduleMonthSummariesQuery("c-1", {}, RANGE, false).queryFn
 		).not.toBe("function");
@@ -316,5 +319,36 @@ describe("generating a month", () => {
 		expect(
 			monthGenerationCheckQuery("c-1", "d-1", "2026-11").queryKey.slice(0, 3)
 		).toEqual(["scheduling", "c-1", "months"]);
+	});
+
+	it("given_aReaderAndAnObserverThatAsksNothingOnOneMonth_when_invalidated_then_theMonthIsReadAgain", async () => {
+		const calls = stubApi({
+			[`GET ${NOVEMBER}`]: {
+				status: 200,
+				body: envelope(scheduleMonthFixture()),
+			},
+		});
+		const client = new QueryClient();
+		const reader = new QueryObserver(
+			client,
+			scheduleMonthQuery("c-1", "d-1", "2026-11", true)
+		);
+		const stopReader = reader.subscribe(() => {});
+		await vi.waitFor(() => {
+			expect(reader.getCurrentResult().isSuccess).toBe(true);
+		});
+		// One that may not read the month yet observes the same key, and is set last.
+		const stopIdle = new QueryObserver(
+			client,
+			scheduleMonthQuery("c-1", "d-1", "2026-11", false)
+		).subscribe(() => {});
+
+		await client.invalidateQueries({ queryKey: scheduleMonthsKey("c-1") });
+
+		expect(calls).toHaveLength(2);
+		expect(reader.getCurrentResult().isError).toBe(false);
+		stopIdle();
+		stopReader();
+		client.clear();
 	});
 });

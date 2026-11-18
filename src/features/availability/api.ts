@@ -343,10 +343,11 @@ export const availabilityListQuery = (
 > =>
 	queryOptions({
 		queryKey: [...availabilityRoot(companyId), "list", query] as const,
-		queryFn: allowed
-			? ({ signal }): Promise<AvailabilityList> =>
-					fetchAvailabilityList(companyId, query, signal)
-			: skipToken,
+		queryFn: ({ signal }): Promise<AvailabilityList> =>
+			fetchAvailabilityList(companyId, query, signal),
+		// `enabled`, not skipToken: the list and "Apply availability" share this key, and a refetch after a save
+		// runs the query function of whichever observer set it last.
+		enabled: allowed,
 		// Keep the current rows on screen while another week or Department loads, unless withdrawn.
 		placeholderData: accessiblePreviousData(),
 		meta: administrativeMeta(companyId),

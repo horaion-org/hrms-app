@@ -23,6 +23,7 @@ import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 import {
 	MEMBER_WEEK_FIXTURES,
+	memberWeekFixture,
 	WEEKDAY_MORNINGS,
 	weeklyAvailabilityFixture,
 } from "@/features/availability/fixtures";
@@ -396,6 +397,92 @@ describe("Availability", () => {
 			calls.filter((call) => call.path.includes("/member-profiles/"))
 		).toEqual([]);
 	});
+
+	it.each([
+		["All branches", "all", ""],
+		["one Branch", "b-1", "&branchId=b-1"],
+	])(
+		"saves a row's week under %s, closing the editor, confirming it and showing the new hours",
+		async (_scope, branch, branchSearch) => {
+			const user = userEvent.setup();
+			const thisWeek = mondayOf(new Date());
+			const aishaWeek = `${MEMBERS_PATH}/m-aisha/availability/weeks/${thisWeek}`;
+			const savedAisha = memberWeekFixture({
+				membershipId: "m-aisha",
+				source: "OVERRIDE",
+				windows: [{ date: thisWeek, startTime: "10:00", endTime: "14:00" }],
+			});
+			const calls = stubApi({
+				...routes("FULL_TIME", {
+					status: 200,
+					body: envelope(companyWideWorkspace([READ, UPDATE])),
+				}),
+				// The list as it was, then as the save left it.
+				[`GET ${TEAM_PATH}`]: [
+					{
+						status: 200,
+						body: envelope({
+							weekStartMonday: thisWeek,
+							members: MEMBER_WEEK_FIXTURES,
+						}),
+					},
+					{
+						status: 200,
+						body: envelope({
+							weekStartMonday: thisWeek,
+							members: [savedAisha],
+						}),
+					},
+				],
+				[`PUT ${aishaWeek}`]: {
+					status: 200,
+					body: envelope({
+						membershipId: "m-aisha",
+						weekStartMonday: thisWeek,
+						days: weeklyAvailabilityFixture(WEEKDAY_MORNINGS).days,
+					}),
+				},
+			});
+			const opened = await open(`/availability?view=team&branch=${branch}`);
+			await user.click(
+				await screen.findByRole("button", {
+					name: "Edit Aisha Rahman’s availability",
+				})
+			);
+			const dialog = await screen.findByRole("dialog", {
+				name: "Edit availability",
+			});
+
+			await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+			// The save settles with its confirmation, the one the app's toast shows ("Availability saved.").
+			await waitFor(() => {
+				expect(
+					opened.queryClient
+						.getMutationCache()
+						.getAll()
+						.map((save) => [save.state.status, save.meta?.successMessage])
+				).toEqual([["success", "availability.saved"]]);
+			});
+			await waitFor(() => {
+				expect(
+					screen.queryByRole("dialog", { name: "Edit availability" })
+				).not.toBeInTheDocument();
+			});
+			expect(
+				await within(
+					screen.getByRole("table", { name: "Team availability" })
+				).findByText("10:00–14:00")
+			).toBeVisible();
+			// The header's scope is read before and after the save: no Branch under All branches.
+			const listSearch = `weekStartMonday=${thisWeek}${branchSearch}`;
+			expect(
+				calls
+					.filter((call) => call.path === TEAM_PATH)
+					.map((call) => call.search)
+			).toEqual([listSearch, listSearch]);
+		}
+	);
 
 	it("moves a week on, and back to this week, through the URL", async () => {
 		const user = userEvent.setup();

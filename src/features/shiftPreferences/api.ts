@@ -1,4 +1,4 @@
-import { queryOptions, skipToken } from "@tanstack/react-query";
+import { queryOptions } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest } from "@/common/api-client";
 import { companyPath } from "@/common/companyPath";
@@ -359,10 +359,11 @@ export const teamPreferencesQuery = (
 ): QueryOptionsFor<TeamPreferencePage, ReturnType<typeof teamPreferencesKey>> =>
 	queryOptions({
 		queryKey: teamPreferencesKey(companyId, query),
-		queryFn: allowed
-			? ({ signal }): Promise<TeamPreferencePage> =>
-					fetchTeamPreferences(companyId, query, signal)
-			: skipToken,
+		queryFn: ({ signal }): Promise<TeamPreferencePage> =>
+			fetchTeamPreferences(companyId, query, signal),
+		// `enabled`, not skipToken: the list and "Apply shift preferences" share this key, and a refetch after a
+		// save runs the query function of whichever observer set it last.
+		enabled: allowed,
 		// Keep the current rows on screen while another week or page loads, unless withdrawn.
 		placeholderData: accessiblePreviousData(),
 		meta: administrativeMeta(companyId),
