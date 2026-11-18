@@ -5530,7 +5530,12 @@
 				"jobTitle": "Puesto",
 				"apply": "Usar estas personas",
 				"cancel": "Cancelar",
-				"nobodyChosen": "Elige al menos una persona."
+				"nobodyChosen": "Elige al menos una persona.",
+				"everyone": "Todos en {{department}}, {{count}} personas",
+				"chosen": "{{chosen}} de {{count}} personas",
+				"choose": "Elegir personas",
+				"daysTaken": "Estos días ya tienen un horario. Elige días sin horario o incluye a todos.",
+				"savedDraft": "Los primeros días están guardados como borrador con estas personas, así que todo el periodo las mantiene. Elimina ese borrador para elegir de nuevo."
 			}
 		},
 		"roster": {

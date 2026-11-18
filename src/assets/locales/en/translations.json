@@ -5730,7 +5730,12 @@
 				"jobTitle": "Job title",
 				"apply": "Use these people",
 				"cancel": "Cancel",
-				"nobodyChosen": "Choose at least one person."
+				"nobodyChosen": "Choose at least one person.",
+				"everyone": "Everyone in {{department}}, {{count}} people",
+				"chosen": "{{chosen}} of {{count}} people",
+				"choose": "Choose people",
+				"daysTaken": "These days already have a schedule. Choose days with no schedule, or roster everyone.",
+				"savedDraft": "The first days are saved as a draft with these people, so the whole run keeps them. Delete that draft to choose again."
 			}
 		},
 		"roster": {
