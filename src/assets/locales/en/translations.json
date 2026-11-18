@@ -5739,6 +5739,56 @@
 			"beingRedone": "{{days}} are being scheduled again. This roster keeps them until the new one is ready.",
 			"noneBeforePublished_one": "{{days}} has no schedule. It comes before days that have been published, so it can’t be scheduled now.",
 			"noneBeforePublished_other": "{{days}} have no schedule. They come before days that have been published, so they can’t be scheduled now."
+		},
+		"timeline": {
+			"backLink": "Back to Scheduling",
+			"title": "{{department}} Schedule",
+			"subtitle": "One timeline for the team. Each schedule is published on its own.",
+			"createSchedule": "Create schedule",
+			"loading": "Loading the schedules…",
+			"loadFailed": "The schedules couldn't be loaded. Reload the page to try again.",
+			"unavailable": "This department's schedules aren't available to you. Choose a department from Scheduling.",
+			"toolbar": {
+				"label": "Days shown",
+				"today": "Today",
+				"previous": "Earlier days",
+				"next": "Later days",
+				"zoom": "Zoom",
+				"views": {
+					"week": "Week",
+					"two": "2 weeks",
+					"four": "4 weeks"
+				},
+				"schedule": "Schedule",
+				"allSchedules": "All schedules"
+			},
+			"bars": {
+				"label": "Schedules",
+				"bar": "{{name}}, {{state}}",
+				"openSchedule": "Open schedule",
+				"showOnly": "Show only this schedule"
+			},
+			"grid": {
+				"label": "Staff by day",
+				"staff": "Staff",
+				"noSchedule": "No schedule",
+				"noStaff": "No one is rostered in these days yet."
+			},
+			"needs": {
+				"heading": "Needs you",
+				"none": "Nothing needs you in these days.",
+				"reviewOne": "{{name}} is ready to review.",
+				"reviewMany": "{{count}} schedules are ready to review: {{names}}.",
+				"noSchedule": "No schedule for {{days}}.",
+				"review": "Review",
+				"createSchedule": "Create schedule"
+			},
+			"notice": {
+				"showingOne": "Showing only {{name}}. Other schedules are dimmed.",
+				"openSchedule": "Open schedule",
+				"showAll": "Show all schedules",
+				"unpublished": "Not published yet: {{names}}. Each one is published from its own page."
+			}
 		}
 	},
 	"colourSwatchPicker": {
