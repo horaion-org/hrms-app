@@ -28,6 +28,21 @@ export const hasRoster = (state: WeekState): boolean =>
 	ROSTER_STATES.includes(state);
 
 /**
+ * Whether a week card shows its cover summary (shifts short, days changed by
+ * hand): when the week's newest part has a roster, or, on a week of several
+ * schedules, when an earlier part has one and the month read sent the week's
+ * days (they cover every part with a roster, so the counts are the week's).
+ */
+export const showsCoverSummary = (
+	week: Pick<MonthWeek, "state" | "parts" | "days">
+): boolean => {
+	if (hasRoster(week.state)) return true;
+	return (
+		week.days.length > 0 && week.parts.some((part) => hasRoster(part.state))
+	);
+};
+
+/**
  * The week card's one action: Review on the week under review, Open on any
  * other week with a schedule (a draft opens its setup, a rejected week its
  * roster), none on a week without one.

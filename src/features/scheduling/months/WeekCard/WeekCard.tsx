@@ -15,6 +15,7 @@ import { WeekPartLinks } from "@/features/scheduling/months/WeekPartLinks";
 import { weekHeadline } from "@/features/scheduling/months/weekHeadline";
 import {
 	hasRoster,
+	showsCoverSummary,
 	weekAction,
 	weekStateTones,
 } from "@/features/scheduling/months/weekStateLooks";
@@ -147,7 +148,7 @@ export const WeekCard = ({
 				</p>
 			)}
 			<DayCoverMarks days={week.days} />
-			{hasRoster(week.state) && (
+			{showsCoverSummary(week) && (
 				<div className="text-sm text-neutral-800">
 					<p>
 						{shortShifts > 0
