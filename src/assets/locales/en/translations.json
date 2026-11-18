@@ -4822,7 +4822,8 @@
 				"notMet_one": "{{count}} could not be met",
 				"notMet_other": "{{count}} could not be met",
 				"forInformation_one": "{{count}} for information",
-				"forInformation_other": "{{count}} for information"
+				"forInformation_other": "{{count}} for information",
+				"changesUnchecked": "Changes not validated"
 			},
 			"jobShort_one": "{{count}} {{job}} short",
 			"jobShort_other": "{{count}} {{job}} short",
@@ -5658,6 +5659,7 @@
 			"staffingUnchecked": "Staffing could not be checked; the shifts left short below are from before.",
 			"brokenRulesTitle": "Working-time rules broken",
 			"outOfDate": "Changed since this list was made",
+			"changesUnchecked": "Changes made by hand aren’t checked in this list yet: it shows only what was found when the roster was generated. Validate the schedule before you publish.",
 			"rulesUnchecked": "The working-time rules could not be checked; the list below is from before.",
 			"validated": "Validated: no rule broken",
 			"mayBeShort": "The check ran out of time, so this list may be incomplete.",

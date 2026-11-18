@@ -4622,7 +4622,8 @@
 				"notMet_one": "{{count}} no se pudo cumplir",
 				"notMet_other": "{{count}} no se pudieron cumplir",
 				"forInformation_one": "{{count}} a título informativo",
-				"forInformation_other": "{{count}} a título informativo"
+				"forInformation_other": "{{count}} a título informativo",
+				"changesUnchecked": "Cambios sin validar"
 			},
 			"jobShort_one": "Falta {{count}} {{job}}",
 			"jobShort_other": "Faltan {{count}} {{job}}",
@@ -5458,6 +5459,7 @@
 			"staffingUnchecked": "No se pudo comprobar el personal; los turnos con falta de personal de abajo son los anteriores.",
 			"brokenRulesTitle": "Reglas de tiempo de trabajo incumplidas",
 			"outOfDate": "Ha cambiado desde que se hizo esta lista",
+			"changesUnchecked": "Los cambios hechos a mano aún no se comprueban en esta lista: solo muestra lo encontrado al generar el cuadrante. Valida el cuadrante antes de publicarlo.",
 			"rulesUnchecked": "No se pudieron comprobar las reglas de tiempo de trabajo; la lista de abajo es la anterior.",
 			"validated": "Validado: no se incumple ninguna regla",
 			"mayBeShort": "La comprobación se quedó sin tiempo, así que esta lista puede estar incompleta.",

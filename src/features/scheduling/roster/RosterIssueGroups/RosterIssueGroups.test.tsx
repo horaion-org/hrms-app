@@ -208,4 +208,19 @@ describe("IssueSummary", () => {
 
 		expect(screen.getByText(copy.nothingToFix)).toBeInTheDocument();
 	});
+
+	it("leads with unvalidated changes in the warning tone, never reading as clean", () => {
+		render(
+			<IssueSummary
+				changesUnchecked
+				counts={{ mustFix: 0, notMet: 0, forInformation: 1 }}
+			/>
+		);
+
+		expect(screen.getByText(copy.summary.changesUnchecked)).toHaveClass(
+			"text-warning-800"
+		);
+		expect(screen.getByText("1 for information")).toBeInTheDocument();
+		expect(screen.queryByText(copy.nothingToFix)).not.toBeInTheDocument();
+	});
 });

@@ -84,8 +84,19 @@ describe("ValidationNote", () => {
 		}
 	);
 
-	it("says the list is out of date, with Validate schedule right there", async () => {
+	it("warns that hand changes are not validated, with Validate schedule as the main action", async () => {
 		const ask = show("outOfDate");
+
+		expect(screen.getByRole("note")).toHaveTextContent(copy.changesUnchecked);
+		expect(screen.getByRole("note")).toHaveClass("bg-warning-50");
+		await userEvent.click(screen.getByRole("button", { name: copy.check }));
+		expect(ask).toHaveBeenCalledOnce();
+	});
+
+	it("says the list is out of date, with Validate schedule right there", async () => {
+		const ask = show("outOfDate", {
+			last: { revision: 0, check: rulesCheckFixture() },
+		});
 
 		expect(screen.getByRole("note")).toHaveTextContent(copy.outOfDate);
 		expect(screen.getByRole("note")).toHaveClass("bg-neutral-100");
