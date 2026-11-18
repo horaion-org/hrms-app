@@ -5730,7 +5730,14 @@
 				"tooLong": "That is {{days}} days. A schedule by dates covers up to {{max}} days. Choose a last day on or before {{last}}, or make a second schedule for the rest.",
 				"handChangesReplaced_one": "{{count}} change made by hand to this week’s roster will be replaced.",
 				"handChangesReplaced_other": "{{count}} changes made by hand to this week’s roster will be replaced.",
-				"description": "Select the department and the days to generate."
+				"description": "Select the department and the days to generate.",
+				"quick": {
+					"label": "Quick choices",
+					"restOfWeek": "Rest of this week",
+					"nextWeek": "Next week",
+					"thisMonth": "This month",
+					"nextMonth": "Next month"
+				}
 			},
 			"generate": {
 				"hint_one": "Generating works out {{count}} day, {{range}}. You then review and publish it.",

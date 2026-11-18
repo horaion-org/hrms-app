@@ -418,6 +418,37 @@ describe("MonthSetupStep", () => {
 			});
 		});
 
+		it("given_aQuickChoice_when_pressed_then_bothDaysAreFilledAndNothingElse", async () => {
+			const user = userEvent.setup();
+			const onDatesChange = vi.fn();
+			render(
+				<Harness
+					dates={datesProp()}
+					defaultValues={{ ...DATES, name: "Year-end gala" }}
+					onDatesChange={onDatesChange}
+				/>
+			);
+
+			await user.click(screen.getByRole("button", { name: "Next week" }));
+
+			// Today is Tuesday 17 November 2026: next week is Monday 23 to Sunday 29.
+			await waitFor(() => {
+				expect(onDatesChange).toHaveBeenLastCalledWith({
+					scheduleFor: "dates",
+					firstDay: "2026-11-23",
+					lastDay: "2026-11-29",
+					name: "Year-end gala",
+				});
+			});
+			expect(screen.queryByRole("alert")).toBeNull();
+		});
+
+		it("given_monthInTheDefaults_when_shown_then_noQuickChoices", () => {
+			render(<Harness dates={datesProp()} />);
+
+			expect(screen.queryByRole("group", { name: "Quick choices" })).toBeNull();
+		});
+
 		it("given_aPastFirstDay_when_validated_then_saysChooseTodayOrLater", async () => {
 			const user = userEvent.setup();
 			render(

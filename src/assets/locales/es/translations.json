@@ -5530,7 +5530,14 @@
 				"tooLong": "Son {{days}} días. Un horario por fechas cubre hasta {{max}} días. Elige un último día igual o anterior al {{last}}, o haz un segundo horario para el resto.",
 				"handChangesReplaced_one": "{{count}} cambio hecho a mano en el cuadrante de esta semana se reemplazará.",
 				"handChangesReplaced_other": "{{count}} cambios hechos a mano en el cuadrante de esta semana se reemplazarán.",
-				"description": "Selecciona el departamento y los días que quieres generar."
+				"description": "Selecciona el departamento y los días que quieres generar.",
+				"quick": {
+					"label": "Opciones rápidas",
+					"restOfWeek": "Resto de esta semana",
+					"nextWeek": "La próxima semana",
+					"thisMonth": "Este mes",
+					"nextMonth": "El próximo mes"
+				}
 			},
 			"generate": {
 				"hint_one": "Generar calcula {{count}} día, {{range}}. Después lo revisas y lo publicas.",

@@ -47,6 +47,7 @@ import {
 	monthSetupSchema,
 	type MonthSetupValues,
 } from "@/features/scheduling/createSchedule/setupSchema";
+import { DatesQuickChoices } from "@/features/scheduling/createSchedule/DatesQuickChoices";
 import { PlanRowDates } from "@/features/scheduling/createSchedule/PlanRowDates";
 import { StepPanel } from "@/features/scheduling/createSchedule/StepPanel";
 import { workspaceQuery } from "@/features/workspace/api";
@@ -112,6 +113,9 @@ const SETTINGS = [
 
 /** The last day's order and length depend on the first day: a change to the first day checks the last again. */
 const FIRST_DAY_RULES: { deps: Array<"lastDay"> } = { deps: ["lastDay"] };
+
+/** A quick choice fills the two days as typing them would: checked at once and marked changed. */
+const QUICK_CHOICE_SET = { shouldValidate: true, shouldDirty: true };
 
 const rangeOf = (week: TickableWeek): TickedRange => ({
 	start: week.periodStart,
@@ -481,6 +485,15 @@ export const MonthSetupStep = ({
 									</FormRow>
 								))}
 							</div>
+							{today !== "" && (
+								<DatesQuickChoices
+									today={today}
+									onChoose={(range) => {
+										setValue("firstDay", range.firstDay, QUICK_CHOICE_SET);
+										setValue("lastDay", range.lastDay, QUICK_CHOICE_SET);
+									}}
+								/>
+							)}
 							<FormRow
 								className="sm:w-[37rem]"
 								error={errors.name?.message}
