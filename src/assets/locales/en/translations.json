@@ -5808,7 +5808,9 @@
 				"short": {
 					"dayOff": "Off",
 					"restDay": "Rest"
-				}
+				},
+				"rostersLoading": "Loading the rosters…",
+				"rostersFailed": "The rosters couldn't be loaded. Reload the page to try again."
 			},
 			"needs": {
 				"heading": "Needs you",

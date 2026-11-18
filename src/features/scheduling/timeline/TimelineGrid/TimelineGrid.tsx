@@ -31,6 +31,7 @@ import {
 } from "@/features/scheduling/timeline/timelineLooks";
 import {
 	hoursOfRow,
+	type RostersRead,
 	type TimelineRow,
 } from "@/features/scheduling/timeline/timelineRows";
 
@@ -44,6 +45,8 @@ export type TimelineGridProps = {
 	shownScheduleId?: string;
 	/** "Show only this schedule" was chosen on a bar. */
 	onShowOnly: (scheduleId: string) => void;
+	/** Whether every roster is read; while loading or after a failure the grid says so rather than "No one is rostered". */
+	rosters: RostersRead;
 };
 
 const key = "scheduling.timeline.grid";
@@ -193,6 +196,27 @@ const StaffCell = ({
 	);
 };
 
+/** A row across the table saying why it has no staff rows yet; an alert when a read failed. */
+const StatusRow = ({
+	days,
+	alert,
+	children,
+}: {
+	days: ReadonlyArray<string>;
+	alert: boolean;
+	children: string;
+}): FunctionComponent => (
+	<tr className="border-t border-neutral-400">
+		<td
+			className="px-3 py-4 text-sm text-neutral-800"
+			colSpan={days.length + 1}
+			role={alert ? "alert" : undefined}
+		>
+			{children}
+		</td>
+	</tr>
+);
+
 /**
  * The timeline as one table, in the roster grid's bordered container: a header
  * row of days, the schedules' bar lanes, then one row per person.
@@ -204,6 +228,7 @@ export const TimelineGrid = ({
 	view,
 	shownScheduleId,
 	onShowOnly,
+	rosters,
 }: TimelineGridProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
@@ -263,15 +288,20 @@ export const TimelineGrid = ({
 						view={view}
 						onShowOnly={onShowOnly}
 					/>
-					{rows.length === 0 && (
-						<tr className="border-t border-neutral-400">
-							<td
-								className="px-3 py-4 text-sm text-neutral-800"
-								colSpan={days.length + 1}
-							>
-								{t(`${key}.noStaff`)}
-							</td>
-						</tr>
+					{rosters === "failed" && (
+						<StatusRow alert days={days}>
+							{t(`${key}.rostersFailed`)}
+						</StatusRow>
+					)}
+					{rosters === "loading" && (
+						<StatusRow alert={false} days={days}>
+							{t(`${key}.rostersLoading`)}
+						</StatusRow>
+					)}
+					{rosters === "loaded" && rows.length === 0 && (
+						<StatusRow alert={false} days={days}>
+							{t(`${key}.noStaff`)}
+						</StatusRow>
 					)}
 					{rows.map((row) => {
 						const name = row.name ?? t("scheduling.detail.formerMember");

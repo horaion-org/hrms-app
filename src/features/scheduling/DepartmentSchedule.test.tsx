@@ -10,6 +10,7 @@ import {
 import {
 	accessPassReply,
 	envelope,
+	problemReply,
 	stubApi,
 	type StubReply,
 } from "@/common/testing/stubApi";
@@ -309,3 +310,38 @@ it.each([
 		).not.toBeInTheDocument();
 	}
 );
+
+/** While a roster is still being read the grid says it is loading, not that no one is rostered. */
+it("says the rosters are loading while their reads are on the way", async () => {
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	stubApi(twoSchedulesInOneWeek());
+	const answered = globalThis.fetch;
+	// The rosters' replies never arrive.
+	vi.stubGlobal("fetch", (url: string, init?: RequestInit) =>
+		url.includes("/assignments")
+			? new Promise<Response>(() => {})
+			: answered(url, init)
+	);
+	app = await openApp("/scheduling/department?department=d-1&from=2026-10-12");
+	renderAuthApp(app);
+
+	expect(await screen.findByText("Loading the rosters…")).toBeInTheDocument();
+	expect(
+		screen.queryByText("No one is rostered in these days yet.")
+	).not.toBeInTheDocument();
+});
+
+/** A schedule that can't be read (here gone, a 404) is an alert, not an empty grid. */
+it("alerts when a schedule's roster could not be read", async () => {
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	stubApi({
+		...twoSchedulesInOneWeek(),
+		[`GET ${SCHEDULES}/s-2`]: problemReply(404, "SCHEDULE_NOT_FOUND"),
+	});
+	app = await openApp("/scheduling/department?department=d-1&from=2026-10-12");
+	renderAuthApp(app);
+
+	expect(await screen.findByRole("alert")).toHaveTextContent(
+		"The rosters couldn't be loaded. Reload the page to try again."
+	);
+});

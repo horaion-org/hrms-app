@@ -5608,7 +5608,9 @@
 				"short": {
 					"dayOff": "Libre",
 					"restDay": "Desc."
-				}
+				},
+				"rostersLoading": "Cargando los turnos…",
+				"rostersFailed": "No se pudieron cargar los turnos. Recarga la página para intentarlo de nuevo."
 			},
 			"needs": {
 				"heading": "Requiere tu atención",

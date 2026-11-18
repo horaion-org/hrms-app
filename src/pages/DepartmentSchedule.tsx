@@ -251,6 +251,7 @@ export const DepartmentSchedulePage = (): FunctionComponent => {
 				/>
 				<TimelineGrid
 					days={days}
+					rosters={timeline.rosters}
 					rows={timeline.rows}
 					schedules={timeline.schedules}
 					shownScheduleId={shownScheduleId}
