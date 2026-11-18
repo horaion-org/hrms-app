@@ -350,10 +350,10 @@ it("deletes the schedule from the header's menu and goes back to the overview", 
 		).getByRole("button", { name: "Delete schedule" })
 	);
 
-	// Deleting returns to the schedule's month, not the overview.
+	// Deleting returns to the department timeline from the schedule's week, not the overview.
 	await waitFor(() => {
-		expect(app?.router.state.location.pathname).toBe(
-			"/scheduling/months/2026-10"
+		expect(app?.router.state.location.href).toBe(
+			"/scheduling/department?department=d-1&from=2026-10-12"
 		);
 	});
 	expect(
