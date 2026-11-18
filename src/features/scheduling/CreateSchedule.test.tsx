@@ -361,6 +361,33 @@ describe("Create Schedule: opening and setup", () => {
 		]);
 		expect(sent(calls, `POST ${SCHEDULES}`)).toEqual([]);
 	});
+
+	it("given_aChosenPeoplePartOfAWeek_when_setupCompletedAgain_then_thePutKeepsItsPeopleAndDays", async () => {
+		const user = userEvent.setup();
+		const part = scheduleFixture({
+			coveredFrom: "2026-10-15",
+			memberProfileIds: ["m-1", "m-2"],
+		});
+		const { calls } = await open(
+			"/scheduling/new?step=setup&scheduleId=s-1&departmentId=d-1",
+			{ [`GET ${SCHEDULE}`]: reply(part), [`PUT ${SCHEDULE}`]: reply(part) }
+		);
+		await screen.findByRole("textbox", { name: /Schedule name/ });
+
+		await user.click(next());
+
+		await screen.findByRole("region", { name: "Ready to generate" });
+		expect(sent(calls, `PUT ${SCHEDULE}`)).toEqual([
+			{
+				...DRAFT_SETUP,
+				coveredFrom: "2026-10-15",
+				coveredTo: "2026-10-18",
+				includedShiftIds: INCLUDED_SHIFT_IDS,
+				includedConstraintIds: INCLUDED_CONSTRAINT_IDS,
+				memberProfileIds: ["m-1", "m-2"],
+			},
+		]);
+	});
 });
 
 describe("Create Schedule: the week's choice", () => {

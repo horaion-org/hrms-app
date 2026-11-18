@@ -7,6 +7,7 @@ import type {
 	PartDays,
 } from "@/features/scheduling/dates/api";
 import { daysBeforeOf } from "@/features/scheduling/dates/datesSetup";
+import type { PeopleProblem } from "@/features/scheduling/dates/people";
 import type {
 	MonthWeek,
 	ScheduleMonth,
@@ -119,3 +120,23 @@ export const partsBeforeStartOf = (
 		(week) => week.parts
 	),
 ];
+
+/** What decides whether "Before this week" may save a dates run's first days as a draft. */
+export type DaysBeforeFacts = {
+	/** The run's first new days redo days that have a schedule: no draft can be saved over them. */
+	redoAtStart: boolean;
+	mayCreate: boolean;
+	mayUpdate: boolean;
+	/** The Department's shifts and constraints are read, so the draft gets its choice. */
+	listsRead: boolean;
+	/** Why the chosen people can't be sent, e.g. nobody of the new days chosen; never sent as an empty list. */
+	peopleProblem: PeopleProblem | undefined;
+};
+
+/** Whether "Before this week" may save the dates run's first days as a draft. */
+export const mayAddDaysBeforeOf = (facts: DaysBeforeFacts): boolean =>
+	!facts.redoAtStart &&
+	facts.mayCreate &&
+	facts.mayUpdate &&
+	facts.listsRead &&
+	facts.peopleProblem === undefined;

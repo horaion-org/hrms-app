@@ -63,4 +63,26 @@ describe("PeopleChoiceDialog", () => {
 			"Choose at least one person."
 		);
 	});
+
+	it("given_chosenPeopleTheNewDaysNoLongerList_when_opened_then_onlyTheListedOnesAreTicked", () => {
+		show({ value: ["m-2", "m-9"] });
+
+		expect(
+			screen.getByRole("checkbox", { name: "Select Blake Example" })
+		).toBeChecked();
+		expect(
+			screen.getByRole("checkbox", { name: "Select Avery Example" })
+		).not.toBeChecked();
+	});
+
+	it("given_noneOfTheChosenStillListed_when_opened_then_applyWaitsWithItsReason", () => {
+		show({ value: ["m-9"] });
+
+		expect(
+			screen.getByRole("button", { name: "Use these people" })
+		).toBeDisabled();
+		expect(screen.getByRole("alert")).toHaveTextContent(
+			"Choose at least one person."
+		);
+	});
 });

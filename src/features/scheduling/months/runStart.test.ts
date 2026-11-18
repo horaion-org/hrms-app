@@ -9,6 +9,7 @@ import {
 	ungeneratedMonthFixture,
 } from "@/features/scheduling/months/fixtures";
 import {
+	mayAddDaysBeforeOf,
 	partsBeforeStartOf,
 	runStartOf,
 } from "@/features/scheduling/months/runStart";
@@ -211,5 +212,51 @@ describe("partsBeforeStartOf", () => {
 
 	it("given_nothingRead_when_gathered_then_noParts", () => {
 		expect(partsBeforeStartOf(undefined, undefined, undefined)).toEqual([]);
+	});
+});
+
+describe("mayAddDaysBeforeOf", () => {
+	const allowed = {
+		redoAtStart: false,
+		mayCreate: true,
+		mayUpdate: true,
+		listsRead: true,
+		peopleProblem: undefined,
+	};
+
+	it.each([
+		{ case: "everything allows it", facts: allowed, may: true },
+		{
+			case: "a redo at the start",
+			facts: { ...allowed, redoAtStart: true },
+			may: false,
+		},
+		{
+			case: "no schedule:create",
+			facts: { ...allowed, mayCreate: false },
+			may: false,
+		},
+		{
+			case: "no schedule:update",
+			facts: { ...allowed, mayUpdate: false },
+			may: false,
+		},
+		{
+			case: "the lists not read",
+			facts: { ...allowed, listsRead: false },
+			may: false,
+		},
+		{
+			case: "none of the chosen people in the new days",
+			facts: { ...allowed, peopleProblem: "nobodyChosen" as const },
+			may: false,
+		},
+		{
+			case: "people chosen over scheduled days",
+			facts: { ...allowed, peopleProblem: "daysTaken" as const },
+			may: false,
+		},
+	])("$case: $may", ({ facts, may }) => {
+		expect(mayAddDaysBeforeOf(facts)).toBe(may);
 	});
 });

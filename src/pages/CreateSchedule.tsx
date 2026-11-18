@@ -321,7 +321,7 @@ export const CreateSchedule = (): FunctionComponent => {
 				await scheduleActions.update.mutateAsync({
 					unit: saved,
 					scheduleId: saved.scheduleId,
-					body: scheduleBodyOf(setup, ticked, tickedConstraints),
+					body: scheduleBodyOf(setup, ticked, tickedConstraints, answered),
 				});
 			dispatch({ type: "setupSaved", setup });
 			goTo(1);
@@ -339,7 +339,7 @@ export const CreateSchedule = (): FunctionComponent => {
 			await scheduleActions.update.mutateAsync({
 				unit: saved,
 				scheduleId: saved.scheduleId,
-				body: scheduleBodyOf(draft.setup, ticked, tickedConstraints),
+				body: scheduleBodyOf(draft.setup, ticked, tickedConstraints, answered),
 			});
 			return true;
 		} catch (error) {
