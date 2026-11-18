@@ -283,7 +283,7 @@ describe("Create Schedule: opening and setup", () => {
 		expect(
 			await screen.findByRole(
 				"heading",
-				{ level: 1, name: "Create schedule" },
+				{ level: 1, name: "Generate" },
 				{ timeout: 10_000 }
 			)
 		).toBeVisible();

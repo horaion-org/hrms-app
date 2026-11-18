@@ -358,7 +358,7 @@ describe("MonthSetupStep", () => {
 
 			render(<Harness dates={datesProp()} defaultValues={DATES} />);
 			expect(
-				screen.getByText("Select the department and the days to generate.")
+				screen.getByText("Select the department and the days to roster.")
 			).toBeInTheDocument();
 		});
 
@@ -399,12 +399,12 @@ describe("MonthSetupStep", () => {
 			expect(screen.getByText("First day")).toBeInTheDocument();
 			expect(screen.getByText("Last day")).toBeInTheDocument();
 			expect(
-				screen.getByText("Optional. Shown on the weeks these dates create.")
+				screen.getByText("Optional. Shown only in History.")
 			).toBeInTheDocument();
-			const table = screen.getByRole("table", { name: "What this creates" });
+			const table = screen.getByRole("table", { name: "What generating does" });
 			expect(within(table).getAllByRole("row")).toHaveLength(3);
 			expect(
-				within(table).getByText(/^Nov 19\s?–\s?22, 2026 with your choices$/)
+				within(table).getByText(/^Nov 19\s?–\s?22, 2026: empty, will be filled\.$/)
 			).toBeInTheDocument();
 			expect(within(table).getAllByText("New")).toHaveLength(2);
 			expect(
@@ -480,7 +480,7 @@ describe("MonthSetupStep", () => {
 
 			expect(
 				await screen.findByText(
-					"That is 32 days. A schedule by dates covers up to 31 days. Choose a last day on or before Sat, Dec 19, or make a second schedule for the rest."
+					"That is 32 days. One run covers up to 31 days. Choose a last day on or before Sat, Dec 19, then generate the rest in a second run."
 				)
 			).toBeInTheDocument();
 		});
@@ -520,7 +520,7 @@ describe("MonthSetupStep", () => {
 			);
 
 			expect(
-				screen.getByText(/^Nov 23\s?–\s?29, 2026 stay as they are$/)
+				screen.getByText(/^Nov 23\s?–\s?29, 2026: stays as it is\.$/)
 			).toBeInTheDocument();
 			expect(screen.getByText("Kept")).toBeInTheDocument();
 			expect(
@@ -556,7 +556,7 @@ describe("MonthSetupStep", () => {
 				)
 			).toBeInTheDocument();
 			expect(
-				screen.queryByText(/already have a schedule\. It stays/)
+				screen.queryByText(/are to review\. Their roster stays/)
 			).toBeNull();
 		});
 
@@ -589,7 +589,7 @@ describe("MonthSetupStep", () => {
 
 			expect(
 				within(
-					screen.getByRole("table", { name: "What this creates" })
+					screen.getByRole("table", { name: "What generating does" })
 				).getByText(
 					"3 changes made by hand to this week’s roster will be replaced."
 				)
@@ -623,24 +623,24 @@ describe("MonthSetupStep", () => {
 				/>
 			);
 
-			const table = screen.getByRole("table", { name: "What this creates" });
+			const table = screen.getByRole("table", { name: "What generating does" });
 			expect(
-				within(table).getByText(/^Nov 16\s?–\s?17, 2026 stay as they are$/)
+				within(table).getByText(/^Nov 16\s?–\s?17, 2026: stays as it is\.$/)
 			).toBeInTheDocument();
 			expect(
 				within(table).getByText(
-					/^Nov 18\s?–\s?19, 2026 scheduled again with your choices$/
+					/^Nov 18\s?–\s?19, 2026: to review, will be worked out again\.$/
 				)
 			).toBeInTheDocument();
 			expect(
 				within(table).getByText(
-					/^Nov 20\s?–\s?22, 2026 scheduled again with the week’s own shifts and rules$/
+					/^Nov 20\s?–\s?22, 2026: to review, will be worked out again after the new days\.$/
 				)
 			).toBeInTheDocument();
 			expect(within(table).getByText("To redo")).toBeInTheDocument();
 			expect(
 				within(table).getByText(
-					/^This week will be 3 schedules: Nov 16\s?–\s?17, 2026, Nov 18\s?–\s?19, 2026,? and Nov 20\s?–\s?22, 2026\. Each is reviewed and published on its own\.$/
+					/^These days are reviewed and published in 3 parts: Nov 16\s?–\s?17, 2026, Nov 18\s?–\s?19, 2026,? and Nov 20\s?–\s?22, 2026\.$/
 				)
 			).toBeInTheDocument();
 			expect(
@@ -650,7 +650,7 @@ describe("MonthSetupStep", () => {
 			).toBeInTheDocument();
 			expect(
 				screen.getByText(
-					/^Nov 18\s?–\s?19, 2026 already have a schedule\. It stays until the new days are ready\. Then they are replaced, and the rest of their week is scheduled again\. Days that have been published are never touched\.$/
+					/^Nov 18\s?–\s?19, 2026 are to review\. Their roster stays until the new one is ready, then it is replaced and the rest of their week is worked out again\. Published days are never touched\.$/
 				)
 			).toBeInTheDocument();
 		});
@@ -676,7 +676,7 @@ describe("MonthSetupStep", () => {
 			);
 
 			expect(
-				screen.queryAllByText(/It stays until the new days are ready/)
+				screen.queryAllByText(/roster stays until the new one is ready/)
 			).toHaveLength(notes);
 			expect(screen.queryAllByText(/more days? after them/)).toHaveLength(
 				notes
@@ -695,7 +695,7 @@ describe("MonthSetupStep", () => {
 				/>
 			);
 
-			const table = screen.getByRole("table", { name: "What this creates" });
+			const table = screen.getByRole("table", { name: "What generating does" });
 			expect(within(table).getByRole("img")).toHaveAccessibleName(
 				"Monday already scheduled, stays as it is, Tuesday already scheduled, stays as it is, Wednesday covered, Thursday covered, Friday covered, Saturday covered, Sunday covered"
 			);
@@ -743,12 +743,12 @@ describe("MonthSetupStep", () => {
 				screen.getByText(/which have been published and stay as they are\./)
 			).toBeInTheDocument();
 			expect(
-				screen.queryByRole("table", { name: "What this creates" })
+				screen.queryByRole("table", { name: "What generating does" })
 			).toBeNull();
 			expect(screen.queryByText(/This week will be/)).toBeNull();
 			expect(screen.queryByText(/\d+ days? to generate/)).toBeNull();
 			expect(
-				screen.queryByText(/It stays until the new days are ready/)
+				screen.queryByText(/roster stays until the new one is ready/)
 			).toBeNull();
 		});
 	});

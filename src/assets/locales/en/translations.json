@@ -5697,19 +5697,19 @@
 			"setup": {
 				"firstDay": "First day",
 				"lastDay": "Last day",
-				"hint": "Any weekday, up to {{max}} days. Days that already have a schedule are scheduled again with your choices; days that have been published stay as they are.",
+				"hint": "Any days, up to {{max}}. They don’t have to be a whole week or start on a Monday.",
 				"name": "Name",
-				"nameHint": "Optional. Shown on the weeks these dates create.",
+				"nameHint": "Optional. Shown only in History.",
 				"nameCounter": "{{count}}/{{max}}",
-				"creates": "What this creates",
+				"creates": "What generating does",
 				"datesColumn": "Dates",
 				"daysColumn": "Days",
-				"staysLine_one": "{{days}} stays as it is",
-				"staysLine_other": "{{days}} stay as they are",
-				"newLine": "{{days}} with your choices",
-				"redoneLine": "{{days}} scheduled again with your choices",
-				"weeksOwnLine": "{{days}} scheduled again with the week’s own shifts and rules",
-				"schedulesLine": "This week will be {{number}} schedules: {{days}}. Each is reviewed and published on its own.",
+				"staysLine_one": "{{days}}: stays as it is.",
+				"staysLine_other": "{{days}}: stays as it is.",
+				"newLine": "{{days}}: empty, will be filled.",
+				"redoneLine": "{{days}}: to review, will be worked out again.",
+				"weeksOwnLine": "{{days}}: to review, will be worked out again after the new days.",
+				"schedulesLine": "These days are reviewed and published in {{number}} parts: {{days}}.",
 				"new": "New",
 				"kept": "Kept",
 				"redo": "To redo",
@@ -5719,18 +5719,18 @@
 				"restSummary_other": "{{count}} more days after them, scheduled again with their week’s own shifts and rules",
 				"keptNote_one": "{{days}} has been published and stays as it is.",
 				"keptNote_other": "{{days}} have been published and stay as they are.",
-				"redoNote_one": "{{days}} already has a schedule. It stays until the new days are ready. Then it is replaced, and the rest of its week is scheduled again. Days that have been published are never touched.",
-				"redoNote_other": "{{days}} already have a schedule. It stays until the new days are ready. Then they are replaced, and the rest of their week is scheduled again. Days that have been published are never touched.",
+				"redoNote_one": "{{days}} is to review. Its roster stays until the new one is ready, then it is replaced and the rest of its week is worked out again. Published days are never touched.",
+				"redoNote_other": "{{days}} are to review. Their roster stays until the new one is ready, then it is replaced and the rest of their week is worked out again. Published days are never touched.",
 				"restNote_one": "{{days}} is scheduled again after the new days are ready.",
 				"restNote_other": "{{days}} are scheduled again after the new days are ready.",
 				"checking": "Checking these dates…",
 				"missing": "Choose a first day and a last day.",
 				"past": "Choose today ({{today}}) or a later first day. Days that have passed cannot be scheduled.",
 				"reversed": "The last day is before the first day. Choose a last day on or after {{first}}.",
-				"tooLong": "That is {{days}} days. A schedule by dates covers up to {{max}} days. Choose a last day on or before {{last}}, or make a second schedule for the rest.",
+				"tooLong": "That is {{days}} days. One run covers up to {{max}} days. Choose a last day on or before {{last}}, then generate the rest in a second run.",
 				"handChangesReplaced_one": "{{count}} change made by hand to this week’s roster will be replaced.",
 				"handChangesReplaced_other": "{{count}} changes made by hand to this week’s roster will be replaced.",
-				"description": "Select the department and the days to generate.",
+				"description": "Select the department and the days to roster.",
 				"quick": {
 					"label": "Quick choices",
 					"restOfWeek": "Rest of this week",
@@ -5740,12 +5740,12 @@
 				}
 			},
 			"generate": {
-				"hint_one": "Generating works out {{count}} day, {{range}}. You then review and publish it.",
-				"hint_other": "Generating works out {{count}} days, {{range}}. You then review and publish them week by week."
+				"hint_one": "Generating works out {{count}} day, {{range}}. Nothing is published by generating: staff see nothing new until you publish this day.",
+				"hint_other": "Generating works out {{count}} days, {{range}}. Nothing is published by generating: staff see nothing new until you publish these days."
 			},
 			"create": {
-				"title": "Create schedule",
-				"subtitle": "Choose a department and the days, then generate. You review and publish each schedule afterwards."
+				"title": "Generate",
+				"subtitle": "Choose the days. Empty days are filled, days to review are worked out again, published days stay as they are."
 			},
 			"people": {
 				"title": "Choose people",

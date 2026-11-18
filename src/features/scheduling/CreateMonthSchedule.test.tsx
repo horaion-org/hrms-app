@@ -1801,7 +1801,7 @@ describe("Create schedules for a month: by dates", () => {
 			[`GET ${NOVEMBER}`]: weekOf16Read(),
 		});
 
-		await screen.findByRole("table", { name: "What this creates" });
+		await screen.findByRole("table", { name: "What generating does" });
 		// Once the week before is read (nothing rostered) and drawn, the notice would show if it were offered.
 		await vi.waitFor(() => {
 			expect(calls.some((call) => call.path === NOVEMBER)).toBe(true);
@@ -1855,7 +1855,7 @@ describe("Create schedules for a month: by dates", () => {
 		const { calls } = await open(NEW_DATES, datesRoutes());
 
 		expect(
-			await screen.findByRole("table", { name: "What this creates" })
+			await screen.findByRole("table", { name: "What generating does" })
 		).toBeInTheDocument();
 		expect(screen.getByText("First day")).toBeInTheDocument();
 		expect(
@@ -1971,7 +1971,7 @@ describe("Create schedules for a month: by dates", () => {
 			[`GET ${SCHEDULES}/s-gala/starting-days`]: reply(answered),
 		});
 
-		await screen.findByRole("table", { name: "What this creates" });
+		await screen.findByRole("table", { name: "What generating does" });
 		// The draft's starting days answer every day before Thursday, so the question goes away.
 		await vi.waitFor(() => {
 			expect(
@@ -2015,7 +2015,7 @@ describe("Create schedules for a month: by dates", () => {
 	it("given_datesChosen_when_generated_then_postsTheDatesTheNameAndOneChoicePerNewWeek", async () => {
 		const user = userEvent.setup();
 		const { opened, calls } = await open(NEW_DATES, datesRoutes());
-		await screen.findByRole("table", { name: "What this creates" });
+		await screen.findByRole("table", { name: "What generating does" });
 		await user.type(
 			screen.getByRole("textbox", { name: "Name" }),
 			"Year-end gala"
