@@ -199,6 +199,27 @@ export const timelineScheduleLink = (
 		status: schedule.status === "DRAFT" ? "DRAFT" : "GENERATED",
 	});
 
+/** Whether any schedule covering a day from the run's first to its last is being generated. */
+export const isGeneratingIn = (
+	schedules: ReadonlyArray<TimelineSchedule>,
+	run: DayRun
+): boolean =>
+	schedules.some(
+		(schedule) =>
+			schedule.status === "GENERATING" &&
+			touches(schedule, run.firstDay, run.lastDay)
+	);
+
+/**
+ * Whether the notice shown on arrival from a run by dates still shows: until
+ * its days were seen being generated and no longer are. On arrival the month
+ * read may not show the run yet, so nothing generating alone does not end it.
+ */
+export const generatingNoticeShown = (
+	generatingNow: boolean,
+	seenGenerating: boolean
+): boolean => generatingNow || !seenGenerating;
+
 /** One line of the "needs you" list, as data. */
 export type NeedLine =
 	| ({

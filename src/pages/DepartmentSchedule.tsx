@@ -18,8 +18,11 @@ import { StatusStrip } from "@/features/scheduling/timeline/StatusStrip";
 import {
 	branchWeekFrom,
 	firstFreeRunOf,
+	generatingNoticeShown,
+	isGeneratingIn,
 	needsOf,
 	shiftWindow,
+	type TimelineSchedule,
 	type TimelineView,
 	windowDays,
 } from "@/features/scheduling/timeline/timeline";
@@ -86,13 +89,31 @@ export const DepartmentScheduleProblem = (): FunctionComponent => {
 	);
 };
 
-/** On arrival from a run by dates: which days are being generated. */
-const DatesRunCallout = (): FunctionComponent => {
+/**
+ * On arrival from a run by dates: which days are being generated. It goes
+ * once those days were seen being generated and no longer are.
+ */
+const DatesRunCallout = ({
+	schedules,
+}: {
+	schedules: ReadonlyArray<TimelineSchedule>;
+}): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const days = datesRunOf(
 		useRouterState({ select: (state) => state.location.state })
 	);
+	// The run whose days were seen being generated, kept by its days so a later run starts unseen.
+	const [seenGeneratingRun, setSeenGeneratingRun] = useState<string>();
 	if (!days) return null;
+	const run = `${days.from}/${days.to}`;
+	const generatingNow = isGeneratingIn(schedules, {
+		firstDay: days.from,
+		lastDay: days.to,
+	});
+	// Set while rendering, as a validation's last answer is: the next render finds the run seen.
+	if (generatingNow && seenGeneratingRun !== run) setSeenGeneratingRun(run);
+	if (!generatingNoticeShown(generatingNow, seenGeneratingRun === run))
+		return null;
 	return (
 		<Callout>
 			{t(`${key}.generatingDays`, {
@@ -224,7 +245,7 @@ export const DepartmentSchedulePage = (): FunctionComponent => {
 						)}
 					</div>
 				</header>
-				<DatesRunCallout />
+				<DatesRunCallout schedules={timeline.schedules} />
 				<TimelineNeeds
 					departmentId={departmentId}
 					lines={needs}

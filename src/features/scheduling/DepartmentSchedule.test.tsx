@@ -285,6 +285,49 @@ it("says which days are being generated on arrival from a run by dates", async (
 	).toBeInTheDocument();
 });
 
+/** The notice is for the wait: once the days it names were seen generating and no longer are, it goes by itself. */
+it("takes the Generating notice away once those days are no longer being generated", async () => {
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	const routes = twoSchedulesInOneWeek();
+	const month = (
+		routes[`GET ${MONTHS}/2026-10`] as { body: { data: ScheduleMonth } }
+	).body.data;
+	const [early, weekend] = month.weeks[0]!.parts;
+	const whileGenerating = {
+		...month,
+		weeks: [
+			{
+				...month.weeks[0]!,
+				parts: [{ ...early!, state: "GENERATING" }, weekend!],
+			},
+		],
+	};
+	stubApi({
+		...routes,
+		[`GET ${MONTHS}/2026-10`]: [ok(whileGenerating), ok(month)],
+	});
+	app = await openApp("/scheduling/department?department=d-1&from=2026-10-05");
+	renderAuthApp(app);
+	await screen.findByRole("heading", { level: 1, name: "Kitchen Schedule" });
+	await app.router.navigate({
+		to: "/scheduling/department",
+		search: { department: "d-1", from: "2026-10-12" },
+		state: withDatesRun({}, { firstDay: "2026-10-12", lastDay: "2026-10-14" }),
+	});
+	const notice = await screen.findByText(/^Generating Oct 12\s?–\s?14, 2026…$/);
+	expect((await stripBands())[0]).toHaveTextContent("Generating…");
+
+	// The month's own poll comes round: the days are to review now.
+	await app.queryClient.invalidateQueries({
+		queryKey: scheduleMonthKey("c-1", "d-1", "2026-10"),
+	});
+
+	await vi.waitFor(async () => {
+		expect((await stripBands())[0]).toHaveTextContent("To review");
+	});
+	expect(notice).not.toBeInTheDocument();
+});
+
 /** "Open schedule" links with no `from`: the window opens on the Monday of today's week. */
 it("starts on the Monday of today's week when the link names no day", async () => {
 	const days = windowDays(mondayOf(new Date()), "week");
