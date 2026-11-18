@@ -170,6 +170,16 @@ describe("RosterIssueGroups", () => {
 		).toBeInTheDocument();
 	});
 
+	it("draws no Find cover advice on a roster that offers no Find cover", () => {
+		const gap = rosterIssuesFixture()[0];
+		if (!gap) throw new Error("fixture has a gap");
+		render(<RosterIssueGroups issues={[gap]} />);
+
+		expect(screen.getByText(gap.rule)).toBeVisible();
+		expect(screen.queryByRole("button", { name: "Find cover" })).toBeNull();
+		expect(screen.queryByText(/What to do:/)).toBeNull();
+	});
+
 	it("draws no advice line for an issue with nothing to advise", () => {
 		render(
 			<RosterIssueGroups

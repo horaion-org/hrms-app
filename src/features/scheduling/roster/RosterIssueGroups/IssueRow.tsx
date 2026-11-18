@@ -60,7 +60,11 @@ export const IssueRow = ({
 				}
 			: undefined;
 	const act = findCover ?? show;
-	const advice = issueAdviceOf(issue);
+	// Advice to press Find cover is only for a row that draws the button.
+	const advice =
+		action.kind === "findCover" && !findCover
+			? undefined
+			: issueAdviceOf(issue);
 	return (
 		<li className="flex items-start justify-between gap-3 py-2">
 			<div className="flex min-w-0 flex-col">
