@@ -5617,8 +5617,8 @@
 		},
 		"dates": {
 			"refusal": {
-				"allTaken": "Every day from {{first}} to {{last}} is published, so nothing would change. Choose a first day after {{last}}.",
-				"beforeRoster": "{{days}} come before {{scheduled}}, which are published and stay as they are. Choose a first day after {{last}}.",
+				"allTaken": "Every day from {{first}} to {{last}} has been published, so nothing would change. Choose a first day after {{last}}.",
+				"beforeRoster": "{{days}} come before {{scheduled}}, which have been published and stay as they are. Choose a first day after {{last}}.",
 				"draftInTheWay": "The week of {{week}} has a schedule for {{days}} with no roster yet. Open it from the month page to generate it, or delete it, then choose these dates again.",
 				"beingGenerated": "{{days}} are being generated right now. Wait until that finishes on the month page, then choose these dates again.",
 				"datesInvalid": "These dates can’t be scheduled any more. Go back to Setup and choose them again.",
@@ -5680,8 +5680,8 @@
 			"schedulesThisWeek": "Schedules this week",
 			"redoing": "This schedule redoes {{days}}. Until its roster is ready, the week’s current schedule keeps those days.",
 			"beingRedone": "{{days}} are being scheduled again. This roster keeps them until the new one is ready.",
-			"noneBeforePublished_one": "{{days}} has no schedule. It comes before published days, so it can’t be scheduled now.",
-			"noneBeforePublished_other": "{{days}} have no schedule. They come before published days, so they can’t be scheduled now."
+			"noneBeforePublished_one": "{{days}} has no schedule. It comes before days that have been published, so it can’t be scheduled now.",
+			"noneBeforePublished_other": "{{days}} have no schedule. They come before days that have been published, so they can’t be scheduled now."
 		}
 	},
 	"colourSwatchPicker": {

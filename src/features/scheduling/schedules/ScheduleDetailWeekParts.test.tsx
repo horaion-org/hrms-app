@@ -88,7 +88,9 @@ const openPart = async ({
 }: {
 	monday: string;
 	sunday: string;
-	shown: Pick<WeekPart, "coveredFrom" | "coveredTo">;
+	shown: Pick<WeekPart, "coveredFrom" | "coveredTo"> & {
+		publicationWithdrawnAt?: string;
+	};
 	parts: Array<WeekPart>;
 	permissions?: Array<string>;
 }): Promise<void> => {
@@ -194,6 +196,32 @@ describe("the owner's week of 15 February 2027: Wed–Fri, then Sat–Sun", () =
 		expect(
 			within(dialog).getByRole("button", { name: "Publish roster" })
 		).toBeEnabled();
+	});
+
+	// A part whose publication was taken back still holds the days before it (API WeekRedos.countsAsPublished).
+	it("given_thisPartsPublicationWithdrawn_when_shown_then_mondayTuesdaySayWhyWithoutScheduleButton", async () => {
+		vi.useFakeTimers({
+			toFake: ["Date"],
+			now: new Date("2027-02-10T09:00:00+08:00"),
+		});
+		await openPart({
+			...WEEK,
+			shown: {
+				...wednesdayToFriday,
+				publicationWithdrawnAt: "2027-02-09T10:00:00Z",
+			},
+			parts: [part({ ...wednesdayToFriday })],
+		});
+
+		expect(
+			await screen.findByText(
+				/^Feb 15\s?–\s?16, 2027 have no schedule\. They come before days that have been published, so they can’t be scheduled now\.$/
+			)
+		).toBeInTheDocument();
+		expect(screen.queryByRole("link", { name: /^Schedule Feb 15/ })).toBeNull();
+		expect(
+			screen.queryByRole("button", { name: /^Schedule Feb 15/ })
+		).toBeNull();
 	});
 
 	it("given_theWeekendPart_when_shown_then_mondayTuesdayHavePassedAndWednesdayToFridayLinksItsSchedule", async () => {

@@ -1262,7 +1262,7 @@ describe("schedule refusals", () => {
 				"en-GB"
 			)
 		).toBe(
-			"Every day from Thu 19 Nov to Sun 22 Nov is published, so nothing would change. Choose a first day after Sun 22 Nov."
+			"Every day from Thu 19 Nov to Sun 22 Nov has been published, so nothing would change. Choose a first day after Sun 22 Nov."
 		);
 		expect(
 			datesRefusalText(
@@ -1291,7 +1291,7 @@ describe("schedule refusals", () => {
 				"en-GB"
 			)
 		).toMatch(
-			/^19\s?–\s?22 Nov 2026 come before 23\s?–\s?29 Nov 2026, which are published and stay as they are\. Choose a first day after Sun 29 Nov\.$/
+			/^19\s?–\s?22 Nov 2026 come before 23\s?–\s?29 Nov 2026, which have been published and stay as they are\. Choose a first day after Sun 29 Nov\.$/
 		);
 	});
 

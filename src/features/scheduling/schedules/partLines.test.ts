@@ -139,21 +139,37 @@ describe("firstPublishedDayOf", () => {
 	it.each([
 		{
 			case: "no part published",
-			parts: [{ state: "TO_REVIEW", coveredFrom: "2027-02-15" }],
+			parts: [
+				{ scheduleId: "s-1", state: "TO_REVIEW", coveredFrom: "2027-02-15" },
+			],
+			withdrawn: [],
 			expected: undefined,
 		},
 		{
 			case: "two published parts",
 			parts: [
-				{ state: "PUBLISHED", coveredFrom: "2027-02-19" },
-				{ state: "TO_REVIEW", coveredFrom: "2027-02-15" },
-				{ state: "PUBLISHED", coveredFrom: "2027-02-17" },
+				{ scheduleId: "s-3", state: "PUBLISHED", coveredFrom: "2027-02-19" },
+				{ scheduleId: "s-1", state: "TO_REVIEW", coveredFrom: "2027-02-15" },
+				{ scheduleId: "s-2", state: "PUBLISHED", coveredFrom: "2027-02-17" },
 			],
+			withdrawn: [],
 			expected: "2027-02-17",
 		},
-	] as const)("given_$case_when_read_then_$expected", ({ parts, expected }) => {
-		expect(firstPublishedDayOf(parts)).toBe(expected);
-	});
+		// Taken back, it reads as to review again, but the API still counts it as published.
+		{
+			case: "a part whose publication was withdrawn",
+			parts: [
+				{ scheduleId: "s-1", state: "TO_REVIEW", coveredFrom: "2027-02-17" },
+			],
+			withdrawn: ["s-1"],
+			expected: "2027-02-17",
+		},
+	] as const)(
+		"given_$case_when_read_then_$expected",
+		({ parts, withdrawn, expected }) => {
+			expect(firstPublishedDayOf(parts, withdrawn)).toBe(expected);
+		}
+	);
 });
 
 describe("daysLeftBeforeOf", () => {

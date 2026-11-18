@@ -19,12 +19,23 @@ export type PartLinesSource = {
 	firstPublishedDay?: string;
 };
 
-/** The first day of the week a published part covers, or none: days before it can't be scheduled (API ADR-0129). */
+/**
+ * The first day of the week a part that has been published covers, or none:
+ * days before it can't be scheduled (API ADR-0129). The API counts a part
+ * whose publication was withdrawn as published too (`WeekRedos.countsAsPublished`);
+ * the week read doesn't say which parts those are, so the caller names the
+ * ones it knows (`withdrawnScheduleIds`, such as the schedule on screen).
+ */
 export const firstPublishedDayOf = (
-	parts: ReadonlyArray<Pick<WeekPart, "state" | "coveredFrom">>
+	parts: ReadonlyArray<Pick<WeekPart, "scheduleId" | "state" | "coveredFrom">>,
+	withdrawnScheduleIds: ReadonlyArray<string> = []
 ): string | undefined =>
 	parts
-		.filter((part) => part.state === "PUBLISHED")
+		.filter(
+			(part) =>
+				part.state === "PUBLISHED" ||
+				withdrawnScheduleIds.includes(part.scheduleId)
+		)
 		.map((part) => part.coveredFrom)
 		.sort()[0];
 

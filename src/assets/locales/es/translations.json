@@ -5417,8 +5417,8 @@
 		},
 		"dates": {
 			"refusal": {
-				"allTaken": "Todos los días del {{first}} al {{last}} están publicados, así que no cambiaría nada. Elige un primer día posterior al {{last}}.",
-				"beforeRoster": "{{days}} van antes de {{scheduled}}, que están publicados y se quedan como están. Elige un primer día posterior al {{last}}.",
+				"allTaken": "Todos los días del {{first}} al {{last}} ya se han publicado, así que no cambiaría nada. Elige un primer día posterior al {{last}}.",
+				"beforeRoster": "{{days}} van antes de {{scheduled}}, que ya se han publicado y se quedan como están. Elige un primer día posterior al {{last}}.",
 				"draftInTheWay": "La semana del {{week}} tiene un horario para {{days}} todavía sin cuadrante. Ábrelo desde la página del mes para generarlo, o elimínalo, y luego vuelve a elegir estas fechas.",
 				"beingGenerated": "{{days}} se están generando ahora mismo. Espera a que termine en la página del mes y luego vuelve a elegir estas fechas.",
 				"datesInvalid": "Ya no se pueden programar estas fechas. Vuelve a Configuración y elígelas de nuevo.",
@@ -5480,8 +5480,8 @@
 			"schedulesThisWeek": "Horarios de esta semana",
 			"redoing": "Este horario rehace {{days}}. Hasta que su cuadrante esté listo, el horario actual de la semana conserva esos días.",
 			"beingRedone": "{{days}} se están volviendo a programar. Este cuadrante los conserva hasta que el nuevo esté listo.",
-			"noneBeforePublished_one": "{{days}} no tiene horario. Va antes de días publicados, así que no se puede programar ahora.",
-			"noneBeforePublished_other": "{{days}} no tienen horario. Van antes de días publicados, así que no se pueden programar ahora."
+			"noneBeforePublished_one": "{{days}} no tiene horario. Va antes de días que ya se han publicado, así que no se puede programar ahora.",
+			"noneBeforePublished_other": "{{days}} no tienen horario. Van antes de días que ya se han publicado, así que no se pueden programar ahora."
 		}
 	},
 	"workspace": {
