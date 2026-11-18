@@ -4490,7 +4490,9 @@
 				"byAt": "{{name}} · {{at}}"
 			},
 			"leaveWithTime": "{{leave}} {{time}}",
-			"regenerateWeek": "Regenerate this week"
+			"regenerateWeek": "Regenerate this week",
+			"regenerateDays": "Regenerate these days",
+			"laterPartPublished": "A later schedule of this week is published, and it was worked out from these days, so this one can’t be generated again. Change its roster by hand instead."
 		},
 		"myRoster": {
 			"title": "My roster · {{department}} · {{period}}",
@@ -4655,7 +4657,11 @@
 			"oncePublishedSeen": "Staff saw this roster while it was published.",
 			"oncePublishedReplaced": "Every shift may change, and every change made by hand since is replaced.",
 			"oncePublishedPublishAgain": "Publish the new roster again for staff to see it.",
-			"oncePublishedConfirm": "Generate again"
+			"confirm": "Generate again",
+			"partTitle": "Generate these days again?",
+			"partDays": "{{days}} are worked out again. The current roster stays until the new one is ready.",
+			"laterPartsAfter_one": "{{days}} was worked out from these days, so it is generated again after them.",
+			"laterPartsAfter_other": "{{days}} were worked out from these days, so they are generated again after them."
 		},
 		"export": {
 			"menu": "Export roster",

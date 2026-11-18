@@ -33,6 +33,8 @@ export type ScheduleActionFacts = {
 	mayWithdraw: boolean;
 	/** Holds `schedule:generate`, it is regenerable and its week is not published elsewhere. */
 	mayRegenerate: boolean;
+	/** It covers only part of its week, so Regenerate names its days, not the week. */
+	regeneratesPart: boolean;
 	/** Has a roster, so its history has something to tell. */
 	hasRoster: boolean;
 	approvalStanding: ApprovalActionStanding;
@@ -53,6 +55,7 @@ export type ScheduleAction = {
 		| "scheduling.decision.reject"
 		| "scheduling.decision.withdraw"
 		| "scheduling.detail.regenerateWeek"
+		| "scheduling.detail.regenerateDays"
 		| "scheduling.detail.viewSetup"
 		| "scheduling.detail.details.title";
 	/** The status where this is the page's one primary button; otherwise it is in the menu. */
@@ -120,7 +123,16 @@ export const SCHEDULE_ACTIONS: ReadonlyArray<ScheduleAction> = [
 		id: "regenerate",
 		labelKey: "scheduling.detail.regenerateWeek",
 		primaryWhen: "REJECTED",
-		offered: ({ mayRegenerate }) => mayRegenerate,
+		offered: ({ mayRegenerate, regeneratesPart }) =>
+			mayRegenerate && !regeneratesPart,
+	},
+	{
+		// A part of its week regenerates its own days (API ADR-0135).
+		id: "regenerate",
+		labelKey: "scheduling.detail.regenerateDays",
+		primaryWhen: "REJECTED",
+		offered: ({ mayRegenerate, regeneratesPart }) =>
+			mayRegenerate && regeneratesPart,
 	},
 	{
 		id: "viewSetup",

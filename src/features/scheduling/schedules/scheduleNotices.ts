@@ -15,6 +15,7 @@ export type ScheduleNoticeId =
 	| "failed"
 	| "draft"
 	| "weekPassed"
+	| "laterPartPublished"
 	| "rulesChanged";
 
 /** What decides the notices on one schedule. */
@@ -31,6 +32,8 @@ export type ScheduleNoticeFacts = {
 	weekPassed: boolean;
 	/** The rules changed since the week was generated, as the month read says (API ADR-0091). */
 	rulesChanged: boolean;
+	/** A later part of the week is published, so this part can't be generated again (API ADR-0135). */
+	laterPartPublished: boolean;
 };
 
 /** What the page knows of a schedule's week beyond the schedule itself. */
@@ -39,6 +42,8 @@ export type ScheduleWeekFacts = {
 	weekPublishedElsewhere: boolean;
 	/** The week ended before today in its branch's time zone. */
 	weekPassed: boolean;
+	/** A later part of the week is published (`regenerationOf`). */
+	laterPartPublished: boolean;
 	/** The Department's weeks of the schedule's month, once read. */
 	monthWeeks:
 		| ReadonlyArray<{
@@ -51,7 +56,12 @@ export type ScheduleWeekFacts = {
 /** The facts that decide a schedule's notices: its own standing and what is known of its week. */
 export const scheduleNoticeFactsOf = (
 	schedule: Schedule,
-	{ weekPublishedElsewhere, weekPassed, monthWeeks }: ScheduleWeekFacts
+	{
+		weekPublishedElsewhere,
+		weekPassed,
+		laterPartPublished,
+		monthWeeks,
+	}: ScheduleWeekFacts
 ): ScheduleNoticeFacts => ({
 	status: schedule.status,
 	generating: generationInProgress(schedule),
@@ -59,6 +69,7 @@ export const scheduleNoticeFactsOf = (
 	newestRunFailed: newestRunFailed(schedule),
 	weekPublishedElsewhere,
 	weekPassed,
+	laterPartPublished,
 	rulesChanged:
 		monthWeeks?.find((week) => week.scheduleId === schedule.scheduleId)
 			?.rulesChanged === true,
@@ -103,6 +114,12 @@ export const SCHEDULE_NOTICES: ReadonlyArray<{
 			!generating && !hasRoster && status !== "GENERATION_FAILED",
 	},
 	{ id: "weekPassed", shownWhen: ({ weekPassed }) => weekPassed },
+	// Says why a part has no Regenerate: a later part was worked out from its days and is published.
+	{
+		id: "laterPartPublished",
+		shownWhen: ({ laterPartPublished, generating, weekPassed }) =>
+			laterPartPublished && !generating && !weekPassed,
+	},
 	// Until the week has passed, generating it again takes the department's rules as they are now.
 	{
 		id: "rulesChanged",
