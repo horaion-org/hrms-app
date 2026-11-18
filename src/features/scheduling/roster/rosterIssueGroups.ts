@@ -209,7 +209,7 @@ const sameFindings = (
 	violations: ReadonlyArray<RuleViolation>
 ): Array<SameFinding> => {
 	const findings = new Map<string, SameFinding>();
-	for (const { employeeId, date, messages } of violations) {
+	for (const { employeeId, date, days, messages } of violations) {
 		if (employeeId === null || date === null) continue;
 		const findingKey = JSON.stringify([employeeId, messages]);
 		const finding = findings.get(findingKey) ?? {
@@ -217,7 +217,10 @@ const sameFindings = (
 			days: [],
 			messages,
 		};
-		finding.days.push(date);
+		// Validate sends every day the person breaks the rule on; an answer per day sends only `date`.
+		finding.days.push(
+			...(days !== undefined && days.length > 0 ? days : [date])
+		);
 		findings.set(findingKey, finding);
 	}
 	return [...findings.values()].map((finding) => ({

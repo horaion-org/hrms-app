@@ -77,7 +77,12 @@ describe("roster rules check client", () => {
 					constraintId: null,
 					constraintName: null,
 					violations: [
-						{ employeeId: "mp-1", date: "2026-10-16", messages: ["Over"] },
+						{
+							employeeId: "mp-1",
+							date: "2026-10-16",
+							days: ["2026-10-16", "2026-10-17"],
+							messages: ["Over"],
+						},
 					],
 				},
 			],
@@ -104,7 +109,12 @@ describe("roster rules check client", () => {
 
 		const check = await fetchRosterRulesCheck(TARGET, { expectedRevision: 1 });
 
-		expect(check.brokenRules[0]?.violations?.[0]?.date).toBe("2026-10-16");
+		expect(check.brokenRules[0]?.violations?.[0]).toMatchObject({
+			date: "2026-10-16",
+			days: ["2026-10-16", "2026-10-17"],
+		});
+		// A violation sent without its days (an older API, a generation's findings) reads as before.
+		expect(check.notMet?.[0]?.violations?.[0]?.days).toBeUndefined();
 		expect(check.notMet?.[0]?.constraintName).toBe("Five in a row");
 		expect(check.members[0]?.displayName).toBe("Aisha");
 		expect(check.mayBeShort).toBe(true);

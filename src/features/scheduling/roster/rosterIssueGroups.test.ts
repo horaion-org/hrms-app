@@ -329,6 +329,46 @@ describe("one broken rule for one person", () => {
 		expect(issueCounts(issues).mustFix).toBe(1);
 	});
 
+	it("names every day Validate sends for the person, on one row counted once", () => {
+		const issues = rosterIssues(
+			input({
+				brokenMusts: [
+					ruleFixture({
+						constraintName: "Most days a week",
+						violations: [
+							{
+								employeeId: "mp-1",
+								date: WEEK[0]!,
+								days: WEEK,
+								messages: [SENTENCE],
+							},
+						],
+					}),
+				],
+			})
+		);
+
+		expect(issues).toHaveLength(1);
+		expect(issues[0]).toMatchObject({ day: WEEK[0], days: WEEK });
+		expect(issueCounts(issues).mustFix).toBe(1);
+	});
+
+	it("names only the date of a violation sent without its days", () => {
+		const [issue] = rosterIssues(
+			input({
+				brokenMusts: [
+					ruleFixture({
+						violations: [
+							{ employeeId: "mp-1", date: WEEK[2]!, messages: [SENTENCE] },
+						],
+					}),
+				],
+			})
+		);
+
+		expect(issue?.days).toEqual([WEEK[2]]);
+	});
+
 	it("keeps two rows for two different sentences, and for two people", () => {
 		const issues = rosterIssues(
 			input({
