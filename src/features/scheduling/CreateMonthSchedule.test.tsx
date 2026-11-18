@@ -642,7 +642,7 @@ describe("Create schedules for a month: ticking weeks", () => {
 	});
 
 	it("given_aDepartmentWithNothingLeftThisMonth_when_chosen_then_theNextMonthIsSuggested", async () => {
-		await open("/scheduling/new?department=d-1", {
+		await open("/scheduling/new?department=d-1&for=month", {
 			[SUMMARIES]: reply([
 				monthSummaryFixture({
 					departmentId: "d-1",
@@ -689,7 +689,7 @@ describe("Create schedules for a month: ticking weeks", () => {
 
 	it("given_theMonthChosenByHand_when_theDepartmentChanges_then_theMonthStays", async () => {
 		const user = userEvent.setup();
-		await open("/scheduling/new?department=d-1", {
+		await open("/scheduling/new?department=d-1&for=month", {
 			[SUMMARIES]: reply([]),
 			[`GET ${JANUARY}`]: reply(ungeneratedMonthFixture({ month: "2027-01" })),
 		});

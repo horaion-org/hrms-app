@@ -6,8 +6,6 @@ import { I18nextProvider } from "react-i18next";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { storyCompany } from "@/features/people/storyCompany";
-import { approvalKeys } from "@/features/approvals/api";
-import { approvalInstanceFixture } from "@/features/approvals/fixtures";
 import {
 	scheduleMonthSummariesKey,
 	type ScheduleMonthSummary,
@@ -93,9 +91,6 @@ const show = (
 			queryKey: monthsKey,
 			queryFn: () => new Promise<Array<ScheduleMonthSummary>>(() => {}),
 		});
-	client.setQueryData(approvalKeys.pending("c-1"), [
-		approvalInstanceFixture({ subjectId: "s-2" }),
-	]);
 	const Story = (): ReactElement => (
 		<SchedulesTab
 			companyId="c-1"
@@ -120,21 +115,22 @@ const show = (
 };
 
 describe("SchedulesTab", () => {
-	it("given_monthSummaries_when_rendered_then_aSectionPerMonthEarliestFirstWithACardPerDepartment", async () => {
+	it("given_departmentsInReach_when_rendered_then_aDepartmentsSectionWithACardPerDepartmentAndNoMonth", async () => {
 		show();
 
-		const sections = await screen.findAllByRole("region", {
-			name: /^(November|December) 2026$/,
+		const departments = await screen.findByRole("region", {
+			name: "Departments",
+		});
+		const kitchen = within(departments).getByRole("region", {
+			name: "Kitchen",
 		});
 		expect(
-			sections.map((section) => section.getAttribute("aria-labelledby"))
-		).toEqual(["month-2026-11", "month-2026-12"]);
+			within(kitchen).getByRole("link", { name: "Open the Kitchen schedule" })
+		).toHaveAttribute("href", "/scheduling/department?department=d-2");
 		expect(
-			within(sections[0]!).getByRole("region", { name: "Kitchen" })
-		).toBeVisible();
-		expect(
-			within(sections[1]!).getByRole("region", { name: "Front Office" })
-		).toBeVisible();
+			within(departments).getAllByRole("region", { name: "Front Office" })
+		).not.toHaveLength(0);
+		expect(screen.queryByRole("region", { name: /2026$/ })).toBeNull();
 	});
 
 	it("given_theSchedules_when_rendered_then_theHistoryStillListsEveryOne", async () => {
@@ -234,16 +230,14 @@ describe("SchedulesTab", () => {
 		).toBeInTheDocument();
 	});
 
-	it("given_anApprovalWaitingOnTheViewer_when_rendered_then_itsMonthCardSaysWhichWeek", async () => {
-		show(vi.fn(), ["schedule:read", "approval:decide"]);
+	it("given_schedulesToReview_when_rendered_then_theDepartmentCardCountsThem", async () => {
+		show();
 
 		const kitchen = await screen.findByRole("region", { name: "Kitchen" });
-		expect(kitchen).toHaveTextContent(
-			/waiting on you · step 1 of 2 \(Endorse\)/
-		);
+		expect(kitchen).toHaveTextContent(/\d+ schedules? to review/);
 	});
 
-	it("given_aSearch_when_typed_then_narrowsTheMonthCardsByDepartment", async () => {
+	it("given_aSearch_when_typed_then_narrowsTheDepartmentCards", async () => {
 		const user = userEvent.setup();
 		show();
 		await screen.findByRole("region", { name: "Kitchen" });
@@ -255,51 +249,33 @@ describe("SchedulesTab", () => {
 		expect(screen.queryByRole("heading", { name: "December 2026" })).toBeNull();
 	});
 
-	it("given_theMonthsStillLoading_when_rendered_then_saysTheMonthsAreLoading", async () => {
+	it("given_theMonthsStillLoading_when_rendered_then_saysTheDepartmentsAreLoading", async () => {
 		show(vi.fn(), ["schedule:read"], "GENERATION_REQUESTED", null);
 
-		expect(await screen.findByText("Loading the months…")).toHaveAttribute(
+		expect(await screen.findByText("Loading the departments…")).toHaveAttribute(
 			"role",
 			"status"
 		);
 	});
 
-	it("given_noMonthWithAScheduleAndScheduleCreate_when_rendered_then_saysSoAndPointsAtCreateSchedule", async () => {
-		show(
-			vi.fn(),
-			["schedule:read", "schedule:create"],
-			"GENERATION_REQUESTED",
-			[]
-		);
-
-		expect(
-			await screen.findByText(
-				"No upcoming month has a schedule. Use Create schedule to start one."
-			)
-		).toBeInTheDocument();
-	});
-
-	it("given_noMonthWithAScheduleForAReader_when_rendered_then_saysSoWithoutTheButtonTheyLack", async () => {
+	it("given_noSchedule_when_rendered_then_eachDepartmentStillHasACardSayingSo", async () => {
 		show(vi.fn(), ["schedule:read"], "GENERATION_REQUESTED", []);
 
-		expect(
-			await screen.findByText("No upcoming month has a schedule.")
-		).toBeInTheDocument();
-		expect(screen.queryByText(/Create schedule/)).toBeNull();
+		const kitchen = await screen.findByRole("region", { name: "Kitchen" });
+		expect(kitchen).toHaveTextContent("No schedule yet");
+		expect(kitchen).toHaveTextContent("Nothing published yet");
 	});
 
-	it("given_aSearchThatMatchesNoMonth_when_typed_then_saysTheSearchEmptiedTheList", async () => {
+	it("given_aSearchThatMatchesNoDepartment_when_typed_then_saysTheSearchEmptiedTheList", async () => {
 		const user = userEvent.setup();
 		show();
-		await screen.findAllByRole("region", {
-			name: /^(November|December) 2026$/,
-		});
+		await screen.findByRole("region", { name: "Departments" });
 
 		await user.type(screen.getByRole("searchbox"), "Nowhere");
 
 		expect(
 			await screen.findByText(
-				"No upcoming month matches your search or filters."
+				"No department matches your search or filters. Clear them to see every department."
 			)
 		).toBeInTheDocument();
 	});

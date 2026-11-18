@@ -2,7 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { useRouterState } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import dayjs from "dayjs";
 import { formattingLocale } from "@/common/formattingLocale";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import { matchesSearch } from "@/common/matchesSearch";
 import type { FunctionComponent } from "@/common/types";
 import { Badge } from "@/components/ui/Badge";
@@ -10,18 +12,9 @@ import { Button } from "@/components/ui/Button";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { PlusIcon, ViewIcon } from "@/components/ui/Icon";
 import { Toast } from "@/components/ui/Toast";
-import { myPendingApprovalsQuery } from "@/features/approvals/api";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
-import {
-	scheduleMonthSummariesQuery,
-	type ScheduleMonthSummary,
-} from "@/features/scheduling/months/api";
-import { MonthCard } from "@/features/scheduling/months/MonthCard";
-import {
-	formatMonth,
-	summariesByMonth,
-	summaryRange,
-} from "@/features/scheduling/months/monthWeeks";
+import { scheduleMonthSummariesQuery } from "@/features/scheduling/months/api";
+import { summaryRange } from "@/features/scheduling/months/monthWeeks";
 import { formatPeriod } from "@/features/scheduling/periods";
 import { ScheduleMenu } from "@/features/scheduling/schedules/ScheduleMenu";
 import type { Schedule } from "@/features/scheduling/schedules/api";
@@ -31,6 +24,12 @@ import { scheduleStatusTones } from "@/features/scheduling/schedules/scheduleSta
 import { scheduleViewLink } from "@/features/scheduling/schedules/scheduleViewLink";
 import { useSchedules } from "@/features/scheduling/schedules/useSchedules";
 import { schedulingNoticeFrom } from "@/features/scheduling/schedules/schedulingNotice";
+import {
+	departmentCards,
+	type DepartmentCardEntry,
+} from "@/features/scheduling/timeline/departmentCards";
+import { dayMarkLooks } from "@/features/scheduling/timeline/dayMarkLooks";
+import { DepartmentCard } from "@/features/scheduling/timeline/DepartmentCard";
 import { Can } from "@/features/workspace/Can";
 import { DepartmentFilter } from "@/features/workspace/DepartmentFilter";
 import { departmentChips } from "@/features/workspace/filterChips";
@@ -47,9 +46,9 @@ const matches = (schedule: Schedule, search: string): boolean =>
 	matchesSearch(schedule.name, search) ||
 	matchesSearch(schedule.departmentName, search);
 
-/** A month card matches the search by its Department's name, as a history row does. */
-const monthMatches = (summary: ScheduleMonthSummary, search: string): boolean =>
-	matchesSearch(summary.departmentName, search);
+/** A Department card matches the search by its Department's name, as a history row does. */
+const cardMatches = (card: DepartmentCardEntry, search: string): boolean =>
+	matchesSearch(card.departmentName, search);
 
 export type SchedulesTabProps = {
 	companyId: string;
@@ -60,10 +59,10 @@ export type SchedulesTabProps = {
 };
 
 /**
- * One section per month, from this week's month to 12 months ahead, with a
- * card per Department that has a schedule in it, then the history of every
- * accessible schedule; both in the header's Branch, narrowed to a
- * Department from the Filters. The search stays on the tab.
+ * A card per Department in reach, read from this week's month to 12 months
+ * ahead, then the history of every accessible schedule; both in the
+ * header's Branch, narrowed to a Department from the Filters. The search
+ * stays on the tab.
  */
 export const SchedulesTab = ({
 	companyId,
@@ -86,10 +85,6 @@ export const SchedulesTab = ({
 			access.canAnywhere("schedule:read")
 		)
 	);
-	// What waits on the caller, so a month card can say "Waiting on you"; asked only of possible approvers.
-	const waitingOnMe = useQuery(
-		myPendingApprovalsQuery(companyId, access.canAnywhere("approval:decide"))
-	).data;
 	const [search, setSearch] = useState("");
 	// The Branch is the header's scope; the Department is the one filter.
 	const chips = departmentChips(
@@ -201,17 +196,22 @@ export const SchedulesTab = ({
 			},
 		];
 	}, [t, language, companyId]);
-	const summaries = months.data ?? [];
-	// No month card: say whether a filter emptied the list, and point at Create schedule only for who has it.
-	const monthsEmptyKey =
-		search.trim() !== "" || chips.length > 0
-			? "scheduling.months.tabEmptyFiltered"
-			: access.canAnywhere("schedule:create")
-				? "scheduling.months.tabEmpty"
-				: "scheduling.months.tabEmptyReadOnly";
-	const monthGroups = summariesByMonth(
-		summaries.filter((summary) => monthMatches(summary, search))
+	const today = dayjs().format(ISO_DATE_FORMAT);
+	// The Department chosen in the Filters, or every Department offered.
+	const departments = (
+		units.department ? [units.department] : units.departments
+	).map((department) => ({
+		departmentId: department.departmentId,
+		name: department.name,
+	}));
+	const cards = departmentCards(departments, months.data ?? [], today).filter(
+		(card) => cardMatches(card, search)
 	);
+	// No Department card: a filter or the search emptied the list, or no Department is in reach.
+	const cardsEmptyKey =
+		search.trim() !== "" || chips.length > 0
+			? "scheduling.timeline.cardsEmptyFiltered"
+			: "scheduling.timeline.cardsEmpty";
 
 	return (
 		<>
@@ -240,40 +240,50 @@ export const SchedulesTab = ({
 			/>
 			{months.isLoading && (
 				<p className="mt-8 text-sm text-neutral-700" role="status">
-					{t("scheduling.months.tabLoading")}
+					{t("scheduling.timeline.cardsLoading")}
 				</p>
 			)}
 			{months.isError && (
 				<p className="mt-8 text-sm text-neutral-700" role="alert">
-					{t("scheduling.months.tabFailed")}
+					{t("scheduling.timeline.cardsFailed")}
 				</p>
 			)}
-			{months.isSuccess && monthGroups.length === 0 && (
-				<p className="mt-8 text-sm text-neutral-700">{t(monthsEmptyKey)}</p>
+			{months.isSuccess && cards.length === 0 && (
+				<p className="mt-8 text-sm text-neutral-700">{t(cardsEmptyKey)}</p>
 			)}
-			{monthGroups.map(([month, monthSummaries]) => (
-				<section
-					key={month}
-					aria-labelledby={`month-${month}`}
-					className="mt-12"
-				>
-					<h2
-						className="text-2xl font-semibold text-neutral-900"
-						id={`month-${month}`}
-					>
-						{formatMonth(month, language)}
-					</h2>
+			{months.isSuccess && cards.length > 0 && (
+				<section aria-labelledby="schedule-departments" className="mt-12">
+					<div className="flex flex-wrap items-center justify-between gap-4">
+						<h2
+							className="text-2xl font-semibold text-neutral-900"
+							id="schedule-departments"
+						>
+							{t("scheduling.timeline.departments")}
+						</h2>
+						<p className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-neutral-700">
+							<span>{t("scheduling.timeline.card.legend.title")}</span>
+							{(["published", "toReview", "none"] as const).map((mark) => (
+								<span key={mark} className="flex items-center gap-1">
+									<span
+										aria-hidden="true"
+										className={`h-1.5 w-3.5 rounded-sm ${dayMarkLooks[mark]}`}
+									/>
+									{t(`scheduling.timeline.card.legend.${mark}`)}
+								</span>
+							))}
+						</p>
+					</div>
 					<div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-						{monthSummaries.map((summary) => (
-							<MonthCard
-								key={summary.departmentId}
-								summary={summary}
-								waitingOnMe={waitingOnMe ?? []}
+						{cards.map((card) => (
+							<DepartmentCard
+								key={card.departmentId}
+								card={card}
+								today={today}
 							/>
 						))}
 					</div>
 				</section>
-			))}
+			)}
 			<section aria-labelledby="schedule-history" className="mt-16">
 				<h2
 					className="text-2xl font-semibold text-neutral-900"

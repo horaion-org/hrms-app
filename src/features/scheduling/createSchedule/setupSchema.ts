@@ -34,10 +34,16 @@ export const scheduleSetupSchema = (t: TFunction): ScheduleSetupSchema =>
 
 export type ScheduleSetupValues = z.infer<ScheduleSetupSchema>;
 
-/** Whether Setup schedules a month's ticked weeks, or any dates. */
-export const SCHEDULE_FOR = ["month", "dates"] as const;
+/** Whether Setup schedules any dates, or a month's ticked weeks; offered in this order, Dates first. */
+export const SCHEDULE_FOR = ["dates", "month"] as const;
 
 export type ScheduleFor = (typeof SCHEDULE_FOR)[number];
+
+/** What Setup opens on: the link's choice, else Month when the link names a month (the month page's links), else Dates. */
+export const openingScheduleFor = (link: {
+	for?: ScheduleFor;
+	month?: string;
+}): ScheduleFor => link.for ?? (link.month ? "month" : "dates");
 
 type MonthSetupSchema = z.ZodObject<{
 	departmentId: z.ZodString;

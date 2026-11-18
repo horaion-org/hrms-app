@@ -1,5 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
+import {
+	SCHEDULE_FOR,
+	type ScheduleFor,
+} from "@/features/scheduling/createSchedule/setupSchema";
 import { isMonth } from "@/features/scheduling/months/monthSearch";
 import { SCHEDULING_UNIT_RULES } from "@/features/scheduling/schedules/schedulesUnitRules";
 import { isScheduleStep, type ScheduleStep } from "@/features/scheduling/steps";
@@ -25,8 +29,8 @@ export type CreateScheduleSearch = {
 	week?: string;
 	/** A new month run's month, "yyyy-MM"; with no draft named, the month wizard opens. */
 	month?: string;
-	/** "dates": Setup opens on Dates, with these first and last days (ISO dates). */
-	for?: "dates";
+	/** Which choice Setup opens on; "dates" with these first and last days (ISO dates). */
+	for?: ScheduleFor;
 	firstDay?: string;
 	lastDay?: string;
 };
@@ -49,6 +53,7 @@ export const Route = createFileRoute("/_authenticated/_app/scheduling_/new")({
 			firstDay,
 			lastDay,
 		} = search;
+		const scheduleFor = SCHEDULE_FOR.find((each) => each === search["for"]);
 		return {
 			...(isScheduleStep(step) ? { step } : {}),
 			...(isId(scheduleId) ? { scheduleId } : {}),
@@ -56,7 +61,7 @@ export const Route = createFileRoute("/_authenticated/_app/scheduling_/new")({
 			...(isId(department) ? { department } : {}),
 			...(isIsoDate(week) ? { week } : {}),
 			...(typeof month === "string" && isMonth(month) ? { month } : {}),
-			...(search["for"] === "dates" ? { for: "dates" as const } : {}),
+			...(scheduleFor ? { for: scheduleFor } : {}),
 			...(isIsoDate(firstDay) ? { firstDay } : {}),
 			...(isIsoDate(lastDay) ? { lastDay } : {}),
 		};

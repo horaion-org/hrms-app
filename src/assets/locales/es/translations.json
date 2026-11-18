@@ -3387,7 +3387,7 @@
 				"partOfWeek": "Parte de la semana del {{week}}",
 				"description": "Consulta horarios completados y asignaciones de personal anteriores.",
 				"name": "Nombre",
-				"date": "Semana",
+				"date": "Periodo",
 				"createdAt": "Creado el",
 				"status": "Estado",
 				"department": "Departamento",
@@ -5589,7 +5589,31 @@
 				"showAll": "Mostrar todos los horarios",
 				"unpublished": "Aún sin publicar: {{names}}. Cada uno se publica desde su propia página."
 			},
-			"backFromSchedule": "Volver al horario del departamento"
+			"backFromSchedule": "Volver al horario del departamento",
+			"departments": "Departamentos",
+			"card": {
+				"open": "Abrir horario",
+				"openNamed": "Abrir el horario de {{department}}",
+				"publishedUpTo": "Publicado hasta el {{day}}",
+				"nothingPublished": "Nada publicado todavía",
+				"toReview_one": "{{count}} horario por revisar",
+				"toReview_other": "{{count}} horarios por revisar",
+				"nothingToReview": "Nada por revisar",
+				"scheduledUpTo": "Nada programado después del {{day}}",
+				"noSchedule": "Aún no hay horario",
+				"waiting": "{{name}} espera tu revisión.",
+				"nothingWaiting": "No hay nada esperándote.",
+				"legend": {
+					"title": "Cada barra es un día, desde hoy:",
+					"published": "Publicado",
+					"toReview": "Por revisar",
+					"none": "Sin horario"
+				}
+			},
+			"cardsLoading": "Cargando los departamentos…",
+			"cardsFailed": "No se pudieron cargar los departamentos. Inténtalo de nuevo.",
+			"cardsEmpty": "No tienes ningún departamento a tu alcance. Pide acceso a un administrador.",
+			"cardsEmptyFiltered": "Ningún departamento coincide con tu búsqueda o filtros. Bórralos para ver todos los departamentos."
 		}
 	},
 	"workspace": {
