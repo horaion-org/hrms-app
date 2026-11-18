@@ -348,15 +348,12 @@ it("deletes the schedule from the header's menu and goes back to the overview", 
 		).getByRole("button", { name: "Delete schedule" })
 	);
 
-	// The overview's code is split from the roster's, and its first load in a test outlasts the default wait.
-	expect(
-		await screen.findByRole(
-			"heading",
-			{ level: 1, name: "Scheduling" },
-			{ timeout: 10_000 }
-		)
-	).toBeInTheDocument();
-	expect(app?.router.state.location.pathname).toBe("/scheduling");
+	// Deleting returns to the schedule's month, not the overview.
+	await waitFor(() => {
+		expect(app?.router.state.location.pathname).toBe(
+			"/scheduling/months/2026-10"
+		);
+	});
 	expect(
 		calls.filter((call) => call.method === "DELETE" && call.path === SCHEDULE)
 	).toHaveLength(1);

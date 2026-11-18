@@ -661,7 +661,11 @@ const ApiSchedule = ({
 							schedule={schedule}
 							weekParts={weekParts}
 							onDeleted={() => {
-								void navigate({ to: "/scheduling" });
+								void navigate({
+									to: "/scheduling/months/$month",
+									params: { month },
+									search: { department: schedule.departmentId },
+								});
 							}}
 						>
 							{menu.length > 0 &&
