@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { DayRun } from "@/features/scheduling/dates/api";
 import type { WeekRun } from "@/features/scheduling/dates/datesSetup";
 import {
+	daysLeftBeforeOf,
 	firstPublishedDayOf,
 	partLinesOf,
 	type PartLine,
@@ -152,5 +153,52 @@ describe("firstPublishedDayOf", () => {
 		},
 	] as const)("given_$case_when_read_then_$expected", ({ parts, expected }) => {
 		expect(firstPublishedDayOf(parts)).toBe(expected);
+	});
+});
+
+describe("daysLeftBeforeOf", () => {
+	const linesOf = (overrides: Partial<PartLinesSource>): Array<PartLine> =>
+		partLinesOf({ ...MIDWEEK, ...overrides }, formatDays, t);
+
+	it.each([
+		{
+			case: "days before still to come",
+			source: { runs: [{ kind: "noneBefore", days: MONDAY_TUESDAY }] },
+			expected: [MONDAY_TUESDAY],
+		},
+		{
+			case: "days before already rostered",
+			source: {
+				runs: [{ kind: "otherPart", days: MONDAY_TUESDAY, part: WEEKEND_PART }],
+			},
+			expected: [],
+		},
+		{
+			case: "days before that have passed",
+			source: { runs: [{ kind: "passedBefore", days: MONDAY_TUESDAY }] },
+			expected: [],
+		},
+		{
+			case: "days before a published part",
+			source: {
+				runs: [{ kind: "noneBefore", days: MONDAY_TUESDAY }],
+				firstPublishedDay: "2027-02-17",
+			},
+			expected: [],
+		},
+		{
+			case: "only days after",
+			source: { runs: [{ kind: "noneAfter", days: WEEKEND }] },
+			expected: [],
+		},
+		{ case: "not a part of its week", source: {}, expected: [] },
+	] as Array<{
+		case: string;
+		source: Partial<PartLinesSource>;
+		expected: Array<DayRun>;
+	}>)("given_$case_when_read_then_warnsOfThoseDays", ({ source, expected }) => {
+		expect(daysLeftBeforeOf(linesOf(source), MIDWEEK.covered.from)).toEqual(
+			expected
+		);
 	});
 });

@@ -134,3 +134,18 @@ export const partLinesOf = (
 		...runs.map((run) => runLineOf(run, source, formatDays, t)),
 	];
 };
+
+/**
+ * The days before this part with no schedule that can still be scheduled:
+ * those its before-lines offer to schedule (`partLinesOf`). Once this part is
+ * published they can't be (API ADR-0129), so publishing warns of them. Pure.
+ */
+export const daysLeftBeforeOf = (
+	lines: ReadonlyArray<PartLine>,
+	coveredFrom: string
+): Array<DayRun> =>
+	lines.flatMap(({ action }) =>
+		action?.kind === "scheduleDays" && action.days.to < coveredFrom
+			? [action.days]
+			: []
+	);

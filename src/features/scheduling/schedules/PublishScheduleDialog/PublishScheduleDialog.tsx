@@ -1,6 +1,7 @@
 import type { TFunction } from "i18next";
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Textarea } from "@/components/forms/Textarea";
 import { Callout } from "@/components/ui/Callout";
@@ -10,6 +11,9 @@ import { approvalDecisionRefusal } from "@/features/approvals/approvalRefusal";
 import { stepSummary } from "@/features/approvals/approvalStanding";
 import { useApprovalDecisionActions } from "@/features/approvals/useApprovalActions";
 import type { PublishMode } from "@/features/scheduling/schedules/PublishScheduleDialog/publishMode";
+import type { DayRun } from "@/features/scheduling/dates/api";
+import { dayCountOfRuns } from "@/features/scheduling/dates/datesSetup";
+import { formatPeriod } from "@/features/scheduling/periods";
 import type { Schedule } from "@/features/scheduling/schedules/api";
 import { decisionRefusal } from "@/features/scheduling/schedules/scheduleRefusal";
 import {
@@ -28,6 +32,8 @@ export type PublishScheduleDialogProps = {
 	onDone?: (announcement: string) => void;
 	/** Shifts still short on the roster: above zero, a warning says so; it never blocks the decision. */
 	shortShifts?: number;
+	/** Days before this part with no schedule (`daysLeftBeforeOf`): a warning says publishing leaves them unschedulable. */
+	daysLeftBefore?: ReadonlyArray<DayRun>;
 };
 
 const key = "scheduling.decision";
@@ -103,8 +109,17 @@ export const PublishScheduleDialog = ({
 	onClose,
 	onDone,
 	shortShifts = 0,
+	daysLeftBefore = [],
 }: PublishScheduleDialogProps): FunctionComponent => {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
+	const language = formattingLocale(i18n);
+	const daysLeftText = new Intl.ListFormat(language, {
+		type: "conjunction",
+	}).format(
+		daysLeftBefore.map((days) =>
+			formatPeriod({ start: days.from, end: days.to }, language)
+		)
+	);
 	const id = useId();
 	const [comment, setComment] = useState("");
 	const { publish, submit } = useScheduleActions(companyId);
@@ -162,6 +177,14 @@ export const PublishScheduleDialog = ({
 				);
 			}}
 		>
+			{daysLeftBefore.length > 0 && (
+				<Callout className="mb-6" tone="warning">
+					{t(`${key}.daysLeftBefore`, {
+						days: daysLeftText,
+						count: dayCountOfRuns(daysLeftBefore),
+					})}
+				</Callout>
+			)}
 			{shortShifts > 0 && (
 				<Callout className="mb-6" tone="warning">
 					{t(`${key}.shortShifts`, { count: shortShifts })}

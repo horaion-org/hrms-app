@@ -78,6 +78,7 @@ import {
 } from "@/features/scheduling/schedules/scheduleActions";
 import {
 	firstPublishedDayOf,
+	daysLeftBeforeOf,
 	partLinesOf,
 } from "@/features/scheduling/schedules/partLines";
 import { WeekPartsCallout } from "@/features/scheduling/schedules/WeekPartsCallout";
@@ -762,6 +763,7 @@ const ApiSchedule = ({
 			{openDialog === "publish" && (
 				<PublishScheduleDialog
 					companyId={companyId}
+					daysLeftBefore={daysLeftBeforeOf(partLines, schedule.coveredFrom)}
 					mode={publishModeOf(standing, approval.instance?.steps ?? [])}
 					schedule={schedule}
 					shortShifts={shortShifts}

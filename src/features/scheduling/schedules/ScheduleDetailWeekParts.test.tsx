@@ -1,4 +1,5 @@
 import { screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
 import {
@@ -167,6 +168,32 @@ describe("the owner's week of 15 February 2027: Wed–Fri, then Sat–Sun", () =
 		expect(
 			within(row).getByRole("link", { name: /Sat, Feb 20\s?–\s?Sun, Feb 21/ })
 		).toHaveAttribute("href", "/scheduling/s-2");
+	});
+
+	// Publishing this part would leave Monday and Tuesday unschedulable (API ADR-0129): the dialog says so first.
+	it("given_mondayTuesdayStillWithoutASchedule_when_publishing_then_warnsAndStillPublishes", async () => {
+		vi.useFakeTimers({
+			toFake: ["Date"],
+			now: new Date("2027-02-10T09:00:00+08:00"),
+		});
+		await openPart({
+			...WEEK,
+			shown: wednesdayToFriday,
+			parts: [part({ ...wednesdayToFriday })],
+			permissions: ["schedule:read", "schedule:publish"],
+		});
+		const user = userEvent.setup();
+
+		await user.click(
+			await screen.findByRole("button", { name: "Publish roster" })
+		);
+		const dialog = screen.getByRole("dialog", { name: "Publish this roster?" });
+		expect(dialog).toHaveTextContent(
+			/Feb 15\s?–\s?16, 2027 have no schedule, and once this roster is published they can’t be scheduled\. Schedule Feb 15\s?–\s?16, 2027 first, or publish as it is\./
+		);
+		expect(
+			within(dialog).getByRole("button", { name: "Publish roster" })
+		).toBeEnabled();
 	});
 
 	it("given_theWeekendPart_when_shown_then_mondayTuesdayHavePassedAndWednesdayToFridayLinksItsSchedule", async () => {

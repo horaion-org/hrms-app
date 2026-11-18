@@ -4491,7 +4491,9 @@
 				"noApprover": "Un paso del flujo de aprobación de este departamento no tiene a nadie que pueda aprobarlo. Pide a un administrador que lo cambie en Ajustes › Aprobaciones."
 			},
 			"shortShifts_one": "A {{count}} turno todavía le falta gente, y el personal verá el cuadrante tal como está. Busca cobertura desde Avisos, o publícalo tal como está.",
-			"shortShifts_other": "A {{count}} turnos todavía les falta gente, y el personal verá el cuadrante tal como está. Busca cobertura desde Avisos, o publícalo tal como está."
+			"shortShifts_other": "A {{count}} turnos todavía les falta gente, y el personal verá el cuadrante tal como está. Busca cobertura desde Avisos, o publícalo tal como está.",
+			"daysLeftBefore_one": "{{days}} no tiene horario, y una vez publicado este cuadrante no se podrá programar. Programa {{days}} primero, o publícalo tal como está.",
+			"daysLeftBefore_other": "{{days}} no tienen horario, y una vez publicado este cuadrante no se podrán programar. Programa {{days}} primero, o publícalo tal como está."
 		},
 		"startingContext": {
 			"title": "Antes de esta semana",
