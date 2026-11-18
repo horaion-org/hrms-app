@@ -1,8 +1,11 @@
+import { QueryClient, QueryObserver } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, stubApi } from "@/common/testing/stubApi";
 import {
 	availabilityListPath,
+	availabilityListQuery,
+	availabilityRoot,
 	deleteWeekAvailability,
 	fetchAvailability,
 	fetchPartTimeMembersWithoutAvailability,
@@ -11,6 +14,7 @@ import {
 	MY_AVAILABILITY,
 	replaceWeekAvailability,
 } from "@/features/availability/api";
+import { MEMBER_WEEK_FIXTURES } from "@/features/availability/fixtures";
 
 const MEMBER = "/api/v1/companies/c-1/member-profiles/m-1/availability";
 const WEEK = `${MEMBER}/weeks/2026-11-09`;
@@ -120,5 +124,41 @@ describe("availability API", () => {
 		);
 
 		expect(calls[0]?.search).toBe("weekStartMonday=2026-11-09");
+	});
+
+	it("given_theListAndAnObserverThatAsksNothingOnOneKey_when_invalidatedAfterASave_then_theListIsReadAgain", async () => {
+		const calls = stubApi({
+			"GET /api/v1/companies/c-1/availability": {
+				status: 200,
+				body: envelope({
+					weekStartMonday: "2027-11-01",
+					members: MEMBER_WEEK_FIXTURES,
+				}),
+			},
+		});
+		const client = new QueryClient();
+		// "All branches": no Branch in the query.
+		const query = { weekStartMonday: "2027-11-01" };
+		const list = new QueryObserver(
+			client,
+			availabilityListQuery("c-1", query, true)
+		);
+		const stopList = list.subscribe(() => {});
+		await vi.waitFor(() => {
+			expect(list.getCurrentResult().isSuccess).toBe(true);
+		});
+		// "Apply availability" observes the same key while its dialog is closed, and is set last.
+		const stopIdle = new QueryObserver(
+			client,
+			availabilityListQuery("c-1", query, false)
+		).subscribe(() => {});
+
+		await client.invalidateQueries({ queryKey: availabilityRoot("c-1") });
+
+		expect(calls).toHaveLength(2);
+		expect(list.getCurrentResult().isError).toBe(false);
+		stopIdle();
+		stopList();
+		client.clear();
 	});
 });

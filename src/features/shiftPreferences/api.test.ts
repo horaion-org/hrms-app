@@ -1,3 +1,4 @@
+import { QueryClient, QueryObserver } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, stubApi } from "@/common/testing/stubApi";
@@ -13,6 +14,8 @@ import {
 	teamPagesAfterFirst,
 	teamPreferencesKey,
 	teamPreferencesPath,
+	teamPreferencesQuery,
+	teamPreferencesRoot,
 } from "@/features/shiftPreferences/api";
 import {
 	FIXTURE_WEEK,
@@ -203,5 +206,42 @@ describe("shift preferences API", () => {
 			"m-1",
 			FIXTURE_WEEK,
 		]);
+	});
+
+	it("given_theListAndAnObserverThatAsksNothingOnOneKey_when_invalidatedAfterASave_then_theListIsReadAgain", async () => {
+		const calls = stubApi({
+			"GET /api/v1/companies/c-1/shift-preferences": {
+				status: 200,
+				body: envelope(fixtureTeamPage()),
+			},
+		});
+		const client = new QueryClient();
+		// "All branches": no Branch, so the key's Branch part is "".
+		const query = {
+			departmentId: "d-1",
+			weekStartMonday: FIXTURE_WEEK,
+			page: 0,
+		};
+		const list = new QueryObserver(
+			client,
+			teamPreferencesQuery("c-1", query, true)
+		);
+		const stopList = list.subscribe(() => {});
+		await vi.waitFor(() => {
+			expect(list.getCurrentResult().isSuccess).toBe(true);
+		});
+		// "Apply shift preferences" observes the same key while its dialog is closed, and is set last.
+		const stopIdle = new QueryObserver(
+			client,
+			teamPreferencesQuery("c-1", query, false)
+		).subscribe(() => {});
+
+		await client.invalidateQueries({ queryKey: teamPreferencesRoot("c-1") });
+
+		expect(calls).toHaveLength(2);
+		expect(list.getCurrentResult().isError).toBe(false);
+		stopIdle();
+		stopList();
+		client.clear();
 	});
 });
