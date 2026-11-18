@@ -194,6 +194,15 @@ export const teamPreferencesPath = (
 	return `${companyPath(companyId)}/shift-preferences?${query.toString()}`;
 };
 
+/** The page numbers of the team list after the first, for a list of `totalElements` members. */
+export const teamPagesAfterFirst = (totalElements: number): Array<number> => {
+	const pageCount = Math.ceil(totalElements / TEAM_PAGE_SIZE);
+	return Array.from(
+		{ length: Math.max(pageCount - 1, 0) },
+		(_, index) => index + 1
+	);
+};
+
 /** The caller's preferences for the week starting `weekStartMonday`. */
 export const fetchMyPreferenceWeek = (
 	companyId: string,

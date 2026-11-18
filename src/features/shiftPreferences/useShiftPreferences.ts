@@ -1,5 +1,6 @@
 import {
 	useMutation,
+	useQueries,
 	useQuery,
 	useQueryClient,
 	type UseMutationResult,
@@ -12,10 +13,12 @@ import {
 	myPreferenceWeekQuery,
 	replaceMemberPreferenceDay,
 	replaceMyPreferenceDay,
+	teamPagesAfterFirst,
 	teamPreferencesQuery,
 	teamPreferencesRoot,
 	type MyPreferenceWeek,
 	type PreferenceDay,
+	type TeamMemberWeek,
 	type TeamPreferencePage,
 	type TeamPreferenceQuery,
 } from "@/features/shiftPreferences/api";
@@ -77,6 +80,48 @@ export const useTeamPreferences = (
 	if (page.isError) return { status: "error" };
 	if (page.data === undefined) return { status: "pending" };
 	return { status: "ready", page: page.data };
+};
+
+/**
+ * Every member of the team list, across its pages. `hidden` as for
+ * `useTeamPreferences`; `error` when any page fails.
+ */
+export type WholeTeamState =
+	| { status: "pending" | "error" | "hidden" }
+	| { status: "ready"; members: Array<TeamMemberWeek> };
+
+/**
+ * Every member the team list holds for `query`'s units and week, read page
+ * by page through the team list's own entries, to choose one to apply for.
+ * `wanted` false asks for nothing and stays pending.
+ */
+export const useWholeTeamPreferences = (
+	companyId: string,
+	query: Omit<TeamPreferenceQuery, "page">,
+	wanted: boolean
+): WholeTeamState => {
+	const access = useAccess();
+	const allowed = access.canAny(SHIFT_PREFERENCE_READ_KEYS, "anywhere");
+	const asks = allowed && wanted;
+	const firstPage = useQuery(
+		teamPreferencesQuery(companyId, { ...query, page: 0 }, asks)
+	);
+	const laterPages = useQueries({
+		queries: teamPagesAfterFirst(firstPage.data?.page.totalElements ?? 0).map(
+			(page) => teamPreferencesQuery(companyId, { ...query, page }, asks)
+		),
+	});
+	const pages = [firstPage, ...laterPages];
+	if (access.status !== "ready") return { status: access.status };
+	if (!allowed || pages.some((page) => isRefused(page.error)))
+		return { status: "hidden" };
+	if (pages.some((page) => page.isError)) return { status: "error" };
+	if (!wanted || pages.some((page) => page.data === undefined))
+		return { status: "pending" };
+	return {
+		status: "ready",
+		members: pages.flatMap((page) => page.data?.content ?? []),
+	};
 };
 
 /** One day's new set of preferred shifts. */

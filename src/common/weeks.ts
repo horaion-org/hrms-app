@@ -16,6 +16,15 @@ export const mondayOf = (date: Date | string): string => {
 	return iso(day.subtract((day.day() + 6) % 7, "day"));
 };
 
+/**
+ * The first week still open to change from the week starting `monday`: that
+ * week while it has not ended, else the week `today` is in.
+ */
+export const openWeekOf = (monday: string, today: Date | string): string => {
+	const thisWeek = mondayOf(today);
+	return monday < thisWeek ? thisWeek : monday;
+};
+
 /** Each week-long range within `range`, Monday first. */
 export const weeksOf = (range: DateRange): Array<DateRange> => {
 	const weeks: Array<DateRange> = [];

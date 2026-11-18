@@ -615,6 +615,7 @@
 		"pageSubtitle": "Los turnos que a las personas les gustaría trabajar, semana a semana.",
 		"views": "Vistas de preferencias de turno",
 		"controls": "Controles de preferencias de turno",
+		"apply": "Indicar preferencias de turno",
 		"noBranches": "Añade una sucursal a la organización antes de consultar las preferencias de turno del equipo.",
 		"mine": {
 			"tab": "Mis preferencias"

@@ -7,16 +7,19 @@ import { useTranslation } from "react-i18next";
 import { dayParameter, shownDayOf } from "@/common/dayView";
 import type { FunctionComponent } from "@/common/types";
 import type { Weekday } from "@/common/weekdays";
-import { daysOf, mondayOf } from "@/common/weeks";
+import { daysOf, mondayOf, openWeekOf } from "@/common/weeks";
+import { Button } from "@/components/ui/Button";
 import { DaySwitcher } from "@/components/ui/DaySwitcher";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { FiltersPopover } from "@/components/ui/FiltersPopover";
+import { PlusIcon } from "@/components/ui/Icon";
 import { PageToolbar } from "@/components/ui/PageToolbar";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
 import { WeekNavigator } from "@/components/ui/WeekNavigator";
 import { isPartTime } from "@/features/availability/availabilityModel";
 import { useMyAvailability } from "@/features/availability/useAvailability";
 import { myProfileQuery } from "@/features/people/api";
+import { ApplyForSomeoneDialog } from "@/features/people/ApplyForSomeoneDialog";
 import type { TeamMemberWeek } from "@/features/shiftPreferences/api";
 import { MemberShiftPreferencesDialog } from "@/features/shiftPreferences/MemberShiftPreferencesDialog";
 import { MyShiftPreferences } from "@/features/shiftPreferences/MyShiftPreferences";
@@ -30,6 +33,10 @@ import {
 	type ShiftPreferencesSearch,
 } from "@/features/shiftPreferences/shiftPreferencesSearch";
 import { TeamShiftPreferences } from "@/features/shiftPreferences/TeamShiftPreferences";
+import {
+	useWholeTeamPreferences,
+	type WholeTeamState,
+} from "@/features/shiftPreferences/useShiftPreferences";
 import { workspaceQuery } from "@/features/workspace/api";
 import { DepartmentFilter } from "@/features/workspace/DepartmentFilter";
 import { departmentChips } from "@/features/workspace/filterChips";
@@ -66,6 +73,18 @@ const useAvailableWeekdays = (
 	return availability.week.map((window) => window.day);
 };
 
+/** The copy-key of why the team could not be listed to apply for, if it could not. */
+const teamProblemKeyOf = (
+	team: WholeTeamState
+):
+	| "shiftPreferences.team.hidden"
+	| "shiftPreferences.team.failed"
+	| undefined => {
+	if (team.status === "hidden") return "shiftPreferences.team.hidden";
+	if (team.status === "error") return "shiftPreferences.team.failed";
+	return undefined;
+};
+
 /**
  * Shift preferences, in two tabs decided by data, never roles. "My
  * preferences" is everyone's own week of preferred shifts, changed with
@@ -73,12 +92,13 @@ const useAvailableWeekdays = (
  * availability on. "Team" is the members of the header's Branch (every
  * Branch in reach under "All branches"), or of one Department of it, for one
  * week, read under `shift_preference:read`; a member's week is changed from
- * their row under `shift_preference:update`. Beneath the tabs, one toolbar
- * holds the team's Department filter and the week. The tab (written once it
- * is known), units and week live in the URL; a week left out is this one,
- * worked out on every render. Any week can be read; only open days are
- * changed. Page-level composition only: the parts live in
- * `features/shiftPreferences`.
+ * their row under `shift_preference:update`, or by "Apply shift
+ * preferences", which chooses the member first, as Leave's "Apply leave"
+ * does. Beneath the tabs, one toolbar holds the team's Department filter,
+ * the week and that action. The tab (written once it is known), units and
+ * week live in the URL; a week left out is this one, worked out on every
+ * render. Any week can be read; only open days are changed. Page-level
+ * composition only: the parts live in `features/shiftPreferences`.
  */
 export const ShiftPreferences = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
@@ -106,6 +126,18 @@ export const ShiftPreferences = (): FunctionComponent => {
 		SHIFT_PREFERENCES_TEAM_UNIT_RULES
 	);
 	const [editing, setEditing] = useState<TeamMemberWeek | null>(null);
+	const [choosingMember, setChoosingMember] = useState(false);
+	const canApply = access.canAnywhere(SHIFT_PREFERENCE_UPDATE_KEY);
+	// A member's week opens in the first week still open: a row opens only in an open week, so there it is the
+	// week shown; applying from a week that has ended opens this week.
+	const openWeek = openWeekOf(week, today);
+	const teamUnits = selectedUnits(units);
+	const wholeTeam = useWholeTeamPreferences(
+		companyId,
+		{ ...teamUnits, weekStartMonday: openWeek },
+		choosingMember
+	);
+	const teamProblemKey = teamProblemKeyOf(wholeTeam);
 
 	const show = (next: ShiftPreferencesSearch): void => {
 		void navigate({ search: (previous) => ({ ...previous, ...next }) });
@@ -121,11 +153,13 @@ export const ShiftPreferences = (): FunctionComponent => {
 				replace: true,
 			});
 	}, [tabsKnown, view, search.view, navigate]);
-	// A row is changed where its member is filed, and only in a week still to come; a removed member never.
-	const canEdit = (member: TeamMemberWeek): boolean =>
-		!past &&
+	// A member is set for where they are filed; a removed member never.
+	const maySetFor = (member: TeamMemberWeek): boolean =>
 		member.displayName !== null &&
 		access.can(SHIFT_PREFERENCE_UPDATE_KEY, recordScope(member.departmentId));
+	// A row is changed only in a week still to come.
+	const canEdit = (member: TeamMemberWeek): boolean =>
+		!past && maySetFor(member);
 
 	const header = (
 		<div>
@@ -161,7 +195,18 @@ export const ShiftPreferences = (): FunctionComponent => {
 					t
 				)
 			: [];
-	const teamUnits = selectedUnits(units);
+	const applyAction = view === "team" &&
+		canApply &&
+		units.branches.length > 0 && (
+			<Button
+				leadingIcon={<PlusIcon />}
+				onClick={() => {
+					setChoosingMember(true);
+				}}
+			>
+				{t("shiftPreferences.apply")}
+			</Button>
+		);
 	return (
 		<div>
 			{header}
@@ -185,6 +230,7 @@ export const ShiftPreferences = (): FunctionComponent => {
 					))}
 				</TabList>
 				<PageToolbar
+					actions={applyAction}
 					className="mt-6 mb-8"
 					label={t("shiftPreferences.controls")}
 					chips={
@@ -251,13 +297,28 @@ export const ShiftPreferences = (): FunctionComponent => {
 					))}
 				</TabPanels>
 			</Tabs>
+			{choosingMember && (
+				<ApplyForSomeoneDialog
+					maySetFor={maySetFor}
+					people={wholeTeam.status === "ready" ? wholeTeam.members : undefined}
+					problem={teamProblemKey && t(teamProblemKey)}
+					title={t("shiftPreferences.apply")}
+					onChoose={(member) => {
+						setChoosingMember(false);
+						setEditing(member);
+					}}
+					onClose={() => {
+						setChoosingMember(false);
+					}}
+				/>
+			)}
 			{editing && (
 				<MemberShiftPreferencesDialog
 					key={editing.membershipId}
 					companyId={companyId}
 					membershipId={editing.membershipId}
 					name={editing.displayName ?? t("scheduling.detail.formerMember")}
-					weekStartMonday={week}
+					weekStartMonday={openWeek}
 					onClose={() => {
 						setEditing(null);
 					}}

@@ -615,6 +615,7 @@
 		"pageSubtitle": "The shifts people would like to work, week by week.",
 		"views": "Shift preference views",
 		"controls": "Shift preference controls",
+		"apply": "Apply shift preferences",
 		"noBranches": "Add a branch to the organisation before reading the team’s shift preferences.",
 		"mine": {
 			"tab": "My preferences"

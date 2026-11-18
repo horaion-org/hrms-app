@@ -21,7 +21,8 @@ chosen in Filters. A part-timer is warned of the open days they have no availabi
 - `useShiftPreferences.ts` — `useMyPreferenceWeek`, `useTeamPreferences` (`hidden` when the read key is held
   nowhere or the API refuses with a 403: the one place that decides access) and `useReplaceMyPreferenceDay`, which
   reads only that week again; `useMemberPreferenceWeek` and `useReplaceMemberPreferenceDay`, which reads that member's
-  week and every team page again.
+  week and every team page again; `useWholeTeamPreferences`, every page of the team list (`teamPagesAfterFirst`)
+  through the list's own entries, for choosing a member to apply for.
 - `preferenceLimit.ts` — the pure rules of a day's limit: which shifts are chosen, whether another may be, and the
   set after a tap.
 - `preferenceOutcome.ts` — what a roster made of a preference, without rendering: each outcome's Badge tone and
@@ -39,7 +40,8 @@ chosen in Filters. A part-timer is warned of the open days they have no availabi
   availability; an open day opens `ShiftPreferenceDialog`, which saves straight away.
 - `ShiftPreferenceDialog` — one day's choosable shifts as boxes, with the count against the day's limit and the
   day's availability warning when given.
-- `MemberShiftPreferencesDialog` — a colleague's week as a list of days, opened from the team list; an open day opens
+- `MemberShiftPreferencesDialog` — a colleague's week as a list of days, opened from the team list or from "Apply
+  shift preferences" once a member is chosen in `ApplyForSomeoneDialog` (`features/people`); an open day opens
   `ShiftPreferenceDialog` in place of the week, which saves straight away through the member's routes.
 - `TeamShiftPreferences` — a Branch's or Department's members and their week under its own heading, with an edit
   control on each row the page says may be changed (opening `MemberShiftPreferencesDialog`), paged; the page starts again at the first when the Branch, Department or week changes.
@@ -54,6 +56,9 @@ A member's own week needs nothing granted. The team list needs `shift_preference
 only the members of the units where it is held and checks every request regardless. A row's edit control shows when
 the week has not ended, the member has not been removed, and `shift_preference:update` is held where the member is
 filed: their Department, or the company for a member filed at none (`recordScope`), as availability decides it.
+"Apply shift preferences", Leave's "Apply leave" for this area, shows on the Team tab when `shift_preference:update`
+is held anywhere; it offers the same members a row would (the week aside) and opens their week in the first week
+still open (`openWeekOf`): the week shown, or this week when the week shown has ended.
 
 ## Verification
 
