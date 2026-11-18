@@ -471,3 +471,72 @@ describe("splitReplacementOf", () => {
 		}
 	);
 });
+
+describe("a week of several schedules on Setup", () => {
+	const [wednesdayToFriday, weekend] = twoPartWeekFixture();
+	/** The week of 15 Feb 2027, its newest part the weekend (s-2), in the given states. */
+	const week = (
+		state: WeekState,
+		parts: Array<WeekPart>
+	): Parameters<typeof tickableWeekOf>[0] => ({
+		periodStart: "2027-02-15",
+		state,
+		scheduleId: "s-2",
+		parts,
+	});
+
+	it.each<
+		[
+			string,
+			Parameters<typeof tickableWeekOf>[0],
+			Partial<ReturnType<typeof tickableWeekOf>>,
+		]
+	>([
+		[
+			"onePublishedSchedule",
+			week("PUBLISHED", [{ ...weekend!, state: "PUBLISHED" }]),
+			{
+				look: "PUBLISHED",
+				canTick: false,
+				note: undefined,
+				newestPublished: undefined,
+			},
+		],
+		[
+			"newestPublishedAndAnEarlierToReview",
+			week("PUBLISHED", [
+				wednesdayToFriday!,
+				{ ...weekend!, state: "PUBLISHED" },
+			]),
+			{
+				look: "TO_REVIEW",
+				canTick: false,
+				note: undefined,
+				newestPublished: { from: "2027-02-20", to: "2027-02-21" },
+			},
+		],
+		[
+			"allPublished",
+			week("PUBLISHED", [
+				{ ...wednesdayToFriday!, state: "PUBLISHED" },
+				{ ...weekend!, state: "PUBLISHED" },
+			]),
+			{ look: "PUBLISHED", canTick: false, newestPublished: undefined },
+		],
+		[
+			"newestToReview",
+			week("TO_REVIEW", [
+				{ ...wednesdayToFriday!, state: "PUBLISHED" },
+				weekend!,
+			]),
+			{
+				look: "TO_REVIEW",
+				canTick: true,
+				note: "rosterWaiting",
+				newestPublished: undefined,
+			},
+		],
+	])("given_%s_when_listed_then_itsRow", (_case, given, row) => {
+		expect(tickableWeekOf(given, TODAY)).toMatchObject(row);
+	});
+});

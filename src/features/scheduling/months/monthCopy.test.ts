@@ -4,6 +4,7 @@ import { datesPlanFixture } from "@/features/scheduling/dates/fixtures";
 import {
 	datesRunHint,
 	monthUsesLine,
+	newestPublishedNoteOf,
 	replacingNoteOf,
 	setupNextNoteOf,
 	stateCountsLine,
@@ -310,5 +311,33 @@ describe("replacingNoteOf, for a week published once", () => {
 		).toMatch(
 			/ was published once, so a month run leaves it as it is\. Open it to generate it again or to change it by hand\.$/
 		);
+	});
+});
+
+describe("newestPublishedNoteOf", () => {
+	const row: TickableWeek = {
+		periodStart: "2027-02-08",
+		periodEnd: "2027-02-14",
+		state: "PUBLISHED",
+		look: "TO_REVIEW",
+		canTick: false,
+		tickedByDefault: false,
+		note: undefined,
+	};
+
+	it("given_aWeekWhoseNewestScheduleIsPublished_when_noted_then_saysWhyAMonthRunLeavesIt", () => {
+		expect(
+			newestPublishedNoteOf(
+				{ ...row, newestPublished: { from: "2027-02-13", to: "2027-02-14" } },
+				"en-US",
+				authTestI18n.t
+			)
+		).toMatch(
+			/^A month run leaves this week: its newest schedule, Feb 13\s?–\s?14, 2027, has been published\. Work on its other days from their own schedules on the month page\.$/
+		);
+	});
+
+	it("given_anyOtherWeek_when_noted_then_nothing", () => {
+		expect(newestPublishedNoteOf(row, "en-US", authTestI18n.t)).toBeUndefined();
 	});
 });

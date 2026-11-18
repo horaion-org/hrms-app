@@ -9,6 +9,7 @@ import type {
 } from "@/features/scheduling/months/api";
 import { rosterCarriesOver } from "@/features/scheduling/months/monthGeneration";
 import { mondaysIn } from "@/features/scheduling/months/monthWeeks";
+import { weekHeadline } from "@/features/scheduling/months/weekHeadline";
 import { weekStateTones } from "@/features/scheduling/months/weekStateLooks";
 
 /*
@@ -38,6 +39,12 @@ export type TickableWeek = {
 	note: TickNote | undefined;
 	/** On a week of several schedules, or of one covering only some days: the days a month run generates again, and the days it leaves. */
 	splitReplacement?: SplitReplacement;
+	/**
+	 * On a week of several schedules whose newest is published while another
+	 * still needs the manager: that newest schedule's days, why a month run
+	 * leaves the week (it acts on the newest schedule only).
+	 */
+	newestPublished?: DayRun;
 };
 
 /**
@@ -96,14 +103,23 @@ const tickedByDefault = (look: WeekLook): TickRule => ({
 const newestPartOf = (week: WeekToTick): WeekPart | undefined =>
 	week.parts?.find((part) => part.scheduleId === week.scheduleId);
 
+/** The week's state as the month card shows it: a week of several schedules by the one needing the manager first. */
+const headlineOf = (week: WeekToTick): Pick<WeekToTick, "state"> =>
+	weekHeadline({
+		state: week.state,
+		scheduleId: week.scheduleId ?? null,
+		parts: [...(week.parts ?? [])],
+	});
+
 /** The first rule that matches wins; a week with a roster is never ticked by default. */
 const tickRuleOf = (
 	week: WeekToTick,
 	periodEnd: string,
 	today: string
 ): TickRule => {
-	if (week.state === "PUBLISHED" || week.state === "GENERATING")
-		return locked(week.state);
+	// Shown as the month card shows it (`weekHeadline`); a month run still leaves a week whose newest part is published.
+	if (week.state === "PUBLISHED") return locked(headlineOf(week).state);
+	if (week.state === "GENERATING") return locked(week.state);
 	// Published and generating weeks are named above; any other week the API leaves out is over.
 	const open = week.includedInMonthGeneration ?? periodEnd >= today;
 	if (!open) return locked("OVER");
@@ -171,6 +187,18 @@ export const splitReplacementOf = (
 	};
 };
 
+/**
+ * The newest schedule's days of a week whose newest schedule is published
+ * while another of its schedules still needs the manager; undefined otherwise.
+ */
+export const newestPublishedOf = (week: WeekToTick): DayRun | undefined => {
+	if (week.state !== "PUBLISHED") return undefined;
+	const newest = newestPartOf(week);
+	const headline = headlineOf(week);
+	if (!newest || headline.state === "PUBLISHED") return undefined;
+	return daysOfPart(newest);
+};
+
 /** One week as the list shows it. */
 export const tickableWeekOf = (
 	week: WeekToTick,
@@ -183,6 +211,7 @@ export const tickableWeekOf = (
 		state: week.state,
 		...tickRuleOf(week, periodEnd, today),
 		splitReplacement: splitReplacementOf(week),
+		newestPublished: newestPublishedOf(week),
 	};
 };
 
