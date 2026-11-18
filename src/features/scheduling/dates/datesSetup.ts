@@ -7,6 +7,7 @@ import type {
 	DayRun,
 	GenerateDatesBody,
 } from "@/features/scheduling/dates/api";
+import { handChangesReplacedIn } from "@/features/scheduling/dates/handChanges";
 import type { MonthWeek, WeekPart } from "@/features/scheduling/months/api";
 import type { MonthChoices } from "@/features/scheduling/months/monthGeneration";
 import { hasRoster } from "@/features/scheduling/months/weekStateLooks";
@@ -77,6 +78,8 @@ export type PlanRow = {
 	lines: Array<PlanLine>;
 	/** The week's separate schedules once generated, in day order, when it will hold more than one; otherwise empty. */
 	schedules: Array<DayRun>;
+	/** How many of the days the run replaces carry a hand change (`handChangesReplacedIn`). */
+	handChangesReplaced: number;
 	badge: PlanBadge;
 };
 
@@ -172,6 +175,7 @@ export const planRowOf = (week: DatesPlanWeek): PlanRow => {
 		days,
 		lines: planLinesOf(week),
 		schedules: weekSchedulesOf(week),
+		handChangesReplaced: handChangesReplacedIn(week),
 		badge: planBadgeOf(week),
 	};
 };

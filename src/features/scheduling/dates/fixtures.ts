@@ -72,6 +72,7 @@ export const datesPlanWithKeptWeekFixture = (): DatesPlan => {
 						coveredFrom: "2026-11-23",
 						coveredTo: "2026-11-29",
 						state: "PUBLISHED",
+						handChangedDays: null,
 					},
 				],
 			},
@@ -80,11 +81,16 @@ export const datesPlanWithKeptWeekFixture = (): DatesPlan => {
 };
 
 /** Some days of the week of 16 Nov's whole schedule, s-1, awaiting review. */
-const weekPartDays = (coveredFrom: string, coveredTo: string): PartDays => ({
+const weekPartDays = (
+	coveredFrom: string,
+	coveredTo: string,
+	handChangedDays: number | null = null
+): PartDays => ({
 	scheduleId: "s-1",
 	coveredFrom,
 	coveredTo,
 	state: "TO_REVIEW",
+	handChangedDays,
 });
 
 /**

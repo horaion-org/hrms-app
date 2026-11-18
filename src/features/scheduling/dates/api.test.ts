@@ -61,6 +61,28 @@ describe("schedules by dates client", () => {
 		expect(parsed.weeks[0]?.action).toBe("UNKNOWN");
 	});
 
+	it("given_partsWithoutHandChangedDays_when_parsed_then_accepted_withNoCount", async () => {
+		const plan = datesPlanRedoingFixture();
+		// An older API sends no handChangedDays: JSON leaves out a key set to undefined.
+		const olderWeeks = plan.weeks.map((week) => ({
+			...week,
+			redone: week.redone.map((part) => ({
+				...part,
+				handChangedDays: undefined,
+			})),
+		}));
+		stubApi({
+			[`GET ${DATES}/plan`]: {
+				status: 200,
+				body: envelope({ ...plan, weeks: olderWeeks }),
+			},
+		});
+
+		const parsed = await fetchDatesPlan("c-1", "d-1", DAYS);
+
+		expect(parsed.weeks[0]?.redone[0]?.handChangedDays ?? null).toBeNull();
+	});
+
 	it("given_aPlanWithoutRedoneOrRest_when_parsed_then_bothEmpty", async () => {
 		const plan = datesPlanFixture();
 		// Sent as JSON, a key set to undefined is left out, as an older API leaves these out.

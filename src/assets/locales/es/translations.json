@@ -5469,7 +5469,9 @@
 				"missing": "Elige un primer día y un último día.",
 				"past": "Elige hoy ({{today}}) o un primer día posterior. Los días que ya pasaron no se pueden programar.",
 				"reversed": "El último día es anterior al primero. Elige un último día igual o posterior al {{first}}.",
-				"tooLong": "Son {{days}} días. Un horario por fechas cubre hasta {{max}} días. Elige un último día igual o anterior al {{last}}, o haz un segundo horario para el resto."
+				"tooLong": "Son {{days}} días. Un horario por fechas cubre hasta {{max}} días. Elige un último día igual o anterior al {{last}}, o haz un segundo horario para el resto.",
+				"handChangesReplaced_one": "{{count}} cambio hecho a mano en el cuadrante de esta semana se reemplazará.",
+				"handChangesReplaced_other": "{{count}} cambios hechos a mano en el cuadrante de esta semana se reemplazarán."
 			},
 			"generate": {
 				"hint_one": "Generar calcula {{count}} día, {{range}}. Después lo revisas y lo publicas.",

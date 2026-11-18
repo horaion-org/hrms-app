@@ -36,6 +36,12 @@ const partDaysSchema = z.object({
 	coveredFrom: z.string(),
 	coveredTo: z.string(),
 	state: weekStateSchema,
+	/**
+	 * For a part whose days the run replaces (`redone`, `rest`): how many of
+	 * those days carry a hand change. Null for a part only kept or with no
+	 * roster; left out by an older API, which reads as none.
+	 */
+	handChangedDays: z.number().nullable().optional(),
 });
 
 /** A scheduled part's days that one list of a plan week names. */
