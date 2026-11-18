@@ -1207,7 +1207,7 @@ describe("schedule refusals", () => {
 		],
 		[
 			"SCHEDULE_LATER_PART_PUBLISHED",
-			"A later schedule of this week is published, and it was worked out from these days, so this one can’t be generated again. Change its roster by hand instead.",
+			"A later schedule of this week has been published, and it was worked out from these days, so this one can’t be generated again. Change its roster by hand instead.",
 		],
 	])(
 		"words a month week refused with %s in a week's own words",

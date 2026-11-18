@@ -272,7 +272,7 @@ it("offers no regeneration of a part whose later part is published, and says why
 
 	expect(
 		await screen.findByText(
-			"A later schedule of this week is published, and it was worked out from these days, so this one can’t be generated again. Change its roster by hand instead."
+			"A later schedule of this week has been published, and it was worked out from these days, so this one can’t be generated again. Change its roster by hand instead."
 		)
 	).toBeInTheDocument();
 	await user.click(await screen.findByRole("button", { name: PART_MENU }));
