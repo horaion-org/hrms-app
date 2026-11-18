@@ -1,5 +1,6 @@
 import { getRouteApi, useRouterState } from "@tanstack/react-router";
 import dayjs from "dayjs";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import { ISO_DATE_FORMAT } from "@/common/isoDate";
@@ -13,6 +14,7 @@ import { formatPeriod } from "@/features/scheduling/periods";
 import { isoDateIn } from "@/features/scheduling/roster/roster";
 import {
 	awaitingPublication,
+	branchWeekFrom,
 	needsOf,
 	shiftWindow,
 	shownScheduleIn,
@@ -158,7 +160,7 @@ export const DepartmentSchedulePage = (): FunctionComponent => {
 	const access = useAccess();
 	const departmentId = search.department ?? "";
 	const view = search.view ?? DEFAULT_VIEW;
-	// The branch's time zone is known only once read, so the default window starts from the device's week.
+	// The branch's time zone is known only once read, so the default window starts from the device's week (moved below).
 	const firstDay = search.from ?? mondayOf(dayjs().toDate());
 	const days = windowDays(firstDay, view);
 	const lastDay = days[days.length - 1]!;
@@ -172,6 +174,23 @@ export const DepartmentSchedulePage = (): FunctionComponent => {
 		SCHEDULE_CREATE_KEYS,
 		departmentScope(departmentId)
 	);
+
+	// Once the branch's today is known, a window opened on the device's Monday moves to the branch's (URL replaced).
+	const branchFrom =
+		timeline.status === "ready" && timeline.timeZone
+			? branchWeekFrom(
+					search.from,
+					firstDay,
+					isoDateIn(timeline.timeZone, new Date())
+				)
+			: undefined;
+	useEffect(() => {
+		if (branchFrom === undefined) return;
+		void navigate({
+			search: (previous) => ({ ...previous, from: branchFrom }),
+			replace: true,
+		});
+	}, [branchFrom, navigate]);
 
 	/** Changes the given search keys, keeping the rest. */
 	const changeSearch = (change: Partial<typeof search>): void => {

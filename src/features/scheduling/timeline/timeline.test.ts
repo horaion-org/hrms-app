@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	awaitingPublication,
+	branchWeekFrom,
 	daysWithoutSchedule,
 	isDimmed,
 	laneCellsOf,
@@ -316,5 +317,34 @@ describe("timelineScheduleLink", () => {
 	] as const)("opens a %s schedule at %j", (status, expected) => {
 		const one = schedule("one", "2027-02-08", "2027-02-10", status);
 		expect(timelineScheduleLink(one, "d-1")).toEqual(expected);
+	});
+});
+
+describe("branchWeekFrom", () => {
+	it.each([
+		["a from in the URL", "2027-02-01", "2027-02-08", "2027-02-15", undefined],
+		[
+			"the branch's week already shown",
+			undefined,
+			"2027-02-08",
+			"2027-02-10",
+			undefined,
+		],
+		[
+			"the branch already in next week",
+			undefined,
+			"2027-02-08",
+			"2027-02-15",
+			"2027-02-15",
+		],
+		[
+			"the branch still in last week",
+			undefined,
+			"2027-02-08",
+			"2027-02-07",
+			"2027-02-01",
+		],
+	])("%s", (_, from, shownFirstDay, branchToday, expected) => {
+		expect(branchWeekFrom(from, shownFirstDay, branchToday)).toBe(expected);
 	});
 });

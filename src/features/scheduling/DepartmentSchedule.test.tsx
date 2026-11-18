@@ -399,3 +399,30 @@ it("opens a draft's setup from its bar", async () => {
 		departmentId: "d-1",
 	});
 });
+
+/** With no `from`, once the branch's today is known in a week other than the device's, the window moves to it. */
+it("moves a window opened on the device's Monday to the branch's", async () => {
+	// Sunday 11 October 2026, 12:00 UTC: already Monday 12 October at the branch (UTC+14).
+	vi.useFakeTimers({ toFake: ["Date"] });
+	vi.setSystemTime(new Date("2026-10-11T12:00:00Z"));
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	const routes = twoSchedulesInOneWeek();
+	const month = (
+		routes[`GET ${MONTHS}/2026-10`] as { body: { data: ScheduleMonth } }
+	).body.data;
+	stubApi({
+		...routes,
+		[`GET ${MONTHS}/2026-10`]: ok({ ...month, timeZone: "Pacific/Kiritimati" }),
+	});
+	app = await openApp("/scheduling/department?department=d-1");
+	renderAuthApp(app);
+
+	await vi.waitFor(() => {
+		expect(app?.router.state.location.search).toMatchObject({
+			from: "2026-10-12",
+		});
+	});
+	expect(
+		await screen.findByRole("row", { name: /Aisha Rahman/ })
+	).toBeInTheDocument();
+});

@@ -59,6 +59,21 @@ export const windowDays = (
 		addDays(firstDay, offset)
 	);
 
+/**
+ * The `from` to put in the URL once the branch's today is known: the Monday of
+ * its week when the URL names no `from` and the window opened on another
+ * Monday (the device's, in another time zone); else none, nothing to change.
+ */
+export const branchWeekFrom = (
+	from: string | undefined,
+	shownFirstDay: string,
+	branchToday: string
+): string | undefined => {
+	if (from !== undefined) return undefined;
+	const branchMonday = mondayOf(branchToday);
+	return branchMonday === shownFirstDay ? undefined : branchMonday;
+};
+
 /** The first day of the window one view's length later (`step` 1) or earlier (`step` -1). */
 export const shiftWindow = (
 	firstDay: string,
