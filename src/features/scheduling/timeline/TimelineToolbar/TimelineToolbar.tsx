@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Select } from "@/components/forms/Select";
 import { Button } from "@/components/ui/Button";
@@ -14,6 +15,10 @@ const ALL_SCHEDULES = "";
 
 const VIEWS = Object.keys(DAYS_IN_VIEW) as Array<TimelineView>;
 
+/** One option of the joined zoom control: a divider before every option but the first. */
+const zoomOptionClasses =
+	"cursor-pointer px-4 text-sm whitespace-nowrap not-first:border-l not-first:border-neutral-500 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ink-blue-500";
+
 export type TimelineToolbarProps = {
 	view: TimelineView;
 	schedules: ReadonlyArray<TimelineSchedule>;
@@ -27,7 +32,7 @@ export type TimelineToolbarProps = {
 	onScheduleChange: (scheduleId: string | undefined) => void;
 };
 
-/** Today, earlier and later days, the schedule select and the zoom, styled as the week navigator. */
+/** Today, earlier and later days (styled as the week navigator), the schedule select and the zoom as one joined control. */
 export const TimelineToolbar = ({
 	view,
 	schedules,
@@ -83,19 +88,29 @@ export const TimelineToolbar = ({
 					onScheduleChange(value === ALL_SCHEDULES ? undefined : value);
 				}}
 			/>
-			<div aria-label={t(`${key}.zoom`)} className="flex gap-1" role="group">
+			{/* One joined control, as the approved design draws it; the app has no segmented control to reuse. */}
+			<div
+				aria-label={t(`${key}.zoom`)}
+				className="inline-flex h-12 overflow-hidden rounded-full border border-neutral-500 bg-white"
+				role="group"
+			>
 				{VIEWS.map((option) => (
-					<Button
+					<button
 						key={option}
 						aria-pressed={option === view}
-						size="sm"
-						variant={option === view ? "primary" : "secondary"}
+						type="button"
+						className={joinClassNames(
+							zoomOptionClasses,
+							option === view
+								? "bg-ink-blue-100 font-medium text-ink-blue-900"
+								: "text-neutral-900 hover:text-ink-blue-700"
+						)}
 						onClick={() => {
 							onViewChange(option);
 						}}
 					>
 						{t(`${key}.views.${option}`)}
-					</Button>
+					</button>
 				))}
 			</div>
 		</div>
