@@ -36,8 +36,9 @@ through the person's grants, with editing on the rows they may change. Shift pre
   windows on any days; "Not available this week" and "Reset to default" for the week. It opens on the week when it
   has hours of its own, on every week when nothing is set at all, otherwise on the week; choosing the other shows
   what is saved for it.
-- `MemberAvailabilityDialog` — the editor for a colleague: a week on the pattern is the pattern, so it is read only
-  for an overridden week, and "Every week" waits for it (or stays off when it can't be read).
+- `MemberAvailabilityDialog` — the editor for a colleague, opened from their row or from "Apply availability" once
+  they are chosen in `ApplyForSomeoneDialog` (`features/people`): a week on the pattern is the pattern, so it is read
+  only for an overridden week, and "Every week" waits for it (or stays off when it can't be read).
 - `fixtures.ts` — API-shaped rows and patterns for stories and component tests.
 
 `src/pages/Availability.tsx` composes them and owns the tabs, the selectors, the week (the shared
@@ -53,7 +54,10 @@ part-timer's (from their own profile's employment type) and needs nothing grante
 held anywhere and offers the Branches where it is held at the Branch or a Department beneath it; the API lists only
 the part-timers of the units where it is held, so a Department-only grant lists that Department. Editing a row needs
 `work_availability:update` at that member's Department (or the company, for a member filed at none). The API
-checks every request regardless.
+checks every request regardless. "Apply availability", Leave's "Apply leave" for this area, shows on the Team tab
+when the update key is held anywhere; it searches the part-timers of the header's units a row would offer (the week
+aside) and opens their week in the first week still open (`openWeekOf`): the week shown, or this week when the week
+shown has ended.
 
 ## Verification
 

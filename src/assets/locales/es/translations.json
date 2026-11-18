@@ -607,6 +607,7 @@
 			"weekNotMonday": "No encontramos esa semana. Recarga la página y vuelve a elegirla."
 		},
 		"controls": "Controles de disponibilidad",
+		"apply": "Indicar disponibilidad",
 		"saved": "Disponibilidad guardada.",
 		"weekReset": "Esta semana vuelve a seguir la disponibilidad habitual."
 	},

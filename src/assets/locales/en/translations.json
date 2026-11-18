@@ -607,6 +607,7 @@
 			"weekNotMonday": "That week couldn’t be found. Reload the page and choose the week again."
 		},
 		"controls": "Availability controls",
+		"apply": "Apply availability",
 		"saved": "Availability saved.",
 		"weekReset": "This week follows the usual availability again."
 	},
