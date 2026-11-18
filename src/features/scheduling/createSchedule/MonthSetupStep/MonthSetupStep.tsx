@@ -45,6 +45,7 @@ import {
 	type MonthSetupValues,
 	type ScheduleFor,
 } from "@/features/scheduling/createSchedule/setupSchema";
+import { PlanRowDates } from "@/features/scheduling/createSchedule/PlanRowDates";
 import { StepPanel } from "@/features/scheduling/createSchedule/StepPanel";
 import { workspaceQuery } from "@/features/workspace/api";
 import { DepartmentSelector } from "@/features/workspace/DepartmentSelector";
@@ -152,19 +153,7 @@ const DatesPlanRows = ({ plan }: { plan: DatesPlan }): FunctionComponent => {
 		{
 			id: "dates",
 			header: t("scheduling.dates.setup.datesColumn"),
-			cell: (row): FunctionComponent => (
-				<span className="flex flex-col">
-					<span>{datesText(row.asked.start, row.asked.end)}</span>
-					{row.lines.map((line) => (
-						<span key={line.days.from} className="text-xs text-neutral-700">
-							{t(`scheduling.dates.setup.${line.kind}Line`, {
-								days: datesText(line.days.from, line.days.to),
-								count: dayCountOfRuns([line.days]),
-							})}
-						</span>
-					))}
-				</span>
-			),
+			cell: (row): FunctionComponent => <PlanRowDates row={row} />,
 		},
 		{
 			id: "days",

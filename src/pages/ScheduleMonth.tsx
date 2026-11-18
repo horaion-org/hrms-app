@@ -42,6 +42,9 @@ import {
 	showsRegenerate,
 	stoppedWeeksOf,
 } from "@/features/scheduling/months/monthGeneration";
+import type { DayRun } from "@/features/scheduling/dates/api";
+import { formatPeriod } from "@/features/scheduling/periods";
+import { datesRunNoticeOf } from "@/features/scheduling/months/datesRunState";
 import { refusedWeeksFrom } from "@/features/scheduling/months/refusedWeeksState";
 import { RegenerateMonthDialog } from "@/features/scheduling/months/RegenerateMonthDialog";
 import {
@@ -196,6 +199,50 @@ const CrossingWeekLine = ({
 				}}
 			/>
 		</p>
+	);
+};
+
+/** On arrival from a run by dates: what is being generated, and a link to the next month's page for its days there. */
+const DatesRunLine = ({
+	month,
+	department,
+}: {
+	month: string;
+	department: string;
+}): FunctionComponent => {
+	const { t, i18n } = useTranslation();
+	const notice = datesRunNoticeOf(
+		useRouterState({ select: (state) => state.location.state }),
+		month
+	);
+	if (!notice) return null;
+	const language = formattingLocale(i18n);
+	const datesText = ({ from, to }: DayRun): string =>
+		formatPeriod({ start: from, end: to }, language);
+	const { otherMonth } = notice;
+	return (
+		<Callout>
+			{t(`${key}.datesRun.generating`, { days: datesText(notice.days) })}
+			{otherMonth && " "}
+			{otherMonth && (
+				<Trans
+					i18nKey={`${key}.datesRun.otherMonth`}
+					components={[
+						<Button
+							key="month"
+							params={{ month: otherMonth.month }}
+							search={{ department }}
+							to="/scheduling/months/$month"
+							variant="textlink"
+						/>,
+					]}
+					values={{
+						days: datesText(otherMonth.days),
+						month: formatMonth(otherMonth.month, language),
+					}}
+				/>
+			)}
+		</Callout>
 	);
 };
 
@@ -375,6 +422,7 @@ const MonthContent = ({
 					<MonthSteps department={departmentId} month={month} />
 				</div>
 			</header>
+			<DatesRunLine department={departmentId} month={month} />
 			<CrossingWeekLine department={departmentId} month={month} />
 			{openingWeek && openingScheduleId !== "" && (
 				<OpeningHoursSection

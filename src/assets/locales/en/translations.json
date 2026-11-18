@@ -5399,6 +5399,10 @@
 				"previousMonth": "Previous month, {{month}}",
 				"nextMonth": "Next month, {{month}}",
 				"crossingWeek": "{{week}} is in <0>{{month}}</0>’s page.",
+				"datesRun": {
+					"generating": "Schedules for {{days}} are being generated.",
+					"otherMonth": "{{days}} are on the <0>{{month}}</0> page."
+				},
 				"noSchedule": "No week of {{month}} has a schedule yet.",
 				"legendCovered": "Every shift covered",
 				"legendShort": "A shift is short",
@@ -5640,6 +5644,7 @@
 				"newLine": "{{days}} with your choices",
 				"redoneLine": "{{days}} scheduled again with your choices",
 				"weeksOwnLine": "{{days}} scheduled again with the week’s own shifts and rules",
+				"schedulesLine": "This week will be {{number}} schedules: {{days}}. Each is reviewed and published on its own.",
 				"new": "New",
 				"kept": "Kept",
 				"redo": "To redo",

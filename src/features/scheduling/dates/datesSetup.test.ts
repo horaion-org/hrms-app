@@ -9,11 +9,16 @@ import {
 	partRedoOf,
 	planNotesOf,
 	planRowOf,
+	weekSchedulesOf,
 	previousBefore,
 	rosterPartBefore,
 	weekRunsAround,
 } from "@/features/scheduling/dates/datesSetup";
-import type { PartDays } from "@/features/scheduling/dates/api";
+import type {
+	DatesPlanWeek,
+	DayRun,
+	PartDays,
+} from "@/features/scheduling/dates/api";
 import {
 	datesPlanFixture,
 	datesPlanRedoingFixture,
@@ -40,6 +45,51 @@ describe("datesProblemOf", () => {
 	])("given %s to %s_when_checked_then_%s", (first, last, problem) => {
 		expect(datesProblemOf(first, last, TODAY)).toBe(problem);
 	});
+});
+
+describe("weekSchedulesOf", () => {
+	const part = (from: string, to: string): PartDays => ({
+		scheduleId: `s-${from}`,
+		coveredFrom: from,
+		coveredTo: to,
+		state: "TO_REVIEW",
+	});
+	const [redoWeek] = datesPlanRedoingFixture().weeks;
+
+	it.each<[string, Partial<DatesPlanWeek>, Array<DayRun>]>([
+		["newDaysOnly", { kept: [], redone: [], rest: [] }, []],
+		[
+			"keptBeforeNewAndTheRestAfter",
+			{},
+			[
+				{ from: "2026-11-16", to: "2026-11-17" },
+				{ from: "2026-11-18", to: "2026-11-19" },
+				{ from: "2026-11-20", to: "2026-11-22" },
+			],
+		],
+		[
+			"newDaysThenARestOfTwoParts",
+			{
+				kept: [],
+				rest: [
+					part("2026-11-20", "2026-11-20"),
+					part("2026-11-21", "2026-11-22"),
+				],
+			},
+			[
+				{ from: "2026-11-18", to: "2026-11-19" },
+				{ from: "2026-11-20", to: "2026-11-22" },
+			],
+		],
+		["nothingGenerated", { newFrom: null, newTo: null }, []],
+	])(
+		"given_%s_when_laidOut_then_theWeeksSchedules",
+		(_case, overrides, schedules) => {
+			expect(weekSchedulesOf({ ...redoWeek!, ...overrides })).toEqual(
+				schedules
+			);
+		}
+	);
 });
 
 describe("planRowOf", () => {

@@ -17,6 +17,7 @@ import {
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 import { constraintFixture } from "@/features/scheduling/constraints/fixtures";
+import { withDatesRun } from "@/features/scheduling/months/datesRunState";
 import {
 	editableMember,
 	midMonthOpenings,
@@ -869,4 +870,39 @@ describe("the hours worked this month before its first scheduled week", () => {
 		).toBeVisible();
 		expect(screen.queryByRole("button", { name: "Add them" })).toBeNull();
 	});
+});
+
+it("given_aRunByDatesPastTheMonthEnd_when_arrived_then_saysWhatIsGeneratedAndLinksToTheNextMonth", async () => {
+	await openMonth({
+		...signedIn(),
+		[`GET ${MONTHS}/2026-11`]: ok(scheduleMonthFixture()),
+	});
+	await app!.router.navigate({
+		to: "/scheduling/months/$month",
+		params: { month: "2026-11" },
+		search: { department: "d-1" },
+		state: withDatesRun({}, { firstDay: "2026-11-30", lastDay: "2026-12-03" }),
+	});
+
+	const link = await screen.findByRole("link", { name: "December 2026" });
+	expect(link).toHaveAttribute(
+		"href",
+		"/scheduling/months/2026-12?department=d-1"
+	);
+	expect(link.parentElement).toHaveTextContent(
+		/^Schedules for Nov 30\s?–\s?Dec 3, 2026 are being generated\. Dec 1\s?–\s?3, 2026 are on the December 2026 page\.$/
+	);
+});
+
+it("given_noRunByDates_when_opened_then_noNoticeOfOne", async () => {
+	await openMonth({
+		...signedIn(),
+		[`GET ${MONTHS}/2026-11`]: ok(scheduleMonthFixture()),
+	});
+
+	await screen.findByRole("heading", {
+		level: 1,
+		name: "Kitchen · November 2026",
+	});
+	expect(screen.queryByText(/are being generated/)).toBeNull();
 });

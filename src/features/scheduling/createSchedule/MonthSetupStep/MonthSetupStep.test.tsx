@@ -548,6 +548,11 @@ describe("MonthSetupStep", () => {
 			).toBeInTheDocument();
 			expect(within(table).getByText("To redo")).toBeInTheDocument();
 			expect(
+				within(table).getByText(
+					/^This week will be 3 schedules: Nov 16\s?–\s?17, 2026, Nov 18\s?–\s?19, 2026,? and Nov 20\s?–\s?22, 2026\. Each is reviewed and published on its own\.$/
+				)
+			).toBeInTheDocument();
+			expect(
 				screen.getByText(
 					"3 more days after them, scheduled again with their week’s own shifts and rules"
 				)

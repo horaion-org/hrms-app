@@ -75,6 +75,8 @@ export type PlanRow = {
 	days: Array<PlanDay>;
 	/** The week's days the run touches, in day order: consecutive days treated alike make one line. */
 	lines: Array<PlanLine>;
+	/** The week's separate schedules once generated, in day order, when it will hold more than one; otherwise empty. */
+	schedules: Array<DayRun>;
 	badge: PlanBadge;
 };
 
@@ -128,6 +130,31 @@ const planBadgeOf = (week: DatesPlanWeek): PlanBadge => {
 	return week.newFrom === null ? "kept" : "new";
 };
 
+/**
+ * The schedules a plan week will hold once generated, in day order, when more
+ * than one (API ADR-0129): each part that keeps days, the new days, then the
+ * rest of the week as one; empty when it generates nothing or stays one schedule.
+ */
+export const weekSchedulesOf = (week: DatesPlanWeek): Array<DayRun> => {
+	if (week.newFrom === null || week.newTo === null) return [];
+	const kept = week.kept.map((part) => ({
+		from: part.coveredFrom,
+		to: part.coveredTo,
+	}));
+	const restDays = week.rest
+		.flatMap((part) => [part.coveredFrom, part.coveredTo])
+		.sort();
+	const rest =
+		restDays.length === 0
+			? []
+			: [{ from: restDays[0]!, to: restDays[restDays.length - 1]! }];
+	const schedules = [...kept, { from: week.newFrom, to: week.newTo }, ...rest];
+	if (schedules.length < 2) return [];
+	return schedules.sort((first, second) =>
+		first.from.localeCompare(second.from)
+	);
+};
+
 /** One plan week as a row of "What this creates": generated days look covered, days that stay look kept. */
 export const planRowOf = (week: DatesPlanWeek): PlanRow => {
 	const days = daysOf(week.periodStart).map((date) => {
@@ -144,6 +171,7 @@ export const planRowOf = (week: DatesPlanWeek): PlanRow => {
 		asked: { start: week.askedFrom, end: week.askedTo },
 		days,
 		lines: planLinesOf(week),
+		schedules: weekSchedulesOf(week),
 		badge: planBadgeOf(week),
 	};
 };

@@ -5199,6 +5199,10 @@
 				"previousMonth": "Mes anterior, {{month}}",
 				"nextMonth": "Mes siguiente, {{month}}",
 				"crossingWeek": "{{week}} está en la página de <0>{{month}}</0>.",
+				"datesRun": {
+					"generating": "Se están generando los horarios del {{days}}.",
+					"otherMonth": "{{days}} están en la página de <0>{{month}}</0>."
+				},
 				"noSchedule": "Ninguna semana de {{month}} tiene horario todavía.",
 				"legendCovered": "Todos los turnos cubiertos",
 				"legendShort": "Falta personal en un turno",
@@ -5440,6 +5444,7 @@
 				"newLine": "{{days}} con tus opciones",
 				"redoneLine": "{{days}} se vuelven a programar con tus opciones",
 				"weeksOwnLine": "{{days}} se vuelven a programar con los turnos y reglas de su semana",
+				"schedulesLine": "Esta semana serán {{number}} horarios: {{days}}. Cada uno se revisa y se publica por separado.",
 				"new": "Nueva",
 				"kept": "Se mantiene",
 				"redo": "Por rehacer",
