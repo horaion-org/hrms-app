@@ -3372,6 +3372,7 @@
 			},
 			"history": {
 				"title": "Historial de horarios",
+				"partOfWeek": "Parte de la semana del {{week}}",
 				"description": "Consulta horarios completados y asignaciones de personal anteriores.",
 				"name": "Nombre",
 				"date": "Semana",

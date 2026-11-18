@@ -3,11 +3,14 @@ import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { ApiProblemError } from "@/common/problem";
 import { saveFile } from "@/common/saveFile";
+import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { OverflowMenu, OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import type { WeekPart } from "@/features/scheduling/months/api";
+import { formatPeriod } from "@/features/scheduling/periods";
 import { DeleteScheduleDialog } from "@/features/scheduling/schedules/DeleteScheduleDialog";
+import { coversPartOfWeek } from "@/features/scheduling/schedules/partLines";
 import {
 	deletable,
 	exportRoster,
@@ -49,7 +52,7 @@ export const ScheduleMenu = ({
 	weekParts,
 	children,
 }: ScheduleMenuProps): FunctionComponent => {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
 	const access = useAccess();
 	const [deleting, setDeleting] = useState(false);
 	const rosterExport = useMutation({
@@ -81,8 +84,16 @@ export const ScheduleMenu = ({
 	return (
 		<>
 			<OverflowMenu
-				label={t("scheduling.scheduleMenu.label", { name: schedule.name })}
 				variant="icon"
+				label={t("scheduling.scheduleMenu.label", {
+					// A part of a week shares its week's name, so it is named by its days.
+					name: coversPartOfWeek(schedule)
+						? formatPeriod(
+								{ start: schedule.coveredFrom, end: schedule.coveredTo },
+								formattingLocale(i18n)
+							)
+						: schedule.name,
+				})}
 			>
 				{children}
 				{canExport && (

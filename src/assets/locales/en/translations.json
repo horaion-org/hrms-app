@@ -3572,6 +3572,7 @@
 			},
 			"history": {
 				"title": "Schedule history",
+				"partOfWeek": "Part of the week of {{week}}",
 				"description": "View saved schedules across your departments.",
 				"name": "Name",
 				"date": "Week",
