@@ -1,6 +1,8 @@
 import dayjs from "dayjs";
 import { ISO_DATE_FORMAT } from "@/common/isoDate";
+import { mondayOf } from "@/common/weeks";
 import type { WeekState } from "@/features/scheduling/months/api";
+import { lastPublishedPartStartOf } from "@/features/scheduling/schedules/partLines";
 
 /*
  * One Department's timeline, pure. Dates are ISO strings ("YYYY-MM-DD"); the
@@ -24,6 +26,8 @@ export type TimelineSchedule = {
 	firstDay: string;
 	lastDay: string;
 	status: WeekState;
+	/** Published, then withdrawn: the API still counts it as published (API ADR-0129). */
+	publishedOnce: boolean;
 };
 
 /** A run of days, both ends included. */
@@ -152,12 +156,69 @@ export const isDimmed = (
 export type NeedLine =
 	| { kind: "reviewOne"; scheduleId: string; name: string }
 	| { kind: "reviewMany"; count: number; names: Array<string> }
-	| ({ kind: "noSchedule" } & DayRun);
+	| ({
+			kind: "noSchedule";
+			/** False for days before a published part of their week, which the API refuses to schedule. */
+			schedulable: boolean;
+	  } & DayRun);
+
+/**
+ * Whether `day` can be scheduled: not when a part of its week that counts as
+ * published starts after it (`lastPublishedPartStartOf`, as the week card's
+ * `weekGapsOf` decides).
+ */
+const isSchedulable = (
+	schedules: ReadonlyArray<TimelineSchedule>,
+	day: string
+): boolean => {
+	const monday = mondayOf(day);
+	const lastPublishedPartStart = lastPublishedPartStartOf(
+		schedules
+			.filter((schedule) =>
+				touches(schedule, monday, addDays(monday, DAYS_IN_VIEW.week - 1))
+			)
+			.map((schedule) => ({
+				scheduleId: schedule.id,
+				state: schedule.status,
+				coveredFrom: schedule.firstDay,
+				publishedOnce: schedule.publishedOnce,
+			}))
+	);
+	return lastPublishedPartStart === undefined || day >= lastPublishedPartStart;
+};
+
+/** The runs of days from `firstDay` to `lastDay` no schedule covers, each split where it stops being schedulable. */
+const gapLinesOf = (
+	schedules: ReadonlyArray<TimelineSchedule>,
+	firstDay: string,
+	lastDay: string
+): Array<NeedLine> => {
+	const lines: Array<NeedLine & { kind: "noSchedule" }> = [];
+	for (const run of daysWithoutSchedule(schedules, firstDay, lastDay))
+		for (let day = run.firstDay; day <= run.lastDay; day = addDays(day, 1)) {
+			const schedulable = isSchedulable(schedules, day);
+			const last = lines[lines.length - 1];
+			if (
+				last &&
+				last.schedulable === schedulable &&
+				last.lastDay === addDays(day, -1)
+			)
+				last.lastDay = day;
+			else
+				lines.push({
+					kind: "noSchedule",
+					schedulable,
+					firstDay: day,
+					lastDay: day,
+				});
+		}
+	return lines;
+};
 
 /**
  * What needs the manager in the window: the schedules to review (one line
  * each, or one line for all above two), then the runs of days from today on
- * that no schedule covers.
+ * that no schedule covers, each saying whether the API lets them be scheduled.
  */
 export const needsOf = (
 	schedules: ReadonlyArray<TimelineSchedule>,
@@ -184,10 +245,6 @@ export const needsOf = (
 					name: schedule.name,
 				}));
 	const firstOpenDay = today > window.firstDay ? today : window.firstDay;
-	const gapLines: Array<NeedLine> = daysWithoutSchedule(
-		schedules,
-		firstOpenDay,
-		window.lastDay
-	).map((run) => ({ kind: "noSchedule", ...run }));
+	const gapLines = gapLinesOf(schedules, firstOpenDay, window.lastDay);
 	return [...reviewLines, ...gapLines];
 };

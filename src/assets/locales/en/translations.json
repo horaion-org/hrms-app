@@ -5817,7 +5817,8 @@
 				"reviewMany": "{{count}} schedules are ready to review: {{names}}.",
 				"noSchedule": "No schedule for {{days}}.",
 				"review": "Review",
-				"createSchedule": "Create schedule"
+				"createSchedule": "Create schedule",
+				"noScheduleBeforePublished": "No schedule for {{days}}. Days before a published schedule in the same week cannot be scheduled."
 			},
 			"notice": {
 				"showingOne": "Showing only {{name}}. Other schedules are dimmed.",

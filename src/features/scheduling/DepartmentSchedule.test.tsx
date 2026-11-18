@@ -18,6 +18,7 @@ import { renderAuthApp } from "@/features/auth/testing";
 import dayjs from "dayjs";
 import { mondayOf } from "@/common/weeks";
 import { withDatesRun } from "@/features/scheduling/months/datesRunState";
+import type { ScheduleMonth, WeekPart } from "@/features/scheduling/months/api";
 import {
 	monthWeekFixture,
 	scheduleMonthFixture,
@@ -40,6 +41,7 @@ afterEach(() => {
 	endSession("expired");
 	resetApiClient();
 	vi.restoreAllMocks();
+	vi.useRealTimers();
 	localStorage.clear();
 });
 
@@ -262,3 +264,48 @@ it("drops a stale schedule choice once the window moves on", async () => {
 	expect(document.querySelector(".opacity-40")).toBeNull();
 	expect(screen.queryByText(/^Showing only/)).not.toBeInTheDocument();
 });
+
+/** The two-part week with its weekend part in `weekend`'s state, today being Saturday 10 October 2026, before it. */
+const openBeforeTheWeek = async (weekend: Partial<WeekPart>): Promise<void> => {
+	vi.useFakeTimers({ toFake: ["Date"] });
+	vi.setSystemTime(new Date("2026-10-10T09:00:00"));
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	const routes = twoSchedulesInOneWeek();
+	const month = (
+		routes[`GET ${MONTHS}/2026-10`] as { body: { data: ScheduleMonth } }
+	).body.data;
+	const [early, late] = month.weeks[0]!.parts;
+	stubApi({
+		...routes,
+		[`GET ${MONTHS}/2026-10`]: ok({
+			...month,
+			weeks: [
+				{ ...month.weeks[0]!, parts: [early!, { ...late!, ...weekend }] },
+			],
+		}),
+	});
+	app = await openApp("/scheduling/department?department=d-1&from=2026-10-12");
+	renderAuthApp(app);
+	await screen.findByRole("heading", { level: 2, name: "Needs you" });
+};
+
+/** Thursday lies before the published (or once published) weekend part: the API refuses it, so no Create schedule. */
+it.each([
+	["published", { state: "PUBLISHED" as const }],
+	["published once", { state: "TO_REVIEW" as const, publishedOnce: true }],
+])(
+	"offers no Create schedule for days before a %s part",
+	async (_, weekend) => {
+		await openBeforeTheWeek(weekend);
+
+		expect(
+			await screen.findByText(
+				/^No schedule for Oct 15, 2026\. Days before a published schedule in the same week cannot be scheduled\.$/
+			)
+		).toBeInTheDocument();
+		const needs = screen.getByRole("region", { name: "Needs you" });
+		expect(
+			within(needs).queryByRole("link", { name: "Create schedule" })
+		).not.toBeInTheDocument();
+	}
+);

@@ -62,6 +62,8 @@ export const timelineSchedulesOf = (
 			id: part.scheduleId,
 			name: part.name,
 			status: part.state,
+			publishedOnce:
+				seen?.publishedOnce === true || part.publishedOnce === true,
 			firstDay:
 				seen && seen.firstDay < part.coveredFrom
 					? seen.firstDay

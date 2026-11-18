@@ -18,7 +18,14 @@ const schedule = (
 	firstDay: string,
 	lastDay: string,
 	status: TimelineSchedule["status"] = "PUBLISHED"
-): TimelineSchedule => ({ id, name: `Name ${id}`, firstDay, lastDay, status });
+): TimelineSchedule => ({
+	id,
+	name: `Name ${id}`,
+	firstDay,
+	lastDay,
+	status,
+	publishedOnce: false,
+});
 
 const early = schedule("early", "2027-02-08", "2027-02-10");
 const late = schedule("late", "2027-02-12", "2027-02-14");
@@ -112,8 +119,18 @@ describe("needsOf", () => {
 			needsOf([early, toReview("r1", "2027-02-12")], window, "2027-02-09")
 		).toEqual([
 			{ kind: "reviewOne", scheduleId: "r1", name: "Name r1" },
-			{ kind: "noSchedule", firstDay: "2027-02-11", lastDay: "2027-02-11" },
-			{ kind: "noSchedule", firstDay: "2027-02-13", lastDay: "2027-02-14" },
+			{
+				kind: "noSchedule",
+				schedulable: true,
+				firstDay: "2027-02-11",
+				lastDay: "2027-02-11",
+			},
+			{
+				kind: "noSchedule",
+				schedulable: true,
+				firstDay: "2027-02-13",
+				lastDay: "2027-02-14",
+			},
 		]);
 	});
 
@@ -129,13 +146,23 @@ describe("needsOf", () => {
 				count: 3,
 				names: ["Name r1", "Name r2", "Name r3"],
 			},
-			{ kind: "noSchedule", firstDay: "2027-02-11", lastDay: "2027-02-11" },
+			{
+				kind: "noSchedule",
+				schedulable: false, // Before the published weekend part.
+				firstDay: "2027-02-11",
+				lastDay: "2027-02-11",
+			},
 		]);
 	});
 
 	it("leaves out days before today", () => {
 		expect(needsOf([], window, "2027-02-13")).toEqual([
-			{ kind: "noSchedule", firstDay: "2027-02-13", lastDay: "2027-02-14" },
+			{
+				kind: "noSchedule",
+				schedulable: true,
+				firstDay: "2027-02-13",
+				lastDay: "2027-02-14",
+			},
 		]);
 	});
 });
@@ -184,5 +211,70 @@ describe("shownScheduleIn", () => {
 		["no schedule", undefined, undefined],
 	])("%s", (_, scheduleId, expected) => {
 		expect(shownScheduleIn([early, late], scheduleId)).toBe(expected);
+	});
+});
+
+describe("needsOf: days before a published part", () => {
+	const window = { firstDay: "2027-02-08", lastDay: "2027-02-14" };
+	const toReviewEarly = schedule(
+		"review",
+		"2027-02-08",
+		"2027-02-10",
+		"TO_REVIEW"
+	);
+	const withdrawn: TimelineSchedule = {
+		...schedule("withdrawn", "2027-02-12", "2027-02-14", "TO_REVIEW"),
+		publishedOnce: true,
+	};
+
+	/** Thursday lies before Friday's published (or once-published) part of the same week: not schedulable. */
+	it.each([
+		["a published part after it", [toReviewEarly, late], false],
+		["a part published once after it", [toReviewEarly, withdrawn], false],
+		[
+			"only a part to review after it",
+			[
+				toReviewEarly,
+				schedule("next", "2027-02-12", "2027-02-14", "TO_REVIEW"),
+			],
+			true,
+		],
+	] as const)(
+		"Thursday with %s is schedulable: %s",
+		(_, schedules, expected) => {
+			const gaps = needsOf([...schedules], window, "2027-02-08").filter(
+				(line) => line.kind === "noSchedule"
+			);
+			expect(gaps).toEqual([
+				{
+					kind: "noSchedule",
+					schedulable: expected,
+					firstDay: "2027-02-11",
+					lastDay: "2027-02-11",
+				},
+			]);
+		}
+	);
+
+	it("splits a run where it stops being before a published part", () => {
+		const lines = needsOf(
+			[schedule("weekend", "2027-02-13", "2027-02-14")],
+			{ firstDay: "2027-02-08", lastDay: "2027-02-21" },
+			"2027-02-08"
+		);
+		expect(lines).toEqual([
+			{
+				kind: "noSchedule",
+				schedulable: false,
+				firstDay: "2027-02-08",
+				lastDay: "2027-02-12",
+			},
+			{
+				kind: "noSchedule",
+				schedulable: true,
+				firstDay: "2027-02-15",
+				lastDay: "2027-02-21",
+			},
+		]);
 	});
 });

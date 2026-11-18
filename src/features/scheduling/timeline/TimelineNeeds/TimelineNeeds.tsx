@@ -57,8 +57,15 @@ const NeedItem = ({
 	);
 	return (
 		<>
-			<span>{t(`${key}.noSchedule`, { days })}</span>
-			{mayCreate && (
+			<span>
+				{t(
+					line.schedulable
+						? `${key}.noSchedule`
+						: `${key}.noScheduleBeforePublished`,
+					{ days }
+				)}
+			</span>
+			{mayCreate && line.schedulable && (
 				// The same dates run the month page's "Schedule <days>" opens (WeekCard).
 				<Button
 					size="sm"

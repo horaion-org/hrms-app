@@ -5617,7 +5617,8 @@
 				"reviewMany": "{{count}} horarios están listos para revisar: {{names}}.",
 				"noSchedule": "Sin horario para {{days}}.",
 				"review": "Revisar",
-				"createSchedule": "Crear horario"
+				"createSchedule": "Crear horario",
+				"noScheduleBeforePublished": "Sin horario para {{days}}. Los días anteriores a un horario publicado de la misma semana no se pueden programar."
 			},
 			"notice": {
 				"showingOne": "Mostrando solo {{name}}. Los demás horarios aparecen atenuados.",
