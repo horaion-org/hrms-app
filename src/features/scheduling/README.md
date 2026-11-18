@@ -29,6 +29,7 @@ Each area has one job. `SCHEDULING_TOP_LEVEL` in `scripts/check-feature-cycles.m
 | `schedules/` | One schedule and the list of them: their API, standing, actions, menu, dialogs and the Schedules tab |
 | `months/` | Schedules by month: month summaries, generating a month, the month page's cards |
 | `dates/` | Schedules of any dates, up to 31 days: their API and setup |
+| `timeline/` | One department's schedules on one timeline: bars, the grid of people by day, the needs list and the page's reads |
 | `readiness/` | Whether a department can be rostered, and the links that fix it |
 | `startingContext/` | What each member was doing in the days before a schedule's period |
 | `hours/` | Opening balances and a roster's hours per person |
@@ -61,6 +62,12 @@ setup, shifts, constraints and forecast), `weekChoice.ts`, `steps.ts`, `setupRea
   (`weekWaitingOnMe`), `monthSearch.ts`, and the components `MonthCard` (one Department's month on the Schedules
   tab), `WeekCard` (one week on the month page) and `DayCoverMarks` (a week's seven days). The month page is
   `src/pages/ScheduleMonth.tsx` at `/scheduling/months/$month?department=…`.
+- `timeline/` — one department's schedules on one timeline: `timeline.ts` (pure: window days, lanes, the schedule of a
+  day, days without a schedule, the needs lines), `timelineRows.ts` (pure: the month reads as schedules, every roster
+  merged into one row per person), `useDepartmentTimeline.ts` (the only fetching: months, then each schedule and its
+  roster), `timelineSearch.ts`, and the components `ScheduleBars`, `TimelineGrid`, `TimelineNeeds` and
+  `TimelineToolbar`. The page is `src/pages/DepartmentSchedule.tsx` at `/scheduling/department?department=…`; the
+  schedule page's back link leads there.
 - `schedules/scheduleStatusTones.ts` — each status's badge tone. A period's weeks and days (`mondayOf`, `weeksOf`,
   `daysOf`) are calendar helpers in `@/common/weeks`.
 

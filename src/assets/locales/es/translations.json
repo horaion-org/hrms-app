@@ -5539,6 +5539,57 @@
 			"beingRedone": "{{days}} se están volviendo a programar. Este cuadrante los conserva hasta que el nuevo esté listo.",
 			"noneBeforePublished_one": "{{days}} no tiene horario. Va antes de días que ya se han publicado, así que no se puede programar ahora.",
 			"noneBeforePublished_other": "{{days}} no tienen horario. Van antes de días que ya se han publicado, así que no se pueden programar ahora."
+		},
+		"timeline": {
+			"backLink": "Volver a Programación",
+			"title": "Horario de {{department}}",
+			"subtitle": "Una línea de tiempo para el equipo. Cada horario se publica por separado.",
+			"createSchedule": "Crear horario",
+			"loading": "Cargando los horarios…",
+			"loadFailed": "No se pudieron cargar los horarios. Recarga la página para intentarlo de nuevo.",
+			"unavailable": "Los horarios de este departamento no están disponibles para ti. Elige un departamento en Programación.",
+			"toolbar": {
+				"label": "Días mostrados",
+				"today": "Hoy",
+				"previous": "Días anteriores",
+				"next": "Días siguientes",
+				"zoom": "Zoom",
+				"views": {
+					"week": "Semana",
+					"two": "2 semanas",
+					"four": "4 semanas"
+				},
+				"schedule": "Horario",
+				"allSchedules": "Todos los horarios"
+			},
+			"bars": {
+				"label": "Horarios",
+				"bar": "{{name}}, {{state}}",
+				"openSchedule": "Abrir horario",
+				"showOnly": "Mostrar solo este horario"
+			},
+			"grid": {
+				"label": "Personal por día",
+				"staff": "Personal",
+				"noSchedule": "Sin horario",
+				"noStaff": "Aún no hay nadie en el horario de estos días."
+			},
+			"needs": {
+				"heading": "Requiere tu atención",
+				"none": "Nada requiere tu atención en estos días.",
+				"reviewOne": "{{name}} está listo para revisar.",
+				"reviewMany": "{{count}} horarios están listos para revisar: {{names}}.",
+				"noSchedule": "Sin horario para {{days}}.",
+				"review": "Revisar",
+				"createSchedule": "Crear horario"
+			},
+			"notice": {
+				"showingOne": "Mostrando solo {{name}}. Los demás horarios aparecen atenuados.",
+				"openSchedule": "Abrir horario",
+				"showAll": "Mostrar todos los horarios",
+				"unpublished": "Aún sin publicar: {{names}}. Cada uno se publica desde su propia página."
+			},
+			"backFromSchedule": "Volver al horario del departamento"
 		}
 	},
 	"workspace": {

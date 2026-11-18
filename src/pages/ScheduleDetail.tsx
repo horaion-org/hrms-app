@@ -70,6 +70,7 @@ import {
 	decidable,
 	GENERATION_POLL_INTERVAL_MS,
 	rosterRunId,
+	type Schedule,
 } from "@/features/scheduling/schedules/api";
 import { rosterPagePermissions } from "@/features/scheduling/schedules/rosterPagePermissions";
 import {
@@ -134,18 +135,16 @@ const ROSTER_PROBLEMS = {
 } as const;
 
 /**
- * Back to the schedule's month page, named by the month ("November 2026"),
- * once the schedule is known; back to Scheduling before that.
+ * Back to the department's timeline from the schedule's first week, once the
+ * schedule is known; back to Scheduling before that.
  */
 const BackLink = ({
-	month,
-	departmentId,
+	schedule,
 }: {
-	month?: string;
-	departmentId?: string;
+	schedule?: Pick<Schedule, "departmentId" | "periodStart">;
 }): FunctionComponent => {
-	const { t, i18n } = useTranslation();
-	if (month === undefined || departmentId === undefined)
+	const { t } = useTranslation();
+	if (schedule === undefined)
 		return (
 			<Button
 				leadingIcon={<ArrowLeftIcon />}
@@ -158,12 +157,11 @@ const BackLink = ({
 	return (
 		<Button
 			leadingIcon={<ArrowLeftIcon />}
-			params={{ month }}
-			search={{ department: departmentId }}
-			to="/scheduling/months/$month"
+			search={{ department: schedule.departmentId, from: schedule.periodStart }}
+			to="/scheduling/department"
 			variant="textlink"
 		>
-			{formatMonth(month, formattingLocale(i18n))}
+			{t("scheduling.timeline.backFromSchedule")}
 		</Button>
 	);
 };
@@ -641,7 +639,7 @@ const ApiSchedule = ({
 	};
 	return (
 		<>
-			<BackLink departmentId={schedule.departmentId} month={month} />
+			<BackLink schedule={schedule} />
 			{/* Only where an approval is involved: without a flow the page is as before. */}
 			{(standing.kind !== "direct" || approval.instance) && (
 				<p className="sr-only" role="status">
