@@ -59,7 +59,7 @@ import { RosterHeader } from "@/features/scheduling/roster/RosterHeader";
 import { RosterHours } from "@/features/scheduling/hours/RosterHours";
 import { useRosterRulesCheck } from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
 import { validationStanding } from "@/features/scheduling/rulesCheck/issuesFromValidation";
-import { changedDays } from "@/features/scheduling/roster/rosterSummary";
+import { hasHandChanges } from "@/features/scheduling/roster/rosterSummary";
 import { useRepairWarmUpOnValidate } from "@/features/scheduling/cover/useRepairWarmUp";
 import { coverOffersQuery } from "@/features/scheduling/coverOffers/api";
 import { rosterChangeShiftsQuery } from "@/features/scheduling/rosterChanges/api";
@@ -378,29 +378,29 @@ const ApiSchedule = ({
 		access
 	);
 	const { mayEditShifts, mayValidate } = permissions;
+	const rosterRevision =
+		state.status === "ready" ? state.schedule.rosterRevision : 0;
+	const handChanged = hasHandChanges(assignments);
 	const validation = useRosterRulesCheck(
 		mayValidate && runId !== undefined && unit !== undefined
 			? { companyId, unit, scheduleId, runId }
 			: undefined,
-		state.status === "ready" ? state.schedule.rosterRevision : 0
+		rosterRevision,
+		handChanged
 	);
-	// Validate schedule lighting up after a hand change warms the engine's worker for the check to come.
-	const rosterRevision =
-		state.status === "ready" ? state.schedule.rosterRevision : 0;
 	// Where hand changes go, for someone who may change this roster now.
 	const editTarget: RosterChangeTarget | undefined =
 		mayEditShifts && runId !== undefined && unit !== undefined
 			? { companyId, unit, scheduleId, runId }
 			: undefined;
+	// Validate schedule lighting up after a hand change warms the engine's worker for the check to come.
 	useRepairWarmUpOnValidate(
 		editTarget,
 		rosterRevision,
 		validationStanding({
 			revision: rosterRevision,
 			last: validation.last,
-			hasChanges:
-				assignments.status === "ready" &&
-				changedDays(assignments.items).length > 0,
+			hasChanges: handChanged,
 		}) === "outOfDate"
 	);
 	const editorShifts = useQuery(

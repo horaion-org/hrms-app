@@ -212,8 +212,8 @@ describe("IssueSummary", () => {
 	it("leads with unvalidated changes in the warning tone, never reading as clean", () => {
 		render(
 			<IssueSummary
-				changesUnchecked
 				counts={{ mustFix: 0, notMet: 0, forInformation: 1 }}
+				lead="unchecked"
 			/>
 		);
 
@@ -221,6 +221,20 @@ describe("IssueSummary", () => {
 			"text-warning-800"
 		);
 		expect(screen.getByText("1 for information")).toBeInTheDocument();
+		expect(screen.queryByText(copy.nothingToFix)).not.toBeInTheDocument();
+	});
+
+	it("leads with the check running, in grey, while it runs", () => {
+		render(
+			<IssueSummary
+				counts={{ mustFix: 0, notMet: 0, forInformation: 0 }}
+				lead="validating"
+			/>
+		);
+
+		expect(screen.getByText(en.scheduling.rulesCheck.loading)).toHaveClass(
+			"text-neutral-700"
+		);
 		expect(screen.queryByText(copy.nothingToFix)).not.toBeInTheDocument();
 	});
 });

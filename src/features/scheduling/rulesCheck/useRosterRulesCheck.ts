@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
+import { validatesOnOpen } from "@/features/scheduling/rulesCheck/issuesFromValidation";
 import {
 	rosterRulesCheckQuery,
 	type RosterRulesCheck,
@@ -36,18 +37,32 @@ const NO_TARGET: RosterChangeTarget = {
 };
 
 /**
- * Validate schedule, asked for on demand: nothing is sent until `ask`, and
- * nothing at all without a `target` (someone who may not read the roster).
- * An ask holds for the revision it was made at, so a roster changed since is
- * unasked again; `last` keeps the latest answer and its revision, which the
- * week bar's button compares with the roster's revision to light up.
+ * Validate schedule: asked by `ask`, or by itself as the page opens on a
+ * roster whose hand changes (`hasChanges`) nothing has validated in this
+ * visit (`validatesOnOpen`), once per revision; nothing at all without a
+ * `target` (someone who may not read the roster). An ask holds for the
+ * revision it was made at, so a roster changed since is unasked again; `last`
+ * keeps the latest answer and its revision, which the week bar's button
+ * compares with the roster's revision to light up.
  */
 export const useRosterRulesCheck = (
 	target: RosterChangeTarget | undefined,
-	revision: number
+	revision: number,
+	hasChanges = false
 ): RosterValidation => {
 	const [askedAt, setAskedAt] = useState<number>();
 	const [last, setLast] = useState<LastValidation>();
+	// Set while rendering, as `last` is: the ask starts with this render, and a re-render finds it asked.
+	if (
+		validatesOnOpen({
+			mayValidate: target !== undefined,
+			revision,
+			last,
+			hasChanges,
+			askedAt,
+		})
+	)
+		setAskedAt(revision);
 	const asked = target !== undefined && askedAt === revision;
 	const query = useQuery(
 		rosterRulesCheckQuery(target ?? NO_TARGET, revision, asked)
@@ -56,6 +71,8 @@ export const useRosterRulesCheck = (
 	if (asked && query.data && last?.check !== query.data)
 		setLast({ revision, check: query.data });
 	const ask = (): void => {
+		// An ask already in flight is the answer to wait for, never a second request.
+		if (query.isFetching) return;
 		if (asked) void query.refetch();
 		else setAskedAt(revision);
 	};
