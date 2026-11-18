@@ -13,8 +13,9 @@ import type { FindingsDiagnostic } from "@/features/scheduling/schedules/api";
  * of the engine's `scheduling_core/diagnostics/checks.py`; the next two are
  * its findings about the days before a schedule, for a rule about day types;
  * the next says when someone may first start after rest carried in from
- * before; the last says days of a days-off block before the schedule were not
- * sent, which is information only.
+ * before; the next says by when someone's last shifts must end for rest
+ * before their next shift after the schedule; the last says days of a days-off
+ * block before the schedule were not sent, which is information only.
  * The set is open, so a code added later reads by its code and the engine's
  * own sentence.
  */
@@ -27,6 +28,7 @@ export const KNOWN_DIAGNOSTIC_CODES = [
 	"PRIOR_RUN_NEEDS_DAY_TYPE",
 	"PRIOR_DAYS_UNKNOWN",
 	"PRIOR_REST_BLOCKS_SHIFTS",
+	"NEXT_SHIFT_REST_BLOCKS_SHIFTS",
 	"OFF_BLOCK_HISTORY_MISSING",
 ] as const;
 
@@ -206,6 +208,18 @@ export const diagnosticSentence = (
 				endTime: clockOf(previousEnd),
 			});
 		}
+		case "NEXT_SHIFT_REST_BLOCKS_SHIFTS": {
+			// Local date-times as the engine keys them, "2026-11-22T19:00".
+			const mustEndBy = entityText(diagnostic, "mustEndBy") ?? "";
+			const nextStart = entityText(diagnostic, "nextShiftStart") ?? "";
+			return t(`${key}.${code}.sentence`, {
+				member: member(),
+				time: clockOf(mustEndBy),
+				day: mustEndBy ? day(mustEndBy.slice(0, ISO_DATE_LENGTH)) : "",
+				startDay: nextStart ? day(nextStart.slice(0, ISO_DATE_LENGTH)) : "",
+				startTime: clockOf(nextStart),
+			});
+		}
 		case "OFF_BLOCK_HISTORY_MISSING":
 			// Without a member it is about everyone the rule counts.
 			if (entityText(diagnostic, "employeeId") === null)
@@ -243,10 +257,11 @@ export type DiagnosticSubject = {
 	day: string | null;
 };
 
-/** The ISO day a diagnostic is about: when rest lets someone start, or when a run needs a day type. */
+/** The ISO day a diagnostic is about: when rest lets someone start, by when their shifts must end, or when a run needs a day type. */
 const dayOfDiagnostic = (diagnostic: FindingsDiagnostic): string | null =>
 	(
 		entityText(diagnostic, "restedAt") ??
+		entityText(diagnostic, "mustEndBy") ??
 		entityText(diagnostic, "dayTypeNeededBy")
 	)?.slice(0, ISO_DATE_LENGTH) ?? null;
 

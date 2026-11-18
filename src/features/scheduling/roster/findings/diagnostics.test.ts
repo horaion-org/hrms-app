@@ -228,6 +228,41 @@ describe("diagnosticSentence", () => {
 		);
 	});
 
+	it("given_restBeforeTheNextShiftAfterTheSchedule_when_worded_then_saysByWhenShiftsMustEndAndWhy", () => {
+		const diagnostic = {
+			...withCode("DEAD_SHIFT"),
+			code: "NEXT_SHIFT_REST_BLOCKS_SHIFTS",
+			severity: "info",
+			entities: {
+				employeeId: "mp-2",
+				date: "2026-10-18",
+				shiftIds: ["front-desk-pm"],
+				nextShiftStart: "2026-10-19T06:00",
+				mustEndBy: "2026-10-18T19:00",
+				minimumRestHours: 11,
+			},
+		};
+
+		expect(diagnosticSentence(diagnostic, withDaysLimit, t, day)).toBe(
+			"Ben Ong can only work shifts that end by 19:00 on day 2026-10-18, because of rest before their next shift after this schedule, which started day 2026-10-19 at 06:00 when this schedule was generated."
+		);
+		expect(diagnosticLabel("NEXT_SHIFT_REST_BLOCKS_SHIFTS", t)).toBe(
+			"Rest needed before the next schedule"
+		);
+	});
+
+	it("given_restBeforeTheNextShiftWithoutItsStart_when_worded_then_theStartIsLeftEmptyAsPriorRestLeavesItsEnd", () => {
+		const diagnostic = {
+			...withCode("DEAD_SHIFT"),
+			code: "NEXT_SHIFT_REST_BLOCKS_SHIFTS",
+			entities: { employeeId: "mp-2", mustEndBy: "2026-10-18T19:00" },
+		};
+
+		expect(diagnosticSentence(diagnostic, withDaysLimit, t, day)).toBe(
+			"Ben Ong can only work shifts that end by 19:00 on day 2026-10-18, because of rest before their next shift after this schedule, which started  at  when this schedule was generated."
+		);
+	});
+
 	it("given_daysBeforeOnlyPartlyKnown_when_worded_then_namesTheMemberCountsAndRule", () => {
 		const diagnostic = dayTypeFinding("PRIOR_DAYS_UNKNOWN", {
 			employeeId: "mp-2",
@@ -308,6 +343,23 @@ describe("diagnosticSubject", () => {
 			memberProfileId: "mp-2",
 			day: "2026-10-12",
 		});
+	});
+
+	it("given_restBeforeTheNextShift_when_read_then_isThePersonOnTheDayTheirShiftsMustEndBy", () => {
+		const restBeforeNext: FindingsDiagnostic = {
+			...withCode("DEAD_SHIFT"),
+			code: "NEXT_SHIFT_REST_BLOCKS_SHIFTS",
+			entities: { employeeId: "mp-2", mustEndBy: "2026-10-18T19:00" },
+		};
+
+		expect(diagnosticSubject(restBeforeNext, named, t)).toEqual({
+			who: "Ben Ong",
+			memberProfileId: "mp-2",
+			day: "2026-10-18",
+		});
+		expect(diagnosticSubject(restBeforeNext, unnamed, t).who).toBe(
+			"Rest needed before the next schedule"
+		);
 	});
 
 	it("given_aShift_when_read_then_isTheShiftWithNoDay", () => {
