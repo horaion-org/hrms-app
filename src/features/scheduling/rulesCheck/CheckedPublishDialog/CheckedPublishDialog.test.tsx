@@ -47,6 +47,7 @@ const ruleOf = (
 		],
 	});
 
+/** A 200 carrying `data` in the API's envelope. */
 const ok = (data: unknown): StubReply => ({
 	status: 200,
 	body: envelope(data),
@@ -112,6 +113,7 @@ const openDialog = (check?: StubReply): void => {
 const answer = (check: Partial<RosterRulesCheck>): StubReply =>
 	ok(rulesCheckFixture(check));
 
+/** The dialog's confirm button. */
 const publishButton = (): HTMLElement =>
 	screen.getByRole("button", { name: "Publish roster" });
 

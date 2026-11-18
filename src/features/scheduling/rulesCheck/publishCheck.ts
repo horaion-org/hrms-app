@@ -77,6 +77,7 @@ export const publishCheckOf = (
 					.filter((constraint) => constraint.locked)
 					.map((constraint) => constraint.constraintId)
 	);
+	/** Whether the rule is one the schedule must apply: its id is a locked constraint's. */
 	const isLocked = (rule: BrokenRule): boolean =>
 		rule.constraintId !== null && lockedIds.has(rule.constraintId);
 	const broken =

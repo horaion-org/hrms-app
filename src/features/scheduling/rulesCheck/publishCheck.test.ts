@@ -30,6 +30,7 @@ const openRule = ruleFixture({
 });
 const ruleWithoutId = ruleFixture();
 const unnamedRule = ruleFixture({ rule: "" });
+/** The check's answer for a roster breaking the given rules. */
 const broken = (...brokenRules: Array<typeof lockedRule>): CheckRead =>
 	rulesCheckFixture({ status: "BROKEN", brokenRules });
 
