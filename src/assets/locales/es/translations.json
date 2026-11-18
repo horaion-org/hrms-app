@@ -4211,6 +4211,7 @@
 			"unavailable": "Este horario no existe o no tienes permiso para verlo.",
 			"viewSetup": "Ver configuración",
 			"timeZone": "Horas en {{timeZone}}",
+			"partOfWeek": "{{days}} · parte de la semana del {{week}}",
 			"draft": "Este horario sigue siendo un borrador, así que aún no tiene cuadrante. Ve su configuración para continuar.",
 			"weekPassed": "Esta semana ya pasó. Sus reglas y su horario son definitivos; cambia sus días a mano si hace falta.",
 			"rulesChanged": "Las reglas cambiaron desde que se generó este horario. Vuelve a generarlo para aplicarlas.",

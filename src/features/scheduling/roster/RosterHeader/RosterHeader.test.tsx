@@ -35,4 +35,33 @@ describe("RosterHeader", () => {
 			screen.getByRole("button", { name: "Publish roster" })
 		).toBeInTheDocument();
 	});
+
+	it("given_aPartOfItsWeek_when_rendered_then_namesItsOwnDaysThenTheWeek", () => {
+		render(
+			<RosterHeader
+				schedule={generatedScheduleFixture({
+					status: "GENERATED",
+					coveredFrom: "2026-10-14",
+					coveredTo: "2026-10-16",
+				})}
+			/>
+		);
+
+		expect(
+			screen.getByText(
+				/^Oct 14\s?–\s?16, 2026 · part of the week of Oct 12\s?–\s?18, 2026$/
+			)
+		).toBeInTheDocument();
+	});
+
+	it("given_aWholeWeekSchedule_when_rendered_then_namesTheWeekOnly", () => {
+		render(
+			<RosterHeader
+				schedule={generatedScheduleFixture({ status: "GENERATED" })}
+			/>
+		);
+
+		expect(screen.getByText(/^Oct 12\s?–\s?18, 2026$/)).toBeInTheDocument();
+		expect(screen.queryByText(/part of the week/)).toBeNull();
+	});
 });

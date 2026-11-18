@@ -4411,6 +4411,7 @@
 			"unavailable": "This schedule doesn’t exist or you don’t have permission to see it.",
 			"viewSetup": "View setup",
 			"timeZone": "Times in {{timeZone}}",
+			"partOfWeek": "{{days}} · part of the week of {{week}}",
 			"draft": "This schedule is still a draft, so it has no roster yet. View its setup to carry on.",
 			"weekPassed": "This week has passed. Its rules and roster are final; change its days by hand if needed.",
 			"rulesChanged": "Rules changed since this roster was generated. Regenerate to apply them.",

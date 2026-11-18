@@ -6,6 +6,7 @@ import type { FunctionComponent } from "@/common/types";
 import { Badge } from "@/components/ui/Badge";
 import { formatPeriod } from "@/features/scheduling/periods";
 import type { Schedule } from "@/features/scheduling/schedules/api";
+import { coversPartOfWeek } from "@/features/scheduling/schedules/partLines";
 import { rosterStatusBadge } from "@/features/scheduling/schedules/rosterStatus";
 
 export type RosterHeaderProps = {
@@ -25,7 +26,7 @@ const key = "scheduling.detail";
 
 /**
  * The top of a schedule's roster, kept to two lines: its department, then
- * its period, status (with any approval line `meta` says) and time zone.
+ * its period (a part of a week names its own days, then its week), status (with any approval line `meta` says) and time zone.
  * Who requested and decided it, and when, are in the "More actions" menu's
  * Details.
  */
@@ -51,10 +52,21 @@ export const RosterHeader = ({
 					{t(`${key}.title`, { department: schedule.departmentName })}
 				</h1>
 				<p className="mt-3 flex flex-wrap items-center gap-3 text-sm font-medium text-neutral-800">
-					{formatPeriod(
-						{ start: schedule.periodStart, end: schedule.periodEnd },
-						language
-					)}
+					{coversPartOfWeek(schedule)
+						? t(`${key}.partOfWeek`, {
+								days: formatPeriod(
+									{ start: schedule.coveredFrom, end: schedule.coveredTo },
+									language
+								),
+								week: formatPeriod(
+									{ start: schedule.periodStart, end: schedule.periodEnd },
+									language
+								),
+							})
+						: formatPeriod(
+								{ start: schedule.periodStart, end: schedule.periodEnd },
+								language
+							)}
 					<Badge className="uppercase" tone={badge.tone}>
 						{t(badge.labelKey)}
 					</Badge>
