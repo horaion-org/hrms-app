@@ -571,6 +571,17 @@ describe("datesGenerationBody", () => {
 		});
 	});
 
+	it("given_chosenPeople_when_sent_then_theirIdsAreSentAndEveryoneSendsNoField", () => {
+		const plan = datesPlanFixture();
+
+		expect(
+			datesGenerationBody(setup, plan, {}, everything, ["m-1", "m-2"])
+		).toMatchObject({ memberProfileIds: ["m-1", "m-2"] });
+		expect(datesGenerationBody(setup, plan, {}, everything)).not.toHaveProperty(
+			"memberProfileIds"
+		);
+	});
+
 	it("given_noNameAKeptWeekAndAWeeksOwnChoice_when_sent_then_noNameOnlyTheCreatedWeekWithItsChoice", () => {
 		expect(
 			datesGenerationBody(

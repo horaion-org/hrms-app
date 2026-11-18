@@ -282,14 +282,15 @@ export const startingWeekBody = (
 /**
  * What saving a dates run's first new part as a draft sends, covering its new
  * days, which the run then generates: the name Setup holds (else the week's
- * name), the part's choice and Setup's settings. None while the part has no
- * new days.
+ * name), the part's choice, Setup's settings and the chosen people only when
+ * some are (absent rosters everyone). None while the part has no new days.
  */
 export const datesStartBody = (
 	datesStart: Pick<DatesPlanWeek, "periodStart" | "newFrom" | "newTo">,
 	name: string,
 	weekChoice: WeekChoiceIds,
-	setup: MonthSetup
+	setup: MonthSetup,
+	memberProfileIds?: Array<string>
 ): ScheduleBody | undefined => {
 	const { periodStart, newFrom, newTo } = datesStart;
 	if (!newFrom || !newTo) return undefined;
@@ -301,5 +302,6 @@ export const datesStartBody = (
 		includeLeave: setup.includeLeave,
 		includedShiftIds: weekChoice.shiftIds,
 		includedConstraintIds: weekChoice.constraintIds,
+		...(memberProfileIds === undefined ? {} : { memberProfileIds }),
 	};
 };

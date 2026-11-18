@@ -612,6 +612,17 @@ describe("datesStartBody", () => {
 		});
 	});
 
+	it("given_chosenPeople_when_saved_then_theirIdsAreSentAndEveryoneSendsNoField", () => {
+		const setup = { includeLeave: true };
+
+		expect(
+			datesStartBody(firstPart, "", EVERYTHING, setup, ["m-1"])
+		).toMatchObject({ memberProfileIds: ["m-1"] });
+		expect(datesStartBody(firstPart, "", EVERYTHING, setup)).not.toHaveProperty(
+			"memberProfileIds"
+		);
+	});
+
 	it("given_aPartWithoutNewDays_when_saved_then_nothingToSend", () => {
 		expect(
 			datesStartBody(
