@@ -5503,7 +5503,9 @@
 					"hintChosen_other": "Generating works out the {{count}} weeks you ticked: {{ranges}}. You then review and publish them week by week.",
 					"generate": "Generate {{month}}",
 					"blockedShift": "{{department}} can’t be generated until it has a shift.",
-					"blockedStaffing": "{{department}} can’t be generated until a constraint puts people on a shift."
+					"blockedStaffing": "{{department}} can’t be generated until a constraint puts people on a shift.",
+					"titleDays": "Before you generate {{days}}",
+					"generateDays": "Generate {{days}}"
 				},
 				"cannotCreate": "You can’t create schedules at {{department}}, so the weeks this month still needs can’t be made.",
 				"generatingTitle": "Generating {{month}}…",

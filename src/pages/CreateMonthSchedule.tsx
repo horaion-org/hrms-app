@@ -51,11 +51,10 @@ import {
 	summaryRange,
 } from "@/features/scheduling/months/monthWeeks";
 import {
-	datesRunHint,
+	generateStepWordsOf,
 	monthUsesLine,
 	replacingNoteOf,
 	setupNextNoteOf,
-	tickedWeeksHint,
 	weekRangeText,
 } from "@/features/scheduling/months/monthCopy";
 import { hasRoster } from "@/features/scheduling/months/weekStateLooks";
@@ -682,6 +681,8 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 		},
 		t
 	);
+	// What the Generate step names and says: a dates run's days, or the month and its ticked weeks.
+	const generateWords = generateStepWordsOf(byDates, plan, ticked, language, t);
 	const generateDatesNow = async (values: MonthSetupValues): Promise<void> => {
 		if (!plan || !everything) return;
 		setProblem("");
@@ -873,6 +874,8 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 							{check.data && (
 								<BeforeGeneratePanel
 									check={check.data}
+									days={generateWords.days}
+									hint={generateWords.hint}
 									month={checkMonth}
 									blockedNote={
 										!byDates && ticked.length === 0
@@ -881,11 +884,6 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 									}
 									generating={
 										byDates ? datesGeneration.isPending : generation.isPending
-									}
-									hint={
-										byDates
-											? datesRunHint(plan, language, t)
-											: tickedWeeksHint(ticked, language, t)
 									}
 									waiting={
 										byDates

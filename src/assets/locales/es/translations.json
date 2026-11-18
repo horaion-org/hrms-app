@@ -5303,7 +5303,9 @@
 					"hintChosen_other": "Generar calcula las {{count}} semanas que marcaste: {{ranges}}. Después revisas y publicas cada semana.",
 					"generate": "Generar {{month}}",
 					"blockedShift": "{{department}} no se puede generar hasta que tenga un turno.",
-					"blockedStaffing": "{{department}} no se puede generar hasta que una restricción asigne personas a un turno."
+					"blockedStaffing": "{{department}} no se puede generar hasta que una restricción asigne personas a un turno.",
+					"titleDays": "Antes de generar {{days}}",
+					"generateDays": "Generar {{days}}"
 				},
 				"cannotCreate": "No puedes crear horarios en {{department}}, así que no se pueden crear las semanas que le faltan a este mes.",
 				"generatingTitle": "Generando {{month}}…",

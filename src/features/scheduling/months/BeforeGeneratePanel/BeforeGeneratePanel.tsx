@@ -20,6 +20,8 @@ export type BeforeGeneratePanelProps = {
 	blockedNote?: string;
 	/** Says what Generate works out, in place of the month's words: the create flow names the ticked weeks. */
 	hint?: string;
+	/** A dates run's days, named in the title and on Generate in place of the month. */
+	days?: string;
 	/** Generate waits without a note: the lists it needs are still loading. */
 	waiting?: boolean;
 	/** The fix links, each only where the person may follow it. */
@@ -84,6 +86,7 @@ export const BeforeGeneratePanel = ({
 	month,
 	blockedNote,
 	hint,
+	days,
 	waiting = false,
 	links = {},
 	generating,
@@ -121,7 +124,9 @@ export const BeforeGeneratePanel = ({
 			)}
 		>
 			<h2 className="text-lg font-medium text-neutral-900" id={titleId}>
-				{t(`${key}.title`, { month: monthName })}
+				{days === undefined
+					? t(`${key}.title`, { month: monthName })
+					: t(`${key}.titleDays`, { days })}
 			</h2>
 			<ul className="flex flex-col gap-3">
 				<Line
@@ -179,7 +184,9 @@ export const BeforeGeneratePanel = ({
 						loading={generating}
 						onClick={onGenerate}
 					>
-						{t(`${key}.generate`, { month: monthName })}
+						{days === undefined
+							? t(`${key}.generate`, { month: monthName })
+							: t(`${key}.generateDays`, { days })}
 					</Button>
 					{note && (
 						<p className="text-sm text-neutral-800" id={noteId}>

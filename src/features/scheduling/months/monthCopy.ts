@@ -259,18 +259,47 @@ export const tickedWeeksHint = (
 				),
 			});
 
+/** A dates run's new days, from the first to the last, e.g. "4 – 10 Jan 2027"; undefined without a plan or new days. */
+const datesRunRange = (
+	plan: DatesPlan | undefined,
+	language: string
+): string | undefined => {
+	const newWeeks = plan?.weeks.filter((week) => week.newFrom !== null) ?? [];
+	const firstNewDay = newWeeks[0]?.newFrom;
+	const lastNewDay = newWeeks[newWeeks.length - 1]?.newTo;
+	if (!firstNewDay || !lastNewDay) return undefined;
+	return formatPeriod({ start: firstNewDay, end: lastNewDay }, language);
+};
+
 /** The Generate panel's line for a dates run: its new days, from the first to the last; empty without a plan. */
 export const datesRunHint = (
 	plan: DatesPlan | undefined,
 	language: string,
 	t: TFunction
 ): string => {
-	const newWeeks = plan?.weeks.filter((week) => week.newFrom !== null) ?? [];
-	const firstNewDay = newWeeks[0]?.newFrom;
-	const lastNewDay = newWeeks[newWeeks.length - 1]?.newTo;
-	if (!plan || !firstNewDay || !lastNewDay) return "";
-	return t("scheduling.dates.generate.hint", {
-		count: plan.newDays,
-		range: formatPeriod({ start: firstNewDay, end: lastNewDay }, language),
-	});
+	const range = datesRunRange(plan, language);
+	if (!plan || range === undefined) return "";
+	return t("scheduling.dates.generate.hint", { count: plan.newDays, range });
 };
+
+/** What the Generate step says: the line of what it works out, and the days it names in place of the month. */
+export type GenerateStepWords = { hint: string; days: string | undefined };
+
+/**
+ * The Generate step's words: a dates run names its days in the title and
+ * button and says how many it generates; a month run keeps its month's
+ * name (days undefined) and names the ticked weeks.
+ */
+export const generateStepWordsOf = (
+	byDates: boolean,
+	plan: DatesPlan | undefined,
+	ticked: ReadonlyArray<string>,
+	language: string,
+	t: TFunction
+): GenerateStepWords =>
+	byDates
+		? {
+				hint: datesRunHint(plan, language, t),
+				days: datesRunRange(plan, language),
+			}
+		: { hint: tickedWeeksHint(ticked, language, t), days: undefined };

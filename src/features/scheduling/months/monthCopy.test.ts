@@ -3,6 +3,7 @@ import { authTestI18n } from "@/features/auth/testingI18n";
 import { datesPlanFixture } from "@/features/scheduling/dates/fixtures";
 import {
 	datesRunHint,
+	generateStepWordsOf,
 	monthUsesLine,
 	newestPublishedNoteOf,
 	replacingNoteOf,
@@ -339,5 +340,36 @@ describe("newestPublishedNoteOf", () => {
 
 	it("given_anyOtherWeek_when_noted_then_nothing", () => {
 		expect(newestPublishedNoteOf(row, "en-US", authTestI18n.t)).toBeUndefined();
+	});
+});
+
+describe("generateStepWordsOf", () => {
+	const t = authTestI18n.t;
+
+	it.each([
+		{
+			case: "a dates run names its days",
+			byDates: true,
+			days: /^Nov 19\s?–\s?28, 2026$/,
+			hint: /^Generating works out 10 days, Nov 19/,
+		},
+		{
+			case: "a month run keeps its month",
+			byDates: false,
+			days: undefined,
+			hint: /^Generating works out the week you ticked: /,
+		},
+	])("$case", ({ byDates, days, hint }) => {
+		const words = generateStepWordsOf(
+			byDates,
+			datesPlanFixture(),
+			["2026-12-07"],
+			"en",
+			t
+		);
+
+		if (days === undefined) expect(words.days).toBeUndefined();
+		else expect(words.days).toMatch(days);
+		expect(words.hint).toMatch(hint);
 	});
 });

@@ -133,6 +133,20 @@ describe("BeforeGeneratePanel", () => {
 		).toBeNull();
 	});
 
+	it("given_aDatesRunsDays_when_shown_then_theTitleAndGenerateNameThemNotTheMonth", () => {
+		renderPanel(undefined, { days: "4 – 10 Jan 2027" });
+
+		expect(
+			screen.getByRole("heading", {
+				name: "Before you generate 4 – 10 Jan 2027",
+			})
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: "Generate 4 – 10 Jan 2027" })
+		).toBeInTheDocument();
+		expect(screen.queryByText(/Generate December 2026/)).toBeNull();
+	});
+
 	it("given_theListsLoading_when_rendered_then_generateWaitsWithoutANote", () => {
 		renderPanel(undefined, { waiting: true });
 
