@@ -1,12 +1,15 @@
-import { getRouteApi } from "@tanstack/react-router";
+import { getRouteApi, useRouterState } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import type { FunctionComponent } from "@/common/types";
 import { mondayOf } from "@/common/weeks";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { ArrowLeftIcon } from "@/components/ui/Icon";
+import { datesRunOf } from "@/features/scheduling/months/datesRunState";
+import { formatPeriod } from "@/features/scheduling/periods";
 import { isoDateIn } from "@/features/scheduling/roster/roster";
 import { ScheduleBars } from "@/features/scheduling/timeline/ScheduleBars";
 import {
@@ -75,6 +78,25 @@ export const DepartmentScheduleProblem = (): FunctionComponent => {
 			<BackLink />
 			<Problem alert>{t(`${key}.loadFailed`)}</Problem>
 		</>
+	);
+};
+
+/** On arrival from a run by dates: which days are being generated, in the month page's words. */
+const DatesRunCallout = (): FunctionComponent => {
+	const { t, i18n } = useTranslation();
+	const days = datesRunOf(
+		useRouterState({ select: (state) => state.location.state })
+	);
+	if (!days) return null;
+	return (
+		<Callout>
+			{t("scheduling.months.page.datesRun.generating", {
+				days: formatPeriod(
+					{ start: days.from, end: days.to },
+					formattingLocale(i18n)
+				),
+			})}
+		</Callout>
 	);
 };
 
@@ -196,6 +218,7 @@ export const DepartmentSchedulePage = (): FunctionComponent => {
 						</Button>
 					)}
 				</header>
+				<DatesRunCallout />
 				<TimelineToolbar
 					schedules={timeline.schedules}
 					shownScheduleId={search.schedule}

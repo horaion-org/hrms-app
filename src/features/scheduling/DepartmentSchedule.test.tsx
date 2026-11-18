@@ -15,6 +15,7 @@ import {
 } from "@/common/testing/stubApi";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
+import { withDatesRun } from "@/features/scheduling/months/datesRunState";
 import {
 	monthWeekFixture,
 	scheduleMonthFixture,
@@ -178,5 +179,23 @@ it("names the schedule to review in the needs list", async () => {
 
 	expect(
 		screen.getByText("Early days is ready to review.")
+	).toBeInTheDocument();
+});
+
+it("says which days are being generated on arrival from a run by dates", async () => {
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	stubApi(twoSchedulesInOneWeek());
+	app = await openApp("/scheduling/department?department=d-1&from=2026-10-05");
+	renderAuthApp(app);
+	await screen.findByRole("heading", { level: 1, name: "Kitchen Schedule" });
+
+	await app.router.navigate({
+		to: "/scheduling/department",
+		search: { department: "d-1", from: "2026-10-12" },
+		state: withDatesRun({}, { firstDay: "2026-10-15", lastDay: "2026-10-15" }),
+	});
+
+	expect(
+		await screen.findByText("Schedules for Oct 15, 2026 are being generated.")
 	).toBeInTheDocument();
 });

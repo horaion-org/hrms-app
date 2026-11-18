@@ -2037,8 +2037,8 @@ describe("Create schedules for a month: by dates", () => {
 		await user.click(generate);
 
 		await vi.waitFor(() => {
-			expect(opened.router.state.location.pathname).toBe(
-				"/scheduling/months/2026-11"
+			expect(opened.router.state.location.href).toBe(
+				"/scheduling/department?department=d-1&from=2026-11-16"
 			);
 		});
 		const post = calls.find(
