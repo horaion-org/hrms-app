@@ -114,6 +114,22 @@ export const replacingNoteOf = (
 	});
 };
 
+/** Why Setup's list can't tick a week of several schedules whose newest is published; undefined for any other week. */
+export const newestPublishedNoteOf = (
+	week: TickableWeek,
+	language: string,
+	t: TFunction
+): string | undefined => {
+	const published = week.newestPublished;
+	if (!published) return undefined;
+	return t("scheduling.months.setup.newestPublishedNote", {
+		published: formatPeriod(
+			{ start: published.from, end: published.to },
+			language
+		),
+	});
+};
+
 /** Why a week a run sent can't be generated now, as the month read shows it. */
 const whyNotGenerated = (
 	state: WeekState
