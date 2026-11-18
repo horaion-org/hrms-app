@@ -1,10 +1,11 @@
 import type { FunctionComponent } from "@/common/types";
 import { mondayOf } from "@/common/weeks";
 import { RegenerateMonthDialog } from "@/features/scheduling/months/RegenerateMonthDialog";
+import { CheckedPublishDialog } from "@/features/scheduling/rulesCheck/CheckedPublishDialog";
 import { DeleteScheduleDialog } from "@/features/scheduling/schedules/DeleteScheduleDialog";
-import { PublishScheduleDialog } from "@/features/scheduling/schedules/PublishScheduleDialog";
 import { RegenerateScheduleDialog } from "@/features/scheduling/schedules/RegenerateScheduleDialog";
 import { RejectScheduleDialog } from "@/features/scheduling/schedules/RejectScheduleDialog";
+import { offersPublishing } from "@/features/scheduling/timeline/pieceActions";
 import type { TimelinePiece } from "@/features/scheduling/timeline/timelineRows";
 import type { PieceActions } from "@/features/scheduling/timeline/usePieceActions";
 
@@ -23,7 +24,8 @@ export type PieceDialogsProps = {
 
 /**
  * The open dialog of one piece's menu: the same dialogs, with the same
- * props, the schedule page opens for the same action.
+ * props, the schedule page opens for the same action; publishing runs the
+ * rules check first.
  */
 export const PieceDialogs = ({
 	companyId,
@@ -34,8 +36,10 @@ export const PieceDialogs = ({
 }: PieceDialogsProps): FunctionComponent => (
 	<>
 		{dialog === "publish" && (
-			<PublishScheduleDialog
+			// Publish from the header or the needs list waits for the piece's own menu to offer it.
+			<CheckedPublishDialog
 				companyId={companyId}
+				confirmDisabled={!offersPublishing(actions.menu)}
 				daysLeftBefore={actions.daysLeftBefore}
 				mode={actions.publishMode}
 				schedule={piece.schedule}

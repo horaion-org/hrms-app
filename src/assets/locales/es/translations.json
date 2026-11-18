@@ -5430,6 +5430,17 @@
 			"loadFailed": "No se pudieron cargar las horas."
 		},
 		"rulesCheck": {
+			"publishCheck": {
+				"checking": "Comprobando las reglas antes de publicar…",
+				"lockedTitle_one": "Se incumple una regla bloqueada de la empresa, así que estos días aún no se pueden publicar:",
+				"lockedTitle_other": "Se incumplen {{count}} reglas bloqueadas de la empresa, así que estos días aún no se pueden publicar:",
+				"lockedNext": "Cambia el cuadrante desde «Revisar y editar estos días» y después publica.",
+				"warnTitle_one": "Se incumple {{count}} regla. Aun así puedes publicar:",
+				"warnTitle_other": "Se incumplen {{count}} reglas. Aun así puedes publicar:",
+				"ruleLine_one": "{{rule}} · {{count}} persona y día",
+				"ruleLine_other": "{{rule}} · {{count}} personas y días",
+				"unchecked": "No se pudieron comprobar las reglas ahora. Aun así puedes publicar."
+			},
 			"check": "Validar cuadrante",
 			"loading": "Validando el cuadrante…",
 			"brokenUnnamed": "Este cuadrante incumple una regla de tiempo de trabajo.",
