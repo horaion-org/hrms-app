@@ -651,6 +651,42 @@ describe("MonthSetupStep", () => {
 			).toBeInTheDocument();
 		});
 
+		it.each([
+			{ case: "everyone keeps the redo note", redoRefused: false, notes: 1 },
+			{
+				case: "people chosen over scheduled days drop it",
+				redoRefused: true,
+				notes: 0,
+			},
+		])("given_aRedoPlan_when_$case", ({ redoRefused, notes }) => {
+			const peopleProblem =
+				"These days already have a schedule. Choose days with no schedule, or roster everyone.";
+			render(
+				<Harness
+					dates={{
+						plan: datesPlanRedoingFixture(),
+						pending: false,
+						today: TODAY,
+						redoRefused,
+						people: redoRefused && <p role="alert">{peopleProblem}</p>,
+					}}
+					defaultValues={{
+						...DATES,
+						firstDay: "2026-11-18",
+						lastDay: "2026-11-19",
+					}}
+				/>
+			);
+
+			expect(
+				screen.queryAllByText(/It stays until the new days are ready/)
+			).toHaveLength(notes);
+			expect(screen.queryAllByText(/more days? after them/)).toHaveLength(
+				notes
+			);
+			expect(screen.queryAllByText(peopleProblem)).toHaveLength(1 - notes);
+		});
+
 		it("given_aRedoPlan_when_shown_then_theDaysStripReadsKeptDaysApartFromGeneratedOnes", () => {
 			render(
 				<Harness

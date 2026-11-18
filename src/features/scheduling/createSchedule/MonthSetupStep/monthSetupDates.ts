@@ -9,4 +9,6 @@ export type MonthSetupDates = {
 	today: string;
 	/** Shown after the name: who the schedule rosters, and the way to choose them. */
 	people?: ReactNode;
+	/** People are chosen over days that have a schedule, which the API refuses: the plan promises no redo. */
+	redoRefused?: boolean;
 };
