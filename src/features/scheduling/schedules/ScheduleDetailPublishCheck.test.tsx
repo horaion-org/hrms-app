@@ -131,9 +131,7 @@ describe("publishing from the roster page", () => {
 		).toBeVisible();
 		expect(within(dialog).getByText(`${LOCKED.name} · 1 person`)).toBeVisible();
 		expect(
-			within(dialog).getByText(
-				'Change the roster from "Review and edit these days", then publish.'
-			)
+			within(dialog).getByText("Change the roster, then publish.")
 		).toBeVisible();
 		expect(
 			within(dialog).getByRole("button", { name: "Publish roster" })

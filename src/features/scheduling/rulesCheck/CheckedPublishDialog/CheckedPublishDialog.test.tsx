@@ -13,7 +13,10 @@ import {
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { storyCompany } from "@/features/people/storyCompany";
 import { frozenConstraintsFixture } from "@/features/scheduling/constraints/fixtures";
-import { CheckedPublishDialog } from "@/features/scheduling/rulesCheck/CheckedPublishDialog";
+import {
+	CheckedPublishDialog,
+	type PublishDialogPlace,
+} from "@/features/scheduling/rulesCheck/CheckedPublishDialog";
 import {
 	ruleFixture,
 	rulesCheckFixture,
@@ -71,8 +74,11 @@ afterEach(() => {
 	vi.useRealTimers();
 });
 
-/** Opens the dialog on generated schedule s-1 with the roster check answering `check`; it never answers when left out. */
-const openDialog = (check?: StubReply): void => {
+/**
+ * Opens the dialog on generated schedule s-1 with the roster check answering
+ * `check` (it never answers when left out), shown on `shownOn` when given.
+ */
+const openDialog = (check?: StubReply, shownOn?: PublishDialogPlace): void => {
 	stubApi({
 		...(check ? { [`POST ${SCHEDULE}/roster-check`]: check } : {}),
 		[`GET ${SCHEDULE}/constraints`]: ok([LOCKED, UNLOCKED]),
@@ -92,6 +98,7 @@ const openDialog = (check?: StubReply): void => {
 		<CheckedPublishDialog
 			companyId="c-1"
 			schedule={generatedScheduleFixture({ status: "GENERATED" })}
+			shownOn={shownOn}
 			onClose={() => {}}
 		/>
 	);
@@ -151,6 +158,22 @@ describe("CheckedPublishDialog", () => {
 		expect(
 			screen.getByText("1 rule is broken. You can still publish:")
 		).toBeVisible();
+		expect(publishButton()).toBeDisabled();
+	});
+
+	/** On the schedule's own page the manager is already where the roster is changed, so no page is named. */
+	it("says only to change the roster when shown on the schedule page", async () => {
+		openDialog(
+			answer({ status: "BROKEN", brokenRules: [ruleOf(LOCKED!)] }),
+			"schedulePage"
+		);
+
+		expect(
+			await screen.findByText("Change the roster, then publish.")
+		).toBeVisible();
+		expect(
+			screen.queryByText(/Review and edit these days/)
+		).not.toBeInTheDocument();
 		expect(publishButton()).toBeDisabled();
 	});
 

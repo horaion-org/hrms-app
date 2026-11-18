@@ -5675,6 +5675,7 @@
 				"lockedTitle_one": "A locked company rule is broken, so these days can't be published yet:",
 				"lockedTitle_other": "{{count}} locked company rules are broken, so these days can't be published yet:",
 				"lockedNext": "Change the roster from \"Review and edit these days\", then publish.",
+				"lockedNextHere": "Change the roster, then publish.",
 				"warnTitle_one": "{{count}} rule is broken. You can still publish:",
 				"warnTitle_other": "{{count}} rules are broken. You can still publish:",
 				"ruleLine_one": "{{rule}} · {{count}} person",
