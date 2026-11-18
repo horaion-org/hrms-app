@@ -368,6 +368,27 @@ describe("WeekCard", () => {
 			).toBeNull();
 		});
 
+		it("given_theNewestPartGeneratingAfterAPublishedPart_when_shown_then_theWeeksCoverSummary", async () => {
+			const [published, generating] = twoPartWeekFixture();
+			const card = await renderCard(
+				monthWeekFixture({
+					periodStart: "2027-02-15",
+					periodEnd: "2027-02-21",
+					state: "GENERATING",
+					scheduleId: "s-2",
+					days: coverDays("2027-02-15", { 2: 1 }),
+					handChangedDays: null,
+					parts: [
+						{ ...published!, state: "PUBLISHED" },
+						{ ...generating!, state: "GENERATING" },
+					],
+				})
+			);
+
+			expect(card).toHaveTextContent("1 shift short");
+			expect(card).not.toHaveTextContent("changed by hand");
+		});
+
 		it("given_aWholeWeek_when_shown_then_noPartLine", async () => {
 			const card = await renderCard(
 				monthWeekFixture({ coveredFrom: "2026-11-02", coveredTo: "2026-11-08" })
