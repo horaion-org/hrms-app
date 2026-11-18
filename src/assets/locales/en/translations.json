@@ -4664,6 +4664,7 @@
 			"reason": "Reason for rejection",
 			"publishTitle": "Publish this roster?",
 			"publishDescription": "Publishing makes this roster final for its week. It can’t be regenerated or deleted afterwards; its days can still be changed, and the people whose days change are told.",
+			"publishPartDescription": "Publishing makes this roster final for its days ({{days}}). It can’t be regenerated or deleted afterwards; its days can still be changed, and the people whose days change are told.",
 			"publishConfirm": "Publish roster",
 			"rejectTitle": "Reject this roster?",
 			"rejectDescription": "Say what needs to change. The roster stays visible, and the schedule can then be regenerated or deleted.",
