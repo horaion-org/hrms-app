@@ -17,3 +17,10 @@ export const shiftTextOfView: Record<
 	TimelineView,
 	"timeAndName" | "name" | "initial"
 > = { week: "timeAndName", two: "name", four: "initial" };
+
+/** Whether the Staff cell shows the avatar and the hours in the window, as the roster grid does; four weeks has no room. */
+export const staffDetailsShown: Record<TimelineView, boolean> = {
+	week: true,
+	two: true,
+	four: false,
+};

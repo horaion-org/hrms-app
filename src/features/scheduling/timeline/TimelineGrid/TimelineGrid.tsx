@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
+import { Avatar } from "@/components/ui/Avatar";
 import {
 	dayWithoutShiftTileText,
 	type RosterCell,
@@ -22,8 +23,12 @@ import {
 import {
 	shiftTextOfView,
 	staffCellClasses,
+	staffDetailsShown,
 } from "@/features/scheduling/timeline/timelineLooks";
-import type { TimelineRow } from "@/features/scheduling/timeline/timelineRows";
+import {
+	hoursOfRow,
+	type TimelineRow,
+} from "@/features/scheduling/timeline/timelineRows";
 
 export type TimelineGridProps = {
 	/** The ISO dates shown, one column each. */
@@ -103,6 +108,41 @@ const DayCell = ({
 	);
 };
 
+/** A person's Staff cell, as the roster grid's: avatar, name, job title and hours in the window; name and job title alone in four weeks. */
+const StaffCell = ({
+	row,
+	days,
+	view,
+}: {
+	row: TimelineRow;
+	days: ReadonlyArray<string>;
+	view: TimelineView;
+}): FunctionComponent => {
+	const { t } = useTranslation();
+	const name = row.name ?? t("scheduling.detail.formerMember");
+	const showsDetails = staffDetailsShown[view];
+	return (
+		<th className={joinClassNames(staffCellClasses, "font-normal")} scope="row">
+			<span className="flex items-center gap-3">
+				{showsDetails && (
+					<Avatar className="size-10! text-base! max-sm:hidden" name={name} />
+				)}
+				<span className="min-w-0">
+					<span className="block truncate text-xs font-semibold">{name}</span>
+					<span className="mt-0.5 block truncate text-[0.625rem]">
+						{row.jobTitle ?? row.employeeCode}
+					</span>
+					{showsDetails && (
+						<span className="block text-[0.625rem]">
+							{t("scheduling.detail.hours", { count: hoursOfRow(row, days) })}
+						</span>
+					)}
+				</span>
+			</span>
+		</th>
+	);
+};
+
 /**
  * The timeline as one table, in the roster grid's bordered container: a header
  * row of days, the schedules' bar lanes, then one row per person.
@@ -166,15 +206,7 @@ export const TimelineGrid = ({
 					)}
 					{rows.map((row) => (
 						<tr key={row.key} className="border-t border-neutral-400">
-							<th
-								scope="row"
-								className={joinClassNames(
-									staffCellClasses,
-									"truncate text-sm font-normal"
-								)}
-							>
-								{row.name ?? t("scheduling.detail.formerMember")}
-							</th>
+							<StaffCell days={days} row={row} view={view} />
 							{days.map((day) => (
 								<td key={day} className="p-1">
 									<DayCell

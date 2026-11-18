@@ -1,8 +1,9 @@
 import dayjs from "dayjs";
 import type { ScheduleMonth } from "@/features/scheduling/months/api";
-import type {
-	RosterCell,
-	RosterRow,
+import {
+	hoursInDays,
+	type RosterCell,
+	type RosterRow,
 } from "@/features/scheduling/roster/roster";
 import type { TimelineSchedule } from "@/features/scheduling/timeline/timeline";
 
@@ -22,6 +23,7 @@ export type TimelineRow = {
 	key: string;
 	name: string | null;
 	jobTitle: string | null;
+	employeeCode: string | null;
 	/** Each day a schedule gives the person, by ISO date. */
 	days: Record<string, TimelineCell>;
 };
@@ -82,6 +84,7 @@ export const timelineRowsOf = (
 				key: rosterRow.key,
 				name: rosterRow.name,
 				jobTitle: rosterRow.jobTitle,
+				employeeCode: rosterRow.employeeCode,
 				days: {},
 			};
 			for (const [day, cell] of Object.entries(rosterRow.days))
@@ -90,3 +93,22 @@ export const timelineRowsOf = (
 		}
 	return [...rows.values()];
 };
+
+/** The paid hours a person's row adds up to over `days`, totalled as the roster page totals them. */
+export const hoursOfRow = (
+	row: TimelineRow,
+	days: ReadonlyArray<string>
+): number =>
+	hoursInDays(
+		{
+			key: row.key,
+			membershipId: null,
+			name: row.name,
+			jobTitle: row.jobTitle,
+			employeeCode: row.employeeCode,
+			days: Object.fromEntries(
+				Object.entries(row.days).map(([day, { cell }]) => [day, cell])
+			),
+		},
+		days
+	);

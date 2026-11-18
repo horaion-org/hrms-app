@@ -60,4 +60,15 @@ describe("TimelineGrid", () => {
 		const row = await renderGrid("four");
 		expect(within(row).getAllByText("M")).toHaveLength(2);
 	});
+
+	/** The Staff cell reads as the roster page's; four weeks keeps only the name and job title. */
+	it.each([
+		["week", true],
+		["four", false],
+	] as const)("shows the hours in the %s view: %s", async (view, shown) => {
+		const row = await renderGrid(view);
+		const staff = within(row).getByRole("rowheader");
+		expect(within(staff).getByText("Cook")).toBeInTheDocument();
+		expect(within(staff).queryByText("16 hrs") !== null).toBe(shown);
+	});
 });
