@@ -58,7 +58,8 @@ export const useSetProfileStatus = (
 				memberProfileQuery(companyId, profile.membershipId).queryKey,
 				(previous) => savedProfile(saved, previous)
 			);
-			await client.invalidateQueries({ queryKey: ["people", companyId] });
+			// Re-read in the background: the saved answer is already on screen, so the notice need not wait.
+			void client.invalidateQueries({ queryKey: ["people", companyId] });
 			await show({
 				kind: saved.status === "ACTIVE" ? "reactivated" : "deactivated",
 				name: saved.displayName,
