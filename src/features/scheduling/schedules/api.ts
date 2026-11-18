@@ -296,8 +296,9 @@ export const scheduleSchema = z
 					}
 			),
 		/**
-		 * When its publication was last withdrawn; null if never. Once set the
-		 * schedule is published once and never regenerated. Null from an older API.
+		 * When its publication was last withdrawn; null if never. Once set a
+		 * month run never regenerates it; its own route may (API ADR-0134).
+		 * Null from an older API.
 		 */
 		publicationWithdrawnAt: z.string().nullable().default(null),
 		/**
