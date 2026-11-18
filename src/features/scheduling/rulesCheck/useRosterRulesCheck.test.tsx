@@ -1,4 +1,8 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+	focusManager,
+	QueryClient,
+	QueryClientProvider,
+} from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -182,6 +186,31 @@ describe("useRosterRulesCheck", () => {
 
 		expect(result.current.status).toBe("idle");
 		expect(calls).toHaveLength(0);
+	});
+
+	it("sends no second request when the window regains focus", async () => {
+		const calls = stubApi({
+			[`POST ${ROSTER_CHECK}`]: { status: 200, body: envelope(CHECK) },
+		});
+		const { result } = hook(TARGET, 1, true);
+		await waitFor(() => {
+			expect(result.current.status).toBe("ready");
+		});
+
+		act(() => {
+			focusManager.setFocused(false);
+			focusManager.setFocused(true);
+		});
+		// A refetch would have been sent by now: let the stubbed fetch settle.
+		await act(
+			() =>
+				new Promise<void>((settle) => {
+					setTimeout(settle, 50);
+				})
+		);
+
+		expect(result.current.status).toBe("ready");
+		expect(calls).toHaveLength(1);
 	});
 
 	it("sends no second request when asked while a check is in flight", async () => {
