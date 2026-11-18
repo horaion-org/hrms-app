@@ -47,12 +47,11 @@ export const useEditProfile = (
 				memberProfileQuery(companyId, membershipId).queryKey,
 				(previous) => savedProfile(saved, previous)
 			);
-			return Promise.all([
-				client.invalidateQueries({ queryKey: ["people", companyId] }),
-				client.invalidateQueries({
-					queryKey: ["organisation", companyId, "members"],
-				}),
-			]);
+			// Re-read in the background: the saved answer is already on screen, so the form need not wait.
+			void client.invalidateQueries({ queryKey: ["people", companyId] });
+			void client.invalidateQueries({
+				queryKey: ["organisation", companyId, "members"],
+			});
 		},
 	});
 	const assign = useChangeAccessRoleHolders(companyId);
