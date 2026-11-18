@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import en from "@/assets/locales/en/translations.json";
 import { CONSTRAINT_TYPES } from "@/features/scheduling/constraints/api";
 import { CONSTRAINT_TYPE_CATALOGUE } from "@/features/scheduling/constraints/constraintTypeCatalogue";
 import {
@@ -270,5 +271,13 @@ describe("issueAdviceOf: by the item itself", () => {
 		},
 	])("gives none for $case", ({ issue }) => {
 		expect(issueAdviceOf(issue)).toBeUndefined();
+	});
+});
+
+describe("issue advice: the wording", () => {
+	it("has a sentence for every line of advice, and nothing but the two lines around them", () => {
+		expect(Object.keys(en.scheduling.issues.advice).sort()).toEqual(
+			[...ISSUE_ADVICE_KEYS, "lead", "withNeighbouringDays"].sort()
+		);
 	});
 });

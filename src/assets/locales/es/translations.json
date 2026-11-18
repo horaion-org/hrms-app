@@ -4664,7 +4664,35 @@
 				"startChanged": "Días anteriores cambiados",
 				"fromGeneration": "Notas de la generación"
 			},
-			"dayRun": "{{from}} – {{to}}"
+			"dayRun": "{{from}} – {{to}}",
+			"advice": {
+				"lead": "Qué hacer: {{advice}}",
+				"withNeighbouringDays": "{{advice}} También puedes cambiar los días vecinos, en el horario anterior o en el siguiente.",
+				"findCover": "Pulsa Buscar cobertura para ver quién puede hacerlo, o pregunta al motor por opciones.",
+				"staffByHand": "Da este turno a alguien que pueda trabajarlo ese día.",
+				"daysOff": "Cambia uno de los turnos de esta persona en ese periodo por un día libre.",
+				"requiredDays": "Cambia uno de los turnos de esta persona en esa semana por un día de descanso (o un día libre).",
+				"avoidDayOff": "Da a esta persona un turno ese día y su día libre otro día, si el cuadrante lo permite.",
+				"restBetweenShifts": "Cambia uno de los dos turnos para que haya descanso suficiente entre ellos, o da un día libre entre los dos.",
+				"restBetweenShiftsHours": "Cambia uno de los dos turnos para que haya al menos {{hours}} horas entre ellos, o da un día libre entre los dos.",
+				"pattern": "Cambia uno de los turnos de la secuencia.",
+				"daysInARow": "Da a esta persona un día de descanso o un día libre dentro de esta racha de días.",
+				"lessThatDay": "Quita a esta persona un turno o las horas extra de ese día, y usa Buscar cobertura para lo que liberes.",
+				"lessThatWeek": "Quita a esta persona un turno de esa semana, y usa Buscar cobertura para el turno que liberes.",
+				"lessThatMonth": "Quita a esta persona horas extra o un turno de ese mes, y usa Buscar cobertura para lo que liberes.",
+				"callBacks": "Devuelve a esta persona uno de los días de descanso o días libres en los que se la llamó, y usa Buscar cobertura para el turno que liberes.",
+				"noExtraHours": "Quita a esta persona las horas de más o la llamada en su día libre, y usa Buscar cobertura para lo que liberes.",
+				"keepDaysOffTogether": "Mueve uno de los días libres de esta persona junto a sus otros días libres.",
+				"cantWorkShift": "Quita este turno a esta persona, y usa Buscar cobertura para dárselo a alguien que pueda trabajarlo.",
+				"oneShiftADay": "Deja a esta persona un solo turno ese día, y usa Buscar cobertura para el otro.",
+				"overtimeNeedsShift": "Da a esta persona un turno ese día, o quita las horas extra.",
+				"overtimeJoined": "Mueve las horas extra para que queden unidas al turno, o quítalas.",
+				"preferences": "Intercambia turnos entre personas para repartir mejor los turnos que prefieren.",
+				"daysInRole": "Cambia los turnos de esta persona en ese periodo para que sus días en el puesto cumplan la regla.",
+				"dayType": "Abre el día y elige qué es: un día de descanso, un día libre o un permiso.",
+				"startTimeChange": "Da a esta persona la misma hora de inicio en días seguidos, si el cuadrante lo permite.",
+				"validate": "Pulsa Validar cuadrante para ver qué regla es y a quién nombra."
+			}
 		},
 		"rosterMarkers": {
 			"leaveRequested": "Permiso solicitado",

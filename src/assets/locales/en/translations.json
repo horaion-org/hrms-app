@@ -4864,7 +4864,35 @@
 				"startChanged": "Days before changed",
 				"fromGeneration": "Notes from generation"
 			},
-			"dayRun": "{{from}} – {{to}}"
+			"dayRun": "{{from}} – {{to}}",
+			"advice": {
+				"lead": "What to do: {{advice}}",
+				"withNeighbouringDays": "{{advice}} You can also change the neighbouring days, in the schedule before or after this one.",
+				"findCover": "Press Find cover to see who can take it, or ask the engine for options.",
+				"staffByHand": "Give this shift to someone who can work it that day.",
+				"daysOff": "Change one of this person’s shifts in that period to a day off.",
+				"requiredDays": "Change one of this person’s shifts in that week to a rest day (or a day off).",
+				"avoidDayOff": "Give this person a shift on that day and their day off on another day, if the roster allows.",
+				"restBetweenShifts": "Change one of the two shifts so there is enough rest between them, or give a day off between them.",
+				"restBetweenShiftsHours": "Change one of the two shifts so they are at least {{hours}} hours apart, or give a day off between them.",
+				"pattern": "Change one of the shifts in the pattern.",
+				"daysInARow": "Give this person a rest day or a day off inside this run of days.",
+				"lessThatDay": "Take a shift or the overtime off this person that day, and use Find cover for what you free.",
+				"lessThatWeek": "Take one shift off this person that week, and use Find cover for the shift you free.",
+				"lessThatMonth": "Take overtime or a shift off this person that month, and use Find cover for what you free.",
+				"callBacks": "Give this person back one of the rest days or days off they were called in on, and use Find cover for the shift you free.",
+				"noExtraHours": "Take the extra hours or the call-back off this person, and use Find cover for what you free.",
+				"keepDaysOffTogether": "Move one of this person’s days off next to their other days off.",
+				"cantWorkShift": "Take this shift off this person, and use Find cover to give it to someone who can work it.",
+				"oneShiftADay": "Leave this person one shift that day, and use Find cover for the other.",
+				"overtimeNeedsShift": "Give this person a shift that day, or take the overtime off.",
+				"overtimeJoined": "Move the overtime so it joins the shift, or take it off.",
+				"preferences": "Swap shifts between people so the shifts they prefer are shared more evenly.",
+				"daysInRole": "Change this person’s shifts in that period so their days in the role match the rule.",
+				"dayType": "Open the day and choose what it is: a rest day, a day off or leave.",
+				"startTimeChange": "Give this person the same start time on the days next to each other, if the roster allows.",
+				"validate": "Press Validate schedule to see which rule this is and who it names."
+			}
 		},
 		"rosterMarkers": {
 			"leaveRequested": "Leave requested",
