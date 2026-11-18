@@ -485,7 +485,7 @@ describe("MonthSetupStep", () => {
 			expect(screen.getByText("Kept")).toBeInTheDocument();
 			expect(
 				screen.getByText(
-					/^Nov 23\s?–\s?28, 2026 are published and stay as they are\.$/
+					/^Nov 23\s?–\s?28, 2026 have been published and stay as they are\.$/
 				)
 			).toBeInTheDocument();
 		});
@@ -610,7 +610,7 @@ describe("MonthSetupStep", () => {
 			).toBeInTheDocument();
 			expect(
 				screen.getByText(
-					/^Nov 18\s?–\s?19, 2026 already have a schedule\. It stays until the new days are ready\. Then they are replaced, and the rest of their week is scheduled again\. Published days are never touched\.$/
+					/^Nov 18\s?–\s?19, 2026 already have a schedule\. It stays until the new days are ready\. Then they are replaced, and the rest of their week is scheduled again\. Days that have been published are never touched\.$/
 				)
 			).toBeInTheDocument();
 		});

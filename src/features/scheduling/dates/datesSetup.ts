@@ -182,7 +182,7 @@ export const planRowOf = (week: DatesPlanWeek): PlanRow => {
 
 /** What the notes under "What this creates" name, across the plan's weeks. */
 export type PlanNotes = {
-	/** The asked days that are published and stay as they are, a run per part. */
+	/** The asked days that have been published (or published and taken back) and stay as they are, a run per part. */
 	publishedDays: Array<DayRun>;
 	/** The asked days with a schedule that generating redoes, a run per part. */
 	redoneDays: Array<DayRun>;
