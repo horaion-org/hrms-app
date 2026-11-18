@@ -240,8 +240,9 @@ const WEEK_REFUSAL_WORDS: Record<
 	[errorCodeOf(codes.generationInProgress)]: (t) =>
 		t("scheduling.regenerate.inProgress"),
 	[errorCodeOf(codes.published)]: (t) => t("scheduling.regenerate.published"),
+	// A month run refuses every withdrawn week, told of changes or not (API ADR-0134).
 	[errorCodeOf(codes.oncePublished)]: (t) =>
-		t("scheduling.regenerate.oncePublished"),
+		t("scheduling.months.generate.oncePublished"),
 	[errorCodeOf(codes.laterPartPublished)]: (t) =>
 		t("scheduling.regenerate.laterPartPublished"),
 	[EARLIER_WEEK_FAILED]: (t, failedWeek) =>
