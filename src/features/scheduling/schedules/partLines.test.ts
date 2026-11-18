@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import type { DayRun } from "@/features/scheduling/dates/api";
 import type { WeekRun } from "@/features/scheduling/dates/datesSetup";
 import {
+	daysLeftBeforeOf,
+	deleteLeavesOf,
 	firstPublishedDayOf,
 	partLinesOf,
 	type PartLine,
@@ -138,19 +140,149 @@ describe("firstPublishedDayOf", () => {
 	it.each([
 		{
 			case: "no part published",
-			parts: [{ state: "TO_REVIEW", coveredFrom: "2027-02-15" }],
+			parts: [
+				{ scheduleId: "s-1", state: "TO_REVIEW", coveredFrom: "2027-02-15" },
+			],
+			withdrawn: [],
 			expected: undefined,
 		},
 		{
 			case: "two published parts",
 			parts: [
-				{ state: "PUBLISHED", coveredFrom: "2027-02-19" },
-				{ state: "TO_REVIEW", coveredFrom: "2027-02-15" },
-				{ state: "PUBLISHED", coveredFrom: "2027-02-17" },
+				{ scheduleId: "s-3", state: "PUBLISHED", coveredFrom: "2027-02-19" },
+				{ scheduleId: "s-1", state: "TO_REVIEW", coveredFrom: "2027-02-15" },
+				{ scheduleId: "s-2", state: "PUBLISHED", coveredFrom: "2027-02-17" },
 			],
+			withdrawn: [],
 			expected: "2027-02-17",
 		},
-	] as const)("given_$case_when_read_then_$expected", ({ parts, expected }) => {
-		expect(firstPublishedDayOf(parts)).toBe(expected);
+		// Taken back, it reads as to review again, but the API still counts it as published.
+		{
+			case: "a part whose publication was withdrawn",
+			parts: [
+				{ scheduleId: "s-1", state: "TO_REVIEW", coveredFrom: "2027-02-17" },
+			],
+			withdrawn: ["s-1"],
+			expected: "2027-02-17",
+		},
+	] as const)(
+		"given_$case_when_read_then_$expected",
+		({ parts, withdrawn, expected }) => {
+			expect(firstPublishedDayOf(parts, withdrawn)).toBe(expected);
+		}
+	);
+});
+
+describe("daysLeftBeforeOf", () => {
+	const linesOf = (overrides: Partial<PartLinesSource>): Array<PartLine> =>
+		partLinesOf({ ...MIDWEEK, ...overrides }, formatDays, t);
+
+	it.each([
+		{
+			case: "days before still to come",
+			source: { runs: [{ kind: "noneBefore", days: MONDAY_TUESDAY }] },
+			expected: [MONDAY_TUESDAY],
+		},
+		{
+			case: "days before already rostered",
+			source: {
+				runs: [{ kind: "otherPart", days: MONDAY_TUESDAY, part: WEEKEND_PART }],
+			},
+			expected: [],
+		},
+		{
+			case: "days before that have passed",
+			source: { runs: [{ kind: "passedBefore", days: MONDAY_TUESDAY }] },
+			expected: [],
+		},
+		{
+			case: "days before a published part",
+			source: {
+				runs: [{ kind: "noneBefore", days: MONDAY_TUESDAY }],
+				firstPublishedDay: "2027-02-17",
+			},
+			expected: [],
+		},
+		{
+			case: "only days after",
+			source: { runs: [{ kind: "noneAfter", days: WEEKEND }] },
+			expected: [],
+		},
+		{ case: "not a part of its week", source: {}, expected: [] },
+	] as Array<{
+		case: string;
+		source: Partial<PartLinesSource>;
+		expected: Array<DayRun>;
+	}>)("given_$case_when_read_then_warnsOfThoseDays", ({ source, expected }) => {
+		expect(daysLeftBeforeOf(linesOf(source), MIDWEEK.covered.from)).toEqual(
+			expected
+		);
 	});
+});
+
+describe("deleteLeavesOf", () => {
+	const MONDAY_TO_TUESDAY = {
+		scheduleId: "s-0",
+		coveredFrom: "2027-02-15",
+		coveredTo: "2027-02-16",
+	};
+	const WEDNESDAY_TO_FRIDAY = {
+		scheduleId: "s-1",
+		coveredFrom: "2027-02-17",
+		coveredTo: "2027-02-19",
+	};
+	const SATURDAY = {
+		scheduleId: "s-2",
+		coveredFrom: "2027-02-20",
+		coveredTo: "2027-02-20",
+	};
+	const SUNDAY = {
+		scheduleId: "s-3",
+		coveredFrom: "2027-02-21",
+		coveredTo: "2027-02-21",
+	};
+	const daysOf = (part: typeof MONDAY_TO_TUESDAY): DayRun => ({
+		from: part.coveredFrom,
+		to: part.coveredTo,
+	});
+
+	it.each([
+		{
+			case: "the only part of its week",
+			shown: WEDNESDAY_TO_FRIDAY,
+			parts: [WEDNESDAY_TO_FRIDAY],
+			expected: {},
+		},
+		{
+			case: "a middle part",
+			shown: WEDNESDAY_TO_FRIDAY,
+			parts: [MONDAY_TO_TUESDAY, WEDNESDAY_TO_FRIDAY, SATURDAY, SUNDAY],
+			expected: {
+				daysWithoutRoster: daysOf(WEDNESDAY_TO_FRIDAY),
+				laterDays: { from: "2027-02-20", to: "2027-02-21" },
+			},
+		},
+		{
+			case: "the first part with a later one",
+			shown: MONDAY_TO_TUESDAY,
+			parts: [MONDAY_TO_TUESDAY, WEDNESDAY_TO_FRIDAY],
+			expected: {
+				daysWithoutRoster: daysOf(MONDAY_TO_TUESDAY),
+				laterDays: daysOf(WEDNESDAY_TO_FRIDAY),
+			},
+		},
+		{
+			case: "the last part",
+			shown: SUNDAY,
+			parts: [WEDNESDAY_TO_FRIDAY, SUNDAY],
+			expected: { daysWithoutRoster: daysOf(SUNDAY), laterDays: undefined },
+		},
+	])(
+		"given_$case_when_deleted_then_saysWhatItLeaves",
+		({ shown, parts, expected }) => {
+			expect(deleteLeavesOf(shown.scheduleId, daysOf(shown), parts)).toEqual(
+				expected
+			);
+		}
+	);
 });

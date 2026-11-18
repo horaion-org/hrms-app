@@ -4633,7 +4633,10 @@
 			"published": "This schedule is published, so it can’t be deleted. Change its days on the roster instead.",
 			"gone": "This schedule no longer exists.",
 			"forbidden": "You no longer have permission to delete this schedule.",
-			"failed": "We couldn’t delete the schedule. Try again."
+			"failed": "We couldn’t delete the schedule. Try again.",
+			"leavesNoRoster": "{{days}} will have no roster.",
+			"laterWorkedOut_one": "{{later}} was worked out from them and stays as it is; schedule {{days}} again to redo it.",
+			"laterWorkedOut_other": "{{later}} were worked out from them and stay as they are; schedule {{days}} again to redo them."
 		},
 		"regenerate": {
 			"retry": "Generate again",
@@ -4691,7 +4694,9 @@
 				"noApprover": "A step of this department’s approval flow has nobody who can approve it. Ask an admin to change it in Settings › Approvals."
 			},
 			"shortShifts_one": "{{count}} shift is still short of people, and staff will see the roster as it is. Find cover for it from Issues, or publish as it is.",
-			"shortShifts_other": "{{count}} shifts are still short of people, and staff will see the roster as it is. Find cover for them from Issues, or publish as it is."
+			"shortShifts_other": "{{count}} shifts are still short of people, and staff will see the roster as it is. Find cover for them from Issues, or publish as it is.",
+			"daysLeftBefore_one": "{{days}} has no schedule, and once this roster is published it can’t be scheduled. Schedule {{days}} first, or publish as it is.",
+			"daysLeftBefore_other": "{{days}} have no schedule, and once this roster is published they can’t be scheduled. Schedule {{days}} first, or publish as it is."
 		},
 		"startingContext": {
 			"title": "Before this week",
@@ -5615,8 +5620,8 @@
 		},
 		"dates": {
 			"refusal": {
-				"allTaken": "Every day from {{first}} to {{last}} is published, so nothing would change. Choose a first day after {{last}}.",
-				"beforeRoster": "{{days}} come before {{scheduled}}, which are published and stay as they are. Choose a first day after {{last}}.",
+				"allTaken": "Every day from {{first}} to {{last}} has been published, so nothing would change. Choose a first day after {{last}}.",
+				"beforeRoster": "{{days}} come before {{scheduled}}, which have been published and stay as they are. Choose a first day after {{last}}.",
 				"draftInTheWay": "The week of {{week}} has a schedule for {{days}} with no roster yet. Open it from the month page to generate it, or delete it, then choose these dates again.",
 				"beingGenerated": "{{days}} are being generated right now. Wait until that finishes on the month page, then choose these dates again.",
 				"datesInvalid": "These dates can’t be scheduled any more. Go back to Setup and choose them again.",
@@ -5678,8 +5683,8 @@
 			"schedulesThisWeek": "Schedules this week",
 			"redoing": "This schedule redoes {{days}}. Until its roster is ready, the week’s current schedule keeps those days.",
 			"beingRedone": "{{days}} are being scheduled again. This roster keeps them until the new one is ready.",
-			"noneBeforePublished_one": "{{days}} has no schedule. It comes before published days, so it can’t be scheduled now.",
-			"noneBeforePublished_other": "{{days}} have no schedule. They come before published days, so they can’t be scheduled now."
+			"noneBeforePublished_one": "{{days}} has no schedule. It comes before days that have been published, so it can’t be scheduled now.",
+			"noneBeforePublished_other": "{{days}} have no schedule. They come before days that have been published, so they can’t be scheduled now."
 		}
 	},
 	"colourSwatchPicker": {

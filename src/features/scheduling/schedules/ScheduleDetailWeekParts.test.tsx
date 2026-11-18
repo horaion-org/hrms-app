@@ -1,4 +1,5 @@
 import { screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
 import {
@@ -87,7 +88,9 @@ const openPart = async ({
 }: {
 	monday: string;
 	sunday: string;
-	shown: Pick<WeekPart, "coveredFrom" | "coveredTo">;
+	shown: Pick<WeekPart, "coveredFrom" | "coveredTo"> & {
+		publicationWithdrawnAt?: string;
+	};
 	parts: Array<WeekPart>;
 	permissions?: Array<string>;
 }): Promise<void> => {
@@ -167,6 +170,84 @@ describe("the owner's week of 15 February 2027: Wed–Fri, then Sat–Sun", () =
 		expect(
 			within(row).getByRole("link", { name: /Sat, Feb 20\s?–\s?Sun, Feb 21/ })
 		).toHaveAttribute("href", "/scheduling/s-2");
+	});
+
+	// Publishing this part would leave Monday and Tuesday unschedulable (API ADR-0129): the dialog says so first.
+	it("given_mondayTuesdayStillWithoutASchedule_when_publishing_then_warnsAndStillPublishes", async () => {
+		vi.useFakeTimers({
+			toFake: ["Date"],
+			now: new Date("2027-02-10T09:00:00+08:00"),
+		});
+		await openPart({
+			...WEEK,
+			shown: wednesdayToFriday,
+			parts: [part({ ...wednesdayToFriday })],
+			permissions: ["schedule:read", "schedule:publish"],
+		});
+		const user = userEvent.setup();
+
+		await user.click(
+			await screen.findByRole("button", { name: "Publish roster" })
+		);
+		const dialog = screen.getByRole("dialog", { name: "Publish this roster?" });
+		expect(dialog).toHaveTextContent(
+			/Feb 15\s?–\s?16, 2027 have no schedule, and once this roster is published they can’t be scheduled\. Schedule Feb 15\s?–\s?16, 2027 first, or publish as it is\./
+		);
+		expect(
+			within(dialog).getByRole("button", { name: "Publish roster" })
+		).toBeEnabled();
+	});
+
+	// A part whose publication was taken back still holds the days before it (API WeekRedos.countsAsPublished).
+	it("given_thisPartsPublicationWithdrawn_when_shown_then_mondayTuesdaySayWhyWithoutScheduleButton", async () => {
+		vi.useFakeTimers({
+			toFake: ["Date"],
+			now: new Date("2027-02-10T09:00:00+08:00"),
+		});
+		await openPart({
+			...WEEK,
+			shown: {
+				...wednesdayToFriday,
+				publicationWithdrawnAt: "2027-02-09T10:00:00Z",
+			},
+			parts: [part({ ...wednesdayToFriday })],
+		});
+
+		expect(
+			await screen.findByText(
+				/^Feb 15\s?–\s?16, 2027 have no schedule\. They come before days that have been published, so they can’t be scheduled now\.$/
+			)
+		).toBeInTheDocument();
+		expect(screen.queryByRole("link", { name: /^Schedule Feb 15/ })).toBeNull();
+		expect(
+			screen.queryByRole("button", { name: /^Schedule Feb 15/ })
+		).toBeNull();
+	});
+
+	it("given_theWednesdayToFridayPartWithALaterOne_when_deleting_then_saysWhatItLeavesBehind", async () => {
+		vi.useFakeTimers({
+			toFake: ["Date"],
+			now: new Date("2027-02-10T09:00:00+08:00"),
+		});
+		await openPart({
+			...WEEK,
+			shown: wednesdayToFriday,
+			parts: [
+				part({ ...wednesdayToFriday }),
+				part({ scheduleId: "s-2", ...saturdayToSunday }),
+			],
+			permissions: ["schedule:read", "schedule:delete"],
+		});
+		const user = userEvent.setup();
+
+		await user.click(
+			await screen.findByRole("button", { name: /More actions/ })
+		);
+		await user.click(await screen.findByRole("menuitem", { name: "Delete" }));
+
+		expect(await screen.findByRole("dialog")).toHaveTextContent(
+			/This can’t be undone\. Feb 17\s?–\s?19, 2027 will have no roster\. Feb 20\s?–\s?21, 2027 were worked out from them and stay as they are; schedule Feb 17\s?–\s?19, 2027 again to redo them\./
+		);
 	});
 
 	it("given_theWeekendPart_when_shown_then_mondayTuesdayHavePassedAndWednesdayToFridayLinksItsSchedule", async () => {

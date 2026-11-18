@@ -19,12 +19,23 @@ export type PartLinesSource = {
 	firstPublishedDay?: string;
 };
 
-/** The first day of the week a published part covers, or none: days before it can't be scheduled (API ADR-0129). */
+/**
+ * The first day of the week a part that has been published covers, or none:
+ * days before it can't be scheduled (API ADR-0129). The API counts a part
+ * whose publication was withdrawn as published too (`WeekRedos.countsAsPublished`);
+ * the week read doesn't say which parts those are, so the caller names the
+ * ones it knows (`withdrawnScheduleIds`, such as the schedule on screen).
+ */
 export const firstPublishedDayOf = (
-	parts: ReadonlyArray<Pick<WeekPart, "state" | "coveredFrom">>
+	parts: ReadonlyArray<Pick<WeekPart, "scheduleId" | "state" | "coveredFrom">>,
+	withdrawnScheduleIds: ReadonlyArray<string> = []
 ): string | undefined =>
 	parts
-		.filter((part) => part.state === "PUBLISHED")
+		.filter(
+			(part) =>
+				part.state === "PUBLISHED" ||
+				withdrawnScheduleIds.includes(part.scheduleId)
+		)
 		.map((part) => part.coveredFrom)
 		.sort()[0];
 
@@ -133,4 +144,58 @@ export const partLinesOf = (
 		...redoLines,
 		...runs.map((run) => runLineOf(run, source, formatDays, t)),
 	];
+};
+
+/**
+ * The days before this part with no schedule that can still be scheduled:
+ * those its before-lines offer to schedule (`partLinesOf`). Once this part is
+ * published they can't be (API ADR-0129), so publishing warns of them. Pure.
+ */
+export const daysLeftBeforeOf = (
+	lines: ReadonlyArray<PartLine>,
+	coveredFrom: string
+): Array<DayRun> =>
+	lines.flatMap(({ action }) =>
+		action?.kind === "scheduleDays" && action.days.to < coveredFrom
+			? [action.days]
+			: []
+	);
+
+/** What deleting a part of its week leaves behind, as the delete dialog says it. */
+export type DeleteLeaves = {
+	/** This part's days, which have no roster once it is gone; none when no other part shares its week. */
+	daysWithoutRoster?: DayRun;
+	/** The later parts' days, worked out from this part's days and left as they are. */
+	laterDays?: DayRun;
+};
+
+/**
+ * What deleting the part covering `covered` leaves of its week (`parts`, the
+ * week read's parts, this one included): only when other parts share the
+ * week, its days with no roster, and the later parts' days, which were worked
+ * out from them and are not changed. Pure.
+ */
+export const deleteLeavesOf = (
+	scheduleId: string,
+	covered: DayRun,
+	parts: ReadonlyArray<
+		Pick<WeekPart, "scheduleId" | "coveredFrom" | "coveredTo">
+	>
+): DeleteLeaves => {
+	const others = parts.filter((part) => part.scheduleId !== scheduleId);
+	if (others.length === 0) return {};
+	const later = others
+		.filter((part) => part.coveredFrom > covered.to)
+		.sort((first, second) =>
+			first.coveredFrom.localeCompare(second.coveredFrom)
+		);
+	const firstLater = later[0];
+	const lastLater = later[later.length - 1];
+	return {
+		daysWithoutRoster: covered,
+		laterDays:
+			firstLater && lastLater
+				? { from: firstLater.coveredFrom, to: lastLater.coveredTo }
+				: undefined,
+	};
 };

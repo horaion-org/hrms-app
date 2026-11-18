@@ -78,6 +78,7 @@ import {
 } from "@/features/scheduling/schedules/scheduleActions";
 import {
 	firstPublishedDayOf,
+	daysLeftBeforeOf,
 	partLinesOf,
 } from "@/features/scheduling/schedules/partLines";
 import { WeekPartsCallout } from "@/features/scheduling/schedules/WeekPartsCallout";
@@ -507,7 +508,10 @@ const ApiSchedule = ({
 				: [],
 			// A redo part in the week (API ADR-0129): this schedule is one, or one redoes some of its days.
 			redo: partRedoOf(schedule, weekParts),
-			firstPublishedDay: firstPublishedDayOf(weekParts),
+			firstPublishedDay: firstPublishedDayOf(
+				weekParts,
+				schedule.publicationWithdrawnAt ? [schedule.scheduleId] : []
+			),
 		},
 		(days) =>
 			formatPeriod({ start: days.from, end: days.to }, formattingLocale(i18n)),
@@ -655,6 +659,7 @@ const ApiSchedule = ({
 							withExport
 							companyId={companyId}
 							schedule={schedule}
+							weekParts={weekParts}
 							onDeleted={() => {
 								void navigate({ to: "/scheduling" });
 							}}
@@ -762,6 +767,7 @@ const ApiSchedule = ({
 			{openDialog === "publish" && (
 				<PublishScheduleDialog
 					companyId={companyId}
+					daysLeftBefore={daysLeftBeforeOf(partLines, schedule.coveredFrom)}
 					mode={publishModeOf(standing, approval.instance?.steps ?? [])}
 					schedule={schedule}
 					shortShifts={shortShifts}

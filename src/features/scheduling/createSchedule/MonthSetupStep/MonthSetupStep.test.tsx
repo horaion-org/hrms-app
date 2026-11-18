@@ -590,7 +590,7 @@ describe("MonthSetupStep", () => {
 
 			expect(
 				screen.getByText(
-					"Every day from Thu, Nov 19 to Sat, Nov 28 is published, so nothing would change. Choose a first day after Sat, Nov 28."
+					"Every day from Thu, Nov 19 to Sat, Nov 28 has been published, so nothing would change. Choose a first day after Sat, Nov 28."
 				)
 			).toBeInTheDocument();
 		});
