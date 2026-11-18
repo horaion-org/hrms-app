@@ -15,6 +15,7 @@ import type { DayRun } from "@/features/scheduling/dates/api";
 import { dayCountOfRuns } from "@/features/scheduling/dates/datesSetup";
 import { formatPeriod } from "@/features/scheduling/periods";
 import type { Schedule } from "@/features/scheduling/schedules/api";
+import { coversPartOfWeek } from "@/features/scheduling/schedules/partLines";
 import { decisionRefusal } from "@/features/scheduling/schedules/scheduleRefusal";
 import {
 	useReloadScheduling,
@@ -42,6 +43,7 @@ const key = "scheduling.decision";
 const copyOf = (
 	mode: PublishMode,
 	department: string,
+	partDays: string | undefined,
 	t: TFunction
 ): {
 	title: string;
@@ -53,7 +55,9 @@ const copyOf = (
 		case "publish":
 			return {
 				title: t(`${key}.publishTitle`),
-				description: t(`${key}.publishDescription`),
+				description: partDays
+					? t(`${key}.publishPartDescription`, { days: partDays })
+					: t(`${key}.publishDescription`),
 				confirm: t(`${key}.publishConfirm`),
 			};
 		case "submit":
@@ -97,7 +101,7 @@ const copyOf = (
 
 /**
  * Asks before a roster goes forward. Without a flow it publishes, saying
- * that it becomes final for its week. Where a flow applies it submits the
+ * that it becomes final for its week (a part: for its own days). Where a flow applies it submits the
  * roster, naming the steps it goes through. On a submission's open step it
  * approves, with an optional comment: "Approve" on a middle step, "Approve
  * and publish" on the last. A refusal shows inside the dialog.
@@ -127,7 +131,14 @@ export const PublishScheduleDialog = ({
 		companyId,
 		useReloadScheduling(companyId)
 	);
-	const copy = copyOf(mode, schedule.departmentName, t);
+	// A part of a week becomes final for its own days, not the whole week.
+	const partDays = coversPartOfWeek(schedule)
+		? formatPeriod(
+				{ start: schedule.coveredFrom, end: schedule.coveredTo },
+				language
+			)
+		: undefined;
+	const copy = copyOf(mode, schedule.departmentName, partDays, t);
 	const done = (): void => {
 		if (copy.announcement) onDone?.(copy.announcement);
 		onClose();

@@ -25,6 +25,7 @@ import {
 import { formatPeriod } from "@/features/scheduling/periods";
 import { ScheduleMenu } from "@/features/scheduling/schedules/ScheduleMenu";
 import type { Schedule } from "@/features/scheduling/schedules/api";
+import { coversPartOfWeek } from "@/features/scheduling/schedules/partLines";
 import { statusLabelKey } from "@/features/scheduling/schedules/rosterStatus";
 import { scheduleStatusTones } from "@/features/scheduling/schedules/scheduleStatusTones";
 import { scheduleViewLink } from "@/features/scheduling/schedules/scheduleViewLink";
@@ -122,7 +123,22 @@ export const SchedulesTab = ({
 				// A schedule is named by its week, in the reader's language; the stored name is the API's.
 				id: "date",
 				header: t(`${key}.history.date`),
-				cell: (schedule) => periodOf(schedule),
+				cell: (schedule) => (
+					<>
+						{periodOf(schedule)}
+						{/* A part of a week says so, so a split week's rows tell apart. */}
+						{coversPartOfWeek(schedule) && (
+							<span className="block text-xs font-normal text-neutral-700">
+								{t(`${key}.history.partOfWeek`, {
+									week: formatPeriod(
+										{ start: schedule.periodStart, end: schedule.periodEnd },
+										language
+									),
+								})}
+							</span>
+						)}
+					</>
+				),
 				cellClassName: "font-semibold",
 				sortValue: (schedule) => schedule.coveredFrom,
 				pin: "start",

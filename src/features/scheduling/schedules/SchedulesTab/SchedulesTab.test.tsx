@@ -191,8 +191,47 @@ describe("SchedulesTab", () => {
 		});
 		const row = within(history).getByRole("row", { name: /Kitchen - Week 41/ });
 		expect(within(row).getAllByRole("cell")[0]).toHaveTextContent(
-			/^Oct 15\s?–\s?18, 2026/
+			/^Oct 15\s?–\s?18, 2026Part of the week of Oct 12\s?–\s?18, 2026·/
 		);
+	});
+
+	it("given_aPartTheViewerMayDelete_when_listed_then_itsMenuIsNamedByItsDays", async () => {
+		show(
+			vi.fn(),
+			["schedule:read", "schedule:delete"],
+			"GENERATED",
+			SUMMARIES,
+			{
+				coveredFrom: "2026-10-15",
+			}
+		);
+
+		const history = await screen.findByRole("table", {
+			name: "Schedule history",
+		});
+		const row = within(history).getByRole("row", { name: /Kitchen - Week 41/ });
+		expect(
+			within(row).getByRole("button", {
+				name: /^More actions for Oct 15\s?–\s?18, 2026$/,
+			})
+		).toBeInTheDocument();
+	});
+
+	it("given_aWholeWeekSchedule_when_listed_then_saysNoPartAndItsMenuKeepsItsName", async () => {
+		show(vi.fn(), ["schedule:read", "schedule:delete"], "GENERATED");
+
+		const history = await screen.findByRole("table", {
+			name: "Schedule history",
+		});
+		const row = within(history).getByRole("row", { name: /Kitchen - Week 41/ });
+		expect(within(row).getAllByRole("cell")[0]).toHaveTextContent(
+			/^Oct 12\s?–\s?18, 2026·Name/
+		);
+		expect(
+			within(row).getByRole("button", {
+				name: "More actions for Kitchen - Week 41",
+			})
+		).toBeInTheDocument();
 	});
 
 	it("given_anApprovalWaitingOnTheViewer_when_rendered_then_itsMonthCardSaysWhichWeek", async () => {

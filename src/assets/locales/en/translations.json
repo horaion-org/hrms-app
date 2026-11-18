@@ -3572,6 +3572,7 @@
 			},
 			"history": {
 				"title": "Schedule history",
+				"partOfWeek": "Part of the week of {{week}}",
 				"description": "View saved schedules across your departments.",
 				"name": "Name",
 				"date": "Week",
@@ -4411,6 +4412,7 @@
 			"unavailable": "This schedule doesn’t exist or you don’t have permission to see it.",
 			"viewSetup": "View setup",
 			"timeZone": "Times in {{timeZone}}",
+			"partOfWeek": "{{days}} · part of the week of {{week}}",
 			"draft": "This schedule is still a draft, so it has no roster yet. View its setup to carry on.",
 			"weekPassed": "This week has passed. Its rules and roster are final; change its days by hand if needed.",
 			"rulesChanged": "Rules changed since this roster was generated. Regenerate to apply them.",
@@ -4669,6 +4671,7 @@
 			"reason": "Reason for rejection",
 			"publishTitle": "Publish this roster?",
 			"publishDescription": "Publishing makes this roster final for its week. It can’t be regenerated or deleted afterwards; its days can still be changed, and the people whose days change are told.",
+			"publishPartDescription": "Publishing makes this roster final for its days ({{days}}). It can’t be regenerated or deleted afterwards; its days can still be changed, and the people whose days change are told.",
 			"publishConfirm": "Publish roster",
 			"rejectTitle": "Reject this roster?",
 			"rejectDescription": "Say what needs to change. The roster stays visible, and the schedule can then be regenerated or deleted.",

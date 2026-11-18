@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { DayRun } from "@/features/scheduling/dates/api";
 import type { WeekRun } from "@/features/scheduling/dates/datesSetup";
 import {
+	coversPartOfWeek,
 	daysLeftBeforeOf,
 	deleteLeavesOf,
 	firstPublishedDayOf,
@@ -285,4 +286,22 @@ describe("deleteLeavesOf", () => {
 			);
 		}
 	);
+});
+
+describe("coversPartOfWeek", () => {
+	it.each([
+		["the whole week", "2027-02-08", "2027-02-14", false],
+		["the week's middle days", "2027-02-10", "2027-02-12", true],
+		["the week's first days", "2027-02-08", "2027-02-09", true],
+		["the week's last days", "2027-02-13", "2027-02-14", true],
+	])("covering %s is %s", (_, coveredFrom, coveredTo, expected) => {
+		expect(
+			coversPartOfWeek({
+				periodStart: "2027-02-08",
+				periodEnd: "2027-02-14",
+				coveredFrom,
+				coveredTo,
+			})
+		).toBe(expected);
+	});
 });

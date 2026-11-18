@@ -3372,6 +3372,7 @@
 			},
 			"history": {
 				"title": "Historial de horarios",
+				"partOfWeek": "Parte de la semana del {{week}}",
 				"description": "Consulta horarios completados y asignaciones de personal anteriores.",
 				"name": "Nombre",
 				"date": "Semana",
@@ -4211,6 +4212,7 @@
 			"unavailable": "Este horario no existe o no tienes permiso para verlo.",
 			"viewSetup": "Ver configuración",
 			"timeZone": "Horas en {{timeZone}}",
+			"partOfWeek": "{{days}} · parte de la semana del {{week}}",
 			"draft": "Este horario sigue siendo un borrador, así que aún no tiene cuadrante. Ve su configuración para continuar.",
 			"weekPassed": "Esta semana ya pasó. Sus reglas y su horario son definitivos; cambia sus días a mano si hace falta.",
 			"rulesChanged": "Las reglas cambiaron desde que se generó este horario. Vuelve a generarlo para aplicarlas.",
@@ -4469,6 +4471,7 @@
 			"reason": "Motivo del rechazo",
 			"publishTitle": "¿Publicar este cuadrante?",
 			"publishDescription": "Al publicarlo, este cuadrante pasa a ser definitivo para su semana. Después no se podrá regenerar ni eliminar; sus días aún se pueden cambiar y se avisa a las personas cuyos días cambian.",
+			"publishPartDescription": "Al publicarlo, este cuadrante pasa a ser definitivo para sus días ({{days}}). Después no se podrá regenerar ni eliminar; sus días aún se pueden cambiar y se avisa a las personas cuyos días cambian.",
 			"publishConfirm": "Publicar cuadrante",
 			"rejectTitle": "¿Rechazar este cuadrante?",
 			"rejectDescription": "Indica qué hay que cambiar. El cuadrante sigue visible y después el horario se puede regenerar o eliminar.",

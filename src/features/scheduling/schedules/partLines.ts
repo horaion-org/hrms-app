@@ -199,3 +199,13 @@ export const deleteLeavesOf = (
 				: undefined,
 	};
 };
+
+/** Whether a schedule covers only some of its week's days: a part of the week (API ADR-0129). */
+export const coversPartOfWeek = (schedule: {
+	periodStart: string;
+	periodEnd: string;
+	coveredFrom: string;
+	coveredTo: string;
+}): boolean =>
+	schedule.coveredFrom !== schedule.periodStart ||
+	schedule.coveredTo !== schedule.periodEnd;

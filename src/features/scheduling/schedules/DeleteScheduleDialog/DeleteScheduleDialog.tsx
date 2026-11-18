@@ -27,7 +27,7 @@ export type DeleteScheduleDialogProps = {
 const key = "scheduling.delete";
 
 /**
- * Asks before deleting a schedule, naming its department and week. While the
+ * Asks before deleting a schedule, naming its department and the days it covers. While the
  * schedule is being generated it explains why it can't be deleted yet and
  * holds confirming back; a refusal shows inside the dialog.
  */
@@ -60,10 +60,11 @@ export const DeleteScheduleDialog = ({
 	].filter(Boolean);
 	const { remove } = useScheduleActions(companyId);
 	const running = generationInProgress(schedule);
-	const period = formatPeriod(
-		{ start: schedule.periodStart, end: schedule.periodEnd },
-		formattingLocale(i18n)
-	);
+	// The days this schedule holds: a part of a week names only its own days.
+	const period = daysText({
+		from: schedule.coveredFrom,
+		to: schedule.coveredTo,
+	});
 	return (
 		<ConfirmDialog
 			cancelLabel={t(running ? `${key}.close` : `${key}.cancel`)}
