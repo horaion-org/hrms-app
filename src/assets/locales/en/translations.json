@@ -5679,7 +5679,9 @@
 				"changed": "The days changed since Setup read them, so nothing was generated. Go back to Setup to see them as they are now.",
 				"unavailable": "You can’t schedule this department. Choose a department you schedule.",
 				"forbidden": "You don’t have permission to generate schedules at this department.",
-				"failed": "We couldn’t generate these dates. Try again."
+				"failed": "We couldn’t generate these dates. Try again.",
+				"memberGone": "Someone you chose can no longer be rostered in this department, so nothing was created. Go back to Setup and choose the people again.",
+				"chosenPeopleGone": "None of the people chosen for this schedule can be rostered any more. Delete this schedule and schedule its days again with people of the department."
 			},
 			"setup": {
 				"firstDay": "First day",

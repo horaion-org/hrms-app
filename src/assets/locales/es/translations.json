@@ -5479,7 +5479,9 @@
 				"changed": "Los días cambiaron desde que Configuración los leyó, así que no se generó nada. Vuelve a Configuración para verlos como están ahora.",
 				"unavailable": "No puedes programar este departamento. Elige un departamento que programes.",
 				"forbidden": "No tienes permiso para generar horarios en este departamento.",
-				"failed": "No pudimos generar estas fechas. Inténtalo de nuevo."
+				"failed": "No pudimos generar estas fechas. Inténtalo de nuevo.",
+				"memberGone": "Alguien que elegiste ya no puede incluirse en este departamento, así que no se creó nada. Vuelve a Configuración y elige de nuevo a las personas.",
+				"chosenPeopleGone": "Ninguna de las personas elegidas para este horario puede incluirse ya. Elimina este horario y programa sus días de nuevo con personas del departamento."
 			},
 			"setup": {
 				"firstDay": "Primer día",

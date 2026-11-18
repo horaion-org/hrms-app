@@ -48,6 +48,9 @@ export const SCHEDULE_REFUSAL_CODES = {
 	daysBeforeRoster: "409 SCHEDULE_DAYS_BEFORE_ROSTER",
 	daysBeingGenerated: "409 SCHEDULE_DAYS_BEING_GENERATED",
 	coveredDaysInvalid: "400 SCHEDULE_COVERED_DAYS_INVALID",
+	memberNotFound: "404 SCHEDULE_MEMBER_NOT_FOUND",
+	peopleDaysTaken: "409 SCHEDULE_PEOPLE_DAYS_TAKEN",
+	chosenPeopleGone: "409 SCHEDULE_CHOSEN_PEOPLE_GONE",
 } as const;
 
 const codes = SCHEDULE_REFUSAL_CODES;
@@ -83,6 +86,8 @@ export const scheduleRefusal = (
 			[codes.constraintInactive]: t(`${key}.constraintInactive`),
 			[codes.departmentInactive]: t(`${key}.departmentInactive`),
 			[codes.departmentNotFound]: t(`${key}.departmentGone`),
+			[codes.memberNotFound]: t("scheduling.dates.refusal.memberGone"),
+			[codes.peopleDaysTaken]: t("scheduling.dates.people.daysTaken"),
 		},
 		fieldErrors: {
 			name: field("name", t(`${key}.nameRejected`)),
@@ -245,6 +250,8 @@ const WEEK_REFUSAL_WORDS: Record<
 		t("scheduling.months.generate.oncePublished"),
 	[errorCodeOf(codes.laterPartPublished)]: (t) =>
 		t("scheduling.regenerate.laterPartPublished"),
+	[errorCodeOf(codes.chosenPeopleGone)]: (t) =>
+		t("scheduling.dates.refusal.chosenPeopleGone"),
 	[EARLIER_WEEK_FAILED]: (t, failedWeek) =>
 		failedWeek === undefined
 			? plainGenerationFailure(t)
@@ -312,6 +319,8 @@ export const datesGenerationRefusal = (
 					"scheduling.months.generate.choiceMissing"
 				),
 				[codes.monthNotFound]: t(`${key}.unavailable`),
+				[codes.memberNotFound]: t(`${key}.memberGone`),
+				[codes.peopleDaysTaken]: t("scheduling.dates.people.daysTaken"),
 			},
 			forbidden: t(`${key}.forbidden`),
 			failed: t(`${key}.failed`),
