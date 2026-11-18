@@ -23,6 +23,8 @@ import {
 	rejectedAtEndorseFixture,
 	SITI,
 } from "@/features/approvals/fixtures";
+import { rulesCheckFixture } from "@/features/scheduling/rulesCheck/fixtures";
+import { confirmOnceChecked } from "@/features/scheduling/rulesCheck/testing";
 import type { Schedule } from "@/features/scheduling/schedules/api";
 import {
 	generatedScheduleFixture,
@@ -53,6 +55,8 @@ const SCHEDULE =
 const SCHEDULE_READ = "/api/v1/companies/c-1/schedules/s-1";
 const INSTANCES = "/api/v1/companies/c-1/approval-instances";
 const INSTANCE = `${INSTANCES}/ai-1`;
+/** The rules check every publish dialog asks before its confirm button is let go. */
+const ROSTER_CHECK = `${SCHEDULE}/roster-check`;
 /** The viewer of every test: membership m-c-1. */
 const VIEWER = { membershipId: "m-c-1", displayName: "José" };
 const MENU = "More actions for Front Office - Week 42";
@@ -117,6 +121,8 @@ const openRoster = async (
 		"GET /api/v1/me/workspace": ok(schedulingWorkspace(permissions)),
 		[`GET ${SCHEDULE_READ}`]: () => ok(world.schedule),
 		[`GET ${SCHEDULE}/assignments`]: ok(scheduleAssignmentsFixture()),
+		// Every rule holds, so the check never stands in the way of a decision.
+		[`POST ${ROSTER_CHECK}`]: ok(rulesCheckFixture()),
 		[`GET ${INSTANCES}`]: () => ok(world.instance ? [world.instance] : []),
 		[`GET ${INSTANCE}`]: () =>
 			world.instance
@@ -164,9 +170,7 @@ it("submits where a flow applies, then says it waits and lets the submitter see 
 		name: "Submit this roster for approval?",
 	});
 	expect(dialog).toHaveTextContent("It goes through Endorse → Publish");
-	await user.click(
-		within(dialog).getByRole("button", { name: "Submit for approval" })
-	);
+	await confirmOnceChecked(user, dialog, "Submit for approval");
 
 	expect(
 		await screen.findByText(
@@ -208,7 +212,9 @@ it("submits where a flow applies, then says it waits and lets the submitter see 
 	expect(
 		await screen.findByRole("button", { name: "Submit for approval" })
 	).toBeInTheDocument();
+	// The rules check is asked as the dialog opens, before the submission.
 	expect(posts(calls).map((call) => call.path)).toEqual([
+		ROSTER_CHECK,
 		`${SCHEDULE}/approval`,
 		"/api/v1/companies/c-1/me/approval-instances/ai-1/cancellation",
 	]);
@@ -251,10 +257,10 @@ it("lets a submitter without approval:read see where their submission waits, and
 	await user.click(
 		await screen.findByRole("button", { name: "Submit for approval" })
 	);
-	await user.click(
-		within(
-			screen.getByRole("dialog", { name: "Submit this roster for approval?" })
-		).getByRole("button", { name: "Submit for approval" })
+	await confirmOnceChecked(
+		user,
+		screen.getByRole("dialog", { name: "Submit this roster for approval?" }),
+		"Submit for approval"
 	);
 
 	expect(
@@ -285,7 +291,9 @@ it("lets a submitter without approval:read see where their submission waits, and
 		await screen.findByRole("button", { name: "Submit for approval" })
 	).toBeInTheDocument();
 	expect(await screen.findByText(WITHDRAWN)).toHaveAttribute("role", "status");
+	// The rules check is asked as the dialog opens, before the submission.
 	expect(posts(calls).map((call) => call.path)).toEqual([
+		ROSTER_CHECK,
 		`${SCHEDULE}/approval`,
 		"/api/v1/companies/c-1/me/approval-instances/ai-1/cancellation",
 	]);
@@ -364,9 +372,7 @@ it("lets the approver approve step 1 with a comment, then approve and publish st
 		within(dialog).getByRole("textbox", { name: "Comment (optional)" }),
 		"Covered by Ahmad on Sat."
 	);
-	await user.click(
-		within(dialog).getByRole("button", { name: "Confirm approval" })
-	);
+	await confirmOnceChecked(user, dialog, "Confirm approval");
 
 	expect(
 		await screen.findByText("You approved Endorse. Publish (step 2) is next.")
@@ -381,9 +387,7 @@ it("lets the approver approve step 1 with a comment, then approve and publish st
 		name: "Approve and publish the Front Office roster?",
 	});
 	// The last step's button names the outcome (addendum C4).
-	await user.click(
-		within(dialog).getByRole("button", { name: "Approve and publish" })
-	);
+	await confirmOnceChecked(user, dialog, "Approve and publish");
 
 	expect(await screen.findByText("Published")).toBeInTheDocument();
 	// One status message, and focus on the approval line, not a new button (C5).
@@ -394,7 +398,10 @@ it("lets the approver approve step 1 with a comment, then approve and publish st
 	expect(
 		screen.queryByRole("button", { name: "Approve and publish" })
 	).toBeNull();
+	// Each approval dialog asks the rules check as it opens, before its decision.
+	const check = { path: ROSTER_CHECK, body: { expectedRevision: 0 } };
 	expect(posts(calls)).toEqual([
+		check,
 		{
 			path: `${INSTANCE}/decisions`,
 			body: {
@@ -403,6 +410,7 @@ it("lets the approver approve step 1 with a comment, then approve and publish st
 				comment: "Covered by Ahmad on Sat.",
 			},
 		},
+		check,
 		{
 			path: `${INSTANCE}/decisions`,
 			body: { stepOrder: 2, decision: "APPROVE", comment: null },
@@ -502,9 +510,7 @@ it("says someone else decided first when the step closed meanwhile", async () =>
 
 	await user.click(await screen.findByRole("button", { name: "Approve" }));
 	const dialog = screen.getByRole("dialog");
-	await user.click(
-		within(dialog).getByRole("button", { name: "Confirm approval" })
-	);
+	await confirmOnceChecked(user, dialog, "Confirm approval");
 
 	expect(await within(dialog).findByRole("alert")).toHaveTextContent(
 		"Someone else decided this step first. The page now shows where it stands."
@@ -529,9 +535,7 @@ it("shows the waiting submission's message when publishing directly is refused",
 		await screen.findByRole("button", { name: "Publish roster" })
 	);
 	const dialog = screen.getByRole("dialog", { name: "Publish this roster?" });
-	await user.click(
-		within(dialog).getByRole("button", { name: "Publish roster" })
-	);
+	await confirmOnceChecked(user, dialog, "Publish roster");
 
 	expect(await within(dialog).findByRole("alert")).toHaveTextContent(
 		"This roster is already waiting for approval. Reload the page to see where it stands."
