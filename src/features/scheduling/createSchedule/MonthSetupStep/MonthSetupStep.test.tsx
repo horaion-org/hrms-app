@@ -349,6 +349,29 @@ describe("MonthSetupStep", () => {
 			plan = datesPlanFixture()
 		): MonthSetupStepProps["dates"] => ({ plan, pending: false, today: TODAY });
 
+		it("given_aPeopleLine_when_datesChosen_then_shownAfterTheNameAndNotInMonth", () => {
+			const dates = {
+				plan: datesPlanFixture(),
+				pending: false,
+				today: TODAY,
+				people: <p>Everyone in Kitchen, 3 people</p>,
+			};
+			const { unmount } = render(
+				<Harness dates={dates} defaultValues={DATES} />
+			);
+
+			expect(
+				screen
+					.getByRole("textbox", { name: /Name/ })
+					.compareDocumentPosition(
+						screen.getByText("Everyone in Kitchen, 3 people")
+					) & Node.DOCUMENT_POSITION_FOLLOWING
+			).toBeTruthy();
+			unmount();
+			render(<Harness dates={dates} />);
+			expect(screen.queryByText("Everyone in Kitchen, 3 people")).toBeNull();
+		});
+
 		it("given_aNewSetup_when_shown_then_monthIsChosen", () => {
 			render(<Harness />);
 
