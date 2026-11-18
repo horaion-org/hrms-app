@@ -5584,7 +5584,8 @@
 					"four": "4 semanas"
 				},
 				"schedule": "Horario",
-				"allSchedules": "Todos los horarios"
+				"allSchedules": "Todos los horarios",
+				"goToDate": "Ir a la fecha"
 			},
 			"bars": {
 				"label": "Horarios",
@@ -5644,7 +5645,8 @@
 					"toReview": "Por revisar",
 					"none": "Sin horario"
 				},
-				"notPublishedFromThisWeek": "Sin publicar desde esta semana"
+				"notPublishedFromThisWeek": "Sin publicar desde esta semana",
+				"openAt": "Abrir el horario de {{department}} en {{day}}"
 			},
 			"cardsLoading": "Cargando los departamentos…",
 			"cardsFailed": "No se pudieron cargar los departamentos. Inténtalo de nuevo.",

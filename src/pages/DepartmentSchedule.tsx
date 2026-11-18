@@ -219,9 +219,13 @@ export const DepartmentSchedulePage = (): FunctionComponent => {
 				</header>
 				<DatesRunCallout />
 				<TimelineToolbar
+					firstDay={firstDay}
 					schedules={timeline.schedules}
 					shownScheduleId={search.schedule}
 					view={view}
+					onFromChange={(from) => {
+						changeSearch({ from });
+					}}
 					onScheduleChange={(schedule) => {
 						changeSearch({ schedule });
 					}}

@@ -24,8 +24,10 @@ describe("TimelineToolbar", () => {
 		const onViewChange = vi.fn();
 		render(
 			<TimelineToolbar
+				firstDay="2027-02-08"
 				schedules={twoTimelineSchedules()}
 				view="week"
+				onFromChange={() => {}}
 				onScheduleChange={() => {}}
 				onStep={onStep}
 				onToday={onToday}
@@ -49,5 +51,29 @@ describe("TimelineToolbar", () => {
 				.getAllByRole("button")
 				.map((option) => option.getAttribute("aria-pressed"))
 		).toEqual(["true", "false", "false"]);
+	});
+
+	/** "Go to date" opens the window on the Monday of the picked day's week. */
+	it("goes to the week of a picked date", async () => {
+		const onFromChange = vi.fn();
+		render(
+			<TimelineToolbar
+				firstDay="2026-12-14"
+				schedules={twoTimelineSchedules()}
+				view="two"
+				onFromChange={onFromChange}
+				onScheduleChange={() => {}}
+				onStep={() => {}}
+				onToday={() => {}}
+				onViewChange={() => {}}
+			/>
+		);
+		await userEvent.click(
+			screen.getByRole("button", { name: /^Go to date: / })
+		);
+		await userEvent.click(
+			screen.getByRole("gridcell", { name: /\b9 December 2026/ })
+		);
+		expect(onFromChange).toHaveBeenCalledExactlyOnceWith("2026-12-07");
 	});
 });

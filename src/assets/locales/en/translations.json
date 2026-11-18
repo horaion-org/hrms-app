@@ -5784,7 +5784,8 @@
 					"four": "4 weeks"
 				},
 				"schedule": "Schedule",
-				"allSchedules": "All schedules"
+				"allSchedules": "All schedules",
+				"goToDate": "Go to date"
 			},
 			"bars": {
 				"label": "Schedules",
@@ -5844,7 +5845,8 @@
 					"toReview": "To review",
 					"none": "No schedule"
 				},
-				"notPublishedFromThisWeek": "Not published from this week"
+				"notPublishedFromThisWeek": "Not published from this week",
+				"openAt": "Open the {{department}} schedule at {{day}}"
 			},
 			"cardsLoading": "Loading the departments…",
 			"cardsFailed": "The departments couldn’t be loaded. Please try again.",

@@ -1,8 +1,9 @@
-import { useId } from "react";
+import { useId, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
+import { mondayOf } from "@/common/weeks";
 import { Button } from "@/components/ui/Button";
 import { formatDayAndMonth } from "@/features/scheduling/months/monthWeeks";
 import { formatPeriod } from "@/features/scheduling/periods";
@@ -28,6 +29,38 @@ const PUBLISHED_LINE_KEYS = {
 	notFromThisWeek: `${key}.notPublishedFromThisWeek`,
 	nothing: `${key}.nothingPublished`,
 } as const satisfies Record<PublishedStanding, string>;
+
+/**
+ * A card line that names a day: a link to the Department's timeline on that
+ * day's week, by the route's path as "Open schedule" links (schedules/ may
+ * not import timeline/).
+ */
+const DayLink = ({
+	card,
+	day,
+	dayText,
+	children,
+}: {
+	card: DepartmentCardEntry;
+	day: string;
+	dayText: string;
+	children: ReactNode;
+}): FunctionComponent => {
+	const { t } = useTranslation();
+	return (
+		<Button
+			search={{ department: card.departmentId, from: mondayOf(day) }}
+			to="/scheduling/department"
+			variant="textlink"
+			aria-label={t(`${key}.openAt`, {
+				department: card.departmentName,
+				day: dayText,
+			})}
+		>
+			{children}
+		</Button>
+	);
+};
 
 /**
  * One Department on the Scheduling landing: Open schedule, a bar per day
@@ -96,19 +129,45 @@ export const DepartmentCard = ({
 						: "text-neutral-800"
 				)}
 			>
-				{t(PUBLISHED_LINE_KEYS[card.publishedStanding], {
-					day: card.publishedUpTo && dayText(card.publishedUpTo),
-				})}
+				{card.publishedUpTo === undefined ? (
+					t(PUBLISHED_LINE_KEYS[card.publishedStanding])
+				) : (
+					<DayLink
+						card={card}
+						day={card.publishedUpTo}
+						dayText={dayText(card.publishedUpTo)}
+					>
+						{t(PUBLISHED_LINE_KEYS[card.publishedStanding], {
+							day: dayText(card.publishedUpTo),
+						})}
+					</DayLink>
+				)}
 			</p>
 			<p className="text-sm text-neutral-800">
-				{card.toReviewCount > 0
-					? t(`${key}.toReview`, { count: card.toReviewCount })
-					: t(`${key}.nothingToReview`)}
+				{card.firstToReviewDay === undefined ? (
+					t(`${key}.nothingToReview`)
+				) : (
+					<DayLink
+						card={card}
+						day={card.firstToReviewDay}
+						dayText={dayText(card.firstToReviewDay)}
+					>
+						{t(`${key}.toReview`, { count: card.toReviewCount })}
+					</DayLink>
+				)}
 			</p>
 			<p className="text-sm text-neutral-800">
-				{card.scheduledUpTo === undefined
-					? t(`${key}.noSchedule`)
-					: t(`${key}.scheduledUpTo`, { day: dayText(card.scheduledUpTo) })}
+				{card.scheduledUpTo === undefined ? (
+					t(`${key}.noSchedule`)
+				) : (
+					<DayLink
+						card={card}
+						day={card.scheduledUpTo}
+						dayText={dayText(card.scheduledUpTo)}
+					>
+						{t(`${key}.scheduledUpTo`, { day: dayText(card.scheduledUpTo) })}
+					</DayLink>
+				)}
 			</p>
 			<p className="text-sm text-neutral-800">
 				{card.nextToReview === undefined
