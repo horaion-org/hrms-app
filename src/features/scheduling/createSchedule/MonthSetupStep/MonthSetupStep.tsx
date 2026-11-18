@@ -532,7 +532,6 @@ export const MonthSetupStep = ({
 									{...register("name")}
 								/>
 							</FormRow>
-							{dates?.people}
 							{dates?.pending && (
 								<p className="text-sm text-neutral-800" role="status">
 									{t("scheduling.dates.setup.checking")}

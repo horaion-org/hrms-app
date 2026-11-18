@@ -362,29 +362,6 @@ describe("MonthSetupStep", () => {
 			).toBeInTheDocument();
 		});
 
-		it("given_aPeopleLine_when_datesChosen_then_shownAfterTheNameAndNotInMonth", () => {
-			const dates = {
-				plan: datesPlanFixture(),
-				pending: false,
-				today: TODAY,
-				people: <p>Everyone in Kitchen, 3 people</p>,
-			};
-			const { unmount } = render(
-				<Harness dates={dates} defaultValues={DATES} />
-			);
-
-			expect(
-				screen
-					.getByRole("textbox", { name: /Name/ })
-					.compareDocumentPosition(
-						screen.getByText("Everyone in Kitchen, 3 people")
-					) & Node.DOCUMENT_POSITION_FOLLOWING
-			).toBeTruthy();
-			unmount();
-			render(<Harness dates={dates} />);
-			expect(screen.queryByText("Everyone in Kitchen, 3 people")).toBeNull();
-		});
-
 		it("given_aNewSetup_when_shown_then_monthIsChosen", () => {
 			render(<Harness />);
 
@@ -653,14 +630,8 @@ describe("MonthSetupStep", () => {
 
 		it.each([
 			{ case: "everyone keeps the redo note", redoRefused: false, notes: 1 },
-			{
-				case: "people chosen over scheduled days drop it",
-				redoRefused: true,
-				notes: 0,
-			},
+			{ case: "a refused redo drops it", redoRefused: true, notes: 0 },
 		])("given_aRedoPlan_when_$case", ({ redoRefused, notes }) => {
-			const peopleProblem =
-				"These days already have a schedule. Choose days with no schedule, or roster everyone.";
 			render(
 				<Harness
 					dates={{
@@ -668,7 +639,6 @@ describe("MonthSetupStep", () => {
 						pending: false,
 						today: TODAY,
 						redoRefused,
-						people: redoRefused && <p role="alert">{peopleProblem}</p>,
 					}}
 					defaultValues={{
 						...DATES,
@@ -684,7 +654,6 @@ describe("MonthSetupStep", () => {
 			expect(screen.queryAllByText(/more days? after them/)).toHaveLength(
 				notes
 			);
-			expect(screen.queryAllByText(peopleProblem)).toHaveLength(1 - notes);
 		});
 
 		it("given_aRedoPlan_when_shown_then_theDaysStripReadsKeptDaysApartFromGeneratedOnes", () => {
