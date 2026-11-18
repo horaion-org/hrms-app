@@ -15,6 +15,8 @@ import {
 } from "@/common/testing/stubApi";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
+import dayjs from "dayjs";
+import { mondayOf } from "@/common/weeks";
 import { withDatesRun } from "@/features/scheduling/months/datesRunState";
 import {
 	monthWeekFixture,
@@ -25,6 +27,9 @@ import {
 	scheduleAssignmentsFixture,
 	schedulingWorkspace,
 } from "@/features/scheduling/schedules/fixtures";
+import { windowDays } from "@/features/scheduling/timeline/timeline";
+import { LABEL_DAY_FORMAT } from "@/features/scheduling/timeline/timelineLooks";
+import { monthsOfWindow } from "@/features/scheduling/timeline/timelineRows";
 
 let app: OpenedApp | undefined;
 
@@ -212,4 +217,32 @@ it("says which days are being generated on arrival from a run by dates", async (
 	expect(
 		await screen.findByText("Schedules for Oct 15, 2026 are being generated.")
 	).toBeInTheDocument();
+});
+
+/** "Open schedule" links with no `from`: the window opens on the Monday of today's week. */
+it("starts on the Monday of today's week when the link names no day", async () => {
+	const days = windowDays(mondayOf(new Date()), "week");
+	const months = monthsOfWindow(days[0]!, days[days.length - 1]!);
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	stubApi({
+		...twoSchedulesInOneWeek(),
+		...Object.fromEntries(
+			months.map((month) => [
+				`GET ${MONTHS}/${month}`,
+				ok(scheduleMonthFixture({ month, weeks: [] })),
+			])
+		),
+	});
+	app = await openApp("/scheduling/department?department=d-1");
+	renderAuthApp(app);
+
+	const table = await screen.findByRole("table", { name: "Staff by day" });
+	const [, firstDay] = within(table).getAllByRole("columnheader");
+	expect(firstDay).toHaveAttribute(
+		"title",
+		new Intl.DateTimeFormat("en-US", LABEL_DAY_FORMAT).format(
+			dayjs(days[0]).toDate()
+		)
+	);
+	expect(dayjs(days[0]).day()).toBe(1);
 });
