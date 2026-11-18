@@ -34,10 +34,8 @@ import {
 	rosterWeeksOf,
 } from "@/features/scheduling/months/rosterWeeks";
 import { formatPeriod } from "@/features/scheduling/periods";
-import {
-	PublishScheduleDialog,
-	publishModeOf,
-} from "@/features/scheduling/schedules/PublishScheduleDialog";
+import { publishModeOf } from "@/features/scheduling/schedules/PublishScheduleDialog";
+import { CheckedPublishDialog } from "@/features/scheduling/rulesCheck/CheckedPublishDialog";
 import { hasRosterHours } from "@/features/scheduling/hours/rosterHoursRows";
 import {
 	useRosterHours,
@@ -778,7 +776,7 @@ const ApiSchedule = ({
 				/>
 			)}
 			{openDialog === "publish" && (
-				<PublishScheduleDialog
+				<CheckedPublishDialog
 					companyId={companyId}
 					daysLeftBefore={daysLeftBeforeOf(partLines, schedule.coveredFrom)}
 					mode={publishModeOf(standing, approval.instance?.steps ?? [])}

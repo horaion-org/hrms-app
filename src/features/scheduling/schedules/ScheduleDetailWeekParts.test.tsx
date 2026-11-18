@@ -193,9 +193,12 @@ describe("the owner's week of 15 February 2027: Wed–Fri, then Sat–Sun", () =
 		expect(dialog).toHaveTextContent(
 			/Feb 15\s?–\s?16, 2027 have no schedule, and once this roster is published they can’t be scheduled\. Schedule Feb 15\s?–\s?16, 2027 first, or publish as it is\./
 		);
-		expect(
-			within(dialog).getByRole("button", { name: "Publish roster" })
-		).toBeEnabled();
+		// Held back only while the rules check runs; the warning itself never blocks.
+		await vi.waitFor(() => {
+			expect(
+				within(dialog).getByRole("button", { name: "Publish roster" })
+			).toBeEnabled();
+		});
 	});
 
 	// A part whose publication was taken back still holds the days before it (API WeekRedos.countsAsPublished).

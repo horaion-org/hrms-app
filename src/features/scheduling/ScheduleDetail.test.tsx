@@ -43,6 +43,7 @@ import {
 	rosterCheckFixture,
 } from "@/features/scheduling/rosterChanges/fixtures";
 import { rulesCheckFixture } from "@/features/scheduling/rulesCheck/fixtures";
+import { confirmOnceChecked } from "@/features/scheduling/rulesCheck/testing";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 import {
 	monthWeekFixture,
@@ -878,6 +879,7 @@ it("publishes a generated roster after a confirm, then says who published it", a
 			ok(generatedScheduleFixture({ status: "PUBLISHED" })),
 		],
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`POST ${SCHEDULE}/roster-check`]: ok(rulesCheckFixture()),
 		[`POST ${SCHEDULE}/approval`]: ok(
 			generatedScheduleFixture({ status: "PUBLISHED" })
 		),
@@ -891,9 +893,7 @@ it("publishes a generated roster after a confirm, then says who published it", a
 	expect(dialog).toHaveTextContent(
 		"It can’t be regenerated or deleted afterwards"
 	);
-	await user.click(
-		within(dialog).getByRole("button", { name: "Publish roster" })
-	);
+	await confirmOnceChecked(user, dialog, "Publish roster");
 
 	expect(await screen.findByText("Published")).toBeInTheDocument();
 	expect(screen.queryByRole("dialog")).toBeNull();
@@ -905,8 +905,12 @@ it("publishes a generated roster after a confirm, then says who published it", a
 	const decisions = calls.filter(
 		(call) => call.method === "POST" && call.path.startsWith(SCHEDULE)
 	);
-	expect(decisions.map((call) => call.path)).toEqual([`${SCHEDULE}/approval`]);
-	expect(decisions[0]?.body).toBeUndefined();
+	// The rules are checked first; every rule holds, so the one decision follows.
+	expect(decisions.map((call) => call.path.replace(SCHEDULE, ""))).toEqual([
+		"/roster-check",
+		"/approval",
+	]);
+	expect(decisions[1]?.body).toBeUndefined();
 });
 
 it("withholds Publish and Regenerate when another schedule is already the week's published roster, and links it", async () => {
@@ -1074,9 +1078,7 @@ it("shows a refused decision inside the dialog and keeps it open", async () => {
 		await screen.findByRole("button", { name: "Publish roster" })
 	);
 	const dialog = screen.getByRole("dialog", { name: "Publish this roster?" });
-	await user.click(
-		within(dialog).getByRole("button", { name: "Publish roster" })
-	);
+	await confirmOnceChecked(user, dialog, "Publish roster");
 
 	expect(await within(dialog).findByRole("alert")).toHaveTextContent(
 		"This roster was already published or rejected. Reload the page to see it."
@@ -1267,9 +1269,7 @@ it("given_aShiftStillShort_when_publishing_then_theDialogWarnsWithTheCountAndSti
 	expect(dialog).toHaveTextContent(
 		"1 shift is still short of people, and staff will see the roster as it is. Find cover for it from Issues, or publish as it is."
 	);
-	await user.click(
-		within(dialog).getByRole("button", { name: "Publish roster" })
-	);
+	await confirmOnceChecked(user, dialog, "Publish roster");
 
 	await vi.waitFor(() => {
 		expect(
