@@ -5,7 +5,10 @@ import { Button } from "@/components/ui/Button";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import { Dialog } from "@/components/ui/Dialog";
 import type { PlanPerson } from "@/features/scheduling/dates/api";
-import type { ChosenPeople } from "@/features/scheduling/dates/people";
+import {
+	chosenAmongPlan,
+	type ChosenPeople,
+} from "@/features/scheduling/dates/people";
 
 export type PeopleChoiceDialogProps = {
 	/** The Department whose people are listed. */
@@ -34,11 +37,11 @@ export const PeopleChoiceDialog = ({
 	onClose,
 }: PeopleChoiceDialogProps): FunctionComponent => {
 	const { t } = useTranslation();
-	const [working, setWorking] = useState<Array<string>>(() =>
-		value === undefined
-			? people.map((person) => person.memberProfileId)
-			: [...value]
-	);
+	// Only the chosen people the plan still lists start ticked; everyone starts with every box.
+	const [working, setWorking] = useState<Array<string>>(() => [
+		...(chosenAmongPlan(value, people) ??
+			people.map((person) => person.memberProfileId)),
+	]);
 	const nobodyChosen = working.length === 0;
 	const columns: Array<DataTableColumn<PlanPerson>> = [
 		{

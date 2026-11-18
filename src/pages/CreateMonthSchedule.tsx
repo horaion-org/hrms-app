@@ -70,6 +70,7 @@ import { withDatesRun } from "@/features/scheduling/months/datesRunState";
 import { departmentTimelineLink } from "@/features/scheduling/timeline/timelineSearch";
 import { withRefusedWeeks } from "@/features/scheduling/months/refusedWeeksState";
 import {
+	mayAddDaysBeforeOf,
 	partsBeforeStartOf,
 	runStartOf,
 } from "@/features/scheduling/months/runStart";
@@ -611,11 +612,13 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 	// Dates whose first new days already have a schedule redo them (API ADR-0129): no draft can be saved over
 	// scheduled days, so "Before this week" is not offered; the calm carried line still shows when it applies.
 	const showsDatesStart = !datesRedoStart || previousOfStart.kind === "carried";
-	const mayAddDaysBefore =
-		!datesRedoStart &&
-		allowedHere("schedule:create") &&
-		allowedHere("schedule:update") &&
-		everything !== undefined;
+	const mayAddDaysBefore = mayAddDaysBeforeOf({
+		redoAtStart: datesRedoStart,
+		mayCreate: allowedHere("schedule:create"),
+		mayUpdate: allowedHere("schedule:update"),
+		listsRead: everything !== undefined,
+		peopleProblem: people.problem,
+	});
 	const datesStartingPoint =
 		!unit || !datesStart ? undefined : datesDraftId !== "" ? (
 			<StartingContextSection
