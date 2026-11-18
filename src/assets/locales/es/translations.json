@@ -5521,6 +5521,16 @@
 			"generate": {
 				"hint_one": "Generar calcula {{count}} día, {{range}}. Después lo revisas y lo publicas.",
 				"hint_other": "Generar calcula {{count}} días, {{range}}. Después los revisas y los publicas semana a semana."
+			},
+			"people": {
+				"title": "Elegir personas",
+				"intro": "Las personas que dejes fuera no reciben turnos de este horario.",
+				"tableLabel": "Personas de {{department}}",
+				"name": "Nombre",
+				"jobTitle": "Puesto",
+				"apply": "Usar estas personas",
+				"cancel": "Cancelar",
+				"nobodyChosen": "Elige al menos una persona."
 			}
 		},
 		"roster": {

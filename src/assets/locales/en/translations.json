@@ -5721,6 +5721,16 @@
 			"generate": {
 				"hint_one": "Generating works out {{count}} day, {{range}}. You then review and publish it.",
 				"hint_other": "Generating works out {{count}} days, {{range}}. You then review and publish them week by week."
+			},
+			"people": {
+				"title": "Choose people",
+				"intro": "People you leave out get no shifts from this schedule.",
+				"tableLabel": "People of {{department}}",
+				"name": "Name",
+				"jobTitle": "Job title",
+				"apply": "Use these people",
+				"cancel": "Cancel",
+				"nobodyChosen": "Choose at least one person."
 			}
 		},
 		"roster": {
