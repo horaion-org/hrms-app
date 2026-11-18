@@ -1,10 +1,12 @@
 import dayjs from "dayjs";
 import type { ScheduleMonth, WeekPart } from "@/features/scheduling/months/api";
+import { monthOf } from "@/features/scheduling/months/monthWeeks";
 import {
 	hoursInDays,
 	type RosterCell,
 	type RosterRow,
 } from "@/features/scheduling/roster/roster";
+import type { Schedule } from "@/features/scheduling/schedules/api";
 import type { TimelineSchedule } from "@/features/scheduling/timeline/timeline";
 
 /*
@@ -138,3 +140,28 @@ export const weekPartsOf = (
 	months
 		.flatMap((month) => month.weeks)
 		.find((week) => week.periodStart === periodStart)?.parts ?? [];
+
+/** One schedule read, with what its actions need: its week's parts and the month its week belongs to, once read. */
+export type TimelinePiece = {
+	schedule: Schedule;
+	weekParts: Array<WeekPart>;
+	month: ScheduleMonth | undefined;
+};
+
+/** Every schedule read as a piece of the roster, by schedule id, from the months already read. */
+export const timelinePiecesOf = (
+	schedules: ReadonlyArray<Schedule>,
+	months: ReadonlyArray<ScheduleMonth>
+): Record<string, TimelinePiece> =>
+	Object.fromEntries(
+		schedules.map((schedule) => [
+			schedule.scheduleId,
+			{
+				schedule,
+				weekParts: weekPartsOf(months, schedule.periodStart),
+				month: months.find(
+					(month) => month.month === monthOf(schedule.periodStart)
+				),
+			},
+		])
+	);
