@@ -52,6 +52,12 @@ const weekPartSchema = z.object({
 	state: weekStateSchema,
 	/** A redo part (API ADR-0129): until its roster is ready, the week's other parts keep the days it redoes. */
 	redoing: z.boolean().default(false),
+	/**
+	 * Published, or published and then withdrawn: the API counts either as
+	 * published, so days before it can't be scheduled. Left out by an older
+	 * API, which reads as false.
+	 */
+	publishedOnce: z.boolean().optional(),
 });
 
 /** One schedule of a week, by the days it covers. */

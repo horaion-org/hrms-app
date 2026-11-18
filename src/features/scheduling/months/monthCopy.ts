@@ -62,8 +62,8 @@ export const weekRangeText = (
 	});
 
 /**
- * What Generate says of a chosen week that holds a roster: generating again
- * replaces it; on a week of several schedules, only the newest part's days,
+ * What Generate says of a chosen week that holds a roster: one published once
+ * is left as it is; otherwise generating again replaces it; on a week of several schedules, only the newest part's days,
  * the other days staying as they are for Dates to schedule again; on a week
  * of one schedule covering some days, only those, the others having no roster.
  */
@@ -77,6 +77,9 @@ export const replacingNoteOf = (
 		language,
 		t
 	);
+	// A month run leaves a week published once as it is: nothing is replaced.
+	if (week.note === "oncePublished")
+		return t("scheduling.months.setup.oncePublishedNote", { week: weekText });
 	const rejected = week.note === "rosterRejected";
 	const split = week.splitReplacement;
 	if (!split)
