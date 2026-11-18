@@ -12,11 +12,11 @@ import { formatPeriod } from "@/features/scheduling/periods";
 import { DeleteScheduleDialog } from "@/features/scheduling/schedules/DeleteScheduleDialog";
 import { coversPartOfWeek } from "@/features/scheduling/schedules/partLines";
 import {
-	deletable,
 	exportRoster,
 	hasRoster,
 	type Schedule,
 } from "@/features/scheduling/schedules/api";
+import { mayDeleteSchedule } from "@/features/scheduling/schedules/scheduleActions";
 import { departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 
@@ -72,7 +72,7 @@ export const ScheduleMenu = ({
 	};
 	const scope = departmentScope(schedule.departmentId);
 	// A published roster is changed, never deleted.
-	const canDelete = deletable(schedule) && access.can("schedule:delete", scope);
+	const canDelete = mayDeleteSchedule(schedule, access);
 	const canExport =
 		withExport && hasRoster(schedule) && access.can("schedule:read", scope);
 	if (!children && !canDelete && !canExport) return null;

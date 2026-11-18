@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import type { ScheduleMonth } from "@/features/scheduling/months/api";
+import type { ScheduleMonth, WeekPart } from "@/features/scheduling/months/api";
 import {
 	hoursInDays,
 	type RosterCell,
@@ -129,3 +129,12 @@ export const rostersReadOf = (
 	if (steps.includes("pending")) return "loading";
 	return "loaded";
 };
+
+/** The parts of the week starting `periodStart`, as the roster page gives the delete dialog; none when not read. */
+export const weekPartsOf = (
+	months: ReadonlyArray<ScheduleMonth>,
+	periodStart: string
+): Array<WeekPart> =>
+	months
+		.flatMap((month) => month.weeks)
+		.find((week) => week.periodStart === periodStart)?.parts ?? [];

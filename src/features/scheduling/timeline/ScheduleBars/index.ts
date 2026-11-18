@@ -1,1 +1,5 @@
-export { ScheduleBars, type ScheduleBarsProps } from "./ScheduleBars";
+export {
+	type BarDeleting,
+	ScheduleBars,
+	type ScheduleBarsProps,
+} from "./ScheduleBars";

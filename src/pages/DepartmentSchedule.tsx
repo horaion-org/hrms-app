@@ -278,6 +278,15 @@ export const DepartmentSchedulePage = (): FunctionComponent => {
 					schedules={timeline.schedules}
 					shownScheduleId={shownScheduleId}
 					view={view}
+					deleting={{
+						companyId,
+						targets: timeline.deleteTargets,
+						// The lists refresh through the dialog; a schedule shown alone that is gone no longer is.
+						onDeleted: (scheduleId) => {
+							if (search.schedule === scheduleId)
+								changeSearch({ schedule: undefined });
+						},
+					}}
 					onShowOnly={(schedule) => {
 						changeSearch({ schedule });
 					}}

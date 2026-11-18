@@ -1,5 +1,19 @@
 import type { ApprovalStanding } from "@/features/approvals/approvalStanding";
-import type { Schedule } from "@/features/scheduling/schedules/api";
+import { deletable, type Schedule } from "@/features/scheduling/schedules/api";
+import { departmentScope } from "@/features/workspace/scopes";
+import type { Access } from "@/features/workspace/useAccess";
+
+/**
+ * Whether Delete is offered on a schedule: never on a published one (a
+ * published roster is changed instead), and only with `schedule:delete` at
+ * its Department. The history menu, the roster page and the timeline share it.
+ */
+export const mayDeleteSchedule = (
+	schedule: Schedule,
+	access: Pick<Access, "can">
+): boolean =>
+	deletable(schedule) &&
+	access.can("schedule:delete", departmentScope(schedule.departmentId));
 
 /** The roster page's own actions; Export and Delete stay with `ScheduleMenu`. */
 export type ScheduleActionId =

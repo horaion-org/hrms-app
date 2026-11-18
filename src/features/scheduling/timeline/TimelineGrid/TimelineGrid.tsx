@@ -14,7 +14,10 @@ import {
 	rosterLooks,
 	shiftTileStyle,
 } from "@/features/scheduling/roster/rosterLooks";
-import { ScheduleBars } from "@/features/scheduling/timeline/ScheduleBars";
+import {
+	type BarDeleting,
+	ScheduleBars,
+} from "@/features/scheduling/timeline/ScheduleBars";
 import {
 	isDimmed,
 	scheduleOfDay,
@@ -36,6 +39,8 @@ import {
 } from "@/features/scheduling/timeline/timelineRows";
 
 export type TimelineGridProps = {
+	/** What a bar's Delete needs. */
+	deleting: BarDeleting;
 	/** The Department shown, which a draft's setup link names. */
 	departmentId: string;
 	/** The ISO dates shown, one column each. */
@@ -224,6 +229,7 @@ const StatusRow = ({
  * row of days, the schedules' bar lanes, then one row per person.
  */
 export const TimelineGrid = ({
+	deleting,
 	departmentId,
 	days,
 	rows,
@@ -286,6 +292,7 @@ export const TimelineGrid = ({
 				<tbody>
 					<ScheduleBars
 						days={days}
+						deleting={deleting}
 						departmentId={departmentId}
 						schedules={schedules}
 						shownScheduleId={shownScheduleId}

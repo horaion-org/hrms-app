@@ -31,6 +31,7 @@ const renderGrid = (
 		<MemoryRouterHarness>
 			<TimelineGrid
 				days={FIXTURE_WEEK}
+				deleting={{ companyId: "c-1", targets: {}, onDeleted: () => {} }}
 				departmentId="d-1"
 				rosters="loaded"
 				rows={[timelineRowFixture()]}

@@ -1,6 +1,7 @@
 import { Menu, MenuButton, MenuItems } from "@headlessui/react";
 import { useNavigate } from "@tanstack/react-router";
 import dayjs from "dayjs";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
@@ -11,6 +12,7 @@ import {
 	OverflowMenuItem,
 } from "@/components/ui/OverflowMenu";
 import { weekStateTones } from "@/features/scheduling/months/weekStateLooks";
+import { DeleteScheduleDialog } from "@/features/scheduling/schedules/DeleteScheduleDialog";
 import {
 	isDimmed,
 	laneCellsOf,
@@ -25,8 +27,17 @@ import {
 	staffCellClasses,
 	statusDotLooks,
 } from "@/features/scheduling/timeline/timelineLooks";
+import type { DeleteTarget } from "@/features/scheduling/timeline/useDepartmentTimeline";
+
+/** What Delete on a bar needs: the company, the schedules the person may delete, and what to do once one is deleted. */
+export type BarDeleting = {
+	companyId: string;
+	targets: Record<string, DeleteTarget>;
+	onDeleted: (scheduleId: string) => void;
+};
 
 export type ScheduleBarsProps = {
+	deleting: BarDeleting;
 	/** The Department the schedules belong to, which a draft's setup link names. */
 	departmentId: string;
 	schedules: ReadonlyArray<TimelineSchedule>;
@@ -46,12 +57,14 @@ export type ScheduleBarsProps = {
  */
 const ScheduleBar = ({
 	departmentId,
+	deleting,
 	schedule,
 	span,
 	view,
 	onShowOnly,
 }: {
 	departmentId: string;
+	deleting: BarDeleting;
 	schedule: TimelineSchedule;
 	span: number;
 	view: TimelineView;
@@ -59,6 +72,9 @@ const ScheduleBar = ({
 }): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const navigate = useNavigate();
+	const [confirmingDelete, setConfirmingDelete] = useState(false);
+	// Only a schedule read and deletable under the roster page's rule is a target (useDepartmentTimeline).
+	const deleteTarget = deleting.targets[schedule.id];
 	const state = t(`scheduling.months.states.${schedule.status}`);
 	const dayName = new Intl.DateTimeFormat(
 		formattingLocale(i18n),
@@ -110,7 +126,31 @@ const ScheduleBar = ({
 				>
 					{t("scheduling.timeline.bars.showOnly")}
 				</OverflowMenuItem>
+				{deleteTarget && (
+					<OverflowMenuItem
+						tone="danger"
+						onClick={() => {
+							setConfirmingDelete(true);
+						}}
+					>
+						{t("scheduling.delete.menu")}
+					</OverflowMenuItem>
+				)}
 			</MenuItems>
+			{confirmingDelete && deleteTarget && (
+				<DeleteScheduleDialog
+					companyId={deleting.companyId}
+					schedule={deleteTarget.schedule}
+					weekParts={deleteTarget.weekParts}
+					onClose={() => {
+						setConfirmingDelete(false);
+					}}
+					onDeleted={() => {
+						setConfirmingDelete(false);
+						deleting.onDeleted(schedule.id);
+					}}
+				/>
+			)}
 		</Menu>
 	);
 };
@@ -121,6 +161,7 @@ const ScheduleBar = ({
  * Each bar's cell spans exactly the columns of its days in the window.
  */
 export const ScheduleBars = ({
+	deleting,
 	departmentId,
 	schedules,
 	days,
@@ -165,6 +206,7 @@ export const ScheduleBars = ({
 								)}
 							>
 								<ScheduleBar
+									deleting={deleting}
 									departmentId={departmentId}
 									schedule={cell.schedule}
 									span={cell.span}
