@@ -14,6 +14,7 @@ import { isoDateIn } from "@/features/scheduling/roster/roster";
 import {
 	needsOf,
 	shiftWindow,
+	shownScheduleIn,
 	type TimelineSchedule,
 	type TimelineView,
 	windowDays,
@@ -194,6 +195,8 @@ export const DepartmentSchedulePage = (): FunctionComponent => {
 				)}
 			</>
 		);
+	// A `schedule=` naming no schedule in the window (the window moved on) counts as none, everywhere below.
+	const shownScheduleId = shownScheduleIn(timeline.schedules, search.schedule);
 	const today = timeline.timeZone
 		? isoDateIn(timeline.timeZone, new Date())
 		: dayjs().format(ISO_DATE_FORMAT);
@@ -221,7 +224,7 @@ export const DepartmentSchedulePage = (): FunctionComponent => {
 				<TimelineToolbar
 					firstDay={firstDay}
 					schedules={timeline.schedules}
-					shownScheduleId={search.schedule}
+					shownScheduleId={shownScheduleId}
 					view={view}
 					onFromChange={(from) => {
 						changeSearch({ from });
@@ -241,7 +244,7 @@ export const DepartmentSchedulePage = (): FunctionComponent => {
 				/>
 				<TimelineNotice
 					schedules={timeline.schedules}
-					shownScheduleId={search.schedule}
+					shownScheduleId={shownScheduleId}
 					onShowAll={() => {
 						changeSearch({ schedule: undefined });
 					}}
@@ -250,7 +253,7 @@ export const DepartmentSchedulePage = (): FunctionComponent => {
 					days={days}
 					rows={timeline.rows}
 					schedules={timeline.schedules}
-					shownScheduleId={search.schedule}
+					shownScheduleId={shownScheduleId}
 					view={view}
 					onShowOnly={(schedule) => {
 						changeSearch({ schedule });

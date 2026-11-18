@@ -246,3 +246,19 @@ it("starts on the Monday of today's week when the link names no day", async () =
 	);
 	expect(dayjs(days[0]).day()).toBe(1);
 });
+
+/** A `schedule=` left over after moving the window names no schedule there: nothing is dimmed and the select shows all. */
+it("drops a stale schedule choice once the window moves on", async () => {
+	await openTimeline("from=2026-10-12&schedule=s-1");
+
+	await userEvent.click(screen.getByRole("button", { name: "Later days" }));
+
+	const toolbar = screen.getByRole("group", { name: "Days shown" });
+	await vi.waitFor(() => {
+		expect(
+			within(toolbar).getByRole("button", { name: /^Schedule/ })
+		).toHaveTextContent("All schedules");
+	});
+	expect(document.querySelector(".opacity-40")).toBeNull();
+	expect(screen.queryByText(/^Showing only/)).not.toBeInTheDocument();
+});

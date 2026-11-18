@@ -130,6 +130,18 @@ export const daysWithoutSchedule = (
 	return runs;
 };
 
+/**
+ * The schedule shown alone: the one `schedule=` names when it is in the
+ * window, else none, so a stale choice after moving the window dims nothing.
+ */
+export const shownScheduleIn = (
+	schedules: ReadonlyArray<TimelineSchedule>,
+	scheduleId: string | undefined
+): string | undefined =>
+	schedules.some((schedule) => schedule.id === scheduleId)
+		? scheduleId
+		: undefined;
+
 /** Whether a schedule's bar and cells are dimmed: another schedule is shown alone. */
 export const isDimmed = (
 	scheduleId: string,

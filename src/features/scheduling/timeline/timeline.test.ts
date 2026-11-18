@@ -7,6 +7,7 @@ import {
 	needsOf,
 	scheduleOfDay,
 	shiftWindow,
+	shownScheduleIn,
 	type TimelineSchedule,
 	windowDays,
 } from "@/features/scheduling/timeline/timeline";
@@ -173,5 +174,15 @@ describe("isDimmed", () => {
 		["s-2", "s-1", true],
 	])("%s with %s shown alone is dimmed: %s", (scheduleId, shown, expected) => {
 		expect(isDimmed(scheduleId, shown)).toBe(expected);
+	});
+});
+
+describe("shownScheduleIn", () => {
+	it.each([
+		["a schedule in the window", "early", "early"],
+		["a schedule not in the window", "gone", undefined],
+		["no schedule", undefined, undefined],
+	])("%s", (_, scheduleId, expected) => {
+		expect(shownScheduleIn([early, late], scheduleId)).toBe(expected);
 	});
 });
