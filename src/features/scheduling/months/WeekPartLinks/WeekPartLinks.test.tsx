@@ -55,4 +55,14 @@ describe("WeekPartLinks", () => {
 				.map((link) => link.getAttribute("href"))
 		).toEqual(["/scheduling/s-1", "/scheduling/s-2"]);
 	});
+
+	it("given_aNarrowCard_when_rendered_then_eachStateBadgeNeverWrapsOrShrinksAndDropsUnderItsDays", async () => {
+		const row = await renderLinks();
+
+		for (const badge of within(row).getAllByText("To review")) {
+			const element = badge.closest(".whitespace-nowrap") ?? badge;
+			expect(element).toHaveClass("shrink-0", "whitespace-nowrap");
+			expect(element.closest("li")).toHaveClass("flex-wrap");
+		}
+	});
 });
