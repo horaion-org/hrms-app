@@ -5,6 +5,7 @@ import {
 	dayCountOfRuns,
 	type PlanRow,
 } from "@/features/scheduling/dates/datesSetup";
+import { HandChangesNote } from "@/features/scheduling/dates/HandChangesNote";
 import { formatPeriod } from "@/features/scheduling/periods";
 
 export type PlanRowDatesProps = {
@@ -37,6 +38,7 @@ export const PlanRowDates = ({ row }: PlanRowDatesProps): FunctionComponent => {
 					})}
 				</span>
 			))}
+			<HandChangesNote count={row.handChangesReplaced} />
 			{row.schedules.length > 1 && (
 				<span className="text-xs font-semibold text-neutral-900">
 					{t("scheduling.dates.setup.schedulesLine", {

@@ -520,6 +520,57 @@ describe("MonthSetupStep", () => {
 			).toBeNull();
 		});
 
+		it("given_aWeekToRedoWithHandChanges_when_shown_then_saysTheyWillBeReplaced", () => {
+			const plan = datesPlanRedoingFixture();
+			const [week] = plan.weeks;
+			const withChanges = {
+				...plan,
+				weeks: [
+					{
+						...week!,
+						redone: week!.redone.map((part) => ({
+							...part,
+							handChangedDays: 2,
+						})),
+						rest: week!.rest.map((part) => ({ ...part, handChangedDays: 1 })),
+					},
+				],
+			};
+			render(
+				<Harness
+					dates={datesProp(withChanges)}
+					defaultValues={{
+						...DATES,
+						firstDay: "2026-11-18",
+						lastDay: "2026-11-19",
+					}}
+				/>
+			);
+
+			expect(
+				within(
+					screen.getByRole("table", { name: "What this creates" })
+				).getByText(
+					"3 changes made by hand to this week’s roster will be replaced."
+				)
+			).toBeInTheDocument();
+		});
+
+		it("given_aWeekToRedoWithoutHandChanges_when_shown_then_noHandChangeLine", () => {
+			render(
+				<Harness
+					dates={datesProp(datesPlanRedoingFixture())}
+					defaultValues={{
+						...DATES,
+						firstDay: "2026-11-18",
+						lastDay: "2026-11-19",
+					}}
+				/>
+			);
+
+			expect(screen.queryByText(/made by hand/)).toBeNull();
+		});
+
 		it("given_aRedoPlan_when_shown_then_saysWhichDaysStayWhichAreRedoneWithYourChoicesAndWhichWithTheWeeksOwn", () => {
 			render(
 				<Harness

@@ -5669,7 +5669,9 @@
 				"missing": "Choose a first day and a last day.",
 				"past": "Choose today ({{today}}) or a later first day. Days that have passed cannot be scheduled.",
 				"reversed": "The last day is before the first day. Choose a last day on or after {{first}}.",
-				"tooLong": "That is {{days}} days. A schedule by dates covers up to {{max}} days. Choose a last day on or before {{last}}, or make a second schedule for the rest."
+				"tooLong": "That is {{days}} days. A schedule by dates covers up to {{max}} days. Choose a last day on or before {{last}}, or make a second schedule for the rest.",
+				"handChangesReplaced_one": "{{count}} change made by hand to this week’s roster will be replaced.",
+				"handChangesReplaced_other": "{{count}} changes made by hand to this week’s roster will be replaced."
 			},
 			"generate": {
 				"hint_one": "Generating works out {{count}} day, {{range}}. You then review and publish it.",
