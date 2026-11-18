@@ -232,10 +232,11 @@ export const scheduleMonthQuery = (
 ): QueryOptionsFor<ScheduleMonth, ReturnType<typeof scheduleMonthKey>> =>
 	queryOptions({
 		queryKey: scheduleMonthKey(companyId, departmentId, month),
-		queryFn: allowed
-			? ({ signal }): Promise<ScheduleMonth> =>
-					fetchScheduleMonth(companyId, departmentId, month, signal)
-			: skipToken,
+		queryFn: ({ signal }): Promise<ScheduleMonth> =>
+			fetchScheduleMonth(companyId, departmentId, month, signal),
+		// `enabled`, not skipToken: the month page, its route loader and the timeline share this key, and a
+		// refetch or retry runs the query function of whichever observer set it last.
+		enabled: allowed,
 		// One Department's month: a 404 may mean it moved out of reach.
 		meta: administrativeMeta(companyId, { record: true }),
 		staleTime: 30_000,
