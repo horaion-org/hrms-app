@@ -66,6 +66,21 @@ const scheduleDaysAction = (
 	label: t("scheduling.roster.remainingButton", { rest: daysText }),
 });
 
+/** Whether days come before a part that has been published, so a dates run asking for them is refused (API ADR-0129). */
+const comesBeforePublished = (
+	days: DayRun,
+	firstPublishedDay: string | undefined
+): boolean => firstPublishedDay !== undefined && firstPublishedDay > days.from;
+
+/** The line for days with no schedule that come before published days: why they can't be scheduled, no action. */
+const beforePublishedLineOf = (
+	daysText: string,
+	count: number,
+	t: TFunction
+): PartLine => ({
+	text: t("scheduling.roster.noneBeforePublished", { days: daysText, count }),
+});
+
 /**
  * The line for days before this part with no schedule, as the API treats a
  * dates run asking for them (API ADR-0129): scheduled, the later unpublished
@@ -80,13 +95,8 @@ const noneBeforeLineOf = (
 ): PartLine => {
 	const daysText = formatDays(days);
 	const count = dayCountOf(days.from, days.to);
-	if (firstPublishedDay !== undefined && firstPublishedDay > days.from)
-		return {
-			text: t("scheduling.roster.noneBeforePublished", {
-				days: daysText,
-				count,
-			}),
-		};
+	if (comesBeforePublished(days, firstPublishedDay))
+		return beforePublishedLineOf(daysText, count, t);
 	return {
 		text: t("scheduling.roster.noneBefore", { days: daysText, count }),
 		action: scheduleDaysAction(days, daysText, t),
@@ -113,6 +123,12 @@ const runLineOf = (
 				label: t("scheduling.roster.openOtherPart", { days }),
 			},
 		};
+	// Days after this part that come before published days can't be scheduled either.
+	if (
+		run.kind === "noneAfter" &&
+		comesBeforePublished(run.days, firstPublishedDay)
+	)
+		return beforePublishedLineOf(days, count, t);
 	if (run.kind === "noneAfter")
 		return {
 			text: t("scheduling.roster.coversCallout", {

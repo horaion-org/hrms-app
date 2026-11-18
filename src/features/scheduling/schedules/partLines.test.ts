@@ -94,6 +94,35 @@ describe("partLinesOf", () => {
 			],
 		],
 		[
+			"days after this part before a published part",
+			{
+				runs: [{ kind: "noneAfter", days: WEEKEND }],
+				firstPublishedDay: "2027-02-21",
+			},
+			[
+				{
+					text: "scheduling.roster.noneBeforePublished(2027-02-20..2027-02-21|2)",
+				},
+			],
+		],
+		[
+			"days after the week's last part, with an earlier part published",
+			{
+				runs: [{ kind: "noneAfter", days: WEEKEND }],
+				firstPublishedDay: "2027-02-15",
+			},
+			[
+				{
+					text: "scheduling.roster.coversCallout(2027-02-17..2027-02-19|2027-02-20..2027-02-21)",
+					action: {
+						kind: "scheduleDays",
+						days: WEEKEND,
+						label: "scheduling.roster.remainingButton(2027-02-20..2027-02-21)",
+					},
+				},
+			],
+		],
+		[
 			"days another part holds",
 			{ runs: [{ kind: "otherPart", days: WEEKEND, part: WEEKEND_PART }] },
 			[
