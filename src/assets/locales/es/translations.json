@@ -3387,7 +3387,7 @@
 				"partOfWeek": "Parte de la semana del {{week}}",
 				"description": "Consulta horarios completados y asignaciones de personal anteriores.",
 				"name": "Nombre",
-				"date": "Semana",
+				"date": "Periodo",
 				"createdAt": "Creado el",
 				"status": "Estado",
 				"department": "Departamento",

@@ -3587,7 +3587,7 @@
 				"partOfWeek": "Part of the week of {{week}}",
 				"description": "View saved schedules across your departments.",
 				"name": "Name",
-				"date": "Week",
+				"date": "Period",
 				"createdAt": "Created at",
 				"status": "Status",
 				"department": "Department",
