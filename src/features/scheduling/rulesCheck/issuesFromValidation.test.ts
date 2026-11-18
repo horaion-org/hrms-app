@@ -9,6 +9,7 @@ import {
 	changesUnchecked,
 	findingsShown,
 	scheduleWithFindingsShown,
+	validatesOnOpen,
 	validationStanding,
 } from "@/features/scheduling/rulesCheck/issuesFromValidation";
 import {
@@ -65,6 +66,67 @@ describe("changesUnchecked", () => {
 	] as const)("reads %s", (_case, standing, lastValidation, expected) => {
 		expect(changesUnchecked(standing, lastValidation)).toBe(expected);
 	});
+});
+
+describe("validatesOnOpen", () => {
+	const last = { revision: 1, check: rulesCheckFixture() };
+
+	it.each([
+		[
+			"hand changes, nothing asked: asks",
+			true,
+			undefined,
+			true,
+			undefined,
+			true,
+		],
+		[
+			"without leave to validate: never",
+			false,
+			undefined,
+			true,
+			undefined,
+			false,
+		],
+		[
+			"no hand changes: nothing to check",
+			true,
+			undefined,
+			false,
+			undefined,
+			false,
+		],
+		[
+			"validated in this visit: the button takes over",
+			true,
+			last,
+			true,
+			undefined,
+			false,
+		],
+		["already asked at this revision: once", true, undefined, true, 2, false],
+		[
+			"asked at an earlier revision: asks again",
+			true,
+			undefined,
+			true,
+			1,
+			true,
+		],
+	] as const)(
+		"%s",
+		(_case, mayValidate, lastValidation, hasChanges, askedAt, expected) => {
+			expect(
+				validatesOnOpen({
+					mayValidate,
+					revision: 2,
+					last: lastValidation,
+					hasChanges,
+					askedAt,
+				})
+			).toBe(expected);
+		}
+	);
 });
 
 describe("findingsShown", () => {

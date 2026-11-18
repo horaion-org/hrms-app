@@ -47,6 +47,30 @@ export const changesUnchecked = (
 	last: LastValidation | undefined
 ): boolean => standing === "outOfDate" && last === undefined;
 
+/**
+ * Whether the page should validate the roster now, without being asked: the
+ * viewer may validate this roster (Validate schedule's own target: the
+ * permission, a roster that may be changed, its run and unit known), its hand
+ * changes are unchecked in this visit, and nothing was asked at this revision
+ * yet (an ask in flight, answered or refused is never repeated).
+ */
+export const validatesOnOpen = ({
+	mayValidate,
+	revision,
+	last,
+	hasChanges,
+	askedAt,
+}: {
+	mayValidate: boolean;
+	revision: number;
+	last: LastValidation | undefined;
+	hasChanges: boolean;
+	askedAt: number | undefined;
+}): boolean =>
+	mayValidate &&
+	askedAt !== revision &&
+	changesUnchecked(validationStanding({ revision, last, hasChanges }), last);
+
 /** Findings with nothing in them, for a run that stored none, so validated gaps still have a list to join. */
 const NO_FINDINGS: GenerationFindings = {
 	scheduleStatus: "",
