@@ -102,4 +102,13 @@ describe("TimelineGrid", () => {
 		});
 		expect(within(row).getByRole("rowheader")).toHaveClass("sticky", "left-0");
 	});
+
+	/** A tile's screen-reader label stays inside its tile, so the table scrolls in its container and never widens the page. */
+	it("places every screen-reader label in a positioned tile", async () => {
+		const row = await renderGrid("four");
+		const labels = row.querySelectorAll(".sr-only");
+		expect(labels.length).toBe(7);
+		for (const label of labels)
+			expect(label.parentElement).toHaveClass("relative");
+	});
 });

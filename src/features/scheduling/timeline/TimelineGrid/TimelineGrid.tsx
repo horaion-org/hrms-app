@@ -48,8 +48,11 @@ export type TimelineGridProps = {
 
 const key = "scheduling.timeline.grid";
 
+// `relative`, as the roster grid's tiles: each tile's screen-reader label (`sr-only`, absolutely positioned) is
+// placed in its tile. Without it the label's box is placed against the app shell, outside the scrolling
+// container, and a label far right in the table widens the whole page on a phone.
 const tileClasses =
-	"flex h-12 w-full min-w-0 flex-col items-center justify-center overflow-hidden rounded border px-1 text-center text-xs leading-4 font-medium whitespace-nowrap";
+	"relative flex h-12 w-full min-w-0 flex-col items-center justify-center overflow-hidden rounded border px-1 text-center text-xs leading-4 font-medium whitespace-nowrap";
 
 /** A day's full words, as its label names it: a shift with its time, any other day in plain words. */
 const dayWords = (cell: RosterCell, t: TFunction): string =>
