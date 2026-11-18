@@ -224,6 +224,40 @@ describe("the owner's week of 15 February 2027: Wed–Fri, then Sat–Sun", () =
 		).toBeNull();
 	});
 
+	// Days before published days can never be scheduled again: deleting them is said plainly, before confirming.
+	it("given_aLaterPartPublished_when_deleting_then_warnsTheDaysCantBeScheduledAgain", async () => {
+		vi.useFakeTimers({
+			toFake: ["Date"],
+			now: new Date("2027-02-10T09:00:00+08:00"),
+		});
+		await openPart({
+			...WEEK,
+			shown: wednesdayToFriday,
+			parts: [
+				part({ ...wednesdayToFriday }),
+				part({ scheduleId: "s-2", ...saturdayToSunday, state: "PUBLISHED" }),
+			],
+			permissions: ["schedule:read", "schedule:delete"],
+		});
+		const user = userEvent.setup();
+
+		await user.click(
+			await screen.findByRole("button", { name: /More actions/ })
+		);
+		await user.click(await screen.findByRole("menuitem", { name: "Delete" }));
+
+		const dialog = await screen.findByRole("dialog", {
+			name: /Its days can’t be scheduled again\.$/,
+		});
+		expect(within(dialog).getByRole("note")).toHaveTextContent(
+			/^Feb 17\s?–\s?19, 2027 will have no roster, and they can’t be scheduled again: they come before published days \(Feb 20\s?–\s?21, 2027\)\. To change these days, change the roster by hand instead of deleting it\.$/
+		);
+		expect(dialog).not.toHaveTextContent("again to redo");
+		expect(
+			within(dialog).getByRole("button", { name: "Delete for good" })
+		).toBeEnabled();
+	});
+
 	it("given_theWednesdayToFridayPartWithALaterOne_when_deleting_then_saysWhatItLeavesBehind", async () => {
 		vi.useFakeTimers({
 			toFake: ["Date"],

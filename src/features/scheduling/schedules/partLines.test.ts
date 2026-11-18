@@ -2,6 +2,7 @@ import type { TFunction } from "i18next";
 import { describe, expect, it } from "vitest";
 import type { DayRun } from "@/features/scheduling/dates/api";
 import type { WeekRun } from "@/features/scheduling/dates/datesSetup";
+import type { WeekState } from "@/features/scheduling/months/api";
 import {
 	coversPartOfWeek,
 	daysLeftBeforeOf,
@@ -223,21 +224,25 @@ describe("daysLeftBeforeOf", () => {
 
 describe("deleteLeavesOf", () => {
 	const MONDAY_TO_TUESDAY = {
+		state: "TO_REVIEW" as WeekState,
 		scheduleId: "s-0",
 		coveredFrom: "2027-02-15",
 		coveredTo: "2027-02-16",
 	};
 	const WEDNESDAY_TO_FRIDAY = {
+		state: "TO_REVIEW" as WeekState,
 		scheduleId: "s-1",
 		coveredFrom: "2027-02-17",
 		coveredTo: "2027-02-19",
 	};
 	const SATURDAY = {
+		state: "TO_REVIEW" as WeekState,
 		scheduleId: "s-2",
 		coveredFrom: "2027-02-20",
 		coveredTo: "2027-02-20",
 	};
 	const SUNDAY = {
+		state: "TO_REVIEW" as WeekState,
 		scheduleId: "s-3",
 		coveredFrom: "2027-02-21",
 		coveredTo: "2027-02-21",
@@ -276,14 +281,55 @@ describe("deleteLeavesOf", () => {
 			case: "the last part",
 			shown: SUNDAY,
 			parts: [WEDNESDAY_TO_FRIDAY, SUNDAY],
-			expected: { daysWithoutRoster: daysOf(SUNDAY), laterDays: undefined },
+			expected: { daysWithoutRoster: daysOf(SUNDAY) },
 		},
-	])(
+		{
+			// The tester's week: deleting the middle part before a published one loses its days for good.
+			case: "a middle part before a published part",
+			shown: WEDNESDAY_TO_FRIDAY,
+			parts: [
+				MONDAY_TO_TUESDAY,
+				WEDNESDAY_TO_FRIDAY,
+				SATURDAY,
+				{ ...SUNDAY, state: "PUBLISHED" },
+			],
+			expected: {
+				daysWithoutRoster: daysOf(WEDNESDAY_TO_FRIDAY),
+				publishedLater: daysOf(SUNDAY),
+			},
+		},
+		{
+			// Taken back, it reads as to review; only a caller that knows it was withdrawn can say so.
+			case: "a middle part before a withdrawn part the caller knows of",
+			shown: WEDNESDAY_TO_FRIDAY,
+			parts: [WEDNESDAY_TO_FRIDAY, SATURDAY],
+			withdrawn: [SATURDAY.scheduleId],
+			expected: {
+				daysWithoutRoster: daysOf(WEDNESDAY_TO_FRIDAY),
+				publishedLater: daysOf(SATURDAY),
+			},
+		},
+		{
+			case: "a middle part before a withdrawn part the caller doesn't know of",
+			shown: WEDNESDAY_TO_FRIDAY,
+			parts: [WEDNESDAY_TO_FRIDAY, SATURDAY],
+			expected: {
+				daysWithoutRoster: daysOf(WEDNESDAY_TO_FRIDAY),
+				laterDays: daysOf(SATURDAY),
+			},
+		},
+	] as Array<{
+		case: string;
+		shown: typeof WEDNESDAY_TO_FRIDAY;
+		parts: Array<typeof WEDNESDAY_TO_FRIDAY>;
+		withdrawn?: Array<string>;
+		expected: object;
+	}>)(
 		"given_$case_when_deleted_then_saysWhatItLeaves",
-		({ shown, parts, expected }) => {
-			expect(deleteLeavesOf(shown.scheduleId, daysOf(shown), parts)).toEqual(
-				expected
-			);
+		({ shown, parts, withdrawn, expected }) => {
+			expect(
+				deleteLeavesOf(shown.scheduleId, daysOf(shown), parts, withdrawn)
+			).toEqual(expected);
 		}
 	);
 });

@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
+import { Callout } from "@/components/ui/Callout";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import type { DayRun } from "@/features/scheduling/dates/api";
 import { dayCountOf } from "@/features/scheduling/dates/datesSetup";
@@ -47,8 +48,17 @@ export const DeleteScheduleDialog = ({
 		{ from: schedule.coveredFrom, to: schedule.coveredTo },
 		weekParts
 	);
+	// Days before published days can never be scheduled again: said as a warning, and the title and button say it too.
+	const lostForGood =
+		leaves.daysWithoutRoster && leaves.publishedLater
+			? {
+					daysWithoutRoster: leaves.daysWithoutRoster,
+					publishedLater: leaves.publishedLater,
+				}
+			: undefined;
 	const leavesLines = [
 		leaves.daysWithoutRoster &&
+			!leaves.publishedLater &&
 			t(`${key}.leavesNoRoster`, { days: daysText(leaves.daysWithoutRoster) }),
 		leaves.daysWithoutRoster &&
 			leaves.laterDays &&
@@ -69,7 +79,7 @@ export const DeleteScheduleDialog = ({
 		<ConfirmDialog
 			cancelLabel={t(running ? `${key}.close` : `${key}.cancel`)}
 			confirmDisabled={running}
-			confirmLabel={t(`${key}.confirm`)}
+			confirmLabel={t(lostForGood ? `${key}.confirmForGood` : `${key}.confirm`)}
 			error={remove.error ? deleteRefusal(remove.error, t) : undefined}
 			submitting={remove.isPending}
 			tone="danger"
@@ -84,7 +94,7 @@ export const DeleteScheduleDialog = ({
 							...leavesLines,
 						].join(" ")
 			}
-			title={t(`${key}.title`, {
+			title={t(lostForGood ? `${key}.titleForGood` : `${key}.title`, {
 				department: schedule.departmentName,
 				period,
 			})}
@@ -101,6 +111,19 @@ export const DeleteScheduleDialog = ({
 					{ onSuccess: onDeleted }
 				);
 			}}
-		/>
+		>
+			{!running && lostForGood && (
+				<Callout className="mb-6" tone="warning">
+					{t(`${key}.beforePublished`, {
+						days: daysText(lostForGood.daysWithoutRoster),
+						published: daysText(lostForGood.publishedLater),
+						count: dayCountOf(
+							lostForGood.daysWithoutRoster.from,
+							lostForGood.daysWithoutRoster.to
+						),
+					})}
+				</Callout>
+			)}
+		</ConfirmDialog>
 	);
 };

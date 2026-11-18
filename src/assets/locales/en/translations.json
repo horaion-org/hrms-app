@@ -4638,7 +4638,11 @@
 			"failed": "We couldn’t delete the schedule. Try again.",
 			"leavesNoRoster": "{{days}} will have no roster.",
 			"laterWorkedOut_one": "{{later}} was worked out from them and stays as it is; schedule {{days}} again to redo it.",
-			"laterWorkedOut_other": "{{later}} were worked out from them and stay as they are; schedule {{days}} again to redo them."
+			"laterWorkedOut_other": "{{later}} were worked out from them and stay as they are; schedule {{days}} again to redo them.",
+			"titleForGood": "Delete the {{department}} schedule for {{period}}? Its days can’t be scheduled again.",
+			"confirmForGood": "Delete for good",
+			"beforePublished_one": "{{days}} will have no roster, and it can’t be scheduled again: it comes before published days ({{published}}). To change this day, change the roster by hand instead of deleting it.",
+			"beforePublished_other": "{{days}} will have no roster, and they can’t be scheduled again: they come before published days ({{published}}). To change these days, change the roster by hand instead of deleting it."
 		},
 		"regenerate": {
 			"retry": "Generate again",
