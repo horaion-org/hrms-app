@@ -5,6 +5,10 @@ import type {
 	CoverOption,
 	CoverUnavailableReason,
 } from "@/features/scheduling/cover/api";
+import type {
+	CoverEngineNote,
+	CoverOrder,
+} from "@/features/scheduling/cover/coverWithEngine";
 import { formatTimeRange } from "@/features/scheduling/shifts/formatShift";
 import type { ScheduleShift } from "@/features/scheduling/schedules/api";
 
@@ -162,3 +166,28 @@ export const reasonText = (
 	shift: CoverShift | undefined,
 	t: TFunction
 ): string => t(`${key}.reason.${reason}`, { jobTitles: jobTitlesOf(shift, t) });
+
+/**
+ * What the list's order means, as the line under "Who covers": before the
+ * engine has answered, also what the order does not check.
+ */
+export const coverOrderNote = (order: CoverOrder, t: TFunction): string =>
+	t(`${key}.withEngine.order.${order}`);
+
+/**
+ * Where each of the engine's notes on a card is worded. The two the engine
+ * also gives as reasons keep their sentence from "Why nobody was assigned".
+ */
+const ENGINE_NOTE_KEYS = {
+	fills: "scheduling.cover.withEngine.note.fills",
+	couldTake: "scheduling.cover.withEngine.note.couldTake",
+	notConsidered: "scheduling.cover.withEngine.note.notConsidered",
+	notCheckedInTime: "scheduling.cover.engine.whyNot.reason.not_checked",
+	partTimeNoShift: "scheduling.cover.engine.whyNot.reason.no_shift_part_time",
+} as const satisfies Record<CoverEngineNote, string>;
+
+/** The line the engine's answer adds to someone's card; none before the engine has answered. */
+export const engineNoteLines = (
+	note: CoverEngineNote | undefined,
+	t: TFunction
+): Array<string> => (note === undefined ? [] : [t(ENGINE_NOTE_KEYS[note])]);

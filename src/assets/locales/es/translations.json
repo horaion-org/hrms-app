@@ -4972,6 +4972,17 @@
 				"nobody": "Nadie de este cuadrante puede cubrir {{shift}} el {{day}}.",
 				"notChecked": "Las reglas de tiempo de trabajo (horas al día, horas extra al mes, días a la semana, permisos) no se comprueban en este cambio. Después de aplicarlo, pulsa Validar cuadrante."
 			},
+			"withEngine": {
+				"order": {
+					"byExtraHours": "Por orden de menos horas extra. Aquí no se comprueba el descanso entre turnos ni el puesto que falta: pregunta al motor más abajo.",
+					"engineFirst": "Primero la elección del motor; después, por menos horas extra."
+				},
+				"note": {
+					"fills": "El motor: cubre el hueco",
+					"couldTake": "El motor: podría cubrir este turno",
+					"notConsidered": "Sin comprobar por el motor, que solo mira a quienes tienen el puesto que falta en este hueco"
+				}
+			},
 			"gapWithoutRoles": "{{shift}} · {{day}} · {{time}}",
 			"engine": {
 				"title": "Del motor de planificación",

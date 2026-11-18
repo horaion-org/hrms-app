@@ -87,7 +87,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** A draft: the suggested option chosen and previewed, with Apply. */
+/** A draft before the engine is asked: the first option chosen and previewed, nobody suggested, with Apply. */
 export const Draft: Story = { decorators: [withList(coverOptionsFixture())] };
 
 /** A published roster: Send offer and They agreed in place of Apply. */
@@ -96,7 +96,7 @@ export const Published: Story = {
 	args: { coverOffers: { offers: [], timeZone: "Asia/Singapore" } },
 };
 
-/** An offer already out to the suggested person: who, by when, and Withdraw. */
+/** An offer already out to the first person: who, by when, and Withdraw. */
 export const OfferOut: Story = {
 	decorators: [withList(coverOptionsFixture())],
 	args: {

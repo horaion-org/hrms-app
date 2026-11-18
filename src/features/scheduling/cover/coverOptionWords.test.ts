@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
+	coverOrderNote,
+	engineNoteLines,
 	gapReason,
 	gapTitle,
 	neighbourLine,
@@ -169,5 +171,39 @@ describe("reasonText", () => {
 		["UNKNOWN", "Can't help"],
 	] as const)("given_%s_when_worded_then_%s", (reason, words) => {
 		expect(reasonText(reason, names.shift(gap.shiftId), t)).toBe(words);
+	});
+});
+
+describe("coverOrderNote", () => {
+	it.each([
+		[
+			"byExtraHours",
+			"In order of fewest extra hours. Rest between shifts and the job title that is short aren’t checked here: ask the engine below.",
+		],
+		["engineFirst", "The engine’s choice first, then by fewest extra hours."],
+	] as const)("given_%s_when_worded_then_%s", (order, words) => {
+		expect(coverOrderNote(order, t)).toBe(words);
+	});
+});
+
+describe("engineNoteLines", () => {
+	it.each([
+		["fills", "The engine: fills the gap"],
+		["couldTake", "The engine: could take this shift"],
+		[
+			"notConsidered",
+			"Not checked by the engine, which only looks at people with the job title this gap is short of",
+		],
+		["notCheckedInTime", "Not checked in time."],
+		[
+			"partTimeNoShift",
+			"Part-time with no shift that day. The engine doesn’t call in part-timers: choose them under Who covers.",
+		],
+	] as const)("given_%s_when_worded_then_%s", (note, words) => {
+		expect(engineNoteLines(note, t)).toEqual([words]);
+	});
+
+	it("given_noNote_when_worded_then_noLine", () => {
+		expect(engineNoteLines(undefined, t)).toEqual([]);
 	});
 });
