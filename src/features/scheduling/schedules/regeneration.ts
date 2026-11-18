@@ -10,7 +10,7 @@ import {
 } from "@/features/scheduling/schedules/api";
 import {
 	coversPartOfWeek,
-	firstPublishedDayOf,
+	lastPublishedPartStartOf,
 } from "@/features/scheduling/schedules/partLines";
 
 /**
@@ -120,7 +120,7 @@ export const regenerationOf = (
 	const path: RegenerationPath =
 		!partOfWeek && !oncePublished
 			? "monthRun"
-			: firstPublishedDayOf(laterParts) === undefined
+			: lastPublishedPartStartOf(laterParts) === undefined
 				? "ownRoute"
 				: "laterPartPublished";
 	return {

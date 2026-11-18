@@ -15,33 +15,47 @@ export type PartLinesSource = {
 	runs: ReadonlyArray<WeekRun>;
 	/** A redo part touching this one, if any (`partRedoOf`, API ADR-0129). */
 	redo: PartRedo | undefined;
-	/** The first day of the week a published part covers, if any (`firstPublishedDayOf`). */
-	firstPublishedDay?: string;
+	/** The first day of the latest-starting published part, if any (`lastPublishedPartStartOf`): days before it are blocked. */
+	lastPublishedPartStart?: string;
 };
 
+/** A part's fields that say whether it counts as published. */
+type PublishedFacts = Pick<
+	WeekPart,
+	"scheduleId" | "state" | "coveredFrom" | "publishedOnce"
+>;
+
 /**
- * The first day of the week a part that has been published covers, or none:
- * days before it can't be scheduled (API ADR-0129). A part counts when it is
- * published or the week read says it was published once (`publishedOnce`: its
- * publication withdrawn), as the API's `WeekRedos.countsAsPublished` does;
- * `withdrawnScheduleIds` names any the caller knows of another way (the
- * schedule on screen, against an older API).
+ * Whether a part counts as published, as the API's
+ * `WeekRedos.countsAsPublished` does: published, or published once (its
+ * publication withdrawn, `publishedOnce`); `withdrawnScheduleIds` names any
+ * the caller knows of another way (the schedule on screen, against an older
+ * API).
  */
-export const firstPublishedDayOf = (
-	parts: ReadonlyArray<
-		Pick<WeekPart, "scheduleId" | "state" | "coveredFrom" | "publishedOnce">
-	>,
+const countsAsPublished = (
+	part: PublishedFacts,
+	withdrawnScheduleIds: ReadonlyArray<string>
+): boolean =>
+	part.state === "PUBLISHED" ||
+	part.publishedOnce === true ||
+	withdrawnScheduleIds.includes(part.scheduleId);
+
+/**
+ * The first day of the latest-starting part of the week that counts as
+ * published (`countsAsPublished`), or none. A day before it has a published
+ * part starting after it, so a dates run asking for it is refused (API
+ * ADR-0129, `WeekRedos.refusalOf`); a day on or after it is free.
+ */
+export const lastPublishedPartStartOf = (
+	parts: ReadonlyArray<PublishedFacts>,
 	withdrawnScheduleIds: ReadonlyArray<string> = []
-): string | undefined =>
-	parts
-		.filter(
-			(part) =>
-				part.state === "PUBLISHED" ||
-				part.publishedOnce === true ||
-				withdrawnScheduleIds.includes(part.scheduleId)
-		)
+): string | undefined => {
+	const starts = parts
+		.filter((part) => countsAsPublished(part, withdrawnScheduleIds))
 		.map((part) => part.coveredFrom)
-		.sort()[0];
+		.sort();
+	return starts[starts.length - 1];
+};
 
 /** What a line lets the manager do: open the schedule holding its days, or schedule its days. */
 export type PartLineAction =
@@ -69,8 +83,9 @@ const scheduleDaysAction = (
 /** Whether days come before a part that has been published, so a dates run asking for them is refused (API ADR-0129). */
 const comesBeforePublished = (
 	days: DayRun,
-	firstPublishedDay: string | undefined
-): boolean => firstPublishedDay !== undefined && firstPublishedDay > days.from;
+	lastPublishedPartStart: string | undefined
+): boolean =>
+	lastPublishedPartStart !== undefined && lastPublishedPartStart > days.from;
 
 /** The line for days with no schedule that come before published days: why they can't be scheduled, no action. */
 const beforePublishedLineOf = (
@@ -89,13 +104,13 @@ const beforePublishedLineOf = (
  */
 const noneBeforeLineOf = (
 	days: DayRun,
-	firstPublishedDay: string | undefined,
+	lastPublishedPartStart: string | undefined,
 	formatDays: (days: DayRun) => string,
 	t: TFunction
 ): PartLine => {
 	const daysText = formatDays(days);
 	const count = dayCountOf(days.from, days.to);
-	if (comesBeforePublished(days, firstPublishedDay))
+	if (comesBeforePublished(days, lastPublishedPartStart))
 		return beforePublishedLineOf(daysText, count, t);
 	return {
 		text: t("scheduling.roster.noneBefore", { days: daysText, count }),
@@ -106,14 +121,14 @@ const noneBeforeLineOf = (
 /** The line for one run of the week's days outside this part. */
 const runLineOf = (
 	run: WeekRun,
-	{ covered, firstPublishedDay }: PartLinesSource,
+	{ covered, lastPublishedPartStart }: PartLinesSource,
 	formatDays: (days: DayRun) => string,
 	t: TFunction
 ): PartLine => {
 	const days = formatDays(run.days);
 	const count = dayCountOf(run.days.from, run.days.to);
 	if (run.kind === "noneBefore")
-		return noneBeforeLineOf(run.days, firstPublishedDay, formatDays, t);
+		return noneBeforeLineOf(run.days, lastPublishedPartStart, formatDays, t);
 	if (run.kind === "otherPart")
 		return {
 			text: t("scheduling.roster.otherPart", { days, count }),
@@ -126,7 +141,7 @@ const runLineOf = (
 	// Days after this part that come before published days can't be scheduled either.
 	if (
 		run.kind === "noneAfter" &&
-		comesBeforePublished(run.days, firstPublishedDay)
+		comesBeforePublished(run.days, lastPublishedPartStart)
 	)
 		return beforePublishedLineOf(days, count, t);
 	if (run.kind === "noneAfter")
@@ -199,7 +214,7 @@ export type DeleteLeaves = {
  * What deleting the part covering `covered` leaves of its week (`parts`, the
  * week read's parts, this one included): only when other parts share the
  * week, its days with no roster; then either the published days after it
- * (`firstPublishedDayOf`, counting `withdrawnScheduleIds` as published, as
+ * (`countsAsPublished`, with `withdrawnScheduleIds`, nearest first, as
  * the API does), which mean its days can't be scheduled again, or else the
  * later parts' days, which were worked out from them and are not changed.
  * Pure.
@@ -225,11 +240,17 @@ export const deleteLeavesOf = (
 	const firstLater = later[0];
 	const lastLater = later[later.length - 1];
 	if (!firstLater || !lastLater) return { daysWithoutRoster: covered };
-	const firstPublished = firstPublishedDayOf(later, withdrawnScheduleIds);
-	if (firstPublished !== undefined)
+	// Any published part after these days blocks them; the warning names the nearest one's days.
+	const nearestPublished = later.find((part) =>
+		countsAsPublished(part, withdrawnScheduleIds)
+	);
+	if (nearestPublished)
 		return {
 			daysWithoutRoster: covered,
-			publishedLater: { from: firstPublished, to: lastLater.coveredTo },
+			publishedLater: {
+				from: nearestPublished.coveredFrom,
+				to: nearestPublished.coveredTo,
+			},
 		};
 	return {
 		daysWithoutRoster: covered,

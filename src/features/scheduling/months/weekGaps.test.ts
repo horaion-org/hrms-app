@@ -108,6 +108,17 @@ describe("weekGapsOf", () => {
 			],
 		],
 		[
+			"aGapBetweenAnEarlierAndALaterPublishedPart",
+			weekWithParts(["PUBLISHED", "PUBLISHED"]),
+			"2027-02-01",
+			[
+				{
+					days: { from: "2027-02-10", to: "2027-02-12" },
+					kind: "beforePublished",
+				},
+			],
+		],
+		[
 			"aGapAfterAPublishedPart",
 			weekWithParts(["PUBLISHED", "TO_REVIEW"]),
 			"2027-02-01",

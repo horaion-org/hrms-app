@@ -1,6 +1,6 @@
 import type { DayRun } from "@/features/scheduling/dates/api";
 import type { MonthWeek } from "@/features/scheduling/months/api";
-import { firstPublishedDayOf } from "@/features/scheduling/schedules/partLines";
+import { lastPublishedPartStartOf } from "@/features/scheduling/schedules/partLines";
 
 /*
  * A week card's days without a roster: the month read sends a day no part
@@ -19,17 +19,17 @@ export type WeekGapKind = "open" | "passed" | "beforePublished";
 export type WeekGap = { days: DayRun; kind: WeekGapKind };
 
 /**
- * What can be done with one day with no roster. The month read doesn't say
- * which parts had their publication withdrawn, so only PUBLISHED parts count
- * as published here (`firstPublishedDay`, from `firstPublishedDayOf`).
+ * What can be done with one day with no roster: a day before the
+ * latest-starting published part (`lastPublishedPartStartOf`, which counts a
+ * part published once) can't be scheduled.
  */
 const gapKindOf = (
 	date: string,
 	today: string,
-	firstPublishedDay: string | undefined
+	lastPublishedPartStart: string | undefined
 ): WeekGapKind => {
 	if (date < today) return "passed";
-	if (firstPublishedDay !== undefined && date < firstPublishedDay)
+	if (lastPublishedPartStart !== undefined && date < lastPublishedPartStart)
 		return "beforePublished";
 	return "open";
 };
@@ -47,7 +47,7 @@ export const weekGapsOf = (
 		const from = week.periodStart < today ? today : week.periodStart;
 		return [{ days: { from, to: week.periodEnd }, kind: "open" }];
 	}
-	const firstPublishedDay = firstPublishedDayOf(week.parts);
+	const lastPublishedPartStart = lastPublishedPartStartOf(week.parts);
 	const gaps: Array<WeekGap> = [];
 	let lastDate: string | undefined;
 	for (const day of week.days) {
@@ -55,7 +55,7 @@ export const weekGapsOf = (
 			lastDate = undefined;
 			continue;
 		}
-		const kind = gapKindOf(day.date, today, firstPublishedDay);
+		const kind = gapKindOf(day.date, today, lastPublishedPartStart);
 		const last = gaps[gaps.length - 1];
 		if (last && lastDate === last.days.to && last.kind === kind)
 			last.days.to = day.date;
