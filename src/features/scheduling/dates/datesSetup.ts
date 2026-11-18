@@ -219,22 +219,31 @@ export const dayCountOfRuns = (runs: ReadonlyArray<DayRun>): number =>
 /**
  * The notes under "What this creates". A week's kept days among its asked
  * days are published: its new days start at the first asked day that is not
- * (API ADR-0129).
+ * (API ADR-0129). With `redoRefused` (people chosen over days that have a
+ * schedule, which the API refuses) no day is promised a redo.
  */
-export const planNotesOf = (plan: DatesPlan): PlanNotes => ({
-	publishedDays: plan.weeks.flatMap((week) =>
+export const planNotesOf = (
+	plan: DatesPlan,
+	redoRefused = false
+): PlanNotes => {
+	const publishedDays = plan.weeks.flatMap((week) =>
 		week.kept.flatMap((part) =>
 			partDaysWithin(part, week.askedFrom, week.askedTo)
 		)
-	),
-	redoneDays: plan.weeks.flatMap((week) => week.redone.map(runOf)),
-	restOnlyDays: plan.weeks.flatMap((week) =>
-		week.redone.length > 0 ? [] : week.rest.map(runOf)
-	),
-	restDayCount: dayCountOfRuns(
-		plan.weeks.flatMap((week) => week.rest.map(runOf))
-	),
-});
+	);
+	if (redoRefused)
+		return { publishedDays, redoneDays: [], restOnlyDays: [], restDayCount: 0 };
+	return {
+		publishedDays,
+		redoneDays: plan.weeks.flatMap((week) => week.redone.map(runOf)),
+		restOnlyDays: plan.weeks.flatMap((week) =>
+			week.redone.length > 0 ? [] : week.rest.map(runOf)
+		),
+		restDayCount: dayCountOfRuns(
+			plan.weeks.flatMap((week) => week.rest.map(runOf))
+		),
+	};
+};
 
 /** A named schedule's days across touching parts of the weeks shown. */
 export type NamedSpan = { name: string; from: string; to: string };

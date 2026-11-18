@@ -772,6 +772,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 							pending: datesValid && datesPlan.isPending,
 							today: branchToday,
 							people: people.line,
+							redoRefused: people.problem === "daysTaken",
 						}}
 						departmentExtras={
 							setupGate && (

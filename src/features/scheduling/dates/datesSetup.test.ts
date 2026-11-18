@@ -225,6 +225,15 @@ describe("planNotesOf", () => {
 		});
 	});
 
+	it("given_theOwnersExampleWithTheRedoRefused_when_noted_then_noDayIsPromisedARedo", () => {
+		expect(planNotesOf(datesPlanRedoingFixture(), true)).toEqual({
+			publishedDays: [],
+			redoneDays: [],
+			restOnlyDays: [],
+			restDayCount: 0,
+		});
+	});
+
 	it("given_newDaysBeforeALaterPart_when_noted_then_onlyItsRestIsScheduledAgain", () => {
 		const plan = datesPlanFixture();
 		const week = {

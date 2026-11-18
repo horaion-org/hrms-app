@@ -135,7 +135,10 @@ const PLAN_BADGE_TONES: Record<PlanBadge, BadgeTone> = {
  * the published days, the days with a schedule that are redone and the rest days scheduled again after new days.
  * Refused dates show why, and nothing of a run that won't happen.
  */
-const DatesPlanRows = ({ plan }: { plan: DatesPlan }): FunctionComponent => {
+const DatesPlanRows = ({
+	plan,
+	redoRefused,
+}: MonthSetupDates & { plan: DatesPlan }): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
 	// A refusal refuses the whole run (API DatesPlans): no week of it would be generated, so none is described.
@@ -146,7 +149,7 @@ const DatesPlanRows = ({ plan }: { plan: DatesPlan }): FunctionComponent => {
 			</Callout>
 		);
 	const rows = plan.weeks.map(planRowOf);
-	const notes = planNotesOf(plan);
+	const notes = planNotesOf(plan, redoRefused);
 	const datesText = (start: string, end: string): string =>
 		formatPeriod({ start, end }, language);
 	const runsText = (runs: Array<DayRun>): string =>
@@ -535,7 +538,7 @@ export const MonthSetupStep = ({
 									{t("scheduling.dates.setup.checking")}
 								</p>
 							)}
-							{dates?.plan && <DatesPlanRows plan={dates.plan} />}
+							{dates?.plan && <DatesPlanRows {...dates} plan={dates.plan} />}
 						</div>
 					)}
 					{scheduleFor === "month" && (
