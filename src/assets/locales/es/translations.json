@@ -4438,7 +4438,11 @@
 			"failed": "No pudimos eliminar el horario. Inténtalo de nuevo.",
 			"leavesNoRoster": "{{days}} se quedará sin cuadrante.",
 			"laterWorkedOut_one": "{{later}} se calculó a partir de esos días y se queda como está; programa {{days}} de nuevo para rehacerlo.",
-			"laterWorkedOut_other": "{{later}} se calcularon a partir de esos días y se quedan como están; programa {{days}} de nuevo para rehacerlos."
+			"laterWorkedOut_other": "{{later}} se calcularon a partir de esos días y se quedan como están; programa {{days}} de nuevo para rehacerlos.",
+			"titleForGood": "¿Eliminar el horario de {{department}} para {{period}}? Sus días no se podrán volver a programar.",
+			"confirmForGood": "Eliminar definitivamente",
+			"beforePublished_one": "{{days}} se quedará sin cuadrante y no se podrá volver a programar: va antes de días publicados ({{published}}). Para cambiar este día, cambia el cuadrante a mano en vez de eliminarlo.",
+			"beforePublished_other": "{{days}} se quedarán sin cuadrante y no se podrán volver a programar: van antes de días publicados ({{published}}). Para cambiar estos días, cambia el cuadrante a mano en vez de eliminarlo."
 		},
 		"regenerate": {
 			"retry": "Generar de nuevo",

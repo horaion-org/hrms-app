@@ -165,22 +165,32 @@ export const daysLeftBeforeOf = (
 export type DeleteLeaves = {
 	/** This part's days, which have no roster once it is gone; none when no other part shares its week. */
 	daysWithoutRoster?: DayRun;
-	/** The later parts' days, worked out from this part's days and left as they are. */
+	/** The later parts' days, worked out from this part's days and left as they are; none when one is published. */
 	laterDays?: DayRun;
+	/**
+	 * The published days after this part, when there are any: this part's
+	 * days come before them, so once deleted they can never be scheduled
+	 * again (API ADR-0129, SCHEDULE_DAYS_BEFORE_ROSTER).
+	 */
+	publishedLater?: DayRun;
 };
 
 /**
  * What deleting the part covering `covered` leaves of its week (`parts`, the
  * week read's parts, this one included): only when other parts share the
- * week, its days with no roster, and the later parts' days, which were worked
- * out from them and are not changed. Pure.
+ * week, its days with no roster; then either the published days after it
+ * (`firstPublishedDayOf`, counting `withdrawnScheduleIds` as published, as
+ * the API does), which mean its days can't be scheduled again, or else the
+ * later parts' days, which were worked out from them and are not changed.
+ * Pure.
  */
 export const deleteLeavesOf = (
 	scheduleId: string,
 	covered: DayRun,
 	parts: ReadonlyArray<
-		Pick<WeekPart, "scheduleId" | "coveredFrom" | "coveredTo">
-	>
+		Pick<WeekPart, "scheduleId" | "state" | "coveredFrom" | "coveredTo">
+	>,
+	withdrawnScheduleIds: ReadonlyArray<string> = []
 ): DeleteLeaves => {
 	const others = parts.filter((part) => part.scheduleId !== scheduleId);
 	if (others.length === 0) return {};
@@ -191,12 +201,16 @@ export const deleteLeavesOf = (
 		);
 	const firstLater = later[0];
 	const lastLater = later[later.length - 1];
+	if (!firstLater || !lastLater) return { daysWithoutRoster: covered };
+	const firstPublished = firstPublishedDayOf(later, withdrawnScheduleIds);
+	if (firstPublished !== undefined)
+		return {
+			daysWithoutRoster: covered,
+			publishedLater: { from: firstPublished, to: lastLater.coveredTo },
+		};
 	return {
 		daysWithoutRoster: covered,
-		laterDays:
-			firstLater && lastLater
-				? { from: firstLater.coveredFrom, to: lastLater.coveredTo }
-				: undefined,
+		laterDays: { from: firstLater.coveredFrom, to: lastLater.coveredTo },
 	};
 };
 
