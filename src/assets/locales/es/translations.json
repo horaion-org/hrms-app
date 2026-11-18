@@ -4459,7 +4459,8 @@
 			"oncePublishedPublishAgain": "Publica de nuevo el nuevo cuadrante para que el personal lo vea.",
 			"confirm": "Generar de nuevo",
 			"partTitle": "¿Generar de nuevo estos días?",
-			"partDays": "Se vuelven a calcular {{days}}. El cuadrante actual se mantiene hasta que el nuevo esté listo.",
+			"partDays_one": "Se vuelve a calcular {{days}}. El cuadrante actual se mantiene hasta que el nuevo esté listo.",
+			"partDays_other": "Se vuelven a calcular {{days}}. El cuadrante actual se mantiene hasta que el nuevo esté listo.",
 			"laterPartsAfter_one": "{{days}} se calculó a partir de estos días, así que se genera de nuevo después de ellos.",
 			"laterPartsAfter_other": "{{days}} se calcularon a partir de estos días, así que se generan de nuevo después de ellos."
 		},

@@ -4659,7 +4659,8 @@
 			"oncePublishedPublishAgain": "Publish the new roster again for staff to see it.",
 			"confirm": "Generate again",
 			"partTitle": "Generate these days again?",
-			"partDays": "{{days}} are worked out again. The current roster stays until the new one is ready.",
+			"partDays_one": "{{days}} is worked out again. The current roster stays until the new one is ready.",
+			"partDays_other": "{{days}} are worked out again. The current roster stays until the new one is ready.",
 			"laterPartsAfter_one": "{{days}} was worked out from these days, so it is generated again after them.",
 			"laterPartsAfter_other": "{{days}} were worked out from these days, so they are generated again after them."
 		},
