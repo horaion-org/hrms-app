@@ -105,7 +105,7 @@ describe("StartingContextSection", () => {
 
 		expect(
 			await screen.findByText(
-				"Still unknown for some people: Sat, Nov 7 and Sun, Nov 8. Left unknown, they count as days nobody worked."
+				"Still unknown for some people: Sat, Nov 7 and Sun, Nov 8. Left unknown, they count as days worked."
 			)
 		).toBeVisible();
 	});

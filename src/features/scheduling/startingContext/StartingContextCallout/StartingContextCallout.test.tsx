@@ -69,7 +69,7 @@ describe("StartingContextCallout", () => {
 		expect(note).toHaveClass("bg-warning-50");
 		expect(note).toHaveTextContent(
 			"Horaion doesn’t know what people worked on Mon, Nov 9 and Tue, Nov 10, or the week before." +
-				"Mark any rest days already given, so the week’s rest day counts them. Left unknown, they count as days nobody worked." +
+				"Mark any rest days or days off already given, so the week counts them. Left unknown, they count as days worked." +
 				"Add last week’s shifts"
 		);
 	});
@@ -80,7 +80,7 @@ describe("StartingContextCallout", () => {
 		const note = screen.getByRole("note");
 		expect(note).toHaveClass("bg-ink-blue-50");
 		expect(note).toHaveTextContent(
-			"Still unknown for some people: Tue, Nov 10. Left unknown, they count as days nobody worked."
+			"Still unknown for some people: Tue, Nov 10. Left unknown, they count as days worked."
 		);
 	});
 

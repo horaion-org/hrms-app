@@ -802,7 +802,7 @@ describe("Create schedules for a month: ticking weeks", () => {
 			)
 		).closest("[role='note']");
 		expect(notice).toHaveTextContent(
-			"Mark any rest days already given, so the week’s rest day counts them. Left unknown, they count as days nobody worked."
+			"Mark any rest days or days off already given, so the week counts them. Left unknown, they count as days worked."
 		);
 		expect(
 			within(notice as HTMLElement).getByRole("button", {
@@ -2000,7 +2000,7 @@ describe("Create schedules for a month: by dates", () => {
 
 		expect(
 			await screen.findByText(
-				"Mark any rest days already given, so the week’s rest day counts them. Left unknown, they count as days nobody worked."
+				"Mark any rest days or days off already given, so the week counts them. Left unknown, they count as days worked."
 			)
 		).toBeVisible();
 		const body = await generateDates(user, calls);
