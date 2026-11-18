@@ -4599,7 +4599,7 @@
 					"sentence": "{{member}} can only start from {{time}} on {{day}}, because of rest after their last shift, which ended {{endDay}} at {{endTime}}."
 				},
 				"OFF_BLOCK_HISTORY_MISSING": {
-					"label": "Days before not sent",
+					"label": "Days before not filled in",
 					"sentence": "{{member}}: some days before this schedule in a days-off period were not filled in, so they are counted as worked. Fill them in if a day off was given then.",
 					"wholeSchedule": "Some days before this schedule in a days-off period were not filled in, so they are counted as worked. Fill them in if a day off was given then."
 				}

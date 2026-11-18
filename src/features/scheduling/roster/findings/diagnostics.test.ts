@@ -284,7 +284,7 @@ describe("diagnosticSentence", () => {
 			"Ben Ong: some days before this schedule in a days-off period were not filled in, so they are counted as worked. Fill them in if a day off was given then."
 		);
 		expect(diagnosticLabel("OFF_BLOCK_HISTORY_MISSING", t)).toBe(
-			"Days before not sent"
+			"Days before not filled in"
 		);
 	});
 

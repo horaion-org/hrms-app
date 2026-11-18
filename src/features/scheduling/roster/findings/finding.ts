@@ -30,7 +30,7 @@ export const findingFamily = (finding: Finding): FindingFamily =>
 
 export type FindingTone = "error" | "warning" | "info";
 
-/** Diagnostics that only inform, whatever severity they come with: days of a days-off block that were not sent. */
+/** Diagnostics that only inform, whatever severity they come with: days of a days-off block that were not filled in. */
 const INFO_CODES: ReadonlyArray<string> = ["OFF_BLOCK_HISTORY_MISSING"];
 
 /**
