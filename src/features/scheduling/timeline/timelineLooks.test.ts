@@ -5,6 +5,8 @@ import { morningShift } from "@/features/scheduling/timeline/fixtures";
 import {
 	barContentOf,
 	cellLinesOf,
+	showsStripWord,
+	stripToneOf,
 	tableMinWidthOf,
 	ZOOM_LOOKS,
 } from "@/features/scheduling/timeline/timelineLooks";
@@ -15,6 +17,37 @@ const dayOff: RosterCell = { kind: "off", dayType: "OFF" };
 const untypedDayOff: RosterCell = { kind: "off", dayType: null };
 /** A day type with no short word keeps its own word. */
 const publicHoliday: RosterCell = { kind: "off", dayType: "PUBLIC_HOLIDAY" };
+
+describe("showsStripWord", () => {
+	/** A band too narrow for its state word shows none; its name and title keep the words. */
+	it.each([
+		["week", 1, true],
+		["two", 1, false],
+		["two", 2, true],
+		["four", 2, false],
+		["four", 3, true],
+	] as const)(
+		"a %s band %i days wide shows its word: %s",
+		(view, span, shown) => {
+			expect(showsStripWord(view, span)).toBe(shown);
+		}
+	);
+});
+
+describe("stripToneOf", () => {
+	it.each([
+		["PUBLISHED", "success"],
+		["TO_REVIEW", "warning"],
+		["GENERATING", "warning"],
+		["FAILED", "error"],
+		["REJECTED", "error"],
+		["DRAFT", "neutral"],
+		["NONE", "neutral"],
+		["UNKNOWN", "neutral"],
+	] as const)("tones %s as %s", (state, tone) => {
+		expect(stripToneOf(state)).toBe(tone);
+	});
+});
 
 describe("barContentOf", () => {
 	it.each([

@@ -5837,6 +5837,20 @@
 				"noRoster_other": "{{days}} have no roster.",
 				"generate": "Generate"
 			},
+			"strip": {
+				"label": "Status",
+				"states": {
+					"PUBLISHED": "Published",
+					"TO_REVIEW": "To review",
+					"GENERATING": "Generating…",
+					"FAILED": "Generation failed",
+					"REJECTED": "Rejected",
+					"DRAFT": "Not generated yet",
+					"NONE": "No roster",
+					"UNKNOWN": "Unknown"
+				},
+				"segment": "{{days}}: {{state}}"
+			},
 			"piece": {
 				"menuLabel": "Actions for {{days}}",
 				"open": "Review and edit these days",

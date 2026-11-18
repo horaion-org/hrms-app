@@ -5637,6 +5637,20 @@
 				"noRoster_other": "{{days}} no tienen cuadrante.",
 				"generate": "Generar"
 			},
+			"strip": {
+				"label": "Estado",
+				"states": {
+					"PUBLISHED": "Publicado",
+					"TO_REVIEW": "Por revisar",
+					"GENERATING": "Generando…",
+					"FAILED": "Generación fallida",
+					"REJECTED": "Rechazado",
+					"DRAFT": "Aún sin generar",
+					"NONE": "Sin cuadrante",
+					"UNKNOWN": "Desconocido"
+				},
+				"segment": "{{days}}: {{state}}"
+			},
 			"piece": {
 				"menuLabel": "Acciones para {{days}}",
 				"open": "Revisar y editar estos días",
