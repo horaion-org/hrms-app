@@ -37,6 +37,7 @@ const renderBars = (
 				<tbody>
 					<ScheduleBars
 						days={FIXTURE_WEEK}
+						departmentId="d-1"
 						schedules={schedules}
 						shownScheduleId={shownScheduleId}
 						view={view}

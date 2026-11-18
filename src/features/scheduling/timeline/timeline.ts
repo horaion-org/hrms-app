@@ -3,6 +3,10 @@ import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import { mondayOf } from "@/common/weeks";
 import type { WeekState } from "@/features/scheduling/months/api";
 import { lastPublishedPartStartOf } from "@/features/scheduling/schedules/partLines";
+import {
+	scheduleViewLink,
+	type ScheduleViewLink,
+} from "@/features/scheduling/schedules/scheduleViewLink";
 
 /*
  * One Department's timeline, pure. Dates are ISO strings ("YYYY-MM-DD"); the
@@ -151,6 +155,33 @@ export const isDimmed = (
 	scheduleId: string,
 	shownScheduleId: string | undefined
 ): boolean => shownScheduleId !== undefined && shownScheduleId !== scheduleId;
+
+/** States the "Not published yet" notice leaves out: published, or with no roster to publish. */
+const NOT_AWAITING_PUBLICATION: ReadonlyArray<WeekState> = [
+	"PUBLISHED",
+	"FAILED",
+	"REJECTED",
+	"NOT_GENERATED",
+];
+
+/** The schedules still to be published from their own page, as the "Not published yet" notice names them. */
+export const awaitingPublication = (
+	schedules: ReadonlyArray<TimelineSchedule>
+): Array<TimelineSchedule> =>
+	schedules.filter(
+		(schedule) => !NOT_AWAITING_PUBLICATION.includes(schedule.status)
+	);
+
+/** Where "Open schedule" leads: a draft to its setup, as the week card sends one; any other to its roster. */
+export const timelineScheduleLink = (
+	schedule: TimelineSchedule,
+	departmentId: string
+): ScheduleViewLink =>
+	scheduleViewLink({
+		scheduleId: schedule.id,
+		departmentId,
+		status: schedule.status === "DRAFT" ? "DRAFT" : "GENERATED",
+	});
 
 /** One line of the "needs you" list, as data. */
 export type NeedLine =

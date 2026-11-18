@@ -14,6 +14,7 @@ import { weekStateTones } from "@/features/scheduling/months/weekStateLooks";
 import {
 	isDimmed,
 	laneCellsOf,
+	timelineScheduleLink,
 	lanesOf,
 	type TimelineSchedule,
 	type TimelineView,
@@ -26,6 +27,8 @@ import {
 } from "@/features/scheduling/timeline/timelineLooks";
 
 export type ScheduleBarsProps = {
+	/** The Department the schedules belong to, which a draft's setup link names. */
+	departmentId: string;
 	schedules: ReadonlyArray<TimelineSchedule>;
 	/** The ISO dates shown, one column each. */
 	days: ReadonlyArray<string>;
@@ -42,11 +45,13 @@ export type ScheduleBarsProps = {
  * schedules of one name can be told apart. Opens its menu.
  */
 const ScheduleBar = ({
+	departmentId,
 	schedule,
 	span,
 	view,
 	onShowOnly,
 }: {
+	departmentId: string;
 	schedule: TimelineSchedule;
 	span: number;
 	view: TimelineView;
@@ -93,10 +98,7 @@ const ScheduleBar = ({
 			>
 				<OverflowMenuItem
 					onClick={() => {
-						void navigate({
-							to: "/scheduling/$scheduleId",
-							params: { scheduleId: schedule.id },
-						});
+						void navigate(timelineScheduleLink(schedule, departmentId));
 					}}
 				>
 					{t("scheduling.timeline.bars.openSchedule")}
@@ -119,6 +121,7 @@ const ScheduleBar = ({
  * Each bar's cell spans exactly the columns of its days in the window.
  */
 export const ScheduleBars = ({
+	departmentId,
 	schedules,
 	days,
 	view,
@@ -162,6 +165,7 @@ export const ScheduleBars = ({
 								)}
 							>
 								<ScheduleBar
+									departmentId={departmentId}
 									schedule={cell.schedule}
 									span={cell.span}
 									view={view}

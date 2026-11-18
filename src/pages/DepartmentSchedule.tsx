@@ -12,9 +12,11 @@ import { datesRunOf } from "@/features/scheduling/months/datesRunState";
 import { formatPeriod } from "@/features/scheduling/periods";
 import { isoDateIn } from "@/features/scheduling/roster/roster";
 import {
+	awaitingPublication,
 	needsOf,
 	shiftWindow,
 	shownScheduleIn,
+	timelineScheduleLink,
 	type TimelineSchedule,
 	type TimelineView,
 	windowDays,
@@ -102,10 +104,12 @@ const DatesRunCallout = (): FunctionComponent => {
 
 /** With one schedule shown alone: which, a way to its page and back to all; otherwise the unpublished ones named. */
 const TimelineNotice = ({
+	departmentId,
 	schedules,
 	shownScheduleId,
 	onShowAll,
 }: {
+	departmentId: string;
 	schedules: ReadonlyArray<TimelineSchedule>;
 	shownScheduleId?: string;
 	onShowAll: () => void;
@@ -118,9 +122,8 @@ const TimelineNotice = ({
 				<span className="flex flex-wrap items-center gap-3">
 					<span>{t(`${key}.notice.showingOne`, { name: shown.name })}</span>
 					<Button
-						params={{ scheduleId: shown.id }}
+						{...timelineScheduleLink(shown, departmentId)}
 						size="sm"
-						to="/scheduling/$scheduleId"
 						variant="secondary"
 					>
 						{t(`${key}.notice.openSchedule`)}
@@ -131,9 +134,7 @@ const TimelineNotice = ({
 				</span>
 			</Callout>
 		);
-	const unpublished = schedules.filter(
-		(schedule) => schedule.status !== "PUBLISHED"
-	);
+	const unpublished = awaitingPublication(schedules);
 	if (unpublished.length === 0) return null;
 	return (
 		<Callout tone="info">
@@ -243,6 +244,7 @@ export const DepartmentSchedulePage = (): FunctionComponent => {
 					}}
 				/>
 				<TimelineNotice
+					departmentId={departmentId}
 					schedules={timeline.schedules}
 					shownScheduleId={shownScheduleId}
 					onShowAll={() => {
@@ -251,6 +253,7 @@ export const DepartmentSchedulePage = (): FunctionComponent => {
 				/>
 				<TimelineGrid
 					days={days}
+					departmentId={departmentId}
 					rosters={timeline.rosters}
 					rows={timeline.rows}
 					schedules={timeline.schedules}

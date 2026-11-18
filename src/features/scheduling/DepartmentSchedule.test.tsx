@@ -345,3 +345,57 @@ it("alerts when a schedule's roster could not be read", async () => {
 		"The rosters couldn't be loaded. Reload the page to try again."
 	);
 });
+
+/** The two-part week with its early part changed by `early`. */
+const openWithEarlyPart = async (early: Partial<WeekPart>): Promise<void> => {
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	const routes = twoSchedulesInOneWeek();
+	const month = (
+		routes[`GET ${MONTHS}/2026-10`] as { body: { data: ScheduleMonth } }
+	).body.data;
+	const [first, weekend] = month.weeks[0]!.parts;
+	stubApi({
+		...routes,
+		[`GET ${MONTHS}/2026-10`]: ok({
+			...month,
+			weeks: [
+				{ ...month.weeks[0]!, parts: [{ ...first!, ...early }, weekend!] },
+			],
+		}),
+	});
+	app = await openApp("/scheduling/department?department=d-1&from=2026-10-12");
+	renderAuthApp(app);
+	await screen.findByRole("heading", { level: 1, name: "Kitchen Schedule" });
+};
+
+/** A failed, rejected or never generated schedule has nothing to publish, so the notice does not name it. */
+it.each(["FAILED", "REJECTED", "NOT_GENERATED"] as const)(
+	"leaves a %s schedule out of the Not published yet notice",
+	async (state) => {
+		await openWithEarlyPart({ state });
+
+		await screen.findByRole("button", { name: /^Early days,/ });
+		expect(screen.queryByText(/^Not published yet/)).not.toBeInTheDocument();
+	}
+);
+
+/** A draft's bar opens its setup, where the week card sends a draft, not the roster page. */
+it("opens a draft's setup from its bar", async () => {
+	await openWithEarlyPart({ state: "DRAFT" });
+
+	await userEvent.click(
+		await screen.findByRole("button", { name: /^Early days,/ })
+	);
+	await userEvent.click(
+		await screen.findByRole("menuitem", { name: "Open schedule" })
+	);
+
+	await vi.waitFor(() => {
+		expect(app?.router.state.location.pathname).toBe("/scheduling/new");
+	});
+	expect(app?.router.state.location.search).toMatchObject({
+		step: "setup",
+		scheduleId: "s-1",
+		departmentId: "d-1",
+	});
+});

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+	awaitingPublication,
 	daysWithoutSchedule,
 	isDimmed,
 	laneCellsOf,
@@ -8,6 +9,7 @@ import {
 	scheduleOfDay,
 	shiftWindow,
 	shownScheduleIn,
+	timelineScheduleLink,
 	type TimelineSchedule,
 	windowDays,
 } from "@/features/scheduling/timeline/timeline";
@@ -276,5 +278,43 @@ describe("needsOf: days before a published part", () => {
 				lastDay: "2027-02-21",
 			},
 		]);
+	});
+});
+
+describe("awaitingPublication", () => {
+	it.each([
+		["TO_REVIEW", true],
+		["GENERATING", true],
+		["DRAFT", true],
+		["PUBLISHED", false],
+		["FAILED", false],
+		["REJECTED", false],
+		["NOT_GENERATED", false],
+	] as const)("names a %s schedule: %s", (status, named) => {
+		const one = schedule("one", "2027-02-08", "2027-02-10", status);
+		expect(awaitingPublication([one])).toEqual(named ? [one] : []);
+	});
+});
+
+describe("timelineScheduleLink", () => {
+	it.each([
+		[
+			"DRAFT",
+			{
+				to: "/scheduling/new",
+				search: { step: "setup", scheduleId: "one", departmentId: "d-1" },
+			},
+		],
+		[
+			"TO_REVIEW",
+			{ to: "/scheduling/$scheduleId", params: { scheduleId: "one" } },
+		],
+		[
+			"FAILED",
+			{ to: "/scheduling/$scheduleId", params: { scheduleId: "one" } },
+		],
+	] as const)("opens a %s schedule at %j", (status, expected) => {
+		const one = schedule("one", "2027-02-08", "2027-02-10", status);
+		expect(timelineScheduleLink(one, "d-1")).toEqual(expected);
 	});
 });

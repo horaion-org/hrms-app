@@ -36,6 +36,8 @@ import {
 } from "@/features/scheduling/timeline/timelineRows";
 
 export type TimelineGridProps = {
+	/** The Department shown, which a draft's setup link names. */
+	departmentId: string;
 	/** The ISO dates shown, one column each. */
 	days: ReadonlyArray<string>;
 	rows: ReadonlyArray<TimelineRow>;
@@ -222,6 +224,7 @@ const StatusRow = ({
  * row of days, the schedules' bar lanes, then one row per person.
  */
 export const TimelineGrid = ({
+	departmentId,
 	days,
 	rows,
 	schedules,
@@ -283,6 +286,7 @@ export const TimelineGrid = ({
 				<tbody>
 					<ScheduleBars
 						days={days}
+						departmentId={departmentId}
 						schedules={schedules}
 						shownScheduleId={shownScheduleId}
 						view={view}
