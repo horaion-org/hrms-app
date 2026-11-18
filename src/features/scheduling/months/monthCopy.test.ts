@@ -229,6 +229,7 @@ describe("replacingNoteOf", () => {
 				splitReplacement: {
 					replaced: { from: "2027-02-20", to: "2027-02-21" },
 					staying: [{ from: "2027-02-17", to: "2027-02-19" }],
+					withoutRoster: [],
 				},
 			}),
 			/^Mon,? Feb 15 to Sun,? Feb 21 has a roster waiting for review\. Generating again replaces Feb 20\s?–\s?21, 2027 only\. Feb 17\s?–\s?19, 2027 stay as they are: use Dates to schedule them again\.$/,
@@ -240,9 +241,36 @@ describe("replacingNoteOf", () => {
 				splitReplacement: {
 					replaced: { from: "2027-02-20", to: "2027-02-21" },
 					staying: [{ from: "2027-02-17", to: "2027-02-19" }],
+					withoutRoster: [],
 				},
 			}),
 			/^Mon,? Feb 15 to Sun,? Feb 21 has a rejected roster\. Generating again replaces Feb 20\s?–\s?21, 2027 only\. Feb 17\s?–\s?19, 2027 stay as they are: use Dates to schedule them again\.$/,
+		],
+		[
+			"aWeekOfOneScheduleCoveringSomeDays",
+			week({
+				splitReplacement: {
+					replaced: { from: "2027-02-17", to: "2027-02-19" },
+					staying: [],
+					withoutRoster: [
+						{ from: "2027-02-15", to: "2027-02-16" },
+						{ from: "2027-02-20", to: "2027-02-21" },
+					],
+				},
+			}),
+			/^Mon,? Feb 15 to Sun,? Feb 21 has a roster waiting for review\. Generating again replaces Feb 17\s?–\s?19, 2027 only\. Feb 15\s?–\s?16, 2027,? and Feb 20\s?–\s?21, 2027 have no roster: use Dates to schedule them\.$/,
+		],
+		[
+			"aRejectedWeekOfOneScheduleMissingOneDay",
+			week({
+				note: "rosterRejected",
+				splitReplacement: {
+					replaced: { from: "2027-02-16", to: "2027-02-21" },
+					staying: [],
+					withoutRoster: [{ from: "2027-02-15", to: "2027-02-15" }],
+				},
+			}),
+			/^Mon,? Feb 15 to Sun,? Feb 21 has a rejected roster\. Generating again replaces Feb 16\s?–\s?21, 2027 only\. Feb 15, 2027 has no roster: use Dates to schedule it\.$/,
 		],
 		[
 			"aWeekWhoseOtherScheduleIsOneDay",
@@ -250,6 +278,7 @@ describe("replacingNoteOf", () => {
 				splitReplacement: {
 					replaced: { from: "2027-02-16", to: "2027-02-21" },
 					staying: [{ from: "2027-02-15", to: "2027-02-15" }],
+					withoutRoster: [],
 				},
 			}),
 			/replaces Feb 16\s?–\s?21, 2027 only\. Feb 15, 2027 stays as it is: use Dates to schedule it again\.$/,
