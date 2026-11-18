@@ -8,6 +8,12 @@ import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
+	frontDeskSundayLateCase,
+	rosterRowsOf,
+	ruleLabCase,
+	type CoverWithEngineCase,
+} from "@/features/scheduling/cover/coverWithEngineFixtures";
+import {
 	callInMove,
 	feasibleRepair,
 	infeasibleRepair,
@@ -133,7 +139,7 @@ const show = (
 };
 
 describe("FindCoverPanel", () => {
-	it("given_options_when_shown_then_theGapTheSuggestedFirstChosenAndTheRulesNotCheckedLine", async () => {
+	it("given_options_when_shown_then_theGapTheFirstChosenNobodySuggestedAndTheRulesNotCheckedLine", async () => {
 		stubApi({
 			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
 			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
@@ -149,6 +155,13 @@ describe("FindCoverPanel", () => {
 		expect(
 			screen.getByText("1 short since the roster was generated")
 		).toBeVisible();
+		// Before the engine is asked nobody is suggested, and the list says what its order does not check.
+		expect(screen.queryByText("Suggested")).toBeNull();
+		expect(
+			screen.getByRole("radiogroup", { name: "Who covers" })
+		).toHaveAccessibleDescription(
+			"In order of fewest extra hours. Rest between shifts and the job title that is short aren’t checked here: ask the engine below."
+		);
 		expect(screen.getByRole("note")).toHaveTextContent(
 			"Working-time rules (hours a day, overtime a month, days a week, leave) aren’t checked for this change. After you apply it, press Validate schedule."
 		);
@@ -684,6 +697,117 @@ describe("FindCoverPanel", () => {
 		await user.keyboard("{Escape}");
 
 		expect(onClose).toHaveBeenCalled();
+	});
+
+	describe("Who covers once the engine has answered", () => {
+		/** Shows the panel for a recorded case, and gives the stubbed API's calls. */
+		const showCase = ({
+			members,
+			cover,
+			engine,
+		}: CoverWithEngineCase): ReturnType<typeof stubApi> => {
+			const calls = stubApi({
+				[`POST ${COVER_OPTIONS}`]: answer(cover),
+				[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+				[`POST ${REPAIR_OPTIONS}`]: answer(engine),
+			});
+			const rows = rosterRowsOf(members);
+			show({ assignments: rows, dayRow: rows[0]! });
+			return calls;
+		};
+
+		/** Whose radio cards are shown, top to bottom, by membership id. */
+		const cardOrder = (): Array<string | null> =>
+			screen.getAllByRole("radio").map((radio) => radio.getAttribute("value"));
+
+		it("given_ruleLabsAssistantGap_when_theEngineAnswers_then_theAssistantItCallsInIsFirstSuggestedChosenAndPreviewed", async () => {
+			const calls = showCase(ruleLabCase());
+			const user = userEvent.setup();
+			// Before: the backend's order, a Supervisor first and chosen, nobody suggested.
+			expect(
+				await screen.findByRole("radio", { name: "Orla Vance" })
+			).toBeChecked();
+			expect(cardOrder()).toEqual(["m-orla", "m-piet", "m-tamsin"]);
+			expect(screen.queryByText("Suggested")).toBeNull();
+
+			await user.click(screen.getByRole("button", { name: "Ask the engine" }));
+
+			await waitFor(() => {
+				expect(
+					screen.getByRole("radio", { name: "Tamsin Okafor" })
+				).toBeChecked();
+			});
+			expect(cardOrder()).toEqual(["m-tamsin", "m-orla", "m-piet"]);
+			const tamsin = screen.getByRole("radio", { name: "Tamsin Okafor" });
+			expect(tamsin).toHaveAccessibleDescription(/Suggested/);
+			expect(tamsin).toHaveAccessibleDescription(/The engine: fills the gap/);
+			expect(screen.getAllByText("Suggested")).toHaveLength(1);
+			expect(
+				screen.getByRole("radio", { name: "Orla Vance" })
+			).toHaveAccessibleDescription(
+				/Not checked by the engine, which only looks at people with the job title this gap is short of/
+			);
+			expect(
+				screen.getByRole("radiogroup", { name: "Who covers" })
+			).toHaveAccessibleDescription(
+				"The engine’s choice first, then by fewest extra hours."
+			);
+			await waitFor(() => {
+				expect(
+					calls.filter((call) => call.path === PREVIEW).slice(-1)[0]?.body
+				).toMatchObject({ cells: [{ membershipId: "m-tamsin" }] });
+			});
+			// Viktor is not on leave: the backend says he is not available then.
+			const whyNot = screen.getByRole("region", {
+				name: "Why nobody was assigned",
+			});
+			expect(whyNot).toHaveTextContent(
+				"Viktor NakamuraNot available for this shift’s hours."
+			);
+			expect(whyNot).not.toHaveTextContent("On leave that day.");
+		});
+
+		it("given_frontDesksSundayLate_when_theEngineAnswers_then_thePersonItRefusesIsUnderCantHelpNobodyIsChosenAndNoApply", async () => {
+			showCase(frontDeskSundayLateCase());
+			const user = userEvent.setup();
+			// Before: Calvin is first and chosen, with Apply, though he would break the rest between shifts.
+			expect(
+				await screen.findByRole("radio", { name: "Calvin Ang" })
+			).toBeChecked();
+			expect(
+				await screen.findByRole("button", { name: "Apply change" })
+			).toBeVisible();
+
+			await user.click(screen.getByRole("button", { name: "Ask the engine" }));
+
+			expect(
+				await screen.findByText("The engine found no way to fill this.")
+			).toBeVisible();
+			expect(cardOrder()).toEqual(["m-elaine", "m-fikri"]);
+			expect(screen.queryAllByRole("radio", { checked: true })).toHaveLength(0);
+			expect(screen.queryByText("Suggested")).toBeNull();
+			expect(screen.queryByRole("button", { name: "Apply change" })).toBeNull();
+			expect(screen.queryByRole("note")).toBeNull();
+			await user.click(screen.getByRole("button", { name: "Can't help (3)" }));
+			expect(
+				screen.getByText("Calvin Ang · Would break: Rest between shifts")
+			).toBeVisible();
+			expect(
+				screen.getByRole("radio", { name: "Elaine Pang" })
+			).toHaveAccessibleDescription(
+				/Part-time with no shift that day\. The engine doesn’t call in part-timers: choose them under Who covers\./
+			);
+			expect(
+				screen.getByRole("radio", { name: "Fikri Jamal" })
+			).toHaveAccessibleDescription(/Not checked by the engine/);
+			const whyNot = screen.getByRole("region", {
+				name: "Why nobody was assigned",
+			});
+			expect(whyNot).toHaveTextContent(
+				"Elaine PangPart-time with no shift that day. The engine doesn’t call in part-timers: choose them under Who covers."
+			);
+			expect(whyNot).not.toHaveTextContent("On leave that day.");
+		});
 	});
 
 	describe("the engine's repair, as a tester walks it", () => {

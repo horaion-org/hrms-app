@@ -9,6 +9,8 @@ import { Skeleton } from "@/components/ui/Skeleton";
 import { CoverOptionList } from "@/features/scheduling/cover/CoverOptionList";
 import { EngineRepairOptions } from "@/features/scheduling/cover/EngineRepairOptions";
 import {
+	coverOrderNote,
+	engineNoteLines,
 	gapReason,
 	gapTitle,
 	neighbourLine,
@@ -17,11 +19,11 @@ import {
 	type CoverNames,
 	type CoverShift,
 } from "@/features/scheduling/cover/coverOptionWords";
+import { notAssignedReasonLine } from "@/features/scheduling/cover/notAssignedWords";
 import {
 	useCoverPanel,
 	type CoverPanelInput,
 } from "@/features/scheduling/cover/useCoverPanel";
-import { useEngineRepair } from "@/features/scheduling/cover/useEngineRepair";
 import { useRepairWarmUp } from "@/features/scheduling/cover/useRepairWarmUp";
 import { CoverOfferSent } from "@/features/scheduling/coverOffers/CoverOfferActions/CoverOfferSent";
 import { offerActionsOf } from "@/features/scheduling/coverOffers/coverOfferRules";
@@ -45,16 +47,19 @@ const SKELETON_ROWS = ["first", "second", "third"];
 
 /**
  * Find cover beside the roster grid, in the side panel's slot and frame:
- * the short shift in two lines, then who could cover it (`CoverOptionList`),
- * the first one chosen and previewed on the grid, the line that the rules
- * aren't checked yet with the person's shifts beside it as facts, and the
- * same review and actions a hand change gets: Apply on a draft, Send offer
- * or They agreed on a published roster. Under them, "From the scheduling
- * engine" asks the engine for its own repair on demand
- * (`EngineRepairOptions`), while the shift is still short: for any gap, the
- * generation's or one made since, which the engine finds in the roster. `useCoverPanel`
- * and `useEngineRepair` hold the state and calls; this component only lays
- * the parts out.
+ * the short shift in two lines, then who could cover it (`CoverOptionList`)
+ * under a line saying what the list's order means, the first one chosen and
+ * previewed on the grid, the line that the rules aren't checked yet with the
+ * person's shifts beside it as facts, and the same review and actions a hand
+ * change gets: Apply on a draft, Send offer or They agreed on a published
+ * roster. Under them, "From the scheduling engine" asks the engine for its
+ * own repair on demand (`EngineRepairOptions`), while the shift is still
+ * short: for any gap, the generation's or one made since, which the engine
+ * finds in the roster. Once the engine has answered, "Who covers" follows it
+ * (`coverWithEngine`): its choice comes first, badged Suggested and chosen,
+ * each card says what the engine made of the person, and the people it
+ * refuses sit under "Can't help" with its reason. `useCoverPanel` holds the
+ * state and calls; this component only lays the parts out.
  */
 export const FindCoverPanel = ({
 	id,
@@ -65,13 +70,8 @@ export const FindCoverPanel = ({
 	const language = formattingLocale(i18n);
 	const radioName = useId();
 	const panel = useCoverPanel(input);
-	const { status, options, selected, review, offer } = panel;
-	const engineRepair = useEngineRepair(
-		input.target,
-		input.gap,
-		input.revision,
-		panel.landing
-	);
+	const { status, options, withEngine, engineRepair, selected, review, offer } =
+		panel;
 	// Opening repair for a gap warms the engine's worker, so its first options come fast.
 	useRepairWarmUp(input.target, input.revision, true);
 	// The roster's own days name a shift when the frozen shifts can't be read.
@@ -95,24 +95,37 @@ export const FindCoverPanel = ({
 	const offerOut = offer && (offer.justSent ?? offer.openOffer);
 
 	const optionList = (unavailableOpen: boolean): ReactNode =>
-		options && (
+		withEngine && (
 			<CoverOptionList
+				note={coverOrderNote(withEngine.order, t)}
 				radioName={radioName}
 				selected={panel.repairChosen ? undefined : selected?.membershipId}
+				suggested={withEngine.suggested}
 				unavailableOpen={unavailableOpen}
-				options={options.options.map((option) => ({
+				options={withEngine.options.map((option) => ({
 					membershipId: option.membershipId,
 					name: names.member(option.membershipId),
-					lines: optionLines(option, names, t),
+					lines: [
+						...optionLines(option, names, t),
+						...engineNoteLines(withEngine.engineNote[option.membershipId], t),
+					],
 				}))}
-				unavailable={options.unavailable.map((person) => ({
+				unavailable={withEngine.unavailable.map((person) => ({
 					membershipId: person.membershipId,
 					name: names.member(person.membershipId),
-					reason: reasonText(person.reason, shift, t),
+					reason:
+						"engineReason" in person
+							? notAssignedReasonLine(person.engineReason, t)
+							: reasonText(person.reason, shift, t),
 				}))}
 				onSelect={panel.select}
 			/>
 		);
+	// "Why nobody was assigned" reads the merged list, where "on leave" stands only where the backend agrees.
+	const repair =
+		engineRepair.status === "ready" && withEngine
+			? { ...engineRepair, notAssigned: withEngine.notAssigned }
+			: engineRepair;
 
 	const statusContent: Record<typeof status, () => ReactNode> = {
 		loading: () => (
@@ -252,7 +265,7 @@ export const FindCoverPanel = ({
 			content: status !== "closed" && (
 				<EngineRepairOptions
 					names={names}
-					repair={engineRepair}
+					repair={repair}
 					// A published roster's changes go out as offers, one person at a time: made by hand there.
 					onReview={input.coverOffers ? undefined : panel.chooseRepair}
 				/>

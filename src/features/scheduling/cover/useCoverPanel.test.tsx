@@ -7,6 +7,11 @@ import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
+	callInMove,
+	feasibleRepair,
+	repairOptionsFixture,
+} from "@/features/scheduling/cover/engineRepairFixtures";
+import {
 	coverOptionFixture,
 	coverOptionsFixture,
 } from "@/features/scheduling/cover/fixtures";
@@ -24,8 +29,8 @@ import { frozenShiftsFixture } from "@/features/scheduling/shifts/fixtures";
 
 /*
  * Front Desk AM one short on Saturday 17 October: Aisha (off that day) is
- * the suggested option, Chen the overtime one. The API is stubbed; the
- * hook's list, preview, apply and offer calls go through it.
+ * the first option, Chen the overtime one. The API is stubbed; the hook's
+ * list, preview, apply, offer and engine calls go through it.
  */
 
 const SCHEDULE =
@@ -34,6 +39,7 @@ const COVER_OPTIONS = `${SCHEDULE}/cover-options`;
 const PREVIEW = `${SCHEDULE}/roster-changes/preview`;
 const CHANGES = `${SCHEDULE}/roster-changes`;
 const OFFERS = `${SCHEDULE}/cover-offers`;
+const REPAIR_OPTIONS = `${SCHEDULE}/repair-options`;
 const GAP = coverOptionsFixture().gap;
 const roster = scheduleAssignmentsFixture();
 /** The body of the last preview the hook asked for. */
@@ -139,6 +145,88 @@ describe("useCoverPanel", () => {
 			});
 		});
 		expect(result.current.selected?.membershipId).toBe("m-3");
+	});
+
+	it("given_theEngineCallsSomeoneIn_when_itAnswers_then_theyAreChosenInPlaceOfTheFirstAndPreviewed", async () => {
+		const calls = stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+			[`POST ${REPAIR_OPTIONS}`]: answer(
+				repairOptionsFixture(
+					[feasibleRepair([callInMove({ membershipId: "m-3" })])],
+					[]
+				)
+			),
+		});
+		const { result } = hook();
+		await waitFor(() => {
+			expect(result.current.selected?.membershipId).toBe("m-1");
+		});
+		expect(result.current.withEngine?.suggested).toBeUndefined();
+
+		act(() => {
+			result.current.engineRepair.ask();
+		});
+
+		await waitFor(() => {
+			expect(result.current.selected?.membershipId).toBe("m-3");
+		});
+		expect(result.current.withEngine?.suggested).toBe("m-3");
+		await waitFor(() => {
+			expect(lastPreview(calls)?.body).toEqual({
+				expectedRevision: 1,
+				cells: coverOptionsFixture().options[1]!.cells,
+			});
+		});
+	});
+
+	it("given_aChosenPerson_when_theEngineRefusesThem_then_theyAreNoLongerSelectedAndNobodyIs", async () => {
+		stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+			[`POST ${REPAIR_OPTIONS}`]: answer(
+				repairOptionsFixture(
+					[],
+					[
+						{
+							memberProfileId: "mp-3",
+							name: "Chen Wei",
+							couldTake: false,
+							reasons: [
+								{
+									code: "breaks_rule",
+									rule: "minimum_rest_between_shifts",
+									constraintId: null,
+									constraintName: null,
+								},
+							],
+						},
+					]
+				)
+			),
+		});
+		const { result, input } = hook();
+		await waitFor(() => {
+			expect(result.current.status).toBe("options");
+		});
+		act(() => {
+			result.current.select("m-3");
+		});
+		expect(result.current.selected?.membershipId).toBe("m-3");
+
+		act(() => {
+			result.current.engineRepair.ask();
+		});
+
+		await waitFor(() => {
+			expect(result.current.engineRepair.status).toBe("ready");
+		});
+		// Chen is under "Can't help" now; Aisha was never looked at, so the engine suggests nobody.
+		expect(result.current.selected).toBeUndefined();
+		expect(result.current.withEngine?.unavailable[0]).toMatchObject({
+			membershipId: "m-3",
+		});
+		expect(input.onPreviewDays).toHaveBeenLastCalledWith([]);
 	});
 
 	it("given_theRosterMovedSinceTheRevision_when_listed_then_rosterMoved", async () => {

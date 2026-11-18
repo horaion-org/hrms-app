@@ -16,6 +16,9 @@ const key = "scheduling.cover.engine.whyNot";
 /** The reason that names the rule the shift would break. */
 const BREAKS_RULE = "breaks_rule";
 
+/** The app's own reason, in place of the engine's "on leave", for a part-timer with no shift that day (`coverWithEngine`). */
+export const NO_SHIFT_PART_TIME = "no_shift_part_time";
+
 /** The other reason codes the app has a sentence for; any code not here reads as a plain "Cannot take this shift." */
 const WORDED_REASONS = [
 	"fixed_day_no_call_back",
@@ -26,6 +29,7 @@ const WORDED_REASONS = [
 	"breaks_unnamed_rule",
 	"not_checked",
 	"needs_overtime",
+	NO_SHIFT_PART_TIME,
 ] as const;
 
 type WordedReason = (typeof WORDED_REASONS)[number];

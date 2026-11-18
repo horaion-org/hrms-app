@@ -5200,6 +5200,17 @@
 				"nobody": "Nobody on this roster can cover {{shift}} on {{day}}.",
 				"notChecked": "Working-time rules (hours a day, overtime a month, days a week, leave) aren’t checked for this change. After you apply it, press Validate schedule."
 			},
+			"withEngine": {
+				"order": {
+					"byExtraHours": "In order of fewest extra hours. Rest between shifts and the job title that is short aren’t checked here: ask the engine below.",
+					"engineFirst": "The engine’s choice first, then by fewest extra hours."
+				},
+				"note": {
+					"fills": "The engine: fills the gap",
+					"couldTake": "The engine: could take this shift",
+					"notConsidered": "Not checked by the engine, which only looks at people with the job title this gap is short of"
+				}
+			},
 			"gapWithoutRoles": "{{shift}} · {{day}} · {{time}}",
 			"engine": {
 				"title": "From the scheduling engine",
@@ -5250,6 +5261,7 @@
 						"works_another_shift": "Already on another shift that day.",
 						"breaks_unnamed_rule": "Would break a working-time rule.",
 						"not_checked": "Not checked in time.",
+						"no_shift_part_time": "Part-time with no shift that day. The engine doesn’t call in part-timers: choose them under Who covers.",
 						"needs_overtime": "Only as overtime, which isn’t assigned when a roster is generated."
 					},
 					"breaksRule": "Would break: {{rule}}",
