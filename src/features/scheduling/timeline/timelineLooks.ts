@@ -127,6 +127,12 @@ const dayWordOf = (
 };
 
 /**
+ * One line of a tile. A shift's time may break onto two lines, as the roster
+ * page's tile does on a phone, so it is never cut; any other line is cut short.
+ */
+export type TileLine = { text: string; isTime: boolean };
+
+/**
  * The lines a cell's tile shows in `view`: a shift's time over its name, its
  * name, or its initial; any other day in the roster's own word (short in two
  * weeks), or its initial.
@@ -135,13 +141,16 @@ export const cellLinesOf = (
 	cell: RosterCell,
 	view: TimelineView,
 	t: TFunction
-): Array<string> => {
+): Array<TileLine> => {
 	const word = cell.kind === "shift" ? cell.name : dayWordOf(cell, view, t);
 	const shown = ZOOM_LOOKS[view].shiftText;
-	if (shown === "initial") return [word.charAt(0)];
+	if (shown === "initial") return [{ text: word.charAt(0), isTime: false }];
 	if (shown === "timeOverName" && cell.kind === "shift")
-		return [shiftTimeText(cell, t), cell.name];
-	return [word];
+		return [
+			{ text: shiftTimeText(cell, t), isTime: true },
+			{ text: cell.name, isTime: false },
+		];
+	return [{ text: word, isTime: false }];
 };
 
 /** A day as cell and bar labels name it, e.g. "Mon, Nov 23". */

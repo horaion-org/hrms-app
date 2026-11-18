@@ -42,7 +42,16 @@ describe("cellLinesOf", () => {
 		["two", publicHoliday, ["Public holiday"]],
 		["four", restDay, ["R"]],
 	] as const)("a %s cell shows its lines", (view, cell, expected) => {
-		expect(cellLinesOf(cell, view, t)).toEqual(expected);
+		expect(cellLinesOf(cell, view, t).map((line) => line.text)).toEqual(
+			expected
+		);
+	});
+
+	/** Only a shift's time may wrap; it is never cut short. */
+	it("marks the Week view's time line as the one that wraps", () => {
+		expect(
+			cellLinesOf(morningShift("a-1"), "week", t).map((line) => line.isTime)
+		).toEqual([true, false]);
 	});
 });
 

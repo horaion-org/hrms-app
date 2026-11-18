@@ -111,4 +111,14 @@ describe("TimelineGrid", () => {
 		for (const label of labels)
 			expect(label.parentElement).toHaveClass("relative");
 	});
+
+	/** In Week view the time breaks onto two lines in a narrow column, as the roster page's tile does, never cut short. */
+	it("lets the Week view's time wrap instead of cutting it", async () => {
+		const row = await renderGrid("week");
+		const [monday] = within(row).getAllByTitle(/Morning/);
+		const time = within(monday!).getByText("09:00 – 17:00");
+		expect(time).toHaveClass("text-balance", "whitespace-normal");
+		expect(time).not.toHaveClass("truncate");
+		expect(monday).toHaveClass("min-h-12");
+	});
 });
