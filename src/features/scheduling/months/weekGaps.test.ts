@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
+import type { WeekState } from "@/features/scheduling/months/api";
 import {
 	coverDays,
 	monthWeekFixture,
+	twoPartWeekFixture,
 } from "@/features/scheduling/months/fixtures";
 import {
 	weekGapsOf,
@@ -23,6 +25,32 @@ const weekWithout = (
 		})),
 	});
 
+/** The week of 8 Feb 2027: Monday and Tuesday, then Saturday and Sunday, in the given states; Wednesday to Friday without a roster. */
+const weekWithParts = ([first, last]: [WeekState, WeekState]): Parameters<
+	typeof weekGapsOf
+>[0] => {
+	const [part] = twoPartWeekFixture();
+	return {
+		...weekWithout([2, 3, 4]),
+		parts: [
+			{
+				...part!,
+				scheduleId: "s-1",
+				coveredFrom: "2027-02-08",
+				coveredTo: "2027-02-09",
+				state: first,
+			},
+			{
+				...part!,
+				scheduleId: "s-2",
+				coveredFrom: "2027-02-13",
+				coveredTo: "2027-02-14",
+				state: last,
+			},
+		],
+	};
+};
+
 describe("weekGapsOf", () => {
 	it.each<[string, Parameters<typeof weekGapsOf>[0], string, Array<WeekGap>]>([
 		["aFullWeekCovered", weekWithout([]), "2027-02-01", []],
@@ -30,28 +58,51 @@ describe("weekGapsOf", () => {
 			"aMiddleGap",
 			weekWithout([2, 3, 4]),
 			"2027-02-01",
-			[{ days: { from: "2027-02-10", to: "2027-02-12" }, passed: false }],
+			[{ days: { from: "2027-02-10", to: "2027-02-12" }, kind: "open" }],
 		],
 		[
 			"aGapAtTheStartThatHasPassed",
 			weekWithout([0, 1]),
 			"2027-02-10",
-			[{ days: { from: "2027-02-08", to: "2027-02-09" }, passed: true }],
+			[{ days: { from: "2027-02-08", to: "2027-02-09" }, kind: "passed" }],
 		],
 		[
 			"aGapAcrossToday",
 			weekWithout([0, 1, 2]),
 			"2027-02-09",
 			[
-				{ days: { from: "2027-02-08", to: "2027-02-08" }, passed: true },
-				{ days: { from: "2027-02-09", to: "2027-02-10" }, passed: false },
+				{ days: { from: "2027-02-08", to: "2027-02-08" }, kind: "passed" },
+				{ days: { from: "2027-02-09", to: "2027-02-10" }, kind: "open" },
 			],
 		],
 		[
 			"aGapAtTheEnd",
 			weekWithout([5, 6]),
 			"2027-02-01",
-			[{ days: { from: "2027-02-13", to: "2027-02-14" }, passed: false }],
+			[{ days: { from: "2027-02-13", to: "2027-02-14" }, kind: "open" }],
+		],
+		[
+			"aGapBeforeAPublishedPart",
+			weekWithParts(["TO_REVIEW", "PUBLISHED"]),
+			"2027-02-01",
+			[
+				{
+					days: { from: "2027-02-10", to: "2027-02-12" },
+					kind: "beforePublished",
+				},
+			],
+		],
+		[
+			"aGapAfterAPublishedPart",
+			weekWithParts(["PUBLISHED", "TO_REVIEW"]),
+			"2027-02-01",
+			[{ days: { from: "2027-02-10", to: "2027-02-12" }, kind: "open" }],
+		],
+		[
+			"aGapBeforeAPartToReview",
+			weekWithParts(["TO_REVIEW", "TO_REVIEW"]),
+			"2027-02-01",
+			[{ days: { from: "2027-02-10", to: "2027-02-12" }, kind: "open" }],
 		],
 		[
 			"noScheduleAtAll",
@@ -63,7 +114,7 @@ describe("weekGapsOf", () => {
 				days: [],
 			}),
 			"2027-02-01",
-			[{ days: { from: "2027-02-08", to: "2027-02-14" }, passed: false }],
+			[{ days: { from: "2027-02-08", to: "2027-02-14" }, kind: "open" }],
 		],
 		[
 			"noScheduleAndStarted",
@@ -75,7 +126,7 @@ describe("weekGapsOf", () => {
 				days: [],
 			}),
 			"2027-02-11",
-			[{ days: { from: "2027-02-11", to: "2027-02-14" }, passed: false }],
+			[{ days: { from: "2027-02-11", to: "2027-02-14" }, kind: "open" }],
 		],
 		[
 			"noScheduleWhollyPast",

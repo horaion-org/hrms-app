@@ -650,5 +650,38 @@ describe("MonthSetupStep", () => {
 				)
 			).toBeInTheDocument();
 		});
+
+		it("given_aPlanRefusedBeforePublishedDays_when_shown_then_theRefusalOnlyAndNoPlanOfARunThatWontHappen", () => {
+			const plan = {
+				...datesPlanRedoingFixture(),
+				refusal: {
+					code: "SCHEDULE_DAYS_BEFORE_ROSTER",
+					days: { from: "2026-11-18", to: "2026-11-19" },
+					scheduledDays: { from: "2026-11-20", to: "2026-11-22" },
+				},
+			};
+			render(
+				<Harness
+					dates={datesProp(plan)}
+					defaultValues={{
+						...DATES,
+						firstDay: "2026-11-18",
+						lastDay: "2026-11-19",
+					}}
+				/>
+			);
+
+			expect(
+				screen.getByText(/which have been published and stay as they are\./)
+			).toBeInTheDocument();
+			expect(
+				screen.queryByRole("table", { name: "What this creates" })
+			).toBeNull();
+			expect(screen.queryByText(/This week will be/)).toBeNull();
+			expect(screen.queryByText(/days? to generate/)).toBeNull();
+			expect(
+				screen.queryByText(/It stays until the new days are ready/)
+			).toBeNull();
+		});
 	});
 });

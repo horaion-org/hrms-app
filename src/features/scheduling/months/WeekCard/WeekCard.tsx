@@ -77,7 +77,7 @@ const coversLineOf = (
 		: t(`${key}.cover.covers`, { range });
 };
 
-/** A run of the week's days with no roster, and "Schedule <days>" for days from today on where allowed. */
+/** A run of the week's days with no roster, and "Schedule <days>" for days that can be scheduled, where allowed. */
 const WeekGapLine = ({
 	gap,
 	departmentId,
@@ -96,11 +96,13 @@ const WeekGapLine = ({
 	return (
 		<div className="flex flex-col items-start gap-1 text-sm text-neutral-800">
 			<p>
-				{gap.passed
+				{gap.kind === "passed"
 					? t(`${key}.cover.passedNoRoster`, { days, count })
-					: t(`${key}.cover.noRoster`, { days, count })}
+					: gap.kind === "beforePublished"
+						? t("scheduling.roster.noneBeforePublished", { days, count })
+						: t(`${key}.cover.noRoster`, { days, count })}
 			</p>
-			{!gap.passed && mayCreate && (
+			{gap.kind === "open" && mayCreate && (
 				// The same dates run the roster page's "Schedule <days>" opens (WeekPartsCallout).
 				<Button
 					size="sm"

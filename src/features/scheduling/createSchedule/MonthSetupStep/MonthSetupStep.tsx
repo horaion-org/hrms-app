@@ -135,12 +135,19 @@ const PLAN_BADGE_TONES: Record<PlanBadge, BadgeTone> = {
  * "What this creates": each week the dates touch, a line for each run of its days saying whether they stay, are
  * new, or are scheduled again with the run's choices or the week's own; its days (generated days look covered,
  * others have no roster) and New, To redo or Kept. Then how many days are generated and how many more after them,
- * the published days, the days with a schedule that are redone, the rest days scheduled again after new days, and
- * why the dates are refused, if they are.
+ * the published days, the days with a schedule that are redone and the rest days scheduled again after new days.
+ * Refused dates show why, and nothing of a run that won't happen.
  */
 const DatesPlanRows = ({ plan }: { plan: DatesPlan }): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
+	// A refusal refuses the whole run (API DatesPlans): no week of it would be generated, so none is described.
+	if (plan.refusal)
+		return (
+			<Callout tone="error">
+				{datesRefusalText(plan.refusal, t, language)}
+			</Callout>
+		);
 	const rows = plan.weeks.map(planRowOf);
 	const notes = planNotesOf(plan);
 	const datesText = (start: string, end: string): string =>
@@ -221,11 +228,6 @@ const DatesPlanRows = ({ plan }: { plan: DatesPlan }): FunctionComponent => {
 						days: runsText(notes.restOnlyDays),
 						count: dayCountOfRuns(notes.restOnlyDays),
 					})}
-				</Callout>
-			)}
-			{plan.refusal && (
-				<Callout tone="error">
-					{datesRefusalText(plan.refusal, t, language)}
 				</Callout>
 			)}
 		</div>
