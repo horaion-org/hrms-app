@@ -12,6 +12,7 @@ import {
 } from "@/features/scheduling/schedules/fixtures";
 import { timelineRowFixture } from "@/features/scheduling/timeline/fixtures";
 import {
+	coveredDaysBehind,
 	hoursOfRow,
 	monthsOfWindow,
 	piecesOf,
@@ -224,4 +225,29 @@ describe("a schedule's read against the month's word", () => {
 			expect(scheduleReadPolls(state, read)).toBe(polls);
 		}
 	);
+});
+
+describe("coveredDaysBehind", () => {
+	const wholeWeek = generatedScheduleFixture({ status: "GENERATED" });
+	const listedWhole = { firstDay: "2026-10-12", lastDay: "2026-10-18" };
+
+	/** A later run took Wednesday on: the month lists Monday and Tuesday while the read still covers the week. */
+	it.each([
+		["not read yet", listedWhole, undefined, false],
+		["a read covering the days listed", listedWhole, wholeWeek, false],
+		[
+			"a read covering more days than listed",
+			{ firstDay: "2026-10-12", lastDay: "2026-10-13" },
+			wholeWeek,
+			true,
+		],
+		[
+			"a read starting on another day than listed",
+			{ firstDay: "2026-10-14", lastDay: "2026-10-18" },
+			wholeWeek,
+			true,
+		],
+	])("%s is behind: %s", (_, listed, read, expected) => {
+		expect(coveredDaysBehind(listed, read)).toBe(expected);
+	});
 });

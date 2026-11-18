@@ -23,6 +23,7 @@ import {
 import {
 	monthsOfWindow,
 	timelineRowsOf,
+	coveredDaysBehind,
 	rosterAwaited,
 	rostersReadOf,
 	scheduleReadPolls,
@@ -119,20 +120,25 @@ export const useDepartmentTimeline = (
 	const scheduleReads = useQueries({
 		queries: schedules.map(polledScheduleQuery),
 	});
-	// A read found behind the month is made again at once, so a piece's cells follow its band without waiting a poll.
+	// A read found behind the month (its roster still to come, or its days since changed by a later run) is made
+	// again at once, with its roster: a piece's cells follow its band, and its page opens on what it covers now.
 	const client = useQueryClient();
-	const awaitedIds = schedules
-		.filter((schedule, index) =>
-			rosterAwaited(schedule.status, scheduleReads[index]?.data)
-		)
+	const behindIds = schedules
+		.filter((schedule, index) => {
+			const read = scheduleReads[index]?.data;
+			return (
+				rosterAwaited(schedule.status, read) ||
+				coveredDaysBehind(schedule, read)
+			);
+		})
 		.map((schedule) => schedule.id)
 		.join(" ");
 	useEffect(() => {
-		for (const scheduleId of awaitedIds.split(" ").filter(Boolean))
+		for (const scheduleId of behindIds.split(" ").filter(Boolean))
 			void client.invalidateQueries({
 				queryKey: scheduleKey(companyId, scheduleId),
 			});
-	}, [awaitedIds, client, companyId]);
+	}, [behindIds, client, companyId]);
 	const runIds = scheduleReads.map((read) =>
 		read.data ? rosterRunId(read.data) : undefined
 	);

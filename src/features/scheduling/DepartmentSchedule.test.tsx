@@ -492,6 +492,94 @@ it("shows the cells of a piece that finished generating after the page opened", 
 	expect((await stripBands())[0]).toHaveTextContent("To review");
 });
 
+/**
+ * A later run took Wednesday on from a piece read as the whole week: once the
+ * month lists it as Monday and Tuesday, its read is behind and is made again
+ * with its roster, so the grid (and its page, opened next) shows what it covers now.
+ */
+it("reads a piece again once the month lists other days for it", async () => {
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	const routes = twoSchedulesInOneWeek();
+	const month = (
+		routes[`GET ${MONTHS}/2026-10`] as { body: { data: ScheduleMonth } }
+	).body.data;
+	const [early] = month.weeks[0]!.parts;
+	const listing = (coveredTo: string): StubReply =>
+		ok({
+			...month,
+			weeks: [{ ...month.weeks[0]!, parts: [{ ...early!, coveredTo }] }],
+		});
+	const wholeWeek = generatedScheduleFixture({ status: "GENERATED" });
+	const calls = stubApi({
+		...routes,
+		[`GET ${MONTHS}/2026-10`]: [listing("2026-10-18"), listing("2026-10-13")],
+		[`GET ${SCHEDULES}/s-1`]: [
+			ok(wholeWeek),
+			ok({ ...wholeWeek, coveredTo: "2026-10-13", rosterRevision: 1 }),
+		],
+		[`GET ${SCHEDULES}/s-1/assignments`]: [
+			assignmentsFrom("2026-10-12", "2026-10-18"),
+			assignmentsFrom("2026-10-12", "2026-10-13"),
+		],
+	});
+	app = await openApp("/scheduling/department?department=d-1&from=2026-10-12");
+	renderAuthApp(app);
+	const row = await screen.findByRole("row", { name: /Aisha Rahman/ });
+	await vi.waitFor(() => {
+		expect(cellsOf(row, "s-1")).toHaveLength(7);
+	});
+
+	// The month's own poll comes round after the later run split the week.
+	await app.queryClient.invalidateQueries({
+		queryKey: scheduleMonthKey("c-1", "d-1", "2026-10"),
+	});
+
+	// Its row is drawn anew once the roster of the days it covers now is read.
+	await vi.waitFor(() => {
+		expect(
+			cellsOf(screen.getByRole("row", { name: /Aisha Rahman/ }), "s-1")
+		).toHaveLength(2);
+	});
+	expect(
+		calls.filter(
+			(call) => call.method === "GET" && call.path === `${SCHEDULES}/s-1`
+		)
+	).toHaveLength(2);
+});
+
+/**
+ * The roster page cached the piece 16 seconds ago, which the cache still
+ * calls fresh. Its own page reads it again on entry, so its days, roster and
+ * revision are today's and a change is not refused as made on an old roster.
+ */
+it("opens a piece's page on a fresh read, not the one the roster cached", async () => {
+	await import("@/pages/ScheduleDetail");
+	vi.useFakeTimers({ toFake: ["Date"] });
+	vi.setSystemTime(new Date("2026-10-10T09:00:00"));
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	const PIECE_READ = "/api/v1/companies/c-1/schedules/s-1";
+	const calls = stubApi({
+		...twoSchedulesInOneWeek(),
+		[`GET ${PIECE_READ}`]: ok({ ...EARLY_DAYS, coveredTo: "2026-10-13" }),
+	});
+	app = await openApp("/scheduling/department?department=d-1&from=2026-10-12");
+	renderAuthApp(app);
+	await screen.findByRole("row", { name: /Aisha Rahman/ });
+
+	vi.setSystemTime(new Date("2026-10-10T09:00:16"));
+	await app.router.navigate({
+		to: "/scheduling/$scheduleId",
+		params: { scheduleId: "s-1" },
+	});
+
+	await vi.waitFor(() => {
+		expect(document.body).toHaveTextContent(/Oct 12\s?–\s?13, 2026/);
+	});
+	expect(
+		calls.filter((call) => call.method === "GET" && call.path === PIECE_READ)
+	).toHaveLength(1);
+});
+
 /** A schedule that can't be read (here gone, a 404) is an alert, not an empty grid. */
 it("alerts when a schedule's roster could not be read", async () => {
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
