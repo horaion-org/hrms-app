@@ -125,6 +125,20 @@ export const deleteRefusal = (error: unknown, t: TFunction): string => {
 	);
 };
 
+/** Why generating a withdrawn roster again through its own route was refused, as one message for its dialog. */
+export const regenerationRefusal = (error: unknown, t: TFunction): string =>
+	mapRefusal<never>(error, {
+		alerts: {
+			[codes.oncePublished]: t("scheduling.regenerate.oncePublished"),
+			[codes.laterPartPublished]: t("scheduling.regenerate.laterPartPublished"),
+			[codes.published]: t("scheduling.regenerate.published"),
+			[codes.generationInProgress]: t("scheduling.regenerate.inProgress"),
+			[codes.weekPassed]: t("scheduling.generate.weekPassed"),
+		},
+		forbidden: t("scheduling.create.generateForbidden"),
+		failed: t("scheduling.generate.failed"),
+	}).message ?? t("scheduling.generate.failed");
+
 /** The field a refused rejection can land on. */
 export type RejectionField = "reason";
 

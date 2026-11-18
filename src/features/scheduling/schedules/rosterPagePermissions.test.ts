@@ -48,6 +48,7 @@ const NOTHING: RosterPagePermissions = {
 	mayReject: false,
 	mayWithdraw: false,
 	mayGenerate: false,
+	mayRegenerateOncePublished: false,
 	mayRead: false,
 	mayCreateHere: false,
 	mayHandleLeave: false,
@@ -101,6 +102,18 @@ describe("rosterPagePermissions", () => {
 			"a rejected roster",
 			{ status: "REJECTED" },
 			{ ...NOTHING, ...BY_KEYS_ALONE, mayGenerate: true },
+		],
+		[
+			"a roster whose publication was withdrawn",
+			{ status: "GENERATED", publicationWithdrawnAt: "2026-10-13T09:00:00Z" },
+			{
+				...NOTHING,
+				...BY_KEYS_ALONE,
+				mayEditShifts: true,
+				mayValidate: true,
+				mayReject: true,
+				mayRegenerateOncePublished: true,
+			},
 		],
 		[
 			"a roster still generating",

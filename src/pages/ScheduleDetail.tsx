@@ -45,6 +45,8 @@ import {
 } from "@/features/scheduling/hours/useRosterHours";
 import { useRosterPreferenceOutcomes } from "@/features/scheduling/preferenceOutcomes/usePreferenceOutcomes";
 import { RegenerateMonthDialog } from "@/features/scheduling/months/RegenerateMonthDialog";
+import { RegenerateOncePublishedDialog } from "@/features/scheduling/schedules/RegenerateOncePublishedDialog";
+import { regenerableOncePublished } from "@/features/scheduling/schedules/regeneration";
 import { RejectedRosterCallout } from "@/features/scheduling/schedules/RejectedRosterCallout";
 import { RejectScheduleDialog } from "@/features/scheduling/schedules/RejectScheduleDialog";
 import {
@@ -256,6 +258,7 @@ type OpenDialog =
 	| "withdraw"
 	| "withdrawPublication"
 	| "regenerate"
+	| "regenerateOncePublished"
 	| undefined;
 
 /**
@@ -464,16 +467,21 @@ const ApiSchedule = ({
 		);
 	// A passed week's rules and roster are final, so it is never generated again (API ADR-0091).
 	const passed = weekPassed(state.schedule, new Date());
-	// Regenerating names the month's weeks, so it waits for the month's read.
+	// A withdrawn roster regenerates through its own route (API ADR-0134); otherwise
+	// regenerating names the month's weeks, so it waits for the month's read.
 	const openRegenerate =
-		scheduleMonth !== undefined &&
-		!passed &&
-		weekPublishedBy === undefined &&
-		permissions.mayGenerate
+		permissions.mayRegenerateOncePublished && !passed
 			? (): void => {
-					setOpenDialog("regenerate");
+					setOpenDialog("regenerateOncePublished");
 				}
-			: undefined;
+			: scheduleMonth !== undefined &&
+				  !passed &&
+				  weekPublishedBy === undefined &&
+				  permissions.mayGenerate
+				? (): void => {
+						setOpenDialog("regenerate");
+					}
+				: undefined;
 	const editing = rosterEditingOf({
 		target: editTarget,
 		schedule: state.schedule,
@@ -591,7 +599,9 @@ const ApiSchedule = ({
 			<RejectedRosterCallout
 				rejectedStep={schedule.publication.rejectedAtStep?.stepLabel}
 				schedule={schedule}
-				showsNextStep={regenerable(schedule)}
+				showsNextStep={
+					regenerable(schedule) || regenerableOncePublished(schedule)
+				}
 			/>
 		),
 		generating: (
@@ -795,6 +805,14 @@ const ApiSchedule = ({
 					companyId={companyId}
 					decision="withdraw"
 					schedule={schedule}
+					onClose={closeDialog}
+				/>
+			)}
+			{openDialog === "regenerateOncePublished" && unit && (
+				<RegenerateOncePublishedDialog
+					companyId={companyId}
+					scheduleId={scheduleId}
+					unit={unit}
 					onClose={closeDialog}
 				/>
 			)}
