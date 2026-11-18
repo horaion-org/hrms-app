@@ -15,6 +15,7 @@ import {
 } from "@/common/testing/stubApi";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
+import { withDatesRun } from "@/features/scheduling/months/datesRunState";
 import {
 	monthWeekFixture,
 	scheduleMonthFixture,
@@ -134,9 +135,17 @@ it("shows two schedules in one week as two bars, their cells, and No schedule on
 	expect(
 		screen.getByRole("heading", { level: 1, name: "Kitchen Schedule" })
 	).toBeInTheDocument();
-	const bars = screen.getByRole("group", { name: "Schedules" });
-	expect(within(bars).getByText("Early days")).toBeInTheDocument();
-	expect(within(bars).getByText("Weekend")).toBeInTheDocument();
+	const lane = screen
+		.getByRole("rowheader", { name: "Schedules" })
+		.closest("tr")!;
+	const barCells = within(lane).getAllByRole("cell");
+	expect(barCells.map((cell) => cell.getAttribute("colspan"))).toEqual([
+		"3",
+		"1",
+		"3",
+	]);
+	expect(within(barCells[0]!).getByText("Early days")).toBeInTheDocument();
+	expect(within(barCells[2]!).getByText("Weekend")).toBeInTheDocument();
 	await vi.waitFor(() => {
 		expect(cellsOf(row, "s-1")).toHaveLength(3);
 		expect(cellsOf(row, "s-2")).toHaveLength(3);
@@ -144,7 +153,7 @@ it("shows two schedules in one week as two bars, their cells, and No schedule on
 	expect(within(row).getByText("No schedule")).toBeInTheDocument();
 });
 
-it("dims the other schedules' cells when one is shown alone", async () => {
+it("dims the other schedules' bars and cells when one is shown alone", async () => {
 	const row = await openTimeline("from=2026-10-12&schedule=s-1");
 
 	await vi.waitFor(() => {
@@ -154,6 +163,12 @@ it("dims the other schedules' cells when one is shown alone", async () => {
 		expect(cell).toHaveClass("opacity-40");
 	for (const cell of cellsOf(row, "s-1"))
 		expect(cell).not.toHaveClass("opacity-40");
+	expect(
+		screen.getByRole("button", { name: /^Weekend,/ }).closest("td")
+	).toHaveClass("opacity-40");
+	expect(
+		screen.getByRole("button", { name: /^Early days,/ }).closest("td")
+	).not.toHaveClass("opacity-40");
 	expect(
 		screen.getByText("Showing only Early days. Other schedules are dimmed.")
 	).toBeInTheDocument();
@@ -178,5 +193,23 @@ it("names the schedule to review in the needs list", async () => {
 
 	expect(
 		screen.getByText("Early days is ready to review.")
+	).toBeInTheDocument();
+});
+
+it("says which days are being generated on arrival from a run by dates", async () => {
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	stubApi(twoSchedulesInOneWeek());
+	app = await openApp("/scheduling/department?department=d-1&from=2026-10-05");
+	renderAuthApp(app);
+	await screen.findByRole("heading", { level: 1, name: "Kitchen Schedule" });
+
+	await app.router.navigate({
+		to: "/scheduling/department",
+		search: { department: "d-1", from: "2026-10-12" },
+		state: withDatesRun({}, { firstDay: "2026-10-15", lastDay: "2026-10-15" }),
+	});
+
+	expect(
+		await screen.findByText("Schedules for Oct 15, 2026 are being generated.")
 	).toBeInTheDocument();
 });

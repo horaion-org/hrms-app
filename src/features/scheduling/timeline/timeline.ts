@@ -88,6 +88,32 @@ export const scheduleOfDay = (
 ): TimelineSchedule | undefined =>
 	schedules.find((schedule) => touches(schedule, day, day));
 
+/** One cell of a lane's row: a run of days without a bar, or a schedule's bar, each spanning its day columns. */
+export type LaneCell =
+	| { kind: "gap"; firstDay: string; span: number }
+	| { kind: "bar"; schedule: TimelineSchedule; span: number };
+
+/** A lane's cells across `days`, so each bar spans exactly the columns of its days in the window. */
+export const laneCellsOf = (
+	lane: ReadonlyArray<TimelineSchedule>,
+	days: ReadonlyArray<string>
+): Array<LaneCell> => {
+	const cells: Array<LaneCell> = [];
+	for (const day of days) {
+		const schedule = scheduleOfDay(lane, day);
+		const lastCell = cells[cells.length - 1];
+		const continues =
+			lastCell !== undefined &&
+			(lastCell.kind === "bar"
+				? lastCell.schedule.id === schedule?.id
+				: schedule === undefined);
+		if (lastCell && continues) lastCell.span += 1;
+		else if (schedule) cells.push({ kind: "bar", schedule, span: 1 });
+		else cells.push({ kind: "gap", firstDay: day, span: 1 });
+	}
+	return cells;
+};
+
 /** The runs of days from `firstDay` to `lastDay` that no schedule covers. */
 export const daysWithoutSchedule = (
 	schedules: ReadonlyArray<TimelineSchedule>,
@@ -103,6 +129,12 @@ export const daysWithoutSchedule = (
 	}
 	return runs;
 };
+
+/** Whether a schedule's bar and cells are dimmed: another schedule is shown alone. */
+export const isDimmed = (
+	scheduleId: string,
+	shownScheduleId: string | undefined
+): boolean => shownScheduleId !== undefined && shownScheduleId !== scheduleId;
 
 /** One line of the "needs you" list, as data. */
 export type NeedLine =

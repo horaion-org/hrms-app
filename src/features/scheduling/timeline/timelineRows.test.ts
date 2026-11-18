@@ -6,7 +6,9 @@ import {
 } from "@/features/scheduling/months/fixtures";
 import type { ScheduleMonth } from "@/features/scheduling/months/api";
 import type { RosterRow } from "@/features/scheduling/roster/roster";
+import { timelineRowFixture } from "@/features/scheduling/timeline/fixtures";
 import {
+	hoursOfRow,
 	monthsOfWindow,
 	timelineRowsOf,
 	timelineSchedulesOf,
@@ -96,5 +98,15 @@ describe("timelineRowsOf", () => {
 
 	it("gives no rows without rosters", () => {
 		expect(timelineRowsOf([])).toEqual([]);
+	});
+});
+
+describe("hoursOfRow", () => {
+	it.each([
+		["the whole week, two eight-hour shifts", ["2027-02-08", "2027-02-12"], 16],
+		["one day of the two", ["2027-02-08"], 8],
+		["days without a shift", ["2027-02-09"], 0],
+	])("%s", (_, days, expected) => {
+		expect(hoursOfRow(timelineRowFixture(), days)).toBe(expected);
 	});
 });

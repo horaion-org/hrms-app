@@ -1,4 +1,6 @@
+import { linkOptions } from "@tanstack/react-router";
 import { z } from "zod";
+import { mondayOf } from "@/common/weeks";
 import {
 	DAYS_IN_VIEW,
 	type TimelineView,
@@ -30,3 +32,19 @@ export type TimelineSearch = z.infer<typeof searchSchema>;
 export const parseTimelineSearch = (
 	search: Record<string, unknown>
 ): TimelineSearch => searchSchema.parse(search);
+
+/** The department timeline, as a link's props. */
+export type DepartmentTimelineLink = {
+	to: "/scheduling/department";
+	search: { department: string; from: string };
+};
+
+/** The department's timeline opened on the week `day` falls in. */
+export const departmentTimelineLink = (
+	departmentId: string,
+	day: string
+): DepartmentTimelineLink =>
+	linkOptions({
+		to: "/scheduling/department",
+		search: { department: departmentId, from: mondayOf(day) },
+	});

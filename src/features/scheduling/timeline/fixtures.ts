@@ -51,6 +51,7 @@ export const timelineRowFixture = (): TimelineRow => ({
 	key: "m-1",
 	name: "Aisha Rahman",
 	jobTitle: "Cook",
+	employeeCode: null,
 	days: {
 		"2027-02-08": { cell: morningShift("a-1"), scheduleId: "s-early" },
 		"2027-02-12": { cell: morningShift("a-2"), scheduleId: "s-late" },

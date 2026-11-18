@@ -3,6 +3,7 @@ import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it } from "vitest";
 import en from "@/assets/locales/en/translations.json";
+import { MemoryRouterHarness } from "@/components/utils/MemoryRouterHarness";
 import {
 	FIXTURE_WEEK,
 	timelineRowFixture,
@@ -25,35 +26,80 @@ beforeAll(async () => {
 const renderGrid = (
 	view: TimelineView,
 	shownScheduleId?: string
-): HTMLElement => {
+): Promise<HTMLElement> => {
 	render(
-		<TimelineGrid
-			days={FIXTURE_WEEK}
-			rows={[timelineRowFixture()]}
-			schedules={twoTimelineSchedules()}
-			shownScheduleId={shownScheduleId}
-			view={view}
-		/>
+		<MemoryRouterHarness>
+			<TimelineGrid
+				days={FIXTURE_WEEK}
+				rows={[timelineRowFixture()]}
+				schedules={twoTimelineSchedules()}
+				shownScheduleId={shownScheduleId}
+				view={view}
+				onShowOnly={() => {}}
+			/>
+		</MemoryRouterHarness>
 	);
-	return screen.getByRole("row", { name: /Aisha Rahman/ });
+	return screen.findByRole("row", { name: /Aisha Rahman/ });
 };
 
 describe("TimelineGrid", () => {
-	it("shows each schedule's shift and No schedule on a day in neither", () => {
-		const row = renderGrid("week");
-		expect(within(row).getAllByText(/Morning/)).toHaveLength(2);
-		expect(within(row).getByText("No schedule")).toBeInTheDocument();
+	/** Each zoom level shows only what fits: time over name, the name, or the initial; and its empty-day mark. */
+	it.each([
+		["week", ["09:00 – 17:00", "Morning"], "No schedule", "Mon", "Feb 8"],
+		["two", ["Morning"], "–", "Mon", "8"],
+		["four", ["M"], "·", "M", "8"],
+	] as const)(
+		"shows the %s view's tile, empty day and day header",
+		async (view, lines, emptyDay, weekday, date) => {
+			const row = await renderGrid(view);
+			const [monday] = within(row).getAllByTitle(/Morning/);
+			expect(
+				[...monday!.querySelectorAll("[aria-hidden]")].map(
+					(line) => line.textContent
+				)
+			).toEqual(lines);
+			expect(
+				within(row).getByTitle(/Thu, Feb 11: No schedule$/)
+			).toHaveTextContent(emptyDay);
+			const [, mondayHeader] = screen.getAllByRole("columnheader");
+			expect(mondayHeader).toHaveTextContent(`${weekday}${date}`);
+		}
+	);
+
+	/** A short tile keeps its full words: person, day, shift, schedule and state. */
+	it("names each cell in full", async () => {
+		const row = await renderGrid("four");
+		expect(
+			within(row).getByTitle(
+				"Aisha Rahman, Fri, Feb 12: Morning 09:00 – 17:00, Weekend, To review"
+			)
+		).toHaveTextContent("M");
 	});
 
-	it("dims the cells of other schedules when one is shown alone", () => {
-		const row = renderGrid("week", "s-late");
-		const [early, late] = within(row).getAllByText(/Morning/);
-		expect(early!.parentElement).toHaveClass("opacity-40");
-		expect(late!.parentElement).not.toHaveClass("opacity-40");
+	it("dims the cells of other schedules when one is shown alone", async () => {
+		const row = await renderGrid("week", "s-late");
+		const [early, late] = within(row).getAllByTitle(/Morning/);
+		expect(early).toHaveClass("opacity-40");
+		expect(late).not.toHaveClass("opacity-40");
 	});
 
-	it("shows a shift's initial in the four-week view", () => {
-		const row = renderGrid("four");
-		expect(within(row).getAllByText("M")).toHaveLength(2);
+	/** The Staff cell reads as the roster page's; four weeks keeps only the name and job title. */
+	it.each([
+		["week", true],
+		["four", false],
+	] as const)("shows the hours in the %s view: %s", async (view, shown) => {
+		const row = await renderGrid(view);
+		const staff = within(row).getByRole("rowheader");
+		expect(within(staff).getByText("Cook")).toBeInTheDocument();
+		expect(within(staff).queryByText("16 hrs") !== null).toBe(shown);
+	});
+
+	/** Narrow screens scroll the table sideways at each zoom's narrowest day column, keeping the Staff column in view. */
+	it("keeps a minimum width per zoom and a sticky Staff column", async () => {
+		const row = await renderGrid("two");
+		expect(screen.getByRole("table")).toHaveStyle({
+			minWidth: "calc(var(--staff-column) + 308px)",
+		});
+		expect(within(row).getByRole("rowheader")).toHaveClass("sticky", "left-0");
 	});
 });

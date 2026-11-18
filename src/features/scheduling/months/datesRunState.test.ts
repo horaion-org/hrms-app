@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	datesRunNoticeOf,
+	datesRunOf,
 	withDatesRun,
 } from "@/features/scheduling/months/datesRunState";
 import { refusedWeeksFrom } from "@/features/scheduling/months/refusedWeeksState";
@@ -48,5 +49,19 @@ describe("datesRunNoticeOf", () => {
 		expect(refusedWeeksFrom(stateOf("2027-11-29", "2027-12-03"))).toEqual({
 			"2027-11-29": "SCHEDULE_HAS_NO_EMPLOYEES",
 		});
+	});
+});
+
+describe("datesRunOf", () => {
+	it.each([
+		[
+			"aRun",
+			stateOf("2027-11-29", "2027-12-03"),
+			{ from: "2027-11-29", to: "2027-12-03" },
+		],
+		["noRun", { refusedWeeks: {} }, undefined],
+		["noState", undefined, undefined],
+	])("given_%s_then_itsDays", (_, state, expected) => {
+		expect(datesRunOf(state)).toEqual(expected);
 	});
 });

@@ -85,6 +85,7 @@ import {
 } from "@/features/scheduling/schedules/partLines";
 import { WeekPartsCallout } from "@/features/scheduling/schedules/WeekPartsCallout";
 import { WeekPartLinks } from "@/features/scheduling/months/WeekPartLinks";
+import { departmentTimelineLink } from "@/features/scheduling/timeline/timelineSearch";
 import { isoDateIn } from "@/features/scheduling/roster/roster";
 import { scheduleDetailItems } from "@/features/scheduling/schedules/scheduleDetails";
 import {
@@ -668,11 +669,12 @@ const ApiSchedule = ({
 							schedule={schedule}
 							weekParts={weekParts}
 							onDeleted={() => {
-								void navigate({
-									to: "/scheduling/months/$month",
-									params: { month },
-									search: { department: schedule.departmentId },
-								});
+								void navigate(
+									departmentTimelineLink(
+										schedule.departmentId,
+										schedule.periodStart
+									)
+								);
 							}}
 						>
 							{menu.length > 0 &&

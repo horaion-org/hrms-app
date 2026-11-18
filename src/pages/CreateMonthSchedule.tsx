@@ -68,6 +68,7 @@ import {
 	tickableWeeksOf,
 } from "@/features/scheduling/months/weekTicks";
 import { withDatesRun } from "@/features/scheduling/months/datesRunState";
+import { departmentTimelineLink } from "@/features/scheduling/timeline/timelineSearch";
 import { withRefusedWeeks } from "@/features/scheduling/months/refusedWeeksState";
 import {
 	partsBeforeStartOf,
@@ -689,9 +690,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 				datesGenerationBody(values, plan, choices, everything, people.idsToSend)
 			);
 			await navigate({
-				to: "/scheduling/months/$month",
-				params: { month: monthOf(values.firstDay) },
-				search: { department: values.departmentId },
+				...departmentTimelineLink(values.departmentId, values.firstDay),
 				state: withDatesRun(refusedWeeks(answer), values),
 			});
 		} catch (error) {

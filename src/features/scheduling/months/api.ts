@@ -9,6 +9,7 @@ import {
 	scheduleMonthPath,
 	scheduleMonthsPath,
 } from "@/features/scheduling/paths";
+import { anyWeekGenerating } from "@/features/scheduling/months/weekStateLooks";
 import { GENERATION_POLL_INTERVAL_MS } from "@/features/scheduling/schedules/api";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
@@ -220,7 +221,7 @@ export const scheduleMonthSummariesKey = (
 ] => [...scheduleMonthsKey(companyId), "summaries", units, range] as const;
 
 /**
- * One Department's month; `allowed` false asks for nothing. While a week is
+ * One Department's month; `allowed` false asks for nothing. While a week, or any part of one, is
  * being generated it is read again every 15 seconds, and no longer after.
  */
 export const scheduleMonthQuery = (
@@ -239,7 +240,7 @@ export const scheduleMonthQuery = (
 		meta: administrativeMeta(companyId, { record: true }),
 		staleTime: 30_000,
 		refetchInterval: (query): number | false =>
-			query.state.data?.weeks.some((week) => week.state === "GENERATING")
+			query.state.data && anyWeekGenerating(query.state.data.weeks)
 				? GENERATION_POLL_INTERVAL_MS
 				: false,
 		refetchIntervalInBackground: false,

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
 	daysWithoutSchedule,
+	isDimmed,
+	laneCellsOf,
 	lanesOf,
 	needsOf,
 	scheduleOfDay,
@@ -134,5 +136,42 @@ describe("needsOf", () => {
 		expect(needsOf([], window, "2027-02-13")).toEqual([
 			{ kind: "noSchedule", firstDay: "2027-02-13", lastDay: "2027-02-14" },
 		]);
+	});
+});
+
+describe("laneCellsOf", () => {
+	const week = windowDays("2027-02-08", "week");
+	/** Each cell as "bar <id> <span>" or "gap <first day> <span>". */
+	const shapeOf = (lane: Array<TimelineSchedule>): Array<string> =>
+		laneCellsOf(lane, week).map((cell) =>
+			cell.kind === "bar"
+				? `bar ${cell.schedule.id} ${cell.span}`
+				: `gap ${cell.firstDay} ${cell.span}`
+		);
+
+	it.each([
+		[
+			"two bars around a day without a schedule",
+			[early, late],
+			["bar early 3", "gap 2027-02-11 1", "bar late 3"],
+		],
+		[
+			"a bar clipped to the window",
+			[schedule("long", "2027-02-01", "2027-02-09")],
+			["bar long 2", "gap 2027-02-10 5"],
+		],
+		["an empty lane", [], ["gap 2027-02-08 7"]],
+	] as const)("%s", (_, lane, expected) => {
+		expect(shapeOf([...lane])).toEqual(expected);
+	});
+});
+
+describe("isDimmed", () => {
+	it.each([
+		["s-1", undefined, false],
+		["s-1", "s-1", false],
+		["s-2", "s-1", true],
+	])("%s with %s shown alone is dimmed: %s", (scheduleId, shown, expected) => {
+		expect(isDimmed(scheduleId, shown)).toBe(expected);
 	});
 });

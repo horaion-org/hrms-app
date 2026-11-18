@@ -5786,15 +5786,22 @@
 			},
 			"bars": {
 				"label": "Schedules",
-				"bar": "{{name}}, {{state}}",
+				"bar": "{{name}}, {{from}} to {{to}}, {{state}}",
 				"openSchedule": "Open schedule",
 				"showOnly": "Show only this schedule"
 			},
 			"grid": {
 				"label": "Staff by day",
 				"staff": "Staff",
-				"noSchedule": "No schedule",
-				"noStaff": "No one is rostered in these days yet."
+				"noStaff": "No one is rostered in these days yet.",
+				"emptyDay": {
+					"noSchedule": "No schedule",
+					"dash": "–",
+					"dot": "·"
+				},
+				"cellLabel": "{{name}}, {{day}}: {{what}}, {{schedule}}, {{state}}",
+				"notRosteredLabel": "{{name}}, {{day}}: not rostered, {{schedule}}, {{state}}",
+				"noScheduleLabel": "{{name}}, {{day}}: No schedule"
 			},
 			"needs": {
 				"heading": "Needs you",

@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
@@ -43,5 +43,11 @@ describe("TimelineToolbar", () => {
 			"aria-pressed",
 			"true"
 		);
+		const zoom = screen.getByRole("group", { name: "Zoom" });
+		expect(
+			within(zoom)
+				.getAllByRole("button")
+				.map((option) => option.getAttribute("aria-pressed"))
+		).toEqual(["true", "false", "false"]);
 	});
 });
