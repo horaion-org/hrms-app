@@ -4768,7 +4768,8 @@
 			"notDraft": "This schedule has already been generated, so its starting point can no longer change.",
 			"failed": "The days couldn’t be saved. Try again.",
 			"unknownDays": "Horaion doesn’t know what people worked on {{days}}.",
-			"saved": "Days before this week saved."
+			"saved": "Days before this week saved.",
+			"fittedAroundAfter": "Shifts already rostered in the 7 days after this schedule stay as they are; nobody is given a shift here that leaves too little rest before them."
 		},
 		"openingHours": {
 			"title": "Hours already worked this month ({{from}} to {{to}})",

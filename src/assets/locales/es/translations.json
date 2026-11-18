@@ -4568,7 +4568,8 @@
 			"notDraft": "Este horario ya se generó, así que su punto de partida ya no puede cambiar.",
 			"failed": "No se pudieron guardar los días. Inténtalo de nuevo.",
 			"unknownDays": "Horaion no sabe qué trabajó cada persona el {{days}}.",
-			"saved": "Días anteriores a esta semana guardados."
+			"saved": "Días anteriores a esta semana guardados.",
+			"fittedAroundAfter": "Los turnos ya asignados en los 7 días después de este horario se mantienen; aquí no se da a nadie un turno que deje poco descanso antes de ellos."
 		},
 		"openingHours": {
 			"title": "Horas ya trabajadas este mes (del {{from}} al {{to}})",

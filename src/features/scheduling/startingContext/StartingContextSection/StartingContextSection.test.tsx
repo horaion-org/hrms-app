@@ -88,6 +88,17 @@ describe("StartingContextSection", () => {
 		expect(screen.getByRole("button", { name: "Add them" })).toBeVisible();
 	});
 
+	it("given_aDraft_when_shown_then_saysShiftsRosteredInTheDaysAfterStayAsTheyAre", async () => {
+		stubApi(reads);
+		show();
+
+		expect(
+			await screen.findByText(
+				"Shifts already rostered in the 7 days after this schedule stay as they are; nobody is given a shift here that leaves too little rest before them."
+			)
+		).toBeVisible();
+	});
+
 	it("given_showsHoursFalse_when_shown_then_onlyTheDaysBeforeTheWeek", async () => {
 		const calls = stubApi(reads);
 		show(undefined, false);
