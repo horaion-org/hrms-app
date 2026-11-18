@@ -29,6 +29,7 @@ import {
 	scheduleAssignmentsFixture,
 	schedulingWorkspace,
 } from "@/features/scheduling/schedules/fixtures";
+import { mayDeleteSchedule } from "@/features/scheduling/schedules/scheduleActions";
 import { windowDays } from "@/features/scheduling/timeline/timeline";
 import { LABEL_DAY_FORMAT } from "@/features/scheduling/timeline/timelineLooks";
 import { monthsOfWindow } from "@/features/scheduling/timeline/timelineRows";
@@ -69,12 +70,12 @@ const assignmentsFrom = (firstDay: string, lastDay: string): StubReply =>
  * Kitchen's week of 12 October 2026: "Early days" Monday to Wednesday, to
  * review, and "Weekend" Friday to Sunday, published; Thursday has none.
  */
-const twoSchedulesInOneWeek = (): Routes => ({
+const twoSchedulesInOneWeek = (permissions = ["schedule:read"]): Routes => ({
 	"POST /api/v1/public/sessions/refreshes": accessPassReply(),
 	"GET /api/v1/me": currentUserReply(),
 	"GET /api/v1/me/workspace": {
 		status: 200,
-		body: envelope(schedulingWorkspace(["schedule:read"])),
+		body: envelope(schedulingWorkspace(permissions)),
 	},
 	[`GET ${MONTHS}/2026-10`]: ok(
 		scheduleMonthFixture({
@@ -425,4 +426,97 @@ it("moves a window opened on the device's Monday to the branch's", async () => {
 	expect(
 		await screen.findByRole("row", { name: /Aisha Rahman/ })
 	).toBeInTheDocument();
+});
+
+const MANAGER = ["schedule:read", "schedule:delete"];
+
+/** Opens a bar's menu by its accessible name's start, e.g. "Early days". */
+const openBarMenu = async (name: string): Promise<void> => {
+	await userEvent.click(
+		await screen.findByRole("button", { name: new RegExp(`^${name},`) })
+	);
+};
+
+/** Delete follows the roster page's rule: offered where the schedule is deletable and `schedule:delete` is held. */
+it.each([
+	["Early days", generatedScheduleFixture({ status: "GENERATED" })],
+	["Weekend", generatedScheduleFixture({ status: "PUBLISHED" })],
+])(
+	"offers Delete on the %s bar as the roster page's rule says",
+	async (name, read) => {
+		vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+		stubApi(twoSchedulesInOneWeek(MANAGER));
+		app = await openApp(
+			"/scheduling/department?department=d-1&from=2026-10-12"
+		);
+		renderAuthApp(app);
+		await screen.findByRole("row", { name: /Aisha Rahman/ });
+
+		await openBarMenu(name);
+
+		await screen.findByRole("menuitem", { name: "Open schedule" });
+		expect(screen.queryByRole("menuitem", { name: "Delete" }) !== null).toBe(
+			mayDeleteSchedule(read, { can: () => true })
+		);
+	}
+);
+
+it("offers no Delete without schedule:delete", async () => {
+	await openTimeline("from=2026-10-12");
+
+	await openBarMenu("Early days");
+
+	await screen.findByRole("menuitem", { name: "Open schedule" });
+	expect(
+		screen.queryByRole("menuitem", { name: "Delete" })
+	).not.toBeInTheDocument();
+});
+
+/** Deleting from the bar sends the roster page's DELETE, stays on the window, drops the bar and the stale schedule=. */
+it("deletes a schedule from its bar", async () => {
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	const routes = twoSchedulesInOneWeek(MANAGER);
+	const month = (
+		routes[`GET ${MONTHS}/2026-10`] as { body: { data: ScheduleMonth } }
+	).body.data;
+	const [, weekend] = month.weeks[0]!.parts;
+	const calls = stubApi({
+		...routes,
+		[`GET ${MONTHS}/2026-10`]: [
+			ok(month),
+			ok({ ...month, weeks: [{ ...month.weeks[0]!, parts: [weekend!] }] }),
+		],
+		[`DELETE ${SCHEDULES}/s-1`]: { status: 204 },
+	});
+	app = await openApp(
+		"/scheduling/department?department=d-1&from=2026-10-12&schedule=s-1"
+	);
+	renderAuthApp(app);
+	await screen.findByRole("row", { name: /Aisha Rahman/ });
+
+	await openBarMenu("Early days");
+	await userEvent.click(
+		await screen.findByRole("menuitem", { name: "Delete" })
+	);
+	await userEvent.click(
+		within(await screen.findByRole("dialog")).getByRole("button", {
+			name: "Delete schedule",
+		})
+	);
+
+	await vi.waitFor(() => {
+		expect(
+			screen.queryByRole("button", { name: /^Early days,/ })
+		).not.toBeInTheDocument();
+	});
+	expect(
+		calls.filter(
+			(call) => call.method === "DELETE" && call.path === `${SCHEDULES}/s-1`
+		)
+	).toHaveLength(1);
+	expect(app.router.state.location.pathname).toBe("/scheduling/department");
+	expect(app.router.state.location.search).toEqual({
+		department: "d-1",
+		from: "2026-10-12",
+	});
 });

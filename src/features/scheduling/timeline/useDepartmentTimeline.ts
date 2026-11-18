@@ -4,10 +4,12 @@ import { ApiProblemError } from "@/common/problem";
 import {
 	scheduleMonthQuery,
 	type ScheduleMonth,
+	type WeekPart,
 } from "@/features/scheduling/months/api";
 import { rosterFromAssignments } from "@/features/scheduling/roster/roster";
 import {
 	rosterRunId,
+	type Schedule,
 	scheduleAssignmentsQuery,
 	scheduleQuery,
 } from "@/features/scheduling/schedules/api";
@@ -23,7 +25,9 @@ import {
 	type RostersRead,
 	timelineSchedulesOf,
 	type TimelineRow,
+	weekPartsOf,
 } from "@/features/scheduling/timeline/timelineRows";
+import { mayDeleteSchedule } from "@/features/scheduling/schedules/scheduleActions";
 import { departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 
@@ -40,7 +44,16 @@ export type DepartmentTimeline =
 			rows: Array<TimelineRow>;
 			/** Whether every schedule's roster is read, still loading, or could not be read. */
 			rosters: RostersRead;
+			/**
+			 * Each schedule read so far that the person may delete under the roster
+			 * page's rule (`mayDeleteSchedule`), with its week's parts, as the delete
+			 * dialog takes them; by schedule id.
+			 */
+			deleteTargets: Record<string, DeleteTarget>;
 	  };
+
+/** What the delete dialog needs of one schedule: the schedule itself and its week's parts. */
+export type DeleteTarget = { schedule: Schedule; weekParts: Array<WeekPart> };
 
 /** Whether a failed read was a refusal of `schedule:read`. */
 const isRefused = (error: unknown): boolean =>
@@ -129,5 +142,20 @@ export const useDepartmentTimeline = (
 		schedules,
 		rows: timelineRowsOf(rosters),
 		rosters: rostersReadOf(rosterSteps),
+		deleteTargets: Object.fromEntries(
+			scheduleReads.flatMap((read) =>
+				read.data && mayDeleteSchedule(read.data, access)
+					? [
+							[
+								read.data.scheduleId,
+								{
+									schedule: read.data,
+									weekParts: weekPartsOf(monthsRead, read.data.periodStart),
+								},
+							],
+						]
+					: []
+			)
+		),
 	};
 };

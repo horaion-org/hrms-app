@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { scheduleFixture } from "@/features/scheduling/schedules/fixtures";
 import {
 	approvalActionFacts,
+	mayDeleteSchedule,
 	scheduleActions,
 	type ScheduleActionFacts,
 	type ScheduleActionId,
@@ -180,4 +182,26 @@ describe("approvalActionFacts", () => {
 	])("maps %o", (standing, facts) => {
 		expect(approvalActionFacts(standing)).toEqual(facts);
 	});
+});
+
+describe("mayDeleteSchedule", () => {
+	/** An access that holds `schedule:delete` or not. */
+	const accessWith = (canDelete: boolean): { can: () => boolean } => ({
+		can: () => canDelete,
+	});
+	it.each([
+		["GENERATED", true, true],
+		["DRAFT", true, true],
+		["GENERATION_FAILED", true, true],
+		["REJECTED", true, true],
+		["PUBLISHED", true, false],
+		["GENERATED", false, false],
+	] as const)(
+		"a %s schedule with delete %s: %s",
+		(status, canDelete, expected) => {
+			expect(
+				mayDeleteSchedule(scheduleFixture({ status }), accessWith(canDelete))
+			).toBe(expected);
+		}
+	);
 });

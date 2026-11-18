@@ -11,6 +11,7 @@ import {
 	hoursOfRow,
 	monthsOfWindow,
 	rostersReadOf,
+	weekPartsOf,
 	timelineRowsOf,
 	timelineSchedulesOf,
 } from "@/features/scheduling/timeline/timelineRows";
@@ -122,5 +123,22 @@ describe("rostersReadOf", () => {
 		[[], "loaded"],
 	] as const)("%j reads as %s", (steps, expected) => {
 		expect(rostersReadOf(steps)).toBe(expected);
+	});
+});
+
+describe("weekPartsOf", () => {
+	const month = scheduleMonthFixture({
+		weeks: [
+			monthWeekFixture({
+				periodStart: "2027-02-15",
+				parts: twoPartWeekFixture(),
+			}),
+		],
+	});
+	it.each([
+		["a week read", "2027-02-15", 2],
+		["a week not read", "2027-02-22", 0],
+	])("%s", (_, periodStart, count) => {
+		expect(weekPartsOf([month], periodStart)).toHaveLength(count);
 	});
 });
