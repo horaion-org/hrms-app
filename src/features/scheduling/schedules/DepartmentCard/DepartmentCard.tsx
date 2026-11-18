@@ -5,8 +5,13 @@ import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { formatDayAndMonth } from "@/features/scheduling/months/monthWeeks";
+import { formatPeriod } from "@/features/scheduling/periods";
 import { dayMarkLooks } from "@/features/scheduling/schedules/dayMarkLooks";
-import type { DepartmentCardEntry } from "@/features/scheduling/schedules/departmentCards";
+import {
+	showsYear,
+	type DepartmentCardEntry,
+	type PublishedStanding,
+} from "@/features/scheduling/schedules/departmentCards";
 
 export type DepartmentCardProps = {
 	card: DepartmentCardEntry;
@@ -16,6 +21,13 @@ export type DepartmentCardProps = {
 };
 
 const key = "scheduling.timeline.card";
+
+/** The published line for each standing; only "upTo" names a day. */
+const PUBLISHED_LINE_KEYS = {
+	upTo: `${key}.publishedUpTo`,
+	notFromThisWeek: `${key}.notPublishedFromThisWeek`,
+	nothing: `${key}.nothingPublished`,
+} as const satisfies Record<PublishedStanding, string>;
 
 /**
  * One Department on the Scheduling landing: Open schedule, a bar per day
@@ -30,8 +42,12 @@ export const DepartmentCard = ({
 	const { t, i18n } = useTranslation();
 	const titleId = useId();
 	const language = formattingLocale(i18n);
-	const dayText = (day: string): string => formatDayAndMonth(day, language);
-	// Published only up to a day before today, or not at all: staff are not covered from today.
+	// A day of another year names it, as the history's periods do; this year's reads short.
+	const dayText = (day: string): string =>
+		showsYear(day, today)
+			? formatPeriod({ start: day, end: day }, language)
+			: formatDayAndMonth(day, language);
+	// Published only up to a day before today, or not from this week: staff are not covered from today.
 	const publishedFallsShort =
 		card.publishedUpTo === undefined || card.publishedUpTo < today;
 
@@ -80,9 +96,9 @@ export const DepartmentCard = ({
 						: "text-neutral-800"
 				)}
 			>
-				{card.publishedUpTo === undefined
-					? t(`${key}.nothingPublished`)
-					: t(`${key}.publishedUpTo`, { day: dayText(card.publishedUpTo) })}
+				{t(PUBLISHED_LINE_KEYS[card.publishedStanding], {
+					day: card.publishedUpTo && dayText(card.publishedUpTo),
+				})}
 			</p>
 			<p className="text-sm text-neutral-800">
 				{card.toReviewCount > 0

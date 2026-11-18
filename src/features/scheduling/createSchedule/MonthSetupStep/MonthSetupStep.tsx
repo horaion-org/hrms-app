@@ -43,6 +43,7 @@ import {
 } from "@/features/scheduling/months/weekTicks";
 import { chosenOutsideOffered } from "@/features/scheduling/createSchedule/ScheduleSetupStep/chosenDepartment";
 import {
+	createScheduleWordingOf,
 	monthSetupSchema,
 	SCHEDULE_FOR,
 	type MonthSetupValues,
@@ -388,7 +389,7 @@ export const MonthSetupStep = ({
 	return (
 		<StepPanel
 			className={className}
-			description={t("scheduling.months.setup.description")}
+			description={t(createScheduleWordingOf(scheduleFor).setupDescription)}
 			title={t("scheduling.setup.title")}
 		>
 			<form

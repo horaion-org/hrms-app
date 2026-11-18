@@ -45,6 +45,26 @@ export const openingScheduleFor = (link: {
 	month?: string;
 }): ScheduleFor => link.for ?? (link.month ? "month" : "dates");
 
+/** Create schedule's title, intro and setup line for each choice: Dates speaks of days, Month of a month's weeks. */
+const CREATE_SCHEDULE_WORDING = {
+	dates: {
+		title: "scheduling.dates.create.title",
+		subtitle: "scheduling.dates.create.subtitle",
+		setupDescription: "scheduling.dates.setup.description",
+	},
+	month: {
+		title: "scheduling.months.create.title",
+		subtitle: "scheduling.months.create.subtitle",
+		setupDescription: "scheduling.months.setup.description",
+	},
+} as const;
+
+/** The translation keys of Create schedule's wording while `scheduleFor` is chosen. */
+export const createScheduleWordingOf = (
+	scheduleFor: ScheduleFor
+): (typeof CREATE_SCHEDULE_WORDING)[ScheduleFor] =>
+	CREATE_SCHEDULE_WORDING[scheduleFor];
+
 type MonthSetupSchema = z.ZodObject<{
 	departmentId: z.ZodString;
 	scheduleFor: z.ZodEnum<{ month: "month"; dates: "dates" }>;

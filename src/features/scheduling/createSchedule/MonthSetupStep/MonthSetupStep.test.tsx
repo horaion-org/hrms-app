@@ -349,6 +349,19 @@ describe("MonthSetupStep", () => {
 			plan = datesPlanFixture()
 		): MonthSetupStepProps["dates"] => ({ plan, pending: false, today: TODAY });
 
+		it("given_eachChoice_when_shown_then_theSetupLineSpeaksOfItsDaysOrMonth", () => {
+			const { unmount } = render(<Harness />);
+			expect(
+				screen.getByText("Select the department and the month to generate.")
+			).toBeInTheDocument();
+			unmount();
+
+			render(<Harness dates={datesProp()} defaultValues={DATES} />);
+			expect(
+				screen.getByText("Select the department and the days to generate.")
+			).toBeInTheDocument();
+		});
+
 		it("given_aNewSetup_when_shown_then_monthIsChosen", () => {
 			render(<Harness />);
 
@@ -678,7 +691,7 @@ describe("MonthSetupStep", () => {
 				screen.queryByRole("table", { name: "What this creates" })
 			).toBeNull();
 			expect(screen.queryByText(/This week will be/)).toBeNull();
-			expect(screen.queryByText(/days? to generate/)).toBeNull();
+			expect(screen.queryByText(/\d+ days? to generate/)).toBeNull();
 			expect(
 				screen.queryByText(/It stays until the new days are ready/)
 			).toBeNull();

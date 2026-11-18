@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+	createScheduleWordingOf,
 	openingScheduleFor,
 	SCHEDULE_FOR,
 } from "@/features/scheduling/createSchedule/setupSchema";
@@ -27,4 +28,30 @@ describe("openingScheduleFor", () => {
 	] as const)("$case opens on $opens", ({ link, opens }) => {
 		expect(openingScheduleFor(link)).toBe(opens);
 	});
+});
+
+describe("createScheduleWordingOf", () => {
+	it.each([
+		{
+			scheduleFor: "dates",
+			wording: {
+				title: "scheduling.dates.create.title",
+				subtitle: "scheduling.dates.create.subtitle",
+				setupDescription: "scheduling.dates.setup.description",
+			},
+		},
+		{
+			scheduleFor: "month",
+			wording: {
+				title: "scheduling.months.create.title",
+				subtitle: "scheduling.months.create.subtitle",
+				setupDescription: "scheduling.months.setup.description",
+			},
+		},
+	] as const)(
+		"$scheduleFor has its own wording",
+		({ scheduleFor, wording }) => {
+			expect(createScheduleWordingOf(scheduleFor)).toEqual(wording);
+		}
+	);
 });

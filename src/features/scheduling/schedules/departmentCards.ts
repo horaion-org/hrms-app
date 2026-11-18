@@ -21,6 +21,13 @@ const DAYS_IN_WEEK = 7;
 /** A day's mark on the card's strip. */
 export type DayMark = "published" | "toReview" | "none";
 
+/**
+ * How far the card says the Department is published: up to a day from this
+ * week's Monday, not from this week though a schedule is published later or
+ * earlier in the loaded months, or nothing published at all.
+ */
+export type PublishedStanding = "upTo" | "notFromThisWeek" | "nothing";
+
 /** A Department the manager can see, as the landing's Filters offer it. */
 export type CardDepartment = { departmentId: string; name: string };
 
@@ -30,6 +37,7 @@ export type DepartmentCardEntry = {
 	departmentName: string;
 	/** The last day of the published run from the Monday of today's week. */
 	publishedUpTo: string | undefined;
+	publishedStanding: PublishedStanding;
 	toReviewCount: number;
 	/** The last day any schedule covers. */
 	scheduledUpTo: string | undefined;
@@ -119,6 +127,19 @@ const publishedRunEnd = (
 	return lastPublished;
 };
 
+/** Which published line the card shows, from the run from this week and whether any schedule is published. */
+export const publishedStandingOf = (
+	publishedUpTo: string | undefined,
+	anyPublished: boolean
+): PublishedStanding => {
+	if (publishedUpTo !== undefined) return "upTo";
+	return anyPublished ? "notFromThisWeek" : "nothing";
+};
+
+/** Whether a card day shows its year: only when it is not today's year. */
+export const showsYear = (day: string, today: string): boolean =>
+	dayjs(day).year() !== dayjs(today).year();
+
 /** One Department's card from its schedules and today's date. */
 const cardOf = (
 	department: CardDepartment,
@@ -129,10 +150,15 @@ const cardOf = (
 		(schedule) => schedule.state === "TO_REVIEW"
 	);
 	const lastDays = schedules.map((schedule) => schedule.lastDay).sort();
+	const publishedUpTo = publishedRunEnd(schedules, mondayOf(today));
+	const anyPublished = schedules.some(
+		(schedule) => schedule.state === "PUBLISHED"
+	);
 	return {
 		departmentId: department.departmentId,
 		departmentName: department.name,
-		publishedUpTo: publishedRunEnd(schedules, mondayOf(today)),
+		publishedUpTo,
+		publishedStanding: publishedStandingOf(publishedUpTo, anyPublished),
 		toReviewCount: toReview.length,
 		scheduledUpTo: lastDays[lastDays.length - 1],
 		nextToReview: toReview[0]?.name,

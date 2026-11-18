@@ -5716,11 +5716,16 @@
 				"reversed": "The last day is before the first day. Choose a last day on or after {{first}}.",
 				"tooLong": "That is {{days}} days. A schedule by dates covers up to {{max}} days. Choose a last day on or before {{last}}, or make a second schedule for the rest.",
 				"handChangesReplaced_one": "{{count}} change made by hand to this week’s roster will be replaced.",
-				"handChangesReplaced_other": "{{count}} changes made by hand to this week’s roster will be replaced."
+				"handChangesReplaced_other": "{{count}} changes made by hand to this week’s roster will be replaced.",
+				"description": "Select the department and the days to generate."
 			},
 			"generate": {
 				"hint_one": "Generating works out {{count}} day, {{range}}. You then review and publish it.",
 				"hint_other": "Generating works out {{count}} days, {{range}}. You then review and publish them week by week."
+			},
+			"create": {
+				"title": "Create schedule",
+				"subtitle": "Choose a department and the days, then generate. You review and publish each schedule afterwards."
 			}
 		},
 		"roster": {
@@ -5808,7 +5813,8 @@
 					"published": "Published",
 					"toReview": "To review",
 					"none": "No schedule"
-				}
+				},
+				"notPublishedFromThisWeek": "Not published from this week"
 			},
 			"cardsLoading": "Loading the departments…",
 			"cardsFailed": "The departments couldn’t be loaded. Please try again.",
