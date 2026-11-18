@@ -1,12 +1,21 @@
 import dayjs from "dayjs";
-import type { ScheduleMonth, WeekPart } from "@/features/scheduling/months/api";
+import type {
+	ScheduleMonth,
+	WeekPart,
+	WeekState,
+} from "@/features/scheduling/months/api";
 import { monthOf } from "@/features/scheduling/months/monthWeeks";
+import { hasRoster } from "@/features/scheduling/months/weekStateLooks";
 import {
 	hoursInDays,
 	type RosterCell,
 	type RosterRow,
 } from "@/features/scheduling/roster/roster";
-import type { Schedule } from "@/features/scheduling/schedules/api";
+import {
+	generationInProgress,
+	rosterRunId,
+	type Schedule,
+} from "@/features/scheduling/schedules/api";
 import type { TimelineSchedule } from "@/features/scheduling/timeline/timeline";
 
 /*
@@ -175,3 +184,27 @@ export const piecesOf = (
 		const piece = pieces[scheduleId];
 		return piece ? [piece] : [];
 	});
+
+/**
+ * Whether the month says the schedule has a roster that its own read does
+ * not show yet: the read was made before its generation ended, or before it
+ * began (a piece queued behind another), so its cells are still to come.
+ */
+export const rosterAwaited = (
+	state: WeekState,
+	read: Schedule | undefined
+): boolean =>
+	hasRoster(state) && read !== undefined && rosterRunId(read) === undefined;
+
+/**
+ * Whether a schedule on the timeline is read again every 15 seconds: while
+ * the month, or its own read, says it is being generated, and until its read
+ * shows the roster the month says it has.
+ */
+export const scheduleReadPolls = (
+	state: WeekState,
+	read: Schedule | undefined
+): boolean =>
+	state === "GENERATING" ||
+	rosterAwaited(state, read) ||
+	(read !== undefined && generationInProgress(read));

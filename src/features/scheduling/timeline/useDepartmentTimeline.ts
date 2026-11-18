@@ -1,4 +1,5 @@
-import { useQueries } from "@tanstack/react-query";
+import { useQueries, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import type { DepartmentPath } from "@/common/companyPath";
 import { ApiProblemError } from "@/common/problem";
 import {
@@ -8,9 +9,11 @@ import {
 } from "@/features/scheduling/months/api";
 import { rosterFromAssignments } from "@/features/scheduling/roster/roster";
 import {
+	GENERATION_POLL_INTERVAL_MS,
 	rosterRunId,
 	type Schedule,
 	scheduleAssignmentsQuery,
+	scheduleKey,
 	scheduleQuery,
 } from "@/features/scheduling/schedules/api";
 import {
@@ -20,7 +23,9 @@ import {
 import {
 	monthsOfWindow,
 	timelineRowsOf,
+	rosterAwaited,
 	rostersReadOf,
+	scheduleReadPolls,
 	type RosterReadStep,
 	type RostersRead,
 	type TimelinePiece,
@@ -96,14 +101,38 @@ export const useDepartmentTimeline = (
 		firstDay,
 		lastDay
 	).flat();
-	const scheduleReads = useQueries({
-		queries: schedules.map((schedule) =>
-			// Read again while generating, as the schedule page does, so its roster appears once ready.
-			scheduleQuery(companyId, unit, schedule.id, allowed, {
-				pollWhileGenerating: true,
-			})
-		),
+	/**
+	 * One schedule's read, made again while the month or the read itself says
+	 * it is being generated and until it shows the roster the month says it
+	 * has: a piece queued behind another is first read before its generation
+	 * starts, and its own word alone would never have it read again.
+	 */
+	const polledScheduleQuery = (
+		schedule: TimelineSchedule
+	): ReturnType<typeof scheduleQuery> => ({
+		...scheduleQuery(companyId, unit, schedule.id, allowed),
+		refetchInterval: (query) =>
+			scheduleReadPolls(schedule.status, query.state.data)
+				? GENERATION_POLL_INTERVAL_MS
+				: false,
 	});
+	const scheduleReads = useQueries({
+		queries: schedules.map(polledScheduleQuery),
+	});
+	// A read found behind the month is made again at once, so a piece's cells follow its band without waiting a poll.
+	const client = useQueryClient();
+	const awaitedIds = schedules
+		.filter((schedule, index) =>
+			rosterAwaited(schedule.status, scheduleReads[index]?.data)
+		)
+		.map((schedule) => schedule.id)
+		.join(" ");
+	useEffect(() => {
+		for (const scheduleId of awaitedIds.split(" ").filter(Boolean))
+			void client.invalidateQueries({
+				queryKey: scheduleKey(companyId, scheduleId),
+			});
+	}, [awaitedIds, client, companyId]);
 	const runIds = scheduleReads.map((read) =>
 		read.data ? rosterRunId(read.data) : undefined
 	);
@@ -135,6 +164,8 @@ export const useDepartmentTimeline = (
 	const rosterSteps = scheduleReads.map((read, index): RosterReadStep => {
 		const rosterRead = rosterReads[index]!;
 		if (read.isError || rosterRead.isError) return "failed";
+		// The month says it has a roster the read does not show yet: its cells are loading, not empty.
+		if (rosterAwaited(schedules[index]!.status, read.data)) return "pending";
 		const rosterPending = runIds[index] !== undefined && rosterRead.isPending;
 		return read.isPending || rosterPending ? "pending" : "done";
 	});
