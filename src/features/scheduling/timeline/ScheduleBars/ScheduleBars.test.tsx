@@ -10,7 +10,10 @@ import {
 	twoTimelineSchedules,
 } from "@/features/scheduling/timeline/fixtures";
 import { ScheduleBars } from "@/features/scheduling/timeline/ScheduleBars";
-import type { TimelineSchedule } from "@/features/scheduling/timeline/timeline";
+import type {
+	TimelineSchedule,
+	TimelineView,
+} from "@/features/scheduling/timeline/timeline";
 
 beforeAll(async () => {
 	await createInstance()
@@ -23,7 +26,10 @@ beforeAll(async () => {
 });
 
 /** Renders the bar lanes of `schedules` over the fixture week, in a table as the grid holds them. */
-const renderBars = (schedules: Array<TimelineSchedule>): void => {
+const renderBars = (
+	schedules: Array<TimelineSchedule>,
+	view: TimelineView = "week"
+): void => {
 	render(
 		<MemoryRouterHarness>
 			<table>
@@ -31,6 +37,7 @@ const renderBars = (schedules: Array<TimelineSchedule>): void => {
 					<ScheduleBars
 						days={FIXTURE_WEEK}
 						schedules={schedules}
+						view={view}
 						onShowOnly={() => {}}
 					/>
 				</tbody>
@@ -75,11 +82,43 @@ describe("ScheduleBars", () => {
 		renderBars([{ ...early!, status: "FAILED" }]);
 		await userEvent.click(
 			await screen.findByRole("button", {
-				name: /Early week, Generation failed/,
+				name: "Early week, Mon, Feb 8 to Wed, Feb 10, Generation failed",
 			})
 		);
 		expect(
 			await screen.findByRole("menuitem", { name: "Open schedule" })
 		).toBeInTheDocument();
+	});
+
+	/** Each zoom shows what fits a bar of three days; its full name stays in its label and title. */
+	it.each([
+		["week", true, true],
+		["two", true, false],
+		["four", true, false],
+	] as const)(
+		"a three-day bar in the %s view shows its name %s and badge %s",
+		async (view, name, badge) => {
+			const [early] = twoTimelineSchedules();
+			renderBars([early!], view);
+			const bar = await screen.findByRole("button", {
+				name: "Early week, Mon, Feb 8 to Wed, Feb 10, Published",
+			});
+			expect(bar).toHaveAttribute(
+				"title",
+				"Early week, Mon, Feb 8 to Wed, Feb 10, Published"
+			);
+			expect(within(bar).queryByText("Early week") !== null).toBe(name);
+			expect(within(bar).queryByText("Published") !== null).toBe(badge);
+		}
+	);
+
+	/** A bar too short in four weeks keeps only its dot. */
+	it("shows only the dot of a two-day bar in four weeks", async () => {
+		renderBars(
+			[{ ...twoTimelineSchedules()[0]!, lastDay: "2027-02-09" }],
+			"four"
+		);
+		const bar = await screen.findByRole("button", { name: /^Early week/ });
+		expect(bar).toHaveTextContent("");
 	});
 });

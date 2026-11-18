@@ -43,22 +43,44 @@ const renderGrid = (
 };
 
 describe("TimelineGrid", () => {
-	it("shows each schedule's shift and No schedule on a day in neither", async () => {
-		const row = await renderGrid("week");
-		expect(within(row).getAllByText(/Morning/)).toHaveLength(2);
-		expect(within(row).getByText("No schedule")).toBeInTheDocument();
+	/** Each zoom level shows only what fits: time over name, the name, or the initial; and its empty-day mark. */
+	it.each([
+		["week", ["09:00 – 17:00", "Morning"], "No schedule", "Mon", "Feb 8"],
+		["two", ["Morning"], "–", "Mon", "8"],
+		["four", ["M"], "·", "M", "8"],
+	] as const)(
+		"shows the %s view's tile, empty day and day header",
+		async (view, lines, emptyDay, weekday, date) => {
+			const row = await renderGrid(view);
+			const [monday] = within(row).getAllByTitle(/Morning/);
+			expect(
+				[...monday!.querySelectorAll("[aria-hidden]")].map(
+					(line) => line.textContent
+				)
+			).toEqual(lines);
+			expect(
+				within(row).getByTitle(/Thu, Feb 11: No schedule$/)
+			).toHaveTextContent(emptyDay);
+			const [, mondayHeader] = screen.getAllByRole("columnheader");
+			expect(mondayHeader).toHaveTextContent(`${weekday}${date}`);
+		}
+	);
+
+	/** A short tile keeps its full words: person, day, shift, schedule and state. */
+	it("names each cell in full", async () => {
+		const row = await renderGrid("four");
+		expect(
+			within(row).getByTitle(
+				"Aisha Rahman, Fri, Feb 12: Morning 09:00 – 17:00, Weekend, To review"
+			)
+		).toHaveTextContent("M");
 	});
 
 	it("dims the cells of other schedules when one is shown alone", async () => {
 		const row = await renderGrid("week", "s-late");
-		const [early, late] = within(row).getAllByText(/Morning/);
-		expect(early!.parentElement).toHaveClass("opacity-40");
-		expect(late!.parentElement).not.toHaveClass("opacity-40");
-	});
-
-	it("shows a shift's initial in the four-week view", async () => {
-		const row = await renderGrid("four");
-		expect(within(row).getAllByText("M")).toHaveLength(2);
+		const [early, late] = within(row).getAllByTitle(/Morning/);
+		expect(early).toHaveClass("opacity-40");
+		expect(late).not.toHaveClass("opacity-40");
 	});
 
 	/** The Staff cell reads as the roster page's; four weeks keeps only the name and job title. */

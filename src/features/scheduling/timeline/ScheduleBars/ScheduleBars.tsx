@@ -1,6 +1,8 @@
 import { Menu, MenuButton, MenuItems } from "@headlessui/react";
 import { useNavigate } from "@tanstack/react-router";
+import dayjs from "dayjs";
 import { useTranslation } from "react-i18next";
+import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Badge } from "@/components/ui/Badge";
@@ -13,44 +15,60 @@ import {
 	laneCellsOf,
 	lanesOf,
 	type TimelineSchedule,
+	type TimelineView,
 } from "@/features/scheduling/timeline/timeline";
 import {
+	barContentOf,
+	LABEL_DAY_FORMAT,
 	staffCellClasses,
 	statusDotLooks,
 } from "@/features/scheduling/timeline/timelineLooks";
-
-/** A bar this many days wide or wider has room for its status badge. */
-const DAYS_FOR_BADGE = 3;
 
 export type ScheduleBarsProps = {
 	schedules: ReadonlyArray<TimelineSchedule>;
 	/** The ISO dates shown, one column each. */
 	days: ReadonlyArray<string>;
+	view: TimelineView;
 	/** "Show only this schedule" was chosen. */
 	onShowOnly: (scheduleId: string) => void;
 };
 
-/** One schedule's bar: its status dot, name and, when wide enough, its status badge; opens its menu. */
+/**
+ * One schedule's bar: its status dot, and its name and status badge where the
+ * zoom has room; named in full ("name, first day to last day, state") so two
+ * schedules of one name can be told apart. Opens its menu.
+ */
 const ScheduleBar = ({
 	schedule,
 	span,
+	view,
 	onShowOnly,
 }: {
 	schedule: TimelineSchedule;
 	span: number;
+	view: TimelineView;
 	onShowOnly: (scheduleId: string) => void;
 }): FunctionComponent => {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
 	const navigate = useNavigate();
 	const state = t(`scheduling.months.states.${schedule.status}`);
+	const dayName = new Intl.DateTimeFormat(
+		formattingLocale(i18n),
+		LABEL_DAY_FORMAT
+	);
+	const label = t("scheduling.timeline.bars.bar", {
+		name: schedule.name,
+		from: dayName.format(dayjs(schedule.firstDay).toDate()),
+		to: dayName.format(dayjs(schedule.lastDay).toDate()),
+		state,
+	});
+	const { showsName, showsBadge } = barContentOf(view, span);
 	return (
 		<Menu as="div" className="w-full">
 			<MenuButton
+				aria-label={label}
 				className="flex h-8 w-full min-w-0 cursor-pointer items-center gap-2 rounded-md border border-neutral-400 bg-white px-2 text-left text-xs font-semibold whitespace-nowrap text-neutral-900 data-hover:bg-neutral-100 data-open:bg-ink-blue-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500"
-				aria-label={t("scheduling.timeline.bars.bar", {
-					name: schedule.name,
-					state,
-				})}
+				title={label}
 			>
 				<span
 					aria-hidden="true"
@@ -59,8 +77,8 @@ const ScheduleBar = ({
 						statusDotLooks[weekStateTones[schedule.status]]
 					)}
 				/>
-				<span className="truncate">{schedule.name}</span>
-				{span >= DAYS_FOR_BADGE && (
+				{showsName && <span className="truncate">{schedule.name}</span>}
+				{showsBadge && (
 					<Badge compact tone={weekStateTones[schedule.status]}>
 						{state}
 					</Badge>
@@ -100,6 +118,7 @@ const ScheduleBar = ({
 export const ScheduleBars = ({
 	schedules,
 	days,
+	view,
 	onShowOnly,
 }: ScheduleBarsProps): FunctionComponent => {
 	const { t } = useTranslation();
@@ -138,6 +157,7 @@ export const ScheduleBars = ({
 								<ScheduleBar
 									schedule={cell.schedule}
 									span={cell.span}
+									view={view}
 									onShowOnly={onShowOnly}
 								/>
 							</td>

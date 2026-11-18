@@ -5564,15 +5564,22 @@
 			},
 			"bars": {
 				"label": "Horarios",
-				"bar": "{{name}}, {{state}}",
+				"bar": "{{name}}, del {{from}} al {{to}}, {{state}}",
 				"openSchedule": "Abrir horario",
 				"showOnly": "Mostrar solo este horario"
 			},
 			"grid": {
 				"label": "Personal por día",
 				"staff": "Personal",
-				"noSchedule": "Sin horario",
-				"noStaff": "Aún no hay nadie en el horario de estos días."
+				"noStaff": "Aún no hay nadie en el horario de estos días.",
+				"emptyDay": {
+					"noSchedule": "Sin horario",
+					"dash": "–",
+					"dot": "·"
+				},
+				"cellLabel": "{{name}}, {{day}}: {{what}}, {{schedule}}, {{state}}",
+				"notRosteredLabel": "{{name}}, {{day}}: sin turno, {{schedule}}, {{state}}",
+				"noScheduleLabel": "{{name}}, {{day}}: Sin horario"
 			},
 			"needs": {
 				"heading": "Requiere tu atención",
