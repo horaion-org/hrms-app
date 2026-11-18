@@ -6,6 +6,7 @@ import {
 	diagnosticSentence,
 	diagnosticSubject,
 	groupDiagnostics,
+	KNOWN_DIAGNOSTIC_CODES,
 } from "@/features/scheduling/roster/findings/diagnostics";
 import {
 	findingNames,
@@ -320,6 +321,43 @@ describe("diagnosticSentence", () => {
 		);
 		expect(diagnosticLabel("OFF_BLOCK_HISTORY_MISSING", t)).toBe(
 			"Days before not filled in"
+		);
+	});
+
+	it.each([
+		{
+			code: "DAY_TYPE_BLOCK_HISTORY_MISSING",
+			label: "Days before these days were not filled in (rest days)",
+			message:
+				"Gabriel Toh: the days before the schedule in the week of 8 to 14 February were not filled in; they are counted as worked. Fill in the days before the schedule if a rest day or a day off was given then.",
+		},
+		{
+			code: "DAYS_A_WEEK_HISTORY_MISSING",
+			label: "Days before these days were not filled in (days a week)",
+			message:
+				"P1: 3 days before this schedule in the week of 8 to 14 February were not filled in; they are counted as worked, so at most 3 more days can be worked that week. Fill in the days before the schedule if they were not worked.",
+		},
+	])(
+		"given_$code_when_worded_then_aPlainHeadingOverTheEnginesSentence",
+		({ code, label, message }) => {
+			const diagnostic = { ...dayTypeFinding(code, {}), message };
+
+			expect(diagnosticLabel(code, t)).toBe(label);
+			// No sentence of the app's: the list then shows the engine's own.
+			expect(diagnosticSentence(diagnostic, withDaysLimit, t, day)).toBeNull();
+			expect(diagnosticSubject(diagnostic, unnamed, t).who).toBe(label);
+		}
+	);
+
+	it("given_everyCodeTheAppKnows_when_headed_then_eachHasItsOwnWordsNotItsCode", () => {
+		const copy: Record<string, { label?: string }> =
+			en.scheduling.findings.codes;
+
+		expect(KNOWN_DIAGNOSTIC_CODES.filter((code) => !copy[code]?.label)).toEqual(
+			[]
+		);
+		expect(Object.keys(copy).sort()).toEqual(
+			[...KNOWN_DIAGNOSTIC_CODES].sort()
 		);
 	});
 

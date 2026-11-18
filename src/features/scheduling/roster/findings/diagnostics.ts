@@ -14,8 +14,10 @@ import type { FindingsDiagnostic } from "@/features/scheduling/schedules/api";
  * its findings about the days before a schedule, for a rule about day types;
  * the next says when someone may first start after rest carried in from
  * before; the next says by when someone's last shifts must end for rest
- * before their next shift after the schedule; the last says days of a days-off
- * block before the schedule were not sent, which is information only.
+ * before their next shift after the schedule; the next says days of a days-off
+ * block before the schedule were not sent, which is information only; the last
+ * two say the same of a week's required days and of its most days worked, and
+ * keep the engine's sentence, which names the person, the week and what to do.
  * The set is open, so a code added later reads by its code and the engine's
  * own sentence.
  */
@@ -30,6 +32,8 @@ export const KNOWN_DIAGNOSTIC_CODES = [
 	"PRIOR_REST_BLOCKS_SHIFTS",
 	"NEXT_SHIFT_REST_BLOCKS_SHIFTS",
 	"OFF_BLOCK_HISTORY_MISSING",
+	"DAY_TYPE_BLOCK_HISTORY_MISSING",
+	"DAYS_A_WEEK_HISTORY_MISSING",
 ] as const;
 
 type KnownDiagnosticCode = (typeof KNOWN_DIAGNOSTIC_CODES)[number];
@@ -220,6 +224,10 @@ export const diagnosticSentence = (
 				startTime: clockOf(nextStart),
 			});
 		}
+		case "DAY_TYPE_BLOCK_HISTORY_MISSING":
+		case "DAYS_A_WEEK_HISTORY_MISSING":
+			// Only the heading is the app's: the engine's sentence already says who, which week and what to do.
+			return null;
 		case "OFF_BLOCK_HISTORY_MISSING":
 			// Without a member it is about everyone the rule counts.
 			if (entityText(diagnostic, "employeeId") === null)
