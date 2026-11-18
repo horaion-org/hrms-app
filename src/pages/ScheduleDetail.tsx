@@ -782,6 +782,7 @@ const ApiSchedule = ({
 					mode={publishModeOf(standing, approval.instance?.steps ?? [])}
 					schedule={schedule}
 					shortShifts={shortShifts}
+					shownOn="schedulePage"
 					onClose={closeDialog}
 					onDone={decided}
 				/>

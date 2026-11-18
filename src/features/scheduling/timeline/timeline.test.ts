@@ -4,7 +4,9 @@ import {
 	branchWeekFrom,
 	daysWithoutSchedule,
 	firstFreeRunOf,
+	generatingNoticeShown,
 	isDimmed,
+	isGeneratingIn,
 	laneCellsOf,
 	lanesOf,
 	type NeedLine,
@@ -182,6 +184,40 @@ describe("needsOf", () => {
 				lastDay: "2027-02-14",
 			},
 		]);
+	});
+});
+
+describe("isGeneratingIn", () => {
+	const run = { firstDay: "2027-02-10", lastDay: "2027-02-12" };
+	const generating = (firstDay: string, lastDay: string): TimelineSchedule =>
+		schedule("redo", firstDay, lastDay, "GENERATING");
+
+	it.each([
+		["no schedule", [], false],
+		["only schedules not being generated", [early, late], false],
+		[
+			"one being generated on its last day",
+			[generating("2027-02-12", "2027-02-14")],
+			true,
+		],
+		[
+			"one being generated on other days",
+			[early, generating("2027-02-13", "2027-02-14")],
+			false,
+		],
+	] as const)("with %s over the run: %s", (_, schedules, expected) => {
+		expect(isGeneratingIn(schedules, run)).toBe(expected);
+	});
+});
+
+describe("generatingNoticeShown", () => {
+	/** The notice outlives the moment before the month read shows the run, and goes once generating was seen to end. */
+	it.each([
+		["nothing generating yet, none seen", false, false, true],
+		["generating now", true, true, true],
+		["generating seen, and over", false, true, false],
+	])("%s: %s", (_, generatingNow, seenGenerating, shown) => {
+		expect(generatingNoticeShown(generatingNow, seenGenerating)).toBe(shown);
 	});
 });
 

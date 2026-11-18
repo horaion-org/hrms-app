@@ -9,9 +9,9 @@ import {
 	holdsPublishBack,
 	type LocksRead,
 	PUBLISH_CHECK_WAIT_MS,
+	peopleCountOf,
 	type PublishCheck,
 	publishCheckOf,
-	violationCountOf,
 } from "@/features/scheduling/rulesCheck/publishCheck";
 import {
 	type BrokenRule,
@@ -29,15 +29,21 @@ import {
 import { departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 
+/** Where the dialog is shown: the roster page, or the schedule's own page, where the roster is changed. */
+export type PublishDialogPlace = "rosterPage" | "schedulePage";
+
 /** The publish dialog's own props; the check supplies its note itself. */
 export type CheckedPublishDialogProps = Omit<
 	PublishScheduleDialogProps,
 	"checkNote"
->;
+> & {
+	/** Where it is shown, which words what to do about a broken locked rule; the roster page when left out. */
+	shownOn?: PublishDialogPlace;
+};
 
 const key = "scheduling.rulesCheck.publishCheck";
 
-/** The broken rules as a list: each by its name, with how many people and days it is broken for when the check says. */
+/** The broken rules as a list: each by its name, with how many people it is broken for when the check says. */
 const RuleList = ({
 	rules,
 }: {
@@ -48,7 +54,7 @@ const RuleList = ({
 		<ul className="mt-2 list-disc pl-5">
 			{rules.map((rule, index) => {
 				const name = brokenRuleLabel(rule, t);
-				const count = violationCountOf(rule);
+				const count = peopleCountOf(rule);
 				return (
 					// Two broken rules may share a name and an id, so the place in the list tells them apart.
 					<li key={`${rule.rule}-${index}`}>
@@ -60,11 +66,19 @@ const RuleList = ({
 	);
 };
 
+/** What to do about a broken locked rule: from the roster page, where to change the roster; on the schedule page, only to change it. */
+const LOCKED_NEXT_KEYS = {
+	rosterPage: "scheduling.rulesCheck.publishCheck.lockedNext",
+	schedulePage: "scheduling.rulesCheck.publishCheck.lockedNextHere",
+} as const satisfies Record<PublishDialogPlace, string>;
+
 /** What the check says, above the dialog's other warnings: nothing when every rule holds. */
 const PublishCheckNote = ({
 	check,
+	shownOn,
 }: {
 	check: PublishCheck;
+	shownOn: PublishDialogPlace;
 }): FunctionComponent => {
 	const { t } = useTranslation();
 	if (check.kind === "checking")
@@ -86,7 +100,7 @@ const PublishCheckNote = ({
 				<Callout className="mb-6" tone="error">
 					<p>{t(`${key}.lockedTitle`, { count: check.locked.length })}</p>
 					<RuleList rules={check.locked} />
-					<p className="mt-2">{t(`${key}.lockedNext`)}</p>
+					<p className="mt-2">{t(LOCKED_NEXT_KEYS[shownOn])}</p>
 				</Callout>
 			)}
 			{check.other.length > 0 && (
@@ -105,9 +119,10 @@ const PublishCheckNote = ({
  * says which; any other broken rule only warns; a check refused, unable to
  * tell or slower than 20 seconds warns and still lets the roster be published.
  */
-export const CheckedPublishDialog = (
-	props: CheckedPublishDialogProps
-): FunctionComponent => {
+export const CheckedPublishDialog = ({
+	shownOn = "rosterPage",
+	...props
+}: CheckedPublishDialogProps): FunctionComponent => {
 	const { companyId, schedule } = props;
 	const access = useAccess();
 	const [timedOut, setTimedOut] = useState(false);
@@ -163,7 +178,7 @@ export const CheckedPublishDialog = (
 	return (
 		<PublishScheduleDialog
 			{...props}
-			checkNote={<PublishCheckNote check={result} />}
+			checkNote={<PublishCheckNote check={result} shownOn={shownOn} />}
 			confirmDisabled={held}
 			shortShifts={gapsOf(result) ?? props.shortShifts}
 		/>

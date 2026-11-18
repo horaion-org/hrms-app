@@ -100,12 +100,13 @@ export const gapsOf = (check: PublishCheck): number | undefined =>
 	check.kind === "holds" || check.kind === "broken" ? check.gaps : undefined;
 
 /**
- * How many people and days a broken rule is broken for: each violation is one
- * person, on every day the check lists for them, or on one day when it lists
- * none; zero when the engine could not say who and when.
+ * How many people a broken rule is broken for: the distinct people its
+ * violations name. A weekly rule lists every day of the week for one person,
+ * so days are not counted. Zero when the engine could not say who.
  */
-export const violationCountOf = (rule: BrokenRule): number =>
-	(rule.violations ?? []).reduce(
-		(total, violation) => total + (violation.days?.length ?? 1),
-		0
-	);
+export const peopleCountOf = (rule: BrokenRule): number =>
+	new Set(
+		(rule.violations ?? []).flatMap((violation) =>
+			violation.employeeId === null ? [] : [violation.employeeId]
+		)
+	).size;

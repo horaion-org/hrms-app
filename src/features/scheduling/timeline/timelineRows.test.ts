@@ -6,13 +6,18 @@ import {
 } from "@/features/scheduling/months/fixtures";
 import type { ScheduleMonth } from "@/features/scheduling/months/api";
 import type { RosterRow } from "@/features/scheduling/roster/roster";
-import { scheduleFixture } from "@/features/scheduling/schedules/fixtures";
+import {
+	generatedScheduleFixture,
+	scheduleFixture,
+} from "@/features/scheduling/schedules/fixtures";
 import { timelineRowFixture } from "@/features/scheduling/timeline/fixtures";
 import {
 	hoursOfRow,
 	monthsOfWindow,
 	piecesOf,
+	rosterAwaited,
 	rostersReadOf,
+	scheduleReadPolls,
 	weekPartsOf,
 	timelinePiecesOf,
 	timelineRowsOf,
@@ -188,4 +193,35 @@ describe("timelinePiecesOf", () => {
 			)
 		).toEqual(["s-march", "s-read"]);
 	});
+});
+
+describe("a schedule's read against the month's word", () => {
+	const queued = scheduleFixture();
+	const requested = generatedScheduleFixture();
+	const generated = generatedScheduleFixture({ status: "GENERATED" });
+	const published = generatedScheduleFixture({ status: "PUBLISHED" });
+
+	/**
+	 * A piece queued behind another is read before its generation starts; once
+	 * the month says it has a roster that read is behind, and is made again.
+	 */
+	it.each([
+		["GENERATING", "not read yet", undefined, false, true],
+		["GENERATING", "read while queued", queued, false, true],
+		["GENERATING", "read while requested", requested, false, true],
+		["TO_REVIEW", "not read yet", undefined, false, false],
+		["TO_REVIEW", "read while queued", queued, true, true],
+		["TO_REVIEW", "read while requested", requested, true, true],
+		["TO_REVIEW", "read as generated", generated, false, false],
+		["PUBLISHED", "read as published", published, false, false],
+		["DRAFT", "read as a draft", queued, false, false],
+		["FAILED", "read while requested", requested, false, true],
+		["NOT_GENERATED", "not read yet", undefined, false, false],
+	] as const)(
+		"the month saying %s, the schedule %s: awaits its roster %s, is read again %s",
+		(state, _, read, awaited, polls) => {
+			expect(rosterAwaited(state, read)).toBe(awaited);
+			expect(scheduleReadPolls(state, read)).toBe(polls);
+		}
+	);
 });
