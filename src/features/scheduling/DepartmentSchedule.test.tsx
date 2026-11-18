@@ -10,6 +10,7 @@ import {
 import {
 	accessPassReply,
 	envelope,
+	problemReply,
 	stubApi,
 	type StubReply,
 } from "@/common/testing/stubApi";
@@ -18,6 +19,7 @@ import { renderAuthApp } from "@/features/auth/testing";
 import dayjs from "dayjs";
 import { mondayOf } from "@/common/weeks";
 import { withDatesRun } from "@/features/scheduling/months/datesRunState";
+import type { ScheduleMonth, WeekPart } from "@/features/scheduling/months/api";
 import {
 	monthWeekFixture,
 	scheduleMonthFixture,
@@ -40,6 +42,7 @@ afterEach(() => {
 	endSession("expired");
 	resetApiClient();
 	vi.restoreAllMocks();
+	vi.useRealTimers();
 	localStorage.clear();
 });
 
@@ -245,4 +248,181 @@ it("starts on the Monday of today's week when the link names no day", async () =
 		)
 	);
 	expect(dayjs(days[0]).day()).toBe(1);
+});
+
+/** A `schedule=` left over after moving the window names no schedule there: nothing is dimmed and the select shows all. */
+it("drops a stale schedule choice once the window moves on", async () => {
+	await openTimeline("from=2026-10-12&schedule=s-1");
+
+	await userEvent.click(screen.getByRole("button", { name: "Later days" }));
+
+	const toolbar = screen.getByRole("group", { name: "Days shown" });
+	await vi.waitFor(() => {
+		expect(
+			within(toolbar).getByRole("button", { name: /^Schedule/ })
+		).toHaveTextContent("All schedules");
+	});
+	expect(document.querySelector(".opacity-40")).toBeNull();
+	expect(screen.queryByText(/^Showing only/)).not.toBeInTheDocument();
+});
+
+/** The two-part week with its weekend part in `weekend`'s state, today being Saturday 10 October 2026, before it. */
+const openBeforeTheWeek = async (weekend: Partial<WeekPart>): Promise<void> => {
+	vi.useFakeTimers({ toFake: ["Date"] });
+	vi.setSystemTime(new Date("2026-10-10T09:00:00"));
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	const routes = twoSchedulesInOneWeek();
+	const month = (
+		routes[`GET ${MONTHS}/2026-10`] as { body: { data: ScheduleMonth } }
+	).body.data;
+	const [early, late] = month.weeks[0]!.parts;
+	stubApi({
+		...routes,
+		[`GET ${MONTHS}/2026-10`]: ok({
+			...month,
+			weeks: [
+				{ ...month.weeks[0]!, parts: [early!, { ...late!, ...weekend }] },
+			],
+		}),
+	});
+	app = await openApp("/scheduling/department?department=d-1&from=2026-10-12");
+	renderAuthApp(app);
+	await screen.findByRole("heading", { level: 2, name: "Needs you" });
+};
+
+/** Thursday lies before the published (or once published) weekend part: the API refuses it, so no Create schedule. */
+it.each([
+	["published", { state: "PUBLISHED" as const }],
+	["published once", { state: "TO_REVIEW" as const, publishedOnce: true }],
+])(
+	"offers no Create schedule for days before a %s part",
+	async (_, weekend) => {
+		await openBeforeTheWeek(weekend);
+
+		expect(
+			await screen.findByText(
+				/^No schedule for Oct 15, 2026\. Days before a published schedule in the same week cannot be scheduled\.$/
+			)
+		).toBeInTheDocument();
+		const needs = screen.getByRole("region", { name: "Needs you" });
+		expect(
+			within(needs).queryByRole("link", { name: "Create schedule" })
+		).not.toBeInTheDocument();
+	}
+);
+
+/** While a roster is still being read the grid says it is loading, not that no one is rostered. */
+it("says the rosters are loading while their reads are on the way", async () => {
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	stubApi(twoSchedulesInOneWeek());
+	const answered = globalThis.fetch;
+	// The rosters' replies never arrive.
+	vi.stubGlobal("fetch", (url: string, init?: RequestInit) =>
+		url.includes("/assignments")
+			? new Promise<Response>(() => {})
+			: answered(url, init)
+	);
+	app = await openApp("/scheduling/department?department=d-1&from=2026-10-12");
+	renderAuthApp(app);
+
+	expect(await screen.findByText("Loading the rosters…")).toBeInTheDocument();
+	expect(
+		screen.queryByText("No one is rostered in these days yet.")
+	).not.toBeInTheDocument();
+});
+
+/** A schedule that can't be read (here gone, a 404) is an alert, not an empty grid. */
+it("alerts when a schedule's roster could not be read", async () => {
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	stubApi({
+		...twoSchedulesInOneWeek(),
+		[`GET ${SCHEDULES}/s-2`]: problemReply(404, "SCHEDULE_NOT_FOUND"),
+	});
+	app = await openApp("/scheduling/department?department=d-1&from=2026-10-12");
+	renderAuthApp(app);
+
+	expect(await screen.findByRole("alert")).toHaveTextContent(
+		"The rosters couldn't be loaded. Reload the page to try again."
+	);
+});
+
+/** The two-part week with its early part changed by `early`. */
+const openWithEarlyPart = async (early: Partial<WeekPart>): Promise<void> => {
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	const routes = twoSchedulesInOneWeek();
+	const month = (
+		routes[`GET ${MONTHS}/2026-10`] as { body: { data: ScheduleMonth } }
+	).body.data;
+	const [first, weekend] = month.weeks[0]!.parts;
+	stubApi({
+		...routes,
+		[`GET ${MONTHS}/2026-10`]: ok({
+			...month,
+			weeks: [
+				{ ...month.weeks[0]!, parts: [{ ...first!, ...early }, weekend!] },
+			],
+		}),
+	});
+	app = await openApp("/scheduling/department?department=d-1&from=2026-10-12");
+	renderAuthApp(app);
+	await screen.findByRole("heading", { level: 1, name: "Kitchen Schedule" });
+};
+
+/** A failed, rejected or never generated schedule has nothing to publish, so the notice does not name it. */
+it.each(["FAILED", "REJECTED", "NOT_GENERATED"] as const)(
+	"leaves a %s schedule out of the Not published yet notice",
+	async (state) => {
+		await openWithEarlyPart({ state });
+
+		await screen.findByRole("button", { name: /^Early days,/ });
+		expect(screen.queryByText(/^Not published yet/)).not.toBeInTheDocument();
+	}
+);
+
+/** A draft's bar opens its setup, where the week card sends a draft, not the roster page. */
+it("opens a draft's setup from its bar", async () => {
+	await openWithEarlyPart({ state: "DRAFT" });
+
+	await userEvent.click(
+		await screen.findByRole("button", { name: /^Early days,/ })
+	);
+	await userEvent.click(
+		await screen.findByRole("menuitem", { name: "Open schedule" })
+	);
+
+	await vi.waitFor(() => {
+		expect(app?.router.state.location.pathname).toBe("/scheduling/new");
+	});
+	expect(app?.router.state.location.search).toMatchObject({
+		step: "setup",
+		scheduleId: "s-1",
+		departmentId: "d-1",
+	});
+});
+
+/** With no `from`, once the branch's today is known in a week other than the device's, the window moves to it. */
+it("moves a window opened on the device's Monday to the branch's", async () => {
+	// Sunday 11 October 2026, 12:00 UTC: already Monday 12 October at the branch (UTC+14).
+	vi.useFakeTimers({ toFake: ["Date"] });
+	vi.setSystemTime(new Date("2026-10-11T12:00:00Z"));
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	const routes = twoSchedulesInOneWeek();
+	const month = (
+		routes[`GET ${MONTHS}/2026-10`] as { body: { data: ScheduleMonth } }
+	).body.data;
+	stubApi({
+		...routes,
+		[`GET ${MONTHS}/2026-10`]: ok({ ...month, timeZone: "Pacific/Kiritimati" }),
+	});
+	app = await openApp("/scheduling/department?department=d-1");
+	renderAuthApp(app);
+
+	await vi.waitFor(() => {
+		expect(app?.router.state.location.search).toMatchObject({
+			from: "2026-10-12",
+		});
+	});
+	expect(
+		await screen.findByRole("row", { name: /Aisha Rahman/ })
+	).toBeInTheDocument();
 });

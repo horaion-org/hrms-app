@@ -31,6 +31,8 @@ const renderGrid = (
 		<MemoryRouterHarness>
 			<TimelineGrid
 				days={FIXTURE_WEEK}
+				departmentId="d-1"
+				rosters="loaded"
 				rows={[timelineRowFixture()]}
 				schedules={twoTimelineSchedules()}
 				shownScheduleId={shownScheduleId}

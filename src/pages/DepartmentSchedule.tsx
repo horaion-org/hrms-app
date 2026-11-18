@@ -1,5 +1,6 @@
 import { getRouteApi, useRouterState } from "@tanstack/react-router";
 import dayjs from "dayjs";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import { ISO_DATE_FORMAT } from "@/common/isoDate";
@@ -12,8 +13,12 @@ import { datesRunOf } from "@/features/scheduling/months/datesRunState";
 import { formatPeriod } from "@/features/scheduling/periods";
 import { isoDateIn } from "@/features/scheduling/roster/roster";
 import {
+	awaitingPublication,
+	branchWeekFrom,
 	needsOf,
 	shiftWindow,
+	shownScheduleIn,
+	timelineScheduleLink,
 	type TimelineSchedule,
 	type TimelineView,
 	windowDays,
@@ -101,10 +106,12 @@ const DatesRunCallout = (): FunctionComponent => {
 
 /** With one schedule shown alone: which, a way to its page and back to all; otherwise the unpublished ones named. */
 const TimelineNotice = ({
+	departmentId,
 	schedules,
 	shownScheduleId,
 	onShowAll,
 }: {
+	departmentId: string;
 	schedules: ReadonlyArray<TimelineSchedule>;
 	shownScheduleId?: string;
 	onShowAll: () => void;
@@ -117,9 +124,8 @@ const TimelineNotice = ({
 				<span className="flex flex-wrap items-center gap-3">
 					<span>{t(`${key}.notice.showingOne`, { name: shown.name })}</span>
 					<Button
-						params={{ scheduleId: shown.id }}
+						{...timelineScheduleLink(shown, departmentId)}
 						size="sm"
-						to="/scheduling/$scheduleId"
 						variant="secondary"
 					>
 						{t(`${key}.notice.openSchedule`)}
@@ -130,9 +136,7 @@ const TimelineNotice = ({
 				</span>
 			</Callout>
 		);
-	const unpublished = schedules.filter(
-		(schedule) => schedule.status !== "PUBLISHED"
-	);
+	const unpublished = awaitingPublication(schedules);
 	if (unpublished.length === 0) return null;
 	return (
 		<Callout tone="info">
@@ -156,7 +160,7 @@ export const DepartmentSchedulePage = (): FunctionComponent => {
 	const access = useAccess();
 	const departmentId = search.department ?? "";
 	const view = search.view ?? DEFAULT_VIEW;
-	// The branch's time zone is known only once read, so the default window starts from the device's week.
+	// The branch's time zone is known only once read, so the default window starts from the device's week (moved below).
 	const firstDay = search.from ?? mondayOf(dayjs().toDate());
 	const days = windowDays(firstDay, view);
 	const lastDay = days[days.length - 1]!;
@@ -170,6 +174,23 @@ export const DepartmentSchedulePage = (): FunctionComponent => {
 		SCHEDULE_CREATE_KEYS,
 		departmentScope(departmentId)
 	);
+
+	// Once the branch's today is known, a window opened on the device's Monday moves to the branch's (URL replaced).
+	const branchFrom =
+		timeline.status === "ready" && timeline.timeZone
+			? branchWeekFrom(
+					search.from,
+					firstDay,
+					isoDateIn(timeline.timeZone, new Date())
+				)
+			: undefined;
+	useEffect(() => {
+		if (branchFrom === undefined) return;
+		void navigate({
+			search: (previous) => ({ ...previous, from: branchFrom }),
+			replace: true,
+		});
+	}, [branchFrom, navigate]);
 
 	/** Changes the given search keys, keeping the rest. */
 	const changeSearch = (change: Partial<typeof search>): void => {
@@ -194,6 +215,8 @@ export const DepartmentSchedulePage = (): FunctionComponent => {
 				)}
 			</>
 		);
+	// A `schedule=` naming no schedule in the window (the window moved on) counts as none, everywhere below.
+	const shownScheduleId = shownScheduleIn(timeline.schedules, search.schedule);
 	const today = timeline.timeZone
 		? isoDateIn(timeline.timeZone, new Date())
 		: dayjs().format(ISO_DATE_FORMAT);
@@ -221,7 +244,7 @@ export const DepartmentSchedulePage = (): FunctionComponent => {
 				<TimelineToolbar
 					firstDay={firstDay}
 					schedules={timeline.schedules}
-					shownScheduleId={search.schedule}
+					shownScheduleId={shownScheduleId}
 					view={view}
 					onFromChange={(from) => {
 						changeSearch({ from });
@@ -240,17 +263,20 @@ export const DepartmentSchedulePage = (): FunctionComponent => {
 					}}
 				/>
 				<TimelineNotice
+					departmentId={departmentId}
 					schedules={timeline.schedules}
-					shownScheduleId={search.schedule}
+					shownScheduleId={shownScheduleId}
 					onShowAll={() => {
 						changeSearch({ schedule: undefined });
 					}}
 				/>
 				<TimelineGrid
 					days={days}
+					departmentId={departmentId}
+					rosters={timeline.rosters}
 					rows={timeline.rows}
 					schedules={timeline.schedules}
-					shownScheduleId={search.schedule}
+					shownScheduleId={shownScheduleId}
 					view={view}
 					onShowOnly={(schedule) => {
 						changeSearch({ schedule });

@@ -30,6 +30,7 @@ describe("TimelineNeeds", () => {
 						{ kind: "reviewOne", scheduleId: "s-late", name: "Weekend" },
 						{
 							kind: "noSchedule",
+							schedulable: true,
 							firstDay: "2027-02-11",
 							lastDay: "2027-02-11",
 						},

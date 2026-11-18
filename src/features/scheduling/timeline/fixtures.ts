@@ -21,6 +21,7 @@ export const twoTimelineSchedules = (): Array<TimelineSchedule> => [
 		firstDay: "2027-02-08",
 		lastDay: "2027-02-10",
 		status: "PUBLISHED",
+		publishedOnce: false,
 	},
 	{
 		id: "s-late",
@@ -28,6 +29,7 @@ export const twoTimelineSchedules = (): Array<TimelineSchedule> => [
 		firstDay: "2027-02-12",
 		lastDay: "2027-02-14",
 		status: "TO_REVIEW",
+		publishedOnce: false,
 	},
 ];
 

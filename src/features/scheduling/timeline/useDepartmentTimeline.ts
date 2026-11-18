@@ -18,6 +18,9 @@ import {
 import {
 	monthsOfWindow,
 	timelineRowsOf,
+	rostersReadOf,
+	type RosterReadStep,
+	type RostersRead,
 	timelineSchedulesOf,
 	type TimelineRow,
 } from "@/features/scheduling/timeline/timelineRows";
@@ -35,6 +38,8 @@ export type DepartmentTimeline =
 			timeZone: string | null | undefined;
 			schedules: Array<TimelineSchedule>;
 			rows: Array<TimelineRow>;
+			/** Whether every schedule's roster is read, still loading, or could not be read. */
+			rosters: RostersRead;
 	  };
 
 /** Whether a failed read was a refusal of `schedule:read`. */
@@ -82,9 +87,12 @@ export const useDepartmentTimeline = (
 			})
 		),
 	});
+	const runIds = scheduleReads.map((read) =>
+		read.data ? rosterRunId(read.data) : undefined
+	);
 	const rosterReads = useQueries({
 		queries: scheduleReads.map((read, index) => {
-			const runId = read.data ? rosterRunId(read.data) : undefined;
+			const runId = runIds[index];
 			return scheduleAssignmentsQuery(
 				companyId,
 				unit,
@@ -107,6 +115,12 @@ export const useDepartmentTimeline = (
 		scheduleId: schedules[index]!.id,
 		rows: rosterFromAssignments(read.data ?? [], period),
 	}));
+	const rosterSteps = scheduleReads.map((read, index): RosterReadStep => {
+		const rosterRead = rosterReads[index]!;
+		if (read.isError || rosterRead.isError) return "failed";
+		const rosterPending = runIds[index] !== undefined && rosterRead.isPending;
+		return read.isPending || rosterPending ? "pending" : "done";
+	});
 	return {
 		status: "ready",
 		departmentName: firstMonth.departmentName,
@@ -114,5 +128,6 @@ export const useDepartmentTimeline = (
 		timeZone: firstMonth.timeZone,
 		schedules,
 		rows: timelineRowsOf(rosters),
+		rosters: rostersReadOf(rosterSteps),
 	};
 };

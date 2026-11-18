@@ -62,6 +62,8 @@ export const timelineSchedulesOf = (
 			id: part.scheduleId,
 			name: part.name,
 			status: part.state,
+			publishedOnce:
+				seen?.publishedOnce === true || part.publishedOnce === true,
 			firstDay:
 				seen && seen.firstDay < part.coveredFrom
 					? seen.firstDay
@@ -112,3 +114,18 @@ export const hoursOfRow = (
 		},
 		days
 	);
+
+/** Where one schedule's reads stand: its schedule read, then its roster read when it has a roster. */
+export type RosterReadStep = "pending" | "failed" | "done";
+
+/** Whether the grid's rows are all read, still loading, or missing a roster that could not be read. */
+export type RostersRead = "loading" | "failed" | "loaded";
+
+/** The rosters' state from each schedule's reads: one failure fails them, else one still pending keeps them loading. */
+export const rostersReadOf = (
+	steps: ReadonlyArray<RosterReadStep>
+): RostersRead => {
+	if (steps.includes("failed")) return "failed";
+	if (steps.includes("pending")) return "loading";
+	return "loaded";
+};

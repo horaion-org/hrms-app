@@ -10,6 +10,7 @@ import { timelineRowFixture } from "@/features/scheduling/timeline/fixtures";
 import {
 	hoursOfRow,
 	monthsOfWindow,
+	rostersReadOf,
 	timelineRowsOf,
 	timelineSchedulesOf,
 } from "@/features/scheduling/timeline/timelineRows";
@@ -46,6 +47,7 @@ describe("timelineSchedulesOf", () => {
 				id: "s-1",
 				name: "Week of 2027-02-15",
 				status: "TO_REVIEW",
+				publishedOnce: false,
 				firstDay: "2027-02-17",
 				lastDay: "2027-02-19",
 			},
@@ -53,6 +55,7 @@ describe("timelineSchedulesOf", () => {
 				id: "s-2",
 				name: "Week of 2027-02-15",
 				status: "TO_REVIEW",
+				publishedOnce: false,
 				firstDay: "2027-02-20",
 				lastDay: "2027-02-21",
 			},
@@ -108,5 +111,16 @@ describe("hoursOfRow", () => {
 		["days without a shift", ["2027-02-09"], 0],
 	])("%s", (_, days, expected) => {
 		expect(hoursOfRow(timelineRowFixture(), days)).toBe(expected);
+	});
+});
+
+describe("rostersReadOf", () => {
+	it.each([
+		[["done", "done"], "loaded"],
+		[["done", "pending"], "loading"],
+		[["pending", "failed"], "failed"],
+		[[], "loaded"],
+	] as const)("%j reads as %s", (steps, expected) => {
+		expect(rostersReadOf(steps)).toBe(expected);
 	});
 });
