@@ -137,7 +137,7 @@ const weekBoxNames = (): Array<string> =>
 describe("Schedule a month: going back from Generate", () => {
 	it("given_aMonthChosenByHand_when_backFromGenerate_then_theSameMonthWeeksAndUrl", async () => {
 		const user = userEvent.setup();
-		const { opened } = await open("/scheduling/new?department=d-1");
+		const { opened } = await open("/scheduling/new?department=d-1&for=month");
 		await vi.waitFor(() => {
 			expect(monthField()).toHaveTextContent("November 2026");
 		});
