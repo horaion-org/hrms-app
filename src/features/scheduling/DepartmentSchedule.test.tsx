@@ -153,7 +153,7 @@ it("shows two schedules in one week as two bars, their cells, and No schedule on
 	expect(within(row).getByText("No schedule")).toBeInTheDocument();
 });
 
-it("dims the other schedules' cells when one is shown alone", async () => {
+it("dims the other schedules' bars and cells when one is shown alone", async () => {
 	const row = await openTimeline("from=2026-10-12&schedule=s-1");
 
 	await vi.waitFor(() => {
@@ -163,6 +163,12 @@ it("dims the other schedules' cells when one is shown alone", async () => {
 		expect(cell).toHaveClass("opacity-40");
 	for (const cell of cellsOf(row, "s-1"))
 		expect(cell).not.toHaveClass("opacity-40");
+	expect(
+		screen.getByRole("button", { name: /^Weekend,/ }).closest("td")
+	).toHaveClass("opacity-40");
+	expect(
+		screen.getByRole("button", { name: /^Early days,/ }).closest("td")
+	).not.toHaveClass("opacity-40");
 	expect(
 		screen.getByText("Showing only Early days. Other schedules are dimmed.")
 	).toBeInTheDocument();

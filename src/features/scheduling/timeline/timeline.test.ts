@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	daysWithoutSchedule,
+	isDimmed,
 	laneCellsOf,
 	lanesOf,
 	needsOf,
@@ -162,5 +163,15 @@ describe("laneCellsOf", () => {
 		["an empty lane", [], ["gap 2027-02-08 7"]],
 	] as const)("%s", (_, lane, expected) => {
 		expect(shapeOf([...lane])).toEqual(expected);
+	});
+});
+
+describe("isDimmed", () => {
+	it.each([
+		["s-1", undefined, false],
+		["s-1", "s-1", false],
+		["s-2", "s-1", true],
+	])("%s with %s shown alone is dimmed: %s", (scheduleId, shown, expected) => {
+		expect(isDimmed(scheduleId, shown)).toBe(expected);
 	});
 });

@@ -130,6 +130,12 @@ export const daysWithoutSchedule = (
 	return runs;
 };
 
+/** Whether a schedule's bar and cells are dimmed: another schedule is shown alone. */
+export const isDimmed = (
+	scheduleId: string,
+	shownScheduleId: string | undefined
+): boolean => shownScheduleId !== undefined && shownScheduleId !== scheduleId;
+
 /** One line of the "needs you" list, as data. */
 export type NeedLine =
 	| { kind: "reviewOne"; scheduleId: string; name: string }

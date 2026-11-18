@@ -16,6 +16,7 @@ import {
 } from "@/features/scheduling/roster/rosterLooks";
 import { ScheduleBars } from "@/features/scheduling/timeline/ScheduleBars";
 import {
+	isDimmed,
 	scheduleOfDay,
 	type TimelineSchedule,
 	type TimelineView,
@@ -97,7 +98,7 @@ const DayCell = ({
 		);
 	}
 	const state = t(`scheduling.months.states.${owner.status}`);
-	const dimmed = shownScheduleId !== undefined && shownScheduleId !== owner.id;
+	const dimmed = isDimmed(owner.id, shownScheduleId);
 	if (!timelineCell) {
 		const label = t(`${key}.notRosteredLabel`, {
 			name,
@@ -247,6 +248,7 @@ export const TimelineGrid = ({
 					<ScheduleBars
 						days={days}
 						schedules={schedules}
+						shownScheduleId={shownScheduleId}
 						view={view}
 						onShowOnly={onShowOnly}
 					/>

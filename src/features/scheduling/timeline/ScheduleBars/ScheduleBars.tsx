@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/OverflowMenu";
 import { weekStateTones } from "@/features/scheduling/months/weekStateLooks";
 import {
+	isDimmed,
 	laneCellsOf,
 	lanesOf,
 	type TimelineSchedule,
@@ -29,6 +30,8 @@ export type ScheduleBarsProps = {
 	/** The ISO dates shown, one column each. */
 	days: ReadonlyArray<string>;
 	view: TimelineView;
+	/** The one schedule shown in full; the other bars are dimmed, as their cells are. */
+	shownScheduleId?: string;
 	/** "Show only this schedule" was chosen. */
 	onShowOnly: (scheduleId: string) => void;
 };
@@ -119,6 +122,7 @@ export const ScheduleBars = ({
 	schedules,
 	days,
 	view,
+	shownScheduleId,
 	onShowOnly,
 }: ScheduleBarsProps): FunctionComponent => {
 	const { t } = useTranslation();
@@ -150,9 +154,12 @@ export const ScheduleBars = ({
 						) : (
 							<td
 								key={cell.schedule.id}
-								className="px-1 py-1"
 								colSpan={cell.span}
 								data-schedule-id={cell.schedule.id}
+								className={joinClassNames(
+									"px-1 py-1",
+									isDimmed(cell.schedule.id, shownScheduleId) && "opacity-40"
+								)}
 							>
 								<ScheduleBar
 									schedule={cell.schedule}

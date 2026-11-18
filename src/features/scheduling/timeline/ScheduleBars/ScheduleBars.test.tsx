@@ -28,7 +28,8 @@ beforeAll(async () => {
 /** Renders the bar lanes of `schedules` over the fixture week, in a table as the grid holds them. */
 const renderBars = (
 	schedules: Array<TimelineSchedule>,
-	view: TimelineView = "week"
+	view: TimelineView = "week",
+	shownScheduleId?: string
 ): void => {
 	render(
 		<MemoryRouterHarness>
@@ -37,6 +38,7 @@ const renderBars = (
 					<ScheduleBars
 						days={FIXTURE_WEEK}
 						schedules={schedules}
+						shownScheduleId={shownScheduleId}
 						view={view}
 						onShowOnly={() => {}}
 					/>
@@ -120,5 +122,14 @@ describe("ScheduleBars", () => {
 		);
 		const bar = await screen.findByRole("button", { name: /^Early week/ });
 		expect(bar).toHaveTextContent("");
+	});
+
+	/** "Show only this schedule" dims the other bars, as it dims their cells. */
+	it("dims the other bars when one schedule is shown alone", async () => {
+		renderBars(twoTimelineSchedules(), "week", "s-late");
+		const early = await screen.findByRole("button", { name: /^Early week/ });
+		const weekend = screen.getByRole("button", { name: /^Weekend/ });
+		expect(early.closest("td")).toHaveClass("opacity-40");
+		expect(weekend.closest("td")).not.toHaveClass("opacity-40");
 	});
 });
