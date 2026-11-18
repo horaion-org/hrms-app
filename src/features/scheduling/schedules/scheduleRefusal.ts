@@ -38,6 +38,7 @@ export const SCHEDULE_REFUSAL_CODES = {
 	stepHasNoApprover: "400 APPROVAL_STEP_HAS_NO_APPROVER",
 	notPublished: "409 SCHEDULE_NOT_PUBLISHED",
 	oncePublished: "409 SCHEDULE_ONCE_PUBLISHED",
+	laterPartPublished: "409 SCHEDULE_LATER_PART_PUBLISHED",
 	invalidWithdrawalRemark: "400 INVALID_PUBLICATION_WITHDRAWAL_REMARK",
 	weekChoiceMissing: "400 MONTH_WEEK_CHOICE_MISSING",
 	weekCannotBeGenerated: "400 MONTH_WEEK_CANNOT_BE_GENERATED",
@@ -227,6 +228,8 @@ const WEEK_REFUSAL_WORDS: Record<
 	[errorCodeOf(codes.published)]: (t) => t("scheduling.regenerate.published"),
 	[errorCodeOf(codes.oncePublished)]: (t) =>
 		t("scheduling.regenerate.oncePublished"),
+	[errorCodeOf(codes.laterPartPublished)]: (t) =>
+		t("scheduling.regenerate.laterPartPublished"),
 	[EARLIER_WEEK_FAILED]: (t, failedWeek) =>
 		failedWeek === undefined
 			? plainGenerationFailure(t)

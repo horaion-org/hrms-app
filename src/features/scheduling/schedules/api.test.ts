@@ -1145,7 +1145,11 @@ describe("schedule refusals", () => {
 		],
 		[
 			"SCHEDULE_ONCE_PUBLISHED",
-			"This roster was published once, so it can’t be regenerated. Change its days on the roster instead.",
+			"Staff were told of changes to this roster while it was published, so it can’t be generated again. Correct it with roster changes, or delete it and schedule its days again.",
+		],
+		[
+			"SCHEDULE_LATER_PART_PUBLISHED",
+			"A later schedule of this week is published, and it was worked out from these days, so this one can’t be generated again. Change its roster by hand instead.",
 		],
 	])(
 		"words a month week refused with %s in a week's own words",
