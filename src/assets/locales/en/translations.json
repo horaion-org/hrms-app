@@ -1518,6 +1518,16 @@
 			"all": "Everyone",
 			"pending": "Not yet (invited)",
 			"accepted": "Yes"
+		},
+		"applyFor": {
+			"employee": "Employee",
+			"search": "Search employees",
+			"choose": "Choose an employee",
+			"loading": "Loading people…",
+			"noMatches": "No one you may apply for matches this search.",
+			"nobody": "There’s no one here you may apply for. Choose another branch or department, then try again.",
+			"cancel": "Cancel",
+			"continue": "Continue"
 		}
 	},
 	"settings": {

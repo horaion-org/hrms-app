@@ -3342,6 +3342,16 @@
 			"all": "Todos",
 			"pending": "Aún no (invitado)",
 			"accepted": "Sí"
+		},
+		"applyFor": {
+			"employee": "Empleado",
+			"search": "Buscar empleados",
+			"choose": "Elige un empleado",
+			"loading": "Cargando personas…",
+			"noMatches": "Nadie para quien puedas solicitar coincide con esta búsqueda.",
+			"nobody": "Aquí no hay nadie para quien puedas solicitar. Elige otra sucursal u otro departamento e inténtalo de nuevo.",
+			"cancel": "Cancelar",
+			"continue": "Continuar"
 		}
 	},
 	"numberStepper": {
