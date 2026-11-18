@@ -23,7 +23,12 @@ const noRoster = { days: [], handChangedDays: null };
 const renderCard = async (week: MonthWeek): Promise<HTMLElement> => {
 	render(
 		<MemoryRouterHarness>
-			<WeekCard departmentId="d-1" week={week} />
+			<WeekCard
+				departmentId="d-1"
+				mayCreate={false}
+				today="2026-11-01"
+				week={week}
+			/>
 		</MemoryRouterHarness>
 	);
 	return screen.findByRole("region");
@@ -125,6 +130,8 @@ describe("WeekCard", () => {
 				<WeekCard
 					departmentId="d-1"
 					failureMessage="The engine couldn’t be reached."
+					mayCreate={false}
+					today="2026-11-01"
 					week={monthWeekFixture({ state: "FAILED", ...noRoster })}
 				/>
 			</MemoryRouterHarness>
@@ -141,6 +148,8 @@ describe("WeekCard", () => {
 				<WeekCard
 					departmentId="d-1"
 					failureMessage="The engine’s job ended without a roster."
+					mayCreate={false}
+					today="2026-11-01"
 					week={monthWeekFixture({
 						state: "TO_REVIEW",
 						scheduleId: "s-2",
@@ -174,6 +183,8 @@ describe("WeekCard", () => {
 				<WeekCard
 					departmentId="d-1"
 					failureMessage="The engine couldn’t be reached."
+					mayCreate={false}
+					today="2026-11-01"
 					week={monthWeekFixture({ state: "GENERATING", ...noRoster })}
 				/>
 			</MemoryRouterHarness>
@@ -189,7 +200,9 @@ describe("WeekCard", () => {
 			<MemoryRouterHarness>
 				<WeekCard
 					departmentId="d-1"
+					mayCreate={false}
 					refusal="Nobody can be scheduled."
+					today="2026-11-01"
 					week={monthWeekFixture({
 						state: "NOT_GENERATED",
 						scheduleId: null,
@@ -220,7 +233,13 @@ describe("WeekCard", () => {
 		): void => {
 			render(
 				<MemoryRouterHarness>
-					<WeekCard departmentId="d-1" week={week} {...props} />
+					<WeekCard
+						departmentId="d-1"
+						mayCreate={false}
+						today="2026-11-01"
+						week={week}
+						{...props}
+					/>
 				</MemoryRouterHarness>
 			);
 		};
@@ -395,6 +414,73 @@ describe("WeekCard", () => {
 			);
 
 			expect(card).not.toHaveTextContent(/Covers|published ·/);
+		});
+	});
+
+	describe("days without a roster", () => {
+		/** Renders `week` for a viewer who may schedule, on 1 Feb 2027. */
+		const renderForScheduler = async (
+			week: MonthWeek
+		): Promise<HTMLElement> => {
+			render(
+				<MemoryRouterHarness>
+					<WeekCard
+						mayCreate
+						departmentId="d-1"
+						today="2027-02-01"
+						week={week}
+					/>
+				</MemoryRouterHarness>
+			);
+			return screen.findByRole("region");
+		};
+
+		it("given_aMiddlePartDeleted_when_shown_then_namesTheDaysAndSchedulesThemNotEveryShiftCovered", async () => {
+			const card = await renderForScheduler(
+				monthWeekFixture({
+					periodStart: "2027-02-08",
+					periodEnd: "2027-02-14",
+					state: "TO_REVIEW",
+					days: coverDays("2027-02-08").map((day, index) => ({
+						...day,
+						covered: index < 2 || index > 4,
+					})),
+				})
+			);
+
+			expect(card).not.toHaveTextContent("Every shift covered");
+			expect(card).toHaveTextContent(
+				/Wed, Feb 10\s?–\s?Fri, Feb 12 have no roster\./
+			);
+			expect(
+				within(card).getByRole("link", {
+					name: /^Schedule Wed, Feb 10\s?–\s?Fri, Feb 12$/,
+				})
+			).toHaveAttribute(
+				"href",
+				"/scheduling/new?department=d-1&for=dates&firstDay=2027-02-10&lastDay=2027-02-12"
+			);
+		});
+
+		it("given_aWeekWithoutASchedule_when_shown_then_schedulesTheWholeWeek", async () => {
+			const card = await renderForScheduler(
+				monthWeekFixture({
+					periodStart: "2027-02-22",
+					periodEnd: "2027-02-28",
+					state: "NOT_GENERATED",
+					scheduleId: null,
+					...noRoster,
+				})
+			);
+
+			expect(
+				within(card).getByRole("link", {
+					name: /^Schedule Mon, Feb 22\s?–\s?Sun, Feb 28$/,
+				})
+			).toHaveAttribute(
+				"href",
+				"/scheduling/new?department=d-1&for=dates&firstDay=2027-02-22&lastDay=2027-02-28"
+			);
 		});
 	});
 });

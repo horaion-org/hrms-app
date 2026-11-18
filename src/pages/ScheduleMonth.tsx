@@ -72,6 +72,10 @@ import {
 	refusalOfCode,
 } from "@/features/scheduling/schedules/scheduleRefusal";
 import { departmentScope } from "@/features/workspace/scopes";
+import { SCHEDULE_CREATE_KEYS } from "@/features/workspace/permissionKeys";
+import { isoDateIn } from "@/features/scheduling/roster/roster";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
+import dayjs from "dayjs";
 import { type Access, useAccess } from "@/features/workspace/useAccess";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 
@@ -333,6 +337,14 @@ const MonthContent = ({
 		departmentScope(departmentId)
 	);
 	const showsPanel = mayGenerate && showsBeforeGenerate(scheduleMonth);
+	const mayCreate = access.canAll(
+		SCHEDULE_CREATE_KEYS,
+		departmentScope(departmentId)
+	);
+	// The branch's today where the month read names its time zone, as Setup reads it.
+	const today = scheduleMonth.timeZone
+		? isoDateIn(scheduleMonth.timeZone, new Date())
+		: dayjs().format(ISO_DATE_FORMAT);
 	const check = useQuery(
 		monthGenerationCheckQuery(companyId, departmentId, month, showsPanel)
 	);
@@ -538,7 +550,9 @@ const MonthContent = ({
 							key={week.periodStart}
 							departmentId={departmentId}
 							failedWeek={failedWeekDates}
+							mayCreate={mayCreate}
 							refusal={refusal ? refusalOfCode(refusal, t) : undefined}
+							today={today}
 							week={week}
 							failureMessage={
 								week.failure

@@ -14,7 +14,13 @@ const meta = {
 	title: "Features/Scheduling/Months/WeekCard",
 	component: WeekCard,
 	decorators: [withMemoryRouter],
-	args: { week: monthWeekFixture(), departmentId: "d-1", className: "w-60" },
+	args: {
+		week: monthWeekFixture(),
+		departmentId: "d-1",
+		today: "2026-11-01",
+		mayCreate: true,
+		className: "w-60",
+	},
 } satisfies Meta<typeof WeekCard>;
 
 export default meta;

@@ -7,9 +7,19 @@ import type { FunctionComponent } from "@/common/types";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import type { MonthWeek } from "@/features/scheduling/months/api";
-import { namedSpansOf } from "@/features/scheduling/dates/datesSetup";
+import {
+	dayCountOf,
+	namedSpansOf,
+} from "@/features/scheduling/dates/datesSetup";
 import { DayCoverMarks } from "@/features/scheduling/months/DayCoverMarks";
-import { formatWeekDates } from "@/features/scheduling/months/monthWeeks";
+import {
+	formatPartDays,
+	formatWeekDates,
+} from "@/features/scheduling/months/monthWeeks";
+import {
+	weekGapsOf,
+	type WeekGap,
+} from "@/features/scheduling/months/weekGaps";
 import { listsWeekParts } from "@/features/scheduling/months/rosterWeeks";
 import { WeekPartLinks } from "@/features/scheduling/months/WeekPartLinks";
 import { weekHeadline } from "@/features/scheduling/months/weekHeadline";
@@ -35,6 +45,10 @@ export type WeekCardProps = {
 	failedWeek?: string;
 	/** The week's Department, for the link to a draft's setup. */
 	departmentId: string;
+	/** The branch's today (ISO date): days before it with no roster can't be scheduled. */
+	today: string;
+	/** Whether the viewer may schedule days here, which "Schedule <days>" does. */
+	mayCreate: boolean;
 	className?: string;
 };
 
@@ -63,6 +77,49 @@ const coversLineOf = (
 		: t(`${key}.cover.covers`, { range });
 };
 
+/** A run of the week's days with no roster, and "Schedule <days>" for days from today on where allowed. */
+const WeekGapLine = ({
+	gap,
+	departmentId,
+	mayCreate,
+}: {
+	gap: WeekGap;
+	departmentId: string;
+	mayCreate: boolean;
+}): FunctionComponent => {
+	const { t, i18n } = useTranslation();
+	const days = formatPartDays(
+		{ start: gap.days.from, end: gap.days.to },
+		formattingLocale(i18n)
+	);
+	const count = dayCountOf(gap.days.from, gap.days.to);
+	return (
+		<div className="flex flex-col items-start gap-1 text-sm text-neutral-800">
+			<p>
+				{gap.passed
+					? t(`${key}.cover.passedNoRoster`, { days, count })
+					: t(`${key}.cover.noRoster`, { days, count })}
+			</p>
+			{!gap.passed && mayCreate && (
+				// The same dates run the roster page's "Schedule <days>" opens (WeekPartsCallout).
+				<Button
+					size="sm"
+					to="/scheduling/new"
+					variant="secondary"
+					search={{
+						department: departmentId,
+						for: "dates",
+						firstDay: gap.days.from,
+						lastDay: gap.days.to,
+					}}
+				>
+					{t("scheduling.roster.remainingButton", { rest: days })}
+				</Button>
+			)}
+		</div>
+	);
+};
+
 /**
  * One week of a Department's month: its dates, its state, its seven days'
  * cover and how many were changed by hand, and one action: Review on the
@@ -85,6 +142,8 @@ export const WeekCard = ({
 	refusal,
 	failedWeek,
 	departmentId,
+	today,
+	mayCreate,
 	className,
 }: WeekCardProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -94,6 +153,7 @@ export const WeekCard = ({
 		formattingLocale(i18n)
 	);
 	const headline = weekHeadline(week);
+	const gaps = weekGapsOf(week, today);
 	const action = weekAction(headline);
 	const shortShifts = week.days.reduce((sum, day) => sum + day.shortShifts, 0);
 	const handChangedDays = week.handChangedDays ?? 0;
@@ -153,13 +213,21 @@ export const WeekCard = ({
 					<p>
 						{shortShifts > 0
 							? t(`${key}.cover.shiftsShort`, { count: shortShifts })
-							: t(`${key}.cover.everyShiftCovered`)}
+							: gaps.length === 0 && t(`${key}.cover.everyShiftCovered`)}
 					</p>
 					{handChangedDays > 0 && (
 						<p>{t(`${key}.cover.handChanged`, { count: handChangedDays })}</p>
 					)}
 				</div>
 			)}
+			{gaps.map((gap) => (
+				<WeekGapLine
+					key={gap.days.from}
+					departmentId={departmentId}
+					gap={gap}
+					mayCreate={mayCreate}
+				/>
+			))}
 			{severalParts && (
 				<WeekPartLinks
 					className="mt-auto"
