@@ -52,7 +52,11 @@ export const WeekPartLinks = ({
 						language
 					);
 					return (
-						<li key={part.scheduleId} className="flex items-center gap-2">
+						// Wraps the badge under the days on a narrow card, never into its letters.
+						<li
+							key={part.scheduleId}
+							className="flex flex-wrap items-center gap-x-2 gap-y-1"
+						>
 							{part.scheduleId === currentScheduleId ? (
 								<span
 									aria-current="true"
@@ -68,7 +72,11 @@ export const WeekPartLinks = ({
 									{days}
 								</Button>
 							)}
-							<Badge compact tone={weekStateTones[part.state]}>
+							<Badge
+								compact
+								className="shrink-0 whitespace-nowrap"
+								tone={weekStateTones[part.state]}
+							>
 								{t(`scheduling.months.states.${part.state}`)}
 							</Badge>
 						</li>
