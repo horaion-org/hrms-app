@@ -35,7 +35,7 @@ export type TickableWeek = {
 	canTick: boolean;
 	tickedByDefault: boolean;
 	note: TickNote | undefined;
-	/** On a week of several schedules: the days a month run generates again, and the days it leaves. */
+	/** On a week of several schedules, or of one covering only some days: the days a month run generates again, and the days it leaves. */
 	splitReplacement?: SplitReplacement;
 };
 
@@ -44,7 +44,12 @@ export type TickableWeek = {
  * newest part again (`replaced`) and leaves the other parts' days (`staying`)
  * as they are, in day order.
  */
-export type SplitReplacement = { replaced: DayRun; staying: Array<DayRun> };
+export type SplitReplacement = {
+	replaced: DayRun;
+	staying: Array<DayRun>;
+	/** On a week of one schedule covering only some days: the week's other days, which have no roster. */
+	withoutRoster: Array<DayRun>;
+};
 
 /** A week as the month read or a month summary gives it. */
 type WeekToTick = {
@@ -54,26 +59,6 @@ type WeekToTick = {
 	/** The newest part's schedule, whose state the week shows. */
 	scheduleId?: string | null;
 	parts?: ReadonlyArray<WeekPart>;
-};
-
-/** The days of a part as a run. */
-const daysOfPart = (part: WeekPart): DayRun => ({
-	from: part.coveredFrom,
-	to: part.coveredTo,
-});
-
-/** What a month run replaces in a week of several schedules; undefined for a week of one or none. */
-export const splitReplacementOf = (
-	week: WeekToTick
-): SplitReplacement | undefined => {
-	const parts = week.parts ?? [];
-	if (parts.length < 2) return undefined;
-	const newest = parts.find((part) => part.scheduleId === week.scheduleId);
-	if (!newest) return undefined;
-	return {
-		replaced: daysOfPart(newest),
-		staying: parts.filter((part) => part !== newest).map(daysOfPart),
-	};
 };
 
 /** What the rules decide for one week. */
@@ -125,6 +110,57 @@ const tickRuleOf = (
 	// A week has started once today is past its Monday; on the Monday itself it has not.
 	if (week.periodStart < today) return untickedWithNote("STARTED", "started");
 	return tickedByDefault(week.state);
+};
+
+/** The days of a part as a run. */
+const daysOfPart = (part: WeekPart): DayRun => ({
+	from: part.coveredFrom,
+	to: part.coveredTo,
+});
+
+/** The week's days before and after its one schedule, which have no roster. */
+const daysOutsideOf = (periodStart: string, part: WeekPart): Array<DayRun> => {
+	const shiftDay = (date: string, days: number): string =>
+		dayjs(date).add(days, "day").format(ISO_DATE_FORMAT);
+	const sunday = sundayOf(periodStart);
+	const before =
+		part.coveredFrom > periodStart
+			? [{ from: periodStart, to: shiftDay(part.coveredFrom, -1) }]
+			: [];
+	const after =
+		part.coveredTo < sunday
+			? [{ from: shiftDay(part.coveredTo, 1), to: sunday }]
+			: [];
+	return [...before, ...after];
+};
+
+/**
+ * A week of one schedule covering only some of its days: a month run
+ * generates that schedule again over its own days and creates nothing for
+ * the others, which have no roster; undefined for a schedule covering its whole week.
+ */
+const partialReplacementOf = (
+	week: WeekToTick,
+	part: WeekPart
+): SplitReplacement | undefined => {
+	const withoutRoster = daysOutsideOf(week.periodStart, part);
+	if (withoutRoster.length === 0) return undefined;
+	return { replaced: daysOfPart(part), staying: [], withoutRoster };
+};
+
+/** What a month run replaces in a week of several schedules, or of one covering only some days; undefined otherwise. */
+export const splitReplacementOf = (
+	week: WeekToTick
+): SplitReplacement | undefined => {
+	const parts = week.parts ?? [];
+	const newest = parts.find((part) => part.scheduleId === week.scheduleId);
+	if (!newest) return undefined;
+	if (parts.length === 1) return partialReplacementOf(week, newest);
+	return {
+		replaced: daysOfPart(newest),
+		staying: parts.filter((part) => part !== newest).map(daysOfPart),
+		withoutRoster: [],
+	};
 };
 
 /** One week as the list shows it. */

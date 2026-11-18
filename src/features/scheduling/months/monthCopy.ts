@@ -64,7 +64,8 @@ export const weekRangeText = (
 /**
  * What Generate says of a chosen week that holds a roster: generating again
  * replaces it; on a week of several schedules, only the newest part's days,
- * the other days staying as they are for Dates to schedule again.
+ * the other days staying as they are for Dates to schedule again; on a week
+ * of one schedule covering some days, only those, the others having no roster.
  */
 export const replacingNoteOf = (
 	week: TickableWeek,
@@ -84,15 +85,28 @@ export const replacingNoteOf = (
 			: t("scheduling.months.setup.rosterWaitingNote", { week: weekText });
 	const runText = (run: DayRun): string =>
 		formatPeriod({ start: run.from, end: run.to }, language);
+	const listText = (runs: Array<DayRun>): string =>
+		new Intl.ListFormat(language, { type: "conjunction" }).format(
+			runs.map(runText)
+		);
+	if (split.withoutRoster.length > 0) {
+		const partialKey = rejected
+			? "scheduling.months.setup.rosterRejectedPartialNote"
+			: "scheduling.months.setup.rosterWaitingPartialNote";
+		return t(partialKey, {
+			week: weekText,
+			replaced: runText(split.replaced),
+			withoutRoster: listText(split.withoutRoster),
+			count: dayCountOfRuns(split.withoutRoster),
+		});
+	}
 	const partKey = rejected
 		? "scheduling.months.setup.rosterRejectedPartNote"
 		: "scheduling.months.setup.rosterWaitingPartNote";
 	return t(partKey, {
 		week: weekText,
 		replaced: runText(split.replaced),
-		staying: new Intl.ListFormat(language, { type: "conjunction" }).format(
-			split.staying.map(runText)
-		),
+		staying: listText(split.staying),
 		count: dayCountOfRuns(split.staying),
 	});
 };

@@ -401,6 +401,7 @@ describe("splitReplacementOf", () => {
 			{
 				replaced: { from: "2027-02-20", to: "2027-02-21" },
 				staying: [{ from: "2027-02-17", to: "2027-02-19" }],
+				withoutRoster: [],
 			},
 		],
 		[
@@ -409,9 +410,32 @@ describe("splitReplacementOf", () => {
 			{
 				replaced: { from: "2027-02-17", to: "2027-02-19" },
 				staying: [{ from: "2027-02-20", to: "2027-02-21" }],
+				withoutRoster: [],
 			},
 		],
-		["oneSchedule", week("s-1", [wednesdayToFriday!]), undefined],
+		[
+			"oneScheduleCoveringWednesdayToFriday",
+			week("s-1", [wednesdayToFriday!]),
+			{
+				replaced: { from: "2027-02-17", to: "2027-02-19" },
+				staying: [],
+				withoutRoster: [
+					{ from: "2027-02-15", to: "2027-02-16" },
+					{ from: "2027-02-20", to: "2027-02-21" },
+				],
+			},
+		],
+		[
+			"oneScheduleCoveringItsWholeWeek",
+			week("s-1", [
+				{
+					...wednesdayToFriday!,
+					coveredFrom: "2027-02-15",
+					coveredTo: "2027-02-21",
+				},
+			]),
+			undefined,
+		],
 		["noParts", week(null, []), undefined],
 		[
 			"aNewestNotAmongTheParts",
