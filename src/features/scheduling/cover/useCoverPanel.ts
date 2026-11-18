@@ -8,8 +8,16 @@ import {
 	type CoverOption,
 	type CoverOptions,
 } from "@/features/scheduling/cover/api";
+import {
+	coverWithEngine,
+	type CoverWithEngine,
+} from "@/features/scheduling/cover/coverWithEngine";
 import type { RepairOption } from "@/features/scheduling/cover/engineRepairApi";
 import { stillShortAfterApplying } from "@/features/scheduling/cover/engineRepairWords";
+import {
+	useEngineRepair,
+	type EngineRepairState,
+} from "@/features/scheduling/cover/useEngineRepair";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
 import {
 	useCellCoverOffer,
@@ -89,7 +97,15 @@ const REFUSAL_STATUSES: Partial<Record<RosterChangeRefusal, CoverPanelStatus>> =
 export type CoverPanel = {
 	status: CoverPanelStatus;
 	options: CoverOptions | undefined;
-	/** The chosen option; the first (Suggested) until another is chosen. */
+	/** The list with the engine's answer merged into it; the backend's own until the engine has answered. */
+	withEngine: CoverWithEngine | undefined;
+	/** The engine's own options for the gap, asked for on demand. */
+	engineRepair: EngineRepairState & { ask: () => void };
+	/**
+	 * The chosen option; until one is chosen, the one the engine suggests, or
+	 * the first while the engine has not answered. Nobody once the engine has
+	 * answered without a suggestion, or refuses the one chosen.
+	 */
 	selected: CoverOption | undefined;
 	select: (membershipId: string) => void;
 	/** A change is landing, or landed at a revision the roster does not show yet: nothing is asked meanwhile. */
@@ -134,7 +150,9 @@ const statusOf = (
 
 /**
  * Find cover's state and calls, no words on screen: the ranked list for the
- * gap, the chosen option (the first until another is chosen), its preview
+ * gap, the engine's own answer once asked for (`useEngineRepair`) merged into
+ * that list (`coverWithEngine`), the chosen option (the engine's suggestion,
+ * or the first while the engine has not answered), its preview
  * through the roster-change preview (the grid outlines what it touches),
  * and Apply on a draft or the offer actions on a published roster, exactly
  * as the day editor does it (`useRosterCellPanel`, `useCellCoverOffer`). An
@@ -177,15 +195,34 @@ export const useCoverPanel = ({
 	const landing =
 		apply.isPending ||
 		(landedRevision !== undefined && landedRevision > revision);
+	const engineRepair = useEngineRepair(target, gap, revision, landing);
 	const list = useQuery({
 		...coverOptionsQuery(target, gap, revision),
 		enabled: !landing,
 	});
 	const options = list.data;
 	const status = statusOf(list, options);
-	const shown = status === "options" ? (options?.options ?? []) : [];
+	/** A roster member's profile id, which is how the engine names people. */
+	const profileIdOf = (membershipId: string): string | undefined =>
+		assignments.find((row) => row.member?.membershipId === membershipId)?.member
+			?.memberProfileId;
+	const withEngine =
+		options &&
+		coverWithEngine(
+			options,
+			engineRepair.status === "ready" ? engineRepair : undefined,
+			profileIdOf
+		);
+	const shown = status === "options" ? (withEngine?.options ?? []) : [];
+	// The first row is the default only while the list is the backend's own: once the engine has answered,
+	// the default is the person it suggests, and nobody when it suggests no one.
+	const defaultChoice =
+		withEngine?.order === "engineFirst"
+			? withEngine.suggested
+			: shown[0]?.membershipId;
 	const selected =
-		shown.find((option) => option.membershipId === chosen) ?? shown[0];
+		shown.find((option) => option.membershipId === chosen) ??
+		shown.find((option) => option.membershipId === defaultChoice);
 
 	const chosenCells = repairCells ?? selected?.cells;
 	const body: RosterChangeBody | undefined = chosenCells && {
@@ -282,6 +319,8 @@ export const useCoverPanel = ({
 	return {
 		status,
 		options,
+		withEngine,
+		engineRepair,
 		selected,
 		select: (membershipId): void => {
 			setChosen(membershipId);
