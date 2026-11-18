@@ -5837,6 +5837,16 @@
 				"noRoster_other": "{{days}} have no roster.",
 				"generate": "Generate"
 			},
+			"piece": {
+				"menuLabel": "Actions for {{days}}",
+				"open": "Review and edit these days",
+				"setup": "Finish setting up these days",
+				"publish": "Publish these days",
+				"submit": "Send these days for approval",
+				"withdraw": "Withdraw these days",
+				"regenerate": "Generate these days again",
+				"delete": "Delete these days"
+			},
 			"notice": {
 				"showingOne": "Showing only {{name}}. Other schedules are dimmed.",
 				"openSchedule": "Open schedule",

@@ -5637,6 +5637,16 @@
 				"noRoster_other": "{{days}} no tienen cuadrante.",
 				"generate": "Generar"
 			},
+			"piece": {
+				"menuLabel": "Acciones para {{days}}",
+				"open": "Revisar y editar estos días",
+				"setup": "Terminar de configurar estos días",
+				"publish": "Publicar estos días",
+				"submit": "Enviar estos días para aprobación",
+				"withdraw": "Retirar estos días",
+				"regenerate": "Generar estos días de nuevo",
+				"delete": "Eliminar estos días"
+			},
 			"notice": {
 				"showingOne": "Mostrando solo {{name}}. Los demás horarios aparecen atenuados.",
 				"openSchedule": "Abrir horario",
