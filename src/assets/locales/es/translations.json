@@ -2264,7 +2264,8 @@
 				"confirm": "Eliminar rol",
 				"inUse": "Este rol sigue asignado a alguien. Quítaselo primero a todas las personas.",
 				"forbidden": "No tienes permiso para eliminar este rol.",
-				"failed": "No pudimos eliminar el rol. Inténtalo de nuevo."
+				"failed": "No pudimos eliminar el rol. Inténtalo de nuevo.",
+				"heldDeleteItem": "Eliminar: quítalo antes a las personas que lo tienen"
 			},
 			"kind": {
 				"label": "¿Dónde se puede usar este rol?",
@@ -2795,6 +2796,7 @@
 			"signIn": "Iniciar sesión"
 		},
 		"loading": "Cargando…",
+		"loadingSlow": "Esto está tardando más de lo habitual. Si se acaba de cambiar algo, puede que el acceso aún se esté actualizando.",
 		"accessUpdating": {
 			"title": "El acceso se está actualizando",
 			"explanation": "Un cambio reciente en tu organización aún se está aplicando al acceso de todos, así que esta página no se puede abrir todavía. Inténtalo de nuevo en unos segundos.",

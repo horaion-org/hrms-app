@@ -109,3 +109,25 @@ it("keeps a screen's own failure wording for any other failed read", () => {
 	expect(problem.message).toBe("Couldn't load");
 	expect(problem.retry).toBeDefined();
 });
+
+it("keeps a list's rows and says access is being updated while a re-read waits on it", () => {
+	const rows = [{ name: "Orchard" }];
+	const waiting = describeList(
+		{ status: "ready", items: rows, total: 1, stillUpdating: true },
+		"",
+		false,
+		"No branches yet.",
+		t
+	);
+	expect(waiting.rows).toEqual(rows);
+	expect(waiting.updating).toBe("organisation.list.waitingForAccess");
+
+	const landed = describeList(
+		{ status: "ready", items: rows, total: 1, stillUpdating: false },
+		"",
+		false,
+		"No branches yet.",
+		t
+	);
+	expect(landed.updating).toBeUndefined();
+});

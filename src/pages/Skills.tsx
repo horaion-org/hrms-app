@@ -338,6 +338,11 @@ export const Skills = (): FunctionComponent => {
 				<ListProblem problem={view.problem} />
 			) : (
 				<>
+					{view.updating && (
+						<p className="mt-8 text-sm text-neutral-700" role="status">
+							{view.updating}
+						</p>
+					)}
 					<DataTable
 						className="mt-8"
 						columns={columns}

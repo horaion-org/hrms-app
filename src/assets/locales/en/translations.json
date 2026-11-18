@@ -972,6 +972,7 @@
 			"signIn": "Sign in"
 		},
 		"loading": "Loading…",
+		"loadingSlow": "This is taking longer than usual. If something was just changed, access may still be updating.",
 		"accessUpdating": {
 			"title": "Access is being updated",
 			"explanation": "A recent change to your organisation is still being applied to everyone’s access, so this page can’t open yet. Try again in a few seconds.",
@@ -2392,7 +2393,8 @@
 				"confirm": "Delete role",
 				"inUse": "This role is still assigned to someone. Remove it from everyone first.",
 				"forbidden": "You don’t have permission to delete this role.",
-				"failed": "We couldn’t delete the role. Try again."
+				"failed": "We couldn’t delete the role. Try again.",
+				"heldDeleteItem": "Delete: remove it from the people who hold it first"
 			},
 			"kind": {
 				"label": "Where can this role be used?",

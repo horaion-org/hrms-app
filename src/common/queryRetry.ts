@@ -44,3 +44,14 @@ export const retryDelay = (failureCount: number, error: Error): number => {
 		LONGEST_RETRY_DELAY_MS
 	);
 };
+
+/**
+ * Whether a read is waiting on an access update: still fetching, its last
+ * try refused with `503 DECISION_ENGINE_STALE`, so another follows shortly.
+ * True for a first load and for a re-read of data already on screen alike.
+ */
+export const isWaitingOnAccessUpdate = (read: {
+	fetchStatus: "fetching" | "paused" | "idle";
+	failureReason: unknown;
+}): boolean =>
+	read.fetchStatus === "fetching" && isDecisionEngineStale(read.failureReason);

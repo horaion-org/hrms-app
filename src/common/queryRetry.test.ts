@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ApiProblemError } from "@/common/problem";
 import { queryClient } from "@/common/query-client";
 import {
+	isWaitingOnAccessUpdate,
 	retry,
 	retryDelay,
 	STALE_FALLBACK_DELAY_MS,
@@ -71,5 +72,25 @@ describe("the app's query client", () => {
 		expect(defaults.queries?.retry).toBe(retry);
 		expect(defaults.queries?.retryDelay).toBe(retryDelay);
 		expect(defaults.mutations?.retry).toBeUndefined();
+	});
+});
+
+describe("isWaitingOnAccessUpdate", () => {
+	it("is true only while a read refused as stale is fetching again", () => {
+		expect(
+			isWaitingOnAccessUpdate({ fetchStatus: "fetching", failureReason: stale(5) })
+		).toBe(true);
+		expect(
+			isWaitingOnAccessUpdate({ fetchStatus: "idle", failureReason: stale(5) })
+		).toBe(false);
+		expect(
+			isWaitingOnAccessUpdate({
+				fetchStatus: "fetching",
+				failureReason: new Error("Failed to fetch"),
+			})
+		).toBe(false);
+		expect(
+			isWaitingOnAccessUpdate({ fetchStatus: "fetching", failureReason: null })
+		).toBe(false);
 	});
 });
