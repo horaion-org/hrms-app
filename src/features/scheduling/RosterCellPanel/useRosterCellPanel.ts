@@ -81,6 +81,8 @@ export type RosterCellPanelInput = {
 	/** On a published roster: the schedule's cover offers and its time zone. */
 	coverOffers?: { offers: ReadonlyArray<CoverOffer>; timeZone: string };
 	onCoverRecorded?: () => void;
+	/** Opens with not working chosen and this day type picked, as a fix from Issues asks. */
+	presetDayType?: string;
 };
 
 /**
@@ -106,15 +108,18 @@ export const useRosterCellPanel = ({
 	hasIssues,
 	coverOffers,
 	onCoverRecorded,
+	presetDayType,
 }: RosterCellPanelInput): RosterCellPanelState => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
 	const client = useQueryClient();
-	const [mode, setMode] = useState<RosterPanelMode>();
+	const [mode, setMode] = useState<RosterPanelMode | undefined>(
+		presetDayType === undefined ? undefined : "dayOff"
+	);
 	const [shiftId, setShiftId] = useState<string>();
 	const [partnerId, setPartnerId] = useState<string>();
 	const [leaveType, setLeaveType] = useState<string>();
-	const [chosenDayType, setDayType] = useState<string>();
+	const [chosenDayType, setDayType] = useState(presetDayType);
 	const [remark, setRemark] = useState("");
 	// The fingerprint of the checks the person ticked: new checks need a new tick.
 	const [tickedFor, setTickedFor] = useState<string | null>(null);

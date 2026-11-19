@@ -60,6 +60,8 @@ export type RosterSidePanelSlotProps = {
 	onCloseCover?: () => void;
 	/** The roster's shift preference outcomes by person and day; the chosen day's shows in its panel. */
 	preferenceOutcomes?: PreferenceOutcomeLookup;
+	/** The day type the chosen day's editor opens with, not working chosen, when a fix from Issues opened it. */
+	presetDayType?: string;
 };
 
 /**
@@ -88,6 +90,7 @@ export const RosterSidePanelSlot = ({
 	onFindCover,
 	onCloseCover = onClose,
 	preferenceOutcomes,
+	presetDayType,
 }: RosterSidePanelSlotProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const preferenceOutcome =
@@ -123,6 +126,7 @@ export const RosterSidePanelSlot = ({
 				nonWorkingDayTypes={editing.nonWorkingDayTypes}
 				notifiesMembers={editing.notifiesMembers}
 				preferenceOutcome={preferenceOutcome}
+				presetDayType={presetDayType}
 				revision={editing.revision}
 				shifts={editing.shifts}
 				target={editing.target}

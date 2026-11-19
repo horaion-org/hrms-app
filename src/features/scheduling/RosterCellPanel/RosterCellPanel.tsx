@@ -70,6 +70,8 @@ export type RosterCellPanelProps = {
 	coverOffers?: { offers: ReadonlyArray<CoverOffer>; timeZone: string };
 	/** A recorded yes landed and applied; the roster refreshes by itself. */
 	onCoverRecorded?: () => void;
+	/** Opens with not working chosen and this day type picked, as a fix from Issues asks. */
+	presetDayType?: string;
 	/** The member's shift preference on the day and what the roster made of it; shown under the day. */
 	preferenceOutcome?: SchedulePreferenceOutcome;
 	className?: string;
