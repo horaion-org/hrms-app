@@ -146,6 +146,15 @@ const open = async (
 
 const next = (): HTMLElement => screen.getByRole("button", { name: "Next" });
 
+/** Clicks Next on a ready Setup, then Next on the Forecast step with nothing entered: lands on Generate. */
+const nextToGenerate = async (
+	user: ReturnType<typeof userEvent.setup>
+): Promise<void> => {
+	await user.click(next());
+	await screen.findByRole("region", { name: "Staffing forecast" });
+	await user.click(next());
+};
+
 /** The note under a disabled Next. */
 const nextNote = (): string | null =>
 	document.getElementById(next().getAttribute("aria-describedby") ?? "")
@@ -254,36 +263,6 @@ describe("Create schedules for a month", () => {
 		});
 	});
 
-	it("given_theMonthWizard_when_nextIsClicked_then_generateIsReachedDirectlyWithNoForecast", async () => {
-		const user = userEvent.setup();
-		await open(NEW_DECEMBER);
-		await screen.findByText(EVERY_WEEK_LINE);
-
-		const steps = screen.getByRole("navigation", { name: "Steps" });
-		expect(
-			within(steps)
-				.getAllByRole("listitem")
-				.map((step) => step.getAttribute("aria-label") ?? step.textContent)
-		).toEqual(["Step 1: Setup", "Step 2: Generate"]);
-		await user.click(next());
-
-		expect(
-			await screen.findByRole("button", { name: "Generate December 2026" })
-		).toBeVisible();
-		expect(
-			screen.queryByRole("region", { name: "Staffing forecast" })
-		).toBeNull();
-	});
-
-	it("given_aLinkNamingTheForecastStep_when_opened_then_opensSetup", async () => {
-		await open("/scheduling/new?step=forecast&department=d-1&month=2026-12");
-
-		expect(await screen.findByText(EVERY_WEEK_LINE)).toBeInTheDocument();
-		expect(
-			screen.queryByRole("region", { name: "Staffing forecast" })
-		).toBeNull();
-	});
-
 	it("given_aDepartmentWithoutStaffing_when_onSetup_then_stopsThereWithTheGate", async () => {
 		await open(NEW_DECEMBER, {
 			[READINESS]: reply([
@@ -328,7 +307,7 @@ describe("Create schedules for a month", () => {
 				/^3 of 4 weeks use everything of Front Office\. Changed: Dec 14/
 			)
 		).toBeInTheDocument();
-		await user.click(next());
+		await nextToGenerate(user);
 		const generate = await screen.findByRole("button", {
 			name: "Generate December 2026",
 		});
@@ -382,7 +361,7 @@ describe("Create schedules for a month", () => {
 		});
 
 		await screen.findByText(EVERY_WEEK_LINE);
-		await user.click(next());
+		await nextToGenerate(user);
 
 		expect(
 			await screen.findByText("Checking December 2026 before you generate…")
@@ -402,7 +381,7 @@ describe("Create schedules for a month", () => {
 		});
 
 		await screen.findByText(EVERY_WEEK_LINE);
-		await user.click(next());
+		await nextToGenerate(user);
 		expect(
 			await screen.findByText(/^We couldn’t check December 2026 before/)
 		).toHaveAttribute("role", "alert");
@@ -433,7 +412,7 @@ describe("Create schedules for a month", () => {
 				),
 		});
 		await screen.findByText(EVERY_WEEK_LINE);
-		await user.click(next());
+		await nextToGenerate(user);
 		await screen.findByRole("button", { name: "Generate December 2026" });
 
 		// Someone publishes every ticked week while the wizard is open; the month is read again.
@@ -464,7 +443,7 @@ describe("Create schedules for a month", () => {
 		});
 
 		await screen.findByText(EVERY_WEEK_LINE);
-		await user.click(next());
+		await nextToGenerate(user);
 		const generate = await screen.findByRole("button", {
 			name: "Generate December 2026",
 		});
@@ -546,7 +525,7 @@ describe("Create schedules for a month: ticking weeks", () => {
 		await vi.waitFor(() => {
 			expect(next()).toBeEnabled();
 		});
-		await user.click(next());
+		await nextToGenerate(user);
 		const generate = await screen.findByRole("button", {
 			name: /^Generate /,
 		});
@@ -745,7 +724,7 @@ describe("Create schedules for a month: ticking weeks", () => {
 		await screen.findByText(EVERY_WEEK_LINE);
 		await user.click(box("Mon, Dec 14 to Sun, Dec 20"));
 		await user.click(box("Mon, Dec 28 to Sun, Jan 3"));
-		await user.click(next());
+		await nextToGenerate(user);
 
 		expect(
 			await screen.findByText(
@@ -1222,7 +1201,7 @@ describe("Create schedules for a month: where everyone starts", () => {
 				.map((tab) => tab.textContent?.trim())
 		).not.toContainEqual(expect.stringMatching(/^Dec 7/));
 		await user.click(screen.getByRole("button", { name: "Cancel" }));
-		await user.click(next());
+		await nextToGenerate(user);
 		const generate = await screen.findByRole("button", {
 			name: "Generate December 2026",
 		});
@@ -1909,7 +1888,7 @@ describe("Create schedules for a month: by dates", () => {
 		await vi.waitFor(() => {
 			expect(next()).toBeEnabled();
 		});
-		await user.click(next());
+		await nextToGenerate(user);
 		const generate = await screen.findByRole("button", { name: /^Generate / });
 		await vi.waitFor(() => {
 			expect(generate).toBeEnabled();
@@ -2022,7 +2001,7 @@ describe("Create schedules for a month: by dates", () => {
 			expect(next()).toBeEnabled();
 		});
 
-		await user.click(next());
+		await nextToGenerate(user);
 		expect(
 			await screen.findByText(
 				/^Generating works out 10 days, Nov 19\s?–\s?28, 2026\./

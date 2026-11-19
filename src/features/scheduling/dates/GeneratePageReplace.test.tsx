@@ -171,6 +171,9 @@ it("given_aWithdrawnRosterOnTheDays_when_generating_then_asksBeforeReplacingAndP
 		expect(next).toBeEnabled();
 	});
 	await user.click(next);
+	// The Forecast step is optional: Next goes on with nothing entered.
+	await screen.findByRole("region", { name: "Staffing forecast" });
+	await user.click(screen.getByRole("button", { name: "Next" }));
 
 	await clickGenerate(user);
 	const dialog = await screen.findByRole("dialog", {
