@@ -71,7 +71,7 @@ describe("rosterIssues", () => {
 		expect(issue?.action).toEqual({ kind: "show" });
 	});
 
-	it("carries the engine's rule behind each gap and each rule's item, which its advice is chosen by", () => {
+	it("carries the engine's rule behind each gap and each rule's item, which its advice is chosen by, and the frozen constraint of a rule naming who", () => {
 		const gap = staffingGapFixture();
 		const placeless = ruleFixture({ rule: "most_days_a_week" });
 		const issues = rosterIssues(
@@ -80,8 +80,16 @@ describe("rosterIssues", () => {
 
 		expect(issues.map((issue) => issue.subject)).toEqual([
 			{ kind: "rule", rule: gap.sourceRule },
-			{ kind: "rule", rule: brokenMust.rule },
-			{ kind: "rule", rule: brokenMust.rule },
+			{
+				kind: "rule",
+				rule: brokenMust.rule,
+				constraintId: brokenMust.constraintId,
+			},
+			{
+				kind: "rule",
+				rule: brokenMust.rule,
+				constraintId: brokenMust.constraintId,
+			},
 			{ kind: "rule", rule: "most_days_a_week" },
 		]);
 	});
