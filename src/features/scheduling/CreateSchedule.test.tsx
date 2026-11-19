@@ -276,9 +276,7 @@ describe("Create Schedule: opening and setup", () => {
 		const user = userEvent.setup();
 		const { opened } = await open("/scheduling");
 
-		await user.click(
-			await screen.findByRole("link", { name: "Generate" })
-		);
+		await user.click(await screen.findByRole("link", { name: "Generate" }));
 		// The shell's first navigation into the wizard outlasts the default wait.
 		expect(
 			await screen.findByRole(
@@ -1156,7 +1154,7 @@ describe("Create Schedule: where everyone starts", () => {
 
 		expect(
 			await screen.findByText(
-				"No roster before this week. Days are added for 1 person; everyone else starts rested."
+				"No roster before these days. Days are added for 1 person. For everyone else, the earlier days of this week count as worked for weekly rest days and days a week; rest between shifts and days in a row start fresh."
 			)
 		).toBeInTheDocument();
 		await user.click(
@@ -1178,7 +1176,7 @@ describe("Create Schedule: where everyone starts", () => {
 		]);
 		expect(
 			screen.getByText(
-				"No roster before this week. Days are added for 2 people; everyone else starts rested."
+				"No roster before these days. Days are added for 2 people. For everyone else, the earlier days of this week count as worked for weekly rest days and days a week; rest between shifts and days in a row start fresh."
 			)
 		).toBeInTheDocument();
 	});
@@ -1226,7 +1224,7 @@ describe("Create Schedule: where everyone starts", () => {
 		);
 
 		expect(
-			await screen.findByText(/^No roster before this week\./)
+			await screen.findByText(/^No roster before these days\./)
 		).toBeInTheDocument();
 		expect(screen.queryByRole("button", { name: /last week/ })).toBeNull();
 	});

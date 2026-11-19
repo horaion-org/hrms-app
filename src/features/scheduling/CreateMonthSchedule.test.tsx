@@ -1366,7 +1366,7 @@ describe("Create schedules for a month: where everyone starts", () => {
 		});
 
 		const line = await screen.findByText(
-			"No roster before this week. Days are added for 1 person; everyone else starts rested."
+			"No roster before these days. Days are added for 1 person. For everyone else, the earlier days of this week count as worked for weekly rest days and days a week; rest between shifts and days in a row start fresh."
 		);
 		expect(line.closest("[role='note']")).not.toHaveClass("bg-warning-50");
 		expect(
@@ -1858,9 +1858,7 @@ describe("Create schedules for a month: by dates", () => {
 			await screen.findByRole("table", { name: "What generating does" })
 		).toBeInTheDocument();
 		expect(screen.getByText("First day")).toBeInTheDocument();
-		expect(
-			screen.queryByRole("tablist", { name: "Schedule for" })
-		).toBeNull();
+		expect(screen.queryByRole("tablist", { name: "Schedule for" })).toBeNull();
 		expect(calls.find((call) => call.path === `${DATES}/plan`)?.search).toBe(
 			"departmentId=d-1&firstDay=2026-11-19&lastDay=2026-11-28"
 		);
@@ -1979,7 +1977,7 @@ describe("Create schedules for a month: by dates", () => {
 			).toBe(true);
 			expect(
 				screen.getByText(
-					"No roster before this week. Days are added for 2 people; everyone else starts rested."
+					"No roster before these days. Days are added for 2 people. For everyone else, the earlier days of this week count as worked for weekly rest days and days a week; rest between shifts and days in a row start fresh."
 				)
 			).toBeVisible();
 		});
