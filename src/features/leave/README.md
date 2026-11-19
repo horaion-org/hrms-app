@@ -1,7 +1,8 @@
 # Leave
 
-The authenticated `/leave` route, in three tabs. **My leave** is every member's own requests and their own
-applications (`/companies/{c}/me/leave-requests`), with nothing to grant. **Team requests** and **Team
+The authenticated `/leave` route, in three tabs. **My leave** is a member's own requests and their own
+applications (`/companies/{c}/me/leave-requests`), with nothing to grant, for anyone but a part-timer (a part-timer
+has My availability instead; someone whose employment type is not known yet keeps My leave). **Team requests** and **Team
 timeline** are the company's requests one Branch at a time, read through the person's grants, with applying
 on a member's behalf, recording approved leave, approving, rejecting, changing and cancelling. Everything comes from the API (`features/leave/api.ts`); nothing
 is sampled or kept in page state beyond the timeline's window.
@@ -23,12 +24,14 @@ is sampled or kept in page state beyond the timeline's window.
   `leaveLength.ts` counts the minutes between two times, past midnight included.
 - `leaveTypeOptions.ts` — the applicable leave types (active, never the scheduler's day off) as Select options,
   grouped by Grant kind in the company's order.
-- `leaveSearch.ts` — what belongs in the URL (`view`, `branch`, `status`, `sort`, `page`) and the API queries
-  built from it; `timelineQueryOf` asks for one window of up to 200 rows.
+- `leaveSearch.ts` — what belongs in the URL (`view`, `branch`, `status`, `sort`, `page`), the tabs a person has
+  and the one shown (`leaveViewsOf`, `leaveViewOf`), and the API queries built from it; `timelineQueryOf` asks for one window of up to 200 rows.
 - `types.ts` — the request types re-exported from `api.ts`, and each status's Badge tone.
 - `dates.ts` — the timeline's window (`defaultRange`, `shiftRange`, `rangeDays`), a request's period as one
   line, and the calendar day of an instant in the Branch's time zone.
-- `useLeaveRequests.ts` — the reads: the team list hook (`hidden` when the key is held nowhere, or the API
+- `useLeaveRequests.ts` — the reads: `useLeaveViews` (which tabs the person has, the mirror of
+  `useAvailabilityViews`; the menu offers Leave when they have any) and `useShownLeaveView` (the tab shown, a
+  default team view named in the URL so the header lists by Branch), the team list hook (`hidden` when the key is held nowhere, or the API
   refuses), the caller's own requests, the pending count for the Team requests tab, and `useLeaveTurns` (whose
   turn it is to decide which request).
 - `useLeaveActions.ts` — the writes, one hook per job: `useLeaveDecisionActions` (approve, reject),
@@ -42,6 +45,7 @@ is sampled or kept in page state beyond the timeline's window.
 - `leaveApproval.ts` — leave under an approval flow, as pure rules: which stage a decision is (`single`,
   `middle`, `last`), whether it approves the leave, the approvals waiting on the caller, the "waiting for"
   line, `canDecideLeave` and the approved message (a middle step only moves the request on).
+- `leaveListProblem.ts` — the line a list that is not ready says instead: hidden quietly, failed as an alert.
 - `leaveRefusal.ts` — API codes to frontend-owned copy, on a field or as the dialog's alert;
   `leaveDecisionRefusal` also words the approvals API's refusals for a request under a flow.
 - `LeaveRequests` — one server page: sorting, the status filter and paging are handed to the caller.

@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { ApiProblemError } from "@/common/problem";
 import type { ListPage } from "@/common/schemas";
 import { myPendingApprovalsQuery } from "@/features/approvals/api";
@@ -14,6 +15,12 @@ import {
 	canDecideLeave,
 	leaveApprovalsWaitingOn,
 } from "@/features/leave/leaveApproval";
+import {
+	leaveViewOf,
+	leaveViewsOf,
+	type LeaveSearch,
+	type LeaveView,
+} from "@/features/leave/leaveSearch";
 import { myProfileQuery } from "@/features/people/api";
 import { LEAVE_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { recordScope } from "@/features/workspace/scopes";
@@ -50,6 +57,31 @@ export const useLeaveViews = (): LeaveViews => {
 		mine: !isPartTime(profile.data?.employmentType),
 		team: access.canAny(LEAVE_READ_KEYS, "anywhere"),
 	};
+};
+
+/** The Leave page's tabs, and the one shown (`leaveViewOf`); none when the person has neither kind. */
+export type ShownLeaveView = {
+	offered: LeaveViews;
+	views: Array<LeaveView>;
+	view: LeaveView | undefined;
+};
+
+/**
+ * The person's Leave tabs and the one shown for the URL's `requested`. A
+ * team view shown by default, as for a part-timer who may read others'
+ * leave, is handed to `nameInUrl`, so the header lists by Branch.
+ */
+export const useShownLeaveView = (
+	requested: LeaveSearch["view"],
+	nameInUrl: (view: Exclude<LeaveView, "mine">) => void
+): ShownLeaveView => {
+	const offered = useLeaveViews();
+	const views = leaveViewsOf(offered);
+	const view = leaveViewOf(requested, views);
+	useEffect(() => {
+		if (view && view !== "mine" && view !== requested) nameInUrl(view);
+	}, [view, requested, nameInUrl]);
+	return { offered, views, view };
 };
 
 /**
