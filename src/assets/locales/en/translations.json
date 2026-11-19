@@ -4775,7 +4775,13 @@
 			"failed": "The days couldn’t be saved. Try again.",
 			"unknownDays": "Horaion doesn’t know what people worked on {{days}}.",
 			"saved": "Prior days saved.",
-			"fittedAroundAfter": "Shifts already rostered in the 7 days after this schedule stay as they are; nobody is given a shift here that leaves too little rest before them."
+			"fittedAroundAfter": "Shifts already rostered in the 7 days after this schedule stay as they are; nobody is given a shift here that leaves too little rest before them.",
+			"shown": {
+				"mark": "Entered",
+				"cellLabel": "{{name}}, {{day}}: {{shift}} – entered by hand, not rostered",
+				"note_one": "{{count}} person has shifts entered for the days before these days. View them in the setup.",
+				"note_other": "{{count}} people have shifts entered for the days before these days. View them in the setup."
+			}
 		},
 		"openingHours": {
 			"title": "Hours already worked this month ({{from}} to {{to}})",
