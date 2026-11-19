@@ -18,7 +18,6 @@ const show = (
 		issues: rosterIssuesFixture(),
 		shiftName: () => "Front Desk AM",
 		onShow: vi.fn(),
-		onFindCover: vi.fn(),
 		...props,
 	};
 	render(
@@ -88,30 +87,15 @@ describe("RosterIssuesList", () => {
 		expect(gap).toHaveAttribute("aria-expanded", "true");
 	});
 
-	it("given_aShortShiftsRow_when_findCoverIsPressed_then_coverOpensForItsGap", async () => {
+	it("given_aRosterThatCannotBeChanged_when_aShortShiftOpens_then_itsSentenceAndNoOptions", async () => {
 		const user = userEvent.setup();
-		const { onFindCover } = show();
-
-		await user.click(
-			screen.getByRole("button", { name: /1 Front Desk Staff short/ })
-		);
-		await user.click(screen.getByRole("button", { name: "Find cover" }));
-
-		expect(onFindCover).toHaveBeenCalledWith({
-			shiftId: "front-desk-am",
-			day: "2026-10-17",
-		});
-	});
-
-	it("given_aRosterThatCannotBeChanged_when_aShortShiftOpens_then_noFindCover", async () => {
-		const user = userEvent.setup();
-		show({ onFindCover: undefined });
+		show();
 
 		await user.click(
 			screen.getByRole("button", { name: /1 Front Desk Staff short/ })
 		);
 
-		expect(screen.queryByRole("button", { name: "Find cover" })).toBeNull();
+		expect(screen.queryByRole("button", { name: "Review" })).toBeNull();
 		expect(screen.getByText("Rule: Early front desk")).toBeVisible();
 	});
 });

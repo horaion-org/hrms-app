@@ -15,7 +15,10 @@ import {
 	shortShiftCount,
 	type RosterIssue,
 } from "@/features/scheduling/roster/rosterIssueGroups";
-import { IssuesPanelHead } from "@/features/scheduling/roster/IssuesPanel";
+import {
+	IssuesPanelHead,
+	type IssueCoverContext,
+} from "@/features/scheduling/roster/IssuesPanel";
 import type { IssueFixing } from "@/features/scheduling/roster/RosterIssueGroups";
 import { issuesOfRoster } from "@/features/scheduling/roster/rosterIssueSources";
 import {
@@ -216,6 +219,21 @@ export const GeneratedRoster = ({
 			roster.open({ cell });
 		},
 	};
+	// Covering a short shift from its Issues row: applied as a hand change, the list staying open.
+	const issueCover: IssueCoverContext | undefined = editing && {
+		target: editing.target,
+		revision: editing.revision,
+		assignments,
+		shifts: editing.shifts,
+		coverOffers: editing.coverOffers && {
+			offers: editing.coverOffers.offers,
+			timeZone: schedule.timeZone,
+		},
+		onPreviewDays: roster.onPreviewDays,
+		onApplied: (change, stillShort): void => {
+			setApplied({ change, stillShort });
+		},
+	};
 	/** Closes the panel beside the grid, and forgets the day a fix from Issues opened. */
 	const closePanel = (): void => {
 		setFixPreset(undefined);
@@ -295,6 +313,7 @@ export const GeneratedRoster = ({
 				validating,
 				issues,
 				issueFixing,
+				issueCover,
 				onShowIssue: showIssue,
 				onShowAllIssues: roster.showAllIssues,
 				onFindCover: editing ? roster.openCover : undefined,

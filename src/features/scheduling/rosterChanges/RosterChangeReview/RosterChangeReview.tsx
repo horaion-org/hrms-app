@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useId, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
@@ -42,6 +42,8 @@ export type RosterChangeReviewProps = {
 	previewRefusal?: RosterChangeRefusal;
 	/** Reads the preview again, or reloads the roster after a "revision" refusal. */
 	onRetryPreview?: () => void;
+	/** The change drawn, in place of its before → after lines, under its own title (the Issues panel's tiles). */
+	beforeAfter?: { title: string; content: ReactNode };
 };
 
 const key = "scheduling.rosterEdit";
@@ -73,6 +75,7 @@ export const RosterChangeReview = ({
 	showsRulesNote = true,
 	previewRefusal,
 	onRetryPreview,
+	beforeAfter,
 }: RosterChangeReviewProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const remarkId = useId();
@@ -83,9 +86,10 @@ export const RosterChangeReview = ({
 	return (
 		<div className="flex flex-col gap-3">
 			<h3 className="text-sm font-semibold text-neutral-800">
-				{t(`${key}.beforeAfter`)}
+				{beforeAfter?.title ?? t(`${key}.beforeAfter`)}
 			</h3>
-			{preview ? (
+			{preview && beforeAfter?.content}
+			{preview && !beforeAfter && (
 				<ul className="flex flex-col gap-1 text-sm text-neutral-900">
 					{preview.cells.map((cell) => (
 						<li key={`${cell.membershipId ?? ""}-${cell.day}`}>
@@ -96,7 +100,8 @@ export const RosterChangeReview = ({
 						</li>
 					))}
 				</ul>
-			) : (
+			)}
+			{!preview && (
 				<span className="flex flex-col gap-2" role="status">
 					<span className="sr-only">{t(`${key}.checking`)}</span>
 					<Skeleton className="h-3 w-3/4" />

@@ -30,6 +30,7 @@ import type { IssueFixing } from "@/features/scheduling/roster/RosterIssueGroups
 import {
 	FixableRosterIssuesList,
 	RosterIssuesList,
+	type IssueCoverContext,
 } from "@/features/scheduling/roster/IssuesPanel";
 import type { RosterPanel } from "@/features/scheduling/roster/rosterSearch";
 import type { RosterView } from "@/features/scheduling/roster/rosterView";
@@ -88,6 +89,8 @@ export type RosterListInput = {
 	onFindCover?: (gap: CoverGapRequest) => void;
 	/** On a roster that may be changed: what the fixes Issues makes itself need (`FixableIssueGroups`). */
 	issueFixing?: IssueFixing;
+	/** On a roster that may be changed: what covering a short shift from its Issues row needs. */
+	issueCover?: IssueCoverContext;
 };
 
 /**
@@ -212,10 +215,10 @@ export const issuesSections = (
 		roster: { issuesAbout },
 		assignments,
 		coverOffers,
-		onFindCover,
 		issues,
 		onShowIssue,
 		issueFixing,
+		issueCover,
 	} = input;
 	if (issuesAbout) return headerIssueSections(issuesAbout, input);
 	/** A shift's name by its id, as the roster's own days name it. */
@@ -236,7 +239,7 @@ export const issuesSections = (
 					onRetry={coverOffers.retry}
 				/>
 			),
-		onFindCover,
+		cover: issueCover,
 		onShow: onShowIssue,
 	};
 	return [

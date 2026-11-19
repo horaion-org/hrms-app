@@ -11,6 +11,8 @@ import {
 export type NotAssignedListProps = {
 	/** Why each person with the gap's job title was not assigned; null or left out when the engine could not work it out. */
 	people?: Array<NotAssignedPerson> | null;
+	/** The fold's words; "Why nobody was assigned" without. */
+	title?: string;
 };
 
 const key = "scheduling.cover.engine.whyNot";
@@ -23,11 +25,12 @@ const key = "scheduling.cover.engine.whyNot";
  */
 export const NotAssignedList = ({
 	people,
+	title,
 }: NotAssignedListProps): FunctionComponent => {
 	const { t } = useTranslation();
 	if (people === null || people === undefined) return null;
 	return (
-		<Disclosure title={t(`${key}.title`)} variant="inline">
+		<Disclosure title={title ?? t(`${key}.title`)} variant="inline">
 			{people.length === 0 ? (
 				<p className="text-neutral-800">{t(`${key}.nobodyElse`)}</p>
 			) : (

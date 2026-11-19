@@ -122,6 +122,8 @@ export type CoverPanel = {
 	repairChosen: boolean;
 	/** Reviews an engine option's change, as Find cover's cells, in place of the chosen option. */
 	chooseRepair: (cells: Array<RosterChangeCell>, option: RepairOption) => void;
+	/** Lets go of the chosen person or engine option: back to the list, its default chosen again. */
+	unchoose: () => void;
 	/** After the roster moved, reads it again so the list is made afresh; otherwise asks again. */
 	findAgain: () => void;
 	review: {
@@ -347,6 +349,11 @@ export const useCoverPanel = ({
 		repairChosen: repairCells !== undefined,
 		chooseRepair: (cells, option): void => {
 			setRepairChoice({ cells, option, revision });
+			startReview();
+		},
+		unchoose: (): void => {
+			setChosen(undefined);
+			setRepairChoice(undefined);
 			startReview();
 		},
 		findAgain: (): void => {
