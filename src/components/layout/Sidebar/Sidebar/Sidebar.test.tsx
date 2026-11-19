@@ -149,10 +149,10 @@ describe("Sidebar", () => {
 			"lg:w-70",
 			"overflow-y-auto"
 		);
-		// The logo is itself a fingertip-sized target: 44 px, 48 px from lg.
+		// The logo is itself a fingertip-sized target: 48 px, 64 px from lg in the expanded rail.
 		expect(screen.getByRole("img", { name: "Horaion" })).toHaveClass(
-			"size-11",
-			"lg:size-12"
+			"size-12",
+			"lg:size-16"
 		);
 	});
 
@@ -205,6 +205,10 @@ describe("Sidebar", () => {
 		const rail = home.closest(".consumer-layout");
 		expect(rail).toHaveClass("lg:w-20", "lg:p-4");
 		expect(rail).not.toHaveClass("lg:w-70");
+		// The 80 px rail leaves 48 px for the logo, so it does not grow to 64 px.
+		const logo = within(home).getByRole("img", { name: "Horaion" });
+		expect(logo).toHaveClass("size-12");
+		expect(logo).not.toHaveClass("lg:size-16");
 		// Below lg the bar keeps its Menu button; the collapse control is for the desktop rail.
 		expect(
 			screen.getByRole("button", { name: "Expand menu" }).parentElement
