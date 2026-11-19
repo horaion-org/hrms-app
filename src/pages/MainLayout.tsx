@@ -19,6 +19,7 @@ import {
 	FillShiftsIcon,
 	LeaveFilledIcon,
 	LeaveIcon,
+	ListIcon,
 	OrganisationFilledIcon,
 	OrganisationIcon,
 	PeopleFilledIcon,
@@ -201,7 +202,7 @@ export const MainLayout = (): FunctionComponent => {
 						to="/"
 					/>
 					{/* Scheduling is offered where any of its tabs may be read (schedules, shifts), at any
-					    scope. A member's own roster needs nothing granted: it opens from its notice, under /me. */}
+					    scope. A member's own roster needs nothing granted: it is My roster, under /me. */}
 					<Can anyOf={SCHEDULING_KEYS} at="anywhere">
 						<SidebarItem
 							activeIcon={SchedulingFilledIcon}
@@ -230,6 +231,14 @@ export const MainLayout = (): FunctionComponent => {
 							to="/organisation"
 						/>
 					</Can>
+					{/* My roster is for everyone: a member's own published days need nothing granted. */}
+					<SidebarItem
+						activeIcon={ListIcon}
+						collapsed={collapsed}
+						icon={ListIcon}
+						label={t("shell.navigation.myRoster")}
+						to="/me/schedules"
+					/>
 					{/* Leave is for everyone: a member's own leave needs nothing granted. */}
 					<SidebarItem
 						activeIcon={LeaveFilledIcon}
