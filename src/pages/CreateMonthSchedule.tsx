@@ -24,6 +24,7 @@ import { constraintsQuery } from "@/features/scheduling/constraints/api";
 import { useConstraintOptions } from "@/features/scheduling/constraints/useConstraintOptions";
 import { OpeningHoursCallout } from "@/features/scheduling/hours/OpeningHoursCallout";
 import { startsAfterFirst } from "@/features/scheduling/hours/openingSummary";
+import { ForecastStep } from "@/features/scheduling/createSchedule/ForecastStep";
 import { MonthChoiceDialog } from "@/features/scheduling/createSchedule/MonthChoiceDialog";
 import {
 	monthGenerationCheckQuery,
@@ -107,6 +108,7 @@ import {
 	type StartingPointDialog,
 } from "@/features/scheduling/startingContext/StartingContextSection";
 import { StepActions } from "@/features/scheduling/createSchedule/StepActions";
+import { useForecastStepProps } from "@/features/scheduling/createSchedule/useForecastStepProps";
 import { isScheduleStep, SCHEDULE_STEPS } from "@/features/scheduling/steps";
 import {
 	allOf,
@@ -129,7 +131,7 @@ import { departmentChoices } from "@/features/workspace/unitChoices";
 const key = "scheduling.months.create";
 
 /**
- * Create schedules for a month: Setup and Generate, as the week
+ * Create schedules for a month: Setup, Forecast and Generate, as the week
  * wizard's steps. The URL names the step, the Department and the month;
  * the setup and the per-week choices stay in the page, and nothing is
  * saved before Generate, which posts the month through useGenerateMonth and
@@ -268,6 +270,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 	);
 	const ticked = chosenNow.kept;
 	const shifts = useQuery(departmentShiftsQuery(companyId, unit, readsShifts));
+	const forecastProps = useForecastStepProps(shifts.data);
 	const constraints = useQuery(
 		constraintsQuery(companyId, unit, readsConstraints)
 	);
@@ -805,6 +808,12 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 							setTicks(ticked);
 							goTo(1, values);
 						}}
+					/>
+				)}
+				{step === "forecast" && (
+					<ForecastStep
+						{...forecastProps}
+						periodLabel={generateWords.days ?? monthName}
 					/>
 				)}
 				{step === "generate" &&
