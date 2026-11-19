@@ -216,6 +216,7 @@
 		"appliedOwn": "Tu solicitud de permiso se ha enviado.",
 		"myEmpty": "Aún no tienes solicitudes de permiso.",
 		"myFailed": "No pudimos cargar tus solicitudes. Inténtalo de nuevo.",
+		"unavailable": "Las ausencias son para las personas a tiempo completo y quienes las gestionan, así que aquí no hay nada para ti en esta empresa.",
 		"controls": "Controles de la lista de ausencias",
 		"pendingCount_one": "{{count}} pendiente",
 		"pendingCount_other": "{{count}} pendientes",
