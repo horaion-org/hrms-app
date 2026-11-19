@@ -95,7 +95,11 @@ export type IssueFixAllProps = {
 	};
 };
 
-/** A group's one action for every row of a rule with a retype: "Give each of these 20 people a rest day on one of their days off". */
+/**
+ * A group's one action for every row of a rule with a retype: "Give each of
+ * these 20 people a rest day on one of their days off", and why it was
+ * refused. A change made in part is said by the list, as its rows then go.
+ */
 export const IssueFixAll = ({
 	group,
 	fixes,
@@ -116,7 +120,7 @@ export const IssueFixAll = ({
 					from: dayTypeLabel(group.from, t, SEVERAL).toLocaleLowerCase(),
 				})}
 			</Button>
-			{fixes.outcome?.key === group.key ? (
+			{fixes.outcome?.key === group.key && fixes.outcome.refusal ? (
 				<IssueFixOutcomeLine outcome={fixes.outcome} />
 			) : null}
 		</div>
