@@ -2,14 +2,21 @@ import { useTranslation } from "react-i18next";
 import { formatDay } from "@/common/formatDay";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
-import { dayTypeInSentence } from "@/features/scheduling/dayTypes";
+import {
+	dayTypeInSentence,
+	dayTypeLabel,
+} from "@/features/scheduling/dayTypes";
 import type {
 	DayTypeRetype,
+	DayTypeRetypeGroup,
 	IssueFixOutcome,
 	IssueFixes,
 } from "@/features/scheduling/roster/dayTypeFix";
 
 const key = "scheduling.issues.fix";
+
+/** How many days a plural day type names in "one of their days off". */
+const SEVERAL = 2;
 
 export type IssueFixAdviceProps = {
 	retype: DayTypeRetype;
@@ -78,5 +85,40 @@ export const IssueFixButton = ({
 		>
 			{t(`${key}.make`, { dayType: dayTypeInSentence(retype.to, t) })}
 		</Button>
+	);
+};
+
+export type IssueFixAllProps = {
+	group: DayTypeRetypeGroup;
+	fixes: Pick<IssueFixes, "busy" | "outcome"> & {
+		onFixAll: NonNullable<IssueFixes["onFixAll"]>;
+	};
+};
+
+/** A group's one action for every row of a rule with a retype: "Give each of these 20 people a rest day on one of their days off". */
+export const IssueFixAll = ({
+	group,
+	fixes,
+}: IssueFixAllProps): FunctionComponent => {
+	const { t } = useTranslation();
+	return (
+		<div className="flex flex-col items-start gap-1 py-2">
+			<Button
+				disabled={fixes.busy}
+				variant="textlink"
+				onClick={(): void => {
+					fixes.onFixAll(group);
+				}}
+			>
+				{t(`${key}.makeAll`, {
+					count: group.people,
+					to: dayTypeInSentence(group.to, t),
+					from: dayTypeLabel(group.from, t, SEVERAL).toLocaleLowerCase(),
+				})}
+			</Button>
+			{fixes.outcome?.key === group.key ? (
+				<IssueFixOutcomeLine outcome={fixes.outcome} />
+			) : null}
+		</div>
 	);
 };

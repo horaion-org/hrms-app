@@ -5,13 +5,17 @@ import type { FunctionComponent } from "@/common/types";
 import { Badge } from "@/components/ui/Badge";
 import { ChevronDownIcon } from "@/components/ui/Icon";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
-import type { IssueFixes } from "@/features/scheduling/roster/dayTypeFix";
+import {
+	dayTypeRetypeGroups,
+	type IssueFixes,
+} from "@/features/scheduling/roster/dayTypeFix";
 import {
 	GROUPS_STARTING_CLOSED,
 	topicGist,
 	type IssueGroup,
 	type RosterIssue,
 } from "@/features/scheduling/roster/rosterIssueGroups";
+import { IssueFixAll } from "./IssueFix";
 import { IssueRow } from "./IssueRow";
 import { GROUP_LOOKS } from "./issueGroupTones";
 
@@ -31,7 +35,8 @@ export type IssueGroupSectionProps = {
 /**
  * One group, foldable by its heading (its tone's icon, title and count);
  * folded, a line counting what it holds by kind. Open at first, unless it is one
- * of `GROUPS_STARTING_CLOSED`.
+ * of `GROUPS_STARTING_CLOSED`. Above its rows, one action per rule with two
+ * or more rows that have the same fix, which makes them all in one change.
  */
 export const IssueGroupSection = ({
 	group,
@@ -48,6 +53,9 @@ export const IssueGroupSection = ({
 	const { badgeTone, icon: GroupIcon, textTone } = GROUP_LOOKS[group];
 	const title = t(`scheduling.issues.groups.${group}`);
 	const gist = topicGist(items, t);
+	const onFixAll = fixes?.onFixAll;
+	const fixGroups =
+		fixes && onFixAll ? dayTypeRetypeGroups(items, fixes.retypes) : [];
 	return (
 		<section className="flex flex-col border-t border-neutral-300 pt-2">
 			<button
@@ -78,6 +86,15 @@ export const IssueGroupSection = ({
 				<p className="truncate text-sm text-neutral-700">{gist}</p>
 			)}
 			<div hidden={!open} id={listId}>
+				{fixes && onFixAll
+					? fixGroups.map((fixGroup) => (
+							<IssueFixAll
+								key={fixGroup.key}
+								fixes={{ ...fixes, onFixAll }}
+								group={fixGroup}
+							/>
+						))
+					: null}
 				<ul>
 					{items.map((issue) => (
 						<IssueRow
