@@ -3,6 +3,7 @@ import { formatDay } from "@/common/formatDay";
 import { mapRefusal, type Refusal } from "@/common/refusal";
 import { mondayOf } from "@/common/weeks";
 import type { DatesRefusal, DayRun } from "@/features/scheduling/dates/api";
+import { dayCountOfRuns } from "@/features/scheduling/dates/datesSetup";
 import { formatPeriod, periodStartingOn } from "@/features/scheduling/periods";
 
 /**
@@ -336,15 +337,28 @@ const daysText = (days: DayRun, language: string): string =>
  * Why the dates plan refuses the dates, worded with its days: every day
  * published, days to redo before published days, a schedule with no roster
  * in the way, or days being generated (API ADR-0129). A code the app doesn't
- * know reads as the plain failure.
+ * know reads as the plain failure. `withdrawnDays` are the asked days whose
+ * roster was published and then withdrawn (`withdrawnDaysOf`): with any, the
+ * every-day-published refusal names them and says how to redo or keep them.
  */
 export const datesRefusalText = (
 	refusal: DatesRefusal,
 	t: TFunction,
-	language: string
+	language: string,
+	withdrawnDays: ReadonlyArray<DayRun> = []
 ): string => {
 	const key = "scheduling.dates.refusal";
 	const scheduled = refusal.scheduledDays ?? refusal.days;
+	if (
+		refusal.code === errorCodeOf(codes.daysAllTaken) &&
+		withdrawnDays.length > 0
+	)
+		return t(`${key}.allTakenWithdrawn`, {
+			days: new Intl.ListFormat(language, { type: "conjunction" }).format(
+				withdrawnDays.map((run) => daysText(run, language))
+			),
+			count: dayCountOfRuns(withdrawnDays),
+		});
 	if (refusal.code === errorCodeOf(codes.daysAllTaken))
 		return t(`${key}.allTaken`, {
 			first: formatDay(refusal.days.from, language),

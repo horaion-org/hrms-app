@@ -5541,6 +5541,8 @@
 		"dates": {
 			"refusal": {
 				"allTaken": "Todos los días del {{first}} al {{last}} ya se han publicado, así que no cambiaría nada. Elige un primer día posterior al {{last}}.",
+				"allTakenWithdrawn_one": "{{days}} se publicó y después se retiró, así que generar lo deja como está. Para calcularlo de nuevo, elimínalo primero: en el cuadrante, pulsa su franja y elige «Eliminar estos días», y después genera. Para conservar el cuadrante y ajustarlo, ábrelo desde el cuadrante y publícalo de nuevo.",
+				"allTakenWithdrawn_other": "{{days}} se publicaron y después se retiraron, así que generar los deja como están. Para calcularlos de nuevo, elimínalos primero: en el cuadrante, pulsa su franja y elige «Eliminar estos días», y después genera. Para conservar el cuadrante y ajustarlo, ábrelo desde el cuadrante y publícalo de nuevo.",
 				"beforeRoster": "{{days}} van antes de {{scheduled}}, que ya se han publicado y se quedan como están. Elige un primer día posterior al {{last}}.",
 				"draftInTheWay": "La semana del {{week}} tiene un horario para {{days}} todavía sin cuadrante. Ábrelo desde la página del mes para generarlo, o elimínalo, y luego vuelve a elegir estas fechas.",
 				"beingGenerated": "{{days}} se están generando ahora mismo. Espera a que termine en la página del mes y luego vuelve a elegir estas fechas.",

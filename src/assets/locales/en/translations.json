@@ -5741,6 +5741,8 @@
 		"dates": {
 			"refusal": {
 				"allTaken": "Every day from {{first}} to {{last}} has been published, so nothing would change. Choose a first day after {{last}}.",
+				"allTakenWithdrawn_one": "{{days}} was published and then withdrawn, so generating leaves it as it is. To work it out again, delete it first: on the roster, press its band and choose “Delete these days”, then generate. To keep the roster and adjust it, open it from the roster and publish it again.",
+				"allTakenWithdrawn_other": "{{days}} were published and then withdrawn, so generating leaves them as they are. To work them out again, delete them first: on the roster, press their band and choose “Delete these days”, then generate. To keep the roster and adjust it, open it from the roster and publish it again.",
 				"beforeRoster": "{{days}} come before {{scheduled}}, which have been published and stay as they are. Choose a first day after {{last}}.",
 				"draftInTheWay": "The week of {{week}} has a schedule for {{days}} with no roster yet. Open it from the month page to generate it, or delete it, then choose these dates again.",
 				"beingGenerated": "{{days}} are being generated right now. Wait until that finishes on the month page, then choose these dates again.",
