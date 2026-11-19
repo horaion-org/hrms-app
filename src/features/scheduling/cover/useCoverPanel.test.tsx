@@ -30,7 +30,9 @@ import { frozenShiftsFixture } from "@/features/scheduling/shifts/fixtures";
 /*
  * Front Desk AM one short on Saturday 17 October: Aisha (off that day) is
  * the first option, Chen the overtime one. The API is stubbed; the hook's
- * list, preview, apply, offer and engine calls go through it.
+ * list, preview, apply, offer and engine calls go through it. An engine call
+ * left unstubbed is answered 404, which the panel reads as the engine failing,
+ * so the backend's list is the fallback.
  */
 
 const SCHEDULE =
@@ -104,6 +106,46 @@ const hook = (
 };
 
 describe("useCoverPanel", () => {
+	it("given_aDraftAndTheEngineAnswering_when_opened_then_theEngineIsAskedAndNobodyOfTheBackendListIsChosenOrPreviewed", async () => {
+		const calls = stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+			[`POST ${REPAIR_OPTIONS}`]: answer(
+				repairOptionsFixture([feasibleRepair([callInMove()])], [])
+			),
+		});
+		const { result, input } = hook();
+
+		expect(result.current.view).toBe("engine");
+		await waitFor(() => {
+			expect(result.current.engineRepair.status).toBe("ready");
+		});
+		await waitFor(() => {
+			expect(result.current.status).toBe("options");
+		});
+
+		expect(result.current.view).toBe("engine");
+		expect(result.current.selected).toBeUndefined();
+		expect(calls.some((call) => call.path === PREVIEW)).toBe(false);
+		expect(input.onPreviewDays).toHaveBeenLastCalledWith([]);
+	});
+
+	it("given_aDraftAndTheEngineFailing_when_opened_then_theBackendListIsTheFallback", async () => {
+		stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+			[`POST ${REPAIR_OPTIONS}`]: { status: 503 },
+		});
+		const { result } = hook();
+
+		await waitFor(() => {
+			expect(result.current.view).toBe("backendFallback");
+		});
+		await waitFor(() => {
+			expect(result.current.selected?.membershipId).toBe("m-1");
+		});
+	});
+
 	it("given_options_when_listed_then_theFirstIsChosenPreviewedAndOutlinedOnTheGrid", async () => {
 		const calls = stubApi({
 			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
@@ -147,7 +189,7 @@ describe("useCoverPanel", () => {
 		expect(result.current.selected?.membershipId).toBe("m-3");
 	});
 
-	it("given_theEngineCallsSomeoneIn_when_itAnswers_then_theyAreChosenInPlaceOfTheFirstAndPreviewed", async () => {
+	it("given_aPublishedRosterAndTheEngineCallingSomeoneIn_when_itAnswers_then_theyAreChosenInPlaceOfTheFirstAndPreviewed", async () => {
 		const calls = stubApi({
 			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
 			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
@@ -158,16 +200,11 @@ describe("useCoverPanel", () => {
 				)
 			),
 		});
-		const { result } = hook();
-		await waitFor(() => {
-			expect(result.current.selected?.membershipId).toBe("m-1");
-		});
-		expect(result.current.withEngine?.suggested).toBeUndefined();
-
-		act(() => {
-			result.current.engineRepair.askAgain();
+		const { result } = hook({
+			coverOffers: { offers: [], timeZone: "Asia/Singapore" },
 		});
 
+		expect(result.current.view).toBe("backendWithEngine");
 		await waitFor(() => {
 			expect(result.current.selected?.membershipId).toBe("m-3");
 		});
@@ -180,7 +217,7 @@ describe("useCoverPanel", () => {
 		});
 	});
 
-	it("given_aChosenPerson_when_theEngineRefusesThem_then_theyAreNoLongerSelectedAndNobodyIs", async () => {
+	it("given_aPublishedRoster_when_theEngineRefusesSomeone_then_theyAreUnderCantHelpAndNobodyIsChosen", async () => {
 		stubApi({
 			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
 			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
@@ -205,21 +242,15 @@ describe("useCoverPanel", () => {
 				)
 			),
 		});
-		const { result, input } = hook();
-		await waitFor(() => {
-			expect(result.current.status).toBe("options");
-		});
-		act(() => {
-			result.current.select("m-3");
-		});
-		expect(result.current.selected?.membershipId).toBe("m-3");
-
-		act(() => {
-			result.current.engineRepair.askAgain();
+		const { result, input } = hook({
+			coverOffers: { offers: [], timeZone: "Asia/Singapore" },
 		});
 
 		await waitFor(() => {
 			expect(result.current.engineRepair.status).toBe("ready");
+		});
+		await waitFor(() => {
+			expect(result.current.status).toBe("options");
 		});
 		// Chen is under "Can't help" now; Aisha was never looked at, so the engine suggests nobody.
 		expect(result.current.selected).toBeUndefined();

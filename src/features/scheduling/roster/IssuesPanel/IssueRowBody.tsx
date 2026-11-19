@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
-import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import type { IssueFixes } from "@/features/scheduling/roster/dayTypeFix";
 import {
 	issueAdviceLine,
@@ -13,7 +12,8 @@ import {
 	IssueFixAdvice,
 	IssueFixButton,
 	IssueFixOutcomeLine,
-} from "@/features/scheduling/roster/RosterIssueGroups/IssueFix";
+} from "@/features/scheduling/roster/RosterIssueGroups";
+import { GapCover, type IssueCoverContext } from "./GapCover";
 
 export type IssueRowBodyProps = {
 	row: IssueRow;
@@ -21,26 +21,29 @@ export type IssueRowBodyProps = {
 	language: string;
 	/** Outlines the issue's cell on the grid; no Show without. */
 	onShow?: (issue: RosterIssue) => void;
-	/** On a roster that may be changed: covers a short shift. */
-	onFindCover?: (gap: CoverGapRequest) => void;
+	/** On a roster that may be changed: what covering a short shift needs. */
+	cover?: IssueCoverContext;
 	/** The fixes Issues can make itself. */
 	fixes?: IssueFixes;
 };
 
 /**
- * What a row opens to: for a short shift, its cover; for a fix Issues knows,
- * the fix and its button; otherwise why it is listed and what to do, with
- * Show on the grid. Never empty: the issue's own sentence is always there.
+ * What a row opens to: for a short shift on a roster that may be changed, its
+ * options (`GapCover`); for a fix Issues knows, the fix and its button;
+ * otherwise why it is listed and what to do, with Show on the grid. Never
+ * empty: the issue's own sentence is there whenever there are no options.
  */
 export const IssueRowBody = ({
 	row,
 	language,
 	onShow,
-	onFindCover,
+	cover,
 	fixes,
 }: IssueRowBodyProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const { issue } = row;
+	if (issue.action.kind === "findCover" && cover)
+		return <GapCover cover={cover} gap={issue.action.gap} />;
 	const retype = fixes?.retypes.get(issue.key);
 	const advice = issueAdviceOf(issue);
 	const canShow =
@@ -60,18 +63,6 @@ export const IssueRowBody = ({
 			)}
 			{fixes?.outcome?.key === issue.key && (
 				<IssueFixOutcomeLine outcome={fixes.outcome} />
-			)}
-			{issue.action.kind === "findCover" && onFindCover && (
-				<Button
-					className="self-start"
-					size="sm"
-					variant="secondary"
-					onClick={(): void => {
-						if (issue.action.kind === "findCover") onFindCover(issue.action.gap);
-					}}
-				>
-					{t("scheduling.cover.findCover")}
-				</Button>
 			)}
 			{canShow && (
 				<Button

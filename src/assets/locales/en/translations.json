@@ -4959,6 +4959,22 @@
 					"note": "Note"
 				},
 				"nothingHere": "Nothing here."
+			},
+			"cover": {
+				"badge": {
+					"withinHours": "Within hours",
+					"extraHours": "Extra hours",
+					"overtime": "Overtime",
+					"leavesShort": "Leaves {{shift}} {{count}} short",
+					"notRuleChecked": "Not rule-checked"
+				},
+				"review": "Review",
+				"whatChanges": "What changes for {{name}}",
+				"back": "Back",
+				"week": "This week {{before}} → {{after}} h of {{contract}} h",
+				"weekOvertime": "This week {{before}} → {{after}} h of {{contract}} h · {{overtime}} h overtime",
+				"weekBar": "This week’s hours against the contract",
+				"whyNot": "Why not others ({{count}})"
 			}
 		},
 		"rosterMarkers": {

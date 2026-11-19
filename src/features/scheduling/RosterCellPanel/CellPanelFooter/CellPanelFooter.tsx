@@ -14,6 +14,8 @@ export type CellPanelFooterProps = {
 	busy: boolean;
 	onApply: () => void;
 	onCancel: () => void;
+	/** The words on Cancel, such as "Back" where it returns to a list; "Cancel" without. */
+	cancelLabel?: string;
 	/**
 	 * Given when the change needs the member's yes (a published roster's
 	 * change that adds or moves work): the offer's actions replace Cancel and
@@ -29,6 +31,7 @@ export const CellPanelFooter = ({
 	busy,
 	onApply,
 	onCancel,
+	cancelLabel,
 	offerActions,
 }: CellPanelFooterProps): FunctionComponent => {
 	const { t } = useTranslation();
@@ -36,7 +39,7 @@ export const CellPanelFooter = ({
 	return (
 		<div className="flex justify-end gap-3">
 			<Button size="sm" variant="secondary" onClick={onCancel}>
-				{t("scheduling.rosterEdit.cancel")}
+				{cancelLabel ?? t("scheduling.rosterEdit.cancel")}
 			</Button>
 			<Button
 				disabled={applyDisabled}

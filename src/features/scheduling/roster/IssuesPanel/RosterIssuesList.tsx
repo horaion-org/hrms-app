@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { formatDay } from "@/common/formatDay";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
-import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import {
 	dayTypeRetypeGroups,
 	type IssueFixes,
@@ -13,7 +12,8 @@ import type { RosterIssue } from "@/features/scheduling/roster/rosterIssueGroups
 import {
 	IssueFixAll,
 	IssueFixOutcomeLine,
-} from "@/features/scheduling/roster/RosterIssueGroups/IssueFix";
+} from "@/features/scheduling/roster/RosterIssueGroups";
+import type { IssueCoverContext } from "./GapCover";
 import { IssueRowBody } from "./IssueRowBody";
 import { IssuesPanel } from "./IssuesPanel";
 
@@ -24,7 +24,8 @@ export type RosterIssuesListProps = {
 	/** Under the list, such as the cover offers out. */
 	information?: ReactNode;
 	onShow?: (issue: RosterIssue) => void;
-	onFindCover?: (gap: CoverGapRequest) => void;
+	/** On a roster that may be changed: what covering a short shift from its row needs. */
+	cover?: IssueCoverContext;
 	/** The fixes Issues can make itself, on a roster that may be changed. */
 	fixes?: IssueFixes;
 };
@@ -39,7 +40,7 @@ export const RosterIssuesList = ({
 	shiftName,
 	information,
 	onShow,
-	onFindCover,
+	cover,
 	fixes,
 }: RosterIssuesListProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -84,8 +85,8 @@ export const RosterIssuesList = ({
 				<IssueRowBody
 					fixes={fixes}
 					language={language}
+					cover={cover}
 					row={row}
-					onFindCover={onFindCover}
 					onShow={onShow}
 				/>
 			)}

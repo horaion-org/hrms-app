@@ -7,3 +7,4 @@ export {
 	RosterIssuesList,
 	type RosterIssuesListProps,
 } from "./RosterIssuesList";
+export { type IssueCoverContext } from "./GapCover";

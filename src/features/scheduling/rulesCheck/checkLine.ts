@@ -21,7 +21,10 @@ export type CheckLine =
 	| { state: "refused"; refusal: RulesCheckRefusal; canRetry: boolean }
 	/** Hand changes nothing has checked since, or a check made before the roster changed. */
 	| { state: "unchecked" }
-	/** Checked at the revision on screen; `incomplete` when the engine ran out of time. */
+	/**
+	 * Checked at the revision on screen; `incomplete` when the engine ran out
+	 * of time, or could not check the rules or the staffing.
+	 */
 	| { state: "checked"; checkedAt: number | undefined; incomplete: boolean }
 	/** Never changed and never checked: the list is the generation's. */
 	| { state: "asGenerated" };
@@ -46,7 +49,10 @@ export const checkLineOf = (
 		return {
 			state: "checked",
 			checkedAt: last.checkedAt,
-			incomplete: last.check.mayBeShort,
+			incomplete:
+				last.check.mayBeShort ||
+				last.check.status === "UNCHECKED" ||
+				last.check.staffingGaps === null,
 		};
 	return { state: "asGenerated" };
 };

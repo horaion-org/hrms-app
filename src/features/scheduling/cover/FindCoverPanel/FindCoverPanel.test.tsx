@@ -50,6 +50,18 @@ const SETTLE_MILLISECONDS = 50;
 const GAP = coverOptionsFixture().gap;
 const GAP_REQUEST = { shiftId: GAP.shiftId, day: GAP.day };
 const roster = scheduleAssignmentsFixture();
+const UNREACHABLE =
+	"The engine could not be reached. These people are free by their hours and are not checked against the rules.";
+const WHY_NOT = "Why nobody was assigned";
+const PUBLISHED = { offers: [], timeZone: "Asia/Singapore" };
+/** Opens the folded "Why nobody was assigned" and gives the fold, its list inside. */
+const openWhyNot = async (
+	user: ReturnType<typeof userEvent.setup>
+): Promise<HTMLElement> => {
+	const fold = screen.getByRole("button", { name: WHY_NOT });
+	await user.click(fold);
+	return fold.parentElement!;
+};
 const answer = (body: unknown): { status: number; body: unknown } => ({
 	status: 200,
 	body: envelope(body),
@@ -139,7 +151,7 @@ const show = (
 };
 
 describe("FindCoverPanel", () => {
-	it("given_options_when_shown_then_theGapTheFirstChosenNobodySuggestedAndTheRulesNotCheckedLine", async () => {
+	it("given_theEngineUnreachable_when_shown_then_thePlainLineThenTheBackendsPeopleTheFirstChosenAndTheRulesNotCheckedLine", async () => {
 		stubApi({
 			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
 			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
@@ -155,13 +167,18 @@ describe("FindCoverPanel", () => {
 		expect(
 			screen.getByText("1 short since the roster was generated")
 		).toBeVisible();
-		// Before the engine is asked nobody is suggested, and the list says what its order does not check.
-		expect(screen.queryByText("Suggested")).toBeNull();
+		// The engine could not answer (its call is unstubbed): one plain line, then the backend's people, nobody suggested.
+		const unreachable = await screen.findByText(UNREACHABLE);
+		const list = screen.getByRole("radiogroup", { name: "Who covers" });
 		expect(
-			screen.getByRole("radiogroup", { name: "Who covers" })
-		).toHaveAccessibleDescription(
-			"In order of fewest extra hours. Rest between shifts and the job title that is short aren’t checked here: ask the engine below."
+			unreachable.compareDocumentPosition(list) &
+				Node.DOCUMENT_POSITION_FOLLOWING
+		).toBeTruthy();
+		expect(screen.queryByText("Suggested")).toBeNull();
+		expect(list).toHaveAccessibleDescription(
+			"In order of fewest extra hours. Rest between shifts and the job title that is short aren’t checked here."
 		);
+		expect(screen.queryByRole("button", { name: "Ask the engine" })).toBeNull();
 		expect(screen.getByRole("note")).toHaveTextContent(
 			"Working-time rules (hours a day, overtime a month, days a week, leave) aren’t checked for this change. After you apply it, press Validate schedule."
 		);
@@ -176,7 +193,7 @@ describe("FindCoverPanel", () => {
 		).toBeVisible();
 	});
 
-	it("given_theEngineSection_when_asked_then_itsOptionsUnderTheBackendsOwnFeasibleFirst", async () => {
+	it("given_aShortShiftOnADraft_when_opened_then_theEngineIsAskedWithoutAPressOneWorkingLineThenItsOptionsAsTheOneList", async () => {
 		const calls = stubApi({
 			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
 			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
@@ -188,17 +205,11 @@ describe("FindCoverPanel", () => {
 			),
 		});
 		show();
-		const user = userEvent.setup();
-		await screen.findByRole("radio", { name: "Aisha Rahman" });
-		expect(
-			screen.getByRole("heading", { name: "From the scheduling engine" })
-		).toBeInTheDocument();
-		expect(calls.filter((call) => call.path === REPAIR_OPTIONS)).toHaveLength(
-			0
+
+		expect(screen.getByRole("status")).toHaveTextContent(
+			"Working out the options…"
 		);
-
-		await user.click(screen.getByRole("button", { name: "Ask the engine" }));
-
+		expect(screen.queryByRole("button", { name: "Ask the engine" })).toBeNull();
 		const fills = await screen.findByText("Fills the gap");
 		const cannot = screen.getByText("Can’t fill the gap");
 		expect(
@@ -207,13 +218,21 @@ describe("FindCoverPanel", () => {
 		expect(
 			screen.getByText("Call in Aisha Rahman for Front Desk AM Sat, Oct 17")
 		).toBeVisible();
+		expect(screen.getByRole("heading", { name: "Who covers" })).toBeVisible();
+		// One list: no engine block of its own, and the backend's people are not shown or previewed.
+		expect(
+			screen.queryByRole("heading", { name: "From the scheduling engine" })
+		).toBeNull();
+		expect(screen.queryByRole("radio")).toBeNull();
+		expect(screen.queryByText(UNREACHABLE)).toBeNull();
+		expect(calls.some((call) => call.path === PREVIEW)).toBe(false);
 		expect(calls.find((call) => call.path === REPAIR_OPTIONS)?.body).toEqual({
 			...GAP_REQUEST,
 			expectedRevision: 1,
 		});
 	});
 
-	it("given_repairOpenedForAGap_when_shown_then_theEnginesWorkerIsWarmedOnceBeforeAnyAsk", async () => {
+	it("given_repairOpenedForAGap_when_shown_then_theEnginesWorkerIsWarmedOnce", async () => {
 		const calls = stubApi({
 			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
 			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
@@ -228,10 +247,9 @@ describe("FindCoverPanel", () => {
 				expect.objectContaining({ body: { expectedRevision: 1 } }),
 			]);
 		});
-		expect(calls.some((call) => call.path === REPAIR_OPTIONS)).toBe(false);
 	});
 
-	it("given_theWarmUpFailing_when_shown_then_nothingIsShownAndTheEngineCanStillBeAsked", async () => {
+	it("given_theWarmUpFailing_when_shown_then_nothingIsShownAndTheEngineStillAnswers", async () => {
 		const calls = stubApi({
 			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
 			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
@@ -244,20 +262,17 @@ describe("FindCoverPanel", () => {
 			),
 		});
 		show();
-		const user = userEvent.setup();
-		await screen.findByRole("radio", { name: "Aisha Rahman" });
 		await waitFor(() => {
 			expect(calls.some((call) => call.path === REPAIR_WARM_UP)).toBe(true);
 		});
 
-		expect(screen.queryByRole("alert")).toBeNull();
-		await user.click(screen.getByRole("button", { name: "Ask the engine" }));
 		expect(
 			await screen.findByRole("button", { name: "Review this change" })
 		).toBeVisible();
+		expect(screen.queryByRole("alert")).toBeNull();
 	});
 
-	it("given_aShiftTheEngineCountsStaffed_when_asked_then_itPointsToFindCoversList", async () => {
+	it("given_aShiftTheEngineCountsStaffed_when_opened_then_itsOwnWordsThenTheBackendsPeople", async () => {
 		stubApi({
 			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
 			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
@@ -271,14 +286,13 @@ describe("FindCoverPanel", () => {
 			},
 		});
 		show();
-		const user = userEvent.setup();
-		await screen.findByRole("radio", { name: "Aisha Rahman" });
-
-		await user.click(screen.getByRole("button", { name: "Ask the engine" }));
 
 		expect(
 			await screen.findByText(/choose someone from the people Find cover lists/)
 		).toBeVisible();
+		expect(
+			await screen.findByRole("radio", { name: "Aisha Rahman" })
+		).toBeChecked();
 	});
 
 	it("given_frozenShiftsNotReadable_when_shown_then_theRostersOwnDaysNameTheShift", async () => {
@@ -337,8 +351,6 @@ describe("FindCoverPanel", () => {
 		});
 		const { onApplied } = show();
 		const user = userEvent.setup();
-		await screen.findByRole("radio", { name: "Aisha Rahman" });
-		await user.click(screen.getByRole("button", { name: "Ask the engine" }));
 
 		await user.click(
 			await screen.findByRole("button", { name: "Review this change" })
@@ -357,9 +369,7 @@ describe("FindCoverPanel", () => {
 				calls.filter((call) => call.path === PREVIEW).slice(-1)[0]?.body
 			).toMatchObject({ cells: engineCells });
 		});
-		expect(
-			screen.getByRole("radio", { name: "Aisha Rahman" })
-		).not.toBeChecked();
+		expect(screen.queryByRole("radio")).toBeNull();
 		// The engine's warning heads its options and stays in the review.
 		expect(
 			screen.getByText(
@@ -395,8 +405,6 @@ describe("FindCoverPanel", () => {
 		});
 		const { onApplied } = show();
 		const user = userEvent.setup();
-		await screen.findByRole("radio", { name: "Aisha Rahman" });
-		await user.click(screen.getByRole("button", { name: "Ask the engine" }));
 		await user.click(
 			await screen.findByRole("button", { name: "Review this change" })
 		);
@@ -430,8 +438,6 @@ describe("FindCoverPanel", () => {
 		});
 		const { onApplied } = show();
 		const user = userEvent.setup();
-		await screen.findByRole("radio", { name: "Aisha Rahman" });
-		await user.click(screen.getByRole("button", { name: "Ask the engine" }));
 		await user.click(
 			await screen.findByRole("button", { name: "Review this change" })
 		);
@@ -446,7 +452,7 @@ describe("FindCoverPanel", () => {
 		});
 	});
 
-	it("given_anEngineOptionApplied_when_theRosterMovesToItsNewRevision_then_nothingIsAskedAgainAndThePanelSaysCovered", async () => {
+	it("given_anEngineOptionApplied_when_theRosterMovesToItsNewRevision_then_nothingIsAskedAtTheOldRevisionAndThePanelSaysCovered", async () => {
 		const covered = coverOptionsFixture();
 		const calls = stubApi({
 			// Once the change lands, the shift is covered at the new revision.
@@ -477,8 +483,6 @@ describe("FindCoverPanel", () => {
 		);
 		const props = show({}, { movesRevisionOnApply: true });
 		const user = userEvent.setup();
-		await screen.findByRole("radio", { name: "Aisha Rahman" });
-		await user.click(screen.getByRole("button", { name: "Ask the engine" }));
 		await user.click(
 			await screen.findByRole("button", { name: "Review this change" })
 		);
@@ -507,10 +511,9 @@ describe("FindCoverPanel", () => {
 		);
 		expect(atOldRevision.map((call) => call.path)).toEqual([]);
 		expect(after.filter((call) => call.path === PREVIEW)).toEqual([]);
-		expect(after.filter((call) => call.path === REPAIR_OPTIONS)).toEqual([]);
 	});
 
-	it("given_anEngineOptionApplied_when_theShiftIsStillShortAtTheNewRevision_then_theEngineIsUnaskedAndItsChangeNotPreviewedAgain", async () => {
+	it("given_anEngineOptionApplied_when_theShiftIsStillShortAtTheNewRevision_then_theEngineIsAskedAfreshAndItsChangeNotPreviewedAgain", async () => {
 		const calls = stubApi({
 			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
 			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
@@ -530,8 +533,6 @@ describe("FindCoverPanel", () => {
 		);
 		const props = show({}, { movesRevisionOnApply: true });
 		const user = userEvent.setup();
-		await screen.findByRole("radio", { name: "Aisha Rahman" });
-		await user.click(screen.getByRole("button", { name: "Ask the engine" }));
 		await user.click(
 			await screen.findByRole("button", { name: "Review this change" })
 		);
@@ -545,13 +546,20 @@ describe("FindCoverPanel", () => {
 			expect(props.onApplied).toHaveBeenCalled();
 		});
 
-		expect(
-			await screen.findByRole("button", { name: "Ask the engine" })
-		).toBeVisible();
-		// Find cover's own first option is previewed afresh at the new revision; the engine's change never again.
+		// The engine is asked afresh at the new revision; its old change is never previewed again.
 		await waitFor(() => {
-			expect(screen.getByRole("radio", { name: "Aisha Rahman" })).toBeChecked();
+			expect(
+				calls
+					.filter((call) => call.path === REPAIR_OPTIONS)
+					.map(
+						(call) =>
+							(call.body as { expectedRevision: number }).expectedRevision
+					)
+			).toEqual([1, 2]);
 		});
+		expect(
+			await screen.findByRole("button", { name: "Review this change" })
+		).toBeVisible();
 		const applied = calls.findIndex((call) => call.path === CHANGES);
 		const previewsAfter = calls
 			.slice(applied + 1)
@@ -586,9 +594,6 @@ describe("FindCoverPanel", () => {
 			),
 		});
 		show();
-		const user = userEvent.setup();
-		await screen.findByRole("radio", { name: "Aisha Rahman" });
-		await user.click(screen.getByRole("button", { name: "Ask the engine" }));
 
 		expect(
 			await screen.findByText(
@@ -613,6 +618,7 @@ describe("FindCoverPanel", () => {
 		const user = userEvent.setup();
 
 		const send = await screen.findByRole("button", { name: "Send offer" });
+		expect(screen.queryByRole("button", { name: "Ask the engine" })).toBeNull();
 		expect(screen.getByRole("button", { name: "They agreed" })).toBeVisible();
 		expect(screen.queryByRole("button", { name: "Apply change" })).toBeNull();
 		await waitFor(() => {
@@ -699,7 +705,7 @@ describe("FindCoverPanel", () => {
 		expect(onClose).toHaveBeenCalled();
 	});
 
-	describe("Who covers once the engine has answered", () => {
+	describe("Who covers on a published roster once the engine has answered", () => {
 		/** Shows the panel for a recorded case, and gives the stubbed API's calls. */
 		const showCase = ({
 			members,
@@ -712,7 +718,7 @@ describe("FindCoverPanel", () => {
 				[`POST ${REPAIR_OPTIONS}`]: answer(engine),
 			});
 			const rows = rosterRowsOf(members);
-			show({ assignments: rows, dayRow: rows[0]! });
+			show({ assignments: rows, dayRow: rows[0]!, coverOffers: PUBLISHED });
 			return calls;
 		};
 
@@ -723,14 +729,6 @@ describe("FindCoverPanel", () => {
 		it("given_ruleLabsAssistantGap_when_theEngineAnswers_then_theAssistantItCallsInIsFirstSuggestedChosenAndPreviewed", async () => {
 			const calls = showCase(ruleLabCase());
 			const user = userEvent.setup();
-			// Before: the backend's order, a Supervisor first and chosen, nobody suggested.
-			expect(
-				await screen.findByRole("radio", { name: "Orla Vance" })
-			).toBeChecked();
-			expect(cardOrder()).toEqual(["m-orla", "m-piet", "m-tamsin"]);
-			expect(screen.queryByText("Suggested")).toBeNull();
-
-			await user.click(screen.getByRole("button", { name: "Ask the engine" }));
 
 			await waitFor(() => {
 				expect(
@@ -758,9 +756,7 @@ describe("FindCoverPanel", () => {
 				).toMatchObject({ cells: [{ membershipId: "m-tamsin" }] });
 			});
 			// Viktor is not on leave: the backend says he is not available then.
-			const whyNot = screen.getByRole("region", {
-				name: "Why nobody was assigned",
-			});
+			const whyNot = await openWhyNot(user);
 			expect(whyNot).toHaveTextContent(
 				"Viktor NakamuraNot available for this shift’s hours."
 			);
@@ -770,15 +766,6 @@ describe("FindCoverPanel", () => {
 		it("given_frontDesksSundayLate_when_theEngineAnswers_then_thePersonItRefusesIsUnderCantHelpNobodyIsChosenAndNoApply", async () => {
 			showCase(frontDeskSundayLateCase());
 			const user = userEvent.setup();
-			// Before: Calvin is first and chosen, with Apply, though he would break the rest between shifts.
-			expect(
-				await screen.findByRole("radio", { name: "Calvin Ang" })
-			).toBeChecked();
-			expect(
-				await screen.findByRole("button", { name: "Apply change" })
-			).toBeVisible();
-
-			await user.click(screen.getByRole("button", { name: "Ask the engine" }));
 
 			expect(
 				await screen.findByText("The engine found no way to fill this.")
@@ -786,7 +773,7 @@ describe("FindCoverPanel", () => {
 			expect(cardOrder()).toEqual(["m-elaine", "m-fikri"]);
 			expect(screen.queryAllByRole("radio", { checked: true })).toHaveLength(0);
 			expect(screen.queryByText("Suggested")).toBeNull();
-			expect(screen.queryByRole("button", { name: "Apply change" })).toBeNull();
+			expect(screen.queryByRole("button", { name: "Send offer" })).toBeNull();
 			expect(screen.queryByRole("note")).toBeNull();
 			await user.click(screen.getByRole("button", { name: "Can't help (3)" }));
 			expect(
@@ -800,9 +787,7 @@ describe("FindCoverPanel", () => {
 			expect(
 				screen.getByRole("radio", { name: "Fikri Jamal" })
 			).toHaveAccessibleDescription(/Not checked by the engine/);
-			const whyNot = screen.getByRole("region", {
-				name: "Why nobody was assigned",
-			});
+			const whyNot = await openWhyNot(user);
 			expect(whyNot).toHaveTextContent(
 				"Elaine PangPart-time with no shift that day. The engine doesn’t call in part-timers: choose them under Who covers."
 			);
@@ -815,8 +800,6 @@ describe("FindCoverPanel", () => {
 		const reviewFirstOption = async (
 			user: ReturnType<typeof userEvent.setup>
 		): Promise<void> => {
-			await screen.findByRole("radio", { name: "Aisha Rahman" });
-			await user.click(screen.getByRole("button", { name: "Ask the engine" }));
 			await user.click(
 				await screen.findByRole("button", { name: "Review this change" })
 			);
@@ -850,8 +833,6 @@ describe("FindCoverPanel", () => {
 			});
 			const { onApplied } = show();
 			const user = userEvent.setup();
-			await screen.findByRole("radio", { name: "Aisha Rahman" });
-			await user.click(screen.getByRole("button", { name: "Ask the engine" }));
 
 			expect(
 				await screen.findByText("Adds 8 h of rest-day work for Aisha Rahman.")
@@ -918,7 +899,7 @@ describe("FindCoverPanel", () => {
 			}
 		);
 
-		it("given_noOptionAndNoReasons_when_asked_then_saysTheEngineFoundNoWayAndListsNobody", async () => {
+		it("given_noOptionAndNoReasons_when_opened_then_saysTheEngineFoundNoWayAndListsNobody", async () => {
 			stubApi({
 				[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
 				[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
@@ -928,9 +909,6 @@ describe("FindCoverPanel", () => {
 				}),
 			});
 			show();
-			const user = userEvent.setup();
-			await screen.findByRole("radio", { name: "Aisha Rahman" });
-			await user.click(screen.getByRole("button", { name: "Ask the engine" }));
 
 			expect(
 				await screen.findByText("The engine found no way to fill this.")
@@ -938,7 +916,7 @@ describe("FindCoverPanel", () => {
 			expect(screen.queryByText(/Why nobody was assigned/)).toBeNull();
 		});
 
-		it("given_theEngineDown_when_asked_then_saysSoAndTryAgainAsksAgain", async () => {
+		it("given_theEngineDown_when_opened_then_thePlainLineAndTheBackendsPeopleAndTryAgainAsksAgain", async () => {
 			const calls = stubApi({
 				[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
 				[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
@@ -956,12 +934,11 @@ describe("FindCoverPanel", () => {
 			});
 			show();
 			const user = userEvent.setup();
-			await screen.findByRole("radio", { name: "Aisha Rahman" });
-			await user.click(screen.getByRole("button", { name: "Ask the engine" }));
 
+			expect(await screen.findByText(UNREACHABLE)).toBeVisible();
 			expect(
-				await screen.findByText("The engine couldn’t answer.")
-			).toBeVisible();
+				await screen.findByRole("radio", { name: "Aisha Rahman" })
+			).toBeChecked();
 			await user.click(screen.getByRole("button", { name: "Try again" }));
 
 			expect(
@@ -1005,18 +982,16 @@ describe("FindCoverPanel", () => {
 			);
 
 			// The engine's change was for the old roster: it is dropped, and the engine asked afresh.
-			expect(
-				await screen.findByRole("button", { name: "Ask the engine" })
-			).toBeVisible();
 			await waitFor(() => {
-				expect(
-					screen.getByRole("radio", { name: "Aisha Rahman" })
-				).toBeChecked();
+				expect(screen.queryByText(stale)).toBeNull();
 			});
-			expect(screen.queryByText(stale)).toBeNull();
+			expect(
+				await screen.findByRole("button", { name: "Review this change" })
+			).toBeVisible();
+			expect(screen.queryByRole("button", { name: "Apply change" })).toBeNull();
 		});
 
-		it("given_noOptionButReasons_when_asked_then_saysTheEngineFoundNoWayAndWhyNobodyWasAssigned", async () => {
+		it("given_noOptionButReasons_when_opened_then_saysTheEngineFoundNoWayAndWhyNobodyWasAssignedFolded", async () => {
 			stubApi({
 				[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
 				[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
@@ -1041,15 +1016,12 @@ describe("FindCoverPanel", () => {
 			});
 			show();
 			const user = userEvent.setup();
-			await screen.findByRole("radio", { name: "Aisha Rahman" });
-			await user.click(screen.getByRole("button", { name: "Ask the engine" }));
 
 			expect(
 				await screen.findByText("The engine found no way to fill this.")
 			).toBeVisible();
-			expect(
-				screen.getByRole("region", { name: "Why nobody was assigned" })
-			).toHaveTextContent("Chen Wei");
+			expect(screen.queryByText("Chen Wei")).toBeNull();
+			expect(await openWhyNot(user)).toHaveTextContent("Chen Wei");
 		});
 
 		it("given_optionsInTheEnginesOrder_when_listed_then_noExtraHoursFirstAndCostOrderKept", async () => {
@@ -1088,9 +1060,6 @@ describe("FindCoverPanel", () => {
 				),
 			});
 			show();
-			const user = userEvent.setup();
-			await screen.findByRole("radio", { name: "Aisha Rahman" });
-			await user.click(screen.getByRole("button", { name: "Ask the engine" }));
 
 			await screen.findByText("No extra hours.");
 			const lines = screen

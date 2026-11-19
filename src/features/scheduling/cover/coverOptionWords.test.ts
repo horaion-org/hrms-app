@@ -178,7 +178,7 @@ describe("coverOrderNote", () => {
 	it.each([
 		[
 			"byExtraHours",
-			"In order of fewest extra hours. Rest between shifts and the job title that is short aren’t checked here: ask the engine below.",
+			"In order of fewest extra hours. Rest between shifts and the job title that is short aren’t checked here.",
 		],
 		["engineFirst", "The engine’s choice first, then by fewest extra hours."],
 	] as const)("given_%s_when_worded_then_%s", (order, words) => {

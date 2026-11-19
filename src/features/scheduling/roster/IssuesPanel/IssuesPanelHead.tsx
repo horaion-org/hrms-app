@@ -16,11 +16,12 @@ export type IssuesPanelHeadProps = {
 
 const key = "scheduling.issues.panel";
 
-/** A clock time as the page writes it: "15:42". */
+/** A clock time on 24 hours, as the roster writes its times: "15:42". */
 const clockOf = (epochMilliseconds: number, language: string): string =>
 	new Intl.DateTimeFormat(language, {
 		hour: "2-digit",
 		minute: "2-digit",
+		hourCycle: "h23",
 	}).format(epochMilliseconds);
 
 /** The check line's words and its action, by its state. */
