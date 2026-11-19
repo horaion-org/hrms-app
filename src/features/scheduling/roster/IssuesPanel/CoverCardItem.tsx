@@ -36,7 +36,8 @@ const BADGE_TONES: Record<CoverCardBadge["kind"], BadgeTone> = {
 
 /**
  * One option: initials, the name with its one badge (and "Suggested" on the
- * one card suggested), the change drawn as before → after tiles, and Review.
+ * one card suggested), the change drawn as before → after tiles, and Review
+ * on its own line under them.
  * An engine option the app cannot state says it is made by hand, in its words.
  */
 export const CoverCardItem = ({
@@ -52,7 +53,7 @@ export const CoverCardItem = ({
 	return (
 		<li
 			className={joinClassNames(
-				"grid grid-cols-[2rem_minmax(0,1fr)_auto] items-center gap-2.5 rounded-lg border p-2.5",
+				"grid grid-cols-[2rem_minmax(0,1fr)] items-start gap-2.5 rounded-lg border p-2.5",
 				card.suggested ? "border-ink-blue-500" : "border-neutral-400"
 			)}
 		>
@@ -89,7 +90,13 @@ export const CoverCardItem = ({
 				)}
 			</span>
 			{reviewable && (
-				<Button size="sm" variant="secondary" onClick={onReview}>
+				// On its own line under the content, so it never shares one with the name, badges or tiles.
+				<Button
+					className="col-start-2 justify-self-end"
+					size="sm"
+					variant="secondary"
+					onClick={onReview}
+				>
 					{t(`${key}.review`)}
 				</Button>
 			)}
