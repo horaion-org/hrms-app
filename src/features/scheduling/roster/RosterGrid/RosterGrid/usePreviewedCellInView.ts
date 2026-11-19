@@ -21,6 +21,7 @@ export const usePreviewedCellInView = (
 		const firstTouchedCell = Array.from(cells ?? []).find((cell) =>
 			touched.has(cell.dataset["cell"] ?? "")
 		);
-		firstTouchedCell?.scrollIntoView({ block: "nearest", inline: "nearest" });
+		// Called optionally, as in `ConstraintsTab`: jsdom has no scrollIntoView.
+		firstTouchedCell?.scrollIntoView?.({ block: "nearest", inline: "nearest" });
 	}, [gridRef, touchedDays]);
 };
