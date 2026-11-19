@@ -1243,7 +1243,7 @@ describe("schedule refusals", () => {
 		[
 			"PUBLISHED_SCHEDULE_NOT_DELETABLE",
 			409,
-			"This schedule is published, so it can’t be deleted. Change its days on the roster instead.",
+			"These days are published, so they can’t be deleted. Change them on the roster instead.",
 		],
 		["SCHEDULE_NOT_FOUND", 404, "This schedule no longer exists."],
 		[

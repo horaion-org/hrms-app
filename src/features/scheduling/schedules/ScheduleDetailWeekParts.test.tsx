@@ -286,7 +286,7 @@ describe("the owner's week of 15 February 2027: Wed–Fri, then Sat–Sun", () =
 		await user.click(await screen.findByRole("menuitem", { name: "Delete" }));
 
 		expect(await screen.findByRole("dialog")).toHaveTextContent(
-			/This can’t be undone\. Feb 17\s?–\s?19, 2027 will have no roster\. Feb 20\s?–\s?21, 2027 were worked out from them and stay as they are; schedule Feb 17\s?–\s?19, 2027 again to redo them\./
+			/while its days are still free\. Feb 17\s?–\s?19, 2027 will have no roster\. Feb 20\s?–\s?21, 2027 were worked out from them and stay as they are; generate Feb 17\s?–\s?19, 2027 again to redo them\./
 		);
 	});
 
