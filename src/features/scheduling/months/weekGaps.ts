@@ -20,8 +20,9 @@ export type WeekGap = { days: DayRun; kind: WeekGapKind };
 
 /**
  * What can be done with one day with no roster: a day before the
- * latest-starting published part (`lastPublishedPartStartOf`, which counts a
- * part published once) can't be scheduled.
+ * latest-starting published part (`lastPublishedPartStartOf`; a part whose
+ * publication was withdrawn is to review and holds no day back) can't be
+ * scheduled.
  */
 const gapKindOf = (
 	date: string,

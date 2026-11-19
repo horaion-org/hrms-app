@@ -54,9 +54,9 @@ const weekPartSchema = z.object({
 	/** A redo part (API ADR-0129): until its roster is ready, the week's other parts keep the days it redoes. */
 	redoing: z.boolean().default(false),
 	/**
-	 * Published, or published and then withdrawn: the API counts either as
-	 * published, so days before it can't be scheduled. Left out by an older
-	 * API, which reads as false.
+	 * Published, or published and then withdrawn. Only a part published now
+	 * holds the days before it back from a run by dates; a withdrawn one is
+	 * to review. Left out by an older API, which reads as false.
 	 */
 	publishedOnce: z.boolean().optional(),
 });

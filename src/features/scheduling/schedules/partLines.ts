@@ -19,22 +19,28 @@ export type PartLinesSource = {
 	lastPublishedPartStart?: string;
 };
 
-/** A part's fields that say whether it counts as published. */
-type PublishedFacts = Pick<
-	WeekPart,
-	"scheduleId" | "state" | "coveredFrom" | "publishedOnce"
->;
+/** A part's fields that say whether it was ever published. */
+type PublishedFacts = Pick<WeekPart, "scheduleId" | "state" | "publishedOnce">;
 
 /**
- * Whether a part counts as published, as the API's
- * `WeekRedos.countsAsPublished` does: published, or published once (its
+ * Whether a part counts as published for a run by dates, as the API's
+ * `WeekRedos.countsAsPublished` does: published now. A part whose
+ * publication was withdrawn is a roster to review, which a run by dates
+ * works out again.
+ */
+const countsAsPublished = (part: Pick<WeekPart, "state">): boolean =>
+	part.state === "PUBLISHED";
+
+/**
+ * Whether a part was ever published: published now, or published once (its
  * publication withdrawn, `publishedOnce`); `withdrawnScheduleIds` names any
  * the caller knows of another way (the schedule on screen, against an older
- * API).
+ * API). The single Regenerate keeps this stricter rule for later parts (API
+ * ADR-0134, ADR-0135).
  */
-const countsAsPublished = (
+export const wasEverPublished = (
 	part: PublishedFacts,
-	withdrawnScheduleIds: ReadonlyArray<string>
+	withdrawnScheduleIds: ReadonlyArray<string> = []
 ): boolean =>
 	part.state === "PUBLISHED" ||
 	part.publishedOnce === true ||
@@ -47,11 +53,10 @@ const countsAsPublished = (
  * ADR-0129, `WeekRedos.refusalOf`); a day on or after it is free.
  */
 export const lastPublishedPartStartOf = (
-	parts: ReadonlyArray<PublishedFacts>,
-	withdrawnScheduleIds: ReadonlyArray<string> = []
+	parts: ReadonlyArray<Pick<WeekPart, "state" | "coveredFrom">>
 ): string | undefined => {
 	const starts = parts
-		.filter((part) => countsAsPublished(part, withdrawnScheduleIds))
+		.filter(countsAsPublished)
 		.map((part) => part.coveredFrom)
 		.sort();
 	return starts[starts.length - 1];
@@ -214,21 +219,16 @@ export type DeleteLeaves = {
  * What deleting the part covering `covered` leaves of its week (`parts`, the
  * week read's parts, this one included): only when other parts share the
  * week, its days with no roster; then either the published days after it
- * (`countsAsPublished`, with `withdrawnScheduleIds`, nearest first, as
- * the API does), which mean its days can't be scheduled again, or else the
- * later parts' days, which were worked out from them and are not changed.
- * Pure.
+ * (`countsAsPublished`, nearest first, as the API does), which mean its days
+ * can't be scheduled again, or else the later parts' days, which were worked
+ * out from them and are not changed. Pure.
  */
 export const deleteLeavesOf = (
 	scheduleId: string,
 	covered: DayRun,
 	parts: ReadonlyArray<
-		Pick<
-			WeekPart,
-			"scheduleId" | "state" | "coveredFrom" | "coveredTo" | "publishedOnce"
-		>
-	>,
-	withdrawnScheduleIds: ReadonlyArray<string> = []
+		Pick<WeekPart, "scheduleId" | "state" | "coveredFrom" | "coveredTo">
+	>
 ): DeleteLeaves => {
 	const others = parts.filter((part) => part.scheduleId !== scheduleId);
 	if (others.length === 0) return {};
@@ -241,9 +241,7 @@ export const deleteLeavesOf = (
 	const lastLater = later[later.length - 1];
 	if (!firstLater || !lastLater) return { daysWithoutRoster: covered };
 	// Any published part after these days blocks them; the warning names the nearest one's days.
-	const nearestPublished = later.find((part) =>
-		countsAsPublished(part, withdrawnScheduleIds)
-	);
+	const nearestPublished = later.find(countsAsPublished);
 	if (nearestPublished)
 		return {
 			daysWithoutRoster: covered,

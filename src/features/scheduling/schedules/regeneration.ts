@@ -10,7 +10,7 @@ import {
 } from "@/features/scheduling/schedules/api";
 import {
 	coversPartOfWeek,
-	lastPublishedPartStartOf,
+	wasEverPublished,
 } from "@/features/scheduling/schedules/partLines";
 
 /**
@@ -97,7 +97,8 @@ export const regenerationOffered = (
  * month read's, this one included). A whole week never published takes the
  * month run; a part of its week or a withdrawn roster takes its own route,
  * which also generates the later parts again after it; a part with a later
- * published part can't be generated again (`SCHEDULE_LATER_PART_PUBLISHED`).
+ * part that was ever published (`wasEverPublished`) can't be generated again
+ * (`SCHEDULE_LATER_PART_PUBLISHED`).
  * `offer` says whether the page offers it. Pure.
  */
 export const regenerationOf = (
@@ -120,9 +121,9 @@ export const regenerationOf = (
 	const path: RegenerationPath =
 		!partOfWeek && !oncePublished
 			? "monthRun"
-			: lastPublishedPartStartOf(laterParts) === undefined
-				? "ownRoute"
-				: "laterPartPublished";
+			: laterParts.some((part) => wasEverPublished(part))
+				? "laterPartPublished"
+				: "ownRoute";
 	return {
 		path,
 		offered: regenerationOffered(path, offer),
