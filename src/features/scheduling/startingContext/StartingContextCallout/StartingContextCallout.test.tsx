@@ -54,7 +54,7 @@ describe("StartingContextCallout", () => {
 		const note = screen.getByRole("note");
 		expect(note).toHaveClass("bg-ink-blue-50");
 		expect(note).toHaveTextContent(
-			"No roster before this week. Days are added for 1 person; everyone else starts rested."
+			"No roster before these days. Days are added for 1 person. For everyone else, the earlier days of this week count as worked for weekly rest days and days a week; rest between shifts and days in a row start fresh."
 		);
 		await userEvent.click(
 			screen.getByRole("button", { name: "Edit last week’s shifts" })
@@ -90,7 +90,7 @@ describe("StartingContextCallout", () => {
 		const note = screen.getByRole("note");
 		expect(note).toHaveClass("bg-ink-blue-50");
 		expect(note).toHaveTextContent(
-			"Carried over from the week of Nov 2. 1 person isn’t on that roster and starts rested."
+			"Carried over from the week of Nov 2. 1 person isn’t on that roster: for them, rest between shifts and days in a row start fresh."
 		);
 		expect(
 			screen.getByRole("button", { name: "Edit last week’s shifts" })

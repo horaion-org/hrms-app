@@ -76,7 +76,9 @@ describe("StartingContextSection", () => {
 		stubApi(reads);
 		show();
 
-		expect(await screen.findByText(/No roster before this week/)).toBeVisible();
+		expect(
+			await screen.findByText(/No roster before these days/)
+		).toBeVisible();
 		expect(
 			await screen.findByText(
 				"Hours worked before Nov 9 are unknown for 1 person."
@@ -103,7 +105,9 @@ describe("StartingContextSection", () => {
 		const calls = stubApi(reads);
 		show(undefined, false);
 
-		expect(await screen.findByText(/No roster before this week/)).toBeVisible();
+		expect(
+			await screen.findByText(/No roster before these days/)
+		).toBeVisible();
 		expect(screen.queryByRole("button", { name: "Add them" })).toBeNull();
 		expect(
 			calls.some((call) => call.path === `${SCHEDULE}/opening-balances`)
