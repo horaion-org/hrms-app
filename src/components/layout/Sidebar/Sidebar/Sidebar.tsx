@@ -59,7 +59,7 @@ export const Sidebar = ({
 					className="flex items-center justify-center rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
 					to="/"
 				>
-					<HoraionLogo />
+					<HoraionLogo collapsed={collapsed} />
 				</Link>
 				<Button
 					aria-controls={panelId}
