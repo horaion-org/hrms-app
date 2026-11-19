@@ -74,3 +74,16 @@ export const leaveTypeBodyOf = (values: LeaveTypeValues): LeaveTypeBody => ({
 	allowsPartDays: values.allowsPartDays,
 	...unitReachBody(values.reach),
 });
+
+/** The work-hours setting after Paid changes: a new type's follows Paid until the person sets it themselves. */
+export const countsTowardsWorkHoursAfterPaidChange = ({
+	adding,
+	setByPerson,
+	paid,
+	countsTowardsWorkHours,
+}: {
+	adding: boolean;
+	setByPerson: boolean;
+	paid: boolean;
+	countsTowardsWorkHours: boolean;
+}): boolean => (adding && !setByPerson ? paid : countsTowardsWorkHours);
