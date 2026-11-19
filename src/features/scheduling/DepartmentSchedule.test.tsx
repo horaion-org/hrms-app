@@ -35,6 +35,7 @@ import {
 	schedulingWorkspace,
 } from "@/features/scheduling/schedules/fixtures";
 import { mayDeleteSchedule } from "@/features/scheduling/schedules/scheduleActions";
+import { enteredNightCell } from "@/features/scheduling/startingContext/fixtures";
 import { windowDays } from "@/features/scheduling/timeline/timeline";
 import { LABEL_DAY_FORMAT } from "@/features/scheduling/timeline/timelineLooks";
 import { monthsOfWindow } from "@/features/scheduling/timeline/timelineRows";
@@ -773,4 +774,133 @@ it("deletes a piece through Delete these days", async () => {
 		department: "d-1",
 		from: "2026-10-12",
 	});
+});
+
+/** The weekend schedule's starting days: Aisha entered by hand for a Night shift on each of `days`. */
+const aishaEnteredNights = (...days: Array<string>): StubReply =>
+	ok({
+		days,
+		previousRoster: null,
+		shifts: [],
+		members: [
+			{
+				memberProfileId: "mp-1",
+				displayName: "Aisha Rahman",
+				jobTitleName: "Cook",
+				cells: days.map(enteredNightCell),
+			},
+		],
+	});
+
+/** The label of Aisha's Night entered by hand on `day`, e.g. "Wed, Oct 14". */
+const enteredNight = (day: string): string =>
+	`Aisha Rahman, ${day}: Night 22:00 – 06:00 – entered by hand, not rostered`;
+
+/**
+ * The week of 12 October with its weekend schedule starting on Thursday the
+ * 15th instead: with `early`, the early days' schedule too (a schedule on
+ * every day); without it, Monday to Wednesday have none.
+ */
+const weekRosteredFromThursday = (early: boolean): Routes => {
+	const routes = twoSchedulesInOneWeek();
+	const month = (
+		routes[`GET ${MONTHS}/2026-10`] as { body: { data: ScheduleMonth } }
+	).body.data;
+	const [earlyPart, weekend] = month.weeks[0]!.parts;
+	const fromThursday = { ...weekend!, coveredFrom: "2026-10-15" };
+	return {
+		...routes,
+		[`GET ${MONTHS}/2026-10`]: ok({
+			...month,
+			weeks: [
+				{
+					...month.weeks[0]!,
+					parts: early ? [earlyPart!, fromThursday] : [fromThursday],
+				},
+			],
+		}),
+		[`GET ${SCHEDULES}/s-2`]: ok({ ...WEEKEND, coveredFrom: "2026-10-15" }),
+		[`GET ${SCHEDULES}/s-2/assignments`]: assignmentsFrom(
+			"2026-10-15",
+			"2026-10-18"
+		),
+	};
+};
+
+/** The reads of any schedule's starting days among `calls`, by path. */
+const startingDaysReads = (calls: ReturnType<typeof stubApi>): Array<string> =>
+	calls
+		.filter((call) => call.path.endsWith("/starting-days"))
+		.map((call) => call.path);
+
+/**
+ * The owner's case: Thursday to Sunday are rostered and Wednesday's shift was
+ * entered by hand before that run. Wednesday shows it, marked "Entered"; it
+ * is not a rostered day, so the strip and "Needs you" still say it has none.
+ */
+it("shows a Wednesday entered by hand as Entered on a week rostered from Thursday", async () => {
+	vi.useFakeTimers({ toFake: ["Date"] });
+	vi.setSystemTime(new Date("2026-10-10T09:00:00"));
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	stubApi({
+		...weekRosteredFromThursday(false),
+		[`GET ${SCHEDULES}/s-2/starting-days`]: aishaEnteredNights("2026-10-14"),
+	});
+	app = await openApp("/scheduling/department?department=d-1&from=2026-10-12");
+	renderAuthApp(app);
+
+	const wednesday = await screen.findByTitle(enteredNight("Wed, Oct 14"));
+	expect(wednesday).toHaveTextContent("22:00 – 06:00NightEntered");
+	const row = screen.getByRole("row", { name: /Aisha Rahman/ });
+	expect(row).toContainElement(wednesday);
+	expect(within(row).getAllByText("No roster")).toHaveLength(2);
+	expect(cellsOf(row, "s-2")).toHaveLength(4);
+	const bands = await stripBands();
+	expect(
+		bands.map((band) => [band.getAttribute("colspan"), band.textContent])
+	).toEqual([
+		["3", "No roster"],
+		["4", "Published"],
+	]);
+	expect(
+		within(screen.getByRole("region", { name: "Needs you" })).getByText(
+			/^No schedule for Oct 12\s?–\s?14, 2026\./
+		)
+	).toBeInTheDocument();
+});
+
+/** Wednesday has the early schedule's roster: a day entered there for the weekend run is not shown over it. */
+it("never shows an entered day over a day that has a roster", async () => {
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	const calls = stubApi({
+		...twoSchedulesInOneWeek(),
+		[`GET ${SCHEDULES}/s-2/starting-days`]: aishaEnteredNights(
+			"2026-10-14",
+			"2026-10-15"
+		),
+	});
+	app = await openApp("/scheduling/department?department=d-1&from=2026-10-12");
+	renderAuthApp(app);
+
+	const thursday = await screen.findByTitle(enteredNight("Thu, Oct 15"));
+	const row = screen.getByRole("row", { name: /Aisha Rahman/ });
+	expect(row).toContainElement(thursday);
+	expect(within(row).queryByTitle(enteredNight("Wed, Oct 14"))).toBeNull();
+	expect(cellsOf(row, "s-1")).toHaveLength(3);
+	// Only the run with a free day before it is asked for its entered days.
+	expect(startingDaysReads(calls)).toEqual([`${SCHEDULES}/s-2/starting-days`]);
+});
+
+it("asks for no entered days when every day of the window has a schedule", async () => {
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	const calls = stubApi(weekRosteredFromThursday(true));
+	app = await openApp("/scheduling/department?department=d-1&from=2026-10-12");
+	renderAuthApp(app);
+
+	const row = await screen.findByRole("row", { name: /Aisha Rahman/ });
+	await vi.waitFor(() => {
+		expect(cellsOf(row, "s-1")).toHaveLength(3);
+		expect(cellsOf(row, "s-2")).toHaveLength(4);
+	});
+	expect(startingDaysReads(calls)).toEqual([]);
 });
