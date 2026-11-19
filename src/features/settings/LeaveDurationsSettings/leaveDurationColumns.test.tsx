@@ -60,6 +60,15 @@ describe("leaveDurationColumns", () => {
 		expect(night).toHaveTextContent("Orchard (branch)");
 	});
 
+	it("says No shift that day under the time only on a duration that rules a shift out", () => {
+		show();
+
+		const [morning, prep, night] = rows();
+		expect(within(night!).getByText("No shift that day")).toBeVisible();
+		expect(morning).not.toHaveTextContent("No shift that day");
+		expect(prep).not.toHaveTextContent("No shift that day");
+	});
+
 	it("locks the rows the reader may not change and gives the rest their actions", async () => {
 		const user = userEvent.setup();
 		const given = show();

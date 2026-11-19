@@ -16,19 +16,24 @@ import {
 } from "@/features/organisation/api";
 import { workspaceQuery } from "@/features/workspace/api";
 
-/** Refreshes company lists and workspace access, including newly created units. */
+/**
+ * Refreshes company lists and workspace access, including newly created units.
+ * Without a `successMessage` nothing is announced: the new row shows on the list.
+ */
 const useCompanyCreate = <TBody, TResult>(
 	companyId: string,
-	create: (body: TBody) => Promise<TResult>
+	create: (body: TBody) => Promise<TResult>,
+	successMessage?: "organisation.accessRoles.toast.created"
 ): UseMutationResult<TResult, Error, TBody> => {
 	const client = useQueryClient();
 	return useMutation({
 		mutationFn: create,
-		onSuccess: () =>
-			Promise.all([
-				client.invalidateQueries({ queryKey: ["organisation", companyId] }),
-				client.invalidateQueries({ queryKey: workspaceQuery.queryKey }),
-			]),
+		meta: { successMessage },
+		// Reloaded in the background: the change is done when the API answers.
+		onSuccess: () => {
+			void client.invalidateQueries({ queryKey: ["organisation", companyId] });
+			void client.invalidateQueries({ queryKey: workspaceQuery.queryKey });
+		},
 	});
 };
 
@@ -62,6 +67,8 @@ export const useCreateJobTitle = (
 export const useCreateAccessRole = (
 	companyId: string
 ): UseMutationResult<AccessRole, Error, CreateAccessRoleBody> =>
-	useCompanyCreate(companyId, (body: CreateAccessRoleBody) =>
-		createAccessRole(companyId, body)
+	useCompanyCreate(
+		companyId,
+		(body: CreateAccessRoleBody) => createAccessRole(companyId, body),
+		"organisation.accessRoles.toast.created"
 	);

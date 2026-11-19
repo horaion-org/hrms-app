@@ -11,9 +11,10 @@ import {
 	offeredDeadlines,
 } from "@/features/scheduling/coverOffers/coverOfferRules";
 import { MyCoverOffers } from "@/features/scheduling/coverOffers/MyCoverOffers";
-import { GeneratedRoster } from "@/features/scheduling/GeneratedRoster";
+import { GeneratedRoster } from "@/features/scheduling/roster/GeneratedRoster";
 import { myRosterQuery } from "@/features/scheduling/myRoster/api";
-import { MyRosterChanges } from "@/features/scheduling/MyRosterChanges";
+import { useMyRosterPreferenceOutcomes } from "@/features/scheduling/preferenceOutcomes/usePreferenceOutcomes";
+import { MyRosterChanges } from "@/features/scheduling/myRoster/MyRosterChanges";
 import { formatPeriod } from "@/features/scheduling/periods";
 import {
 	useCurrentCompanyId,
@@ -53,7 +54,9 @@ export const MyRosterProblem = (): FunctionComponent => {
  * figures, findings or any action; the member's open shift offers come
  * first, one card each to accept or decline (and the one a notification
  * linked, `?offer=`, whatever its status); their own days changed after
- * publication are listed above the grid with the manager's remark, and dotted.
+ * publication are listed above the grid with the manager's remark, and dotted;
+ * a chosen shift's panel says their shift preference that day and whether it
+ * was met.
  * The API decides access: a schedule that isn't published, or doesn't
  * roster them, is a 404 like one that doesn't exist.
  */
@@ -67,6 +70,10 @@ export const MyRosterPage = (): FunctionComponent => {
 	const navigate = route.useNavigate();
 	const now = useNow(CLOCK_INTERVAL_MS);
 	const roster = useQuery(myRosterQuery(companyId, scheduleId));
+	const preferenceOutcomes = useMyRosterPreferenceOutcomes(
+		companyId,
+		scheduleId
+	);
 	const offers = useQuery(myCoverOffersQuery(companyId));
 	if (roster.isPending)
 		return <Problem alert={false}>{t(`${key}.loading`)}</Problem>;
@@ -95,7 +102,7 @@ export const MyRosterPage = (): FunctionComponent => {
 				{t(`${key}.title`, {
 					department: data.departmentName,
 					period: formatPeriod(
-						{ start: data.periodStart, end: data.periodEnd },
+						{ start: data.coveredFrom, end: data.coveredTo },
 						language
 					),
 				})}
@@ -120,6 +127,7 @@ export const MyRosterPage = (): FunctionComponent => {
 			<GeneratedRoster
 				assignments={data.assignments}
 				offeredDays={offeredDays}
+				preferenceOutcomes={preferenceOutcomes}
 				schedule={data}
 				view={view}
 				viewerMembershipId={viewerMembershipId}

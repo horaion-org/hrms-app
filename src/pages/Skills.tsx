@@ -34,6 +34,7 @@ import { filterChip } from "@/features/workspace/filterChips";
 import { COMPANY_SCOPE } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
+import { ListProblem } from "@/features/organisation/ListProblem";
 
 /** The option value standing for every category; never a real one. */
 const ALL_CATEGORIES = "";
@@ -302,6 +303,7 @@ export const Skills = (): FunctionComponent => {
 										"404 SKILL_NOT_FOUND": t("organisation.skills.dialog.gone"),
 									},
 									forbidden: t(`organisation.skills.${action.kind}.forbidden`),
+									stillUpdating: t("organisation.stillUpdatingWrite"),
 									failed: t(`organisation.skills.${action.kind}.failed`),
 								}).message
 							: undefined
@@ -333,15 +335,14 @@ export const Skills = (): FunctionComponent => {
 				/>
 			)}
 			{view.problem ? (
-				<p
-					className="mt-8 text-sm text-neutral-700 data-alert:text-error-700"
-					data-alert={view.problem.alert || undefined}
-					role={view.problem.alert ? "alert" : undefined}
-				>
-					{view.problem.message}
-				</p>
+				<ListProblem problem={view.problem} />
 			) : (
 				<>
+					{view.updating && (
+						<p className="mt-8 text-sm text-neutral-700" role="status">
+							{view.updating}
+						</p>
+					)}
 					<DataTable
 						className="mt-8"
 						columns={columns}

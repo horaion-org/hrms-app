@@ -1,12 +1,19 @@
 import type { TFunction } from "i18next";
 import { dateTimeFormatIn } from "@/common/dateTimeFormatIn";
 import { daysOf, weeksOf } from "@/common/weeks";
+import { portionText, timeRangeText } from "@/features/leave/dayPortion";
 import { dayTypeLabel } from "@/features/scheduling/dayTypes";
+import { formatTimeRange } from "@/features/scheduling/shifts/formatShift";
 import type { SchedulePeriod } from "@/features/scheduling/periods";
+import {
+	stretchedTimes,
+	stretchMinutes,
+	stretchSpans,
+} from "@/features/scheduling/roster/shiftStretch";
 import {
 	hoursFromMinutes,
 	paidShiftMinutes,
-} from "@/features/scheduling/scheduleDraft";
+} from "@/features/scheduling/shifts/shiftHours";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 
 /*
@@ -24,15 +31,44 @@ export type RosterShiftCell = {
 	group: string;
 	/** "#RRGGBB", as the frozen shift was coloured. */
 	colour: string;
-	/** "HH:mm"; an end at or before the start runs past midnight. */
+	/**
+	 * "HH:mm" the day is worked; an end at or before the start runs past
+	 * midnight. The shift's own, widened by an overtime stretch.
+	 */
 	start: string;
 	end: string;
+	/**
+	 * The minutes an overtime stretch adds before and after the shift (the
+	 * API's ADR-0110); absent when the day is worked as its shift is.
+	 */
+	stretchMinutes?: number;
+	/**
+	 * The stretch's own times, one per side it is worked on (`stretchSpans`);
+	 * absent when the day is worked as its shift is.
+	 */
+	stretchTimes?: ReadonlyArray<WorkedTime>;
 	/** As frozen with the shift. */
 	unpaidBreakMinutes: number;
 	carriesOvertime: boolean;
 	/** The job title's name, as frozen with the shift. */
 	role: string;
+	/**
+	 * When the shift is kept around approved part-day leave, the pieces still
+	 * worked (one, or two around a leave in the middle); absent when the whole
+	 * shift is worked.
+	 */
+	workedTimes?: ReadonlyArray<WorkedTime>;
 	note?: RosterDayNote;
+};
+
+/** A piece of a shift still worked, "HH:mm" to "HH:mm". */
+export type WorkedTime = { start: string; end: string };
+
+/** The part of one day a leave takes ("Morning 07:00–11:00"); the duration's name is null for Custom times. */
+export type RosterLeavePortion = {
+	durationName: string | null;
+	startTime: string;
+	endTime: string;
 };
 
 /** What the leave records add to a day the roster alone cannot say. */
@@ -40,8 +76,12 @@ export type RosterDayNote = {
 	flag?: NonNullable<ScheduleAssignment["flag"]>;
 	leaveRequestId?: string;
 	leaveTypeName?: string;
+	/** For part-day leave, the part of the day it takes. */
+	leavePortion?: RosterLeavePortion;
 	/** The shift this day's absence leaves short, by name; absent when none is. */
 	uncoveredShiftName?: string;
+	/** When only part of that shift is short (a shift kept around part-day leave), the hours that need cover. */
+	uncoveredTime?: WorkedTime;
 	/** On a worked day, the non-working day type it had before a shift was put on it. */
 	dayType?: string;
 };
@@ -50,6 +90,8 @@ export type RosterDayNote = {
 export type RosterLeaveCell = {
 	kind: "leave";
 	leaveTypeName?: string;
+	/** For part-day leave, which still takes the whole day off the roster this round. */
+	leavePortion?: RosterLeavePortion;
 	note?: RosterDayNote;
 };
 
@@ -103,43 +145,101 @@ export type RosterStats = {
 	onLeave: number;
 };
 
-const offCellOf = ({
-	offReason,
-	dayType,
-	leaveTypeName,
-}: ScheduleAssignment): RosterDayWithoutShift => {
+/** The part of the day a part-day leave takes, when the API names its times; nothing for whole days. */
+export const leavePortionOf = ({
+	leaveDurationName,
+	leaveStartTime,
+	leaveEndTime,
+}: Pick<
+	ScheduleAssignment,
+	"leaveDurationName" | "leaveStartTime" | "leaveEndTime"
+>): RosterLeavePortion | undefined =>
+	leaveStartTime && leaveEndTime
+		? {
+				durationName: leaveDurationName ?? null,
+				startTime: leaveStartTime,
+				endTime: leaveEndTime,
+			}
+		: undefined;
+
+const offCellOf = (assignment: ScheduleAssignment): RosterDayWithoutShift => {
+	const { offReason, dayType, leaveTypeName } = assignment;
 	if (offReason === "ABSENT") return { kind: "absent" };
 	if (offReason !== "LEAVE") return { kind: "off", dayType };
-	return leaveTypeName ? { kind: "leave", leaveTypeName } : { kind: "leave" };
+	const leavePortion = leavePortionOf(assignment);
+	return {
+		kind: "leave",
+		...(leaveTypeName ? { leaveTypeName } : {}),
+		...(leavePortion ? { leavePortion } : {}),
+	};
 };
 
+/**
+ * On a shift kept around approved part-day leave, the pieces still worked;
+ * undefined when the whole shift is worked (an empty list, or none from an
+ * older API).
+ */
+const workedPiecesOf = ({
+	workedTimes,
+}: Pick<ScheduleAssignment, "workedTimes">):
+	ReadonlyArray<WorkedTime> | undefined =>
+	workedTimes?.length ? workedTimes : undefined;
+
 /** The day's note, or nothing on a day with nothing to add. */
-const noteOf = ({
-	flag,
-	leaveRequestId,
-	leaveTypeName,
-	uncoveredShift,
-	shift,
-	dayType,
-}: ScheduleAssignment): RosterDayNote | undefined => {
+const noteOf = (assignment: ScheduleAssignment): RosterDayNote | undefined => {
+	const {
+		flag,
+		leaveRequestId,
+		leaveTypeName,
+		uncoveredShift,
+		shift,
+		dayType,
+	} = assignment;
 	// Only a worked day notes its type; a day not worked shows it in its own cell.
 	const workedDayType = shift === null ? null : dayType;
-	if (!flag && !uncoveredShift && workedDayType === null) return undefined;
+	// A shift kept around part-day leave always has a note, so its tile can name the leave.
+	if (
+		!flag &&
+		!uncoveredShift &&
+		workedDayType === null &&
+		workedPiecesOf(assignment) === undefined
+	)
+		return undefined;
+	const leavePortion = leavePortionOf(assignment);
 	return {
 		...(flag ? { flag } : {}),
 		...(leaveRequestId ? { leaveRequestId } : {}),
 		...(leaveTypeName ? { leaveTypeName } : {}),
+		...(leavePortion ? { leavePortion } : {}),
 		...(uncoveredShift ? { uncoveredShiftName: uncoveredShift.name } : {}),
+		...(uncoveredShift && assignment.uncoveredFrom && assignment.uncoveredTo
+			? {
+					uncoveredTime: {
+						start: assignment.uncoveredFrom,
+						end: assignment.uncoveredTo,
+					},
+				}
+			: {}),
 		...(workedDayType === null ? {} : { dayType: workedDayType }),
 	};
 };
 
 const cellOf = (assignment: ScheduleAssignment): RosterCell => {
 	const note = noteOf(assignment);
+	const workedTimes = workedPiecesOf(assignment);
 	if (assignment.shift === null) {
 		const cell = offCellOf(assignment);
 		return note ? { ...cell, note } : cell;
 	}
+	const times = stretchedTimes(
+		{ start: assignment.shift.startTime, end: assignment.shift.endTime },
+		assignment.stretch
+	);
+	const stretch = stretchMinutes(assignment.stretch);
+	const stretchTimes = stretchSpans(
+		{ start: assignment.shift.startTime, end: assignment.shift.endTime },
+		assignment.stretch
+	);
 	return {
 		kind: "shift",
 		assignmentId: assignment.assignmentId,
@@ -147,11 +247,13 @@ const cellOf = (assignment: ScheduleAssignment): RosterCell => {
 		name: assignment.shift.name,
 		group: assignment.shift.group,
 		colour: assignment.shift.colour,
-		start: assignment.shift.startTime,
-		end: assignment.shift.endTime,
+		start: times.start,
+		end: times.end,
 		unpaidBreakMinutes: assignment.shift.unpaidBreakMinutes,
 		carriesOvertime: assignment.shift.carriesOvertime,
 		role: assignment.jobTitle?.name ?? "",
+		...(stretch > 0 ? { stretchMinutes: stretch, stretchTimes } : {}),
+		...(workedTimes ? { workedTimes } : {}),
 		...(note ? { note } : {}),
 	};
 };
@@ -200,15 +302,44 @@ export const rosterFromAssignments = (
 	return [...rows.values()];
 };
 
-/** Paid minutes of a day: a shift's (past midnight when it ends at or before its start); 0 off. */
-const paidMinutesOf = (cell: RosterCell | undefined): number =>
-	cell?.kind === "shift"
-		? paidShiftMinutes({
-				startTime: cell.start,
-				endTime: cell.end,
-				unpaidBreakMinutes: cell.unpaidBreakMinutes,
-			})
-		: 0;
+/**
+ * Paid minutes of a day: a shift's (past midnight when it ends at or before
+ * its start), or on a shift kept around part-day leave the pieces still
+ * worked, with no unpaid break (the API's ADR-0077, Q7); 0 off.
+ */
+const paidMinutesOf = (cell: RosterCell | undefined): number => {
+	if (cell?.kind !== "shift") return 0;
+	if (cell.workedTimes)
+		return cell.workedTimes.reduce(
+			(total, piece) =>
+				total +
+				paidShiftMinutes({
+					startTime: piece.start,
+					endTime: piece.end,
+					unpaidBreakMinutes: 0,
+				}),
+			0
+		);
+	return paidShiftMinutes({
+		startTime: cell.start,
+		endTime: cell.end,
+		unpaidBreakMinutes: cell.unpaidBreakMinutes,
+	});
+};
+
+/**
+ * A shift tile's time: the shift's ("09:00 – 15:00"), or the time still
+ * worked around part-day leave ("09:00 – 11:00 · 13:00 – 15:00"). Pure.
+ */
+export const shiftTimeText = (
+	cell: Pick<RosterShiftCell, "start" | "end" | "workedTimes">,
+	t: TFunction
+): string =>
+	(cell.workedTimes ?? [{ start: cell.start, end: cell.end }])
+		.map((piece) =>
+			formatTimeRange({ startTime: piece.start, endTime: piece.end }, t)
+		)
+		.join(" · ");
 
 /** Paid hours of a day. */
 export const hoursOf = (cell: RosterCell | undefined): number =>
@@ -248,6 +379,23 @@ export const weekDays = (
 	return shown ? daysOf(shown.start) : [];
 };
 
+/** A part-day leave's times: "07:00–11:00", or "22:00–02:00 next day". */
+export const leavePortionTimeText = (
+	portion: RosterLeavePortion,
+	t: TFunction
+): string => timeRangeText(portion.startTime, portion.endTime, t);
+
+/**
+ * The leave a roster line names: its type, then for part-day leave which
+ * part of the day ("Annual leave · Morning 07:00–11:00").
+ */
+export const leaveLineText = (
+	leaveTypeName: string,
+	portion: RosterLeavePortion | undefined,
+	t: TFunction
+): string =>
+	portion ? `${leaveTypeName} · ${portionText(portion, t)}` : leaveTypeName;
+
 /**
  * A day with no shift as its tile writes it: the leave type, the day type, or
  * "OFF", "LEAVE", "Absent". Pure.
@@ -271,8 +419,15 @@ export const dayWithoutShiftPlainText = (
 	cell: RosterDayWithoutShift,
 	t: TFunction
 ): string => {
-	if (cell.kind === "leave")
-		return cell.leaveTypeName ?? t("scheduling.rosterEdit.onLeave");
+	if (cell.kind === "leave") {
+		const leave = cell.leaveTypeName ?? t("scheduling.rosterEdit.onLeave");
+		return cell.leavePortion
+			? t("scheduling.detail.leaveWithTime", {
+					leave,
+					time: leavePortionTimeText(cell.leavePortion, t),
+				})
+			: leave;
+	}
 	if (cell.kind === "absent") return t("scheduling.detail.absent");
 	if (cell.dayType === null) return t("scheduling.rosterEdit.dayOff");
 	return dayTypeLabel(cell.dayType, t);

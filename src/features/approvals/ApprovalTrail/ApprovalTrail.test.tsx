@@ -10,6 +10,7 @@ import {
 	atStepTwoFixture,
 	carriedForwardFixture,
 	endorseStep,
+	JOSE,
 	publishStep,
 	rejectedAtEndorseFixture,
 	SITI,
@@ -176,6 +177,69 @@ describe("ApprovalTrail", () => {
 
 		expect(steps()[0]).toHaveTextContent("Waiting on 2 people");
 		expect(steps()[0]).toHaveTextContent("Ahmad Ali, Siti Rahman");
+	});
+
+	it("given_theSubmitterAmongTheNamedPeople_when_rendered_then_waitsOnlyOnTheOthers", () => {
+		renderTrail(
+			approvalInstanceFixture({
+				steps: [
+					endorseStep({ rule: "MEMBERS", members: [SITI, JOSE] }),
+					publishStep({
+						rule: "MEMBERS",
+						quorum: "ALL",
+						members: [AHMAD, JOSE, SITI],
+					}),
+				],
+			})
+		);
+
+		const [endorse, publish] = steps();
+		expect(endorse).toHaveTextContent("Endorse · Waiting on Siti Rahman");
+		expect(endorse).toHaveTextContent("Siti Rahman · since at 2026-10-09");
+		expect(endorse).not.toHaveTextContent("José Cruz");
+		expect(
+			within(publish)
+				.getAllByRole("listitem")
+				.map((person) => person.textContent)
+		).toEqual(["Ahmad Ali · Waiting", "Siti Rahman · Waiting"]);
+	});
+
+	it("given_theOtherNamedApprover_when_itIsTheirTurn_then_readsWaitingOnYou", () => {
+		renderTrail(
+			approvalInstanceFixture({
+				canDecide: true,
+				eligibleCount: 1,
+				steps: [
+					endorseStep({ rule: "MEMBERS", members: [SITI, JOSE] }),
+					publishStep(),
+				],
+			})
+		);
+
+		const [endorse] = steps();
+		expect(endorse).toHaveTextContent("Endorse · Waiting on you");
+		expect(endorse).toHaveTextContent("Siti Rahman · since at 2026-10-09");
+		expect(endorse).not.toHaveTextContent("José Cruz");
+	});
+
+	it("given_onlyTheSubmitterNamed_when_nobodyMayDecide_then_saysSoFromTheApiCount", () => {
+		renderTrail(
+			approvalInstanceFixture({
+				eligibleCount: 0,
+				steps: [
+					endorseStep({ rule: "MEMBERS", members: [JOSE] }),
+					publishStep(),
+				],
+			})
+		);
+
+		const [endorse] = steps();
+		expect(endorse).toHaveTextContent(
+			"Endorse · Nobody left who can decide it"
+		);
+		expect(endorse).toHaveTextContent("Since at 2026-10-09");
+		expect(endorse).not.toHaveTextContent("José Cruz");
+		expect(endorse).not.toHaveTextContent("Waiting on");
 	});
 
 	it("given_aWithdrawnSubmission_when_rendered_then_saysWhen", () => {

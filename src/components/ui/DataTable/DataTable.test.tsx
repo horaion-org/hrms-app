@@ -2,7 +2,9 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
+import { useState } from "react";
 import { beforeAll, describe, expect, it, vi } from "vitest";
+import type { FunctionComponent } from "@/common/types";
 import en from "@/assets/locales/en/translations.json";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 
@@ -54,6 +56,99 @@ describe("DataTable", () => {
 		expect(within(table).getAllByRole("row")).toHaveLength(4);
 		expect(screen.getByRole("cell", { name: "Orchard" })).toHaveClass(
 			"font-semibold"
+		);
+	});
+
+	it("given_rowGroups_when_rendered_then_headsEachRunOfAGroupWithItsOwnRow", () => {
+		const grouped = [
+			{ id: "b-1", name: "Main Branch", code: "0010" },
+			{ id: "b-3", name: "Jurong", code: "0010" },
+			{ id: "b-2", name: "Orchard", code: "0002" },
+		];
+		render(
+			<DataTable
+				columns={columns}
+				data={grouped}
+				getRowId={getRowId}
+				label="Branches"
+				rowGroups={{
+					groupOf: (branch) => branch.code,
+					label: (code) => `Code ${code}`,
+				}}
+			/>
+		);
+
+		const headings = screen.getAllByRole("columnheader", { name: /^Code / });
+		expect(headings.map((heading) => heading.textContent)).toEqual([
+			"Code 0010",
+			"Code 0002",
+		]);
+		expect(headings[0]).toHaveAttribute("colspan", "2");
+	});
+
+	it("given_collapsibleRowGroups_when_aHeadingIsClicked_then_itFoldsOnlyItsGroupsRows", async () => {
+		const user = userEvent.setup();
+		const grouped = [
+			{ id: "b-1", name: "Main Branch", code: "0010" },
+			{ id: "b-3", name: "Jurong", code: "0010" },
+			{ id: "b-2", name: "Orchard", code: "0002" },
+		];
+		/** A table whose group "0010" folds and unfolds from its heading. */
+		const Folding = (): FunctionComponent => {
+			const [closed, setClosed] = useState<Array<string>>([]);
+			return (
+				<DataTable
+					columns={columns}
+					data={grouped}
+					getRowId={getRowId}
+					label="Branches"
+					rowGroups={{
+						groupOf: (branch) => branch.code,
+						label: (code) => `Code ${code}`,
+						collapse: {
+							isOpen: (code) => !closed.includes(code),
+							onToggle: (code) => {
+								setClosed(
+									closed.includes(code)
+										? closed.filter((each) => each !== code)
+										: [...closed, code]
+								);
+							},
+						},
+					}}
+				/>
+			);
+		};
+		render(<Folding />);
+
+		const heading = screen.getByRole("button", { name: "Code 0010" });
+		expect(heading).toHaveAttribute("aria-expanded", "true");
+		expect(heading.getAttribute("aria-controls")?.split(" ")).toHaveLength(2);
+		await user.click(heading);
+
+		expect(heading).toHaveAttribute("aria-expanded", "false");
+		expect(screen.queryByRole("cell", { name: "Main Branch" })).toBeNull();
+		expect(screen.queryByRole("cell", { name: "Jurong" })).toBeNull();
+		expect(screen.getByRole("cell", { name: "Orchard" })).toBeVisible();
+	});
+
+	it("given_aHeaderCell_when_rendered_then_drawsItInPlaceOfTheHeaderText", () => {
+		render(
+			<DataTable
+				columns={[{ ...columns[0]!, headerCell: <span>Drawn header</span> }]}
+				data={branches}
+				getRowId={getRowId}
+				label="Branches"
+			/>
+		);
+
+		expect(
+			screen.getByRole("columnheader", { name: /Drawn header/ })
+		).toBeVisible();
+		// It fills the cell, so a scale in it shares the width of the column's cells.
+		expect(screen.getByText("Drawn header").parentElement).toHaveClass(
+			"block",
+			"w-full"
 		);
 	});
 
@@ -623,6 +718,36 @@ describe("DataTable", () => {
 
 		expect(screen.getByRole("table")).toHaveClass("sm:min-w-xl");
 		expect(screen.getByRole("table")).not.toHaveClass("min-w-xl");
+	});
+
+	it("wraps a header asked to wrap instead of truncating it, keeping every other header truncating", () => {
+		type Row = { id: string };
+		const idOf = (row: Row): string => row.id;
+		const columns: Array<DataTableColumn<Row>> = [
+			{ id: "name", header: "Name", cell: idOf },
+			{
+				id: "worked",
+				header: "Paid hours before Mon 23 Nov",
+				cell: idOf,
+				wrapHeader: true,
+			},
+		];
+		render(
+			<DataTable
+				columns={columns}
+				data={[{ id: "a" }]}
+				getRowId={idOf}
+				label="Openings"
+			/>
+		);
+
+		expect(screen.getByText("Paid hours before Mon 23 Nov")).toHaveClass(
+			"break-words"
+		);
+		expect(screen.getByText("Paid hours before Mon 23 Nov")).not.toHaveClass(
+			"truncate"
+		);
+		expect(screen.getByText("Name")).toHaveClass("truncate");
 	});
 
 	it("lets the column naming each row take the room left on a phone, so it truncates", () => {

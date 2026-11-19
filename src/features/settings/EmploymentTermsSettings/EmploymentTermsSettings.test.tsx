@@ -1,6 +1,14 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	afterEach,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 import { resetApiClient } from "@/common/api-client";
 import { companyWideWorkspace } from "@/common/testing/effectiveWorkspace";
 import {
@@ -19,7 +27,10 @@ import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 import {
 	FIVE_DAY_WEEK,
+	overviewResponse,
+	PART_TIME_20,
 	SIX_DAY_SHIFT,
+	STANDARD_WEEK,
 	TERMS_OVERVIEW_RESPONSE,
 	TERMS_PRESETS,
 } from "@/features/employmentTerms/fixtures";
@@ -27,6 +38,11 @@ import {
 const TERMS = "/api/v1/companies/c-1/employment-terms";
 const READ_AND_UPDATE = ["employment_terms:read", "employment_terms:update"];
 
+// The router splits each page's code out; loading it once here keeps that
+// first load out of the first test's time.
+beforeAll(async () => {
+	await import("@/pages/Settings");
+});
 let app: OpenedApp | undefined;
 beforeEach(() => {
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
@@ -65,7 +81,7 @@ const open = async (
 ): Promise<HTMLElement> => {
 	app = await openApp(path);
 	renderAuthApp(app);
-	return screen.findByRole("tabpanel", { name: "Employment" });
+	return screen.findByRole("region", { name: "Employment terms" });
 };
 
 const table = (panel: HTMLElement): Promise<HTMLElement> =>
@@ -78,9 +94,7 @@ describe("EmploymentTermsSettings", () => {
 
 		const rows = await table(panel);
 		const standard = within(rows).getByRole("row", { name: /Standard week/ });
-		expect(standard).toHaveTextContent("6 days · 44 h");
-		expect(standard).toHaveTextContent("Rest day on the roster");
-		expect(standard).toHaveTextContent("Default");
+		expect(standard).toHaveTextContent("picked by the roster");
 		expect(
 			within(rows).getByRole("row", { name: /Six-day shift/ })
 		).toHaveTextContent("41 people+2 from a later date");
@@ -89,6 +103,55 @@ describe("EmploymentTermsSettings", () => {
 		expect(
 			within(panel).getByRole("link", { name: "Work policy" })
 		).toHaveAttribute("href", "/settings?section=scheduling");
+	});
+
+	it("given_terms_when_listed_then_eachRowIsASentenceWithItsRate", async () => {
+		stubApi(
+			routes(READ_AND_UPDATE, {
+				[`GET ${TERMS}/overview`]: {
+					status: 200,
+					body: envelope(
+						overviewResponse([
+							{ ...STANDARD_WEEK, dayMinutes: 440 },
+							PART_TIME_20,
+							{
+								...FIVE_DAY_WEEK,
+								hoursLimitsApply: false,
+								extraHoursPaidAs: "NOTHING",
+							},
+						])
+					),
+				},
+			})
+		);
+		const rows = await table(await open());
+
+		expect(
+			within(rows).getByRole("row", { name: /Standard week/ })
+		).toHaveTextContent(
+			"Full-time, 6 days a week, 44 h (7 h 20 min a day). Rest day: a different day each week, picked by the roster. Overtime after 44 h in a week, paid at 1.5 times."
+		);
+		const partTime = within(rows).getByRole("row", { name: /Part-time, 20 h/ });
+		expect(within(partTime).getByText("Part-time")).toBeVisible();
+		expect(partTime).toHaveTextContent(
+			"Extra hours are paid at the normal rate up to 44 h a week, then at 1.5 times."
+		);
+		const managers = within(rows).getByRole("row", { name: /Five-day week/ });
+		expect(
+			within(managers).getByText("Not under the Act’s hour rules")
+		).toBeVisible();
+		expect(managers).toHaveTextContent(
+			"Hours past 44 h a week earn nothing extra."
+		);
+	});
+
+	it("given_theDefault_when_listed_then_badgeSaysNewPeopleGetThese", async () => {
+		stubApi(routes(READ_AND_UPDATE));
+		const rows = await table(await open());
+
+		expect(
+			within(rows).getByRole("row", { name: /Standard week/ })
+		).toHaveTextContent("New people get these");
 	});
 
 	it("links each count to the People list filtered to those terms, across every Branch", async () => {
@@ -103,12 +166,15 @@ describe("EmploymentTermsSettings", () => {
 
 		const rows = await table(panel);
 		const sixDay = within(rows).getByRole("row", { name: /Six-day shift/ });
-		expect(
-			within(sixDay).getByRole("link", {
-				name: "Show the people on Six-day shift, 12 h",
-			})
-		).toHaveAttribute("href", `/people?branch=all&terms=${SIX_DAY_SHIFT.id}`);
-		expect(within(sixDay).getByRole("link")).toHaveTextContent("41 people");
+		// The phone's summary line repeats the column's link; both go to the same list.
+		const [link] = within(sixDay).getAllByRole("link", {
+			name: "Show the people on Six-day shift, 12 h",
+		});
+		expect(link).toHaveAttribute(
+			"href",
+			`/people?branch=all&terms=${SIX_DAY_SHIFT.id}`
+		);
+		expect(link).toHaveTextContent("41 people");
 	});
 
 	it("shows the counts as plain text to someone who cannot list people's terms company-wide", async () => {
@@ -137,43 +203,147 @@ describe("EmploymentTermsSettings", () => {
 		app = await openApp("/settings");
 		renderAuthApp(app);
 
-		await screen.findByRole("tab", { name: /Work policy/ });
-		expect(screen.queryByRole("tab", { name: /Employment/ })).toBeNull();
+		await screen.findByRole("link", { name: "Work policy" });
+		expect(screen.queryByRole("link", { name: "Employment terms" })).toBeNull();
 	});
 
-	it("adds terms from a common week, reading them back as they change", async () => {
-		const calls = stubApi(
-			routes(READ_AND_UPDATE, {
-				[`POST ${TERMS}`]: { status: 201, body: envelope(FIVE_DAY_WEEK) },
-			})
-		);
-		const user = userEvent.setup();
+	/** Opens Add employment terms once the first starting point has filled the form. */
+	const openAddDialog = async (
+		user: ReturnType<typeof userEvent.setup>
+	): Promise<HTMLElement> => {
 		const panel = await open();
-
 		await user.click(
 			await within(panel).findByRole("button", { name: "Add employment terms" })
 		);
 		const dialog = await screen.findByRole("dialog", {
 			name: "Add employment terms",
 		});
-		await user.click(
-			await within(dialog).findByRole("radio", { name: /Five-day week, 44 h/ })
-		);
+		expect(
+			await within(dialog).findByRole("button", { name: /^Full-time, 5 days/ })
+		).toHaveAttribute("aria-pressed", "true");
+		return dialog;
+	};
+
+	it("given_newTerms_when_opened_then_theThreePartsHaveTheirHeadingsInOrder", async () => {
+		const parts = [
+			"Working week",
+			"Pay for extra hours",
+			"What these terms mean",
+		];
+		stubApi(routes(READ_AND_UPDATE));
+		const dialog = await openAddDialog(userEvent.setup());
+
+		// The read-back's own headings sit inside the last part, so only the parts' headings are kept.
+		const partHeadings = within(dialog)
+			.getAllByRole("heading", { level: 3 })
+			.map((heading) => heading.textContent ?? "")
+			.filter((title) => parts.includes(title));
+		expect(partHeadings).toEqual(parts);
+		for (const part of parts)
+			expect(within(dialog).getByRole("region", { name: part })).toBeVisible();
+	});
+
+	it("given_startFrom5Days_when_clicked_then_fillsAndStepsAside", async () => {
+		stubApi(routes(READ_AND_UPDATE));
+		const user = userEvent.setup();
+		const dialog = await openAddDialog(user);
+
 		expect(dialog).toHaveTextContent(
-			"Works 5 days a week, 8.8 hours a day. Rest day Sunday. Overtime starts after 8.8 hours in a day or 44 hours in a week. Employment Act hour limits apply."
+			"Full-time, 5 days a week, 44 h (8 h 48 min a day). Rest day: Sunday. Overtime after 44 h in a week or 8 h 48 min in a day, paid at 1.5 times. Rest day work counts at 2 times. Day off work counts as normal hours until the week is passed. The Employment Act’s hour limits apply."
 		);
 		expect(within(dialog).getByLabelText("Name")).toHaveValue(
-			"5-day week, 44 h"
+			"Full-time, 5 days, 44 h"
+		);
+		expect(dialog).toHaveTextContent(
+			"A starting point only. Every figure below can be changed."
 		);
 
-		await user.clear(within(dialog).getByLabelText("Normal hours a week"));
-		await user.type(within(dialog).getByLabelText("Normal hours a week"), "42");
-		expect(dialog).toHaveTextContent(
-			"8.8 hours in a day or 42 hours in a week"
+		await user.click(
+			within(dialog).getByRole("button", { name: /^Managers and executives/ })
 		);
+
+		expect(
+			within(dialog).getByRole("button", { name: /^Managers and executives/ })
+		).toHaveAttribute("aria-pressed", "true");
+		expect(
+			within(dialog).getByRole("button", { name: /^Full-time, 5 days/ })
+		).toHaveAttribute("aria-pressed", "false");
+		expect(within(dialog).getByRole("radio", { name: "No" })).toBeChecked();
+		expect(
+			within(dialog).getByRole("radio", { name: /Nothing extra/ })
+		).toBeChecked();
 		expect(within(dialog).getByLabelText("Name")).toHaveValue(
-			"5-day week, 42 h"
+			"Managers, 5 days, 44 h"
 		);
+	});
+
+	it("given_hoursChanged_when_typed_then_dayWorkedOutAndNoteSaysChanged", async () => {
+		stubApi(routes(READ_AND_UPDATE));
+		const user = userEvent.setup();
+		const dialog = await openAddDialog(user);
+
+		const week = within(dialog).getByLabelText("Hours a week");
+		await user.clear(week);
+		await user.type(week, "40");
+
+		expect(dialog).toHaveTextContent("That is 8 h a day.");
+		expect(dialog).toHaveTextContent(
+			"Changed from the starting point. That is fine: the answers below are what gets saved."
+		);
+		expect(
+			within(dialog).getByRole("button", { name: /^Full-time, 5 days/ })
+		).toHaveAttribute("aria-pressed", "false");
+		expect(within(dialog).getByLabelText("Name")).toHaveValue(
+			"Full-time, 5 days, 40 h"
+		);
+	});
+
+	it("given_part_time_hours_when_typed_then_restDayLineShown", async () => {
+		stubApi(routes(READ_AND_UPDATE));
+		const user = userEvent.setup();
+		const dialog = await openAddDialog(user);
+
+		const week = within(dialog).getByLabelText("Hours a week");
+		await user.clear(week);
+		await user.type(week, "20");
+
+		expect(dialog).toHaveTextContent(
+			"Part-timers have no fixed rest day here. The roster works from the days they say they are available."
+		);
+		expect(
+			within(dialog).queryByRole("combobox", { name: "Rest day" })
+		).toBeNull();
+		expect(
+			within(dialog).getByText("Part-time", { selector: "span" })
+		).toBeVisible();
+	});
+
+	it("given_coveredNo_when_chosen_then_minimumHintChanges", async () => {
+		stubApi(routes(READ_AND_UPDATE));
+		const user = userEvent.setup();
+		const dialog = await openAddDialog(user);
+
+		expect(dialog).toHaveTextContent(
+			"Workmen earning up to SGD 4,500 a month and other staff up to SGD 2,600 (basic pay)."
+		);
+		await user.click(within(dialog).getByRole("radio", { name: "No" }));
+
+		expect(dialog).toHaveTextContent(
+			"No legal minimum for staff outside the Act’s hour rules."
+		);
+		expect(
+			within(dialog).getByRole("radio", { name: /Paid at a rate/ })
+		).toBeChecked();
+	});
+
+	it("given_saved_when_posted_then_noDayMinutesOrShiftWorkSent", async () => {
+		const calls = stubApi(
+			routes(READ_AND_UPDATE, {
+				[`POST ${TERMS}`]: { status: 201, body: envelope(FIVE_DAY_WEEK) },
+			})
+		);
+		const user = userEvent.setup();
+		const dialog = await openAddDialog(user);
 
 		await user.click(
 			within(dialog).getByRole("button", { name: "Add employment terms" })
@@ -185,20 +355,263 @@ describe("EmploymentTermsSettings", () => {
 		expect(
 			calls.find((call) => call.method === "POST" && call.path === TERMS)?.body
 		).toEqual({
-			name: "5-day week, 42 h",
+			name: "Full-time, 5 days, 44 h",
 			description: null,
 			daysPerWeek: 5,
-			weekMinutes: 2520,
-			dayMinutes: 528,
+			weekMinutes: 2640,
 			restDay: "SUN",
 			dailyOvertime: true,
-			shiftWork: false,
 			hoursLimitsApply: true,
+			overtimePercent: 150,
+			restDayWorkPercent: 200,
+			dayOffWorkPercent: null,
+			extraHoursPaidAs: "RATE",
 		});
 		expect(await screen.findByText("Employment terms added")).toBeVisible();
 	});
 
+	describe("the pay for extra hours", () => {
+		/** Opens Add employment terms once the first kind has filled the form. */
+		const openAdd = async (panel: HTMLElement): Promise<HTMLElement> => {
+			const user = userEvent.setup();
+			await user.click(
+				await within(panel).findByRole("button", {
+					name: "Add employment terms",
+				})
+			);
+			const dialog = await screen.findByRole("dialog", {
+				name: "Add employment terms",
+			});
+			expect(
+				await within(dialog).findByRole("button", {
+					name: /^Full-time, 5 days/,
+				})
+			).toHaveAttribute("aria-pressed", "true");
+			return dialog;
+		};
+
+		it("given_newTerms_when_opened_then_overtimeIs1Point5AndRestDay2", async () => {
+			stubApi(routes(READ_AND_UPDATE));
+			const dialog = await openAdd(await open());
+
+			expect(
+				within(dialog).getByLabelText("An overtime hour is paid at")
+			).toHaveValue("1.5");
+			expect(
+				within(dialog).getByLabelText("Work on the rest day counts at")
+			).toHaveValue("2");
+			expect(dialog).toHaveTextContent(
+				"The legal minimum is 1.5. You can pay more."
+			);
+		});
+
+		/** The owner saw "paid at times a normal hour" with no figure: the unit had squeezed the box shut. */
+		it("given_newTerms_when_opened_then_eachRateIsAVisibleFigureNamedByItsSentence", async () => {
+			stubApi(routes(READ_AND_UPDATE));
+			const dialog = await openAdd(await open());
+
+			for (const [sentence, figure] of [
+				["An overtime hour is paid at times a normal hour", "1.5"],
+				["Work on the rest day counts at times a normal hour", "2"],
+			] as const) {
+				const rate = within(dialog).getByRole("textbox", { name: sentence });
+				expect(rate).toBeVisible();
+				expect(rate).toHaveValue(figure);
+			}
+		});
+
+		it("given_1Point2Covered_when_saved_then_errorAtTheField", async () => {
+			const calls = stubApi(routes(READ_AND_UPDATE));
+			const user = userEvent.setup();
+			const dialog = await openAdd(await open());
+
+			const rate = within(dialog).getByLabelText("An overtime hour is paid at");
+			await user.clear(rate);
+			await user.type(rate, "1.2");
+			await user.click(
+				within(dialog).getByRole("button", { name: "Add employment terms" })
+			);
+
+			expect(
+				await within(dialog).findByText(
+					"Staff covered by the Employment Act’s hour rules are paid at least 1.5 times for overtime. Enter 1.5 or more, or say these terms are not under the Act’s hour rules if they are for managers or executives."
+				)
+			).toBeVisible();
+			expect(
+				calls.some((call) => call.method === "POST" && call.path === TERMS)
+			).toBe(false);
+		});
+
+		it("given_notCovered_when_nothingExtraChosen_then_rateHidden", async () => {
+			stubApi(
+				routes(READ_AND_UPDATE, {
+					[`GET ${TERMS}/overview`]: {
+						status: 200,
+						body: envelope(
+							overviewResponse([{ ...FIVE_DAY_WEEK, hoursLimitsApply: false }])
+						),
+					},
+				})
+			);
+			const user = userEvent.setup();
+			const panel = await open();
+			await user.click(
+				await within(await table(panel)).findByRole("button", {
+					name: "Edit Five-day week, 44 h",
+				})
+			);
+			const dialog = await screen.findByRole("dialog", {
+				name: "Edit employment terms",
+			});
+			expect(dialog).toHaveTextContent(
+				"No legal minimum for staff outside the Act’s hour rules."
+			);
+
+			await user.click(
+				within(dialog).getByRole("radio", { name: /Nothing extra/ })
+			);
+
+			expect(
+				within(dialog).queryByLabelText("An overtime hour is paid at")
+			).toBeNull();
+		});
+
+		it("given_covered_when_opened_then_noTimeOffOption", async () => {
+			stubApi(routes(READ_AND_UPDATE));
+			const user = userEvent.setup();
+			const dialog = await openAdd(await open());
+
+			await user.click(
+				within(dialog).getByRole("button", { name: /^Full-time, 5 days/ })
+			);
+
+			expect(
+				within(dialog).queryByRole("radio", { name: /Time off instead/ })
+			).toBeNull();
+		});
+
+		it("given_notCovered_when_timeOffChosen_then_saved", async () => {
+			const calls = stubApi(
+				routes(READ_AND_UPDATE, {
+					[`POST ${TERMS}`]: { status: 201, body: envelope(FIVE_DAY_WEEK) },
+				})
+			);
+			const user = userEvent.setup();
+			const dialog = await openAdd(await open());
+
+			await user.click(within(dialog).getByRole("radio", { name: "No" }));
+			await user.click(
+				within(dialog).getByRole("radio", { name: /Time off instead/ })
+			);
+
+			expect(dialog).toHaveTextContent(
+				"Hours past 44 h a week earn 1 h off for each extra hour."
+			);
+			expect(
+				within(dialog).queryByLabelText("An overtime hour is paid at")
+			).toBeNull();
+			await user.click(
+				within(dialog).getByRole("button", { name: "Add employment terms" })
+			);
+			await waitFor(() => {
+				expect(screen.queryByRole("dialog")).toBeNull();
+			});
+			expect(
+				calls.find((call) => call.method === "POST" && call.path === TERMS)
+					?.body
+			).toMatchObject({
+				hoursLimitsApply: false,
+				extraHoursPaidAs: "TIME_OFF",
+			});
+		});
+
+		it("given_saved_when_posted_then_sends150And200", async () => {
+			const calls = stubApi(
+				routes(READ_AND_UPDATE, {
+					[`POST ${TERMS}`]: { status: 201, body: envelope(FIVE_DAY_WEEK) },
+				})
+			);
+			const user = userEvent.setup();
+			const dialog = await openAdd(await open());
+
+			await user.click(
+				within(dialog).getByRole("button", { name: "Add employment terms" })
+			);
+
+			await waitFor(() => {
+				expect(screen.queryByRole("dialog")).toBeNull();
+			});
+			expect(
+				calls.find((call) => call.method === "POST" && call.path === TERMS)
+					?.body
+			).toMatchObject({
+				overtimePercent: 150,
+				restDayWorkPercent: 200,
+				dayOffWorkPercent: null,
+				extraHoursPaidAs: "RATE",
+			});
+		});
+
+		it("given_theApiRefusesTheRate_when_saved_then_itsMessageShowsAtTheField", async () => {
+			stubApi(
+				routes(READ_AND_UPDATE, {
+					[`POST ${TERMS}`]: {
+						status: 400,
+						body: {
+							status: 400,
+							title: "Refused",
+							errorCode: "INVALID_EMPLOYMENT_TERMS",
+							errors: [{ field: "overtimePercent", message: "server prose" }],
+						},
+					},
+				})
+			);
+			const user = userEvent.setup();
+			const dialog = await openAdd(await open());
+
+			await user.click(
+				within(dialog).getByRole("button", { name: "Add employment terms" })
+			);
+
+			expect(
+				await within(dialog).findByText(
+					"Enter an overtime rate from 0 to 10 times a normal hour, and at least the legal minimum for staff under the Act’s hour rules."
+				)
+			).toBeVisible();
+			expect(within(dialog).queryByText("server prose")).toBeNull();
+		});
+	});
+
 	it("explains what is wrong before saving, and sends nothing", async () => {
+		const calls = stubApi(routes(READ_AND_UPDATE));
+		const user = userEvent.setup();
+		const dialog = await openAddDialog(user);
+
+		await user.click(
+			within(dialog).getByRole("button", { name: /Working days a week/ })
+		);
+		await user.click(await screen.findByRole("option", { name: "4 days" }));
+		const week = within(dialog).getByLabelText("Hours a week");
+		await user.clear(week);
+		await user.type(week, "52");
+		await user.click(
+			within(dialog).getByRole("button", { name: "Add employment terms" })
+		);
+
+		expect(
+			await within(dialog).findByText(
+				"52 h over 4 days is 13 h a day, more than the longest normal day of 12 h. Lower the hours a week or add working days."
+			)
+		).toBeVisible();
+		expect(dialog).toHaveTextContent(
+			"Not finished yet: fill in or check the hours a week."
+		);
+		expect(
+			calls.some((call) => call.method === "POST" && call.path === TERMS)
+		).toBe(false);
+	});
+
+	it("says what is wrong at the field as soon as it is left, before saving", async () => {
 		const calls = stubApi(routes(READ_AND_UPDATE));
 		const user = userEvent.setup();
 		const panel = await open();
@@ -209,27 +622,22 @@ describe("EmploymentTermsSettings", () => {
 		const dialog = await screen.findByRole("dialog", {
 			name: "Add employment terms",
 		});
-		await user.type(within(dialog).getByLabelText("Working days a week"), "5");
-		await user.type(
-			within(dialog).getByLabelText("Normal hours a day"),
-			"12.5"
-		);
-		await user.type(
-			within(dialog).getByLabelText("Normal hours a week"),
-			"8.33"
-		);
-		await user.click(
-			within(dialog).getByRole("button", { name: "Add employment terms" })
-		);
+		await within(dialog).findByRole("button", { name: /^Full-time, 5 days/ });
+		const week = within(dialog).getByLabelText("Hours a week");
+		await user.clear(week);
+		await user.type(week, "abc");
+		await user.tab();
 
 		expect(
-			await within(dialog).findByText("Enter 0.5 to 12 hours.")
-		).toBeVisible();
-		expect(
-			within(dialog).getByText(
-				"Use hours that make whole minutes, such as 8.5 or 8.75."
+			await within(dialog).findByText(
+				"Enter hours such as 8, or hours and minutes such as 8:30."
 			)
 		).toBeVisible();
+		expect(week).toHaveAttribute("aria-invalid", "true");
+		// The read-back says the same, in the footer beside the buttons, never over the field.
+		expect(dialog).toHaveTextContent(
+			"Not finished yet: fill in or check the hours a week."
+		);
 		expect(
 			calls.some((call) => call.method === "POST" && call.path === TERMS)
 		).toBe(false);
@@ -265,8 +673,8 @@ describe("EmploymentTermsSettings", () => {
 			name: "Edit employment terms",
 		});
 		expect(dialog).toHaveTextContent("43 people have these terms.");
-		await user.clear(within(dialog).getByLabelText("Normal hours a week"));
-		await user.type(within(dialog).getByLabelText("Normal hours a week"), "42");
+		await user.clear(within(dialog).getByLabelText("Hours a week"));
+		await user.type(within(dialog).getByLabelText("Hours a week"), "42");
 		await user.click(
 			within(dialog).getByRole("button", { name: "Save changes" })
 		);
@@ -334,8 +742,8 @@ describe("EmploymentTermsSettings", () => {
 		const dialog = await screen.findByRole("dialog", {
 			name: "Edit employment terms",
 		});
-		await user.clear(within(dialog).getByLabelText("Normal hours a week"));
-		await user.type(within(dialog).getByLabelText("Normal hours a week"), "42");
+		await user.clear(within(dialog).getByLabelText("Hours a week"));
+		await user.type(within(dialog).getByLabelText("Hours a week"), "42");
 		await user.click(
 			within(dialog).getByRole("button", { name: "Save changes" })
 		);
@@ -365,7 +773,7 @@ describe("EmploymentTermsSettings", () => {
 						errorCode: "INVALID_EMPLOYMENT_TERMS",
 						errors: [
 							{ field: "weekMinutes", message: "server prose" },
-							{ field: "dayMinutes", message: "server prose" },
+							{ field: "dailyOvertime", message: "server prose" },
 						],
 					},
 				},
@@ -380,21 +788,23 @@ describe("EmploymentTermsSettings", () => {
 		const dialog = await screen.findByRole("dialog", {
 			name: "Add employment terms",
 		});
-		await user.click(
-			await within(dialog).findByRole("radio", { name: /Five-day week, 44 h/ })
-		);
+		expect(
+			await within(dialog).findByRole("button", {
+				name: /^Full-time, 5 days/,
+			})
+		).toHaveAttribute("aria-pressed", "true");
 		await user.click(
 			within(dialog).getByRole("button", { name: "Add employment terms" })
 		);
 
 		expect(
 			await within(dialog).findByText(
-				"Check the normal hours a week: 1 to 60 hours, and no more than the working days × the normal day."
+				"Check the hours a week: they are outside what terms may set, or make a day longer than the longest normal day. Lower the hours a week or add working days."
 			)
 		).toBeVisible();
 		expect(
 			within(dialog).getByText(
-				"Check the normal hours a day: they’re outside what terms may set."
+				"Overtime by the day needs fixed working days. Choose the working days, or untick overtime by the day."
 			)
 		).toBeVisible();
 		expect(within(dialog).queryByText("server prose")).toBeNull();
@@ -420,8 +830,8 @@ describe("EmploymentTermsSettings", () => {
 		const dialog = await screen.findByRole("dialog", {
 			name: "Edit employment terms",
 		});
-		await user.clear(within(dialog).getByLabelText("Normal hours a week"));
-		await user.type(within(dialog).getByLabelText("Normal hours a week"), "42");
+		await user.clear(within(dialog).getByLabelText("Hours a week"));
+		await user.type(within(dialog).getByLabelText("Hours a week"), "42");
 		await user.click(
 			within(dialog).getByRole("button", { name: "Save changes" })
 		);
@@ -468,8 +878,8 @@ describe("EmploymentTermsSettings", () => {
 		const dialog = await screen.findByRole("dialog", {
 			name: "Edit employment terms",
 		});
-		await user.clear(within(dialog).getByLabelText("Normal hours a week"));
-		await user.type(within(dialog).getByLabelText("Normal hours a week"), "40");
+		await user.clear(within(dialog).getByLabelText("Hours a week"));
+		await user.type(within(dialog).getByLabelText("Hours a week"), "40");
 		await user.click(
 			within(dialog).getByRole("button", { name: "Save changes" })
 		);
@@ -498,8 +908,8 @@ describe("EmploymentTermsSettings", () => {
 		const dialog = await screen.findByRole("dialog", {
 			name: "Edit employment terms",
 		});
-		await user.clear(within(dialog).getByLabelText("Normal hours a week"));
-		await user.type(within(dialog).getByLabelText("Normal hours a week"), "42");
+		await user.clear(within(dialog).getByLabelText("Hours a week"));
+		await user.type(within(dialog).getByLabelText("Hours a week"), "42");
 		await user.click(
 			within(dialog).getByRole("button", { name: "Save changes" })
 		);
@@ -531,6 +941,9 @@ describe("EmploymentTermsSettings", () => {
 		const dialog = await screen.findByRole("dialog", {
 			name: "Edit employment terms",
 		});
+		await user.click(
+			within(dialog).getByRole("button", { name: "More options" })
+		);
 		await user.type(
 			within(dialog).getByLabelText("Description (optional)"),
 			"Guards"
@@ -567,6 +980,9 @@ describe("EmploymentTermsSettings", () => {
 		const dialog = await screen.findByRole("dialog", {
 			name: "Edit employment terms",
 		});
+		await user.click(
+			within(dialog).getByRole("button", { name: "More options" })
+		);
 		await user.type(
 			within(dialog).getByLabelText("Description (optional)"),
 			"Guards"
@@ -595,6 +1011,53 @@ describe("EmploymentTermsSettings", () => {
 		);
 	});
 
+	it("opens existing terms on their answers, with no starting point pressed", async () => {
+		stubApi(routes(READ_AND_UPDATE));
+		const user = userEvent.setup();
+		const panel = await open();
+
+		await user.click(
+			await within(await table(panel)).findByRole("button", {
+				name: "Edit Standard week",
+			})
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Edit employment terms",
+		});
+		expect(
+			await within(dialog).findByRole("button", { name: /^Full-time, 6 days/ })
+		).toHaveAttribute("aria-pressed", "false");
+		expect(dialog).toHaveTextContent("That is 7 h 20 min a day.");
+		expect(dialog).toHaveTextContent(
+			"Full-time, 6 days a week, 44 h (7 h 20 min a day). Rest day: a different day each week, picked by the roster. Overtime after 44 h in a week, paid at 1.5 times."
+		);
+	});
+
+	it("opens terms outside the Act's hour rules on No, in the main form", async () => {
+		stubApi(
+			routes(READ_AND_UPDATE, {
+				[`GET ${TERMS}/overview`]: {
+					status: 200,
+					body: envelope(
+						overviewResponse([{ ...FIVE_DAY_WEEK, hoursLimitsApply: false }])
+					),
+				},
+			})
+		);
+		const user = userEvent.setup();
+		const panel = await open();
+
+		await user.click(
+			await within(await table(panel)).findByRole("button", {
+				name: "Edit Five-day week, 44 h",
+			})
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Edit employment terms",
+		});
+		expect(within(dialog).getByRole("radio", { name: "No" })).toBeChecked();
+	});
+
 	it("says who moves before making terms the default", async () => {
 		const calls = stubApi(
 			routes(READ_AND_UPDATE, {
@@ -613,16 +1076,16 @@ describe("EmploymentTermsSettings", () => {
 			})
 		);
 		await user.click(
-			await screen.findByRole("menuitem", { name: "Make default" })
+			await screen.findByRole("menuitem", { name: "Give these to new people" })
 		);
 		const confirm = await screen.findByRole("dialog", {
-			name: "Make Five-day week, 44 h the default?",
+			name: "Give Five-day week, 44 h to new people?",
 		});
 		expect(confirm).toHaveTextContent(
 			"New people get Five-day week, 44 h unless you choose other terms when you add them. Nobody’s current terms change."
 		);
 		await user.click(
-			within(confirm).getByRole("button", { name: "Make default" })
+			within(confirm).getByRole("button", { name: "Give to new people" })
 		);
 
 		expect(

@@ -105,3 +105,17 @@ export const NightDuration: Story = {
 		}),
 	},
 };
+
+/** A three-quarter day that keeps the person off the roster for the whole day. */
+export const NoShiftThatDay: Story = {
+	args: {
+		editing: managedLeaveDurationFixture({
+			leaveDurationId: "ld-three-quarters",
+			name: "Three quarters",
+			startTime: "09:00",
+			endTime: "15:00",
+			minutes: 360,
+			allowsShiftSameDay: false,
+		}),
+	},
+};

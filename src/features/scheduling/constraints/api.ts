@@ -2,6 +2,7 @@ import { queryOptions, skipToken } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest, apiRequestVoid } from "@/common/api-client";
 import type { DepartmentPath } from "@/common/companyPath";
+import { isOneOf } from "@/common/isOneOf";
 import type { QueryOptionsFor } from "@/common/query-client";
 import {
 	companyConstraintsPath,
@@ -41,8 +42,17 @@ export const constraintTypeSchema = z.enum([
 	"DAYS_OFF_PER_PERIOD",
 	"AVOID_DAYS_OFF_ON",
 	"REST_BETWEEN_SHIFTS",
+	"BANNED_SHIFT_PATTERN",
 	"MAX_DAYS_WITHOUT_DAY_TYPES",
 	"DAY_TYPE_DAYS_PER_WEEK",
+	"MAX_WORK_HOURS_PER_DAY",
+	"MAX_OVERTIME_HOURS_PER_MONTH",
+	"SHORTEST_PART_SHIFT",
+	"MAX_CALL_BACKS_PER_PERSON",
+	"PAY_RATES",
+	"NO_OVERTIME_WHEN_GENERATING",
+	"OVERTIME_STRETCH",
+	"KEEP_DAYS_OFF_TOGETHER",
 ]);
 
 /** What a constraint says; its copy (label and sentence) is keyed by this name. */
@@ -67,21 +77,61 @@ const constraintFieldSchema = z.enum([
 	"HEADCOUNT",
 	"STAND_INS_PER_PERSON",
 	"DAYS_OFF",
+	// Retired: a days-off period still kept in days, read only; PERIOD_WEEKS replaced it (ADR-0097 in the API).
 	"PERIOD_DAYS",
+	"PERIOD_WEEKS",
 	"REST_HOURS",
 	"JOB_TITLE",
 	"STAND_IN_JOB_TITLE",
 	"SHIFT",
+	"PATTERN_DAY_1",
+	"PATTERN_DAY_2",
+	"PATTERN_DAY_3",
+	"PATTERN_DAY_4",
+	"PATTERN_DAY_5",
+	"PATTERN_DAY_6",
+	"PATTERN_DAY_7",
 	"WEEKDAY",
 	"DAY_TYPE",
 	"DAYS_IN_A_ROW",
 	"DAY_TYPE_COUNT",
+	"WORK_HOURS_A_DAY",
+	"OVERTIME_HOURS_A_MONTH",
+	"PART_SHIFT_MINUTES",
+	"CALL_BACKS",
+	// Optional: the days in a row call-backs are counted over; none counts each week (ADR-0121 in the API).
+	"CALL_BACK_SPAN_DAYS",
+	"OVERTIME_PERCENT",
+	"REST_DAY_WORK_PERCENT",
+	"TIME_OFF_EARNED_PERCENT",
+	"DAY_OFF_WORK_PERCENT",
+	"STRETCH_HOURS",
 ]);
 
 /** One field a constraint type takes; its label is keyed by this name. */
 export type ConstraintField = z.infer<typeof constraintFieldSchema>;
 
 export const CONSTRAINT_FIELDS = constraintFieldSchema.options;
+
+/**
+ * The days of a banned shift pattern, first to last (ADR-0107 in the API):
+ * each lists the shifts nobody works on that day of the run, filled in order.
+ */
+export const PATTERN_DAYS = [
+	"PATTERN_DAY_1",
+	"PATTERN_DAY_2",
+	"PATTERN_DAY_3",
+	"PATTERN_DAY_4",
+	"PATTERN_DAY_5",
+	"PATTERN_DAY_6",
+	"PATTERN_DAY_7",
+] as const satisfies ReadonlyArray<ConstraintField>;
+
+export type PatternDay = (typeof PATTERN_DAYS)[number];
+
+/** Whether a field's values are shifts: a constraint's shifts, or a banned pattern's shifts of one day. */
+export const isShiftField = (field: ConstraintField): boolean =>
+	field === "SHIFT" || isOneOf(PATTERN_DAYS, field);
 
 const constraintFieldKindSchema = z.enum([
 	"NUMBER",
@@ -172,12 +222,35 @@ const fieldStrictnessSchema = z
 /** Which way a field's values protect people more, as the API declares it per field. */
 export type FieldStrictness = z.infer<typeof fieldStrictnessSchema>;
 
+// A problem a newer API adds reads as UNKNOWN: still a problem, worded generically.
+const constraintValueProblemSchema = z
+	.enum([
+		"UNAVAILABLE",
+		"NOT_LISTED",
+		"LISTS_NONE",
+		"PERIOD_IN_DAYS",
+		"UNKNOWN",
+	])
+	.catch("UNKNOWN");
+
+/**
+ * Why a stored value no longer fits (ADR-0085 in the API): its shift or job
+ * title is gone or inactive, a job title no chosen shift lists any more, a
+ * shift that lists none of the chosen job titles, or a days-off period still
+ * kept in days (ADR-0097).
+ */
+export type ConstraintValueProblem = z.infer<
+	typeof constraintValueProblemSchema
+>;
+
 export const constraintValueSchema = z.object({
 	field: constraintFieldSchema,
 	/** As the API takes it: a number, a comparison or weekday name, or a job title's or shift's id. */
 	value: z.string(),
 	/** The job title's or shift's current name; null for a plain value. */
 	name: z.string().nullable(),
+	/** Why the value no longer fits; null or absent when it fits, on a frozen copy, and from an older API. */
+	problem: constraintValueProblemSchema.nullish(),
 });
 
 /** One value of a constraint; a list field has one per item. */
@@ -388,16 +461,42 @@ const constraintFieldSpecSchema = z.object({
 	strictness: fieldStrictnessSchema,
 	/** The comparisons a COMPARISON field takes; null for any other field, or for one that takes all three. */
 	comparisons: z.array(constraintComparisonSchema).nullable().catch(null),
+	/** Each value must be listed by a chosen value of this field (a job title by a chosen shift); null when free. */
+	listedBy: constraintFieldSchema.nullable().catch(null),
+	/** Each chosen value must list a chosen value of one of these fields (a shift, one of the job titles). */
+	listsSomeOf: z.array(constraintFieldSchema).catch([]),
+	/** No value may also be a chosen value of this field (a stand-in is never also counted); null when free. */
+	excludes: constraintFieldSchema.nullable().catch(null),
+	/** The day type codes a DAY_TYPE field takes (ADR-0087); empty for every code of `dayTypeChoices`. */
+	choices: z.array(z.string()).catch([]),
+	/** The comparisons the type takes while only some of `choices` are chosen; empty when any goes. */
+	partialComparisons: z.array(constraintComparisonSchema).catch([]),
 });
 
 /** One field a constraint type takes, as the API declares it. */
 export type ConstraintFieldSpec = z.infer<typeof constraintFieldSpecSchema>;
+
+// A policy a newer API adds reads as UNKNOWN instead of failing the whole answer.
+const requirementPolicySchema = z
+	.enum([
+		"MUST_OR_SHOULD",
+		"ALWAYS_MUST",
+		"ALWAYS_SHOULD",
+		"SETTING",
+		"UNKNOWN",
+	])
+	.catch("UNKNOWN");
+
+/** How a constraint type runs: chosen, always one way, or a setting that is neither. */
+export type RequirementPolicy = z.infer<typeof requirementPolicySchema>;
 
 const constraintTypeOptionSchema = z.object({
 	type: constraintTypeSchema,
 	category: constraintCategorySchema,
 	/** Whether a constraint of the type is a Must or a Should; without, it sends none. */
 	hasRequirement: z.boolean(),
+	/** How it runs; a SETTING is neither a Must nor an If possible, so it carries no label (ADR-0084). */
+	requirementPolicy: requirementPolicySchema,
 	/** Whether a Department may hold only one constraint of the type. */
 	onePerDepartment: z.boolean(),
 	/** The levels it may be set at; only types that link to nothing reach COMPANY. */
@@ -413,11 +512,23 @@ const constraintTypeOptionSchema = z.object({
 /** A constraint type and the fields it takes. */
 export type ConstraintTypeOption = z.infer<typeof constraintTypeOptionSchema>;
 
+/**
+ * What one shift or job title lists, keyed by link kind (`JOB_TITLE`): a
+ * shift its job titles; a job title nothing. A kind a newer API adds is kept.
+ */
+const listedIdsSchema = z.record(z.string(), z.array(z.string())).catch({});
+
+/** What a link lists, by kind; empty from an API that predates it. */
+export type ListedIds = z.infer<typeof listedIdsSchema>;
+
 const constraintLinkOptionSchema = z.object({
 	id: z.string(),
 	name: z.string(),
 	/** A shift's job titles; empty for a job title, or from an API that predates it. */
 	jobTitleIds: z.array(z.string()).catch([]),
+	listedIds: listedIdsSchema,
+	/** The group a shift is shown under on the Shifts page; none for a job title, or from an API that predates it. */
+	group: z.string().nullable().optional().catch(null),
 });
 
 /** The API groups generic { id, name } choices by link kind (ADR-0050). */
@@ -430,18 +541,24 @@ export const constraintOptionsSchema = z
 		}),
 		/** The day types a DAY_TYPE field may name, as codes; empty from an API that predates them. */
 		dayTypeChoices: z.array(z.string()).catch([]),
+		/** The company's stored name of each non-working day type, by code; the fallback for its label. */
+		dayTypeNames: z.record(z.string(), z.string()).catch({}),
 	})
-	.transform(({ types, links, dayTypeChoices }) => ({
+	.transform(({ types, links, dayTypeChoices, dayTypeNames }) => ({
 		types,
 		dayTypeChoices,
-		shifts: links.SHIFT.map(({ id, name, jobTitleIds }) => ({
+		dayTypeNames,
+		shifts: links.SHIFT.map(({ id, name, jobTitleIds, listedIds, group }) => ({
 			shiftId: id,
 			name,
 			jobTitleIds,
+			listedIds,
+			group: group ?? null,
 		})),
-		jobTitles: links.JOB_TITLE.map(({ id, name }) => ({
+		jobTitles: links.JOB_TITLE.map(({ id, name, listedIds }) => ({
 			jobTitleId: id,
 			name,
+			listedIds,
 		})),
 	}));
 

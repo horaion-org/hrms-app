@@ -6,15 +6,17 @@ import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { ErrorText } from "@/components/ui/ErrorText";
+import { RosteredDaysNotice } from "@/features/leave/LeaveRequestDialog/RosteredDaysNotice";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
 import { CoverOfferSent } from "@/features/scheduling/coverOffers/CoverOfferActions/CoverOfferSent";
+import { offerActionsOf } from "@/features/scheduling/coverOffers/coverOfferRules";
 import { CellChoices } from "@/features/scheduling/RosterCellPanel/CellChoices";
 import { CellNow } from "@/features/scheduling/RosterCellPanel/CellNow";
 import { CellPanelFooter } from "@/features/scheduling/RosterCellPanel/CellPanelFooter";
 import { CellPanelHeader } from "@/features/scheduling/RosterCellPanel/CellPanelHeader";
 import { useRosterCellPanel } from "@/features/scheduling/RosterCellPanel/useRosterCellPanel";
-import { RosterChangeReview } from "@/features/scheduling/RosterChangeReview";
-import { RosterLeaveReview } from "@/features/scheduling/RosterLeaveReview";
+import { RosterChangeReview } from "@/features/scheduling/rosterChanges/RosterChangeReview";
+import { RosterLeaveReview } from "@/features/scheduling/rosterChanges/RosterLeaveReview";
 import type { RosterChange } from "@/features/scheduling/rosterChanges/api";
 import {
 	cellPanelSections,
@@ -26,6 +28,7 @@ import type {
 	ScheduleAssignment,
 	ScheduleShift,
 } from "@/features/scheduling/schedules/api";
+import type { SchedulePreferenceOutcome } from "@/features/shiftPreferences/api";
 
 export type RosterCellPanelProps = {
 	/** Where the roster lives and which run's rows are shown. */
@@ -67,6 +70,10 @@ export type RosterCellPanelProps = {
 	coverOffers?: { offers: ReadonlyArray<CoverOffer>; timeZone: string };
 	/** A recorded yes landed and applied; the roster refreshes by itself. */
 	onCoverRecorded?: () => void;
+	/** Opens with not working chosen and this day type picked, as a fix from Issues asks. */
+	presetDayType?: string;
+	/** The member's shift preference on the day and what the roster made of it; shown under the day. */
+	preferenceOutcome?: SchedulePreferenceOutcome;
 	className?: string;
 };
 
@@ -91,6 +98,7 @@ export const RosterCellPanel = ({
 	onClose,
 	notifiesMembers = false,
 	issues,
+	preferenceOutcome,
 	className,
 	...input
 }: RosterCellPanelProps): FunctionComponent => {
@@ -141,6 +149,7 @@ export const RosterCellPanel = ({
 				assignment={assignment}
 				language={panel.language}
 				leaveDay={panel.leaveDay}
+				preferenceOutcome={preferenceOutcome}
 				requestDays={panel.requestDays}
 				requestLink={panel.requestLink}
 			/>
@@ -163,6 +172,7 @@ export const RosterCellPanel = ({
 						type: assignment.leaveTypeName,
 					})}
 				</p>
+				<RosteredDaysNotice days={panel.pendingPartDayDays} name={name} />
 				<Button search={panel.requestLink} to="/leave" variant="textlink">
 					{t(`${key}.reviewInLeave`)}
 				</Button>
@@ -201,6 +211,7 @@ export const RosterCellPanel = ({
 					names={changeReview.names}
 					notifiesMembers={notifiesMembers}
 					preview={changeReview.preview}
+					previewRefusal={changeReview.previewRefusal}
 					remark={changeReview.remark}
 					remarkRequired={changeReview.remarkRequired}
 					ticked={changeReview.ticked}
@@ -210,22 +221,9 @@ export const RosterCellPanel = ({
 							: undefined
 					}
 					onRemarkChange={changeReview.setRemark}
+					onRetryPreview={changeReview.retryPreview}
 					onTickedChange={changeReview.setTicked}
 				/>
-				{changeReview.previewRefusal && (
-					<div className="flex flex-col items-start gap-2" role="alert">
-						<p className="text-sm text-error-700">
-							{changeReview.previewRefusal === "revision"
-								? t(`${key}.error.revision`)
-								: t(`${key}.previewFailed`)}
-						</p>
-						<Button variant="textlink" onClick={changeReview.retryPreview}>
-							{changeReview.previewRefusal === "revision"
-								? t(`${key}.error.reload`)
-								: t(`${key}.tryAgain`)}
-						</Button>
-					</div>
-				)}
 				{changeReview.applyRefusal && !stranded && (
 					<ErrorText>
 						{t(`${key}.error.${changeReview.applyRefusal}`)}
@@ -235,24 +233,10 @@ export const RosterCellPanel = ({
 				<CellPanelFooter
 					applyDisabled={changeReview.applyBlocked}
 					busy={changeReview.busy}
+					offerActions={offerActionsOf(coverOffer, name)}
 					applyLabel={t(
 						changeReview.applyAnyway ? `${key}.applyAnyway` : `${key}.apply`
 					)}
-					offerActions={
-						coverOffer?.consentKind
-							? {
-									name,
-									pending: coverOffer.createPending,
-									ready: coverOffer.ready,
-									refusal: coverOffer.createRefusal,
-									rivals: coverOffer.rivals,
-									sendBlocked: coverOffer.openOffer !== undefined,
-									timeZone: coverOffer.timeZone,
-									onRecord: coverOffer.record,
-									onSend: coverOffer.send,
-								}
-							: undefined
-					}
 					onApply={changeReview.applyChange}
 					onCancel={onClose}
 				/>

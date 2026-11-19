@@ -24,7 +24,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** November: one published, the week under review, two tentative, one not generated yet. */
+/** November: one published, three weeks to review, one not generated yet. */
 export const ReviewingMonth: Story = {};
 export const AllPublished: Story = {
 	args: {
@@ -37,20 +37,6 @@ export const AllPublished: Story = {
 				week("2026-11-30", "PUBLISHED", "s-5"),
 			],
 		}),
-	},
-};
-export const GeneratedAhead: Story = {
-	args: {
-		summary: monthSummaryFixture({
-			month: "2026-12",
-			weeks: [
-				week("2026-12-07", "TENTATIVE", "s-6"),
-				week("2026-12-14", "TENTATIVE", "s-7"),
-				week("2026-12-21", "NOT_GENERATED", null),
-				week("2026-12-28", "NOT_GENERATED", null),
-			],
-		}),
-		reviewMonth: "2026-11",
 	},
 };
 export const MixedWithAFailedWeek: Story = {
@@ -68,4 +54,35 @@ export const MixedWithAFailedWeek: Story = {
 };
 export const WaitingOnTheViewer: Story = {
 	args: { waitingOnMe: [approvalInstanceFixture({ subjectId: "s-2" })] },
+};
+/** A named schedule by dates, Thursday 19 to Saturday 28 November, over two weeks. */
+export const NamedDatesSchedule: Story = {
+	args: {
+		summary: monthSummaryFixture({
+			weeks: monthSummaryFixture().weeks.map((each) =>
+				each.periodStart === "2026-11-16" || each.periodStart === "2026-11-23"
+					? {
+							...each,
+							parts: [
+								{
+									scheduleId: `${each.periodStart}-gala`,
+									name: "Year-end gala",
+									named: true,
+									coveredFrom:
+										each.periodStart === "2026-11-16"
+											? "2026-11-19"
+											: "2026-11-23",
+									coveredTo:
+										each.periodStart === "2026-11-16"
+											? "2026-11-22"
+											: "2026-11-28",
+									state: "TO_REVIEW",
+									redoing: false,
+								},
+							],
+						}
+					: each
+			),
+		}),
+	},
 };

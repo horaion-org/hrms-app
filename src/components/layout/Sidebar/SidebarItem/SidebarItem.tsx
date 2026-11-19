@@ -12,21 +12,28 @@ export type SidebarItemProps = Omit<
 		label: string;
 		icon: Heroicon;
 		activeIcon: Heroicon;
+		/** From `lg`, shows the icon alone, the name kept for screen readers and as a tooltip. */
+		collapsed?: boolean;
 	};
 
+/** One entry of the side menu: its icon and name, filled and highlighted on the current page. */
 export const SidebarItem = ({
 	label,
 	icon: Icon,
 	activeIcon: ActiveIcon,
+	collapsed = false,
 	className,
 	...props
 }: SidebarItemProps): FunctionComponent => {
 	return (
 		<Link
+			// The name is the collapsed entry's tooltip, unless the caller gives its own title.
+			title={collapsed ? label : undefined}
 			{...props}
 			className={joinClassNames(
 				"flex h-12 w-56 shrink-0 items-center gap-3 rounded-sm p-4 text-base focus-visible:outline-2 focus-visible:outline-offset-2",
 				"bg-transparent text-white not-data-[status=active]:hover:bg-ink-blue-800 data-[status=active]:bg-ink-blue-100 data-[status=active]:text-neutral-900 focus-visible:outline-white",
+				collapsed && "lg:w-12 lg:justify-center lg:px-0",
 				className
 			)}
 		>
@@ -40,7 +47,7 @@ export const SidebarItem = ({
 					) : (
 						<Icon aria-hidden="true" className="size-5 shrink-0 text-white" />
 					)}
-					{label}
+					<span className={collapsed ? "lg:sr-only" : undefined}>{label}</span>
 				</>
 			)}
 		</Link>

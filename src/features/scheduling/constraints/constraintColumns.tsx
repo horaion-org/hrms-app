@@ -13,6 +13,7 @@ import type {
 import { appliesToOf } from "@/features/scheduling/constraints/appliesTo";
 import { ConstraintStatement } from "@/features/scheduling/constraints/ConstraintStatement";
 import type { Constraint } from "@/features/scheduling/scheduleDraft";
+import { needsAttention } from "@/features/scheduling/constraints/valueProblems";
 
 /*
  * The columns every list of constraints shares, so a schedule's Constraints
@@ -73,6 +74,9 @@ export const constraintColumns = <Row extends ConstraintRow>(
 							(option) =>
 								option.type === constraint.type && option.fullTimersOnly
 						),
+						requirementPolicy: types.find(
+							(option) => option.type === constraint.type
+						)?.requirementPolicy,
 					}}
 				/>
 			),
@@ -81,12 +85,19 @@ export const constraintColumns = <Row extends ConstraintRow>(
 			id: "status",
 			header: t(`${key}.status`),
 			headerClassName: "w-32",
-			cell: (constraint) =>
-				constraint.status && (
-					<Badge tone={statusTones[constraint.status]}>
-						{t(`${key}.statuses.${constraint.status}`)}
-					</Badge>
-				),
+			// A rule holding a value that no longer fits says so beside its status (ADR-0085).
+			cell: (constraint) => (
+				<span className="flex flex-wrap gap-1">
+					{constraint.status && (
+						<Badge tone={statusTones[constraint.status]}>
+							{t(`${key}.statuses.${constraint.status}`)}
+						</Badge>
+					)}
+					{needsAttention(constraint.values) && (
+						<Badge tone="warning">{t(`${key}.problems.needsAttention`)}</Badge>
+					)}
+				</span>
+			),
 			sortValue: (constraint) =>
 				constraint.status ? CONSTRAINT_STATUSES.indexOf(constraint.status) : 0,
 		},

@@ -1,5 +1,6 @@
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useId, useMemo, useState } from "react";
 import { COMPANY_SCOPE, effectiveAt } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 import { useTranslation } from "react-i18next";
@@ -11,13 +12,32 @@ import {
 } from "@/components/ui/DataTable";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { ArrowLeftIcon } from "@/components/ui/Icon";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
-import type { AccessRole } from "@/features/organisation/api";
+import { Toast } from "@/components/ui/Toast";
+import { mayAssignRole } from "@/features/organisation/accessRoleReadOnly";
+import { placeLabels } from "@/features/organisation/accessSummary";
+import type {
+	AccessRole,
+	DefaultAccessRule,
+} from "@/features/organisation/api";
 import { CreateSystemRoleDialog } from "@/features/organisation/CreateSystemRoleDialog";
+import {
+	defaultRuleText,
+	deleteRoleOffer,
+	giveDefaultAccessSummary,
+	type DefaultRuleText,
+} from "@/features/organisation/defaultAccess";
+import { assignmentTargets } from "@/features/organisation/assignmentTargets";
+import { defaultAccessColumns } from "@/features/organisation/defaultAccessColumns";
+import { DefaultAccessDialog } from "@/features/organisation/DefaultAccessDialog";
+import { defaultAccessRefusal } from "@/features/organisation/defaultAccessRefusal";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import {
 	actionsColumn,
 	describeList,
+	failedReadProblem,
 	isStatusFilter,
 	nameColumn,
 	statusColumn,
@@ -25,17 +45,34 @@ import {
 	statusFilterOptions,
 	type StatusFilter,
 } from "@/features/organisation/listColumns";
+import {
+	defaultAccessRulesQuery,
+	useAddDefaultAccessRule,
+	useRemoveDefaultAccessRule,
+} from "@/features/organisation/useDefaultAccess";
 import { useAccessRoles } from "@/features/organisation/useOrganisationList";
+import { GiveDefaultAccessDialog } from "@/features/people/GiveDefaultAccessDialog";
 import { roleSummaryText } from "@/features/organisation/sectionLevels";
+import { workspaceQuery } from "@/features/workspace/api";
 import { isPermissionKey } from "@/features/workspace/permissionKeys";
+import { retry } from "@/features/workspace/retry";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 import {
 	SystemRoleActionDialog,
 	type SystemRoleAction,
 } from "@/pages/SystemRoleActions";
 import { AssignSystemRole } from "@/pages/SystemRoleHolders";
+import { ListProblem } from "@/features/organisation/ListProblem";
 
-/** Access roles: who may manage what, and where (Settings › Access roles). */
+/** Every role, whatever the list's filter, to name the role each default gives. */
+const ALL_ROLES_BY_NAME = { sort: { field: "name", desc: false } } as const;
+
+/**
+ * Access roles: who may manage what, and where (Settings › Access roles),
+ * then the defaults everyone who receives default access gets (API
+ * ADR-0118), read with `access_role:read` and removed with
+ * `access_role:assign`, both at the whole company.
+ */
 export const SystemRoles = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const { t } = useTranslation();
@@ -59,13 +96,39 @@ export const SystemRoles = (): FunctionComponent => {
 		t("organisation.accessRoles.empty"),
 		t
 	);
-	// The Company Owner role is never edited; any other needs the update key.
+	// The System Owner and System Admin roles are never edited; any other needs the update key.
 	const canEdit = useCallback(
 		(role: AccessRole): boolean =>
 			!role.protectedRole && access.can("access_role:update", COMPANY_SCOPE),
 		[access]
 	);
 	const navigate = useNavigate();
+	const defaultsHeadingId = useId();
+	const canReadDefaults = access.can("access_role:read", COMPANY_SCOPE);
+	// Only the System Owner and System Admin hold it (API ADR-0108).
+	const canChangeDefaults = access.can("access_role:assign", COMPANY_SCOPE);
+	const defaults = useQuery(
+		defaultAccessRulesQuery(companyId, canReadDefaults)
+	);
+	const allRoles = useAccessRoles(companyId, ALL_ROLES_BY_NAME);
+	const { data: workspace } = useQuery({ ...workspaceQuery, retry });
+	const [removing, setRemoving] = useState<DefaultAccessRule>();
+	const remove = useRemoveDefaultAccessRule(companyId);
+	const [addingDefault, setAddingDefault] = useState(false);
+	const [givingDefault, setGivingDefault] = useState(false);
+	const [given, setGiven] = useState<{ id: number; text: string }>();
+	const add = useAddDefaultAccessRule(companyId);
+	const describeDefault = (rule: DefaultAccessRule): DefaultRuleText =>
+		defaultRuleText(
+			rule,
+			allRoles.status === "ready" ? allRoles.items : [],
+			placeLabels(workspace, companyId, t),
+			t
+		);
+	const defaultsColumns = defaultAccessColumns(t, {
+		describe: describeDefault,
+		onRemove: canChangeDefaults ? setRemoving : undefined,
+	});
 	// Opens the role on its permissions, which are read-only for a role the person can't change.
 	const open = useCallback(
 		(role: AccessRole): void => {
@@ -77,14 +140,18 @@ export const SystemRoles = (): FunctionComponent => {
 		},
 		[navigate]
 	);
+	const deleteOffer = useCallback(
+		(role: AccessRole) => deleteRoleOffer(role, defaults.data, access),
+		[defaults.data, access]
+	);
 	const [assigning, setAssigning] = useState(false);
 	const [action, setAction] = useState<SystemRoleAction>();
-	// Neither the Company Owner role nor an inactive role is assigned here.
+	// Only roles the person may give, never the System Owner role or an inactive one (API ADR-0108).
 	const assignable =
 		// Assigning happens at a place; the dialog offers only places where it is held.
-		list.status === "ready" && access.canAnywhere("access_role:assign")
+		list.status === "ready"
 			? list.items.filter(
-					(role) => !role.protectedRole && role.status === "ACTIVE"
+					(role) => role.status === "ACTIVE" && mayAssignRole(role, access)
 				)
 			: [];
 	const columns = useMemo(
@@ -106,7 +173,7 @@ export const SystemRoles = (): FunctionComponent => {
 			{
 				id: "permissions",
 				header: t("organisation.accessRoles.permissions"),
-				// What the role allows, section by section; the owner role holds everything.
+				// What the role allows, section by section; the built-in roles hold everything.
 				cell: (role) =>
 					role.protectedRole
 						? t("organisation.accessRoles.fullAccess")
@@ -179,17 +246,12 @@ export const SystemRoles = (): FunctionComponent => {
 								)}
 							</OverflowMenuItem>
 							<OverflowMenuItem
-								// Only a role nobody holds can be deleted.
-								disabled={
-									role.protectedRole ||
-									role.holderCount > 0 ||
-									!access.can("access_role:delete", COMPANY_SCOPE)
-								}
+								disabled={deleteOffer(role).disabled}
 								onClick={() => {
 									setAction({ kind: "delete", role });
 								}}
 							>
-								{t("organisation.list.deleteItem")}
+								{t(deleteOffer(role).label)}
 							</OverflowMenuItem>
 						</>
 					),
@@ -200,12 +262,16 @@ export const SystemRoles = (): FunctionComponent => {
 				headerClassName: "w-24",
 			},
 		],
-		[t, access, canCreate, canEdit, navigate, open]
+		[t, canCreate, canEdit, navigate, open, deleteOffer]
 	);
 
 	return (
 		<>
-			<h1 className="text-4xl font-medium text-neutral-900">
+			{/* Access roles open from Settings' list, so the way back leads there. */}
+			<Button leadingIcon={<ArrowLeftIcon />} to="/settings" variant="textlink">
+				{t("settings.back")}
+			</Button>
+			<h1 className="mt-4 text-4xl font-medium text-neutral-900">
 				{t("organisation.accessRoles.title")}
 			</h1>
 			<p className="mt-4 text-sm text-neutral-800">
@@ -282,13 +348,7 @@ export const SystemRoles = (): FunctionComponent => {
 				/>
 			)}
 			{view.problem ? (
-				<p
-					className="mt-8 text-sm text-neutral-700 data-alert:text-error-700"
-					data-alert={view.problem.alert || undefined}
-					role={view.problem.alert ? "alert" : undefined}
-				>
-					{view.problem.message}
-				</p>
+				<ListProblem problem={view.problem} />
 			) : (
 				<>
 					<DataTable
@@ -307,6 +367,133 @@ export const SystemRoles = (): FunctionComponent => {
 						<p className="mt-4 text-sm text-neutral-700">{view.truncated}</p>
 					)}
 				</>
+			)}
+			{canReadDefaults && (
+				<section aria-labelledby={defaultsHeadingId} className="mt-12">
+					<h2
+						className="text-xl font-semibold text-neutral-900"
+						id={defaultsHeadingId}
+					>
+						{t("organisation.accessRoles.defaults.title")}
+					</h2>
+					<p className="mt-3 text-sm text-neutral-800">
+						{t("organisation.accessRoles.defaults.description")}
+					</p>
+					{canChangeDefaults && (
+						<div className="mt-6 flex flex-wrap gap-3">
+							<Button
+								variant="secondary"
+								onClick={() => {
+									setAddingDefault(true);
+								}}
+							>
+								{t("organisation.accessRoles.defaults.add")}
+							</Button>
+							<Button
+								variant="secondary"
+								onClick={() => {
+									setGivingDefault(true);
+								}}
+							>
+								{t("organisation.accessRoles.defaults.give")}
+							</Button>
+						</div>
+					)}
+					{defaults.isError ? (
+						<ListProblem
+							problem={failedReadProblem(
+								defaults,
+								t("organisation.accessRoles.defaults.loadFailed"),
+								t
+							)}
+						/>
+					) : (
+						<DataTable
+							className="mt-6"
+							columns={defaultsColumns}
+							data={defaults.data ?? []}
+							getRowId={(rule) => rule.defaultAccessRuleId}
+							label={t("organisation.accessRoles.defaults.title")}
+							emptyState={
+								defaults.isPending
+									? t("organisation.list.loading")
+									: t("organisation.accessRoles.defaults.empty")
+							}
+						/>
+					)}
+				</section>
+			)}
+			{addingDefault && (
+				<DefaultAccessDialog
+					error={add.error ? defaultAccessRefusal(add.error, t) : undefined}
+					places={assignmentTargets(workspace, companyId, access.can, t)}
+					roles={allRoles.status === "ready" ? allRoles.items : []}
+					submitting={add.isPending}
+					onAdd={(body) => {
+						add.mutate(body, {
+							onSuccess: () => {
+								setAddingDefault(false);
+							},
+						});
+					}}
+					onClose={() => {
+						add.reset();
+						setAddingDefault(false);
+					}}
+				/>
+			)}
+			{givingDefault && (
+				<GiveDefaultAccessDialog
+					companyId={companyId}
+					onClose={() => {
+						setGivingDefault(false);
+					}}
+					onGiven={(result) => {
+						setGiven({
+							id: Date.now(),
+							text: giveDefaultAccessSummary(result, t),
+						});
+					}}
+				/>
+			)}
+			{given && (
+				<Toast
+					key={given.id}
+					onDismiss={() => {
+						setGiven(undefined);
+					}}
+				>
+					{given.text}
+				</Toast>
+			)}
+			{removing && (
+				<ConfirmDialog
+					cancelLabel={t("organisation.list.cancel")}
+					confirmLabel={t("organisation.accessRoles.defaults.remove.confirm")}
+					submitting={remove.isPending}
+					tone="danger"
+					description={t(
+						"organisation.accessRoles.defaults.remove.description"
+					)}
+					error={
+						remove.error ? defaultAccessRefusal(remove.error, t) : undefined
+					}
+					title={t("organisation.accessRoles.defaults.remove.title", {
+						role: describeDefault(removing).role,
+						setFor: describeDefault(removing).setFor,
+					})}
+					onClose={() => {
+						remove.reset();
+						setRemoving(undefined);
+					}}
+					onConfirm={() => {
+						remove.mutate(removing.defaultAccessRuleId, {
+							onSuccess: () => {
+								setRemoving(undefined);
+							},
+						});
+					}}
+				/>
 			)}
 		</>
 	);

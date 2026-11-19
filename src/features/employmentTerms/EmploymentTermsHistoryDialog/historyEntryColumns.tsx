@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/Button";
 import type { DataTableColumn } from "@/components/ui/DataTable";
 import { DeleteIcon, EditIcon } from "@/components/ui/Icon";
 import type { HistoryEntry } from "@/features/employmentTerms/api";
-import { formatHours } from "@/features/employmentTerms/hours";
+import { durationShort } from "@/features/employmentTerms/hours";
 
 const key = "employmentTerms.history";
 
@@ -49,7 +49,7 @@ export const historyEntryColumns = (
 					{entry.contractedWeekMinutes !== null && (
 						<span className="block text-neutral-700">
 							{t(`${key}.ownHours`, {
-								week: formatHours(entry.contractedWeekMinutes, language),
+								week: durationShort(entry.contractedWeekMinutes, t),
 							})}
 						</span>
 					)}

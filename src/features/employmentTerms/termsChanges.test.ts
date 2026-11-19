@@ -4,14 +4,12 @@ import "@/common/i18n";
 import type { IsoDate } from "@/components/forms/Calendar";
 import {
 	FIVE_DAY_WEEK,
-	PART_TIME_BELOW_MINUTES,
 	SIX_DAY_SHIFT,
 } from "@/features/employmentTerms/fixtures";
 import {
 	isMonday,
 	needsApplyChoice,
 	nextMonday,
-	partTimeMismatch,
 	successorNameOf,
 } from "@/features/employmentTerms/termsChanges";
 
@@ -23,11 +21,13 @@ const bodyOf = (
 	description: terms.description,
 	daysPerWeek: terms.daysPerWeek,
 	weekMinutes: terms.weekMinutes,
-	dayMinutes: terms.dayMinutes,
 	restDay: terms.restDay,
 	dailyOvertime: terms.dailyOvertime,
-	shiftWork: terms.shiftWork,
 	hoursLimitsApply: terms.hoursLimitsApply,
+	overtimePercent: terms.overtimePercent,
+	restDayWorkPercent: terms.restDayWorkPercent,
+	dayOffWorkPercent: terms.dayOffWorkPercent,
+	extraHoursPaidAs: terms.extraHoursPaidAs,
 });
 
 describe("needsApplyChoice", () => {
@@ -104,26 +104,5 @@ describe("successorNameOf", () => {
 				"en"
 			)
 		).toBe("Standard week from 4 Jan 2027");
-	});
-});
-
-describe("partTimeMismatch", () => {
-	it.each<
-		[string | null, number, number | null, ReturnType<typeof partTimeMismatch>]
-	>([
-		["PART_TIME", 2640, null, "partTimeOnFullTerms"],
-		["PART_TIME", 2640, 1200, undefined],
-		["FULL_TIME", 1200, null, "fullTimeOnPartTerms"],
-		["FULL_TIME", 2640, null, undefined],
-		["CONTRACT", 1200, null, undefined],
-		[null, 1200, null, undefined],
-	])("%s on a %i-minute week with own week %s", (type, week, own, result) => {
-		expect(partTimeMismatch(type, week, own, PART_TIME_BELOW_MINUTES)).toBe(
-			result
-		);
-	});
-
-	it("says nothing without a part-time line", () => {
-		expect(partTimeMismatch("PART_TIME", 2640, null, null)).toBeUndefined();
 	});
 });

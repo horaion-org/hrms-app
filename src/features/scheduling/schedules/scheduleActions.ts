@@ -1,5 +1,19 @@
 import type { ApprovalStanding } from "@/features/approvals/approvalStanding";
-import type { Schedule } from "@/features/scheduling/schedules/api";
+import { deletable, type Schedule } from "@/features/scheduling/schedules/api";
+import { departmentScope } from "@/features/workspace/scopes";
+import type { Access } from "@/features/workspace/useAccess";
+
+/**
+ * Whether Delete is offered on a schedule: never on a published one (a
+ * published roster is changed instead), and only with `schedule:delete` at
+ * its Department. The history menu, the roster page and the timeline share it.
+ */
+export const mayDeleteSchedule = (
+	schedule: Schedule,
+	access: Pick<Access, "can">
+): boolean =>
+	deletable(schedule) &&
+	access.can("schedule:delete", departmentScope(schedule.departmentId));
 
 /** The roster page's own actions; Export and Delete stay with `ScheduleMenu`. */
 export type ScheduleActionId =
@@ -33,6 +47,8 @@ export type ScheduleActionFacts = {
 	mayWithdraw: boolean;
 	/** Holds `schedule:generate`, it is regenerable and its week is not published elsewhere. */
 	mayRegenerate: boolean;
+	/** It covers only part of its week, so Regenerate names its days, not the week. */
+	regeneratesPart: boolean;
 	/** Has a roster, so its history has something to tell. */
 	hasRoster: boolean;
 	approvalStanding: ApprovalActionStanding;
@@ -52,7 +68,8 @@ export type ScheduleAction = {
 		| "scheduling.decision.publish"
 		| "scheduling.decision.reject"
 		| "scheduling.decision.withdraw"
-		| "scheduling.months.regenerate.button"
+		| "scheduling.detail.regenerateWeek"
+		| "scheduling.detail.regenerateDays"
 		| "scheduling.detail.viewSetup"
 		| "scheduling.detail.details.title";
 	/** The status where this is the page's one primary button; otherwise it is in the menu. */
@@ -118,9 +135,18 @@ export const SCHEDULE_ACTIONS: ReadonlyArray<ScheduleAction> = [
 	},
 	{
 		id: "regenerate",
-		labelKey: "scheduling.months.regenerate.button",
+		labelKey: "scheduling.detail.regenerateWeek",
 		primaryWhen: "REJECTED",
-		offered: ({ mayRegenerate }) => mayRegenerate,
+		offered: ({ mayRegenerate, regeneratesPart }) =>
+			mayRegenerate && !regeneratesPart,
+	},
+	{
+		// A part of its week regenerates its own days (API ADR-0135).
+		id: "regenerate",
+		labelKey: "scheduling.detail.regenerateDays",
+		primaryWhen: "REJECTED",
+		offered: ({ mayRegenerate, regeneratesPart }) =>
+			mayRegenerate && regeneratesPart,
 	},
 	{
 		id: "viewSetup",

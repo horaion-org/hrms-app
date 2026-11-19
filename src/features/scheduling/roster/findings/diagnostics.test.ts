@@ -4,7 +4,9 @@ import en from "@/assets/locales/en/translations.json";
 import {
 	diagnosticLabel,
 	diagnosticSentence,
+	diagnosticSubject,
 	groupDiagnostics,
+	KNOWN_DIAGNOSTIC_CODES,
 } from "@/features/scheduling/roster/findings/diagnostics";
 import {
 	findingNames,
@@ -165,7 +167,7 @@ describe("diagnosticSentence", () => {
 		});
 
 		expect(diagnosticSentence(diagnostic, withDaysLimit, t, day)).toBe(
-			"Ben Ong has gone 5 days in a row without a Rest day or Day off before this schedule, so one is needed by day 2026-10-13."
+			"Days in a row: Ben Ong has gone 5 days in a row without a Rest day or Day off before this schedule, so one is needed by day 2026-10-13."
 		);
 	});
 
@@ -177,7 +179,7 @@ describe("diagnosticSentence", () => {
 		});
 
 		expect(diagnosticSentence(diagnostic, withDaysLimit, t, day)).toBe(
-			"Ben Ong has gone 1 day in a row without a Rest day or Day off before this schedule, so one is needed by day 2026-10-17."
+			"Days in a row: Ben Ong has gone 1 day in a row without a Rest day or Day off before this schedule, so one is needed by day 2026-10-17."
 		);
 	});
 
@@ -207,6 +209,61 @@ describe("diagnosticSentence", () => {
 		);
 	});
 
+	it("given_restCarriedInFromBefore_when_worded_then_saysWhenTheMemberMayFirstStartAndWhy", () => {
+		const diagnostic = {
+			...withCode("DEAD_SHIFT"),
+			code: "PRIOR_REST_BLOCKS_SHIFTS",
+			severity: "info",
+			entities: {
+				employeeId: "mp-2",
+				date: "2026-10-12",
+				shiftIds: ["front-desk-am"],
+				previousShiftEnd: "2026-10-11T22:00",
+				restedAt: "2026-10-12T09:00",
+				minimumRestHours: 11,
+			},
+		};
+
+		expect(diagnosticSentence(diagnostic, withDaysLimit, t, day)).toBe(
+			"Ben Ong can only start from 09:00 on day 2026-10-12, because of rest after their last shift, which ended day 2026-10-11 at 22:00."
+		);
+	});
+
+	it("given_restBeforeTheNextShiftAfterTheSchedule_when_worded_then_saysByWhenShiftsMustEndAndWhy", () => {
+		const diagnostic = {
+			...withCode("DEAD_SHIFT"),
+			code: "NEXT_SHIFT_REST_BLOCKS_SHIFTS",
+			severity: "info",
+			entities: {
+				employeeId: "mp-2",
+				date: "2026-10-18",
+				shiftIds: ["front-desk-pm"],
+				nextShiftStart: "2026-10-19T06:00",
+				mustEndBy: "2026-10-18T19:00",
+				minimumRestHours: 11,
+			},
+		};
+
+		expect(diagnosticSentence(diagnostic, withDaysLimit, t, day)).toBe(
+			"Ben Ong can only work shifts that end by 19:00 on day 2026-10-18, because of rest before their next shift after this schedule, which started day 2026-10-19 at 06:00 when this schedule was generated."
+		);
+		expect(diagnosticLabel("NEXT_SHIFT_REST_BLOCKS_SHIFTS", t)).toBe(
+			"Rest needed before the next schedule"
+		);
+	});
+
+	it("given_restBeforeTheNextShiftWithoutItsStart_when_worded_then_theStartIsLeftEmptyAsPriorRestLeavesItsEnd", () => {
+		const diagnostic = {
+			...withCode("DEAD_SHIFT"),
+			code: "NEXT_SHIFT_REST_BLOCKS_SHIFTS",
+			entities: { employeeId: "mp-2", mustEndBy: "2026-10-18T19:00" },
+		};
+
+		expect(diagnosticSentence(diagnostic, withDaysLimit, t, day)).toBe(
+			"Ben Ong can only work shifts that end by 19:00 on day 2026-10-18, because of rest before their next shift after this schedule, which started  at  when this schedule was generated."
+		);
+	});
+
 	it("given_daysBeforeOnlyPartlyKnown_when_worded_then_namesTheMemberCountsAndRule", () => {
 		const diagnostic = dayTypeFinding("PRIOR_DAYS_UNKNOWN", {
 			employeeId: "mp-2",
@@ -215,7 +272,7 @@ describe("diagnosticSentence", () => {
 		});
 
 		expect(diagnosticSentence(diagnostic, withDaysLimit, t, day)).toBe(
-			"Only 3 of the 14 days before this schedule are known for Ben Ong, so the limit on days in a row is counted from what is known."
+			"Days in a row: Only 3 of the 14 days before this schedule are known for Ben Ong, so the limit on days in a row is counted from what is known."
 		);
 	});
 
@@ -226,7 +283,81 @@ describe("diagnosticSentence", () => {
 		});
 
 		expect(diagnosticSentence(diagnostic, withDaysLimit, t, day)).toBe(
-			"No days before this schedule are known, so the limit on days in a row is counted from its first day."
+			"Days in a row: No days before this schedule are known, so the limit on days in a row is counted from its first day."
+		);
+	});
+
+	it("given_noDayBeforeKnownUnderTwoRules_when_worded_then_eachLineNamesItsOwnRule", () => {
+		const twoLimits = findingNames(findings, {
+			assignments: [],
+			shifts: [],
+			constraints: [
+				DAYS_LIMIT_COPY,
+				{ ...DAYS_LIMIT_COPY, constraintId: "six-copy", name: "Six at most" },
+			],
+		});
+		const sentences = ["days-limit-copy", "six-copy"].map((ruleId) =>
+			diagnosticSentence(
+				dayTypeFinding("PRIOR_DAYS_UNKNOWN", { ruleId, knownDays: 0 }),
+				twoLimits,
+				t,
+				day
+			)
+		);
+
+		expect(sentences).toEqual([
+			"Days in a row: No days before this schedule are known, so the limit on days in a row is counted from its first day.",
+			"Six at most: No days before this schedule are known, so the limit on days in a row is counted from its first day.",
+		]);
+	});
+
+	it("given_daysOfADaysOffBlockNotSent_when_worded_then_namesTheMemberAndSaysHowTheyCount", () => {
+		const diagnostic = dayTypeFinding("OFF_BLOCK_HISTORY_MISSING", {
+			employeeId: "mp-2",
+		});
+
+		expect(diagnosticSentence(diagnostic, withDaysLimit, t, day)).toBe(
+			"Ben Ong: some days before this schedule in a days-off period were not filled in, so they are counted as worked. Fill them in if a day off was given then."
+		);
+		expect(diagnosticLabel("OFF_BLOCK_HISTORY_MISSING", t)).toBe(
+			"Days before not filled in"
+		);
+	});
+
+	it.each([
+		{
+			code: "DAY_TYPE_BLOCK_HISTORY_MISSING",
+			label: "Days before these days were not filled in (rest days)",
+			message:
+				"Gabriel Toh: the days before the schedule in the week of 8 to 14 February were not filled in; they are counted as worked. Fill in the days before the schedule if a rest day or a day off was given then.",
+		},
+		{
+			code: "DAYS_A_WEEK_HISTORY_MISSING",
+			label: "Days before these days were not filled in (days a week)",
+			message:
+				"P1: 3 days before this schedule in the week of 8 to 14 February were not filled in; they are counted as worked, so at most 3 more days can be worked that week. Fill in the days before the schedule if they were not worked.",
+		},
+	])(
+		"given_$code_when_worded_then_aPlainHeadingOverTheEnginesSentence",
+		({ code, label, message }) => {
+			const diagnostic = { ...dayTypeFinding(code, {}), message };
+
+			expect(diagnosticLabel(code, t)).toBe(label);
+			// No sentence of the app's: the list then shows the engine's own.
+			expect(diagnosticSentence(diagnostic, withDaysLimit, t, day)).toBeNull();
+			expect(diagnosticSubject(diagnostic, unnamed, t).who).toBe(label);
+		}
+	);
+
+	it("given_everyCodeTheAppKnows_when_headed_then_eachHasItsOwnWordsNotItsCode", () => {
+		const copy: Record<string, { label?: string }> =
+			en.scheduling.findings.codes;
+
+		expect(KNOWN_DIAGNOSTIC_CODES.filter((code) => !copy[code]?.label)).toEqual(
+			[]
+		);
+		expect(Object.keys(copy).sort()).toEqual(
+			[...KNOWN_DIAGNOSTIC_CODES].sort()
 		);
 	});
 
@@ -234,5 +365,64 @@ describe("diagnosticSentence", () => {
 		expect(
 			diagnosticSentence(withCode("SHIFT_TOO_SHORT"), named, t, day)
 		).toBeNull();
+	});
+});
+
+describe("diagnosticSubject", () => {
+	const restCarriedIn: FindingsDiagnostic = {
+		...withCode("DEAD_SHIFT"),
+		code: "PRIOR_REST_BLOCKS_SHIFTS",
+		entities: { employeeId: "mp-2", restedAt: "2026-10-12T09:00" },
+	};
+
+	it("given_aMemberAndARestDay_when_read_then_isThePersonOnThatDay", () => {
+		expect(diagnosticSubject(restCarriedIn, named, t)).toEqual({
+			who: "Ben Ong",
+			memberProfileId: "mp-2",
+			day: "2026-10-12",
+		});
+	});
+
+	it("given_restBeforeTheNextShift_when_read_then_isThePersonOnTheDayTheirShiftsMustEndBy", () => {
+		const restBeforeNext: FindingsDiagnostic = {
+			...withCode("DEAD_SHIFT"),
+			code: "NEXT_SHIFT_REST_BLOCKS_SHIFTS",
+			entities: { employeeId: "mp-2", mustEndBy: "2026-10-18T19:00" },
+		};
+
+		expect(diagnosticSubject(restBeforeNext, named, t)).toEqual({
+			who: "Ben Ong",
+			memberProfileId: "mp-2",
+			day: "2026-10-18",
+		});
+		expect(diagnosticSubject(restBeforeNext, unnamed, t).who).toBe(
+			"Rest needed before the next schedule"
+		);
+	});
+
+	it("given_aShift_when_read_then_isTheShiftWithNoDay", () => {
+		expect(diagnosticSubject(withCode("DEAD_SHIFT"), named, t)).toEqual({
+			who: "Breakfast Prep",
+			memberProfileId: null,
+			day: null,
+		});
+	});
+
+	it("given_aRunNeedingADayType_when_read_then_isOnTheDayItIsNeededBy", () => {
+		const diagnostic = dayTypeFinding("PRIOR_RUN_NEEDS_DAY_TYPE", {
+			employeeId: "mp-2",
+			dayTypeNeededBy: "2026-10-17",
+		});
+
+		expect(diagnosticSubject(diagnostic, named, t).day).toBe("2026-10-17");
+	});
+
+	it("given_namesThatDoNotResolve_when_read_then_isTheKindOfNote", () => {
+		expect(diagnosticSubject(restCarriedIn, unnamed, t).who).toBe(
+			"Rest carried in from before"
+		);
+		expect(diagnosticSubject(withCode("DEAD_SHIFT"), null, t).who).toBe(
+			"Shifts nobody can take"
+		);
 	});
 });

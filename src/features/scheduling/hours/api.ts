@@ -111,3 +111,88 @@ export const openingBalancesQuery = (
 		staleTime: 30_000,
 		retry,
 	});
+
+const memberWeekHoursSchema = z.object({
+	memberProfileId: z.string(),
+	daysWorked: z.number(),
+	normalMinutes: z.number(),
+	/** A part-timer's minutes past their own contract and within the full-time week; 0 for anyone else. */
+	extraMinutes: z.number(),
+	overtimeMinutes: z.number(),
+});
+
+/** One person's week on a roster, as the hours ledger classifies it. */
+export type MemberWeekHours = z.infer<typeof memberWeekHoursSchema>;
+
+const rosterHoursSchema = z
+	.object({
+		weekStart: z.string(),
+		weekEnd: z.string(),
+		/** The first day counted: a later part's week counts its earlier parts too (API ADR-0113). Absent from an older API. */
+		countedFrom: z.string().nullish(),
+		/** One row per person the roster stores a day of. */
+		members: z.array(memberWeekHoursSchema),
+		/** The rows added up. */
+		totals: memberWeekHoursSchema.omit({ memberProfileId: true }),
+	})
+	.transform((hours) => ({
+		...hours,
+		countedFrom: hours.countedFrom ?? hours.weekStart,
+	}));
+
+/**
+ * A roster's planned hours by person: the days it works each person and how
+ * those hours split into normal, extra and overtime, classified on read with
+ * each person's employment terms for the week.
+ */
+export type RosterHours = z.infer<typeof rosterHoursSchema>;
+
+/** A roster's hours by person. */
+export const fetchRosterHours = (
+	companyId: string,
+	unit: DepartmentPath,
+	scheduleId: string,
+	signal?: AbortSignal
+): Promise<RosterHours> =>
+	apiRequest(
+		`${schedulePath(companyId, unit, scheduleId)}/hours`,
+		rosterHoursSchema,
+		{ signal }
+	);
+
+/** The key a roster's hours are cached under: per run and revision, as its rows are. */
+export const rosterHoursKey = (
+	companyId: string,
+	scheduleId: string,
+	runId: string | null,
+	revision: number
+): readonly [
+	"scheduling",
+	string,
+	"schedules",
+	string,
+	"hours",
+	string | null,
+	number,
+] => [...scheduleKey(companyId, scheduleId), "hours", runId, revision] as const;
+
+/** A roster's hours from run `runId` at `revision`; `unit` undefined, or `allowed` false, asks for nothing. */
+export const rosterHoursQuery = (
+	companyId: string,
+	unit: DepartmentPath | undefined,
+	scheduleId: string,
+	runId: string | null,
+	revision: number,
+	allowed = true
+): QueryOptionsFor<RosterHours, ReturnType<typeof rosterHoursKey>> =>
+	queryOptions({
+		queryKey: rosterHoursKey(companyId, scheduleId, runId, revision),
+		queryFn:
+			allowed && unit
+				? ({ signal }): Promise<RosterHours> =>
+						fetchRosterHours(companyId, unit, scheduleId, signal)
+				: skipToken,
+		meta: administrativeMeta(companyId),
+		staleTime: 30_000,
+		retry,
+	});

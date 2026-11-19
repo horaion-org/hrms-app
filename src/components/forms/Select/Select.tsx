@@ -60,11 +60,62 @@ export type SelectProps = SharedProps &
 				 * available option at once; disabled options keep their state.
 				 */
 				selectAllLabel?: string;
+				/**
+				 * Offers a row of group chips above the options, one per group with
+				 * an available option, each choosing or clearing every available
+				 * option of its group at once, as the select-all row does for all of
+				 * them. The options are then one flat list, each named with its group.
+				 */
+				wholeGroups?: boolean;
+				/** The small muted heading over the group chips, e.g. "Shift groups"; none without it. */
+				groupsLabel?: string;
+				/** The muted text after a group chip's name, from its option count, e.g. "2 shifts"; shown for a group of several only. */
+				groupCountText?: (count: number) => string;
 		  }
 	);
 
 /** The value of the select-all row; never reported, never submitted. */
 const SELECT_ALL = "\u0000select-all";
+
+/** The value of a group chip is this prefix and the group; never reported, never submitted. */
+const WHOLE_GROUP = "\u0000group:";
+
+/** How many of some options are chosen: every one, some of them, or none. */
+type ChosenState = "all" | "some" | "none";
+
+/** Whether every, some or none of the given options are chosen; none when there are no options. */
+const chosenStateOf = (
+	members: Array<SelectOption>,
+	chosenValues: Array<string>
+): ChosenState => {
+	const chosenCount = members.filter((option) =>
+		chosenValues.includes(option.value)
+	).length;
+	if (members.length > 0 && chosenCount === members.length) return "all";
+	return chosenCount > 0 ? "some" : "none";
+};
+
+/** A group chip's chosen state, as its aria-checked value: a chip is an option, which may be half checked. */
+const groupChipChecked: Record<ChosenState, "true" | "mixed" | "false"> = {
+	all: "true",
+	some: "mixed",
+	none: "false",
+};
+
+/** A group chip's look: filled when its whole group is chosen, outlined in the chosen colour when some is, neutral when none is. */
+const groupChipClasses: Record<ChosenState, string> = {
+	all: "border-ink-blue-700 bg-ink-blue-700 text-white",
+	some: "border-ink-blue-700 bg-white text-ink-blue-900",
+	none: "border-neutral-400 bg-white text-neutral-800",
+};
+
+/** The groups that have an available option, each once, in the order they first appear. */
+const choosableGroupsOf = (options: Array<SelectOption>): Array<string> =>
+	[...new Set(options.map((option) => option.group))].filter(
+		(group): group is string =>
+			group !== undefined &&
+			options.some((option) => option.group === group && !option.disabled)
+	);
 
 /** A run of consecutive options sharing one heading, or none. */
 type OptionRun = { group: string | undefined; options: Array<SelectOption> };
@@ -77,6 +128,48 @@ const optionRuns = (options: Array<SelectOption>): Array<OptionRun> =>
 		else runs.push({ group: option.group, options: [option] });
 		return runs;
 	}, []);
+
+/** An option's group, to name after its label in whole-groups mode; none when it only repeats the label. */
+const groupNoteOf = (option: SelectOption): string | undefined =>
+	option.group !== undefined &&
+	option.group.trim().toLowerCase() !== option.label.trim().toLowerCase()
+		? option.group
+		: undefined;
+
+/**
+ * A row's text, then any muted note after it. The note takes only the room
+ * left, so it is cut first and the list never scrolls sideways; the space
+ * between them keeps the two apart in the row's accessible name.
+ */
+const RowText = ({
+	text,
+	note,
+	description,
+}: {
+	text: string;
+	note: string | undefined;
+	description?: string;
+}): FunctionComponent => {
+	if (note === undefined && description !== undefined)
+		return (
+			<span className="flex min-w-0 flex-col">
+				<span className="truncate">{text}</span>{" "}
+				<span className="truncate text-xs font-normal text-neutral-600">
+					{description}
+				</span>
+			</span>
+		);
+	return note === undefined ? (
+		<span className="truncate">{text}</span>
+	) : (
+		<span className="flex min-w-0 flex-1 items-baseline gap-2">
+			<span className="truncate">{text}</span>{" "}
+			<span className="min-w-0 flex-1 truncate font-normal text-neutral-600">
+				{note}
+			</span>
+		</span>
+	);
+};
 
 const statusFocusClasses =
 	"focus:outline-2 focus:outline-solid focus:outline-offset-2 focus:outline-ink-blue-500";
@@ -105,27 +198,90 @@ export const Select = (props: SelectProps): FunctionComponent => {
 		"aria-invalid": ariaInvalid,
 	} = props;
 	const selectAllLabel = props.multiple ? props.selectAllLabel : undefined;
-	// With a select-all row the Select keeps its own value, so the row can set
-	// every option at once even when the caller gave only a default.
+	const wholeGroups = props.multiple === true && props.wholeGroups === true;
+	const groupsLabel = props.multiple ? props.groupsLabel : undefined;
+	const groupCountText = props.multiple ? props.groupCountText : undefined;
+	// With a select-all row or group chips the Select keeps its own value, so
+	// they can set many options at once even when the caller gave only a default.
+	const keepsOwnValue = selectAllLabel !== undefined || wholeGroups;
 	const [own, setOwn] = useState<Array<string>>(() =>
 		Array.isArray(defaultValue) ? defaultValue : []
 	);
-	const current = selectAllLabel === undefined ? value : (value ?? own);
+	const current = keepsOwnValue ? (value ?? own) : value;
 	const chosenValues = Array.isArray(current) ? current : [];
 	const available = options.filter((option) => !option.disabled);
-	const allChosen =
-		available.length > 0 &&
-		available.every((option) => chosenValues.includes(option.value));
-	const someChosen = available.some((option) =>
-		chosenValues.includes(option.value)
-	);
-	const renderOption = (option: SelectOption): ReactNode => (
+	const availableState = chosenStateOf(available, chosenValues);
+	const choosableGroups = wholeGroups ? choosableGroupsOf(options) : [];
+	const groupsLabelId =
+		groupsLabel === undefined ? undefined : `${groupId}-groups`;
+	/** Whether every, some or none of a group's available options are chosen. */
+	const groupState = (group: string): ChosenState =>
+		chosenStateOf(
+			available.filter((option) => option.group === group),
+			chosenValues
+		);
+	/** The values after a group chip: its available options all chosen, or all cleared when they already were. */
+	const toggledGroup = (group: string): Array<string> => {
+		const clearing = groupState(group) === "all";
+		return options
+			.filter((option) =>
+				option.group !== group || option.disabled
+					? chosenValues.includes(option.value)
+					: !clearing
+			)
+			.map((option) => option.value);
+	};
+	const stateIcon = (state: ChosenState): ReactNode =>
+		state === "all" ? (
+			<CheckboxFilledIcon className="size-5 text-ink-blue-900" />
+		) : state === "some" ? (
+			<CheckboxHalfIcon className="size-5 text-ink-blue-900" />
+		) : (
+			<CheckboxIcon className="size-5 text-neutral-400" />
+		);
+	/**
+	 * A group's chip: a pill option that chooses or clears the group's available
+	 * options, with its count for a group of several and a tick when all are chosen.
+	 */
+	const renderGroupChip = (group: string): ReactNode => {
+		const memberCount = options.filter(
+			(option) => option.group === group
+		).length;
+		const countText =
+			memberCount > 1 ? groupCountText?.(memberCount) : undefined;
+		const state = groupState(group);
+		return (
+			<ListboxOption
+				key={group}
+				aria-checked={groupChipChecked[state]}
+				aria-label={t("select.wholeGroup", { group })}
+				value={`${WHOLE_GROUP}${group}`}
+				className={joinClassNames(
+					"inline-flex min-h-8 max-w-full cursor-pointer items-center gap-1 rounded-full border px-3 text-sm font-medium select-none pointer-coarse:min-h-11 data-focus:outline-2 data-focus:outline-offset-2 data-focus:outline-ink-blue-500",
+					groupChipClasses[state]
+				)}
+			>
+				{state === "all" && <TickIcon className="size-4 shrink-0" />}
+				<span className="min-w-0 truncate">{group}</span>
+				{/* The space keeps the name and count apart in the chip's text. */}
+				{countText !== undefined && (
+					<>
+						{" "}
+						<span className="shrink-0 font-normal">{countText}</span>
+					</>
+				)}
+			</ListboxOption>
+		);
+	};
+	/** An option's row, with any note, such as its group, muted after the label. */
+	const renderOption = (option: SelectOption, note?: string): ReactNode => (
 		<ListboxOption
 			key={option.value}
 			disabled={option.disabled}
 			value={option.value}
 			className={joinClassNames(
-				"flex h-10 items-center justify-between gap-3 px-4 text-sm select-none pointer-coarse:min-h-11",
+				"flex items-center justify-between gap-3 px-4 text-sm select-none pointer-coarse:min-h-11",
+				option.description === undefined ? "h-10" : "min-h-10 py-1.5",
 				option.disabled
 					? "cursor-not-allowed text-neutral-500"
 					: "cursor-pointer text-neutral-800 data-focus:bg-neutral-100"
@@ -133,7 +289,11 @@ export const Select = (props: SelectProps): FunctionComponent => {
 		>
 			{({ selected }) => (
 				<>
-					<span className="truncate">{option.label}</span>
+					<RowText
+						description={option.description}
+						note={note}
+						text={option.label}
+					/>
 					<span className="size-5 shrink-0">
 						{props.multiple ? (
 							selected ? (
@@ -172,18 +332,23 @@ export const Select = (props: SelectProps): FunctionComponent => {
 			value={current}
 			onChange={(nextValue: string | Array<string>) => {
 				if (props.multiple && Array.isArray(nextValue)) {
-					const next = nextValue.includes(SELECT_ALL)
-						? options
-								.filter((option) =>
-									option.disabled
-										? chosenValues.includes(option.value)
-										: !allChosen
-								)
-								.map((option) => option.value)
-						: options
-								.filter((option) => nextValue.includes(option.value))
-								.map((option) => option.value);
-					if (selectAllLabel !== undefined) setOwn(next);
+					const wholeGroup = nextValue.find((chosen) =>
+						chosen.startsWith(WHOLE_GROUP)
+					);
+					const next = wholeGroup
+						? toggledGroup(wholeGroup.slice(WHOLE_GROUP.length))
+						: nextValue.includes(SELECT_ALL)
+							? options
+									.filter((option) =>
+										option.disabled
+											? chosenValues.includes(option.value)
+											: availableState !== "all"
+									)
+									.map((option) => option.value)
+							: options
+									.filter((option) => nextValue.includes(option.value))
+									.map((option) => option.value);
+					if (keepsOwnValue) setOwn(next);
 					props.onChange?.(next);
 				} else if (!props.multiple && typeof nextValue === "string") {
 					props.onChange?.(nextValue);
@@ -276,37 +441,55 @@ export const Select = (props: SelectProps): FunctionComponent => {
 								>
 									<span className="truncate">{selectAllLabel}</span>
 									<span className="size-5 shrink-0">
-										{allChosen ? (
-											<CheckboxFilledIcon className="size-5 text-ink-blue-900" />
-										) : someChosen ? (
-											<CheckboxHalfIcon className="size-5 text-ink-blue-900" />
-										) : (
-											<CheckboxIcon className="size-5 text-neutral-400" />
-										)}
+										{stateIcon(availableState)}
 									</span>
 								</ListboxOption>
 							)}
-							{optionRuns(options).map((run, index) =>
-								run.group === undefined ? (
-									<Fragment key={`run-${String(index)}`}>
-										{run.options.map(renderOption)}
-									</Fragment>
-								) : (
-									<div
-										key={`run-${String(index)}`}
-										aria-labelledby={`${groupId}-${String(index)}`}
-										role="group"
-									>
+							{/* contain-inline-size: the chips wrap within the width the rows set and never widen the panel. */}
+							{wholeGroups && choosableGroups.length > 0 && (
+								<div
+									aria-labelledby={groupsLabelId}
+									className="mb-1 border-b border-neutral-300 px-4 pt-1 pb-3 contain-inline-size"
+									role="group"
+								>
+									{groupsLabel !== undefined && (
 										<div
-											className="px-4 pt-2 pb-1 text-xs font-semibold tracking-wide text-neutral-700 uppercase"
-											id={`${groupId}-${String(index)}`}
+											className="pb-2 text-xs font-medium text-neutral-600"
+											id={groupsLabelId}
 										>
-											{run.group}
+											{groupsLabel}
 										</div>
-										{run.options.map(renderOption)}
+									)}
+									<div className="flex flex-wrap gap-2">
+										{choosableGroups.map(renderGroupChip)}
 									</div>
-								)
+								</div>
 							)}
+							{wholeGroups
+								? options.map((option) =>
+										renderOption(option, groupNoteOf(option))
+									)
+								: optionRuns(options).map((run, index) => {
+										const key = `run-${String(index)}`;
+										const headingId = `${groupId}-${String(index)}`;
+										if (run.group === undefined)
+											return (
+												<Fragment key={key}>
+													{run.options.map((option) => renderOption(option))}
+												</Fragment>
+											);
+										return (
+											<div key={key} aria-labelledby={headingId} role="group">
+												<div
+													className="px-4 pt-2 pb-1 text-xs font-semibold tracking-wide text-neutral-700 uppercase"
+													id={headingId}
+												>
+													{run.group}
+												</div>
+												{run.options.map((option) => renderOption(option))}
+											</div>
+										);
+									})}
 						</ListboxOptions>
 					</>
 				);

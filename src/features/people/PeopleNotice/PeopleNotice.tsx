@@ -14,8 +14,8 @@ type NoticeKey =
 
 /** The copy for each notice: a role left unchanged is said, and warned about. */
 const messageKey = ({ kind, roleNotAssigned }: Notice): NoticeKey => {
-	if (kind === "added")
-		return roleNotAssigned ? "people.roleNotAssigned" : "people.added";
+	if (kind === "added" || kind === "addedWithoutInvitation")
+		return roleNotAssigned ? "people.roleNotAssigned" : `people.${kind}`;
 	if (kind === "saved")
 		return roleNotAssigned ? "people.roleNotChanged" : "people.saved";
 	return `people.${kind}`;

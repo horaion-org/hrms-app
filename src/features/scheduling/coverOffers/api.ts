@@ -65,7 +65,8 @@ const cellSchema = z.object({
 	shiftId: z.string().nullish(),
 });
 
-const coverOfferSchema = z.object({
+/** One cover offer as every read of offers answers it. */
+export const coverOfferSchema = z.object({
 	offerId: z.string(),
 	scheduleId: z.string(),
 	/** The day the offer covers, as an ISO date. */

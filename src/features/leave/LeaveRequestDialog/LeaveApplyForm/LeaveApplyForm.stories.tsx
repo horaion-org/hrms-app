@@ -5,12 +5,16 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { leaveOptionsQuery } from "@/features/leave/api";
-import { LEAVE_FIXTURES, LEAVE_TYPE_FIXTURES } from "@/features/leave/fixtures";
+import {
+	LEAVE_DURATION_OPTION_FIXTURES,
+	LEAVE_FIXTURES,
+	LEAVE_TYPE_FIXTURES,
+} from "@/features/leave/fixtures";
 import { LeaveApplyForm } from "./LeaveApplyForm";
 
 const COMPANY = "c-1";
 
-/** A cache already holding everyone's leave options, so stories need no API. */
+/** A cache already holding everyone's leave options (types and durations), so stories need no API. */
 const clientWithOptions = (leaveTypes = LEAVE_TYPE_FIXTURES): QueryClient => {
 	const client = new QueryClient();
 	for (const memberId of [
@@ -19,6 +23,7 @@ const clientWithOptions = (leaveTypes = LEAVE_TYPE_FIXTURES): QueryClient => {
 	]) {
 		client.setQueryData(leaveOptionsQuery(COMPANY, memberId).queryKey, {
 			leaveTypes,
+			durations: LEAVE_DURATION_OPTION_FIXTURES,
 		});
 	}
 	return client;
@@ -61,7 +66,7 @@ type Story = StoryObj<typeof meta>;
 /** On a person's behalf: the person is chosen first. */
 export const ForSomeone: Story = {};
 
-/** For the caller themself: no person to choose. */
+/** For the caller themself: no person to choose; one date, so it asks how much of the day. */
 export const Own: Story = { args: { employees: undefined } };
 
 export const Refused: Story = {

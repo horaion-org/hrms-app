@@ -157,7 +157,7 @@ describe("leave approval notifications", () => {
 		expect(target).toEqual({ kind: "leaveApprovalFlows" });
 		expect(target && notificationLink(target)).toEqual({
 			to: "/settings",
-			search: { section: "approvals", subject: "leave" },
+			search: { section: "leave-approvals" },
 		});
 	});
 

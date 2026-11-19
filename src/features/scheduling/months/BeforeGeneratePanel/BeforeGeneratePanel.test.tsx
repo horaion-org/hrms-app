@@ -35,14 +35,14 @@ const renderPanel = (
 };
 
 const generate = (): HTMLElement =>
-	screen.getByRole("button", { name: "Generate December" });
+	screen.getByRole("button", { name: "Generate December 2026" });
 
 describe("BeforeGeneratePanel", () => {
 	it("given_aReadyDepartmentWithLeave_when_rendered_then_threeLinesAndGenerateRuns", async () => {
 		const { onGenerate } = renderPanel();
 
 		expect(
-			screen.getByRole("heading", { name: "Before you generate December" })
+			screen.getByRole("heading", { name: "Before you generate December 2026" })
 		).toBeInTheDocument();
 		expect(screen.getByText("Kitchen has 3 shifts.")).toBeInTheDocument();
 		expect(
@@ -52,7 +52,7 @@ describe("BeforeGeneratePanel", () => {
 		).toBeInTheDocument();
 		expect(
 			screen.getByText(
-				"2 people have approved leave in December. 1 more request is waiting for a decision."
+				"2 people have approved leave in December 2026. 1 more request is waiting for a decision."
 			)
 		).toBeInTheDocument();
 		await userEvent.click(generate());
@@ -69,7 +69,7 @@ describe("BeforeGeneratePanel", () => {
 
 		expect(
 			screen.getByText(
-				"No approved leave in December. If people plan to take leave, approve it first: leave approved later changes the roster. 1 request is waiting for a decision."
+				"No approved leave in December 2026. If people plan to take leave, approve it first: leave approved later changes the roster. 1 request is waiting for a decision."
 			)
 		).toBeInTheDocument();
 		expect(generate()).toBeEnabled();
@@ -120,6 +120,33 @@ describe("BeforeGeneratePanel", () => {
 		);
 	});
 
+	it("given_aHint_when_shown_then_itReplacesTheMonthHint", () => {
+		renderPanel(undefined, {
+			hint: "Generating works out the week you ticked.",
+		});
+
+		expect(
+			screen.getByText("Generating works out the week you ticked.")
+		).toBeInTheDocument();
+		expect(
+			screen.queryByText(/^Generating works out every week of December 2026/)
+		).toBeNull();
+	});
+
+	it("given_aDatesRunsDays_when_shown_then_theTitleAndGenerateNameThemNotTheMonth", () => {
+		renderPanel(undefined, { days: "4 – 10 Jan 2027" });
+
+		expect(
+			screen.getByRole("heading", {
+				name: "Before you generate 4 – 10 Jan 2027",
+			})
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("button", { name: "Generate 4 – 10 Jan 2027" })
+		).toBeInTheDocument();
+		expect(screen.queryByText(/Generate December 2026/)).toBeNull();
+	});
+
 	it("given_theListsLoading_when_rendered_then_generateWaitsWithoutANote", () => {
 		renderPanel(undefined, { waiting: true });
 
@@ -144,5 +171,46 @@ describe("BeforeGeneratePanel", () => {
 		expect(
 			screen.queryByRole("link", { name: "Open leave requests" })
 		).toBeNull();
+	});
+
+	it("given_aRunReplacingARosterToReview_when_generateIsClicked_then_asksFirstAndRunsOnlyOnceConfirmed", async () => {
+		const user = userEvent.setup();
+		const { onGenerate } = renderPanel(undefined, {
+			replaces: {
+				days: [{ from: "2026-11-19", to: "2026-11-22" }],
+				seenByStaff: [],
+				handChanges: 0,
+			},
+		});
+
+		await user.click(generate());
+		const dialog = screen.getByRole("dialog", {
+			name: "Replace the roster to review?",
+		});
+		expect(dialog).toHaveTextContent(
+			/There is a roster to review on Nov 19\s?–\s?22, 2026\./
+		);
+		expect(onGenerate).not.toHaveBeenCalled();
+
+		// Cancel closes the question and generates nothing.
+		await user.click(screen.getByRole("button", { name: "Cancel" }));
+		expect(screen.queryByRole("dialog")).toBeNull();
+		expect(onGenerate).not.toHaveBeenCalled();
+
+		await user.click(generate());
+		await user.click(
+			screen.getByRole("button", { name: "Generate and replace" })
+		);
+		expect(screen.queryByRole("dialog")).toBeNull();
+		expect(onGenerate).toHaveBeenCalledTimes(1);
+	});
+
+	it("given_aRunFillingOnlyEmptyDays_when_generateIsClicked_then_runsAtOnceWithoutAsking", async () => {
+		const { onGenerate } = renderPanel(undefined, { replaces: undefined });
+
+		await userEvent.click(generate());
+
+		expect(screen.queryByRole("dialog")).toBeNull();
+		expect(onGenerate).toHaveBeenCalledTimes(1);
 	});
 });

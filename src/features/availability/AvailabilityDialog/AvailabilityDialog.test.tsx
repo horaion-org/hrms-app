@@ -214,6 +214,32 @@ describe("AvailabilityDialog", () => {
 		expect(onSubmit).not.toHaveBeenCalled();
 	});
 
+	it.each([
+		["the refused row", 2, "Start time", "13:00"],
+		["the row it overlaps", 1, "End time", "12:00"],
+	])(
+		"given_anOverlapRefused_when_%s_isMovedApart_then_theMessageClearsBeforeSaving",
+		async (_, rowNumber, field, time) => {
+			const user = userEvent.setup();
+			show({
+				weekWindows: [{ day: "WED", startTime: "09:00", endTime: "13:00" }],
+			});
+			await user.click(screen.getByRole("button", { name: "Add window" }));
+			await pick(user, windowRow(2), "Days", "Wednesday");
+			await pick(user, windowRow(2), "Start time", "12:00");
+			await pick(user, windowRow(2), "End time", "15:00");
+			await user.click(screen.getByRole("button", { name: "Save" }));
+			const overlap = "This window overlaps Wednesday 09:00–13:00.";
+			expect(await within(windowRow(2)).findByText(overlap)).toBeVisible();
+
+			await pick(user, windowRow(rowNumber), field, time);
+
+			await waitFor(() => {
+				expect(screen.queryByText(overlap)).not.toBeInTheDocument();
+			});
+		}
+	);
+
 	it("given_aNewRowLeftEmpty_when_saved_then_asksForItsDays", async () => {
 		const user = userEvent.setup();
 		const { onSubmit } = show();

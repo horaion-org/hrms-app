@@ -82,9 +82,9 @@ const routes = (
 });
 
 const open = async (): Promise<HTMLElement> => {
-	app = await openApp("/settings?section=leave");
+	app = await openApp("/settings?section=leave-durations");
 	renderAuthApp(app);
-	const panel = await screen.findByRole("tabpanel", { name: "Leave" });
+	const panel = await screen.findByRole("region", { name: "Leave durations" });
 	await within(panel).findByRole("table", { name: "Leave durations" });
 	return panel;
 };
@@ -190,6 +190,7 @@ describe("LeaveDurationsSettings", () => {
 				name: "Morning",
 				startTime: "09:00",
 				endTime: "13:00",
+				allowsShiftSameDay: true,
 				appliesToBranchIds: [],
 				appliesToDepartmentIds: [],
 				status: "INACTIVE",

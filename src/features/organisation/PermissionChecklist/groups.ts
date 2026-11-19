@@ -2,23 +2,16 @@ import type { TFunction } from "i18next";
 import type { AccessRoleKind } from "@/features/organisation/api";
 import {
 	companyOnlyKeys,
-	definitionOf,
 	dependingOn,
 	isAboveDepartments,
 	isCompanyOnly,
-	moduleOf,
 	PERMISSION_KEYS,
-	PERMISSION_MODULES,
 	type PermissionKey,
-	type PermissionModule,
-	type PermissionResource,
 	type PermissionUse,
 	requiredFor,
-	resourceOf,
+	ROLE_PERMISSION_KEYS,
 	usesOf,
 } from "@/features/workspace/permissionKeys";
-
-export type { PermissionResource };
 
 type LabelKeyOf<K> = K extends `${infer R}:${infer A}`
 	? `organisation.permissions.${R}.actions.${A}`
@@ -28,65 +21,16 @@ type HintKeyOf<K> = K extends `${infer R}:${infer A}`
 	? `organisation.permissions.${R}.actionHints.${A}`
 	: never;
 
-/** One resource's keys, in the catalog's order. */
-export type PermissionGroup = {
-	resource: PermissionResource;
-	keys: ReadonlyArray<PermissionKey>;
-};
-
-/** The catalog grouped by resource, both in the catalog's order. */
-export const PERMISSION_GROUPS: ReadonlyArray<PermissionGroup> = [
-	...new Set(PERMISSION_KEYS.map(resourceOf)),
-].map((resource) => ({
-	resource,
-	keys: PERMISSION_KEYS.filter((key) => resourceOf(key) === resource),
-}));
-
-const LOCAL_KEYS = PERMISSION_KEYS.filter((key) => !isCompanyOnly(key));
-
-const LOCAL_GROUPS = PERMISSION_GROUPS.map((group) => ({
-	...group,
-	keys: group.keys.filter((key) => !isCompanyOnly(key)),
-})).filter((group) => group.keys.length > 0);
+const LOCAL_KEYS = ROLE_PERMISSION_KEYS.filter((key) => !isCompanyOnly(key));
 
 /**
- * The keys a role of `kind` may hold, in the catalog's order: all of them,
- * except the company-only ones for a local role. Every key until a kind is
- * chosen.
+ * The keys a role of `kind` may hold, in the catalog's order: every key but
+ * those only the System Owner and System Admin roles hold (API ADR-0108),
+ * and for a local role not the company-only ones either. Those keys until a
+ * kind is chosen.
  */
 export const keysFor = (kind?: AccessRoleKind): ReadonlyArray<PermissionKey> =>
-	kind === "LOCAL" ? LOCAL_KEYS : PERMISSION_KEYS;
-
-/**
- * The rows a role of `kind` is edited in: every resource, except that a
- * local role's rows leave out company-only keys and a row left with none
- * is not shown at all.
- */
-export const groupsFor = (
-	kind?: AccessRoleKind
-): ReadonlyArray<PermissionGroup> =>
-	kind === "LOCAL" ? LOCAL_GROUPS : PERMISSION_GROUPS;
-
-/** One section of the role editor: a module's resources, in the catalog's order. */
-export type PermissionSection = {
-	module: PermissionModule;
-	groups: ReadonlyArray<PermissionGroup>;
-};
-
-/**
- * The rows a role of `kind` is edited in, by module in the contract's
- * order (see `groupsFor`); a module left without rows is not shown.
- */
-export const sectionsFor = (
-	kind?: AccessRoleKind
-): ReadonlyArray<PermissionSection> =>
-	PERMISSION_MODULES.map((module) => ({
-		module,
-		// Every key of a resource shares its module, so any key tells it.
-		groups: groupsFor(kind).filter((group) =>
-			group.keys.some((key) => moduleOf(key) === module)
-		),
-	})).filter((section) => section.groups.length > 0);
+	kind === "LOCAL" ? LOCAL_KEYS : ROLE_PERMISSION_KEYS;
 
 /**
  * Where a key can be given, as the hint beside it in a role of `kind`. In a
@@ -204,66 +148,12 @@ export const selectionForKind = (
 	};
 };
 
-/**
- * The selection after ticking or clearing every permission of one resource,
- * with the same prerequisites as ticking them one by one; keys that can't
- * be ticked are skipped.
- */
-export const toggleGroup = (
-	selected: ReadonlyArray<PermissionKey>,
-	group: PermissionGroup,
-	checked: boolean,
-	unavailable: ReadonlyArray<PermissionKey> = []
-): Array<PermissionKey> =>
-	checked
-		? withKeys(
-				selected,
-				group.keys
-					.filter((key) => canTick(key, selected, unavailable))
-					.flatMap(requiredFor),
-				true
-			)
-		: withKeys(selected, group.keys.flatMap(dependingOn), false);
-
-/**
- * A group's dependencies for display: each distinct set of prerequisites
- * with the keys of the group that need it, in catalog order. `everyOther`
- * is set when every key of the group but the prerequisites themselves needs
- * it, so the row can say so once instead of listing them all.
- */
-export const dependenciesOf = (
-	keys: ReadonlyArray<PermissionKey>
-): Array<{
-	keys: Array<PermissionKey>;
-	prerequisites: ReadonlyArray<PermissionKey>;
-	everyOther: boolean;
-}> => {
-	const byPrerequisites = new Map<
-		string,
-		{ keys: Array<PermissionKey>; prerequisites: ReadonlyArray<PermissionKey> }
-	>();
-	for (const key of keys) {
-		const { prerequisites } = definitionOf(key);
-		if (prerequisites.length === 0) continue;
-		const id = prerequisites.join(",");
-		const entry = byPrerequisites.get(id) ?? { keys: [], prerequisites };
-		entry.keys.push(key);
-		byPrerequisites.set(id, entry);
-	}
-	return [...byPrerequisites.values()].map((entry) => ({
-		...entry,
-		everyOther:
-			entry.keys.length ===
-			keys.filter((key) => !entry.prerequisites.includes(key)).length,
-	}));
-};
-
 /** A key ticked along because another one's screens use it, and which key that was. */
 export type TickedAlong = PermissionUse & { by: PermissionKey };
 
 /**
  * The selection a change turned `before` into `after`, with what the keys it
- * added also use (see `PERMISSION_USES`) ticked along with their
+ * added also use (see `usesOf`, the contract's `worksWith`) ticked along with their
  * prerequisites, when they can be ticked; and those uses, with the key that
  * caused each, to say why where it was ticked. Unlike a prerequisite it
  * never works the other way: clearing a used key leaves whatever uses it

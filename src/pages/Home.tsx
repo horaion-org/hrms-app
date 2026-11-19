@@ -1,63 +1,111 @@
 import { getRouteApi, Link, useRouteContext } from "@tanstack/react-router";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
-import { ActivityItem } from "@/components/ui/ActivityItem";
 import { Button } from "@/components/ui/Button";
-import { Badge } from "@/components/ui/Badge";
-import {
-	AddStaffIcon,
-	ApproveRequestsIcon,
-	CrossIcon,
-	FillShiftsIcon,
-	GenerateScheduleIcon,
-	SchedulingIcon,
-	TickIcon,
-} from "@/components/ui/Icon";
-import { ProgressBar } from "@/components/ui/ProgressBar";
-import { StatCard } from "@/components/ui/StatCard";
+import { Callout } from "@/components/ui/Callout";
+import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
 import { Toast } from "@/components/ui/Toast";
+import { cardLinkClasses } from "@/features/dashboard/cardStyles";
+import { CustomiseHomeDialog } from "@/features/dashboard/CustomiseHomeDialog";
+import {
+	useHiddenSections,
+	useSaveHiddenSections,
+} from "@/features/dashboard/dashboardPreferences";
 import { DASHBOARD_UNIT_RULES } from "@/features/dashboard/dashboardUnitRules";
-import { exampleWorkforce } from "@/features/dashboard/exampleDashboard";
-import { NotificationList } from "@/features/notifications/NotificationList";
-import { NotificationItem } from "@/features/dashboard/NotificationItem";
-import { QuickActions } from "@/features/dashboard/QuickActions";
+import { HomeCounts } from "@/features/dashboard/HomeCounts";
+import { cardSpans, type CardSpan } from "@/features/dashboard/homeLayout";
+import { HOME_TABS, homeTabOf } from "@/features/dashboard/homeSearch";
+import {
+	HOME_SECTIONS,
+	isShown,
+	OVERVIEW_KEYS,
+	OVERVIEW_SECTIONS,
+	sectionsInReach,
+	withSectionShown,
+	type HomeSection,
+	type OverviewSection,
+	type SectionKey,
+} from "@/features/dashboard/homeSections";
+import {
+	LeaveToDecideCard,
+	type LeaveStep,
+} from "@/features/dashboard/LeaveToDecideCard";
+import { NextRosterCard } from "@/features/dashboard/NextRosterCard";
+import { OpenCoverOffersCard } from "@/features/dashboard/OpenCoverOffersCard";
+import { Overview } from "@/features/reports/Overview";
+import { PeopleEventsCard } from "@/features/dashboard/PeopleEventsCard";
 import { SetupChecklistCard } from "@/features/dashboard/SetupChecklistCard";
+import { ShortShiftsCard } from "@/features/dashboard/ShortShiftsCard";
 import { useActivityPage } from "@/features/dashboard/useActivityPage";
+import { useHomeSections } from "@/features/dashboard/useHomeSections";
+import { useOverview } from "@/features/reports/useOverview";
 import { useSetupChecklist } from "@/features/dashboard/useSetupChecklist";
+import { WaitingApprovalsCard } from "@/features/dashboard/WaitingApprovalsCard";
 import type { LeaveRequest } from "@/features/leave/api";
-import { formatPeriod } from "@/features/leave/dates";
 import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
-import { leaveTypeLabel } from "@/features/leave/leaveTypeLabel";
 import { useLeaveDecision } from "@/features/leave/useLeaveDecision";
-import { useLeaveRequests } from "@/features/leave/useLeaveRequests";
+import { SCHEDULING_KEYS } from "@/features/scheduling/schedulingSearch";
+import { Can } from "@/features/workspace/Can";
 import {
-	activityDetails,
-	describeActivity,
-} from "@/features/organisation/activity";
-import { ActivityTitle } from "@/features/organisation/ActivityTitle";
-import { LEAVE_READ_KEYS } from "@/features/workspace/permissionKeys";
+	CONSTRAINT_READ_KEYS,
+	LEAVE_READ_KEYS,
+	PEOPLE_READ_KEYS,
+	SCHEDULE_CREATE_KEYS,
+	SCHEDULE_EDIT_SHIFT_KEYS,
+} from "@/features/workspace/permissionKeys";
 import { unitSelectionOf } from "@/features/workspace/unitSearch";
-import {
-	useCurrentCompanyId,
-	useCurrentMembershipId,
-} from "@/features/workspace/useCurrentCompany";
+import { useAccess } from "@/features/workspace/useAccess";
+import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 
 const route = getRouteApi("/_authenticated/_app/");
 
 const key = "dashboard";
 
-const NOTIFICATION_COUNT = 5;
-const ACTIVITY_COUNT = 4;
+/**
+ * Home's one grid: a single column on small screens and two from `lg`,
+ * where the cards of a row share its height.
+ */
+const homeGridClasses = "mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2";
 
-const sectionHeading = "text-base font-semibold text-ink-blue-600 uppercase";
-const viewAllLink =
-	"shrink-0 text-base font-semibold text-ink-blue-900 underline decoration-2 underline-offset-1 hover:text-ink-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500";
+/**
+ * A card on the grid fills its place, and from `lg` is at least as tall as
+ * one that lists three rows and the line under them (its padding and title,
+ * 3 × 40 px of rows, 12 + 20 px), so every card is the same height whatever
+ * it lists.
+ */
+const gridCardClasses = "h-full lg:min-h-62";
 
-type Decision = { request: LeaveRequest; mode: "view" | "reject" | "approve" };
+/** A card's place on the grid: the whole row, or one of its two columns. */
+const SPAN_CLASSES: Record<CardSpan, string> = {
+	full: "lg:col-span-2",
+	half: "",
+};
 
+/** Holding one of these is what makes someone a roster builder, who starts on what needs them. */
+const ROSTER_BUILDING_KEYS = [
+	...SCHEDULE_CREATE_KEYS,
+	...SCHEDULE_EDIT_SHIFT_KEYS,
+];
+
+/** The sections that are never a card: who is off today is one count in the line above the cards. */
+const NOT_A_CARD: ReadonlyArray<HomeSection> = ["off-today"];
+
+/** The leave request open in the dialog, and what the person is doing with it. */
+type Decision = { request: LeaveRequest; mode: LeaveStep };
+
+/** Today as Home's subtitle writes it, e.g. "Monday 16 Nov 2026". */
+const todayLabel = (language: string): string =>
+	new Intl.DateTimeFormat(language, {
+		weekday: "long",
+		day: "numeric",
+		month: "short",
+		year: "numeric",
+	}).format(new Date());
+
+/** Home for the settled company: its counts, cards and all-clear note, with the dialogs they open. */
 const Dashboard = ({
 	displayName,
 }: {
@@ -65,55 +113,49 @@ const Dashboard = ({
 	displayName: string;
 }): FunctionComponent => {
 	const { t, i18n } = useTranslation();
-	const language = formattingLocale(i18n);
 	const companyId = useCurrentCompanyId();
-	const ownMembershipId = useCurrentMembershipId();
+	const search = route.useSearch();
+	const navigate = route.useNavigate();
 	// The header's Branch, resolved as the header resolves it; every Branch in reach when "All branches" is chosen.
-	const branchId = useUnitSelection(
+	const { branch, branches } = useUnitSelection(
 		companyId,
 		LEAVE_READ_KEYS,
-		unitSelectionOf(route.useSearch()),
+		unitSelectionOf(search),
 		DASHBOARD_UNIT_RULES
-	).branch?.branchId;
+	);
 	const [decision, setDecision] = useState<Decision>();
 	const [toast, setToast] = useState<{ id: number; message: string }>();
-	const [workforce] = useState(exampleWorkforce);
-	const numbers = new Intl.NumberFormat(language, { maximumFractionDigits: 1 });
-	const sort = { field: "requestedAt", desc: true } as const;
-	const pending = useLeaveRequests(companyId, {
-		page: 1,
-		size: NOTIFICATION_COUNT,
-		sort,
-		status: "PENDING",
-		branchId,
+	const [customising, setCustomising] = useState(false);
+	const access = useAccess();
+	const hidden = useHiddenSections(companyId);
+	const saveHidden = useSaveHiddenSections(companyId);
+	const hiddenSections = hidden.status === "ready" ? hidden.hiddenSections : [];
+	const overviewInReach = access.canAny(OVERVIEW_KEYS, "anywhere");
+	const tab = homeTabOf(search.tab, {
+		overview: overviewInReach,
+		buildsRosters: access.canAny(ROSTER_BUILDING_KEYS, "anywhere"),
 	});
-	const approved = useLeaveRequests(companyId, {
-		page: 1,
-		size: 1,
-		sort,
-		status: "APPROVED",
-		branchId,
-	});
-	const rejected = useLeaveRequests(companyId, {
-		page: 1,
-		size: 1,
-		sort,
-		status: "REJECTED",
-		branchId,
-	});
-	const activity = useActivityPage(companyId, 1, ACTIVITY_COUNT);
-	const setup = useSetupChecklist(companyId);
-	const now = new Date();
-	const exampleTag = (
-		<Badge className="shrink-0" tone="neutral">
-			{t(`${key}.exampleTag`)}
-		</Badge>
+	// A section is read and shown only on its own view, once the person's choice is known, and only if they keep it.
+	const kept = (section: SectionKey): boolean =>
+		hidden.status === "ready" && isShown(section, hiddenSections);
+	const shown = (section: HomeSection): boolean =>
+		tab === "needs-you" && kept(section);
+	const shownInOverview = (section: OverviewSection): boolean =>
+		tab === "overview" && kept(section);
+	const home = useHomeSections(companyId, branch?.branchId, shown);
+	const overview = useOverview(
+		companyId,
+		{ branch, branches },
+		shownInOverview
 	);
+	// Read only to learn whether the person may open Recent activity; the page lists it.
+	const activity = useActivityPage(companyId, 1, 1);
+	const setup = useSetupChecklist(companyId);
 
 	const notify = (message: string): void => {
 		setToast((previous) => ({ id: (previous?.id ?? 0) + 1, message }));
 	};
-	// The dashboard says the outcome in its own toast.
+	// Home says the outcome in its own toast.
 	const leaveDecision = useLeaveDecision(companyId, {
 		ownConfirmation: true,
 		onDecided: (message) => {
@@ -129,283 +171,197 @@ const Dashboard = ({
 		close();
 		notify(message);
 	};
-	// Nobody decides their own leave; each request is decided where its member is filed, or by its flow's open step.
-	const canReview = leaveDecision.canDecide;
-	const busy = leaveDecision.busy;
 
-	const resolvedShare = ((): number | undefined => {
-		if (
-			pending.status !== "ready" ||
-			approved.status !== "ready" ||
-			rejected.status !== "ready"
-		)
-			return undefined;
-		const resolved = approved.total + rejected.total;
-		const all = resolved + pending.total;
-		return all === 0 ? 100 : Math.round((resolved / all) * 100);
-	})();
+	const cardOf: Record<HomeSection, ReactNode> = {
+		"short-shifts": (
+			<ShortShiftsCard
+				className={gridCardClasses}
+				shortShifts={home.shortShifts}
+			/>
+		),
+		"leave-to-decide": (
+			<LeaveToDecideCard
+				// Nobody decides their own leave; each request is decided where its member is filed, or by its flow's open step.
+				canDecide={leaveDecision.canDecide}
+				className={gridCardClasses}
+				pending={home.pendingLeave}
+				onOpen={(request, mode) => {
+					setDecision({ request, mode });
+				}}
+			/>
+		),
+		"waiting-approvals": (
+			<WaitingApprovalsCard
+				approvals={home.waitingApprovals}
+				className={gridCardClasses}
+			/>
+		),
+		"next-roster": (
+			<NextRosterCard
+				className={gridCardClasses}
+				comingMonday={home.comingMonday}
+				rows={home.rostersToDo}
+			/>
+		),
+		"cover-offers": (
+			<OpenCoverOffersCard
+				className={gridCardClasses}
+				myOffers={home.myOffers}
+				teamOffers={home.teamOffers}
+			/>
+		),
+		"off-today": null,
+		"people-events": (
+			<PeopleEventsCard
+				className={gridCardClasses}
+				events={home.peopleEvents}
+			/>
+		),
+	};
+	// A section with something to show is a card; one with nothing to act on is its tile at zero.
+	const cards = HOME_SECTIONS.filter(
+		(section) =>
+			home.states[section] === "content" && !NOT_A_CARD.includes(section)
+	);
+	const spans = cardSpans(cards);
+	// With no card at all, and every section known, one line says so.
+	const allClear =
+		cards.length === 0 &&
+		HOME_SECTIONS.some((section) => home.states[section] === "empty") &&
+		HOME_SECTIONS.every((section) => home.states[section] !== "pending");
+
+	const needsYou = (
+		<>
+			<HomeCounts className="mt-6" counts={home.counts} states={home.states} />
+			{cards.length > 0 && (
+				<div className={homeGridClasses}>
+					{cards.map((section) => (
+						<div
+							key={section}
+							className={`scroll-mt-6 ${SPAN_CLASSES[spans.get(section) ?? "full"]}`}
+							id={section}
+						>
+							{cardOf[section]}
+						</div>
+					))}
+				</div>
+			)}
+			{allClear && (
+				<Callout className="mt-6">{t(`${key}.calm.allClear`)}</Callout>
+			)}
+		</>
+	);
 
 	return (
 		<>
-			<h1 className="sr-only">{t("shell.navigation.dashboard")}</h1>
-			{/* Full bleed: the negative margins undo `AppShell`'s page padding at each breakpoint. */}
-			<div className="-mx-4 -mt-6 flex flex-wrap items-start justify-between gap-4 border-b border-neutral-400 px-4 pt-5 pb-5 sm:-mx-6 sm:-mt-8 sm:px-6 lg:-mx-10 lg:-mt-10 lg:px-10">
-				{/* From `lg` the header carries the greeting; below it the page does. */}
-				<p className="w-full text-2xl text-neutral-900 lg:hidden">
-					<Trans
-						i18nKey="shell.welcome"
-						values={{ name: displayName }}
-						components={{
-							name: <span className="font-medium text-ink-blue-900" />,
+			<div className="flex flex-wrap items-end justify-between gap-4">
+				<div className="flex flex-col gap-1">
+					{/* From `lg` the header carries the greeting; below it the page does, in the title's place. */}
+					<p className="text-2xl text-neutral-900 lg:hidden">
+						<Trans
+							i18nKey="shell.welcome"
+							values={{ name: displayName }}
+							components={{
+								name: <span className="font-medium text-ink-blue-900" />,
+							}}
+						/>
+					</p>
+					<h1 className="text-[2rem] leading-10 font-medium text-neutral-900 max-lg:sr-only">
+						{t("shell.navigation.dashboard")}
+					</h1>
+					<p className="text-sm text-neutral-800">
+						{t(`${key}.subtitle`, {
+							branch: branch?.name ?? t("workspace.branchSelector.allBranches"),
+							day: todayLabel(formattingLocale(i18n)),
+						})}
+					</p>
+				</div>
+				<div className="flex flex-wrap gap-3">
+					<Can anyOf={SCHEDULING_KEYS} at="anywhere">
+						<Button size="sm" to="/scheduling" variant="secondary">
+							{t(`${key}.viewRosters`)}
+						</Button>
+					</Can>
+					<Button
+						size="sm"
+						variant="secondary"
+						onClick={() => {
+							setCustomising(true);
 						}}
-					/>
-				</p>
-				<Button
-					leadingIcon={<SchedulingIcon />}
-					size="sm"
-					to="/scheduling"
-					variant="secondary"
-				>
-					{t(`${key}.viewSchedule`)}
-				</Button>
+					>
+						{t(`${key}.customise.open`)}
+					</Button>
+				</div>
 			</div>
 			{setup.status === "shown" && (
 				<SetupChecklistCard
 					canImportOrganisation={setup.canImportOrganisation}
 					canImportPeople={setup.canImportPeople}
-					className="mt-10"
+					className="mt-6"
 					counts={setup.counts}
 					progress={setup.progress}
 					onDismiss={setup.dismiss}
 				/>
 			)}
-			<div className="mt-10 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,666fr)_minmax(0,390fr)]">
-				<div>
-					<StatCard
-						action={exampleTag}
-						size="lg"
-						title={t(`${key}.workforce.title`)}
-						value={numbers.format(workforce.active)}
-						variant="tile"
-					>
-						<dl className="mt-7 grid grid-cols-3 gap-7">
-							{(["onShift", "onCall", "remote"] as const).map((split) => (
-								<div key={split}>
-									<dt className="text-sm text-neutral-800">
-										{t(`${key}.workforce.${split}`)}
-									</dt>
-									<dd className="mt-2 text-[2rem] leading-10 font-medium text-neutral-900">
-										{numbers.format(workforce[split])}
-									</dd>
-								</div>
-							))}
-						</dl>
-					</StatCard>
-					<div className="mt-6 grid grid-cols-1 gap-6 sm:grid-cols-2">
-						<StatCard
-							action={exampleTag}
-							caption={t(`${key}.coverage.caption`)}
-							title={t(`${key}.coverage.title`)}
-							variant="tile"
-							value={t("scheduling.overview.percent", {
-								value: numbers.format(workforce.coverage),
-							})}
-						/>
-						{pending.status !== "hidden" && (
-							<StatCard
-								title={t(`${key}.approvals.title`)}
-								variant="tile"
-								value={
-									pending.status === "ready"
-										? numbers.format(pending.total)
-										: t("organisation.unknownCount")
-								}
-							>
-								{resolvedShare !== undefined && (
-									<div className="mt-2 flex items-center gap-4">
-										<ProgressBar
-											className="w-41 shrink-0"
-											label={t(`${key}.approvals.resolvedLabel`)}
-											tone="accent"
-											track="white"
-											value={resolvedShare}
-										/>
-										<p className="text-sm text-neutral-800">
-											{t(`${key}.approvals.resolved`, {
-												value: resolvedShare,
-											})}
-										</p>
-									</div>
-								)}
-							</StatCard>
-						)}
-					</div>
-				</div>
-				<section
-					aria-labelledby="pending-review"
-					className="flex min-w-0 flex-col rounded-xl bg-neutral-200 px-6 pt-6 pb-2 lg:h-113"
+			{overviewInReach ? (
+				<Tabs
+					className="mt-6"
+					selectedIndex={HOME_TABS.indexOf(tab)}
+					onChange={(index) => {
+						void navigate({
+							search: (previous) => ({ ...previous, tab: HOME_TABS[index] }),
+						});
+					}}
 				>
-					<div className="flex items-center justify-between gap-4">
-						<h2
-							className="text-base font-semibold text-ink-blue-600"
-							id="pending-review"
-						>
-							{t("notifications.pendingReview")}
-						</h2>
-						{pending.status !== "hidden" && (
-							<Link className={viewAllLink} to="/leave">
-								{t(`${key}.viewAll`)}
-							</Link>
-						)}
-					</div>
-					{pending.status === "error" && (
-						<p className="mt-6 text-sm text-error-700" role="alert">
-							{t(`${key}.notifications.failed`)}
-						</p>
-					)}
-					<ul className="mt-6 min-h-0 flex-1 divide-y divide-neutral-400 overflow-y-auto pr-4">
-						{pending.status === "ready" &&
-							pending.items.map((request) => {
-								const reviewable = canReview(request);
-								// Under an approval flow, the step it waits on, beside its title.
-								const stepTag = request.approval
-									? t("approvals.meta.stepShort", {
-											step: request.approval.currentStepOrder,
-											total: request.approval.stepCount,
-										})
-									: undefined;
-								return (
-									<li key={request.leaveRequestId} className="py-5 first:pt-0">
-										<NotificationItem
-											tag={stepTag}
-											detail={t(`${key}.notifications.leaveDetail`, {
-												name: request.displayName,
-												period: formatPeriod(
-													request.startDate,
-													request.endDate,
-													language
-												),
-											})}
-											primaryAction={{
-												label: t(`${key}.notifications.approve`),
-												icon: <TickIcon />,
-												disabled: !reviewable || busy,
-												onClick: () => {
-													setDecision({ request, mode: "approve" });
-												},
-											}}
-											secondaryAction={{
-												label: t(`${key}.notifications.deny`),
-												icon: <CrossIcon />,
-												disabled: !reviewable || busy,
-												onClick: () => {
-													setDecision({ request, mode: "reject" });
-												},
-											}}
-											title={t(`${key}.notifications.leaveTitle`, {
-												type: leaveTypeLabel(request, t),
-											})}
-											onOpen={() => {
-												setDecision({ request, mode: "view" });
-											}}
-										/>
-									</li>
-								);
-							})}
-					</ul>
-				</section>
-			</div>
-			<section
-				aria-labelledby="inbox-preview"
-				className="mt-8 rounded-xl border border-neutral-300 p-6"
-			>
-				<div className="mb-4 flex items-center justify-between gap-4">
-					<h2 className="text-base font-semibold" id="inbox-preview">
-						{t("notifications.title")}
-					</h2>
-					<Link className={viewAllLink} to="/notifications">
-						{t("notifications.viewAll")}
-					</Link>
-				</div>
-				<NotificationList
-					key={`${companyId}:${ownMembershipId}`}
-					compact
-					audience="PERSONAL"
-				/>
-			</section>
-			<div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,666fr)_minmax(0,390fr)]">
-				{activity.status === "hidden" ? (
-					<div />
-				) : (
-					<section aria-labelledby="recent-activity" className="lg:pr-6">
-						<div className="flex items-center justify-between gap-4">
-							<h2 className={sectionHeading} id="recent-activity">
-								{t("organisation.activity.title")}
-							</h2>
-							<Link className={viewAllLink} to="/activity">
-								{t(`${key}.viewAll`)}
-							</Link>
-						</div>
-						{activity.status === "error" && (
-							<p className="mt-6 text-sm text-error-700" role="alert">
-								{t("organisation.activity.failed")}
-							</p>
-						)}
-						{activity.status === "ready" && activity.items.length === 0 && (
-							<p className="mt-6 text-sm text-neutral-700">
-								{t("organisation.activity.empty")}
-							</p>
-						)}
-						{activity.status === "ready" && activity.items.length > 0 && (
-							<ul className="mt-6 flex flex-col gap-7">
-								{activity.items.map((event) => {
-									const described = describeActivity(event, t);
-									return (
-										<li key={described.id}>
-											<ActivityItem
-												details={activityDetails(event, t, now, language)}
-												icon={described.icon}
-												title={<ActivityTitle activity={described} />}
-											/>
-										</li>
-									);
-								})}
-							</ul>
-						)}
-					</section>
-				)}
-				<section aria-labelledby="quick-actions">
-					<h2 className={sectionHeading} id="quick-actions">
-						{t(`${key}.quickActions.title`)}
-					</h2>
-					<QuickActions
-						className="mt-6"
-						label={t(`${key}.quickActions.title`)}
-						actions={[
-							{
-								label: t(`${key}.quickActions.generate`),
-								icon: GenerateScheduleIcon,
-								to: "/scheduling/new",
-							},
-							{
-								label: t(`${key}.quickActions.addStaff`),
-								icon: AddStaffIcon,
-								to: "/people/new",
-							},
-							{
-								label: t(`${key}.quickActions.approve`),
-								icon: ApproveRequestsIcon,
-								to: "/leave",
-							},
-							{
-								label: t(`${key}.quickActions.fillShifts`),
-								icon: FillShiftsIcon,
-								to: "/scheduling",
-							},
-						]}
-					/>
-				</section>
-			</div>
+					<TabList aria-label={t(`${key}.tabs.label`)} className="-ml-1">
+						<Tab>{t(`${key}.tabs.needsYou`)}</Tab>
+						<Tab>{t(`${key}.tabs.overview`)}</Tab>
+					</TabList>
+					<TabPanels>
+						<TabPanel>{needsYou}</TabPanel>
+						<TabPanel className="mt-6">
+							<Overview
+								grouping={branch ? "department" : "branch"}
+								overview={overview}
+								shown={shownInOverview}
+								ruleLinks={{
+									rule: access.canAny(CONSTRAINT_READ_KEYS, "anywhere"),
+									people: access.canAny(PEOPLE_READ_KEYS, "anywhere"),
+								}}
+							/>
+						</TabPanel>
+					</TabPanels>
+				</Tabs>
+			) : (
+				needsYou
+			)}
+			{activity.status !== "hidden" && (
+				<Link className={`${cardLinkClasses} mt-6 inline-block`} to="/activity">
+					{t("organisation.activity.title")}
+				</Link>
+			)}
+			<CustomiseHomeDialog
+				hiddenSections={hiddenSections}
+				open={customising}
+				saveFailed={saveHidden.isError}
+				sections={
+					tab === "overview"
+						? OVERVIEW_SECTIONS
+						: sectionsInReach((keys) => access.canAny(keys, "anywhere"))
+				}
+				onClose={() => {
+					setCustomising(false);
+					saveHidden.reset();
+				}}
+				onReset={() => {
+					saveHidden.mutate([]);
+				}}
+				onToggle={(section, isNowShown) => {
+					saveHidden.mutate(
+						withSectionShown(hiddenSections, section, isNowShown)
+					);
+				}}
+			/>
 			{decision && (
 				<LeaveRequestDialog
 					key={`${decision.request.leaveRequestId}-${decision.mode}`}
@@ -431,10 +387,20 @@ const Dashboard = ({
 };
 
 /**
- * The Dashboard: the workforce at a glance, what is waiting on the person,
- * what changed lately, and shortcuts. Leave requests and activity are live;
- * the workforce and coverage figures are example data until their service
- * exists, and say so.
+ * Home. For someone who looks across units it has two views in tabs, the
+ * to-do list and the Overview (headline, key figures, each unit and the
+ * rules too few people can staff); for everyone else it is the to-do list
+ * alone. The view is kept in the URL.
+ *
+ * "What needs you": a row of equal tiles, a number each, then a card for
+ * each thing with something to act on, most urgent first, on one
+ * two-column grid of equal cards: shifts short by cause, leave to decide,
+ * approvals waiting, the rosters still to get ready, cover offers not
+ * answered, and who joins, ends probation or leaves. Every row of a card
+ * is one line with one action. A section with nothing to act on is its
+ * tile at zero, never an empty box. Each is left out where the person's
+ * grants don't reach it, or where they chose to hide it under Customise; a
+ * hidden section is not read.
  */
 export const Home = (): FunctionComponent => {
 	const context = useRouteContext({ from: "/_authenticated" });

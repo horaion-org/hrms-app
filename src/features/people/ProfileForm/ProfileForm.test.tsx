@@ -1,4 +1,4 @@
-import { screen, waitFor } from "@testing-library/react";
+import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { effectiveWorkspace } from "@/common/testing/effectiveWorkspace";
@@ -19,7 +19,6 @@ import { endSession } from "@/features/auth/session";
 import {
 	FIVE_DAY_WEEK,
 	MEMBER_TERMS,
-	PART_TIME_20,
 	STANDARD_WEEK,
 	termsListResponse,
 } from "@/features/employmentTerms/fixtures";
@@ -277,7 +276,11 @@ describe("Add employee", () => {
 		await screen.findByText(/Priya Nair was added/);
 		expect(opened.router.state.location.pathname).toBe("/people");
 		expect(sent(calls, CREATE_COMPANY).map((call) => call.body)).toEqual([
-			{ displayName: "Priya Nair", email: "priya@company.com" },
+			{
+				displayName: "Priya Nair",
+				email: "priya@company.com",
+				sendInvitation: true,
+			},
 		]);
 		expect(sent(calls, CREATE)).toEqual([]);
 		expect(sent(calls, ASSIGN)).toEqual([]);
@@ -301,14 +304,18 @@ describe("Add employee", () => {
 		await open();
 		await fillRequired(user);
 		await choose(user, /^Job title/, "Chef");
-		await choose(user, /^Role scope/, "Orchard › Kitchen");
+		await choose(user, /^Applies to/, "Orchard › Kitchen");
 		await choose(user, /^Access role/, "Supervisor");
 		await chooseDepartment(user, "No department yet");
 		expect(button(/^Job title/)).toBeDisabled();
 		await user.click(confirm());
 		await screen.findByText(/Priya Nair was added/);
 		expect(sent(calls, CREATE_COMPANY).map((call) => call.body)).toEqual([
-			{ displayName: "Priya Nair", email: "priya@company.com" },
+			{
+				displayName: "Priya Nair",
+				email: "priya@company.com",
+				sendInvitation: true,
+			},
 		]);
 		expect(sent(calls, ASSIGN)).toHaveLength(1);
 	});
@@ -415,6 +422,18 @@ describe("Add employee", () => {
 		).not.toBeInTheDocument();
 	});
 
+	it("given_theForm_when_opened_then_onlyContractAndIntern", async () => {
+		const user = userEvent.setup();
+		stubApi(routes());
+		await open();
+
+		await user.click(button(/^Employment type/));
+
+		expect(
+			(await screen.findAllByRole("option")).map((option) => option.textContent)
+		).toEqual(["Contract", "Intern"]);
+	});
+
 	it("sends every field filled in, as the API takes it, and confirms on the list", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi(routes());
@@ -423,7 +442,7 @@ describe("Add employee", () => {
 		await fillRequired(user);
 		await pickDate(user, /^Date of birth/, "1 October 2026");
 		await user.type(textbox("Phone number"), "8123 4567");
-		await choose(user, /^Employment type/, "Part-time");
+		await choose(user, /^Employment type/, "Contract");
 		await pickDate(user, /^Hire date/, "1 October 2026");
 		await pickDate(user, /^Probation end date/, "30 October 2026");
 		await choose(user, /^Job title/, "Chef");
@@ -444,9 +463,53 @@ describe("Add employee", () => {
 				reportsToMembershipId: "m-9",
 				dateOfBirth: "2026-10-01",
 				phone: "+6581234567",
-				employmentType: "PART_TIME",
+				employmentType: "CONTRACT",
 				hireDate: "2026-10-01",
 				probationEndDate: "2026-10-30",
+				sendInvitation: true,
+			},
+		]);
+	});
+
+	it("invites the new person by default, saying the email goes to their address", async () => {
+		stubApi(routes());
+		await open();
+
+		const invite = await screen.findByRole("checkbox", {
+			name: "Send an invitation now",
+		});
+		expect(invite).toBeChecked();
+		expect(invite).toHaveAccessibleDescription(
+			"We’ll email an invitation to log in to this address."
+		);
+	});
+
+	it("adds the person without an invitation when it is unticked, and says nobody was emailed", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi(routes());
+		await open();
+
+		await fillRequired(user);
+		const invite = screen.getByRole("checkbox", {
+			name: "Send an invitation now",
+		});
+		await user.click(invite);
+		expect(invite).not.toBeChecked();
+		expect(invite).toHaveAccessibleDescription(
+			"No e-mail is sent. You can invite them later from their profile."
+		);
+		await user.click(confirm());
+
+		expect(
+			await screen.findByText(
+				"Priya Nair was added. No email was sent: invite them from their profile when you’re ready."
+			)
+		).toHaveAttribute("role", "status");
+		expect(sent(calls, CREATE).map((call) => call.body)).toEqual([
+			{
+				displayName: "Priya Nair",
+				email: "priya@company.com",
+				sendInvitation: false,
 			},
 		]);
 	});
@@ -457,7 +520,7 @@ describe("Add employee", () => {
 		await open();
 
 		await fillRequired(user);
-		await choose(user, /^Role scope/, "Orchard › Kitchen");
+		await choose(user, /^Applies to/, "Orchard › Kitchen");
 		await user.click(button(/^Access role/));
 		// The owner's role, inactive roles and company roles, which can't be given at a department, are never offered.
 		expect(
@@ -483,7 +546,11 @@ describe("Add employee", () => {
 
 		await screen.findByText(/Priya Nair was added/);
 		expect(sent(calls, CREATE).map((call) => call.body)).toEqual([
-			{ displayName: "Priya Nair", email: "priya@company.com" },
+			{
+				displayName: "Priya Nair",
+				email: "priya@company.com",
+				sendInvitation: true,
+			},
 		]);
 		expect(sent(calls, ASSIGN)).toEqual([]);
 	});
@@ -497,7 +564,7 @@ describe("Add employee", () => {
 		const opened = await open();
 
 		await fillRequired(user);
-		await choose(user, /^Role scope/, "Orchard › Kitchen");
+		await choose(user, /^Applies to/, "Orchard › Kitchen");
 		await choose(user, /^Access role/, "Supervisor");
 		await user.click(confirm());
 
@@ -619,7 +686,7 @@ describe("Add employee", () => {
 		await chooseDepartment(user, "Orchard › Kitchen");
 		expect(await screen.findByText("Access role")).toBeVisible();
 
-		await user.click(button(/^Role scope/));
+		await user.click(button(/^Applies to/));
 		expect(
 			(await screen.findAllByRole("option")).map((option) => option.textContent)
 		).toEqual(["Orchard › Kitchen"]);
@@ -833,7 +900,7 @@ describe("Add employee", () => {
 		expect(sent(calls, CREATE)).toHaveLength(1);
 	});
 
-	it("returns to the list without saving on cancel", async () => {
+	it("asks before Cancel throws away what was typed, then returns to the list without saving", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi(routes());
 		const opened = await open();
@@ -843,12 +910,44 @@ describe("Add employee", () => {
 		);
 
 		await user.click(button("Cancel"));
+		const asking = screen.getByRole("dialog", {
+			name: "Discard your changes?",
+		});
+		expect(asking).toHaveTextContent(
+			"What you typed for this new employee won’t be saved."
+		);
+		await user.click(
+			within(asking).getByRole("button", { name: "Keep editing" })
+		);
+		expect(textbox("Full name")).toHaveValue("Priya");
+		await user.click(button("Cancel"));
+		await user.click(
+			within(
+				screen.getByRole("dialog", { name: "Discard your changes?" })
+			).getByRole("button", { name: "Discard changes" })
+		);
 
 		await waitFor(() => {
 			expect(opened.router.state.location.pathname).toBe("/people");
 		});
 		expect(screen.queryByText(/was added/)).not.toBeInTheDocument();
 		expect(sent(calls, CREATE)).toEqual([]);
+	});
+
+	it("returns to the list at once on Cancel when nothing was typed", async () => {
+		const user = userEvent.setup();
+		stubApi(routes());
+		const opened = await open();
+		await screen.findByRole("textbox", { name: "Full name" });
+
+		await user.click(button("Cancel"));
+
+		await waitFor(() => {
+			expect(opened.router.state.location.pathname).toBe("/people");
+		});
+		expect(
+			screen.queryByRole("dialog", { name: "Discard your changes?" })
+		).not.toBeInTheDocument();
 	});
 });
 
@@ -887,7 +986,7 @@ describe("Add employee's employment terms", () => {
 		expect(button(/^Employment terms/)).toHaveTextContent("Standard week");
 		await choose(user, /^Employment terms/, "Five-day week, 44 h");
 		expect(
-			screen.getByText(/^Works 5 days a week, 8\.8 hours a day\./)
+			screen.getByText(/^Full-time, 5 days a week, 44 h \(8 h 48 min a day\)\./)
 		).toBeVisible();
 		await pickDate(user, /^Hire date/, "1 October 2026");
 		await user.click(confirm());
@@ -916,33 +1015,6 @@ describe("Add employee's employment terms", () => {
 
 		await screen.findByText(/Priya Nair was added/);
 		expect(calls.some((call) => call.path.startsWith(MEMBER))).toBe(false);
-	});
-
-	it("warn when the terms disagree with the Employment type chosen", async () => {
-		const user = userEvent.setup();
-		stubApi({
-			...withTerms(),
-			[TERMS_LIST]: {
-				status: 200,
-				body: envelope(
-					termsListResponse([
-						STANDARD_WEEK,
-						{ ...PART_TIME_20, status: "ACTIVE" },
-					])
-				),
-			},
-		});
-		await open();
-
-		await fillRequired(user);
-		await choose(user, /^Employment type/, "Full-time");
-		await choose(user, /^Employment terms/, "Part-time, 20 h");
-
-		expect(
-			await screen.findByText(
-				"Their employment type is Full-time, but these terms are part-time (20 h a week). Check one of them."
-			)
-		).toBeVisible();
 	});
 
 	it("are not offered, nor sent, without member_employment_terms:update", async () => {

@@ -39,6 +39,12 @@ export type PermissionDefinition = {
 	assignableScopes: ReadonlyArray<AssignableScope>;
 	/** Keys a role must also hold to hold this one. */
 	prerequisites: ReadonlyArray<PermissionKey>;
+	/** The day the key reached the product, `YYYY-MM-DD` (ADR-0101). */
+	since: string;
+	/** Keys this one's screens also read, each with why; never required (ADR-0101). */
+	worksWith: ReadonlyArray<{ key: PermissionKey; reason: PermissionUseReason }>;
+	/** Held only by the System Owner and System Admin roles; never offered for another role (API ADR-0108). */
+	systemRolesOnly: boolean;
 };
 
 // Widening checks every prerequisite names a known key at compile time.
@@ -93,6 +99,20 @@ export const AVAILABILITY_READ_KEYS: ReadonlyArray<PermissionKey> = [
 	"work_availability:read",
 ];
 
+/**
+ * Holding this at any scope is what brings Home's people events into reach:
+ * who joins, ends probation or leaves. A key of its own, never
+ * `member_profile:read` (hrms-backend-v2 docs/adr/0097).
+ */
+export const MEMBER_EVENT_READ_KEYS: ReadonlyArray<PermissionKey> = [
+	"member_event:read",
+];
+
+/** Holding this at a Department is what lets a person see its members' shift preferences. */
+export const SHIFT_PREFERENCE_READ_KEYS: ReadonlyArray<PermissionKey> = [
+	"shift_preference:read",
+];
+
 /** A new schedule may be created where this is held at its Department: the wizard's unit choices. */
 export const SCHEDULE_CREATE_KEYS: ReadonlyArray<PermissionKey> = [
 	"schedule:create",
@@ -101,6 +121,18 @@ export const SCHEDULE_CREATE_KEYS: ReadonlyArray<PermissionKey> = [
 /** A schedule is listed where this is held at its Department: the Scheduling list's unit choices. */
 export const SCHEDULE_READ_KEYS: ReadonlyArray<PermissionKey> = [
 	"schedule:read",
+];
+
+/**
+ * Holding this at any scope is what makes Reports and the overview worth
+ * offering. A key of its own, never `schedule:read`: the figures can be given
+ * without the rosters (hrms-backend-v2 docs/adr/0097).
+ */
+export const REPORT_READ_KEYS: ReadonlyArray<PermissionKey> = ["report:read"];
+
+/** A roster's shifts are changed and cover is offered where this is held at its Department: the dashboard's open offers. */
+export const SCHEDULE_EDIT_SHIFT_KEYS: ReadonlyArray<PermissionKey> = [
+	"schedule:edit_shift",
 ];
 
 /** Shifts are listed where this is held at their Department: the Shifts tab's unit choices. */
@@ -117,6 +149,13 @@ export const CONSTRAINT_READ_KEYS: ReadonlyArray<PermissionKey> = [
  */
 export const AVAILABILITY_UPDATE_KEY: PermissionKey =
 	"work_availability:update";
+
+/**
+ * Holding this at a member's Department is what lets a person change that
+ * member's shift preferences. A member's own needs nothing granted.
+ */
+export const SHIFT_PREFERENCE_UPDATE_KEY: PermissionKey =
+	"shift_preference:update";
 
 /**
  * Whether a key the API sent is one this app's contract knows. A key it
@@ -166,6 +205,17 @@ export const assignableAt = (
 	scope: AssignableScope
 ): boolean => definitionOf(key).assignableScopes.includes(scope);
 
+/**
+ * Whether only the System Owner and System Admin roles hold `key`, such as
+ * `access_role:assign` (API ADR-0108). The API refuses it on any other role.
+ */
+export const isSystemRolesOnly = (key: PermissionKey): boolean =>
+	definitionOf(key).systemRolesOnly;
+
+/** Every key a role made in the editor may hold, in catalogue order. */
+export const ROLE_PERMISSION_KEYS: ReadonlyArray<PermissionKey> =
+	PERMISSION_KEYS.filter((key) => !isSystemRolesOnly(key));
+
 /** Whether `key` can only be given company-wide. */
 export const isCompanyOnly = (key: PermissionKey): boolean =>
 	definitionOf(key).assignableScopes.every((scope) => scope === "COMPANY");
@@ -201,49 +251,18 @@ export const companyOnlyKeys = (
 export const isAboveDepartments = (key: PermissionKey): boolean =>
 	assignableAt(key, "BRANCH") && !assignableAt(key, "DEPARTMENT");
 
-/**
- * Keys a screen reads from another resource besides its own. The API never
- * requires them (a prerequisite is always the same resource), but without
- * one the screen shows less. Each names why, as its copy under
- * `organisation.permissions.uses`. Only pairs this app's code makes; a
- * role's editor ticks them along and warns when one is missing.
- */
-export const PERMISSION_USES = {
-	// The schedule wizard's shifts step and summary (`useScheduleShifts`).
-	"schedule:create": [{ key: "shift:read", reason: "scheduleShifts" }],
-	"schedule:update": [{ key: "shift:read", reason: "scheduleShifts" }],
-	"schedule:generate": [{ key: "shift:read", reason: "scheduleShifts" }],
-	// Applying on someone's behalf searches the People list (`peopleQuery`).
-	"leave_request:create": [
-		{ key: "member_profile:read", reason: "leaveForSomeone" },
-	],
-	// The person form's job title choices (`useJobTitles`).
-	"member_profile:create": [
-		{ key: "job_title:read", reason: "personJobTitles" },
-	],
-	"member_profile:update": [
-		{ key: "job_title:read", reason: "personJobTitles" },
-	],
-	// Notes show only on a person's page, which loads their profile.
-	"member_note:read": [
-		{ key: "member_profile:read", reason: "notesOnProfile" },
-	],
-	// The create dialog's branch choices (`useBranches`).
-	"department:create": [{ key: "branch:read", reason: "departmentBranches" }],
-} as const satisfies Partial<
-	Record<PermissionKey, ReadonlyArray<{ key: PermissionKey; reason: string }>>
->;
-
-/** Why a screen of one key reads another; see `PERMISSION_USES`. */
+/** Why a screen of one key reads another, as the contract's reason codes (ADR-0101). */
 export type PermissionUseReason =
-	(typeof PERMISSION_USES)[keyof typeof PERMISSION_USES][number]["reason"];
+	(typeof PERMISSION_DEFINITIONS)[number]["worksWith"][number]["reason"];
 
 /** A key another one's screens read, and why. */
 export type PermissionUse = { key: PermissionKey; reason: PermissionUseReason };
 
-const USES: Partial<Record<PermissionKey, ReadonlyArray<PermissionUse>>> =
-	PERMISSION_USES;
-
-/** What `key`'s screens read from other resources; see `PERMISSION_USES`. */
+/**
+ * What `key`'s screens read from other resources, as the API's contract
+ * declares (`worksWith`, ADR-0101). The API never requires them (a
+ * prerequisite is always the same resource), but without one the screen
+ * shows less. A role's editor ticks them along and warns when one is missing.
+ */
 export const usesOf = (key: PermissionKey): ReadonlyArray<PermissionUse> =>
-	USES[key] ?? [];
+	definitionOf(key).worksWith;

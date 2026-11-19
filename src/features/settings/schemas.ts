@@ -1,6 +1,6 @@
 import type { TFunction } from "i18next";
 import { z } from "zod";
-import { nameSchema } from "@/features/organisation/nameSchema";
+import { NAME_LIMITS, nameSchema } from "@/features/organisation/nameSchema";
 import {
 	COUNTRY_OPTIONS,
 	DATE_FORMAT_OPTIONS,
@@ -30,7 +30,7 @@ export const generalSettingsSchema = (
 		// The company name follows the API's unit-name rule, like Branch names.
 		workspaceName: nameSchema({
 			required: t("settings.general.validation.required"),
-			length: t("settings.general.validation.length"),
+			length: t("settings.general.validation.length", NAME_LIMITS),
 			characters: t("settings.general.validation.characters"),
 		}),
 		defaultLanguage: z.enum(valuesOf(LANGUAGE_OPTIONS)),

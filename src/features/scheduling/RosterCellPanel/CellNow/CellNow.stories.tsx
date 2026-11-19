@@ -2,7 +2,11 @@ import type { ReactElement } from "react";
 import { I18nextProvider } from "react-i18next";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { authTestI18n } from "@/features/auth/testingI18n";
-import { scheduleAssignmentsFixture } from "@/features/scheduling/schedules/fixtures";
+import {
+	scheduleAssignmentsFixture,
+	shortenedShiftFixture,
+	workedAroundLeaveFixture,
+} from "@/features/scheduling/schedules/fixtures";
 import { CellNow } from "./CellNow";
 
 const roster = scheduleAssignmentsFixture();
@@ -62,4 +66,14 @@ export const ChangedByHand: Story = {
 			},
 		},
 	},
+};
+
+/** A shift shortened by morning leave: the time still worked and the leave. */
+export const ShortenedForLeave: Story = {
+	args: { assignment: shortenedShiftFixture() },
+};
+
+/** A shift worked around leave in the middle: both pieces. */
+export const WorkedAroundLeave: Story = {
+	args: { assignment: workedAroundLeaveFixture() },
 };

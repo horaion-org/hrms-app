@@ -73,14 +73,20 @@ export const Sparse: Story = {
 export const WithAccess: Story = {
 	args: {
 		access: [
-			{ place: "Whole company", lines: ["Departments: View"] },
+			{
+				place: "Whole company",
+				roles: ["Viewer"],
+				lines: ["Departments: View"],
+			},
 			{
 				place: "Orchard",
-				lines: ["Branches: View", "Leave: View, Approve or reject"],
+				roles: ["Department manager"],
+				lines: ["People: Manage", "Leave: Manage", "Scheduling: Full"],
 			},
 			{
 				place: "Orchard › Food & Beverage",
-				lines: ["People: View, Edit", "Notes: View, Add"],
+				roles: ["Department manager"],
+				lines: ["People: Manage", "Leave: Manage", "Scheduling: Full"],
 			},
 		],
 	},
@@ -88,3 +94,14 @@ export const WithAccess: Story = {
 
 /** Their roles give nothing at the places the reader can see. */
 export const WithoutAccess: Story = { args: { access: [] } };
+
+/** Part-time by the terms, with a Contract label: "Part-time [From the terms] · Contract". */
+export const PartTimeByTheTerms: Story = {
+	args: {
+		profile: {
+			...meta.args.profile,
+			partTime: true,
+			employmentType: "CONTRACT",
+		},
+	},
+};

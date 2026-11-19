@@ -14,7 +14,6 @@ beforeAll(async () => {
 describe("nameSuggestion", () => {
 	it.each([
 		["SHIFT_STAFFING", "Front desk AM", "Front desk AM staffing"],
-		["ROLE_PRESENCE", "Closing", "Closing on duty"],
 		["SHIFT_STAFFING", undefined, "People on a shift"],
 		["REST_BETWEEN_SHIFTS", undefined, "Rest between shifts"],
 		["DAYS_OFF_PER_PERIOD", "Ignored", "Days off"],

@@ -1,8 +1,10 @@
 import type { TFunction } from "i18next";
 import type { ConstraintType } from "@/features/scheduling/constraints/api";
-
-/** The longest name the API keeps. */
-const NAME_MAX_LENGTH = 100;
+import {
+	isCountedOnShifts,
+	isRetiredConstraintType,
+} from "@/features/scheduling/constraints/constraintTypeCatalogue";
+import { NAME_MAX_LENGTH } from "@/features/organisation/nameSchema";
 
 /**
  * A name for a new constraint from what it controls and its first shift, such
@@ -13,12 +15,11 @@ export const nameSuggestion = (
 	firstShiftName: string | undefined,
 	t: TFunction
 ): string => {
-	const usesShift =
-		type === "SHIFT_STAFFING" ||
-		type === "SHIFT_STAFFING_WITH_STAND_INS" ||
-		type === "ROLE_PRESENCE";
+	// A retired kind is never offered, so it is never named; it keeps its label.
+	if (isRetiredConstraintType(type))
+		return t(`scheduling.constraints.types.${type}`);
 	const name =
-		usesShift && firstShiftName === undefined
+		isCountedOnShifts(type) && firstShiftName === undefined
 			? t(`scheduling.constraints.types.${type}`)
 			: t(`scheduling.constraints.nameSuggestions.${type}`, {
 					shift: firstShiftName,

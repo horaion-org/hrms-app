@@ -8,6 +8,8 @@ export const ACCESS_ROLE_ERROR = {
 	nameConflict: "ACCESS_ROLE_NAME_CONFLICT",
 	protectedRole: "PROTECTED_ACCESS_ROLE",
 	inUse: "ACCESS_ROLE_IN_USE",
+	/** A default still uses the role (API ADR-0118). */
+	usedAsDefault: "ACCESS_ROLE_USED_AS_DEFAULT",
 	kindConflict: "ACCESS_ROLE_KIND_CONFLICT",
 } as const;
 
@@ -81,8 +83,12 @@ export const accessRoleRowRefusal = (
 				[`409 ${ACCESS_ROLE_ERROR.inUse}`]: t(
 					"organisation.accessRoles.delete.inUse"
 				),
+				[`409 ${ACCESS_ROLE_ERROR.usedAsDefault}`]: t(
+					"organisation.accessRoles.delete.usedAsDefault"
+				),
 			},
 			forbidden: t(`organisation.accessRoles.${change}.forbidden`),
+			stillUpdating: t("organisation.stillUpdatingWrite"),
 			failed,
 		}).message ?? failed
 	);

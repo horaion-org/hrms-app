@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import { I18nextProvider } from "react-i18next";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { authTestI18n } from "@/features/auth/testingI18n";
-import { LEAVE_FIXTURES } from "@/features/leave/fixtures";
+import { LEAVE_FIXTURES, partDayLeaveFixture } from "@/features/leave/fixtures";
 import { LeaveRequestDetails } from "./LeaveRequestDetails";
 
 const meta = {
@@ -29,3 +29,6 @@ export const Pending: Story = {};
 export const Rejected: Story = { args: { request: LEAVE_FIXTURES[2]! } };
 
 export const Approved: Story = { args: { request: LEAVE_FIXTURES[3]! } };
+
+/** A morning off on one day: four hours, at the Morning duration. */
+export const PartDay: Story = { args: { request: partDayLeaveFixture() } };

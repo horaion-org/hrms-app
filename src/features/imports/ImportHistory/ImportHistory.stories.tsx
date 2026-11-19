@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import { ImportHistory } from "@/features/imports/ImportHistory";
+import "@/common/i18n";
 
 const meta = {
 	title: "Features/Imports/ImportHistory",

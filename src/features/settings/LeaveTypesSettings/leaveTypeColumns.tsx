@@ -59,13 +59,14 @@ const baseColumns = (
 		id: "appliesTo",
 		header: t(`${key}.appliesTo`),
 		cell: (type) => reachLabel(type, t),
-		// A phone keeps the name, the count and the actions; where a type applies is in its dialog.
-		hideBelow: "md",
+		// Settings' tables sit in a narrow pane: below 2xl, where a type applies and its requests read on the name's line.
+		hideBelow: "2xl",
 	},
 	{
 		id: "requests",
 		header: t(`${key}.requests`),
 		headerClassName: "w-30",
+		hideBelow: "2xl",
 		cell: (type) => t(`${key}.requestCount`, { count: type.requestCount }),
 	},
 ];

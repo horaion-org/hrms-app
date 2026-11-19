@@ -1,12 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import {
-	useEffect,
-	useId,
-	useMemo,
-	useRef,
-	useState,
-	type ReactNode,
-} from "react";
+import { useId, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { ApiProblemError } from "@/common/problem";
 import type { FunctionComponent } from "@/common/types";
@@ -16,7 +9,6 @@ import { DataTable } from "@/components/ui/DataTable";
 import { PlusIcon } from "@/components/ui/Icon";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import {
-	APPROVAL_SUBJECTS,
 	approvalFlowsQuery,
 	type ApprovalFlow,
 	type ApprovalSubject,
@@ -45,28 +37,23 @@ export type ApprovalsSettingsProps = {
 	canRead: boolean;
 	/** Holds `approval_flow:manage` company-wide: flows may be added and changed. */
 	canManage: boolean;
-	/** A subject asked for by the address (`?subject=`); its group is scrolled into view. */
-	subject?: ApprovalSubject;
+	/** The subject whose flows are shown: Settings › Roster approvals or Leave approvals. */
+	subject: ApprovalSubject;
 };
 
 const key = "approvals.flows";
 
 /** A row's change waiting on its confirm: turning it on or off, or deleting it. */
-type Change = {
-	kind: "toggle" | "delete";
-	flow: ApprovalFlow;
-	subject: ApprovalSubject;
-};
+type Change = { kind: "toggle" | "delete"; flow: ApprovalFlow };
 
-/** The flow dialog: adding one for `subject`, or editing `editing`. */
-type FlowDialog = { subject: ApprovalSubject; editing?: ApprovalFlow };
+/** The flow dialog: adding one, or editing `editing`. */
+type FlowDialog = { editing?: ApprovalFlow };
 
 /**
- * Settings › Approvals: who approves rosters and leave requests, one group
- * per subject in `APPROVAL_SUBJECTS` order. Each group lists its flows
- * (where it applies, its steps, on or off), the company default first, and
- * ends with a line saying what decides everywhere else; a group with no
- * flow is that one sentence. The list needs `approval_flow:read`, and
+ * Settings › Roster approvals or Leave approvals: who approves one subject.
+ * It lists the subject's flows (where each applies, its steps, on or off),
+ * the company default first, and ends with a line saying what decides
+ * everywhere else; with no flow it is that one sentence. The list needs `approval_flow:read`, and
  * adding, editing, turning on or off and deleting need
  * `approval_flow:manage`, both held company-wide; the page passes whether
  * they are held.
@@ -83,9 +70,6 @@ export const ApprovalsSettings = ({
 	const actions = useApprovalFlowActions(companyId);
 	const [dialog, setDialog] = useState<FlowDialog | null>(null);
 	const idPrefix = useId();
-	const groupHeadings = useRef<
-		Partial<Record<ApprovalSubject, HTMLHeadingElement | null>>
-	>({});
 	const [change, setChange] = useState<Change | null>(null);
 	const departmentNames = useMemo(
 		() =>
@@ -97,31 +81,28 @@ export const ApprovalsSettings = ({
 			),
 		[workspace.data, companyId]
 	);
-	// One set of columns per subject, so a row's actions know which group it is in.
-	const columnsBySubject = useMemo(() => {
-		const columnsFor = (
-			group: ApprovalSubject
-		): ReturnType<typeof approvalFlowColumns> =>
+	const columns = useMemo(
+		() =>
 			approvalFlowColumns(
 				t,
 				(departmentId) => departmentNames.get(departmentId),
 				canManage
 					? {
 							onEdit: (flow: ApprovalFlow): void => {
-								setDialog({ subject: group, editing: flow });
+								setDialog({ editing: flow });
 							},
 							menu: (flow: ApprovalFlow): ReactNode => (
 								<>
 									<OverflowMenuItem
 										onClick={() => {
-											setChange({ kind: "toggle", flow, subject: group });
+											setChange({ kind: "toggle", flow });
 										}}
 									>
 										{t(flow.active ? `${key}.turnOff` : `${key}.turnOn`)}
 									</OverflowMenuItem>
 									<OverflowMenuItem
 										onClick={() => {
-											setChange({ kind: "delete", flow, subject: group });
+											setChange({ kind: "delete", flow });
 										}}
 									>
 										{t(`${key}.delete`)}
@@ -130,17 +111,14 @@ export const ApprovalsSettings = ({
 							),
 						}
 					: undefined
-			);
-		return new Map(
-			APPROVAL_SUBJECTS.map((group) => [group, columnsFor(group)])
-		);
-	}, [t, departmentNames, canManage]);
-	// A link to one subject's flows opens with its group in view, once the list has its height.
-	const loaded = flows.data !== undefined;
-	useEffect(() => {
-		if (subject && loaded)
-			groupHeadings.current[subject]?.scrollIntoView?.({ block: "start" });
-	}, [subject, loaded]);
+			),
+		[t, departmentNames, canManage]
+	);
+	const copy = subjectCopyKey(subject);
+	const subjectFlows = flowsOfSubject(flows.data ?? [], subject);
+	const fallback = fallbackLineOf(subjectFlows);
+	const headingId = `${idPrefix}-title`;
+	const addId = `${idPrefix}-add`;
 	const forbidden =
 		!canRead ||
 		(flows.error instanceof ApiProblemError && flows.error.status === 403);
@@ -159,11 +137,30 @@ export const ApprovalsSettings = ({
 
 	return (
 		<>
-			<div>
-				<h2 className="text-xl font-semibold text-neutral-900">
-					{t(`${key}.title`)}
-				</h2>
-				<p className="mt-3 text-sm text-neutral-800">{t(`${key}.subtitle`)}</p>
+			<div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+				<div>
+					<h2 className="text-xl font-semibold text-neutral-900" id={headingId}>
+						{t(`${copy}.pageTitle`)}
+					</h2>
+					<p className="mt-3 text-sm text-neutral-800">
+						{t(`${copy}.pageSubtitle`)}
+					</p>
+				</div>
+				{canManage && !problem && (
+					<Button
+						// "Add flow" read with its heading: "Add flow Leave approvals".
+						aria-labelledby={`${addId} ${headingId}`}
+						className="self-start"
+						id={addId}
+						leadingIcon={<PlusIcon />}
+						size="sm"
+						onClick={() => {
+							setDialog({});
+						}}
+					>
+						{t(`${key}.add`)}
+					</Button>
+				)}
 			</div>
 			{problem ? (
 				<p
@@ -174,73 +171,33 @@ export const ApprovalsSettings = ({
 					{problem}
 				</p>
 			) : (
-				APPROVAL_SUBJECTS.map((group) => {
-					const copy = subjectCopyKey(group);
-					const groupFlows = flowsOfSubject(flows.data ?? [], group);
-					const fallback = fallbackLineOf(groupFlows);
-					const headingId = `${idPrefix}-${group}-title`;
-					const addId = `${idPrefix}-${group}-add`;
-					return (
-						<section key={group} className="mt-8 flex flex-col gap-3">
-							<div className="flex items-start justify-between gap-3">
-								<div>
-									<h3
-										ref={(heading) => {
-											groupHeadings.current[group] = heading;
-										}}
-										className="text-sm font-semibold text-neutral-900"
-										id={headingId}
-									>
-										{t(`${copy}.title`)}
-									</h3>
-									<p className="mt-1 text-sm text-neutral-700">
-										{t(`${copy}.description`)}
-									</p>
-								</div>
-								{canManage && (
-									<Button
-										// "Add flow" read with its group: "Add flow Leave requests".
-										aria-labelledby={`${addId} ${headingId}`}
-										className="self-start"
-										id={addId}
-										leadingIcon={<PlusIcon />}
-										size="sm"
-										onClick={() => {
-											setDialog({ subject: group });
-										}}
-									>
-										{t(`${key}.add`)}
-									</Button>
-								)}
-							</div>
-							{groupFlows.length > 0 && (
-								<DataTable
-									// Fits beside Settings' tabs (360–520 px from md to xl), with the steps and status on the name's line.
-									className="[&>table]:min-w-0"
-									columns={columnsBySubject.get(group) ?? []}
-									data={groupFlows}
-									emptyState=""
-									getRowId={(flow) => flow.approvalFlowId}
-									label={t(`${copy}.title`)}
-								/>
-							)}
-							<p className="text-sm text-neutral-700">
-								{fallback === "companyDefault"
-									? t(`${key}.usesCompanyDefault`)
-									: fallback === "everyDepartment"
-										? t(`${key}.everyDepartmentUsesDefault`)
-										: t(`${copy}.${fallback}`)}
-							</p>
-						</section>
-					);
-				})
+				<section className="mt-8 flex flex-col gap-3">
+					{subjectFlows.length > 0 && (
+						<DataTable
+							// Fits beside Settings' list, with the steps and status on the name's line.
+							className="[&>table]:min-w-0"
+							columns={columns}
+							data={subjectFlows}
+							emptyState=""
+							getRowId={(flow) => flow.approvalFlowId}
+							label={t(`${copy}.pageTitle`)}
+						/>
+					)}
+					<p className="text-sm text-neutral-700">
+						{fallback === "companyDefault"
+							? t(`${key}.usesCompanyDefault`)
+							: fallback === "everyDepartment"
+								? t(`${key}.everyDepartmentUsesDefault`)
+								: t(`${copy}.${fallback}`)}
+					</p>
+				</section>
 			)}
 			{dialog && (
 				<ApprovalFlowDialog
 					companyId={companyId}
 					departmentName={(departmentId) => departmentNames.get(departmentId)}
 					editing={dialog.editing}
-					subjectType={dialog.subject}
+					subjectType={subject}
 					onClose={() => {
 						setDialog(null);
 					}}
@@ -252,7 +209,7 @@ export const ApprovalsSettings = ({
 									body: updateFlowBodyOf(values, editing.active),
 								})
 							: actions.create.mutateAsync(
-									createFlowBodyOf(values, dialog.subject)
+									createFlowBodyOf(values, subject)
 								);
 					}}
 				/>
@@ -269,7 +226,7 @@ export const ApprovalsSettings = ({
 								tone: "danger" as const,
 								title: t(`${key}.deleteTitle`, { name: change.flow.name }),
 								description: t(
-									`${subjectCopyKey(change.subject)}.deleteDescription`
+									`${copy}.deleteDescription`
 								),
 								confirmLabel: t(`${key}.deleteConfirm`),
 							}
@@ -277,14 +234,14 @@ export const ApprovalsSettings = ({
 							? {
 									title: t(`${key}.turnOffTitle`, { name: change.flow.name }),
 									description: t(
-										`${subjectCopyKey(change.subject)}.turnOffDescription`
+										`${copy}.turnOffDescription`
 									),
 									confirmLabel: t(`${key}.turnOffConfirm`),
 								}
 							: {
 									title: t(`${key}.turnOnTitle`, { name: change.flow.name }),
 									description: t(
-										`${subjectCopyKey(change.subject)}.turnOnDescription`
+										`${copy}.turnOnDescription`
 									),
 									confirmLabel: t(`${key}.turnOnConfirm`),
 								})}

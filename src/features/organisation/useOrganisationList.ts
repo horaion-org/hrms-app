@@ -1,11 +1,18 @@
-import { skipToken, useQuery, type QueryKey } from "@tanstack/react-query";
-import { ApiProblemError } from "@/common/problem";
+import {
+	skipToken,
+	useQuery,
+	type QueryKey,
+	type UseQueryResult,
+} from "@tanstack/react-query";
+import { ApiProblemError, isDecisionEngineStale } from "@/common/problem";
+import { isWaitingOnAccessUpdate } from "@/common/queryRetry";
 import type { ListPage } from "@/common/schemas";
 import type { PermissionKey } from "@/features/workspace/permissionKeys";
 import {
 	accessiblePreviousData,
 	administrativeMeta,
 } from "@/features/workspace/queryAccess";
+import { workspaceQuery } from "@/features/workspace/api";
 import { useAccess } from "@/features/workspace/useAccess";
 import {
 	type AccessRole,
@@ -27,8 +34,35 @@ import { retry } from "@/features/organisation/useOrganisationOverview";
  * person granted at one Branch or Department sees their part of the list.
  */
 export type OrganisationList<T> =
-	| { status: "pending" | "error" | "hidden" }
-	| ({ status: "ready" } & ListPage<T>);
+	| { status: "hidden" }
+	| {
+			status: "pending";
+			/** The last try was refused while access is updated; another follows shortly. */
+			stillUpdating?: boolean;
+	  }
+	| {
+			status: "error";
+			/** The API is still updating access after a recent change; reading again soon will pass. */
+			stillUpdating: boolean;
+			/** Reads the list again. */
+			retry: () => void;
+	  }
+	| ({
+			status: "ready";
+			/** A re-read is waiting on an access update; the rows shown may be out of date. */
+			stillUpdating?: boolean;
+	  } & ListPage<T>);
+
+/** A failed read as a list state: whether the API is still updating access, and how to read it again. */
+const failedRead = (
+	query: UseQueryResult<unknown>
+): Extract<OrganisationList<never>, { status: "error" }> => ({
+	status: "error",
+	stillUpdating: isDecisionEngineStale(query.error),
+	retry: (): void => {
+		void query.refetch();
+	},
+});
 
 export const useOrganisationList = <T>(
 	companyId: string,
@@ -38,6 +72,8 @@ export const useOrganisationList = <T>(
 	enabled = true
 ): OrganisationList<T> => {
 	const access = useAccess();
+	// The same workspace read useAccess makes, to read it again when it failed.
+	const workspace = useQuery({ ...workspaceQuery, retry });
 	const allowed = access.canAnywhere(permission);
 	const list = useQuery({
 		queryKey: ["organisation", companyId, ...key],
@@ -51,13 +87,22 @@ export const useOrganisationList = <T>(
 				: skipToken,
 	});
 
-	if (access.status !== "ready") return { status: access.status };
+	if (access.status === "pending") return { status: "pending" };
+	if (access.status === "error") return failedRead(workspace);
 	if (!allowed) return { status: "hidden" };
 	if (list.error instanceof ApiProblemError && list.error.status === 403)
 		return { status: "hidden" };
-	if (list.isError) return { status: "error" };
-	if (list.data === undefined) return { status: "pending" };
-	return { status: "ready", ...list.data };
+	if (list.isError) return failedRead(list);
+	if (list.data === undefined)
+		return {
+			status: "pending",
+			stillUpdating: isWaitingOnAccessUpdate(list),
+		};
+	return {
+		status: "ready",
+		...list.data,
+		stillUpdating: isWaitingOnAccessUpdate(list),
+	};
 };
 
 export const useBranches = (

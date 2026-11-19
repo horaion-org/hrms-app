@@ -78,6 +78,67 @@ const kitchenCover = {
 	departmentName: "Kitchen",
 	branchName: "Orchard",
 };
+/** Kitchen's live rule asking `comparison` `headcount` Duty Managers (jt-dm) on Breakfast Prep. */
+const dutyCover = (
+	headcount: string,
+	comparison = "AT_LEAST",
+	name = "Duty cover"
+): typeof kitchenCover => ({
+	...kitchenCover,
+	constraintId: "duty-cover",
+	name,
+	values: [
+		{ field: "COMPARISON", value: comparison, name: null, problem: null },
+		{ field: "HEADCOUNT", value: headcount, name: null, problem: null },
+		{ field: "JOB_TITLE", value: "jt-dm", name: "Duty Manager", problem: null },
+		{
+			field: "SHIFT",
+			value: "breakfast-prep",
+			name: "Breakfast Prep",
+			problem: null,
+		},
+	],
+});
+
+/** The rule with its shift gone: a roster can't use it until it is fixed. */
+const withShiftGone = (
+	constraint: ReturnType<typeof dutyCover>
+): ReturnType<typeof dutyCover> => ({
+	...constraint,
+	values: constraint.values.map((value) =>
+		value.field === "SHIFT" ? { ...value, problem: "UNAVAILABLE" } : value
+	),
+});
+
+/** How many times the live job titles read was asked for in this test. */
+let jobTitleReads = 0;
+
+/** The live job titles read: two people hold Duty Manager in Kitchen. */
+const TWO_DUTY_MANAGERS = {
+	[`GET ${COMPANY}/job-titles`]: (): StubReply => {
+		jobTitleReads += 1;
+		return {
+			status: 200,
+			body: envelope({
+				content: [
+					{
+						jobTitleId: "jt-dm",
+						branchId: "b-1",
+						branchName: "Orchard",
+						departmentId: "d-1",
+						departmentName: "Kitchen",
+						name: "Duty Manager",
+						description: null,
+						status: "ACTIVE",
+						holderCount: 2,
+					},
+				],
+				page: { totalElements: 1 },
+			}),
+		};
+	},
+};
+
 const barSupervisor = {
 	...CONSTRAINT_FIXTURES[0]!,
 	departmentId: "d-2",
@@ -96,8 +157,11 @@ beforeEach(() => {
 		renew: () => Promise.resolve({ kind: "expired" }),
 		onUnauthenticated: () => {},
 	});
+	jobTitleReads = 0;
 	// The router scrolls to the top on load, which jsdom does not implement.
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	// Sections a test folded are remembered; each test starts with none.
+	window.localStorage.clear();
 });
 afterEach(() => {
 	resetApiClient();
@@ -165,11 +229,18 @@ const KITCHEN_ONLY: UnitSelection = {
 	departmentId: "d-1",
 };
 
-const headers = (): Array<string> =>
-	screen.getAllByRole("columnheader").map((header) => header.textContent ?? "");
+/** Opens the folded section of the company's constraints. */
+const showCompany = async (
+	user: ReturnType<typeof userEvent.setup>
+): Promise<void> => {
+	await user.click(
+		await screen.findByRole("button", { name: /^Set by the company/ })
+	);
+};
 
 describe("ConstraintsTab", () => {
-	it("given_everyDepartment_when_listed_then_showsACompanyRowOnceAsAllDepartmentsWithoutActions", async () => {
+	it("given_everyDepartment_when_listed_then_foldsTheCompanysRowsAndShowsOnceForTheWholeCompanyWithoutActions", async () => {
+		const user = userEvent.setup();
 		stubApi({
 			[COMPANY_CONSTRAINTS]: ok([companyRest, kitchenCover, barSupervisor]),
 		});
@@ -181,19 +252,22 @@ describe("ConstraintsTab", () => {
 			],
 		});
 
-		const company = await screen.findByRole("row", { name: /Company rest/ });
-		expect(screen.getAllByRole("row", { name: /Company rest/ })).toHaveLength(
-			1
-		);
-		expect(headers()).toContain("Department");
-		expect(company).toHaveTextContent("All departments");
+		expect(
+			await screen.findByText("1 company constraint applies here.")
+		).toBeVisible();
+		await showCompany(user);
+		const company = screen.getByRole("listitem", { name: /Company rest/ });
+		expect(
+			screen.getAllByRole("listitem", { name: /Company rest/ })
+		).toHaveLength(1);
+		expect(company).toHaveTextContent("Whole company");
 		expect(within(company).queryByRole("button")).toBeNull();
 		expect(
-			screen.getByRole("row", { name: /Closing supervisor/ })
+			screen.getByRole("listitem", { name: /Closing supervisor/ })
 		).toHaveTextContent("Bar");
 		expect(
 			screen.getByText(
-				"How each department is staffed and rested. Work policy constraints apply where they reach; locked ones always apply."
+				"How each department is staffed and rested, by what each constraint decides. The company’s work policy comes last."
 			)
 		).toBeVisible();
 	});
@@ -209,19 +283,85 @@ describe("ConstraintsTab", () => {
 			requested: KITCHEN_ONLY,
 		});
 
-		const makeStricter = await screen.findByRole("button", {
+		await showCompany(user);
+		const makeStricter = screen.getByRole("button", {
 			name: "Make Company rest stricter here",
 		});
-		expect(headers()).not.toContain("Department");
 		await user.click(makeStricter);
 
 		const dialog = await screen.findByRole("dialog", {
 			name: "Set for this department",
 		});
-		expect(
-			within(dialog).getByRole("button", { name: /^Department/ })
-		).toHaveTextContent("Orchard › Kitchen");
+		expect(dialog).toHaveAccessibleDescription("Orchard › Kitchen");
 		expect(calls.map((call) => call.path)).toContain(`${KITCHEN}/constraints`);
+	});
+
+	it("given_oneDepartmentWhoseCompanySetsRest_when_restIsChosenInAdd_then_opensTheCompanysRuleToChangeHere", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			[`GET ${KITCHEN}/constraints`]: ok([companyRest, kitchenCover]),
+			[`GET ${KITCHEN}/constraint-options`]: ok(CONSTRAINT_OPTIONS_RESPONSE),
+		});
+		show({
+			permissions: ["constraint:read", "constraint:create"],
+			requested: KITCHEN_ONLY,
+		});
+
+		await user.click(
+			await screen.findByRole("button", { name: "Add constraint" })
+		);
+		const rest = await screen.findByRole("radio", {
+			name: "Rest between shifts",
+		});
+		expect(rest).toHaveAccessibleDescription(/Set by the company/);
+		await user.click(rest);
+
+		const dialog = await screen.findByRole("dialog", {
+			name: "Set for this department",
+		});
+		expect(
+			within(dialog).getByText(
+				"Company rest is set by the company and locked. You can only make it stricter here."
+			)
+		).toBeVisible();
+	});
+
+	it("given_oneDepartmentThatReplacedTheCompanysRest_when_adding_then_restIsDisabledWithWhy", async () => {
+		const user = userEvent.setup();
+		const kitchenRest = {
+			...companyRest,
+			constraintId: "kitchen-rest",
+			name: "Kitchen rest",
+			level: "DEPARTMENT" as const,
+			departmentId: "d-1",
+			departmentName: "Kitchen",
+			branchId: "b-1",
+			branchName: "Orchard",
+			lock: null,
+			overridesConstraintId: companyRest.constraintId,
+		};
+		stubApi({
+			[`GET ${KITCHEN}/constraints`]: ok([
+				{ ...companyRest, overriddenByConstraintId: kitchenRest.constraintId },
+				kitchenRest,
+			]),
+			[`GET ${KITCHEN}/constraint-options`]: ok(CONSTRAINT_OPTIONS_RESPONSE),
+		});
+		show({
+			permissions: ["constraint:read", "constraint:create"],
+			requested: KITCHEN_ONLY,
+		});
+
+		await user.click(
+			await screen.findByRole("button", { name: "Add constraint" })
+		);
+		const rest = await screen.findByRole("radio", {
+			name: "Rest between shifts",
+		});
+		expect(rest).toBeDisabled();
+		expect(rest).toHaveAccessibleDescription(
+			/this department already has its own version in the list/
+		);
 	});
 
 	it("given_oneDepartment_when_listed_then_aRuleForFullTimersSaysSo", async () => {
@@ -231,7 +371,9 @@ describe("ConstraintsTab", () => {
 		});
 		show({ permissions: ["constraint:read"], requested: KITCHEN_ONLY });
 
-		const limit = await screen.findByRole("row", { name: /Days in a row/ });
+		const limit = await screen.findByRole("listitem", {
+			name: /Days in a row/,
+		});
 		await waitFor(() => {
 			expect(limit).toHaveTextContent(
 				"No full-timer goes more than 6 days in a row without a Day off or Rest day."
@@ -246,7 +388,9 @@ describe("ConstraintsTab", () => {
 		});
 		show({ held: { "d-1": ["constraint:read"] } });
 
-		const limit = await screen.findByRole("row", { name: /Days in a row/ });
+		const limit = await screen.findByRole("listitem", {
+			name: /Days in a row/,
+		});
 		await waitFor(() => {
 			expect(limit).toHaveTextContent(
 				"No full-timer goes more than 6 days in a row without a Day off or Rest day."
@@ -258,41 +402,157 @@ describe("ConstraintsTab", () => {
 	});
 
 	it("given_everyDepartment_when_listed_then_offersNoMakeStricter", async () => {
+		const user = userEvent.setup();
 		stubApi({ [COMPANY_CONSTRAINTS]: ok([companyRest, kitchenCover]) });
 		show({ permissions: ["constraint:read", "constraint:create"] });
 
-		await screen.findByRole("row", { name: /Company rest/ });
+		await showCompany(user);
+		await screen.findByRole("listitem", { name: /Company rest/ });
 		expect(screen.queryByRole("button", { name: /stricter here/ })).toBeNull();
 	});
 
-	it("given_categoryTabs_when_oneIsChosen_then_narrowsAndCountsTheRows", async () => {
-		const user = userEvent.setup();
+	it("given_constraintsOfSeveralPurposes_when_listed_then_oneSectionEachThenTheCompanysFolded", async () => {
 		stubApi({
 			[COMPANY_CONSTRAINTS]: ok([companyRest, kitchenCover, barSupervisor]),
 		});
 		show({ permissions: ["constraint:read"] });
 
-		const tabs = await screen.findByRole("tablist", {
-			name: "Constraint categories",
+		const staffing = await screen.findByRole("region", {
+			name: "People on shifts · 2",
 		});
 		expect(
-			within(tabs)
-				.getAllByRole("tab")
-				.map((tab) => tab.textContent)
-		).toEqual([
-			"All 3",
-			"People on shifts 1",
-			"On duty throughout 1",
-			"Rest and hours 1",
-		]);
-
-		await user.click(
-			within(tabs).getByRole("tab", { name: /People on shifts/ })
-		);
-		const table = screen.getByRole("table", { name: "Constraints" });
-		expect(within(table).getAllByRole("row")).toHaveLength(2);
+			within(staffing).getByRole("listitem", { name: /Morning cover/ })
+		).toBeVisible();
 		expect(
-			within(table).getByRole("row", { name: /Morning cover/ })
+			within(staffing).getByRole("listitem", { name: /Closing supervisor/ })
+		).toBeVisible();
+		// On duty throughout holds no live kind (ADR-0128 in the API), so it has no section.
+		expect(
+			screen.queryByRole("region", { name: /^On duty throughout/ })
+		).toBeNull();
+		expect(
+			screen.getByRole("region", { name: "Set by the company · 1" })
+		).toBeVisible();
+		expect(screen.queryByRole("tablist")).toBeNull();
+	});
+
+	// A rule asking for more people than hold the title is still used by generation (the roster comes out short),
+	// so it is a warning that says so, not an error claiming no roster can use it.
+	it("given_aRuleAskingThreeDutyManagersWithTwoHolders_when_listed_then_aWarningSaysItsShiftsWillBeShort", async () => {
+		stubApi({
+			[`GET ${KITCHEN}/constraints`]: ok([dutyCover("3")]),
+			...TWO_DUTY_MANAGERS,
+		});
+		show({
+			permissions: ["constraint:read", "constraint:update", "job_title:read"],
+			requested: KITCHEN_ONLY,
+		});
+
+		const row = await screen.findByRole("listitem", { name: /Duty cover/ });
+		expect(
+			await within(row).findByText(
+				"It asks for 3, but only 2 people hold Duty Manager, so its shifts will be short until more people hold it or the number is lowered."
+			)
+		).toBeVisible();
+		expect(within(row).queryByText("Needs attention")).toBeNull();
+		expect(
+			within(row).getByRole("button", { name: "Edit Duty cover" })
+		).toBeVisible();
+		const notes = screen.getAllByRole("note").map((note) => note.textContent);
+		expect(notes).toContainEqual(
+			expect.stringMatching(
+				/^1 staffing rule asks for more people than hold its job titles\. Rosters still use it, but its shifts will be short/
+			)
+		);
+		expect(notes).not.toContainEqual(
+			expect.stringMatching(/needs attention|can’t use/)
+		);
+	});
+
+	// The owner's case: he lowered the headcount to the two who hold the title; the live rule is what counts.
+	it("given_theHeadcountEditedToTwo_when_listed_then_nothingIsFlaggedAndNoBanner", async () => {
+		stubApi({
+			[`GET ${KITCHEN}/constraints`]: ok([dutyCover("2")]),
+			...TWO_DUTY_MANAGERS,
+		});
+		show({
+			permissions: ["constraint:read", "job_title:read"],
+			requested: KITCHEN_ONLY,
+		});
+
+		const row = await screen.findByRole("listitem", { name: /Duty cover/ });
+		await waitFor(() => {
+			expect(jobTitleReads).toBeGreaterThan(0);
+		});
+		expect(within(row).queryByText("Needs attention")).toBeNull();
+		expect(screen.queryByText(/needs? attention\./)).toBeNull();
+	});
+
+	it("given_aRenamedRule_when_listed_then_itIsStillFlaggedByItsOwnValues", async () => {
+		stubApi({
+			[`GET ${KITCHEN}/constraints`]: ok([
+				dutyCover("3", "AT_LEAST", "Day managers"),
+			]),
+			...TWO_DUTY_MANAGERS,
+		});
+		show({
+			permissions: ["constraint:read", "job_title:read"],
+			requested: KITCHEN_ONLY,
+		});
+
+		const row = await screen.findByRole("listitem", { name: /Day managers/ });
+		expect(
+			await within(row).findByText(/^It asks for 3, but only 2 people hold/)
+		).toBeVisible();
+	});
+
+	it("given_atMostMoreThanHold_when_listed_then_neverFlagged", async () => {
+		stubApi({
+			[`GET ${KITCHEN}/constraints`]: ok([dutyCover("5", "AT_MOST")]),
+			...TWO_DUTY_MANAGERS,
+		});
+		show({
+			permissions: ["constraint:read", "job_title:read"],
+			requested: KITCHEN_ONLY,
+		});
+
+		const row = await screen.findByRole("listitem", { name: /Duty cover/ });
+		await waitFor(() => {
+			expect(jobTitleReads).toBeGreaterThan(0);
+		});
+		expect(within(row).queryByText("Needs attention")).toBeNull();
+	});
+
+	it("given_noJobTitleRead_when_listed_then_flagsNoRuleForCapacity", async () => {
+		stubApi({
+			[`GET ${KITCHEN}/constraints`]: ok([dutyCover("3")]),
+			...TWO_DUTY_MANAGERS,
+		});
+		show({ permissions: ["constraint:read"], requested: KITCHEN_ONLY });
+
+		const row = await screen.findByRole("listitem", { name: /Duty cover/ });
+		expect(within(row).queryByText("Needs attention")).toBeNull();
+		expect(jobTitleReads).toBe(0);
+	});
+
+	it("given_aSection_when_itsAddIsPressed_then_theChooserOpens", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			[`GET ${KITCHEN}/constraints`]: ok([kitchenCover]),
+			[`GET ${KITCHEN}/constraint-options`]: ok(CONSTRAINT_OPTIONS_RESPONSE),
+		});
+		show({
+			permissions: ["constraint:read", "constraint:create"],
+			requested: KITCHEN_ONLY,
+		});
+
+		const staffing = await screen.findByRole("region", {
+			name: /^People on shifts/,
+		});
+		await user.click(within(staffing).getByRole("button", { name: "Add" }));
+
+		expect(
+			await screen.findByRole("radio", { name: "People on a shift" })
 		).toBeVisible();
 	});
 
@@ -331,7 +591,7 @@ describe("ConstraintsTab", () => {
 		stubApi({ [COMPANY_CONSTRAINTS]: ok([kitchenCover]) });
 		show({ permissions: ["constraint:read"] });
 
-		await screen.findByRole("row", { name: /Morning cover/ });
+		await screen.findByRole("listitem", { name: /Morning cover/ });
 		expect(screen.queryByRole("link", { name: "Open work policy" })).toBeNull();
 	});
 
@@ -339,7 +599,7 @@ describe("ConstraintsTab", () => {
 		stubApi({ [COMPANY_CONSTRAINTS]: ok([kitchenCover]) });
 		show({ permissions: ["constraint:read"] });
 
-		await screen.findByRole("row", { name: /Morning cover/ });
+		await screen.findByRole("listitem", { name: /Morning cover/ });
 		expect(screen.queryByRole("button", { name: "Add constraint" })).toBeNull();
 	});
 
@@ -362,7 +622,9 @@ describe("ConstraintsTab", () => {
 			stubApi({ [`GET ${KITCHEN}/constraints`]: ok([kitchenCover]) });
 			show({ permissions, requested: KITCHEN_ONLY });
 
-			const row = await screen.findByRole("row", { name: /Morning cover/ });
+			const row = await screen.findByRole("listitem", {
+				name: /Morning cover/,
+			});
 			expect(
 				within(row).queryByRole("button", { name: "Edit Morning cover" }) !==
 					null
@@ -402,7 +664,9 @@ describe("ConstraintsTab", () => {
 				"Saving changes this constraint for Kitchen: new schedules and 1 draft that uses it. Generated and published schedules keep their own copy."
 			)
 		).toBeVisible();
-		expect(screen.getByRole("button", { name: /^Department/ })).toBeDisabled();
+		expect(
+			screen.getByRole("dialog", { name: "Edit constraint" })
+		).toHaveAccessibleDescription("Orchard › Kitchen");
 	});
 
 	it("given_schedulesNotReadable_when_editing_then_theNoteSaysAnyDrafts", async () => {
@@ -522,7 +786,7 @@ describe("ConstraintsTab", () => {
 		const user = userEvent.setup();
 		stubApi({ [COMPANY_CONSTRAINTS]: ok([companyRest, kitchenCover]) });
 		show({ permissions: ["constraint:read"] });
-		await screen.findByRole("row", { name: /Morning cover/ });
+		await screen.findByRole("listitem", { name: /Morning cover/ });
 
 		await user.type(
 			screen.getByRole("searchbox", { name: "Search constraints" }),
@@ -547,14 +811,15 @@ describe("ConstraintsTab", () => {
 		});
 
 		expect(
-			await screen.findByRole("row", { name: /Morning cover/ })
+			await screen.findByRole("listitem", { name: /Morning cover/ })
 		).toHaveTextContent("Kitchen");
 		expect(
-			screen.getByRole("row", { name: /Closing supervisor/ })
+			screen.getByRole("listitem", { name: /Closing supervisor/ })
 		).toHaveTextContent("Bar");
-		expect(screen.getAllByRole("row", { name: /Company rest/ })).toHaveLength(
-			1
-		);
+		await showCompany(user);
+		expect(
+			screen.getAllByRole("listitem", { name: /Company rest/ })
+		).toHaveLength(1);
 
 		await user.click(screen.getByRole("button", { name: "Filters" }));
 		await user.click(screen.getByRole("button", { name: /^Department/ }));
@@ -676,5 +941,89 @@ describe("ConstraintsTab: readiness", () => {
 		expect(
 			calls.filter((call) => call.path.endsWith("/scheduling-readiness"))
 		).toEqual([]);
+	});
+
+	it("given_aSectionHeading_when_clicked_then_itFoldsToItsGist_andCollapseAllFoldsEverySection", async () => {
+		const user = userEvent.setup();
+		stubApi({ [`GET ${KITCHEN}/constraints`]: ok([kitchenCover]) });
+		show({ permissions: ["constraint:read"], requested: KITCHEN_ONLY });
+
+		const heading = await screen.findByRole("button", {
+			name: /^People on shifts/,
+		});
+		expect(heading).toHaveAttribute("aria-expanded", "true");
+		await user.click(heading);
+		expect(heading).toHaveAttribute("aria-expanded", "false");
+		expect(
+			screen.queryByRole("listitem", { name: /Morning cover/ })
+		).toBeNull();
+		expect(screen.getByText("1 constraint")).toBeVisible();
+
+		await user.click(screen.getByRole("button", { name: "Expand all" }));
+		expect(
+			screen.getByRole("listitem", { name: /Morning cover/ })
+		).toBeVisible();
+		await user.click(screen.getByRole("button", { name: "Collapse all" }));
+		expect(heading).toHaveAttribute("aria-expanded", "false");
+		expect(
+			screen.queryByRole("listitem", { name: /Morning cover/ })
+		).toBeNull();
+	});
+
+	it("given_aShowingFilter_when_itLeavesOutARuleNeedingAttention_then_theBannerSaysSo", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			[`GET ${KITCHEN}/constraints`]: ok([
+				withShiftGone(dutyCover("2")),
+				{ ...barSupervisor, departmentId: "d-1", requirement: "SHOULD" },
+			]),
+			...TWO_DUTY_MANAGERS,
+		});
+		show({
+			permissions: ["constraint:read", "job_title:read"],
+			requested: KITCHEN_ONLY,
+		});
+
+		const row = await screen.findByRole("listitem", { name: /Duty cover/ });
+		expect(await within(row).findByText("Needs attention")).toBeVisible();
+		await user.click(screen.getByRole("button", { name: /^Filters/ }));
+		await user.click(screen.getByRole("button", { name: /^Showing/ }));
+		await user.click(screen.getByRole("option", { name: "If possible" }));
+
+		expect(screen.queryByRole("listitem", { name: /Duty cover/ })).toBeNull();
+		expect(
+			screen.getByText("1 more needs attention outside this filter.")
+		).toBeVisible();
+		expect(
+			screen.getByRole("button", { name: "Remove Showing: If possible" })
+		).toBeVisible();
+	});
+
+	it("given_theShowingFilter_when_opened_then_noEmptyOnDutyThroughoutGroup", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			[`GET ${KITCHEN}/constraints`]: ok([
+				dutyCover("3"),
+				{ ...barSupervisor, departmentId: "d-1" },
+			]),
+			[`GET ${KITCHEN}/constraint-options`]: ok(CONSTRAINT_OPTIONS_RESPONSE),
+			...TWO_DUTY_MANAGERS,
+		});
+		show({
+			permissions: ["constraint:read", "job_title:read"],
+			requested: KITCHEN_ONLY,
+		});
+
+		await screen.findByRole("listitem", { name: /Duty cover/ });
+		await user.click(screen.getByRole("button", { name: /^Filters/ }));
+		await user.click(screen.getByRole("button", { name: /^Showing/ }));
+
+		expect(
+			screen.getByRole("group", { name: "People on shifts" })
+		).toBeVisible();
+		// On duty throughout holds no live kind (ADR-0128 in the API), so it is no group of the filter.
+		expect(
+			screen.queryByRole("group", { name: "On duty throughout" })
+		).toBeNull();
 	});
 });

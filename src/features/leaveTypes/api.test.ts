@@ -41,7 +41,7 @@ describe("leave type catalogue client", () => {
 				body: envelope([
 					{
 						...managedLeaveTypeFixture(),
-						grantKind: "EARNED",
+						grantKind: "ACCRUED",
 						status: "ARCHIVED",
 					},
 				]),

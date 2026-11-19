@@ -11,13 +11,14 @@ import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { Input } from "@/components/forms/Input";
 import { Select } from "@/components/forms/Select";
 import { Callout } from "@/components/ui/Callout";
+import { Disclosure } from "@/components/ui/Disclosure";
 import {
 	activeTermsQuery,
 	type EmploymentTerms,
 	type HistoryEntry,
 	type MemberTerms,
 } from "@/features/employmentTerms/api";
-import { formatHours } from "@/features/employmentTerms/hours";
+import { durationShort } from "@/features/employmentTerms/hours";
 import {
 	memberTermsBodyOf,
 	memberTermsFormSchema,
@@ -28,10 +29,7 @@ import {
 } from "@/features/employmentTerms/memberTermsForm";
 import { memberTermsRefusal } from "@/features/employmentTerms/refusals";
 import { termsSentence } from "@/features/employmentTerms/summary";
-import {
-	nextMonday,
-	partTimeMismatch,
-} from "@/features/employmentTerms/termsChanges";
+import { nextMonday } from "@/features/employmentTerms/termsChanges";
 import { useMemberTermsActions } from "@/features/employmentTerms/useMemberTermsActions";
 import { CreateFormDialog } from "@/features/organisation/CreateFormDialog";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
@@ -97,15 +95,17 @@ export const ChangeEmploymentTermsDialog = ({
 				termsOf: (id): EmploymentTerms | undefined =>
 					findTerms(activeTerms, id),
 				startRule,
+				// A correction rewrites an entry in place, so only a new change is compared.
+				history: correcting ? [] : current.history,
 			}),
-		[t, activeTerms, startRule]
+		[t, activeTerms, startRule, correcting, current.history]
 	);
 	const form = useForm<MemberTermsFormValues>({
 		resolver: zodResolver(schema),
 		defaultValues: memberTermsFormValuesOf(
+			// A new change starts with no terms chosen: their current terms would change nothing.
 			correcting ?? {
-				termsId:
-					current.inForce?.basis === "ASSIGNED" ? current.inForce.termsId : "",
+				termsId: "",
 				effectiveFrom:
 					startRule.kind === "anyDay"
 						? (person.hireDate ?? today)
@@ -128,15 +128,6 @@ export const ChangeEmploymentTermsDialog = ({
 	const values = useWatch({ control }) as MemberTermsFormValues;
 	const submit = useCreateFormSubmit(form, FIELDS, onClose);
 	const chosen = findTerms(activeTerms, values.termsId);
-	const own = memberTermsBodyOf(values);
-	const mismatch = chosen
-		? partTimeMismatch(
-				person.employmentType,
-				chosen.weekMinutes,
-				own.contractedWeekMinutes,
-				reference?.partTimeBelowMinutes ?? null
-			)
-		: undefined;
 	const title = correcting
 		? t(`${key}.correctTitle`)
 		: current.inForce?.basis === "ASSIGNED"
@@ -170,6 +161,7 @@ export const ChangeEmploymentTermsDialog = ({
 	const ownField = (
 		field: "ownWeek" | "ownDay",
 		label: string,
+		unit: string,
 		hint: string | undefined
 	): ReactNode => {
 		const error = errors[field]?.message;
@@ -190,6 +182,7 @@ export const ChangeEmploymentTermsDialog = ({
 					id={idOf(field)}
 					inputMode="decimal"
 					status={error ? "error" : undefined}
+					unit={unit}
 					{...register(field)}
 				/>
 			</FormRow>
@@ -240,6 +233,11 @@ export const ChangeEmploymentTermsDialog = ({
 				})(event)
 			}
 		>
+			{!correcting && current.inForce && (
+				<p className="text-sm text-neutral-800">
+					{t(`${key}.now`, { name: current.inForce.name })}
+				</p>
+			)}
 			<FormRow
 				htmlFor={idOf("termsId")}
 				label={t(`${key}.terms`)}
@@ -270,7 +268,7 @@ export const ChangeEmploymentTermsDialog = ({
 			</FormRow>
 			{chosen && (
 				<p className="text-sm text-neutral-800">
-					{termsSentence(chosen, reference, t, language)}
+					{termsSentence(chosen, reference, t)}
 				</p>
 			)}
 			<FormRow
@@ -310,41 +308,33 @@ export const ChangeEmploymentTermsDialog = ({
 				startRule.kind === "monday" && (
 					<Callout tone="warning">{t(`${key}.pastDate`)}</Callout>
 				)}
-			<fieldset className="flex flex-col gap-3">
-				<legend className="mb-2 text-sm font-semibold text-neutral-900">
-					{t(`${key}.ownHours`)}
-				</legend>
+			<Disclosure
+				defaultOpen={values.ownWeek !== "" || values.ownDay !== ""}
+				title={t(`${key}.ownHours`)}
+			>
 				<div className="grid gap-4 sm:grid-cols-2">
 					{ownField(
 						"ownWeek",
 						t(`${key}.ownWeek`),
+						t(`${key}.ownWeekUnit`),
 						chosen
 							? t(`${key}.ownWeekHint`, {
-									week: formatHours(chosen.weekMinutes, language),
+									week: durationShort(chosen.weekMinutes, t),
 								})
 							: undefined
 					)}
 					{ownField(
 						"ownDay",
 						t(`${key}.ownDay`),
+						t(`${key}.ownDayUnit`),
 						chosen?.dayMinutes
 							? t(`${key}.ownDayHint`, {
-									day: formatHours(chosen.dayMinutes, language),
+									day: durationShort(chosen.dayMinutes, t),
 								})
 							: undefined
 					)}
 				</div>
-			</fieldset>
-			{mismatch && chosen && (
-				<Callout tone="warning">
-					{t(`employmentTerms.row.mismatch.${mismatch}`, {
-						week: formatHours(
-							own.contractedWeekMinutes ?? chosen.weekMinutes,
-							language
-						),
-					})}
-				</Callout>
-			)}
+			</Disclosure>
 		</CreateFormDialog>
 	);
 };

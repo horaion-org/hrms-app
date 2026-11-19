@@ -1,5 +1,7 @@
 import type { TFunction } from "i18next";
 import type { ReactNode } from "react";
+import { matchesSearch } from "@/common/matchesSearch";
+import { isDecisionEngineStale } from "@/common/problem";
 import { formatDate } from "@/components/forms/Calendar";
 import type { SelectOption } from "@/components/forms/Select";
 import { Badge } from "@/components/ui/Badge";
@@ -174,22 +176,39 @@ export const actionsColumn = <T extends { name: string }>(
 	pin: "end",
 });
 
-/** Whether a name contains the search, ignoring case and outer spaces. */
-export const matchesSearch = (name: string, search: string): boolean =>
-	name.toLocaleLowerCase().includes(search.trim().toLocaleLowerCase());
-
 /** What a list page shows for a list's state. */
 export type ListView<T> = {
 	rows: Array<T>;
 	/** Shown in the table body when `rows` is empty. */
 	empty: string;
-	/** Replaces the table when the list can't be shown. */
-	problem?: { message: string; alert: boolean };
+	/** Replaces the table when the list can't be shown; `retry` when reading it again may help. */
+	problem?: { message: string; alert: boolean; retry?: () => void };
 	/** Set when the API holds more rows than one page returns. */
 	truncated?: string;
+	/** Shown above the rows while a re-read waits on an access update. */
+	updating?: string;
 };
 
 const NO_ROWS: Array<never> = [];
+
+/**
+ * A failed read shown in place of its table: the access-update wording
+ * when the API refused it as stale (`stillUpdating`), else `failed`, with
+ * Try again reading it again either way.
+ */
+export const failedReadProblem = (
+	read: { error: unknown; refetch: () => Promise<unknown> },
+	failed: string,
+	t: TFunction
+): NonNullable<ListView<never>["problem"]> => ({
+	message: isDecisionEngineStale(read.error)
+		? t("organisation.list.stillUpdating")
+		: failed,
+	alert: true,
+	retry: (): void => {
+		void read.refetch();
+	},
+});
 
 /**
  * Turns a fetched list into rows filtered by the search, with the copy for
@@ -206,7 +225,12 @@ export const describeList = <T extends { name: string }>(
 ): ListView<T> => {
 	switch (list.status) {
 		case "pending":
-			return { rows: NO_ROWS, empty: t("organisation.list.loading") };
+			return {
+				rows: NO_ROWS,
+				empty: list.stillUpdating
+					? t("organisation.list.waitingForAccess")
+					: t("organisation.list.loading"),
+			};
 		case "hidden":
 			return {
 				rows: NO_ROWS,
@@ -217,7 +241,13 @@ export const describeList = <T extends { name: string }>(
 			return {
 				rows: NO_ROWS,
 				empty: emptyText,
-				problem: { message: t("organisation.list.failed"), alert: true },
+				problem: {
+					message: list.stillUpdating
+						? t("organisation.list.stillUpdating")
+						: t("organisation.list.failed"),
+					alert: true,
+					retry: list.retry,
+				},
 			};
 		case "ready": {
 			// Unfiltered rows keep their identity, so the table keeps its models.
@@ -226,6 +256,9 @@ export const describeList = <T extends { name: string }>(
 				: list.items;
 			return {
 				rows,
+				updating: list.stillUpdating
+					? t("organisation.list.waitingForAccess")
+					: undefined,
 				empty:
 					search.trim() || filtered
 						? t("organisation.list.noMatches")

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import "@/common/i18n";
 import type { FunctionComponent } from "@/common/types";
 import { HoraionLogo } from "@/components/layout/Sidebar/HoraionLogo";
 

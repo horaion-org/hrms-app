@@ -26,6 +26,11 @@ describe("PeopleNotice", () => {
 			true,
 			"Priya Nair was added, but their access role wasn’t assigned. Assign it from Settings, under Access roles.",
 		],
+		[
+			"addedWithoutInvitation",
+			false,
+			"Priya Nair was added. No email was sent: invite them from their profile when you’re ready.",
+		],
 		["saved", false, "Changes to Priya Nair were saved."],
 		[
 			"saved",

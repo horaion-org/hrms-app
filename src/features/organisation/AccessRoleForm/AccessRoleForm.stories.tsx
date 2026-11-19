@@ -55,14 +55,45 @@ export const Create: Story = {
 	},
 };
 
-/** How the Company Owner role and roles the person can't change are shown. */
+/** How the built-in System Owner and System Admin roles, and roles the person can't change, are shown. */
 export const ReadOnly: Story = {
 	args: {
 		readOnly: true,
 		initial: {
 			kind: "COMPANY",
-			name: "Company Owner",
+			name: "System Owner",
 			permissions: [...PERMISSION_KEYS],
 		},
+	},
+};
+
+/** A site lead made before shift preferences, reports and people events existed. */
+export const NewPermissions: Story = {
+	args: {
+		initial: {
+			kind: "LOCAL",
+			name: "Site lead",
+			permissions: [
+				"member_profile:read",
+				"leave_request:read",
+				"leave_request:review",
+				"schedule:read",
+				"schedule:create",
+				"schedule:update",
+				"schedule:generate",
+				"schedule:delete",
+				"schedule:publish",
+				"schedule:edit_shift",
+				"shift:read",
+				"constraint:read",
+				"approval:read",
+				"approval:decide",
+			],
+		},
+		newPermissions: [
+			"shift_preference:read",
+			"member_event:read",
+			"report:read",
+		],
 	},
 };

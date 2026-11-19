@@ -4,6 +4,7 @@ import { ApiProblemError, UnexpectedResponseError } from "@/common/problem";
 import { envelope, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
+	CONSTRAINT_TYPES,
 	companyConstraintsQuery,
 	createConstraint,
 	deleteConstraint,
@@ -13,6 +14,7 @@ import {
 	updateConstraint,
 	type ConstraintBody,
 } from "@/features/scheduling/constraints/api";
+import { isRetiredConstraintType } from "@/features/scheduling/constraints/constraintTypeCatalogue";
 import {
 	constraintRefusal,
 	deleteConstraintRefusal,
@@ -22,6 +24,9 @@ import {
 	CONSTRAINT_FIXTURES,
 	CONSTRAINT_OPTIONS,
 	CONSTRAINT_OPTIONS_RESPONSE,
+	MOST_HOURS_A_DAY_FIXTURE,
+	MOST_OVERTIME_A_MONTH_FIXTURE,
+	PAY_RATES_FIXTURE,
 } from "@/features/scheduling/constraints/fixtures";
 
 const UNIT = { branchId: "b-1", departmentId: "d-1" };
@@ -66,7 +71,7 @@ describe("constraints client", () => {
 		expect(calls[0]?.body).toEqual(BODY);
 	});
 
-	it("lists the department's live constraints, inactive ones and constraints without a requirement included", async () => {
+	it("lists the department's live constraints, inactive ones included, each with its requirement", async () => {
 		stubApi({
 			[`GET ${CONSTRAINTS}`]: {
 				status: 200,
@@ -81,10 +86,9 @@ describe("constraints client", () => {
 			constraints.find((constraint) => constraint.status === "INACTIVE")?.name
 		).toBe("Weekend days on");
 		expect(
-			constraints.find(
-				(constraint) => constraint.type === "REST_BETWEEN_SHIFTS"
-			)?.requirement
-		).toBeNull();
+			constraints.find((constraint) => constraint.type === "AVOID_DAYS_OFF_ON")
+				?.requirement
+		).toBe("SHOULD");
 	});
 
 	it.each([
@@ -150,7 +154,8 @@ describe("constraints client", () => {
 		).toEqual({
 			type: "REST_BETWEEN_SHIFTS",
 			category: "WORKING_HOURS",
-			hasRequirement: false,
+			hasRequirement: true,
+			requirementPolicy: "MUST_OR_SHOULD",
 			onePerDepartment: true,
 			levels: ["COMPANY", "DEPARTMENT"],
 			fields: [
@@ -163,6 +168,11 @@ describe("constraints client", () => {
 					max: 24,
 					strictness: "HIGHER_IS_STRICTER",
 					comparisons: null,
+					listedBy: null,
+					listsSomeOf: [],
+					excludes: null,
+					choices: [],
+					partialComparisons: [],
 				},
 			],
 			addedBySystem: false,
@@ -170,6 +180,38 @@ describe("constraints client", () => {
 		});
 		expect(calls.map((call) => call.path)).toEqual([
 			`${DEPARTMENT}/constraint-options`,
+		]);
+	});
+
+	it("reads each shift's group, and none from an API that predates it", async () => {
+		stubApi({
+			[`GET ${DEPARTMENT}/constraint-options`]: {
+				status: 200,
+				body: envelope({
+					types: CONSTRAINT_OPTIONS_RESPONSE.types,
+					links: {
+						SHIFT: [
+							{
+								id: "lunch",
+								name: "Lunch Rush",
+								listedIds: {},
+								group: "Service",
+							},
+							{ id: "old", name: "Old shift", listedIds: {} },
+						],
+						JOB_TITLE: [],
+					},
+				}),
+			},
+		});
+
+		const options = await fetchConstraintOptions("c-1", UNIT);
+
+		expect(
+			options.shifts.map(({ shiftId, group }) => [shiftId, group])
+		).toEqual([
+			["lunch", "Service"],
+			["old", null],
 		]);
 	});
 
@@ -190,7 +232,123 @@ describe("constraints client", () => {
 		const options = await fetchConstraintOptions("c-1", UNIT);
 
 		expect(options.shifts).toEqual([
-			{ shiftId: "front-desk-am", name: "Front Desk AM", jobTitleIds: [] },
+			{
+				shiftId: "front-desk-am",
+				name: "Front Desk AM",
+				jobTitleIds: [],
+				listedIds: {},
+				group: null,
+			},
+		]);
+	});
+
+	it("reads which fields depend on which, and what each shift lists, with none from an API that predates them", async () => {
+		const staffing = CONSTRAINT_OPTIONS_RESPONSE.types.find(
+			(type) => type.type === "SHIFT_STAFFING_WITH_STAND_INS"
+		)!;
+		const older = {
+			...staffing,
+			fields: staffing.fields.map((spec) => {
+				const predating: Record<string, unknown> = { ...spec };
+				delete predating["listedBy"];
+				delete predating["listsSomeOf"];
+				delete predating["excludes"];
+				return predating;
+			}),
+		};
+		stubApi({
+			[`GET ${DEPARTMENT}/constraint-options`]: {
+				status: 200,
+				body: envelope({
+					...CONSTRAINT_OPTIONS_RESPONSE,
+					types: [staffing, older],
+				}),
+			},
+		});
+
+		const options = await fetchConstraintOptions("c-1", UNIT);
+
+		const [current, predating] = options.types;
+		expect(
+			current?.fields.map(({ field, listedBy, listsSomeOf, excludes }) => ({
+				field,
+				listedBy,
+				listsSomeOf,
+				excludes,
+			}))
+		).toEqual([
+			{ field: "HEADCOUNT", listedBy: null, listsSomeOf: [], excludes: null },
+			{
+				field: "STAND_INS_PER_PERSON",
+				listedBy: null,
+				listsSomeOf: [],
+				excludes: null,
+			},
+			{
+				field: "JOB_TITLE",
+				listedBy: "SHIFT",
+				listsSomeOf: [],
+				excludes: null,
+			},
+			{
+				field: "STAND_IN_JOB_TITLE",
+				listedBy: "SHIFT",
+				listsSomeOf: [],
+				excludes: "JOB_TITLE",
+			},
+			{
+				field: "SHIFT",
+				listedBy: null,
+				listsSomeOf: ["JOB_TITLE", "STAND_IN_JOB_TITLE"],
+				excludes: null,
+			},
+		]);
+		expect(
+			predating?.fields.every(
+				(spec) =>
+					spec.listedBy === null &&
+					spec.listsSomeOf.length === 0 &&
+					spec.excludes === null
+			)
+		).toBe(true);
+		expect(
+			options.shifts.find((shift) => shift.shiftId === "front-desk-am")
+				?.listedIds
+		).toEqual({
+			JOB_TITLE: ["front-desk-staff", "front-desk-lead"],
+		});
+		expect(options.jobTitles[0]?.listedIds).toEqual({});
+	});
+
+	it("reads why a stored value no longer fits, a problem the app does not know as unknown, and none from an API that predates it", async () => {
+		const [shift, jobTitle, comparison] = [
+			{
+				field: "SHIFT",
+				value: "gone",
+				name: "Old shift",
+				problem: "UNAVAILABLE",
+			},
+			{
+				field: "JOB_TITLE",
+				value: "lead",
+				name: "Lead",
+				problem: "SOMETHING_NEW",
+			},
+			{ field: "COMPARISON", value: "AT_LEAST", name: null },
+		];
+		stubApi({
+			[`GET ${CONSTRAINTS}`]: {
+				status: 200,
+				body: envelope([{ ...LIVE, values: [shift, jobTitle, comparison] }]),
+			},
+		});
+
+		const [constraint] = await fetchConstraints("c-1", UNIT);
+
+		expect(constraint?.values.map((value) => value.problem)).toEqual([
+			"UNAVAILABLE",
+			"UNKNOWN",
+			undefined,
 		]);
 	});
 
@@ -276,7 +434,161 @@ describe("constraints client", () => {
 		expect(options.types[0]?.fields[0]?.comparisons).toBeNull();
 	});
 
-	it("keeps all eight types when the department has no shifts or job titles", async () => {
+	it("reads the work policy's most hours a day and most overtime a month as system-owned, a lower figure stricter", async () => {
+		stubApi({
+			[`GET ${DEPARTMENT}/constraint-options`]: {
+				status: 200,
+				body: envelope(CONSTRAINT_OPTIONS_RESPONSE),
+			},
+		});
+
+		const options = await fetchConstraintOptions("c-1", UNIT);
+		const ceilings = options.types.filter(
+			(type) =>
+				type.type === "MAX_WORK_HOURS_PER_DAY" ||
+				type.type === "MAX_OVERTIME_HOURS_PER_MONTH"
+		);
+
+		expect(
+			ceilings.map(({ type, category, addedBySystem, onePerDepartment }) => ({
+				type,
+				category,
+				addedBySystem,
+				onePerDepartment,
+			}))
+		).toEqual([
+			{
+				type: "MAX_WORK_HOURS_PER_DAY",
+				category: "WORKING_HOURS",
+				addedBySystem: true,
+				onePerDepartment: true,
+			},
+			{
+				type: "MAX_OVERTIME_HOURS_PER_MONTH",
+				category: "WORKING_HOURS",
+				addedBySystem: true,
+				onePerDepartment: true,
+			},
+		]);
+		expect(
+			ceilings.flatMap((type) =>
+				type.fields.map(({ field, min, max, strictness }) => ({
+					field,
+					min,
+					max,
+					strictness,
+				}))
+			)
+		).toEqual([
+			{
+				field: "WORK_HOURS_A_DAY",
+				min: 1,
+				max: 24,
+				strictness: "LOWER_IS_STRICTER",
+			},
+			{
+				field: "OVERTIME_HOURS_A_MONTH",
+				min: 0,
+				max: 744,
+				strictness: "LOWER_IS_STRICTER",
+			},
+		]);
+	});
+
+	it("reads the working-time settings as ordinary types a planner adds, once per department", async () => {
+		stubApi({
+			[`GET ${DEPARTMENT}/constraint-options`]: {
+				status: 200,
+				body: envelope(CONSTRAINT_OPTIONS_RESPONSE),
+			},
+		});
+
+		const options = await fetchConstraintOptions("c-1", UNIT);
+		const settings = options.types.filter(
+			(type) =>
+				type.type === "MAX_CALL_BACKS_PER_PERSON" || type.type === "PAY_RATES"
+		);
+		// Pay rates moved onto employment terms (ADR-0123 in the API), so only the call-back limit is offered.
+
+		expect(
+			settings.map(({ type, addedBySystem, onePerDepartment, fields }) => ({
+				type,
+				addedBySystem,
+				onePerDepartment,
+				fields: fields.map(({ field, min, max }) => [field, min, max]),
+			}))
+		).toEqual([
+			{
+				type: "MAX_CALL_BACKS_PER_PERSON",
+				addedBySystem: false,
+				onePerDepartment: true,
+				fields: [
+					["CALL_BACKS", 0, 31],
+					["CALL_BACK_SPAN_DAYS", 2, 31],
+				],
+			},
+		]);
+	});
+
+	it("reads each type's requirement policy, a setting neither Must nor If possible, a fixed one and an unknown one safely", async () => {
+		stubApi({
+			[`GET ${DEPARTMENT}/constraint-options`]: {
+				status: 200,
+				body: envelope({
+					...CONSTRAINT_OPTIONS_RESPONSE,
+					// A fixed Must as an API that still fixes a type would send it, and a policy a newer API adds.
+					types: CONSTRAINT_OPTIONS_RESPONSE.types.map((type) =>
+						type.type === "SHIFT_STAFFING"
+							? { ...type, requirementPolicy: "SOMETHING_NEW" }
+							: type.type === "MAX_CALL_BACKS_PER_PERSON"
+								? { ...type, requirementPolicy: "ALWAYS_MUST" }
+								: type
+					),
+				}),
+			},
+		});
+
+		const options = await fetchConstraintOptions("c-1", UNIT);
+		const policyOf = (type: string): string | undefined =>
+			options.types.find((option) => option.type === type)?.requirementPolicy;
+
+		expect(policyOf("NO_OVERTIME_WHEN_GENERATING")).toBe("SETTING");
+		expect(policyOf("REST_BETWEEN_SHIFTS")).toBe("MUST_OR_SHOULD");
+		expect(policyOf("DAY_TYPE_DAYS_PER_WEEK")).toBe("MUST_OR_SHOULD");
+		expect(policyOf("MAX_WORK_HOURS_PER_DAY")).toBe("MUST_OR_SHOULD");
+		expect(policyOf("AVOID_DAYS_OFF_ON")).toBe("MUST_OR_SHOULD");
+		expect(policyOf("MAX_CALL_BACKS_PER_PERSON")).toBe("ALWAYS_MUST");
+		expect(policyOf("SHIFT_STAFFING")).toBe("UNKNOWN");
+	});
+
+	it("reads a work policy's pay rates", async () => {
+		stubApi({
+			"GET /api/v1/companies/c-1/constraints": {
+				status: 200,
+				body: envelope([PAY_RATES_FIXTURE]),
+			},
+		});
+
+		await expect(fetchCompanyConstraints("c-1", undefined)).resolves.toEqual([
+			PAY_RATES_FIXTURE,
+		]);
+	});
+
+	it("reads the seeded ceilings in the work policy", async () => {
+		const rows = [MOST_HOURS_A_DAY_FIXTURE, MOST_OVERTIME_A_MONTH_FIXTURE];
+		stubApi({
+			"GET /api/v1/companies/c-1/constraints": {
+				status: 200,
+				body: envelope(rows),
+			},
+		});
+
+		await expect(fetchCompanyConstraints("c-1", undefined)).resolves.toEqual(
+			rows
+		);
+	});
+
+	it("keeps every type when the department has no shifts or job titles", async () => {
 		stubApi({
 			[`GET ${DEPARTMENT}/constraint-options`]: {
 				status: 200,
@@ -287,7 +599,9 @@ describe("constraints client", () => {
 			},
 		});
 		const options = await fetchConstraintOptions("c-1", UNIT);
-		expect(options.types).toHaveLength(8);
+		expect(options.types).toHaveLength(
+			CONSTRAINT_TYPES.filter((type) => !isRetiredConstraintType(type)).length
+		);
 		expect(options.shifts).toEqual([]);
 		expect(options.jobTitles).toEqual([]);
 	});
@@ -496,10 +810,14 @@ describe("constraint refusals", () => {
 		],
 		[
 			400,
-			"CONSTRAINT_JOB_TITLE_NOT_IN_DEPARTMENT",
-			"A chosen job title isn’t an active job title of this department. Choose again.",
+			"CONSTRAINT_LINK_NOT_IN_DEPARTMENT",
+			"A chosen shift or job title is no longer part of this department. Choose again.",
 		],
-		[404, "SHIFT_NOT_FOUND", "A chosen shift no longer exists. Choose again."],
+		[
+			400,
+			"CONSTRAINT_LINK_DOES_NOT_FIT",
+			"A chosen job title isn’t on every chosen shift, or a chosen shift lists none of the chosen job titles. Choose again, choose fewer shifts, or change the shift first.",
+		],
 		[404, "CONSTRAINT_NOT_FOUND", "This constraint no longer exists."],
 		[
 			409,

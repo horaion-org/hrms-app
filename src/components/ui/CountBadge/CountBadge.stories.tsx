@@ -9,7 +9,7 @@ const meta = {
 		count: { control: "number" },
 		tone: {
 			control: "inline-radio",
-			options: ["active", "inactive", "disabled"],
+			options: ["active", "inactive", "disabled", "warning"],
 		},
 	},
 } satisfies Meta<typeof CountBadge>;
@@ -21,6 +21,8 @@ type Story = StoryObj<typeof meta>;
 export const Active: Story = {};
 export const Inactive: Story = { args: { tone: "inactive" } };
 export const Disabled: Story = { args: { tone: "disabled" } };
+/** What needs a look but does not block, in amber. */
+export const Warning: Story = { args: { tone: "warning" } };
 /** A zero count renders nothing. Change the count control to reveal it. */
 export const Zero: Story = { args: { count: 0 } };
 export const Capped: Story = { args: { count: 150 } };

@@ -16,6 +16,7 @@ import type {
 	AccessRole,
 	CompanyMember,
 	MemberAccessRoleAssignment,
+	RoleRecipient,
 } from "@/features/organisation/api";
 import {
 	companyRoleOutOfReach,
@@ -33,8 +34,8 @@ import { isPermissionKey } from "@/features/workspace/permissionKeys";
 export type AssignAccessRoleDialogProps = {
 	/** The roles that can be assigned. Given just one, it is the role and no choice is offered. */
 	roles: Array<AccessRole>;
-	/** The people matching `query`. */
-	people: Array<CompanyMember>;
+	/** The people matching `query`, each with their Branch and Department when known. */
+	people: Array<RoleRecipient>;
 	query: string;
 	onQueryChange: (query: string) => void;
 	/**
@@ -81,6 +82,12 @@ export type AssignAccessRoleDialogProps = {
 };
 
 const key = "organisation.accessRoles.assignments.dialog";
+
+/** Where a person is filed, e.g. "Orchard › Kitchen", or nothing when not known. */
+const filedAt = (member: RoleRecipient): string | undefined =>
+	[member.branchName, member.departmentName]
+		.filter((name): name is string => Boolean(name))
+		.join(" › ") || undefined;
 const accessKey = "organisation.accessRoles.access";
 
 /**
@@ -113,7 +120,7 @@ export const AssignAccessRoleDialog = ({
 	const [chosenRoleId, setChosenRoleId] = useState(
 		onlyRole?.accessRoleId ?? ""
 	);
-	const [person, setPerson] = useState<CompanyMember | null>(
+	const [person, setPerson] = useState<RoleRecipient | null>(
 		editing?.person ?? null
 	);
 	const [places, setPlaces] = useState<Array<AssignmentTarget>>(
@@ -220,6 +227,14 @@ export const AssignAccessRoleDialog = ({
 						query={query}
 						searchPlaceholder={t(`${key}.searchPlaceholder`)}
 						value={person}
+						renderOption={(member) => (
+							<span className="flex min-w-0 flex-col">
+								<span className="truncate">{member.displayName}</span>
+								<span className="truncate text-xs text-neutral-800">
+									{filedAt(member) ?? t(`${key}.noDepartment`)}
+								</span>
+							</span>
+						)}
 						onQueryChange={onQueryChange}
 						onChange={(next): void => {
 							setPerson(next);

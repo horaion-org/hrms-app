@@ -1,0 +1,240 @@
+import { screen, within } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { resetApiClient } from "@/common/api-client";
+import { effectiveWorkspace } from "@/common/testing/effectiveWorkspace";
+import {
+	currentUserReply,
+	openApp,
+	type OpenedApp,
+} from "@/common/testing/openApp";
+import {
+	accessPassReply,
+	envelope,
+	stubApi,
+	type StubReply,
+} from "@/common/testing/stubApi";
+import { endSession } from "@/features/auth/session";
+import { renderAuthApp } from "@/features/auth/testing";
+import {
+	overtimeFixture,
+	shortageFixture,
+	staffingRuleFixture,
+} from "@/features/dashboard/fixtures";
+import { rosterChangeDepartmentFixture } from "@/features/reports/fixtures";
+import { presetRange } from "@/features/reports/reportsSearch";
+
+const REPORTS = "/api/v1/companies/c-1/reports";
+
+let app: OpenedApp | undefined;
+beforeEach(() => {
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+});
+afterEach(() => {
+	app?.disconnect();
+	app?.queryClient.clear();
+	app = undefined;
+	endSession("expired");
+	resetApiClient();
+	vi.unstubAllGlobals();
+	vi.restoreAllMocks();
+	localStorage.clear();
+});
+
+const workspaceReply = (permissions: Array<string>): StubReply => ({
+	status: 200,
+	body: envelope(
+		effectiveWorkspace({
+			companies: [
+				{
+					uuid: "c-1",
+					name: "Company c-1",
+					permissions,
+					branches: [
+						{
+							uuid: "b-1",
+							name: "Main branch",
+							status: "ACTIVE",
+							country: "SG",
+							permissions: [],
+							departments: [
+								{
+									uuid: "d-1",
+									name: "Sales",
+									status: "ACTIVE",
+									permissions: [],
+								},
+							],
+						},
+					],
+				},
+			],
+		})
+	),
+});
+
+const routes = (permissions: Array<string>): Record<string, StubReply> => ({
+	"POST /api/v1/public/sessions/refreshes": accessPassReply(),
+	"GET /api/v1/me": currentUserReply(),
+	"GET /api/v1/me/workspace": workspaceReply(permissions),
+	[`GET ${REPORTS}/staffing`]: {
+		status: 200,
+		body: envelope({
+			from: "2026-11-01",
+			to: "2026-11-30",
+			rules: [staffingRuleFixture()],
+		}),
+	},
+	[`GET ${REPORTS}/shortages`]: {
+		status: 200,
+		body: envelope({
+			from: "2026-11-01",
+			to: "2026-11-30",
+			shortages: [shortageFixture({ day: "2026-11-18", shortBy: 2 })],
+		}),
+	},
+	[`GET ${REPORTS}/overtime`]: {
+		status: 200,
+		body: envelope(overtimeFixture()),
+	},
+	[`GET ${REPORTS}/roster-changes`]: {
+		status: 200,
+		body: envelope({
+			from: "2026-11-01",
+			to: "2026-11-30",
+			departments: [rosterChangeDepartmentFixture()],
+		}),
+	},
+});
+
+const open = async (entry: string): Promise<OpenedApp> => {
+	app = await openApp(entry);
+	renderAuthApp(app);
+	return app;
+};
+
+describe("Reports", () => {
+	it("answers each question in its heading, over the chosen dates", async () => {
+		const calls = stubApi(routes(["report:read"]));
+		await open("/reports?from=2026-10-01&to=2026-11-30");
+
+		expect(
+			await screen.findByRole("heading", { level: 1, name: "Reports" })
+		).toBeInTheDocument();
+		expect(
+			await screen.findByRole("heading", {
+				level: 2,
+				name: "Main branch ran 9 people short; 9 of them come from Front desk AM",
+			})
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("heading", {
+				level: 2,
+				name: "1 person went over the monthly limit",
+			})
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("heading", {
+				level: 2,
+				name: "4 changes after publishing; main reason: By hand",
+			})
+		).toBeInTheDocument();
+		expect(
+			await screen.findByRole("table", { name: "Staffing by rule" })
+		).toHaveTextContent("Front desk AM");
+		expect(
+			await screen.findByRole("table", { name: "Overtime by month" })
+		).toHaveTextContent("Aisha Rahman");
+		expect(
+			await screen.findByRole("table", { name: "Changes after publishing" })
+		).toHaveTextContent("By hand");
+		// Each section's chart reads its amounts out, by unit: the Departments of the Branch in view.
+		expect(
+			await screen.findByRole("img", {
+				name: /^People short by week, Sales: .*(16 Nov|Nov 16) 2/,
+			})
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("img", {
+				name: "Overtime hours by month, Sales: Nov 80",
+			})
+		).toBeInTheDocument();
+		expect(
+			screen.getByRole("img", {
+				name: /^Changes after publishing by reason: By hand 3, Leave approved 1,/,
+			})
+		).toBeInTheDocument();
+		const asked = (read: string): string | undefined =>
+			calls.find((call) => call.path === `${REPORTS}/${read}`)?.search;
+		expect(asked("staffing")).toContain("from=2026-10-01&to=2026-11-30");
+		expect(asked("overtime")).toContain("from=2026-10&to=2026-11");
+	});
+
+	it("keeps old Insights links working, dates included", async () => {
+		const calls = stubApi(routes(["report:read"]));
+		const lastMonth = presetRange("lastMonth", new Date());
+		const opened = await open(
+			`/insights?from=${lastMonth.from}&to=${lastMonth.to}`
+		);
+
+		expect(
+			await screen.findByRole("heading", { level: 1, name: "Reports" })
+		).toBeInTheDocument();
+		expect(opened.router.state.location.pathname).toBe("/reports");
+		await screen.findByRole("table", { name: "Staffing by rule" });
+		expect(
+			calls.find((call) => call.path === `${REPORTS}/staffing`)?.search
+		).toContain(`from=${lastMonth.from}&to=${lastMonth.to}`);
+		expect(screen.getByRole("tab", { name: "Last month" })).toHaveAttribute(
+			"aria-selected",
+			"true"
+		);
+	});
+
+	it("asks for nothing over a range the API would refuse, and says why", async () => {
+		const calls = stubApi(routes(["report:read"]));
+		await open("/reports?from=2026-01-01&to=2026-12-31");
+
+		expect(
+			await screen.findByText("Choose at most 92 days.")
+		).toBeInTheDocument();
+		expect(calls.some((call) => call.path.startsWith(REPORTS))).toBe(false);
+	});
+
+	it("says why each section is empty over a range it cannot ask for, never Loading", async () => {
+		stubApi(routes(["report:read"]));
+		await open("/reports?from=2026-03-10&to=2026-03-01");
+
+		expect(
+			await screen.findByText(
+				"The end date is before the start date. Choose the dates again."
+			)
+		).toBeInTheDocument();
+		expect(
+			screen.getAllByText("Choose a valid range to see this.")
+		).toHaveLength(3);
+		expect(screen.queryByText("Loading…")).not.toBeInTheDocument();
+	});
+
+	it("is not offered in the menu to someone who reads rosters but holds no report key", async () => {
+		stubApi(routes(["schedule:read"]));
+		await open("/");
+
+		const navigation = await screen.findByRole("navigation");
+		expect(
+			within(navigation).queryByRole("link", { name: "Reports" })
+		).toBeNull();
+	});
+
+	it("is offered in the menu with the report key alone, with no roster entry", async () => {
+		stubApi(routes(["report:read"]));
+		await open("/");
+
+		const navigation = await screen.findByRole("navigation");
+		expect(
+			await within(navigation).findByRole("link", { name: "Reports" })
+		).toBeInTheDocument();
+		expect(
+			within(navigation).queryByRole("link", { name: "Scheduling" })
+		).toBeNull();
+	});
+});

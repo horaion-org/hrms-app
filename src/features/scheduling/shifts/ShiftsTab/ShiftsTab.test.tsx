@@ -20,6 +20,7 @@ import {
 	type ReturnLink,
 } from "@/features/scheduling/readiness/readinessCopy";
 import { constraintFixture } from "@/features/scheduling/constraints/fixtures";
+import { SCHEDULING_QUERY_ROOT } from "@/features/scheduling/paths";
 import { scheduleFixture } from "@/features/scheduling/schedules/fixtures";
 import { SCHEDULING_UNIT_RULES } from "@/features/scheduling/schedules/schedulesUnitRules";
 import {
@@ -116,7 +117,7 @@ afterEach(() => {
 
 /**
  * Renders the tab in company c-1 for the `requested` units, holding
- * `permissions` company-wide and `held` per unit.
+ * `permissions` company-wide and `held` per unit; returns its query client.
  */
 const show = ({
 	permissions = [],
@@ -130,7 +131,7 @@ const show = ({
 	requested?: UnitSelection;
 	onDepartmentChange?: (department: string | undefined) => void;
 	returnTo?: ReturnLink;
-}): void => {
+}): QueryClient => {
 	const units = resolveWorkspaceUnits(
 		effectiveWorkspace({
 			companies: [
@@ -166,6 +167,7 @@ const show = ({
 			</QueryClientProvider>
 		</I18nextProvider>
 	);
+	return client;
 };
 
 const headers = (): Array<string> =>
@@ -177,7 +179,8 @@ describe("ShiftsTab", () => {
 		show({ permissions: ["shift:read"] });
 
 		const bar = await screen.findByRole("row", { name: /Breakfast Prep/ });
-		expect(headers()).toContain("Department");
+		// The department reads under the shift's name, not in a column of its own.
+		expect(headers()).not.toContain("Department");
 		expect(bar).toHaveTextContent("Bar");
 		expect(
 			screen.getByText(
@@ -197,6 +200,109 @@ describe("ShiftsTab", () => {
 		expect(headers()).not.toContain("Department");
 		expect(screen.getByText(/^The times Kitchen works\./)).toBeVisible();
 		expect(calls.map((call) => call.path)).toEqual([`${KITCHEN}/shifts`]);
+	});
+
+	it("given_constraintsReadable_when_listed_then_saysWhatTheStaffingConstraintsNeedOfEachShift", async () => {
+		stubApi({
+			[`GET ${KITCHEN}/shifts`]: ok([kitchenShift]),
+			[`GET ${KITCHEN}/constraints`]: ok([
+				constraintFixture({
+					constraintId: "kitchen-cover",
+					name: "Kitchen cover",
+					type: "SHIFT_STAFFING",
+					values: [
+						{ field: "COMPARISON", value: "AT_LEAST", name: null },
+						{ field: "HEADCOUNT", value: "2", name: null },
+						{ field: "JOB_TITLE", value: "cook", name: "Cook" },
+						{
+							field: "SHIFT",
+							value: kitchenShift.shiftId,
+							name: "Front Desk AM",
+						},
+					],
+				}),
+			]),
+		});
+		show({
+			permissions: ["shift:read", "constraint:read"],
+			requested: { branchId: "b-1", departmentId: "d-1" },
+		});
+
+		const row = await screen.findByRole("row", { name: /Front Desk AM/ });
+		await waitFor(() => {
+			expect(row).toHaveTextContent("2 Cook");
+		});
+		expect(headers()).toContain("Needed");
+	});
+
+	it("given_aLiveRuleAskingMoreThanHoldItsTitle_when_listed_then_theNeededColumnWarns_andNotOnceLowered", async () => {
+		/** Kitchen's rule asking at least `headcount` Cooks on the shift, as the live constraints list answers it. */
+		const cover = (headcount: string): unknown =>
+			constraintFixture({
+				constraintId: "kitchen-cover",
+				name: "Kitchen cover",
+				type: "SHIFT_STAFFING",
+				values: [
+					{ field: "COMPARISON", value: "AT_LEAST", name: null },
+					{ field: "HEADCOUNT", value: headcount, name: null },
+					{ field: "JOB_TITLE", value: "cook", name: "Cook" },
+					{
+						field: "SHIFT",
+						value: kitchenShift.shiftId,
+						name: "Front Desk AM",
+					},
+				],
+			});
+		const twoCooks = {
+			status: 200,
+			body: envelope({
+				content: [
+					{
+						jobTitleId: "cook",
+						branchId: "b-1",
+						branchName: "Orchard",
+						departmentId: "d-1",
+						departmentName: "Kitchen",
+						name: "Cook",
+						description: null,
+						status: "ACTIVE",
+						holderCount: 2,
+					},
+				],
+				page: { totalElements: 1 },
+			}),
+		};
+		stubApi({
+			[`GET ${KITCHEN}/shifts`]: ok([kitchenShift]),
+			[`GET ${KITCHEN}/constraints`]: [ok([cover("3")]), ok([cover("2")])],
+			[`GET ${COMPANY}/job-titles`]: twoCooks,
+		});
+		const client = show({
+			permissions: ["shift:read", "constraint:read", "job_title:read"],
+			requested: { branchId: "b-1", departmentId: "d-1" },
+		});
+
+		const row = await screen.findByRole("row", { name: /Front Desk AM/ });
+		await waitFor(() => {
+			expect(row).toHaveTextContent("Only 2 hold the title");
+		});
+		// Saving a constraint reloads every scheduling query; the next answer has the headcount lowered to 2.
+		await client.invalidateQueries({ queryKey: [SCHEDULING_QUERY_ROOT] });
+		await waitFor(() => {
+			expect(row).not.toHaveTextContent("Only 2 hold the title");
+		});
+		expect(row).toHaveTextContent("2 Cook");
+	});
+
+	it("given_noConstraintReadKey_when_listed_then_leavesTheNeededColumnOut", async () => {
+		stubApi({ [`GET ${KITCHEN}/shifts`]: ok([kitchenShift]) });
+		show({
+			permissions: ["shift:read"],
+			requested: { branchId: "b-1", departmentId: "d-1" },
+		});
+
+		await screen.findByRole("row", { name: /Front Desk AM/ });
+		expect(headers()).not.toContain("Needed");
 	});
 
 	it("given_aDepartmentFilter_when_adding_then_theDialogStartsInIt", async () => {
@@ -277,7 +383,51 @@ describe("ShiftsTab", () => {
 				"Saving changes this shift for Kitchen: new schedules and 1 draft that uses it. Generated and published schedules keep their own copy."
 			)
 		).toBeVisible();
-		expect(screen.getByRole("button", { name: /^Department/ })).toBeDisabled();
+		expect(
+			screen.getByRole("dialog", { name: "Edit shift" })
+		).toHaveAccessibleDescription("Orchard › Kitchen");
+	});
+
+	it("given_constraintsNamingTheShift_when_editing_then_theNoteSaysTheyMayNeedAttention", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			[`GET ${KITCHEN}/shifts`]: ok([kitchenShift]),
+			[`GET ${KITCHEN}/shift-role-options`]: ok(SHIFT_ROLE_OPTIONS),
+			[`GET ${COMPANY}/schedules`]: schedulesReply([kitchenShift.shiftId]),
+			[`GET ${KITCHEN}/constraints`]: ok([
+				constraintFixture({
+					constraintId: "kitchen-cover",
+					name: "Kitchen cover",
+					type: "SHIFT_STAFFING",
+					values: [
+						{
+							field: "SHIFT",
+							value: kitchenShift.shiftId,
+							name: "Front Desk AM",
+						},
+					],
+				}),
+			]),
+		});
+		show({
+			permissions: [
+				"shift:read",
+				"shift:update",
+				"schedule:read",
+				"constraint:read",
+			],
+			requested: { branchId: "b-1", departmentId: "d-1" },
+		});
+
+		await user.click(
+			await screen.findByRole("button", { name: "Edit Front Desk AM" })
+		);
+
+		expect(
+			await screen.findByText(
+				"Saving changes this shift for Kitchen: new schedules and 1 draft that uses it. Generated and published schedules keep their own copy. 1 constraint names this shift; if you take a job title it counts off the shift, it will need attention."
+			)
+		).toBeVisible();
 	});
 
 	it("given_schedulesNotReadable_when_editing_then_theNoteSaysAnyDrafts", async () => {
@@ -345,7 +495,7 @@ describe("ShiftsTab", () => {
 		});
 		await waitFor(() => {
 			expect(dialog).toHaveTextContent(
-				"It's removed from Kitchen and from 2 drafts that use it. Generated and published schedules keep their copy. 1 constraint names this shift; it will stop applying to it."
+				"It's removed from Kitchen and from 2 drafts that use it. Generated and published schedules keep their copy. 1 constraint names this shift and will need attention."
 			);
 		});
 		expect(

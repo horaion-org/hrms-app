@@ -3,13 +3,19 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import {
+	changeableAt,
+	changeablePart,
+	mayAssignRole,
+	whoCanAssign,
+} from "@/features/organisation/accessRoleReadOnly";
 import { placeLabels } from "@/features/organisation/accessSummary";
 import {
 	AccessRoleAssignments,
 	type AccessRoleAssignmentRow,
 	type AccessRolePerson,
 } from "@/features/organisation/AccessRoleAssignments";
-import type { AccessRole, UnitStatus } from "@/features/organisation/api";
+import type { AccessRole } from "@/features/organisation/api";
 import { AssignAccessRoleDialog } from "@/features/organisation/AssignAccessRoleDialog";
 import {
 	assignmentRefusal,
@@ -20,52 +26,29 @@ import {
 	assignmentTargets,
 	placeKey,
 	placeOf,
-	scopeOfPlace,
 } from "@/features/organisation/assignmentTargets";
+import type { ListView } from "@/features/organisation/listColumns";
+import { ListProblem } from "@/features/organisation/ListProblem";
 import { PermissionSummary } from "@/features/organisation/PermissionSummary";
 import {
 	useAccessRoleHolders,
 	useChangeAccessRoleHolders,
 } from "@/features/organisation/useAccessRoleHolders";
-import { useCompanyMemberSearch } from "@/features/organisation/useCompanyMemberSearch";
+import { useActivePeopleSearch } from "@/features/people/useActivePeopleSearch";
 import { useMemberRoles } from "@/features/people/useMemberRoles";
 import { workspaceQuery } from "@/features/workspace/api";
 import { isPermissionKey } from "@/features/workspace/permissionKeys";
 import { retry } from "@/features/workspace/retry";
-import type { CanAt } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 
 const key = "organisation.accessRoles.assignments";
 
-/** Whether the person may change one assignment: `access_role:assign` at the assignment's own place. */
-const changeableAt =
-	(can: CanAt) =>
-	(place: AccessRoleAssignmentRow): boolean =>
-		can("access_role:assign", scopeOfPlace(place));
-
-/**
- * A person's row narrowed to the assignments the person may change, with
- * the status those alone add up to. Status and removal act on these only:
- * an assignment out of reach is never touched because it is grouped on the
- * same row.
- */
-const changeablePart = (
-	person: AccessRolePerson,
-	can: CanAt
-): AccessRolePerson => {
-	const places = person.places.filter(changeableAt(can));
-	const status: UnitStatus = places.some((place) => place.status === "ACTIVE")
-		? "ACTIVE"
-		: "INACTIVE";
-	return { ...person, places, status };
-};
-
 /**
  * The assign dialog with its people search and the places a role can apply;
  * mounted only while open. Given one role, that role is assigned; given
- * several, the person chooses. Recipients come from the colleagues directory
- * (any active company member, whatever their Branch or Department); places
+ * several, the person chooses. Recipients come from the People list (any
+ * active member, shown with their Branch and Department); places
  * come from the workspace, only where the person holds `access_role:assign`.
  * Given `editing`, it changes where that person already has the role,
  * starting from their current assignments as last loaded: places newly
@@ -89,7 +72,7 @@ export const AssignSystemRole = ({
 	const [query, setQuery] = useState("");
 	const [recipient, setRecipient] = useState(editing?.membershipId ?? "");
 	const held = useMemberRoles(companyId, recipient);
-	const people = useCompanyMemberSearch(companyId, query);
+	const people = useActivePeopleSearch(companyId, query);
 	const { data: workspace } = useQuery({ ...workspaceQuery, retry });
 	const change = useChangeAccessRoleHolders(companyId);
 	const onlyRole = roles.length === 1 ? roles[0] : undefined;
@@ -169,19 +152,26 @@ export const AssignSystemRole = ({
 
 export type SystemRoleHoldersProps = {
 	role: AccessRole;
-	/** Who holds the role and where; `undefined` when the list couldn't be loaded. */
+	/** Who holds the role and where; `undefined` until the list is loaded. */
 	holders: Array<AccessRoleAssignmentRow> | undefined;
+	/** Why the list couldn't be loaded, with Try again; shown in its place. */
+	holdersProblem?: ListView<never>["problem"];
+	/** A re-read waits on an access update; the rows shown may be out of date. */
+	holdersUpdating?: boolean;
 };
 
 /**
  * What a system role allows, then who has it and where, with assigning,
- * editing and removing for those who may. The Company Owner role is listed
- * but never assigned or changed here: ownership moves only through its own
- * transfer.
+ * editing and removing for those who may: the System Owner or a System Admin
+ * for a custom role, the System Owner alone for the System Admin role. The
+ * System Owner role is listed but never assigned or changed. Anyone else sees
+ * the holders read-only, with one sentence saying who can change them.
  */
 export const SystemRoleHolders = ({
 	role,
 	holders,
+	holdersProblem,
+	holdersUpdating = false,
 }: SystemRoleHoldersProps): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const access = useAccess();
@@ -189,17 +179,19 @@ export const SystemRoleHolders = ({
 	const change = useChangeAccessRoleHolders(companyId);
 	const [assigning, setAssigning] = useState(false);
 	const [editing, setEditing] = useState<AccessRolePerson>();
+	// The whole row, so the dialog can say when places out of reach keep the role.
 	const [removing, setRemoving] = useState<AccessRolePerson>();
+	const removable = removing && changeablePart(removing, access.can);
 	const [switching, setSwitching] = useState<AccessRolePerson>();
 	const switchKey = `${key}.status.${
 		switching?.status === "ACTIVE" ? "deactivate" : "activate"
 	}` as const;
 	const active = role.status === "ACTIVE";
-	// Assignment changes are checked per assignment, at its own place; the Owner role never changes here.
-	const canManage = !role.protectedRole;
+	// Who may change this role's holders (API ADR-0108); each assignment is still checked at its own place.
+	const canManage = mayAssignRole(role, access);
 	const canChangePerson = (person: AccessRolePerson): boolean =>
 		canManage && person.places.some(changeableAt(access.can));
-	const canAssign = canManage && access.canAnywhere("access_role:assign");
+	const canAssign = canManage;
 	const closeConfirm = (): void => {
 		change.reset();
 		setRemoving(undefined);
@@ -217,9 +209,15 @@ export const SystemRoleHolders = ({
 					{t(`${key}.inactive`)}
 				</p>
 			)}
-			{!holders && (
-				<p className="mt-6 text-sm text-error-700" role="alert">
-					{t(`${key}.loadFailed`)}
+			{!canManage && (
+				<p className="mt-6 text-sm text-neutral-700">
+					{t(`${key}.whoCanChange.${whoCanAssign(role)}`)}
+				</p>
+			)}
+			{holdersProblem && <ListProblem problem={holdersProblem} />}
+			{holdersUpdating && (
+				<p className="mt-6 text-sm text-neutral-700" role="status">
+					{t("organisation.list.waitingForAccess")}
 				</p>
 			)}
 			<AccessRoleAssignments
@@ -238,7 +236,7 @@ export const SystemRoleHolders = ({
 				onRemove={
 					canManage
 						? (person): void => {
-								setRemoving(changeablePart(person, access.can));
+								setRemoving(person);
 							}
 						: undefined
 				}
@@ -289,23 +287,34 @@ export const SystemRoleHolders = ({
 					}}
 				/>
 			)}
-			{removing && (
+			{removing && removable && (
 				<ConfirmDialog
 					cancelLabel={t("organisation.list.cancel")}
 					confirmLabel={t(`${key}.remove.confirm`)}
 					submitting={change.isPending}
 					title={t(`${key}.remove.title`, { name: removing.name })}
-					description={t(`${key}.remove.description`, {
-						name: removing.name,
-						role: role.name,
-					})}
+					tone="danger"
+					description={
+						removable.places.length < removing.places.length
+							? t(`${key}.remove.descriptionSome`, {
+									name: removing.name,
+									role: role.name,
+									places: removable.places.map((place) => placeOf(place, t)),
+								})
+							: t(`${key}.remove.description`, {
+									name: removing.name,
+									role: role.name,
+								})
+					}
 					error={
 						change.error ? assignmentRemoveRefusal(change.error, t) : undefined
 					}
 					onClose={closeConfirm}
 					onConfirm={() => {
 						change.mutate(
-							{ revokes: removing.places.map((place) => place.assignmentId) },
+							{
+								revokes: removable.places.map((place) => place.assignmentId),
+							},
 							{ onSuccess: closeConfirm }
 						);
 					}}

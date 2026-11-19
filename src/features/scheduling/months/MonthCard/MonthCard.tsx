@@ -14,14 +14,13 @@ import { weekWaitingOnMe } from "@/features/scheduling/months/monthApprovals";
 import {
 	formatDayAndMonth,
 	formatMonth,
-	formatMonthName,
+	formatWeekDates,
 } from "@/features/scheduling/months/monthWeeks";
+import { namedSpansOf } from "@/features/scheduling/dates/datesSetup";
 import { stateCountsLine } from "@/features/scheduling/months/monthCopy";
 
 export type MonthCardProps = {
 	summary: ScheduleMonthSummary;
-	/** Set when this Department's week under review is in another month, which comes first. */
-	reviewMonth?: string;
 	/** The approvals waiting on the person (`myPendingApprovalsQuery`); empty for someone who decides none. */
 	waitingOnMe: ReadonlyArray<ApprovalInstance>;
 	className?: string;
@@ -29,15 +28,13 @@ export type MonthCardProps = {
 
 const key = "scheduling.months";
 
-/** A week's small mark on the card: published, to review, tentative, or none (every other state). */
+/** A week's small mark on the card: published, to review, or none (every other state). */
 const weekMarkLook = (state: WeekState): string => {
 	switch (state) {
 		case "PUBLISHED":
 			return "bg-success-900";
 		case "TO_REVIEW":
 			return "bg-ink-blue-700";
-		case "TENTATIVE":
-			return "border border-dashed border-neutral-700";
 		default:
 			return "bg-neutral-300";
 	}
@@ -50,7 +47,6 @@ const weekMarkLook = (state: WeekState): string => {
  */
 export const MonthCard = ({
 	summary,
-	reviewMonth,
 	waitingOnMe,
 	className,
 }: MonthCardProps): FunctionComponent => {
@@ -61,6 +57,10 @@ export const MonthCard = ({
 	const mine = weekWaitingOnMe(summary, waitingOnMe);
 	const toReview = summary.weeks.find((week) => week.state === "TO_REVIEW");
 	const month = formatMonth(summary.month, language);
+	// A named schedule by dates, across the month's weeks; one crossing into the next month shows on both cards.
+	const namedSpans = namedSpansOf(
+		summary.weeks.flatMap((week) => week.parts ?? [])
+	);
 
 	return (
 		<section
@@ -103,6 +103,20 @@ export const MonthCard = ({
 				))}
 			</div>
 			<p className="text-sm text-neutral-800">{counts}</p>
+			{namedSpans.map((span) => (
+				<p
+					key={`${span.name}-${span.from}`}
+					className="text-sm text-neutral-800"
+				>
+					{t(`${key}.cover.namedSpan`, {
+						name: span.name,
+						range: formatWeekDates(
+							{ start: span.from, end: span.to },
+							language
+						),
+					})}
+				</p>
+			))}
 			{mine && (
 				<p className="text-sm font-medium text-neutral-800">
 					{t(`${key}.waitingOnYou`, {
@@ -115,13 +129,6 @@ export const MonthCard = ({
 				<p className="text-sm text-neutral-800">
 					{t(`${key}.hints.toReview`, {
 						week: formatDayAndMonth(toReview.periodStart, language),
-					})}
-				</p>
-			)}
-			{!toReview && reviewMonth && (
-				<p className="text-sm text-neutral-800">
-					{t(`${key}.hints.generatedAhead`, {
-						month: formatMonthName(reviewMonth, language),
 					})}
 				</p>
 			)}

@@ -207,6 +207,12 @@ export const LeaveTypesSettings = ({
 							<h3 className="text-sm font-semibold text-neutral-900">
 								{t(`leave.grantKinds.${group.grantKind}`)}
 							</h3>
+							{group.grantKind === "EARNED" && (
+								// Off in lieu's kind is new to most people: one line says what it is (API ADR-0126).
+								<p className="text-sm text-neutral-700">
+									{t("settings.leave.dialog.kindDescription.EARNED")}
+								</p>
+							)}
 							<DataTable
 								columns={columns.active}
 								data={group.types}

@@ -13,7 +13,6 @@ import type { MonthWeek, WeekState } from "@/features/scheduling/months/api";
 export const weekStateTones: Record<WeekState, BadgeTone> = {
 	PUBLISHED: "success",
 	TO_REVIEW: "warning",
-	TENTATIVE: "neutral",
 	GENERATING: "warning",
 	FAILED: "error",
 	REJECTED: "error",
@@ -22,15 +21,39 @@ export const weekStateTones: Record<WeekState, BadgeTone> = {
 	UNKNOWN: "neutral",
 };
 
-const ROSTER_STATES: ReadonlyArray<WeekState> = [
-	"PUBLISHED",
-	"TO_REVIEW",
-	"TENTATIVE",
-];
+const ROSTER_STATES: ReadonlyArray<WeekState> = ["PUBLISHED", "TO_REVIEW"];
 
 /** Whether a week has a roster to summarise (day marks, cover text, days changed by hand). */
 export const hasRoster = (state: WeekState): boolean =>
 	ROSTER_STATES.includes(state);
+
+/**
+ * Whether any week is still being generated, by its newest state or by any of
+ * its parts: the month read is read again while one is.
+ */
+export const anyWeekGenerating = (
+	weeks: ReadonlyArray<Pick<MonthWeek, "state" | "parts">>
+): boolean =>
+	weeks.some(
+		(week) =>
+			week.state === "GENERATING" ||
+			week.parts.some((part) => part.state === "GENERATING")
+	);
+
+/**
+ * Whether a week card shows its cover summary (shifts short, days changed by
+ * hand): when the week's newest part has a roster, or, on a week of several
+ * schedules, when an earlier part has one and the month read sent the week's
+ * days (they cover every part with a roster, so the counts are the week's).
+ */
+export const showsCoverSummary = (
+	week: Pick<MonthWeek, "state" | "parts" | "days">
+): boolean => {
+	if (hasRoster(week.state)) return true;
+	return (
+		week.days.length > 0 && week.parts.some((part) => hasRoster(part.state))
+	);
+};
 
 /**
  * The week card's one action: Review on the week under review, Open on any
@@ -49,10 +72,12 @@ export const weekAction = ({
  * A day's mark on a week card and in the month page's legend. Shape tells
  * them apart as well as colour (as `rosterLooks` marks do): a filled square
  * for every shift covered, a hollow ring for a short day, a dashed square
- * for no roster.
+ * for no roster, and, in a dates preview, a grey square for a day that
+ * already has a schedule and stays as it is.
  */
 export const dayMarkLooks = {
 	covered: "size-3 rounded-sm bg-ink-blue-700",
 	short: "size-3 rounded-full border-2 border-warning-900",
 	noRoster: "size-3 rounded-sm border border-dashed border-neutral-500",
+	kept: "size-3 rounded-sm bg-neutral-400",
 } as const;

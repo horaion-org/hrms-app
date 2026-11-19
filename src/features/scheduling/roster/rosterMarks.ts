@@ -1,6 +1,9 @@
 import type { TFunction } from "i18next";
+import { timeRangeText } from "@/features/leave/dayPortion";
 import { dayTypeInSentence } from "@/features/scheduling/dayTypes";
+import { formatTimeRange } from "@/features/scheduling/shifts/formatShift";
 import {
+	findingWeight,
 	strongestTone,
 	type Finding,
 } from "@/features/scheduling/roster/findings/finding";
@@ -10,12 +13,16 @@ import {
 } from "@/features/scheduling/roster/findings/findingsOnGrid";
 import type {
 	RosterDayNote,
+	RosterLeavePortion,
 	RosterRow,
+	RosterShiftCell,
+	WorkedTime,
 } from "@/features/scheduling/roster/roster";
 import {
 	asksForDecision,
 	marksLeaveOrCover,
 } from "@/features/scheduling/roster/rosterSummary";
+import { hoursFromMinutes } from "@/features/scheduling/shifts/shiftHours";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 
 /*
@@ -93,9 +100,10 @@ export type DayNoteLine =
 			kind: "leave";
 			key: "leaveRequested" | "onLeave";
 			leaveTypeName?: string;
+			leavePortion?: RosterLeavePortion;
 			leaveRequestId?: string;
 	  }
-	| { kind: "cover"; shiftName: string };
+	| { kind: "cover"; shiftName: string; time?: WorkedTime };
 
 /** What the day editor already says in its own words, so its panel leaves that line out. */
 export type SaidApart = ReadonlySet<"decision" | "leaveRequested">;
@@ -152,6 +160,7 @@ export const dayNoteLines = (
 						...(note.leaveTypeName
 							? { leaveTypeName: note.leaveTypeName }
 							: {}),
+						...(note.leavePortion ? { leavePortion: note.leavePortion } : {}),
 						...(note.leaveRequestId
 							? { leaveRequestId: note.leaveRequestId }
 							: {}),
@@ -160,7 +169,13 @@ export const dayNoteLines = (
 			: []),
 		...(note.uncoveredShiftName === undefined
 			? []
-			: [{ kind: "cover" as const, shiftName: note.uncoveredShiftName }]),
+			: [
+					{
+						kind: "cover" as const,
+						shiftName: note.uncoveredShiftName,
+						...(note.uncoveredTime ? { time: note.uncoveredTime } : {}),
+					},
+				]),
 	];
 };
 
@@ -222,12 +237,30 @@ export const rowIssueCount = (
 	);
 };
 
-/** A day header's count: what the engine left about the day as a whole (no member's cell). */
+/**
+ * A day header's count: what the engine left about the day as a whole (no
+ * member's cell). When all of it is shifts left short (`peopleShort`), it
+ * counts the people they are short, so filling half of a shift lowers the
+ * number; otherwise each thing to look at counts once.
+ */
 export const dayIssueCount = (
 	placed: GridFindings | undefined,
 	date: string
-): HeaderCount | undefined =>
-	headerCount(placed?.byDate.get(date) ?? NO_FINDINGS, 0);
+): (HeaderCount & { peopleShort: boolean }) | undefined => {
+	const findings = placed?.byDate.get(date) ?? NO_FINDINGS;
+	const counted = headerCount(findings, 0);
+	if (!counted) return undefined;
+	const peopleShort = findings.every((finding) => finding.kind === "conflict");
+	if (!peopleShort) return { ...counted, peopleShort };
+	return {
+		...counted,
+		count: findings.reduce(
+			(total, finding) => total + findingWeight(finding),
+			0
+		),
+		peopleShort,
+	};
+};
 
 /** Whether a tile shows its role line: not when empty or when it repeats the member's job title in the row header. */
 export const showsRole = (role: string, jobTitle: string | null): boolean =>
@@ -261,6 +294,76 @@ export const tileStatus = (
 		dayType: dayTypeInSentence(note.dayType, t),
 	});
 };
+
+/**
+ * The part of a shift kept around part-day leave that is not worked, from the
+ * pieces still worked: between two pieces, or before or after one.
+ */
+const timeOffOf = (
+	cell: Pick<RosterShiftCell, "start" | "end">,
+	worked: ReadonlyArray<WorkedTime>
+): WorkedTime => {
+	const [first, second] = worked;
+	if (second) return { start: first!.end, end: second.start };
+	return first!.start === cell.start
+		? { start: first!.end, end: cell.end }
+		: { start: cell.start, end: first!.start };
+};
+
+/**
+ * A shift tile's status line. On a shift kept around approved part-day leave
+ * (the API's ADR-0077, part 4) it names the leave and its time on every
+ * roster, ahead of the day type: "Annual leave 07:00–11:00", or "Off
+ * 07:00–11:00" for a viewer who may not see the leave. A shift stretched into
+ * overtime (the API's ADR-0110) says by how much after what `tileStatus`
+ * says of it, joined as the roster's summary line joins its facts: "On rest
+ * day · Stretched 2 h into overtime". Any other shift reads as `tileStatus`.
+ * Pure.
+ */
+export const shiftStatus = (
+	cell: Pick<
+		RosterShiftCell,
+		"start" | "end" | "workedTimes" | "note" | "stretchMinutes"
+	>,
+	showsIssues: boolean,
+	t: TFunction
+): string | undefined => {
+	if (!cell.workedTimes?.length && cell.stretchMinutes)
+		return [
+			tileStatus(cell.note, showsIssues, t),
+			t("scheduling.rosterMarkers.stretched", {
+				hours: hoursFromMinutes(cell.stretchMinutes),
+			}),
+		]
+			.filter(Boolean)
+			.join(" · ");
+	if (!cell.workedTimes?.length) return tileStatus(cell.note, showsIssues, t);
+	const portion = cell.note?.leavePortion;
+	if (cell.note?.leaveTypeName && portion)
+		return t("scheduling.rosterMarkers.partDayLeave", {
+			type: cell.note.leaveTypeName,
+			time: timeRangeText(portion.startTime, portion.endTime, t),
+		});
+	const off = timeOffOf(cell, cell.workedTimes);
+	return t("scheduling.rosterMarkers.partDayOff", {
+		time: timeRangeText(off.start, off.end, t),
+	});
+};
+
+/**
+ * The pills of a shift stretched into overtime (the API's ADR-0110), one per
+ * side, as v1 marked an applied stretch: "+OT 21:00 – 23:00". None without a
+ * stretch. Pure.
+ */
+export const overtimePills = (
+	cell: Pick<RosterShiftCell, "stretchTimes">,
+	t: TFunction
+): Array<string> =>
+	(cell.stretchTimes ?? []).map((span) =>
+		t("scheduling.rosterMarkers.overtimePill", {
+			time: formatTimeRange({ startTime: span.start, endTime: span.end }, t),
+		})
+	);
 
 /** Which header opened the Issues panel: one member's row, or one day. */
 export type IssuesAbout =

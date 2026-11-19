@@ -8,17 +8,28 @@ import {
 	type CoverOption,
 	type CoverOptions,
 } from "@/features/scheduling/cover/api";
+import {
+	coverWithEngine,
+	type CoverWithEngine,
+} from "@/features/scheduling/cover/coverWithEngine";
+import type { RepairOption } from "@/features/scheduling/cover/engineRepairApi";
+import { stillShortAfterApplying } from "@/features/scheduling/cover/engineRepairWords";
+import {
+	useEngineRepair,
+	type EngineRepairState,
+} from "@/features/scheduling/cover/useEngineRepair";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
 import {
 	useCellCoverOffer,
 	type CellCoverOffer,
 } from "@/features/scheduling/coverOffers/useCellCoverOffer";
 import { dayTypeInSentence } from "@/features/scheduling/dayTypes";
-import { formatDay } from "@/features/scheduling/periods";
+import { formatDay } from "@/common/formatDay";
 import {
 	rosterChangePreviewQuery,
 	type RosterChange,
 	type RosterChangeBody,
+	type RosterChangeCell,
 	type RosterChangePreview,
 } from "@/features/scheduling/rosterChanges/api";
 import type { CheckNames } from "@/features/scheduling/rosterChanges/checkSentence";
@@ -60,22 +71,49 @@ export type CoverPanelInput = {
 	coverOffers?: { offers: ReadonlyArray<CoverOffer>; timeZone: string };
 	/** The days the previewed change touches, as `rosterCellKey` names them. */
 	onPreviewDays: (keys: ReadonlyArray<string>) => void;
-	/** A draft's change landed; the roster already shows it. */
-	onApplied: (change: RosterChange) => void;
+	/**
+	 * A draft's change landed; the roster already shows it. With an engine
+	 * option that leaves hours short, the toast's words saying so.
+	 */
+	onApplied: (change: RosterChange, stillShort?: string) => void;
 	/** A recorded yes applied the change; the roster refreshes by itself. */
 	onCoverRecorded?: () => void;
 };
 
 /** Where the list stands: what the panel shows in place of the options. */
 export type CoverPanelStatus =
-	"loading" | "rosterMoved" | "failed" | "closed" | "nobody" | "options";
+	| "loading"
+	| "rosterMoved"
+	| "notEditable"
+	| "failed"
+	| "closed"
+	| "nobody"
+	| "options";
+
+/** The list's refusals that have a status of their own; any other refusal is a plain failure. */
+const REFUSAL_STATUSES: Partial<Record<RosterChangeRefusal, CoverPanelStatus>> =
+	{ revision: "rosterMoved", notEditable: "notEditable" };
 
 export type CoverPanel = {
 	status: CoverPanelStatus;
 	options: CoverOptions | undefined;
-	/** The chosen option; the first (Suggested) until another is chosen. */
+	/** The list with the engine's answer merged into it; the backend's own until the engine has answered. */
+	withEngine: CoverWithEngine | undefined;
+	/** The engine's own options for the gap, asked for on demand. */
+	engineRepair: EngineRepairState & { ask: () => void };
+	/**
+	 * The chosen option; until one is chosen, the one the engine suggests, or
+	 * the first while the engine has not answered. Nobody once the engine has
+	 * answered without a suggestion, or refuses the one chosen.
+	 */
 	selected: CoverOption | undefined;
 	select: (membershipId: string) => void;
+	/** A change is landing, or landed at a revision the roster does not show yet: nothing is asked meanwhile. */
+	landing: boolean;
+	/** Whether the change under review is one of the scheduling engine's options instead. */
+	repairChosen: boolean;
+	/** Reviews an engine option's change, as Find cover's cells, in place of the chosen option. */
+	chooseRepair: (cells: Array<RosterChangeCell>, option: RepairOption) => void;
 	/** After the roster moved, reads it again so the list is made afresh; otherwise asks again. */
 	findAgain: () => void;
 	review: {
@@ -104,9 +142,7 @@ const statusOf = (
 	options: CoverOptions | undefined
 ): CoverPanelStatus => {
 	if (query.error)
-		return rosterChangeRefusal(query.error) === "revision"
-			? "rosterMoved"
-			: "failed";
+		return REFUSAL_STATUSES[rosterChangeRefusal(query.error)] ?? "failed";
 	if (!options || query.isPending) return "loading";
 	if (options.gap.shortBy === 0) return "closed";
 	return options.options.length === 0 ? "nobody" : "options";
@@ -114,10 +150,14 @@ const statusOf = (
 
 /**
  * Find cover's state and calls, no words on screen: the ranked list for the
- * gap, the chosen option (the first until another is chosen), its preview
+ * gap, the engine's own answer once asked for (`useEngineRepair`) merged into
+ * that list (`coverWithEngine`), the chosen option (the engine's suggestion,
+ * or the first while the engine has not answered), its preview
  * through the roster-change preview (the grid outlines what it touches),
  * and Apply on a draft or the offer actions on a published roster, exactly
- * as the day editor does it (`useRosterCellPanel`, `useCellCoverOffer`).
+ * as the day editor does it (`useRosterCellPanel`, `useCellCoverOffer`). An
+ * engine option chosen (`chooseRepair`) takes the chosen option's place in
+ * the same preview and Apply, and offers nothing.
  */
 export const useCoverPanel = ({
 	target,
@@ -138,26 +178,66 @@ export const useCoverPanel = ({
 	const [chosen, setChosen] = useState<string>();
 	const [editedRemark, setEditedRemark] = useState<string>();
 	const [tickedFor, setTickedFor] = useState<string | null>(null);
+	// An engine option's change holds for the revision it was chosen at: once it lands (or the roster moves),
+	// it is dropped with its preview, as a chosen option of the list is when the list is made afresh.
+	const [repairChoice, setRepairChoice] = useState<{
+		cells: Array<RosterChangeCell>;
+		option: RepairOption;
+		revision: number;
+	}>();
+	const repairCells =
+		repairChoice?.revision === revision ? repairChoice.cells : undefined;
 
-	const list = useQuery(coverOptionsQuery(target, gap, revision));
+	// While a change lands, and until the roster shows its revision, the list and the preview are not asked
+	// again: the landing refreshes the schedule's reads, and these, keyed by the revision it passed, would only
+	// be refused as stale.
+	const landedRevision = apply.data?.toRevision;
+	const landing =
+		apply.isPending ||
+		(landedRevision !== undefined && landedRevision > revision);
+	const engineRepair = useEngineRepair(target, gap, revision, landing);
+	const list = useQuery({
+		...coverOptionsQuery(target, gap, revision),
+		enabled: !landing,
+	});
 	const options = list.data;
 	const status = statusOf(list, options);
-	const shown = status === "options" ? (options?.options ?? []) : [];
+	/** A roster member's profile id, which is how the engine names people. */
+	const profileIdOf = (membershipId: string): string | undefined =>
+		assignments.find((row) => row.member?.membershipId === membershipId)?.member
+			?.memberProfileId;
+	const withEngine =
+		options &&
+		coverWithEngine(
+			options,
+			engineRepair.status === "ready" ? engineRepair : undefined,
+			profileIdOf
+		);
+	const shown = status === "options" ? (withEngine?.options ?? []) : [];
+	// The first row is the default only while the list is the backend's own: once the engine has answered,
+	// the default is the person it suggests, and nobody when it suggests no one.
+	const defaultChoice =
+		withEngine?.order === "engineFirst"
+			? withEngine.suggested
+			: shown[0]?.membershipId;
 	const selected =
-		shown.find((option) => option.membershipId === chosen) ?? shown[0];
+		shown.find((option) => option.membershipId === chosen) ??
+		shown.find((option) => option.membershipId === defaultChoice);
 
-	const body: RosterChangeBody | undefined = selected && {
+	const chosenCells = repairCells ?? selected?.cells;
+	const body: RosterChangeBody | undefined = chosenCells && {
 		expectedRevision: revision,
-		cells: selected.cells,
+		cells: chosenCells,
 	};
-	const preview = useQuery(
-		rosterChangePreviewQuery(
+	const preview = useQuery({
+		...rosterChangePreviewQuery(
 			target.companyId,
 			target.unit,
 			target.scheduleId,
 			body
-		)
-	);
+		),
+		enabled: !landing,
+	});
 	const fingerprint = preview.data?.checksFingerprint ?? null;
 	const gate = applyGate(preview.data?.checks ?? []);
 	const ticked = fingerprint !== null && tickedFor === fingerprint;
@@ -185,11 +265,11 @@ export const useCoverPanel = ({
 		published: coverOffers !== undefined,
 		assignment: candidateRow ?? dayRow,
 		choice:
-			candidateRow && selected
+			candidateRow && selected && !repairCells
 				? { kind: "shift", shiftId: gap.shiftId }
 				: undefined,
 		leaveMove: false,
-		body,
+		body: repairCells ? undefined : body,
 		checksFingerprint: fingerprint,
 		remark,
 		onChecksChanged: () => {
@@ -215,15 +295,43 @@ export const useCoverPanel = ({
 		? rosterChangeRefusal(preview.error)
 		: undefined;
 
+	const shiftName = (id: string | null): string =>
+		shifts.find((shift) => shift.shiftId === id)?.name ??
+		assignments.find((row) => row.shift?.shiftId === id)?.shift?.name ??
+		"";
+	/** What the engine option under review leaves short once applied, in the toast's words. */
+	const stillShortOfChoice = (): string | undefined =>
+		repairCells && repairChoice
+			? stillShortAfterApplying(
+					repairChoice.option,
+					{ shift: shiftName(gap.shiftId), day: formatDay(gap.day, language) },
+					t
+				)
+			: undefined;
+
+	/** A new choice starts its review afresh. */
+	const startReview = (): void => {
+		setTickedFor(null);
+		apply.reset();
+		offer.reset();
+	};
+
 	return {
 		status,
 		options,
+		withEngine,
+		engineRepair,
 		selected,
 		select: (membershipId): void => {
 			setChosen(membershipId);
-			setTickedFor(null);
-			apply.reset();
-			offer.reset();
+			setRepairChoice(undefined);
+			startReview();
+		},
+		landing,
+		repairChosen: repairCells !== undefined,
+		chooseRepair: (cells, option): void => {
+			setRepairChoice({ cells, option, revision });
+			startReview();
 		},
 		findAgain: (): void => {
 			if (status === "rosterMoved") refreshRoster();
@@ -233,10 +341,7 @@ export const useCoverPanel = ({
 			names: {
 				member: memberName,
 				// The roster's own days name the shifts worked when the frozen shifts can't be read.
-				shift: (id) =>
-					shifts.find((shift) => shift.shiftId === id)?.name ??
-					assignments.find((row) => row.shift?.shiftId === id)?.shift?.name ??
-					"",
+				shift: shiftName,
 				day: (date) => formatDay(date, language),
 				dayType: (code) => dayTypeInSentence(code, t),
 			},
@@ -263,7 +368,9 @@ export const useCoverPanel = ({
 						checksFingerprint: fingerprint ?? undefined,
 					},
 					{
-						onSuccess: onApplied,
+						onSuccess: (change) => {
+							onApplied(change, stillShortOfChoice());
+						},
 						onError: (error) => {
 							if (rosterChangeRefusal(error) === "checksChanged")
 								void preview.refetch();
@@ -271,7 +378,12 @@ export const useCoverPanel = ({
 					}
 				);
 			},
-			applyRefusal: apply.error ? rosterChangeRefusal(apply.error) : undefined,
+			// A refusal belongs to the change it refused: once the roster is read again at another revision, the
+			// change under review is another one, so the old words do not sit under it.
+			applyRefusal:
+				apply.error && apply.variables?.expectedRevision === revision
+					? rosterChangeRefusal(apply.error)
+					: undefined,
 			busy: apply.isPending,
 		},
 		offer: coverOffers && {

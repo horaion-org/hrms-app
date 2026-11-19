@@ -5,6 +5,7 @@ import {
 	consentKindOf,
 	formatOfferTime,
 	latestTimeStep,
+	offerActionsOf,
 	offeredDeadlines,
 	offerStanding,
 	offersOutGroups,
@@ -18,6 +19,7 @@ import {
 	BEFORE_DEADLINE,
 	coverOfferFixture,
 } from "@/features/scheduling/coverOffers/fixtures";
+import type { CellCoverOffer } from "@/features/scheduling/coverOffers/useCellCoverOffer";
 import type { RosterEditChoice } from "@/features/scheduling/rosterChanges/rosterEdit";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 
@@ -400,5 +402,57 @@ describe("offeredDeadlines", () => {
 				BEFORE_DEADLINE
 			)
 		).toEqual(new Map([["m-1|2026-10-17", "2026-10-16T07:30:00Z"]]));
+	});
+});
+
+describe("offerActionsOf", () => {
+	const send = (): void => {};
+	const record = (): void => {};
+	const offer = (
+		overrides: Partial<CellCoverOffer> = {}
+	): CellCoverOffer & { timeZone: string; ready: boolean } => ({
+		consentKind: "MOVE",
+		openOffer: undefined,
+		justSent: undefined,
+		rivals: [],
+		createPending: undefined,
+		createRefusal: undefined,
+		withdrawing: false,
+		withdrawRefusal: undefined,
+		send,
+		record,
+		withdraw: (): void => {},
+		reset: (): void => {},
+		timeZone: "Asia/Singapore",
+		ready: true,
+		...overrides,
+	});
+
+	it("given_aChangeThatNeedsAYes_when_asked_then_theFootersOfferActions", () => {
+		expect(offerActionsOf(offer(), "Ben Ong")).toEqual({
+			name: "Ben Ong",
+			pending: undefined,
+			ready: true,
+			refusal: undefined,
+			rivals: [],
+			sendBlocked: false,
+			timeZone: "Asia/Singapore",
+			onRecord: record,
+			onSend: send,
+		});
+	});
+
+	it("given_anOpenOfferThatDay_when_asked_then_sendWaits", () => {
+		expect(
+			offerActionsOf(offer({ openOffer: coverOfferFixture() }), "Ben Ong")
+				?.sendBlocked
+		).toBe(true);
+	});
+
+	it.each([
+		["no offer side", undefined],
+		["a change that needs no yes", offer({ consentKind: undefined })],
+	])("given_%s_when_asked_then_noOfferActions", (_, given) => {
+		expect(offerActionsOf(given, "Ben Ong")).toBeUndefined();
 	});
 });

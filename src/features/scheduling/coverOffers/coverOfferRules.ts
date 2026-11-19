@@ -4,6 +4,8 @@ import type {
 	CoverOffer,
 	CoverOptionKind,
 } from "@/features/scheduling/coverOffers/api";
+import type { CoverOfferActionsProps } from "@/features/scheduling/coverOffers/CoverOfferActions";
+import type { CellCoverOffer } from "@/features/scheduling/coverOffers/useCellCoverOffer";
 import { isoDateIn } from "@/features/scheduling/roster/roster";
 import {
 	rosterCellKey,
@@ -12,7 +14,7 @@ import {
 import {
 	hoursFromMinutes,
 	paidShiftHours,
-} from "@/features/scheduling/scheduleDraft";
+} from "@/features/scheduling/shifts/shiftHours";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 
 /*
@@ -399,3 +401,26 @@ export const offeredDeadlines = (
 				: [];
 		})
 	);
+
+/**
+ * The footer's offer actions for a change that needs the member's yes, or
+ * undefined when it doesn't, as the day editor and Find cover both show them.
+ * Send waits while the member already has an open offer that day.
+ */
+export const offerActionsOf = (
+	offer: (CellCoverOffer & { timeZone: string; ready: boolean }) | undefined,
+	name: string
+): CoverOfferActionsProps | undefined =>
+	offer?.consentKind
+		? {
+				name,
+				pending: offer.createPending,
+				ready: offer.ready,
+				refusal: offer.createRefusal,
+				rivals: offer.rivals,
+				sendBlocked: offer.openOffer !== undefined,
+				timeZone: offer.timeZone,
+				onRecord: offer.record,
+				onSend: offer.send,
+			}
+		: undefined;

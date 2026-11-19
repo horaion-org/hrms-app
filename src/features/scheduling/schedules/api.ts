@@ -87,11 +87,14 @@ const OPEN_RUN_STATUSES: ReadonlyArray<GenerationRunStatus> = [
  * copy (ADR-0003). Keys the app doesn't know are dropped.
  */
 
-const findingsViolationSchema = z.object({
+/** One violation of a run's findings; Validate schedule reads who breaks a rule in the same shape. */
+export const findingsViolationSchema = z.object({
 	/** The member profile it is about, or null for a day's entry. */
 	employeeId: z.string().nullable(),
 	/** The day it is about, or null for a member's entry. */
 	date: z.string().nullable(),
+	/** Validate schedule's every day for the person, `date` the first; a generation's findings send none. */
+	days: z.array(z.string()).optional(),
 	messages: z.array(z.string()),
 });
 
@@ -107,7 +110,8 @@ const findingsDiagnosticSchema = z.object({
 /** A finding about the schedule's input, made before the solve. */
 export type FindingsDiagnostic = z.infer<typeof findingsDiagnosticSchema>;
 
-const findingsConflictSchema = z.object({
+/** One conflict of a run's findings; Validate schedule reads its staffing gaps in the same shape. */
+export const findingsConflictSchema = z.object({
 	kind: z.string(),
 	conflictId: z.string(),
 	date: z.string(),
@@ -137,7 +141,8 @@ const findingsAssignmentMessagesSchema = z.object({
 	messages: z.array(z.string()),
 });
 
-const findingsMemberSchema = z.object({
+/** One member a run's findings name; Validate schedule names its own in the same shape. */
+export const findingsMemberSchema = z.object({
 	/** The engine's employee id, which the other findings refer to. */
 	memberProfileId: z.string(),
 	/** Null when the id did not resolve to a member of the company. */
@@ -200,103 +205,130 @@ const rejectedStepSchema = z.object({
 	stepLabel: z.string(),
 });
 
-const scheduleSchema = z.object({
-	scheduleId: z.string(),
-	companyId: z.string(),
-	branchId: z.string(),
-	branchName: z.string(),
-	departmentId: z.string(),
-	departmentName: z.string(),
-	/** The IANA name of the branch's time zone, which the schedule's days are in. */
-	timeZone: z.string(),
-	name: z.string(),
-	/** The Monday the week-long period starts, as an ISO date. */
-	periodStart: z.string(),
-	/** The Sunday it ends, six days on. */
-	periodEnd: z.string(),
-	includeLeave: z.boolean(),
-	allowOpenShifts: z.boolean(),
-	status: scheduleStatusSchema,
-	/** A draft's ticked live shifts; once generated, every frozen copy's own id. */
-	includedShiftIds: z.array(z.string()),
-	/** A draft's ticked live ACTIVE constraints; once generated, every frozen copy's own id. */
-	includedConstraintIds: z.array(z.string()),
-	/** Set exactly when the status is not DRAFT. */
-	generationRequestedAt: z.string().nullable(),
-	generationRequestedBy: participantSchema.nullable(),
-	/** When the roster was published or rejected; null while undecided (and from an API without publishing). */
-	decidedAt: z.string().nullable().default(null),
-	/** Who published or rejected it. */
-	decidedBy: participantSchema.nullable().default(null),
-	/** Why it was rejected; null unless REJECTED. */
-	rejectionReason: z.string().nullable().default(null),
-	/** The newest generation run, or null for a schedule that has none. */
-	generation: generationSchema.nullable(),
-	/**
-	 * How many times the roster was written: by a generation, a hand change or
-	 * an undo. A change names it, and the roster is cached under it. 0 from an
-	 * API without roster changes.
-	 */
-	rosterRevision: z.number().int().default(0),
-	/**
-	 * How deciding goes at the schedule's department now: whether Publish
-	 * submits it for approval, and the steps it would go through. Absent from
-	 * an API without approvals, which reads as one-step publishing. A roster
-	 * already submitted keeps its own steps; read them on its approval, or
-	 * where it stands on `submission`.
-	 */
-	publication: z
-		.object({
-			requiresApproval: z.boolean(),
-			stepLabels: z.array(z.string()),
-			submission: publicationSubmissionSchema
-				.nullish()
-				.transform((value) => value ?? null),
-			/** The step that rejected the roster; null unless an approval step did. */
-			rejectedAtStep: rejectedStepSchema
-				.nullish()
-				.transform((value) => value ?? null),
-			/**
-			 * The earlier week of the department Publish waits for: weeks are
-			 * published in order. Null when Publish is not held up, and from an
-			 * API without it.
-			 */
-			waitingForWeek: z
-				.object({ periodStart: z.string(), periodEnd: z.string() })
-				.nullish()
-				.transform((value) => value ?? null),
-		})
-		.nullish()
-		.transform(
-			(value) =>
-				value ?? {
-					requiresApproval: false,
-					stepLabels: [],
-					submission: null,
-					rejectedAtStep: null,
-					waitingForWeek: null,
-				}
-		),
-	/**
-	 * When its publication was last withdrawn; null if never. Once set the
-	 * schedule is published once and never regenerated. Null from an older API.
-	 */
-	publicationWithdrawnAt: z.string().nullable().default(null),
-	/**
-	 * The types a day can be made when it is not worked, such as a day off or
-	 * a rest day, as codes; `dayTypeLabel` words them. Empty from an older
-	 * API, which takes a day off without a type.
-	 */
-	nonWorkingDayTypes: z.array(z.string()).catch([]),
-	createdAt: z.string(),
-	updatedAt: z.string(),
+/**
+ * A schedule covers a run of its week's days (API ADR-0113); an older API
+ * sends none, and the schedule covers its whole week.
+ */
+export const withCoveredDays = <
+	Read extends {
+		periodStart: string;
+		periodEnd: string;
+		coveredFrom?: string | null;
+		coveredTo?: string | null;
+	},
+>(
+	read: Read
+): Read & { coveredFrom: string; coveredTo: string } => ({
+	...read,
+	coveredFrom: read.coveredFrom ?? read.periodStart,
+	coveredTo: read.coveredTo ?? read.periodEnd,
 });
+
+export const scheduleSchema = z
+	.object({
+		scheduleId: z.string(),
+		companyId: z.string(),
+		branchId: z.string(),
+		branchName: z.string(),
+		departmentId: z.string(),
+		departmentName: z.string(),
+		/** The IANA name of the branch's time zone, which the schedule's days are in. */
+		timeZone: z.string(),
+		name: z.string(),
+		/** The Monday the week-long period starts, as an ISO date. */
+		periodStart: z.string(),
+		/** The Sunday it ends, six days on. */
+		periodEnd: z.string(),
+		/** The first day of the week the schedule covers (API ADR-0113); the Monday for a whole week. */
+		coveredFrom: z.string().nullish(),
+		/** The last day of the week the schedule covers; the Sunday for a whole week. */
+		coveredTo: z.string().nullish(),
+		includeLeave: z.boolean(),
+		status: scheduleStatusSchema,
+		/** A draft's ticked live shifts; once generated, every frozen copy's own id. */
+		includedShiftIds: z.array(z.string()),
+		/** A draft's ticked live ACTIVE constraints; once generated, every frozen copy's own id. */
+		includedConstraintIds: z.array(z.string()),
+		/** Set exactly when the status is not DRAFT. */
+		generationRequestedAt: z.string().nullable(),
+		generationRequestedBy: participantSchema.nullable(),
+		/** When the roster was published or rejected; null while undecided (and from an API without publishing). */
+		decidedAt: z.string().nullable().default(null),
+		/** Who published or rejected it. */
+		decidedBy: participantSchema.nullable().default(null),
+		/** Why it was rejected; null unless REJECTED. */
+		rejectionReason: z.string().nullable().default(null),
+		/** The newest generation run, or null for a schedule that has none. */
+		generation: generationSchema.nullable(),
+		/**
+		 * How many times the roster was written: by a generation, a hand change or
+		 * an undo. A change names it, and the roster is cached under it. 0 from an
+		 * API without roster changes.
+		 */
+		rosterRevision: z.number().int().default(0),
+		/**
+		 * How deciding goes at the schedule's department now: whether Publish
+		 * submits it for approval, and the steps it would go through. Absent from
+		 * an API without approvals, which reads as one-step publishing. A roster
+		 * already submitted keeps its own steps; read them on its approval, or
+		 * where it stands on `submission`.
+		 */
+		publication: z
+			.object({
+				requiresApproval: z.boolean(),
+				stepLabels: z.array(z.string()),
+				submission: publicationSubmissionSchema
+					.nullish()
+					.transform((value) => value ?? null),
+				/** The step that rejected the roster; null unless an approval step did. */
+				rejectedAtStep: rejectedStepSchema
+					.nullish()
+					.transform((value) => value ?? null),
+			})
+			.nullish()
+			.transform(
+				(value) =>
+					value ?? {
+						requiresApproval: false,
+						stepLabels: [],
+						submission: null,
+						rejectedAtStep: null,
+					}
+			),
+		/**
+		 * When its publication was last withdrawn; null if never. Once set a
+		 * month run never regenerates it; its own route may (API ADR-0134).
+		 * Null from an older API.
+		 */
+		publicationWithdrawnAt: z.string().nullable().default(null),
+		/**
+		 * The types a day can be made when it is not worked, such as a day off or
+		 * a rest day, as codes; `dayTypeLabel` words them. Empty from an older
+		 * API, which takes a day off without a type.
+		 */
+		nonWorkingDayTypes: z.array(z.string()).catch([]),
+		/** The chosen people's member profile ids; null rosters everyone, as does an older API that sends none. */
+		memberProfileIds: z.array(z.string()).nullable().default(null),
+		createdAt: z.string(),
+		updatedAt: z.string(),
+	})
+	.transform(withCoveredDays);
 
 /** A schedule as the API answers it; its shifts, constraints and roster are read on their own. */
 export type Schedule = z.infer<typeof scheduleSchema>;
 
-/** How often a schedule whose generation is in progress is read again. */
-const GENERATION_POLL_INTERVAL_MS = 15_000;
+/**
+ * Whether a schedule's newest run ended without a roster: FAILED, or
+ * SUCCEEDED with no roster meeting every rule (INFEASIBLE). On a GENERATED
+ * schedule it was a regeneration, and the roster shown is the earlier one
+ * (API ADR-0112).
+ */
+export const newestRunFailed = ({ generation }: Schedule): boolean =>
+	generation !== null &&
+	(generation.status === "FAILED" || generation.engineOutcome === "INFEASIBLE");
+
+/** How often a schedule, or a month, whose generation is in progress is read again. */
+export const GENERATION_POLL_INTERVAL_MS = 15_000;
 
 /**
  * Whether a schedule is still being generated: requested, or GENERATED while
@@ -390,10 +422,14 @@ export const fetchSchedules = async (
 export type ScheduleBody = {
 	name: string;
 	periodStart: string;
+	/** The week's days the schedule covers, both or neither; neither is the whole week. */
+	coveredFrom?: string;
+	coveredTo?: string;
 	includeLeave: boolean;
-	allowOpenShifts: boolean;
 	includedShiftIds: Array<string>;
 	includedConstraintIds: Array<string>;
+	/** The chosen people's member profile ids; absent rosters everyone. */
+	memberProfileIds?: Array<string>;
 };
 
 /** Creates a DRAFT schedule for a Department. */
@@ -656,6 +692,18 @@ const rosterCellKindSchema = z
 const dayTypeSchema = z.string().nullable().catch(null);
 
 /**
+ * An overtime stretch of a worked day (the API's ADR-0110): the minutes worked
+ * before its shift starts and after it ends. Null, or absent from an older
+ * API, for a day worked as its shift is.
+ */
+const shiftStretchSchema = z
+	.object({ beforeMinutes: z.number(), afterMinutes: z.number() })
+	.nullish();
+
+/** A worked day's minutes before and after its shift. */
+export type ShiftStretch = NonNullable<z.infer<typeof shiftStretchSchema>>;
+
+/**
  * What a roster day holds before or after a hand change: a shift worked as a
  * job title, a non-working day of its type, leave (only for someone who may
  * read leave), or absent.
@@ -665,6 +713,8 @@ export const rosterCellSchema = z.object({
 	dayType: dayTypeSchema,
 	shift: rosterShiftSchema.nullable(),
 	jobTitle: rosterJobTitleSchema.nullable(),
+	/** A worked day's overtime stretch; see `shiftStretchSchema`. */
+	stretch: shiftStretchSchema,
 });
 
 export type RosterCellValue = z.infer<typeof rosterCellSchema>;
@@ -728,6 +778,15 @@ export const scheduleAssignmentSchema = z.object({
 	 * when none covers the day any more. Absent from an older API.
 	 */
 	leaveTypeName: z.string().nullish(),
+	/**
+	 * For part-day leave, the duration's name; null for Custom times and
+	 * whole days. Shown only where `leaveTypeName` is. Absent from an older API.
+	 */
+	leaveDurationName: z.string().nullish(),
+	/** For part-day leave, "HH:mm" the time off starts; null for whole days. */
+	leaveStartTime: z.string().nullish(),
+	/** "HH:mm" it ends; before the start means the next day. */
+	leaveEndTime: z.string().nullish(),
 	/** The frozen shift worked, or null when off. */
 	shift: rosterShiftSchema.nullable(),
 	/** The job title the shift is worked as, named as frozen with it; null when off. */
@@ -747,6 +806,19 @@ export const scheduleAssignmentSchema = z.object({
 	leaveRequestId: z.string().nullish(),
 	/** The frozen shift this absence leaves short; only on the manager's roster. */
 	uncoveredShift: rosterShiftSchema.nullish(),
+	/**
+	 * On a shift kept around approved part-day leave (the API's ADR-0077,
+	 * part 4), the pieces still worked in order: one, or two around a leave in
+	 * the middle. Empty when the whole shift is worked, and from an older API.
+	 */
+	workedTimes: z
+		.array(z.object({ start: z.string(), end: z.string() }))
+		.nullish(),
+	/** With `uncoveredShift`, when only part of it is short: the hours that need cover. */
+	uncoveredFrom: z.string().nullish(),
+	uncoveredTo: z.string().nullish(),
+	/** A worked day's overtime stretch; see `shiftStretchSchema`. */
+	stretch: shiftStretchSchema,
 });
 
 /** One member's day in a generated schedule: a frozen shift, or off with its reason. */

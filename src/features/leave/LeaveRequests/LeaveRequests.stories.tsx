@@ -2,7 +2,7 @@ import type { ReactElement } from "react";
 import { I18nextProvider } from "react-i18next";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { authTestI18n } from "@/features/auth/testingI18n";
-import { LEAVE_FIXTURES } from "@/features/leave/fixtures";
+import { LEAVE_FIXTURES, partDayLeaveFixture } from "@/features/leave/fixtures";
 import { LeaveRequests } from "@/features/leave/LeaveRequests";
 
 const meta = {
@@ -33,3 +33,23 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 export const ReadOnly: Story = { args: { canReview: (): boolean => false } };
 export const Empty: Story = { args: { rows: [], total: 0 } };
+
+/** With a morning off at the Morning duration and Custom times. */
+export const PartDays: Story = {
+	args: {
+		rows: [
+			partDayLeaveFixture(),
+			partDayLeaveFixture({
+				leaveRequestId: "leave-aisha-custom",
+				startDate: "2026-05-27",
+				endDate: "2026-05-27",
+				durationName: null,
+				startTime: "10:00",
+				endTime: "12:30",
+				leaveMinutes: 150,
+			}),
+			...LEAVE_FIXTURES.slice(1, 3),
+		],
+		total: 4,
+	},
+};

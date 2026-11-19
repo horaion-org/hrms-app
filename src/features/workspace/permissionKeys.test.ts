@@ -10,10 +10,13 @@ import {
 	isAboveDepartments,
 	isCompanyOnly,
 	isPermissionKey,
+	isSystemRolesOnly,
 	moduleOf,
 	PERMISSION_KEYS,
 	PERMISSION_MODULES,
+	ROLE_PERMISSION_KEYS,
 	unknownKeys,
+	usesOf,
 } from "@/features/workspace/permissionKeys";
 
 describe("the permission catalogue generated from the API's contract", () => {
@@ -52,6 +55,27 @@ describe("the permission catalogue generated from the API's contract", () => {
 		expect(moduleOf("schedule:publish")).toBe("scheduling");
 		expect(moduleOf("approval_flow:manage")).toBe("approvals");
 		expect(moduleOf("audit_event:read")).toBe("access_and_activity");
+	});
+
+	it("carries each key's day and what it works with from the contract", () => {
+		expect(
+			PERMISSION_DEFINITIONS.map(({ key, since, worksWith }) => ({
+				key,
+				since,
+				worksWith,
+			}))
+		).toEqual(
+			contract.permissions.map(({ key, since, worksWith }) => ({
+				key,
+				since,
+				worksWith,
+			}))
+		);
+		expect(usesOf("schedule:generate")).toEqual([
+			{ key: "shift:read", reason: "scheduleShifts" },
+			{ key: "constraint:read", reason: "generationRules" },
+		]);
+		expect(usesOf("branch:read")).toEqual([]);
 	});
 
 	it("tells known keys from keys newer than the app", () => {
@@ -96,6 +120,19 @@ describe("the permission catalogue generated from the API's contract", () => {
 				)
 				.map(({ key }) => key)
 		);
+	});
+
+	it("knows the keys only the System Owner and System Admin roles hold, and leaves them out of a role's keys", () => {
+		expect(PERMISSION_KEYS.filter(isSystemRolesOnly)).toEqual([
+			"access_role:assign",
+			"access_role:assign_system_admin",
+		]);
+		expect(ROLE_PERMISSION_KEYS).toEqual(
+			contract.permissions
+				.filter(({ systemRolesOnly }) => !systemRolesOnly)
+				.map(({ key }) => key)
+		);
+		expect(ROLE_PERMISSION_KEYS).not.toContain("access_role:assign");
 	});
 
 	it("tells keys that stop above departments from the rest", () => {

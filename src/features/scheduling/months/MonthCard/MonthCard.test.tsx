@@ -19,20 +19,14 @@ beforeAll(async () => {
 // Dates read as the test browser (en-US) writes them.
 const renderCard = async ({
 	summary = monthSummaryFixture(),
-	reviewMonth,
 	waitingOnMe = [],
 }: {
 	summary?: ScheduleMonthSummary;
-	reviewMonth?: string;
 	waitingOnMe?: Array<ApprovalInstance>;
 }): Promise<HTMLElement> => {
 	render(
 		<MemoryRouterHarness>
-			<MonthCard
-				reviewMonth={reviewMonth}
-				summary={summary}
-				waitingOnMe={waitingOnMe}
-			/>
+			<MonthCard summary={summary} waitingOnMe={waitingOnMe} />
 		</MemoryRouterHarness>
 	);
 	return screen.findByRole("region", { name: "Kitchen" });
@@ -42,10 +36,10 @@ describe("MonthCard", () => {
 	it("given_kitchensNovember_when_rendered_then_countsTheWeeksAndPointsAtTheWeekUnderReview", async () => {
 		const card = await renderCard({});
 
-		expect(card).toHaveTextContent("1 published · 1 to review · 2 tentative");
+		expect(card).toHaveTextContent("1 published · 3 to review");
 		expect(
 			within(card).getByRole("img", {
-				name: "1 published · 1 to review · 2 tentative",
+				name: "1 published · 3 to review",
 			})
 		).toBeInTheDocument();
 		expect(card).toHaveTextContent("Week of Nov 9 is waiting for your review.");
@@ -59,22 +53,6 @@ describe("MonthCard", () => {
 		).toHaveAttribute("href", "/scheduling/months/2026-11?department=d-1");
 	});
 
-	it("given_aMonthGeneratedAhead_when_rendered_then_saysTheEarlierMonthComesFirst", async () => {
-		const card = await renderCard({
-			summary: monthSummaryFixture({
-				month: "2026-12",
-				weeks: [
-					{ periodStart: "2026-12-07", state: "TENTATIVE", scheduleId: "s-6" },
-					{ periodStart: "2026-12-14", state: "PUBLISHED", scheduleId: "s-7" },
-				],
-			}),
-			reviewMonth: "2026-11",
-		});
-
-		expect(card).toHaveTextContent("1 published · 1 tentative");
-		expect(card).toHaveTextContent("Generated ahead. November comes first.");
-	});
-
 	it("given_aWeekWaitingOnTheViewer_when_rendered_then_saysWhichWeekAndItsStep", async () => {
 		const card = await renderCard({
 			waitingOnMe: [approvalInstanceFixture({ subjectId: "s-2" })],
@@ -83,6 +61,50 @@ describe("MonthCard", () => {
 		expect(card).toHaveTextContent(
 			"Week of Nov 9: waiting on you · step 1 of 2 (Endorse)"
 		);
+	});
+
+	it("given_aNamedDatesSchedule_when_shown_then_itsNameAndDates", async () => {
+		const part = {
+			name: "Year-end gala",
+			named: true,
+			state: "TO_REVIEW" as const,
+			redoing: false,
+		};
+		const summary = monthSummaryFixture();
+		const card = await renderCard({
+			summary: {
+				...summary,
+				weeks: summary.weeks.map((week) =>
+					week.periodStart === "2026-11-16"
+						? {
+								...week,
+								parts: [
+									{
+										...part,
+										scheduleId: "s-3",
+										coveredFrom: "2026-11-19",
+										coveredTo: "2026-11-22",
+									},
+								],
+							}
+						: week.periodStart === "2026-11-23"
+							? {
+									...week,
+									parts: [
+										{
+											...part,
+											scheduleId: "s-4",
+											coveredFrom: "2026-11-23",
+											coveredTo: "2026-11-28",
+										},
+									],
+								}
+							: week
+				),
+			},
+		});
+
+		expect(card).toHaveTextContent(/Year-end gala · Nov 19\s?–\s?28/);
 	});
 
 	it("given_twoDrafts_when_rendered_then_saysDraftsInThePlural", async () => {

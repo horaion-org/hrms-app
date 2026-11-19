@@ -7,6 +7,7 @@ import {
 	CONSTRAINT_FIELDS,
 	type ConstraintRequirement,
 	type ConstraintType,
+	type RequirementPolicy,
 } from "@/features/scheduling/constraints/api";
 import {
 	constraintWords,
@@ -14,6 +15,8 @@ import {
 	sentencePartsOf,
 	type SentenceValue,
 } from "@/features/scheduling/constraints/constraintSentence";
+import { requirementTagTone } from "@/features/scheduling/constraints/requirementTagTones";
+import { problemLines } from "@/features/scheduling/constraints/valueProblems";
 
 export type ConstraintStatementProps = {
 	constraint: {
@@ -23,6 +26,8 @@ export type ConstraintStatementProps = {
 		values: ReadonlyArray<SentenceValue>;
 		/** Whether its type covers full-timers only, which its sentence says; absent reads as everyone. */
 		fullTimersOnly?: boolean;
+		/** How its type runs, for the tag of a type that offers no choice; absent shows no fixed tag. */
+		requirementPolicy?: RequirementPolicy;
 	};
 	/** Who it applies to, as a muted line under the sentence (see `appliesToOf`). */
 	appliesTo?: string;
@@ -38,8 +43,10 @@ const NAMED_FIELDS = CONSTRAINT_FIELDS.filter(
 
 /**
  * A constraint as one reads it: a Must or If possible tag, which says on
- * hover what happens when it can't be met, then its sentence, and under it
- * who it applies to. The constraint lists and the dialog's preview show it.
+ * hover what happens when it can't be met, then its sentence, with each
+ * field holding a value that no longer fits marked, under it who it applies
+ * to, and one line per such value saying what to do. The constraint lists
+ * and the dialog's preview show it.
  */
 export const ConstraintStatement = ({
 	constraint,
@@ -58,6 +65,12 @@ export const ConstraintStatement = ({
 			: undefined;
 	const tagTitle = firmness ? t(`${key}.firmness.${firmness}`) : undefined;
 	const words = constraintWords(constraint, t);
+	const fieldsWithProblems = new Set(
+		constraint.values
+			.filter((value) => value.problem)
+			.map((value) => value.field)
+	);
+	const problems = problemLines(constraint.values, t);
 	const parts: Record<string, ReactElement> = Object.fromEntries(
 		NAMED_FIELDS.map((field) => {
 			const text = words[field];
@@ -68,7 +81,16 @@ export const ConstraintStatement = ({
 						{t(`${key}.placeholders.${field}`)}
 					</span>
 				) : (
-					<span key={field}>{text}</span>
+					<span
+						key={field}
+						className={
+							fieldsWithProblems.has(field)
+								? "font-semibold text-warning-700"
+								: undefined
+						}
+					>
+						{text}
+					</span>
 				),
 			];
 		})
@@ -79,7 +101,12 @@ export const ConstraintStatement = ({
 			<p>
 				{tag && (
 					<>
-						<Badge compact className="mr-1" title={tagTitle}>
+						<Badge
+							compact
+							className="mr-1 uppercase"
+							title={tagTitle}
+							tone={requirementTagTone(firmness)}
+						>
 							{tag}
 						</Badge>{" "}
 					</>
@@ -96,6 +123,11 @@ export const ConstraintStatement = ({
 				))}
 			</p>
 			{appliesTo && <p className="text-xs text-neutral-700">{appliesTo}</p>}
+			{problems.map((line) => (
+				<p key={line} className="text-xs text-warning-700">
+					{line}
+				</p>
+			))}
 		</div>
 	);
 };

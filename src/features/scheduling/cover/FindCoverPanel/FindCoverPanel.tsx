@@ -7,7 +7,10 @@ import { Callout } from "@/components/ui/Callout";
 import { ErrorText } from "@/components/ui/ErrorText";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { CoverOptionList } from "@/features/scheduling/cover/CoverOptionList";
+import { EngineRepairOptions } from "@/features/scheduling/cover/EngineRepairOptions";
 import {
+	coverOrderNote,
+	engineNoteLines,
 	gapReason,
 	gapTitle,
 	neighbourLine,
@@ -16,14 +19,17 @@ import {
 	type CoverNames,
 	type CoverShift,
 } from "@/features/scheduling/cover/coverOptionWords";
+import { notAssignedReasonLine } from "@/features/scheduling/cover/notAssignedWords";
 import {
 	useCoverPanel,
 	type CoverPanelInput,
 } from "@/features/scheduling/cover/useCoverPanel";
+import { useRepairWarmUp } from "@/features/scheduling/cover/useRepairWarmUp";
 import { CoverOfferSent } from "@/features/scheduling/coverOffers/CoverOfferActions/CoverOfferSent";
-import { formatDay } from "@/features/scheduling/periods";
+import { offerActionsOf } from "@/features/scheduling/coverOffers/coverOfferRules";
+import { formatDay } from "@/common/formatDay";
 import { CellPanelFooter } from "@/features/scheduling/RosterCellPanel/CellPanelFooter";
-import { RosterChangeReview } from "@/features/scheduling/RosterChangeReview";
+import { RosterChangeReview } from "@/features/scheduling/rosterChanges/RosterChangeReview";
 import {
 	RosterSidePanel,
 	type RosterSidePanelSection,
@@ -41,12 +47,19 @@ const SKELETON_ROWS = ["first", "second", "third"];
 
 /**
  * Find cover beside the roster grid, in the side panel's slot and frame:
- * the short shift in two lines, then who could cover it (`CoverOptionList`),
- * the first one chosen and previewed on the grid, the line that the rules
- * aren't checked yet with the person's shifts beside it as facts, and the
- * same review and actions a hand change gets: Apply on a draft, Send offer
- * or They agreed on a published roster. `useCoverPanel` holds the state and
- * calls; this component only lays the parts out.
+ * the short shift in two lines, then who could cover it (`CoverOptionList`)
+ * under a line saying what the list's order means, the first one chosen and
+ * previewed on the grid, the line that the rules aren't checked yet with the
+ * person's shifts beside it as facts, and the same review and actions a hand
+ * change gets: Apply on a draft, Send offer or They agreed on a published
+ * roster. Under them, "From the scheduling engine" asks the engine for its
+ * own repair on demand (`EngineRepairOptions`), while the shift is still
+ * short: for any gap, the generation's or one made since, which the engine
+ * finds in the roster. Once the engine has answered, "Who covers" follows it
+ * (`coverWithEngine`): its choice comes first, badged Suggested and chosen,
+ * each card says what the engine made of the person, and the people it
+ * refuses sit under "Can't help" with its reason. `useCoverPanel` holds the
+ * state and calls; this component only lays the parts out.
  */
 export const FindCoverPanel = ({
 	id,
@@ -57,7 +70,10 @@ export const FindCoverPanel = ({
 	const language = formattingLocale(i18n);
 	const radioName = useId();
 	const panel = useCoverPanel(input);
-	const { status, options, selected, review, offer } = panel;
+	const { status, options, withEngine, engineRepair, selected, review, offer } =
+		panel;
+	// Opening repair for a gap warms the engine's worker, so its first options come fast.
+	useRepairWarmUp(input.target, input.revision, true);
 	// The roster's own days name a shift when the frozen shifts can't be read.
 	const shiftOf = (shiftId: string): CoverShift | undefined =>
 		input.shifts.find((candidate) => candidate.shiftId === shiftId) ??
@@ -79,24 +95,37 @@ export const FindCoverPanel = ({
 	const offerOut = offer && (offer.justSent ?? offer.openOffer);
 
 	const optionList = (unavailableOpen: boolean): ReactNode =>
-		options && (
+		withEngine && (
 			<CoverOptionList
+				note={coverOrderNote(withEngine.order, t)}
 				radioName={radioName}
-				selected={selected?.membershipId}
+				selected={panel.repairChosen ? undefined : selected?.membershipId}
+				suggested={withEngine.suggested}
 				unavailableOpen={unavailableOpen}
-				options={options.options.map((option) => ({
+				options={withEngine.options.map((option) => ({
 					membershipId: option.membershipId,
 					name: names.member(option.membershipId),
-					lines: optionLines(option, names, t),
+					lines: [
+						...optionLines(option, names, t),
+						...engineNoteLines(withEngine.engineNote[option.membershipId], t),
+					],
 				}))}
-				unavailable={options.unavailable.map((person) => ({
+				unavailable={withEngine.unavailable.map((person) => ({
 					membershipId: person.membershipId,
 					name: names.member(person.membershipId),
-					reason: reasonText(person.reason, shift, t),
+					reason:
+						"engineReason" in person
+							? notAssignedReasonLine(person.engineReason, t)
+							: reasonText(person.reason, shift, t),
 				}))}
 				onSelect={panel.select}
 			/>
 		);
+	// "Why nobody was assigned" reads the merged list, where "on leave" stands only where the backend agrees.
+	const repair =
+		engineRepair.status === "ready" && withEngine
+			? { ...engineRepair, notAssigned: withEngine.notAssigned }
+			: engineRepair;
 
 	const statusContent: Record<typeof status, () => ReactNode> = {
 		loading: () => (
@@ -114,6 +143,12 @@ export const FindCoverPanel = ({
 					{t(`${key}.findAgain`)}
 				</Button>
 			</div>
+		),
+		// Not editable now (a draft, a running or failed generation, a rejected roster): looking again can't help.
+		notEditable: () => (
+			<p className="text-sm text-error-700" role="alert">
+				{t("scheduling.rosterEdit.error.notEditable")}
+			</p>
 		),
 		failed: () => (
 			<div className="flex flex-col items-start gap-2" role="alert">
@@ -145,7 +180,7 @@ export const FindCoverPanel = ({
 	};
 
 	const reviewContent = (): ReactNode => {
-		if (!selected) return null;
+		if (!selected && !panel.repairChosen) return null;
 		if (offer && offerOut)
 			return (
 				<CoverOfferSent
@@ -159,30 +194,23 @@ export const FindCoverPanel = ({
 			);
 		return (
 			<div className="flex flex-col gap-3">
+				{panel.repairChosen && (
+					<Callout tone="warning">
+						{t("scheduling.cover.engine.notChecked")}
+					</Callout>
+				)}
 				<RosterChangeReview
 					names={review.names}
 					notifiesMembers={offer !== undefined}
 					preview={review.preview}
+					previewRefusal={review.previewRefusal}
 					remark={review.remark}
 					showsRulesNote={false}
 					ticked={review.ticked}
 					onRemarkChange={review.setRemark}
+					onRetryPreview={review.retryPreview}
 					onTickedChange={review.setTicked}
 				/>
-				{review.previewRefusal && (
-					<div className="flex flex-col items-start gap-2" role="alert">
-						<p className="text-sm text-error-700">
-							{review.previewRefusal === "revision"
-								? t("scheduling.rosterEdit.error.revision")
-								: t("scheduling.rosterEdit.previewFailed")}
-						</p>
-						<Button variant="textlink" onClick={review.retryPreview}>
-							{review.previewRefusal === "revision"
-								? t("scheduling.rosterEdit.error.reload")
-								: t("scheduling.rosterEdit.tryAgain")}
-						</Button>
-					</div>
-				)}
 				{review.applyRefusal && (
 					<ErrorText>
 						{t(`scheduling.rosterEdit.error.${review.applyRefusal}`)}
@@ -191,25 +219,12 @@ export const FindCoverPanel = ({
 				<CellPanelFooter
 					applyDisabled={review.applyBlocked}
 					busy={review.busy}
+					offerActions={offerActionsOf(offer, selectedName)}
 					applyLabel={t(
 						review.applyAnyway
 							? "scheduling.rosterEdit.applyAnyway"
 							: "scheduling.rosterEdit.apply"
 					)}
-					offerActions={
-						offer?.consentKind
-							? {
-									name: selectedName,
-									pending: offer.createPending,
-									ready: offer.ready,
-									refusal: offer.createRefusal,
-									rivals: offer.rivals,
-									timeZone: offer.timeZone,
-									onRecord: offer.record,
-									onSend: offer.send,
-								}
-							: undefined
-					}
 					onApply={review.apply}
 					onCancel={onClose}
 				/>
@@ -235,13 +250,25 @@ export const FindCoverPanel = ({
 		{ key: "status", content: statusContent[status]() },
 		{
 			key: "notChecked",
-			content: selected && (
+			content: selected && !panel.repairChosen && (
 				<Callout tone="info">
 					<span className="block">{t(`${key}.notChecked`)}</span>
 					<span className="mt-1 block font-normal">
 						{neighbourLine(selected, names, t)}
 					</span>
 				</Callout>
+			),
+		},
+		{
+			key: "engine",
+			title: t("scheduling.cover.engine.title"),
+			content: status !== "closed" && (
+				<EngineRepairOptions
+					names={names}
+					repair={repair}
+					// A published roster's changes go out as offers, one person at a time: made by hand there.
+					onReview={input.coverOffers ? undefined : panel.chooseRepair}
+				/>
 			),
 		},
 		{ key: "review", content: reviewContent() },

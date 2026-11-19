@@ -342,18 +342,11 @@ describe("A person's profile", () => {
 		expect(access).toHaveTextContent("Only places you can see are shown.");
 		expect(
 			within(access)
-				.getAllByRole("term")
-				.map(
-					(term) =>
-						`${term.textContent}: ${[
-							...(term.nextElementSibling?.children ?? []),
-						]
-							.map((line) => line.textContent)
-							.join(" / ")}`
-				)
+				.getAllByRole("listitem")
+				.map((entry) => entry.textContent)
 		).toEqual([
-			"Whole company: People: View",
-			"Orchard › Kitchen: People: View / Leave: View",
+			"Whole companyThrough AdminPeople: View",
+			"Orchard › KitchenThrough SupervisorPeople: ViewLeave: View",
 		]);
 		expect(button("Copy phone number")).toBeVisible();
 		expect(button("Copy email address")).toBeVisible();
@@ -423,6 +416,65 @@ describe("A person's profile", () => {
 		expect(
 			screen.getByRole("link", { name: "Back to people overview" })
 		).toBeVisible();
+	});
+});
+
+describe("A person's default access", () => {
+	const DEFAULTS = `GET ${COMPANY}/default-access-rules`;
+	const RECIPIENT = `GET ${COMPANY}/default-access-recipients/m-1`;
+	// Supervisor for the whole company, applied in each person's own department.
+	const companyDefault = {
+		defaultAccessRuleId: "x",
+		accessRoleId: "r-1",
+		setAt: "COMPANY",
+		branchId: null,
+		departmentId: null,
+		appliesTo: "OWN_DEPARTMENT",
+	};
+	const receiving = (receivesDefaultAccess: boolean): StubReply => ({
+		status: 200,
+		body: envelope({
+			companyMembershipId: "m-1",
+			receivesDefaultAccess,
+			receivingSince: receivesDefaultAccess ? "2026-11-18T02:14:00Z" : null,
+		}),
+	});
+	const kitchenEntry = async (): Promise<string> => {
+		const access = await screen.findByRole("region", { name: "Access" });
+		let entry = "";
+		await waitFor(() => {
+			entry =
+				within(access)
+					.getAllByRole("listitem")
+					.map((item) => item.textContent ?? "")
+					.find((text) => text.startsWith("Orchard › Kitchen")) ?? "";
+			expect(entry).not.toBe("");
+		});
+		return entry;
+	};
+
+	it("shows the defaults that reach someone receiving default access, named as defaults", async () => {
+		stubApi({
+			...routes(),
+			[DEFAULTS]: { status: 200, body: envelope([companyDefault]) },
+			[RECIPIENT]: receiving(true),
+		});
+		await open();
+
+		await waitFor(async () => {
+			expect(await kitchenEntry()).toContain("Supervisor (company default)");
+		});
+	});
+
+	it("shows no defaults for someone who doesn't receive default access", async () => {
+		stubApi({
+			...routes(),
+			[DEFAULTS]: { status: 200, body: envelope([companyDefault]) },
+			[RECIPIENT]: receiving(false),
+		});
+		await open();
+
+		expect(await kitchenEntry()).not.toContain("company default");
 	});
 });
 
@@ -532,7 +584,7 @@ describe("Editing a person", () => {
 				})
 			)
 		);
-		await choose(user, /^Employment type/, "Part-time");
+		await choose(user, /^Employment type/, "Contract");
 		await save(user);
 		await screen.findByText("Changes to Kent Chua were saved.");
 		expect(sent(calls, `PUT ${PROFILE}`)).toEqual([
@@ -540,7 +592,7 @@ describe("Editing a person", () => {
 				...kentBody,
 				departmentId: null,
 				jobTitleId: null,
-				employmentType: "PART_TIME",
+				employmentType: "CONTRACT",
 			},
 		]);
 	});
@@ -592,6 +644,23 @@ describe("Editing a person", () => {
 		expect(screen.getByText("Also holds elsewhere: Admin.")).toBeVisible();
 	});
 
+	it("names the employment terms row as a group, which its label can name though it is no field", async () => {
+		stubApi(routes(workspaceReply([...ALL, "member_employment_terms:read"])));
+		await open("/people/m-1?edit=true");
+
+		expect(
+			await screen.findByRole("group", { name: "Employment terms" })
+		).toBeInTheDocument();
+	});
+
+	it("shows no developer's comment beside the employment terms row", async () => {
+		stubApi(routes(workspaceReply([...ALL, "member_employment_terms:read"])));
+		await open("/people/m-1?edit=true");
+
+		await screen.findByRole("group", { name: "Employment terms" });
+		expect(screen.queryByText(/Not a form control/)).not.toBeInTheDocument();
+	});
+
 	it("keeps the email address once they've logged in, and lets it be corrected before", async () => {
 		stubApi(routes());
 		await open("/people/m-1?edit=true");
@@ -627,7 +696,7 @@ describe("Editing a person", () => {
 
 		await user.clear(textbox("Full name"));
 		await user.type(textbox("Full name"), " Kent Tan ");
-		await choose(user, /^Employment type/, "Part-time");
+		await choose(user, /^Employment type/, "Contract");
 		await choose(user, /^Employment status/, "Inactive");
 		await save(user);
 
@@ -642,7 +711,7 @@ describe("Editing a person", () => {
 			{
 				...kentBody,
 				displayName: "Kent Tan",
-				employmentType: "PART_TIME",
+				employmentType: "CONTRACT",
 				status: "INACTIVE",
 			},
 		]);
@@ -724,6 +793,9 @@ describe("Editing a person", () => {
 	it("returns to the profile on cancel, asking first only if something changed", async () => {
 		const user = userEvent.setup();
 		const { opened, calls } = await openEditing();
+		expect(
+			screen.queryByRole("checkbox", { name: "Send an invitation now" })
+		).not.toBeInTheDocument();
 
 		await user.click(button("Cancel"));
 		await waitFor(() => {
@@ -778,8 +850,8 @@ describe("Editing a person", () => {
 			(): HTMLElement => button(/^Employment status/),
 		],
 		[
-			problemReply(409, "COMPANY_OWNER_CANNOT_BE_DEACTIVATED"),
-			"The company owner can’t be deactivated.",
+			problemReply(409, "SYSTEM_OWNER_CANNOT_BE_DEACTIVATED"),
+			"The System Owner can’t be deactivated.",
 			(): HTMLElement => button(/^Employment status/),
 		],
 		[
@@ -805,10 +877,6 @@ describe("Editing a person", () => {
 
 	it.each([
 		[
-			problemReply(409, "LAST_ACTIVE_DEPARTMENT_HEAD"),
-			"They’re the only head of their department. Add another head there first.",
-		],
-		[
 			problemReply(403, "AUTHORIZATION_DENIED"),
 			"You don’t have permission to move people to this department.",
 		],
@@ -832,10 +900,6 @@ describe("Editing a person", () => {
 	);
 
 	it.each([
-		[
-			problemReply(409, "LAST_ACTIVE_DEPARTMENT_HEAD"),
-			"They’re the only head of their department. Add another head there first.",
-		],
 		[
 			problemReply(404, "MEMBER_PROFILE_NOT_FOUND"),
 			"This person is no longer available.",
@@ -930,7 +994,7 @@ describe("Changing a person's access role", () => {
 			},
 			[`POST ${path}`]: { status: 201 },
 		});
-		await choose(user, /^Role scope/, target);
+		await choose(user, /^Applies to/, target);
 		await choose(user, /^Access role/, "Manager");
 		await save(user);
 		await screen.findByText("Changes to Kent Chua were saved.");
@@ -941,6 +1005,25 @@ describe("Changing a person's access role", () => {
 			{ companyMembershipId: "m-1", accessRoleId: "r-2" },
 		]);
 		expect(sent(calls, REVOKE)).toEqual([]);
+	});
+
+	it("shows the access role read-only, saying who can change it, to someone who may read roles but not give them", async () => {
+		await openEditing(
+			routes(workspaceReply(ALL.filter((key) => key !== "access_role:assign")))
+		);
+
+		await waitFor(() => {
+			expect(textbox("Access role")).toHaveValue("Supervisor, Admin");
+		});
+		expect(textbox("Access role")).toBeDisabled();
+		expect(
+			screen.getByText(
+				"Only the System Owner or a System Admin can change access roles and where they apply."
+			)
+		).toBeVisible();
+		expect(
+			screen.queryByRole("button", { name: /^Applies to/ })
+		).not.toBeInTheDocument();
 	});
 
 	it("loads a branch assignment without a department and preserves it on an ordinary save", async () => {
@@ -970,7 +1053,7 @@ describe("Changing a person's access role", () => {
 				]),
 			},
 		});
-		expect(button(/^Role scope/)).toHaveTextContent("Orchard");
+		expect(button(/^Applies to/)).toHaveTextContent("Orchard");
 		expect(button(/^Access role/)).toHaveTextContent("Manager");
 		await save(user);
 		await screen.findByText("Changes to Kent Chua were saved.");
@@ -1098,7 +1181,10 @@ describe("Deactivating, reactivating and re-inviting", () => {
 		const user = userEvent.setup();
 		stubApi({
 			...routes(),
-			[`PUT ${PROFILE}`]: problemReply(409, "LAST_ACTIVE_DEPARTMENT_HEAD"),
+			[`PUT ${PROFILE}`]: problemReply(
+				409,
+				"SYSTEM_OWNER_CANNOT_BE_DEACTIVATED"
+			),
 		});
 		await open();
 
@@ -1112,9 +1198,7 @@ describe("Deactivating, reactivating and re-inviting", () => {
 		);
 
 		expect(
-			await within(dialog).findByText(
-				"They’re the only head of their department. Add another head there first."
-			)
+			await within(dialog).findByText("The System Owner can’t be deactivated.")
 		).toHaveAttribute("role", "alert");
 	});
 

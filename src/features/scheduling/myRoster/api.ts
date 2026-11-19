@@ -6,7 +6,10 @@ import { z } from "zod";
 import { apiRequest } from "@/common/api-client";
 import { companyPath } from "@/common/companyPath";
 import { SCHEDULING_QUERY_ROOT } from "@/features/scheduling/paths";
-import { scheduleAssignmentSchema } from "@/features/scheduling/schedules/api";
+import {
+	scheduleAssignmentSchema,
+	withCoveredDays,
+} from "@/features/scheduling/schedules/api";
 import { selfMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
 
@@ -16,19 +19,24 @@ import { retry } from "@/features/workspace/retry";
  * company that rosters the caller, and answers 404 for anything else.
  */
 
-const myRosterSchema = z.object({
-	scheduleId: z.string(),
-	name: z.string(),
-	branchName: z.string(),
-	departmentName: z.string(),
-	/** The IANA zone of the branch, which the roster's days are in. */
-	timeZone: z.string(),
-	/** ISO dates; the period starts on a Monday. */
-	periodStart: z.string(),
-	periodEnd: z.string(),
-	/** Every member's days, as the manager's roster reads them. */
-	assignments: z.array(scheduleAssignmentSchema),
-});
+const myRosterSchema = z
+	.object({
+		scheduleId: z.string(),
+		name: z.string(),
+		branchName: z.string(),
+		departmentName: z.string(),
+		/** The IANA zone of the branch, which the roster's days are in. */
+		timeZone: z.string(),
+		/** ISO dates; the period starts on a Monday. */
+		periodStart: z.string(),
+		periodEnd: z.string(),
+		/** The days of the week the schedule covers (API ADR-0113); staff see these only. */
+		coveredFrom: z.string().nullish(),
+		coveredTo: z.string().nullish(),
+		/** Every member's days, as the manager's roster reads them. */
+		assignments: z.array(scheduleAssignmentSchema),
+	})
+	.transform(withCoveredDays);
 
 /** A published schedule's week and department, with its whole roster. */
 export type MyRoster = z.infer<typeof myRosterSchema>;

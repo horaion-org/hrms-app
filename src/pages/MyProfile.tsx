@@ -2,6 +2,8 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { EmploymentTermsRow } from "@/features/employmentTerms/EmploymentTermsRow";
+import { TimeOffEarnedRow } from "@/features/employmentTerms/TimeOffEarnedRow";
+import { useTimeOffEarned } from "@/features/employmentTerms/timeOffBalance";
 import { myProfileQuery } from "@/features/people/api";
 import { ProfileDetails } from "@/features/people/ProfileDetails";
 import { ProfileHeader } from "@/features/people/ProfileHeader";
@@ -16,6 +18,11 @@ export const MyProfile = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const { t } = useTranslation();
 	const { data: profile } = useSuspenseQuery(myProfileQuery(companyId));
+	// Time off for extra hours, when their terms give it or any is left (API ADR-0126).
+	const timeOff = useTimeOffEarned(companyId, profile.membershipId, {
+		self: true,
+		allowed: true,
+	});
 	return (
 		<>
 			<p className="text-sm text-neutral-800">
@@ -28,6 +35,14 @@ export const MyProfile = (): FunctionComponent => {
 					profile={profile}
 					employmentTerms={
 						<EmploymentTermsRow self companyId={companyId} profile={profile} />
+					}
+					timeOffEarned={
+						timeOff && (
+							<TimeOffEarnedRow
+								balance={timeOff}
+								displayName={profile.displayName}
+							/>
+						)
 					}
 				/>
 			</div>

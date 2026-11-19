@@ -37,19 +37,42 @@ const show = (
 };
 
 describe("CoverOptionList", () => {
-	it("given_options_when_shown_then_theFirstIsSuggestedAndChosenAndEachSaysItsLines", () => {
+	it("given_options_when_shown_then_theChosenOneIsCheckedNobodyIsSuggestedAndEachSaysItsLines", () => {
 		show();
 
-		const first = screen.getByRole("radio", { name: "Person 1" });
-		expect(first).toBeChecked();
-		expect(first).toHaveAccessibleDescription(/Suggested/);
-		expect(
-			screen.getByRole("radio", { name: "Person 2" })
-		).not.toHaveAccessibleDescription(/Suggested/);
+		expect(screen.getByRole("radio", { name: "Person 1" })).toBeChecked();
+		expect(screen.queryByText("Suggested")).toBeNull();
 		expect(screen.getByText("Line of person 2")).toBeVisible();
 		expect(
 			screen.getByRole("radiogroup", { name: "Who covers" })
 		).toBeVisible();
+	});
+
+	it("given_someoneSuggested_when_shown_then_onlyTheirCardSaysSuggestedWhereverItIsInTheList", () => {
+		show({ suggested: "m-2" });
+
+		expect(
+			screen.getByRole("radio", { name: "Person 2" })
+		).toHaveAccessibleDescription(/Suggested/);
+		expect(
+			screen.getByRole("radio", { name: "Person 1" })
+		).not.toHaveAccessibleDescription(/Suggested/);
+		expect(screen.getAllByText("Suggested")).toHaveLength(1);
+	});
+
+	it("given_aNote_when_shown_then_itSitsUnderTheHeadingAndDescribesTheGroup", () => {
+		show({ note: "In order of fewest extra hours." });
+
+		expect(screen.getByText("In order of fewest extra hours.")).toBeVisible();
+		expect(
+			screen.getByRole("radiogroup", { name: "Who covers" })
+		).toHaveAccessibleDescription("In order of fewest extra hours.");
+	});
+
+	it("given_nobodyCanCover_when_aNoteIsGiven_then_itIsNotShownWithoutTheList", () => {
+		show({ options: [], selected: undefined, note: "In order of fewest." });
+
+		expect(screen.queryByText("In order of fewest.")).toBeNull();
 	});
 
 	it("given_anOptionChosen_when_clicked_then_reportsWho", async () => {

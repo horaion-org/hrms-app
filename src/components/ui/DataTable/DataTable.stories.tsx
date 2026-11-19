@@ -1,6 +1,7 @@
 import type { Decorator, Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { fn, userEvent, within } from "storybook/test";
+import type { FunctionComponent } from "@/common/types";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -99,6 +100,34 @@ type Story = StoryObj<typeof meta>;
 
 /** Sorted on the client from each column's `sortValue`. */
 export const Default: Story = {};
+
+/** Rows under group headings that fold: the "Closed" branches start folded; click a heading to fold or unfold it. */
+export const CollapsibleGroups: Story = {
+	render: function CollapsibleGroupsStory(
+		args
+	): NonNullable<FunctionComponent> {
+		const [closed, setClosed] = useState<Array<string>>(["Closed"]);
+		return (
+			<DataTable
+				{...args}
+				rowGroups={{
+					groupOf: (branch) => (branch.active ? "Open" : "Closed"),
+					label: (group) => <span className="font-bold">{group}</span>,
+					collapse: {
+						isOpen: (group) => !closed.includes(group),
+						onToggle: (group) => {
+							setClosed(
+								closed.includes(group)
+									? closed.filter((each) => each !== group)
+									: [...closed, group]
+							);
+						},
+					},
+				}}
+			/>
+		);
+	},
+};
 
 export const Selectable: Story = {
 	args: {
@@ -268,4 +297,15 @@ export const PhoneNameAndActions: Story = {
 		],
 	},
 	parameters: { viewport: { defaultViewport: "mobile1" } },
+};
+
+/** Rows headed by their group, as the Shifts page lists shifts by their group. */
+export const Grouped: Story = {
+	args: {
+		defaultSort: undefined,
+		rowGroups: {
+			groupOf: (branch: Branch): string => branch.code.slice(0, 2),
+			label: (group: string): string => `Codes starting ${group}`,
+		},
+	},
 };

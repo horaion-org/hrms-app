@@ -9,6 +9,11 @@ export type InputProps = ComponentPropsWithRef<"input"> & {
 	status?: InputStatus;
 	/** "lg" matches a large Button's height, for a search beside page actions; "md" suits forms. */
 	inputSize?: "md" | "lg";
+	/**
+	 * A unit shown after the typed value, such as "h a week". It is hidden from
+	 * assistive technology, so the field's label must name the unit too.
+	 */
+	unit?: string;
 };
 
 const baseClasses =
@@ -56,6 +61,7 @@ export const Input = ({
 	trailingIcon,
 	status,
 	inputSize = "md",
+	unit,
 	...rest
 }: InputProps): FunctionComponent => (
 	<div
@@ -74,6 +80,11 @@ export const Input = ({
 			className="min-w-0 flex-1 border-0 bg-transparent outline-hidden placeholder:text-neutral-500 disabled:cursor-not-allowed"
 			{...rest}
 		/>
+		{unit && (
+			<span aria-hidden="true" className="whitespace-nowrap text-neutral-700">
+				{unit}
+			</span>
+		)}
 		{trailingIcon}
 	</div>
 );

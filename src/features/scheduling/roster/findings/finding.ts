@@ -30,13 +30,17 @@ export const findingFamily = (finding: Finding): FindingFamily =>
 
 export type FindingTone = "error" | "warning" | "info";
 
+/** Diagnostics that only inform, whatever severity they come with: days of a days-off block that were not filled in. */
+const INFO_CODES: ReadonlyArray<string> = ["OFF_BLOCK_HISTORY_MISSING"];
+
 /**
  * Roster notes read as errors. A diagnostic reads by its severity, which the
- * engine always sends as "warning" today; an unknown severity reads as a
- * warning too.
+ * engine sends as "warning" for most codes; an unknown severity reads as a
+ * warning too, and a code that only informs always reads as information.
  */
 export const findingTone = (finding: Finding): FindingTone => {
 	if (finding.kind !== "diagnostic") return "error";
+	if (INFO_CODES.includes(finding.diagnostic.code)) return "info";
 	const severity = finding.diagnostic.severity.toLowerCase();
 	if (severity === "error" || severity === "critical") return "error";
 	if (severity === "info") return "info";
@@ -58,3 +62,11 @@ export const strongestTone = (findings: ReadonlyArray<Finding>): FindingTone =>
 				TONE_STRENGTH[tone] > TONE_STRENGTH[strongest] ? tone : strongest,
 			"info"
 		);
+
+/** How many people a finding stands for: a shift left short counts each person it is short; anything else counts once. */
+export const findingWeight = (finding: Finding): number =>
+	finding.kind === "conflict" ? Math.max(finding.conflict.missing, 1) : 1;
+
+/** Whether a diagnostic only explains the roster (the engine's "info"): nothing to fix. */
+export const isInfoDiagnostic = (diagnostic: FindingsDiagnostic): boolean =>
+	findingTone({ kind: "diagnostic", diagnostic }) === "info";

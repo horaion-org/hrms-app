@@ -1,3 +1,4 @@
+import { useQuery } from "@tanstack/react-query";
 import { Link, useNavigate, type LinkProps } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { timeAgo } from "@/common/relativeTime";
@@ -7,10 +8,14 @@ import { OverflowMenu, OverflowMenuItem } from "@/components/ui/OverflowMenu";
 import { StatCard } from "@/components/ui/StatCard";
 import { describeActivity } from "@/features/organisation/activity";
 import { ActivityTitle } from "@/features/organisation/ActivityTitle";
+import { failedReadProblem } from "@/features/organisation/listColumns";
+import { ListProblem } from "@/features/organisation/ListProblem";
 import {
 	useOrganisationOverview,
 	type Visible,
 } from "@/features/organisation/useOrganisationOverview";
+import { workspaceQuery } from "@/features/workspace/api";
+import { retry } from "@/features/workspace/retry";
 import { COMPANY_SCOPE } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
@@ -19,6 +24,8 @@ export const Organisation = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
 	const { t, i18n } = useTranslation();
 	const overview = useOrganisationOverview(companyId);
+	// The overview fails only when the workspace read does; the same read, to say why and read it again.
+	const workspace = useQuery({ ...workspaceQuery, retry });
 	const navigate = useNavigate();
 	// Importing creates branches, which needs the key company-wide.
 	const canImport = useAccess().can("branch:create", COMPANY_SCOPE);
@@ -63,9 +70,9 @@ export const Organisation = (): FunctionComponent => {
 				{t("organisation.subtitle")}
 			</p>
 			{overview.status === "error" && (
-				<p className="mt-10 text-sm text-error-700" role="alert">
-					{t("organisation.failed")}
-				</p>
+				<ListProblem
+					problem={failedReadProblem(workspace, t("organisation.failed"), t)}
+				/>
 			)}
 			{overview.status === "ready" && (
 				<>

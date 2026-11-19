@@ -444,4 +444,26 @@ describe("Input", () => {
 		expect(field).toHaveClass("h-14");
 		expect(field).not.toHaveClass("h-11");
 	});
+
+	it("shows a unit after the value, hidden from the field's accessible name", () => {
+		render(
+			<Input
+				aria-label="Normal hours a week"
+				defaultValue="44"
+				unit="h a week"
+			/>
+		);
+		const input = screen.getByRole("textbox", { name: "Normal hours a week" });
+		expect(input).toHaveValue("44");
+		const unit = screen.getByText("h a week");
+		expect(unit).toHaveAttribute("aria-hidden", "true");
+		expect(input.nextSibling).toBe(unit);
+	});
+
+	it("leaves no unit element when none is given", () => {
+		render(<Input aria-label="Name" />);
+		expect(screen.getByRole("textbox").parentElement?.childNodes).toHaveLength(
+			1
+		);
+	});
 });

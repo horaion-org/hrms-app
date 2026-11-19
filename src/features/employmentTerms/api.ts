@@ -15,7 +15,7 @@ import { retry } from "@/features/workspace/retry";
 
 /*
  * Employment terms: the working week each kind of contract sets (working
- * days, normal hours a week and a day, the rest day, shift work, and whether
+ * days, normal hours a week and a day worked out from them, the rest day, and whether
  * the Employment Act's hour limits apply), and which terms each person works
  * on from which date. The catalogue is read and changed under
  * `employment_terms:read`/`:update`, held company-wide; a person's terms
@@ -37,20 +37,43 @@ export type RestDay = z.infer<typeof restDaySchema>;
 
 export type TermsStatus = z.infer<typeof termsStatusSchema>;
 
-/** The fields that say what a working week is; shared by terms, presets and a person's terms in force. */
+// How extra hours are paid (backend ADR-0123); a value a newer API adds reads as UNKNOWN.
+const extraHoursPaidAsSchema = z
+	.enum(["RATE", "TIME_OFF", "NOTHING", "UNKNOWN"])
+	.catch("UNKNOWN");
+
+/** Paid at a rate, given as time off, or nothing extra; UNKNOWN when newer than the app. */
+export type ExtraHoursPaidAs = z.infer<typeof extraHoursPaidAsSchema>;
+
+/**
+ * What terms pay for extra hours, as whole percentages of a normal hour
+ * (150 is 1.5 times): relative costs the engine weighs rosters by, never pay
+ * amounts. Empty from an older API.
+ */
+const payFieldsSchema = z.object({
+	overtimePercent: z.number().int().nullable().catch(null),
+	restDayWorkPercent: z.number().int().nullable().catch(null),
+	/** Work on a day off at its own rate; empty counts it as normal hours until the week is passed. */
+	dayOffWorkPercent: z.number().int().nullable().catch(null),
+	extraHoursPaidAs: extraHoursPaidAsSchema,
+});
+
+/** The pay part of terms. */
+export type PayFields = z.infer<typeof payFieldsSchema>;
+
+/** The fields that say what a working week is and what it pays; shared by terms, presets and a person's terms in force. */
 const weekFieldsSchema = z.object({
 	/** Working days a week, in half days; empty for part-time terms without set days. */
 	daysPerWeek: z.number().nullable(),
 	weekMinutes: z.number().int(),
-	/** Normal hours a day; empty when the terms set none. */
+	/** Normal hours a day, worked out by the API from the days and the week; empty when the days vary. */
 	dayMinutes: z.number().int().nullable(),
 	restDay: restDaySchema,
 	/** Overtime also starts past the normal day, not only past the week. */
 	dailyOvertime: z.boolean(),
-	/** Shift work: no daily overtime, and the week is averaged. */
-	shiftWork: z.boolean(),
 	/** Whether the Employment Act's hour limits apply to people on these terms. */
 	hoursLimitsApply: z.boolean(),
+	...payFieldsSchema.shape,
 });
 
 /** What a working week is made of, as the summary sentence reads it. */
@@ -98,6 +121,21 @@ const referenceSchema = z.object({
 	fullTimeWeekMinutes: z.number().int().nullable().catch(null),
 	/** The longest normal day terms may set. */
 	maxNormalDayMinutes: z.number().int().nullable().catch(null),
+	/** The lowest overtime rate for staff under the Act's hour rules, as a whole percentage. */
+	minimumCoveredOvertimePercent: z.number().int().nullable().catch(null),
+	/** The usual rate for work on the rest day, as a whole percentage. */
+	usualRestDayWorkPercent: z.number().int().nullable().catch(null),
+	/** Time off earned per extra hour, as a whole percentage. */
+	timeOffPerExtraHourPercent: z.number().int().nullable().catch(null),
+	/** The basic monthly pay up to which staff are under the Act's hour rules. */
+	coveredPayLines: z
+		.object({
+			currency: z.string(),
+			workmanMonthly: z.number().int(),
+			otherStaffMonthly: z.number().int(),
+		})
+		.nullable()
+		.catch(null),
 });
 
 /** The country's figures the API reads terms against; the app holds none of its own. */
@@ -118,8 +156,8 @@ const termsPresetsSchema = referenceSchema.extend({
 /** The country's figures and common weeks new terms start from; the app holds none of its own. */
 export type TermsPresets = z.infer<typeof termsPresetsSchema>;
 
-/** What creating or saving terms sends. */
-export type EmploymentTermsBody = WeekFields & {
+/** What creating or saving terms sends: never the day, which the API works out. */
+export type EmploymentTermsBody = Omit<WeekFields, "dayMinutes"> & {
 	name: string;
 	description: string | null;
 };
@@ -188,30 +226,29 @@ const historyEntrySchema = z.object({
 /** One entry of a person's terms history. */
 export type HistoryEntry = z.infer<typeof historyEntrySchema>;
 
-const termsInForceSchema = weekFieldsSchema.extend({
-	termsId: z.string(),
-	name: z.string(),
-	basis: termsBasisSchema,
-	/** Their own hours, when they have any; never above the terms. */
-	contractedWeekMinutes: z.number().int().nullable(),
-	contractedDayMinutes: z.number().int().nullable(),
-	/** The day these terms started for them; none when they follow the Default. */
-	since: z.string().nullable().catch(null),
-});
+const termsInForceSchema = weekFieldsSchema
+	.extend({
+		termsId: z.string(),
+		name: z.string(),
+		basis: termsBasisSchema,
+		/** Their own hours, when they have any; never above the terms. */
+		contractedWeekMinutes: z.number().int().nullable(),
+		contractedDayMinutes: z.number().int().nullable(),
+		/** The day these terms started for them; none when they follow the Default. */
+		since: z.string().nullable().catch(null),
+		/** The API sends a person's pay as one block; read flat like the terms'. */
+		pay: payFieldsSchema.nullable().catch(null),
+	})
+	.transform(({ pay, ...inForce }) =>
+		pay === null ? inForce : { ...inForce, ...pay }
+	);
 
 /** The terms a person works on today. */
 export type TermsInForce = z.infer<typeof termsInForceSchema>;
 
-const mismatchSchema = z.object({
-	employmentType: z.string(),
-	effectiveWeekMinutes: z.number().int(),
-});
-
 const memberTermsSchema = z.object({
 	/** Null only when the company has no Default, which never happens once set up. */
 	inForce: termsInForceSchema.nullable().catch(null),
-	/** Their Employment type disagrees with the terms' week (part-time vs full-time); `/me` has none. */
-	mismatch: mismatchSchema.nullable().catch(null),
 	/** Newest first, the first entry last; `/me` has none. */
 	history: z.array(historyEntrySchema).catch([]),
 	/** What the terms are read against; absent from an older API. */

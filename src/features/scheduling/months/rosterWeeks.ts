@@ -1,17 +1,24 @@
 import type { TFunction } from "i18next";
-import type { ScheduleMonth } from "@/features/scheduling/months/api";
-import type { RosterWeek } from "@/features/scheduling/RosterWeekBar";
+import type {
+	ScheduleMonth,
+	WeekState,
+} from "@/features/scheduling/months/api";
+import type { RosterWeek } from "@/features/scheduling/roster/RosterWeekBar";
 import {
 	scheduleViewLink,
 	type ScheduleViewLink,
 } from "@/features/scheduling/schedules/scheduleViewLink";
+import { weekHeadline } from "@/features/scheduling/months/weekHeadline";
 
 /*
  * The roster page's week bar steps through the Department's weeks of the
  * schedule's month, the same weeks as the month page its back link goes to.
  */
 
-/** The month's weeks as the week bar lists them: "16 – 22 Nov 2026 · Tentative", disabled without a schedule. */
+/**
+ * The month's weeks as the week bar lists them: "16 – 22 Nov 2026 · To review",
+ * disabled without a schedule; a week of several schedules by its part needing attention first.
+ */
 export const rosterWeeksOf = (
 	month: ScheduleMonth,
 	t: TFunction
@@ -19,21 +26,37 @@ export const rosterWeeksOf = (
 	month.weeks.map((week) => ({
 		start: week.periodStart,
 		end: week.periodEnd,
-		state: t(`scheduling.months.states.${week.state}`),
+		state: t(`scheduling.months.states.${weekHeadline(week).state}`),
 		disabled: week.scheduleId === null,
 	}));
 
-/** Where choosing a week goes: its roster, or a draft's setup; undefined for a week without a schedule. */
+/** Where a week's schedule opens, by its week state: a draft's setup, any other its roster. */
+export const weekScheduleLink = (
+	{ scheduleId, state }: { scheduleId: string; state: WeekState },
+	departmentId: string
+): ScheduleViewLink =>
+	scheduleViewLink({
+		scheduleId,
+		departmentId,
+		status: state === "DRAFT" ? "DRAFT" : "GENERATED",
+	});
+
+/**
+ * Where choosing a week goes: its roster, or a draft's setup; for a week of
+ * several schedules, the part needing attention first (its roster lists the
+ * week's other parts); undefined for a week without a schedule.
+ */
 export const rosterWeekLink = (
 	month: ScheduleMonth,
 	weekStart: string
 ): ScheduleViewLink | undefined => {
 	const week = month.weeks.find((each) => each.periodStart === weekStart);
-	if (!week?.scheduleId) return undefined;
-	return scheduleViewLink({
-		scheduleId: week.scheduleId,
-		departmentId: month.departmentId,
-		// Only a draft opens elsewhere (its setup); every other week opens its roster.
-		status: week.state === "DRAFT" ? "DRAFT" : "GENERATED",
-	});
+	if (!week) return undefined;
+	const { scheduleId, state } = weekHeadline(week);
+	if (!scheduleId) return undefined;
+	return weekScheduleLink({ scheduleId, state }, month.departmentId);
 };
+
+/** Whether a week's schedules are listed by their days: only when it holds more than one (API ADR-0113). */
+export const listsWeekParts = (parts: ReadonlyArray<unknown>): boolean =>
+	parts.length > 1;

@@ -23,6 +23,16 @@ describe("a role's summary, section by section", () => {
 		]);
 	});
 
+	it("reads the System Admin role's keys as Full in every section, though it lacks an owner-only key", () => {
+		const systemAdmin = PERMISSION_KEYS.filter(
+			(key) => key !== "access_role:assign_system_admin"
+		);
+
+		expect(
+			sectionLevels(systemAdmin).every((summary) => summary.level === "FULL")
+		).toBe(true);
+	});
+
 	it("lists sections in the contract's order and leaves out those with nothing held", () => {
 		expect(
 			sectionLevels([

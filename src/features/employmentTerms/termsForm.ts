@@ -3,40 +3,62 @@ import { z } from "zod";
 import { isWeekday, type Weekday } from "@/common/weekdays";
 import type {
 	EmploymentTermsBody,
+	ExtraHoursPaidAs,
 	WeekFields,
 } from "@/features/employmentTerms/api";
 import {
-	formatHours,
+	durationShort,
+	formatDays,
 	hoursInput,
 	parseHours,
 } from "@/features/employmentTerms/hours";
+import { normalDayMinutes } from "@/features/employmentTerms/normalDay";
+import { isPartTimeWeek } from "@/features/employmentTerms/summary";
+import {
+	percentOfTimes,
+	timesOfPercent,
+} from "@/features/employmentTerms/rates";
 
 /** The longest name and description terms take, as the API keeps them. */
 export const TERMS_NAME_MAX_LENGTH = 100;
 export const TERMS_DESCRIPTION_MAX_LENGTH = 500;
 
-/** One extra minute covers rounding, e.g. 5 × 8.8 h against 44 h. */
-const ROUNDING_MINUTES = 1;
-/** The week's range and the shortest day, as the API's columns check them (no country figure). */
+/** The week's range, as the API's columns check it (no country figure). */
 const MIN_WEEK_MINUTES = 60;
 const MAX_WEEK_MINUTES = 3600;
-const MIN_DAY_MINUTES = 30;
+/** A rate's sanity bounds, as the API's columns check them: 0 to 10 times a normal hour (no country figure). */
+const MIN_RATE_PERCENT = 0;
+const MAX_RATE_PERCENT = 1000;
+
+/** The sanity bounds as messages name them, in times a normal hour. */
+export const RATE_BOUNDS_IN_TIMES = {
+	min: timesOfPercent(MIN_RATE_PERCENT),
+	max: timesOfPercent(MAX_RATE_PERCENT),
+};
 
 /**
  * The terms dialog as it holds its values: numbers as typed text, and the
- * rest day as a kind plus the weekday a fixed one falls on.
+ * rest day as a kind plus the weekday a fixed one falls on. Hours a day are
+ * worked out from the days and the week, never typed (ADR-0124 in the API).
  */
 export type TermsFormValues = {
 	name: string;
 	description: string;
 	daysPerWeek: string;
-	dayHours: string;
 	weekHours: string;
 	restKind: "FIXED" | "ROSTERED";
 	restWeekday: Weekday | "";
 	dailyOvertime: boolean;
-	shiftWork: boolean;
 	hoursLimitsApply: boolean;
+	/** An overtime hour, in times a normal hour as typed ("1.5"). */
+	overtimeTimes: string;
+	/** Work on the rest day, in times a normal hour. */
+	restDayTimes: string;
+	/** A day off worked counts as normal hours until the week is passed, or at its own rate. */
+	dayOffMode: "NORMAL" | "OWN_RATE";
+	dayOffTimes: string;
+	/** How extra hours are paid; time off is offered once its balance exists. */
+	extraHoursPaidAs: Exclude<ExtraHoursPaidAs, "UNKNOWN">;
 };
 
 /** Blank terms: a fixed Sunday rest day and the Act's limits, nothing typed. */
@@ -44,14 +66,24 @@ export const BLANK_TERMS: TermsFormValues = {
 	name: "",
 	description: "",
 	daysPerWeek: "",
-	dayHours: "",
 	weekHours: "",
 	restKind: "FIXED",
 	restWeekday: "SUN",
 	dailyOvertime: true,
-	shiftWork: false,
 	hoursLimitsApply: true,
+	overtimeTimes: "",
+	restDayTimes: "",
+	dayOffMode: "NORMAL",
+	dayOffTimes: "",
+	extraHoursPaidAs: "RATE",
 };
+
+/**
+ * The working days the form offers, as the approved design lists them: 4, 5,
+ * 5½ and 6 days, and "It varies" (null). Terms stored with another figure
+ * offer theirs too; the API takes any half day.
+ */
+export const DAYS_CHOICES: ReadonlyArray<number | null> = [4, 5, 5.5, 6, null];
 
 /** Working days a week: 0.5 to 7, in half days; empty is allowed (part-time). */
 export const parseDays = (text: string): number | null | "invalid" => {
@@ -66,10 +98,63 @@ export const parseDays = (text: string): number | null | "invalid" => {
 		: "invalid";
 };
 
+/** The week as typed so far: each figure null until it reads as one. */
+export type TypedWeek = {
+	days: number | null;
+	weekMinutes: number | null;
+	/** The normal day worked out from the days and the week. */
+	dayMinutes: number | null;
+	partTime: boolean;
+};
+
+/** The working days, hours a week and normal day the form's answers make, and whether that week is part-time. */
+export const typedWeekOf = (
+	values: Pick<TermsFormValues, "daysPerWeek" | "weekHours">,
+	partTimeBelowMinutes: number | null
+): TypedWeek => {
+	const typedDays = parseDays(values.daysPerWeek);
+	const typedHours = parseHours(values.weekHours);
+	const weekMinutes = typedHours.kind === "minutes" ? typedHours.minutes : null;
+	const days = typeof typedDays === "number" ? typedDays : null;
+	return {
+		days,
+		weekMinutes,
+		dayMinutes: normalDayMinutes(days, weekMinutes),
+		partTime:
+			weekMinutes !== null && isPartTimeWeek(weekMinutes, partTimeBelowMinutes),
+	};
+};
+
+/** The line under the week's figures saying the normal day, or nothing while the week cannot be read. */
+export const dayLineOf = (week: TypedWeek, t: TFunction): string | undefined => {
+	const key = "employmentTerms.dialog";
+	if (week.weekMinutes === null) return undefined;
+	if (week.days === null) return t(`${key}.dayLineVaries`);
+	if (week.dayMinutes === null) return undefined;
+	const day = durationShort(week.dayMinutes, t);
+	if (Number.isInteger(week.days)) return t(`${key}.dayLine`, { day });
+	return t(`${key}.dayLineHalf`, {
+		day,
+		half: durationShort(Math.floor(week.dayMinutes / 2), t),
+	});
+};
+
 const minutesOrNull = (text: string): number | null => {
 	const parsed = parseHours(text);
 	return parsed.kind === "minutes" ? parsed.minutes : null;
 };
+
+const percentOrNull = (text: string): number | null => {
+	const parsed = percentOfTimes(text);
+	return typeof parsed === "number" ? parsed : null;
+};
+
+/**
+ * Whether the overtime rate is asked: whenever the Act's hour limits apply,
+ * and otherwise only for extra hours paid at a rate.
+ */
+export const overtimeRateAsked = (values: TermsFormValues): boolean =>
+	values.hoursLimitsApply || values.extraHoursPaidAs === "RATE";
 
 /** The form's week as the summary reads it, or nothing while the week is incomplete. */
 export const weekFieldsOf = (
@@ -81,7 +166,7 @@ export const weekFieldsOf = (
 		return undefined;
 	if (values.restKind === "FIXED" && !isWeekday(values.restWeekday))
 		return undefined;
-	const dayMinutes = minutesOrNull(values.dayHours);
+	const dayMinutes = normalDayMinutes(days, weekMinutes);
 	return {
 		daysPerWeek: days,
 		weekMinutes,
@@ -90,28 +175,50 @@ export const weekFieldsOf = (
 			values.restKind === "ROSTERED"
 				? "ROSTERED"
 				: (values.restWeekday as Weekday),
-		dailyOvertime:
-			values.dailyOvertime && !values.shiftWork && dayMinutes !== null,
-		shiftWork: values.shiftWork,
+		dailyOvertime: values.dailyOvertime && dayMinutes !== null,
 		hoursLimitsApply: values.hoursLimitsApply,
+		overtimePercent: percentOrNull(values.overtimeTimes),
+		restDayWorkPercent: percentOrNull(values.restDayTimes),
+		dayOffWorkPercent:
+			values.dayOffMode === "OWN_RATE"
+				? percentOrNull(values.dayOffTimes)
+				: null,
+		extraHoursPaidAs: values.extraHoursPaidAs,
 	};
 };
 
-/** The form as stored terms: what is sent once the schema passes. */
+/** The form as stored terms: what is sent once the schema passes; the API works out the day. */
 export const termsBodyOf = (values: TermsFormValues): EmploymentTermsBody => {
 	const fields = weekFieldsOf(values);
 	if (!fields) throw new Error("termsBodyOf: the form did not pass its schema");
+	// The day is the API's to work out, so it is not sent.
 	return {
-		...fields,
 		name: values.name.trim(),
 		description: values.description.trim() || null,
+		daysPerWeek: fields.daysPerWeek,
+		weekMinutes: fields.weekMinutes,
+		restDay: fields.restDay,
+		dailyOvertime: fields.dailyOvertime,
+		hoursLimitsApply: fields.hoursLimitsApply,
+		overtimePercent: fields.overtimePercent,
+		restDayWorkPercent: fields.restDayWorkPercent,
+		dayOffWorkPercent: fields.dayOffWorkPercent,
+		extraHoursPaidAs: fields.extraHoursPaidAs,
 	};
 };
+
+/** A stored rate as the field shows it, or empty when the API sent none. */
+const timesOrEmpty = (percent: number | null): string =>
+	percent === null ? "" : timesOfPercent(percent);
 
 /** Where the form starts from: terms being edited, a preset, or blank. */
 export const termsFormValuesOf = (
 	start:
-		(WeekFields & { name: string; description?: string | null }) | undefined
+		| (Omit<WeekFields, "dayMinutes"> & {
+				name: string;
+				description?: string | null;
+		  })
+		| undefined
 ): TermsFormValues =>
 	start === undefined
 		? BLANK_TERMS
@@ -120,13 +227,20 @@ export const termsFormValuesOf = (
 				description: start.description ?? "",
 				daysPerWeek:
 					start.daysPerWeek === null ? "" : String(start.daysPerWeek),
-				dayHours: hoursInput(start.dayMinutes),
 				weekHours: hoursInput(start.weekMinutes),
 				restKind: start.restDay === "ROSTERED" ? "ROSTERED" : "FIXED",
 				restWeekday: isWeekday(start.restDay) ? start.restDay : "",
 				dailyOvertime: start.dailyOvertime,
-				shiftWork: start.shiftWork,
 				hoursLimitsApply: start.hoursLimitsApply,
+				overtimeTimes: timesOrEmpty(start.overtimePercent),
+				restDayTimes: timesOrEmpty(start.restDayWorkPercent),
+				dayOffMode: start.dayOffWorkPercent === null ? "NORMAL" : "OWN_RATE",
+				dayOffTimes: timesOrEmpty(start.dayOffWorkPercent),
+				// A value a newer API adds reads as paid at a rate.
+				extraHoursPaidAs:
+					start.extraHoursPaidAs === "UNKNOWN"
+						? "RATE"
+						: start.extraHoursPaidAs,
 			};
 
 const key = "employmentTerms.dialog";
@@ -140,35 +254,49 @@ const hoursProblem = (
 		max,
 	}: { required: boolean; min: number; max: number | null },
 	t: TFunction,
-	language: string
+	requiredMessage: string
 ): string | undefined => {
 	const parsed = parseHours(text);
-	if (parsed.kind === "empty")
-		return required ? t(`${key}.hoursRequired`) : undefined;
+	if (parsed.kind === "empty") return required ? requiredMessage : undefined;
 	if (parsed.kind === "invalid") return t(`${key}.hoursInvalid`);
 	if (parsed.kind === "notWholeMinutes") return t(`${key}.hoursWholeMinutes`);
 	if (parsed.minutes < min || (max !== null && parsed.minutes > max))
 		return t(`${key}.hoursRange`, {
-			min: formatHours(min, language),
-			max: formatHours(max ?? MAX_WEEK_MINUTES, language),
+			min: durationShort(min, t),
+			max: durationShort(max ?? MAX_WEEK_MINUTES, t),
 		});
+	return undefined;
+};
+
+/** A typed rate's problem, if any: required, a number such as 1.5, within the sanity bounds. */
+const rateProblem = (text: string, t: TFunction): string | undefined => {
+	const parsed = percentOfTimes(text);
+	if (parsed === "empty" || parsed === "invalid")
+		return t(`${key}.rateInvalid`);
+	if (parsed < MIN_RATE_PERCENT || parsed > MAX_RATE_PERCENT)
+		return t(`${key}.rateRange`, RATE_BOUNDS_IN_TIMES);
 	return undefined;
 };
 
 /**
  * Mirrors the API's rules for terms (`EmploymentTermsRules`) so most
- * mistakes show before saving: a name, whole-minute hours in range, a week
- * no longer than its days × its day, a day when overtime counts by the day,
- * and a weekday for a fixed rest day. The longest normal day is the
- * country's, so it comes from the API (`maxDayMinutes`); without it the API
- * alone judges it.
+ * mistakes show before saving, each as a sentence saying what to change: a
+ * name, whole-minute hours in range, a week whose worked-out day is not
+ * longer than the longest normal day, a weekday for a fixed rest day, and
+ * rates the Employment Act allows. The longest normal day and the lowest
+ * overtime rate for covered staff are the country's, so they come from the
+ * API (`maxDayMinutes`, `minimumCoveredOvertimePercent`); without them the
+ * API alone judges them.
  */
 export const termsFormSchema = (
 	t: TFunction,
 	{
 		maxDayMinutes = null,
-		language = "en",
-	}: { maxDayMinutes?: number | null; language?: string } = {}
+		minimumCoveredOvertimePercent = null,
+	}: {
+		maxDayMinutes?: number | null;
+		minimumCoveredOvertimePercent?: number | null;
+	} = {}
 ): z.ZodType<TermsFormValues, TermsFormValues> =>
 	z
 		.object({
@@ -182,7 +310,6 @@ export const termsFormSchema = (
 				.trim()
 				.max(TERMS_DESCRIPTION_MAX_LENGTH, t(`${key}.descriptionLength`)),
 			daysPerWeek: z.string(),
-			dayHours: z.string(),
 			weekHours: z.string(),
 			restKind: z.enum(["FIXED", "ROSTERED"]),
 			restWeekday: z.union([
@@ -190,8 +317,12 @@ export const termsFormSchema = (
 				z.literal(""),
 			]),
 			dailyOvertime: z.boolean(),
-			shiftWork: z.boolean(),
 			hoursLimitsApply: z.boolean(),
+			overtimeTimes: z.string(),
+			restDayTimes: z.string(),
+			dayOffMode: z.enum(["NORMAL", "OWN_RATE"]),
+			dayOffTimes: z.string(),
+			extraHoursPaidAs: z.enum(["RATE", "TIME_OFF", "NOTHING"]),
 		})
 		.superRefine((values, context) => {
 			const problem = (path: keyof TermsFormValues, message: string): void => {
@@ -199,31 +330,62 @@ export const termsFormSchema = (
 			};
 			if (parseDays(values.daysPerWeek) === "invalid")
 				problem("daysPerWeek", t(`${key}.daysInvalid`));
-			const dayRequired = values.dailyOvertime && !values.shiftWork;
-			const dayProblem = hoursProblem(
-				values.dayHours,
-				{ required: dayRequired, min: MIN_DAY_MINUTES, max: maxDayMinutes },
-				t,
-				language
-			);
-			if (dayProblem) problem("dayHours", dayProblem);
 			const weekProblem = hoursProblem(
 				values.weekHours,
 				{ required: true, min: MIN_WEEK_MINUTES, max: MAX_WEEK_MINUTES },
 				t,
-				language
+				t(`${key}.hoursRequired`)
 			);
 			if (weekProblem) problem("weekHours", weekProblem);
 			if (values.restKind === "FIXED" && values.restWeekday === "")
 				problem("restWeekday", t(`${key}.restDayRequired`));
+			const overtimeProblem = overtimeRateAsked(values)
+				? rateProblem(values.overtimeTimes, t)
+				: undefined;
+			if (overtimeProblem) problem("overtimeTimes", overtimeProblem);
+			const overtime = percentOfTimes(values.overtimeTimes);
+			if (
+				values.hoursLimitsApply &&
+				minimumCoveredOvertimePercent !== null &&
+				typeof overtime === "number" &&
+				overtime < minimumCoveredOvertimePercent
+			)
+				problem(
+					"overtimeTimes",
+					t(`${key}.rateCovered`, {
+						minimum: timesOfPercent(minimumCoveredOvertimePercent),
+					})
+				);
+			if (values.hoursLimitsApply && values.extraHoursPaidAs !== "RATE")
+				problem("extraHoursPaidAs", t(`${key}.paidAsCovered`));
+			const restDayProblem = rateProblem(values.restDayTimes, t);
+			if (restDayProblem) problem("restDayTimes", restDayProblem);
+			const dayOffProblem =
+				values.dayOffMode === "OWN_RATE"
+					? rateProblem(values.dayOffTimes, t)
+					: undefined;
+			if (dayOffProblem) problem("dayOffTimes", dayOffProblem);
 			const days = parseDays(values.daysPerWeek);
-			const day = minutesOrNull(values.dayHours);
 			const week = minutesOrNull(values.weekHours);
+			const day = normalDayMinutes(
+				typeof days === "number" ? days : null,
+				week
+			);
 			if (
 				typeof days === "number" &&
-				day !== null &&
 				week !== null &&
-				week > days * day + ROUNDING_MINUTES
+				day !== null &&
+				maxDayMinutes !== null &&
+				day > maxDayMinutes
 			)
-				problem("weekHours", t(`${key}.weekAboveDays`));
+				problem(
+					"weekHours",
+					t(`${key}.dayTooLong`, {
+						week: durationShort(week, t),
+						days: formatDays(days),
+						count: days,
+						day: durationShort(day, t),
+						max: durationShort(maxDayMinutes, t),
+					})
+				);
 		});

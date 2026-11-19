@@ -23,6 +23,10 @@ import { UnitNameField } from "@/features/organisation/UnitNameField";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
 import type { UnitReachChoices } from "@/features/workspace/unitReach";
 import { UnitReachField } from "@/features/workspace/UnitReachField";
+import {
+	NAME_LIMITS,
+	NAME_MAX_LENGTH,
+} from "@/features/organisation/nameSchema";
 
 export type LeaveTypeDialogProps = {
 	/** Set to edit an existing type; its status stays as it is. */
@@ -39,8 +43,9 @@ const key = "settings.leave.dialog";
 
 /**
  * Adds a leave type to the company's catalogue, or edits one: its name, how
- * it is counted, whether it is paid, whether applying asks for a reason and
- * where it applies: the whole company, chosen Branches or chosen Departments.
+ * it is counted, whether it is paid, whether applying asks for a reason,
+ * whether it can be taken in part days and where it applies: the whole
+ * company, chosen Branches or chosen Departments.
  * Once any request uses the type, how it is counted is fixed, as the API
  * keeps it. Mount when opened and unmount when closed so every attempt starts
  * fresh.
@@ -71,7 +76,12 @@ export const LeaveTypeDialog = ({
 	const name = useWatch({ control, name: "name" });
 	const submit = useCreateFormSubmit(form, FIELDS, onClose);
 	// The API refuses a new kind once any request uses the type, so it is not offered.
-	const kindFixed = (editing?.requestCount ?? 0) > 0;
+	// An earned type (Off in lieu) keeps its kind: it draws on time off earned, and is the only kind shown.
+	const earned = editing?.grantKind === "EARNED";
+	const kindFixed = earned || (editing?.requestCount ?? 0) > 0;
+	const kinds: ReadonlyArray<LeaveGrantKind> = earned
+		? ["EARNED"]
+		: LEAVE_GRANT_KINDS;
 	return (
 		<CreateFormDialog
 			alertRef={submit.alertRef}
@@ -99,14 +109,17 @@ export const LeaveTypeDialog = ({
 		>
 			<UnitNameField
 				autoFocus
-				counter={t(`${key}.nameCounter`, { count: name.length })}
 				disabled={isSubmitting}
 				error={errors.name?.message}
-				hint={t(`${key}.nameHint`)}
+				hint={t(`${key}.nameHint`, NAME_LIMITS)}
 				id={`${formId}-name`}
 				label={t(`${key}.name`)}
 				placeholder={t(`${key}.namePlaceholder`)}
 				registration={register("name")}
+				counter={t(`${key}.nameCounter`, {
+					count: name.length,
+					max: NAME_MAX_LENGTH,
+				})}
 			/>
 			<Controller
 				control={control}
@@ -122,7 +135,7 @@ export const LeaveTypeDialog = ({
 							className="grid gap-4"
 							role="radiogroup"
 						>
-							{LEAVE_GRANT_KINDS.map((kind) => (
+							{kinds.map((kind) => (
 								<RadioCard
 									key={kind}
 									checked={field.value === kind}
@@ -137,7 +150,11 @@ export const LeaveTypeDialog = ({
 						</div>
 						{kindFixed && (
 							<p className="text-xs text-neutral-600" id={kindHintId}>
-								{t(`${key}.kindFixed`, { count: editing?.requestCount ?? 0 })}
+								{earned
+									? t(`${key}.kindEarned`)
+									: t(`${key}.kindFixed`, {
+											count: editing?.requestCount ?? 0,
+										})}
 							</p>
 						)}
 					</div>
@@ -169,6 +186,23 @@ export const LeaveTypeDialog = ({
 						description={t(`${key}.requiresReasonDescription`)}
 						disabled={isSubmitting}
 						label={t(`${key}.requiresReason`)}
+						name={field.name}
+						onBlur={field.onBlur}
+						onChange={(event) => {
+							field.onChange(event.target.checked);
+						}}
+					/>
+				)}
+			/>
+			<Controller
+				control={control}
+				name="allowsPartDays"
+				render={({ field }) => (
+					<Checkbox
+						checked={field.value}
+						description={t(`${key}.allowsPartDaysDescription`)}
+						disabled={isSubmitting}
+						label={t(`${key}.allowsPartDays`)}
 						name={field.name}
 						onBlur={field.onBlur}
 						onChange={(event) => {

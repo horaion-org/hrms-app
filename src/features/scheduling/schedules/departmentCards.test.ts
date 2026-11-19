@@ -1,0 +1,333 @@
+import { describe, expect, it } from "vitest";
+import type {
+	ScheduleMonthSummary,
+	WeekPart,
+	WeekState,
+} from "@/features/scheduling/months/api";
+import {
+	DAY_STRIP_LENGTH,
+	dayCountOfRun,
+	dayMarkOf,
+	departmentCards,
+	firstRunOf,
+	showsYear,
+	type DepartmentCardEntry,
+} from "@/features/scheduling/schedules/departmentCards";
+
+const frontDesk = { departmentId: "dept-1", name: "Front Desk" };
+const security = { departmentId: "dept-2", name: "Security" };
+
+/** Wednesday: its week starts on Monday 16 November 2026. */
+const TODAY = "2026-11-18";
+
+/** A live schedule of a week, by its days. */
+const part = (
+	name: string,
+	coveredFrom: string,
+	coveredTo: string,
+	state: WeekState
+): WeekPart => ({
+	scheduleId: `schedule-${name}`,
+	name,
+	named: true,
+	coveredFrom,
+	coveredTo,
+	state,
+	redoing: false,
+});
+
+/** Front Desk's November with the given weeks, each a Monday and its parts. */
+const november = (
+	weeks: Array<[string, Array<WeekPart>]>
+): ScheduleMonthSummary => ({
+	month: "2026-11",
+	departmentId: frontDesk.departmentId,
+	departmentName: frontDesk.name,
+	branchId: "branch-1",
+	branchName: "Main",
+	weeks: weeks.map(([periodStart, parts]) => ({
+		periodStart,
+		state: parts[parts.length - 1]?.state ?? "NOT_GENERATED",
+		scheduleId: parts[parts.length - 1]?.scheduleId ?? null,
+		parts,
+	})),
+});
+
+/** The only card for Front Desk. */
+const frontDeskCard = (
+	summaries: Array<ScheduleMonthSummary>
+): DepartmentCardEntry | undefined =>
+	departmentCards([frontDesk], summaries, TODAY)[0];
+
+describe("departmentCards", () => {
+	it("gives every Department a card, one with no schedule an empty one", () => {
+		const [, empty] = departmentCards([frontDesk, security], [], TODAY);
+		expect(empty).toMatchObject({
+			departmentName: "Security",
+			publishedUpTo: undefined,
+			toReviewDays: 0,
+			waitingDays: undefined,
+			scheduledUpTo: undefined,
+			firstToReviewDay: undefined,
+		});
+		expect(empty?.dayStrip).toHaveLength(DAY_STRIP_LENGTH);
+		expect(empty?.dayStrip.every((day) => day.mark === "none")).toBe(true);
+	});
+
+	it.each([
+		{
+			case: "a published week from Monday runs to its Sunday",
+			parts: [part("Week", "2026-11-16", "2026-11-22", "PUBLISHED")],
+			publishedUpTo: "2026-11-22",
+		},
+		{
+			case: "a published run stops at the first day not published",
+			parts: [
+				part("Early", "2026-11-16", "2026-11-19", "PUBLISHED"),
+				part("Late", "2026-11-20", "2026-11-22", "TO_REVIEW"),
+			],
+			publishedUpTo: "2026-11-19",
+		},
+		{
+			case: "nothing published on Monday is nothing published",
+			parts: [part("Late", "2026-11-17", "2026-11-22", "PUBLISHED")],
+			publishedUpTo: undefined,
+		},
+	])("publishedUpTo: $case", ({ parts, publishedUpTo }) => {
+		expect(
+			frontDeskCard([november([["2026-11-16", parts]])])?.publishedUpTo
+		).toBe(publishedUpTo);
+	});
+
+	it.each([
+		{
+			case: "a published run from this week says how far",
+			weeks: [
+				["2026-11-16", [part("Now", "2026-11-16", "2026-11-22", "PUBLISHED")]],
+			],
+			standing: "upTo",
+		},
+		{
+			case: "a schedule published later, none from this week, is not published from this week",
+			weeks: [
+				["2026-11-16", [part("Now", "2026-11-16", "2026-11-22", "TO_REVIEW")]],
+				[
+					"2026-11-30",
+					[part("Later", "2026-11-30", "2026-12-06", "PUBLISHED")],
+				],
+			],
+			standing: "notFromThisWeek",
+		},
+		{
+			case: "no schedule published anywhere is nothing published",
+			weeks: [
+				["2026-11-16", [part("Now", "2026-11-16", "2026-11-22", "TO_REVIEW")]],
+			],
+			standing: "nothing",
+		},
+	] as const)("publishedStanding: $case", ({ weeks, standing }) => {
+		const summary = november(
+			weeks.map(([monday, parts]) => [monday, [...parts]])
+		);
+		expect(frontDeskCard([summary])?.publishedStanding).toBe(standing);
+	});
+
+	it("leaves out days to review before this week, and keeps far-future ones", () => {
+		const card = frontDeskCard([
+			november([
+				[
+					"2026-11-02",
+					[part("Past week", "2026-11-02", "2026-11-08", "TO_REVIEW")],
+				],
+				[
+					"2027-10-04",
+					[part("Far week", "2027-10-04", "2027-10-10", "TO_REVIEW")],
+				],
+			]),
+		]);
+		expect(card).toMatchObject({
+			toReviewDays: 7,
+			waitingDays: { from: "2027-10-04", to: "2027-10-10" },
+			firstToReviewDay: "2027-10-04",
+		});
+	});
+
+	it("counts the days to review, and runs two adjacent schedules to review together", () => {
+		const card = frontDeskCard([
+			november([
+				[
+					"2026-11-16",
+					[part("Week 47", "2026-11-16", "2026-11-22", "TO_REVIEW")],
+				],
+				[
+					"2026-11-23",
+					[part("Week 48", "2026-11-23", "2026-11-25", "TO_REVIEW")],
+				],
+			]),
+		]);
+		expect(card).toMatchObject({
+			toReviewDays: 10,
+			waitingDays: { from: "2026-11-16", to: "2026-11-25" },
+			firstToReviewDay: "2026-11-16",
+			scheduledUpTo: "2026-11-25",
+		});
+	});
+
+	it.each([
+		[
+			"the first in day order",
+			[
+				part("Week 48", "2026-11-25", "2026-11-27", "TO_REVIEW"),
+				part("Published", "2026-11-23", "2026-11-24", "PUBLISHED"),
+				part("Week 48 end", "2026-11-28", "2026-11-29", "TO_REVIEW"),
+			],
+			"2026-11-25",
+		],
+		[
+			"none without a schedule to review",
+			[part("Published", "2026-11-23", "2026-11-29", "PUBLISHED")],
+			undefined,
+		],
+	])("names the first day to review: %s", (_, parts, expected) => {
+		const card = frontDeskCard([november([["2026-11-23", parts]])]);
+		expect(card?.firstToReviewDay).toBe(expected);
+	});
+
+	it.each([
+		{
+			case: "days to review either side of published days: the first run waits",
+			parts: [
+				part("Start", "2026-11-16", "2026-11-18", "TO_REVIEW"),
+				part("Middle", "2026-11-19", "2026-11-20", "PUBLISHED"),
+				part("End", "2026-11-21", "2026-11-22", "TO_REVIEW"),
+			],
+			toReviewDays: 5,
+			waitingDays: { from: "2026-11-16", to: "2026-11-18" },
+		},
+		{
+			case: "one day to review is a run of that day",
+			parts: [
+				part("Week", "2026-11-16", "2026-11-21", "PUBLISHED"),
+				part("Sunday", "2026-11-22", "2026-11-22", "TO_REVIEW"),
+			],
+			toReviewDays: 1,
+			waitingDays: { from: "2026-11-22", to: "2026-11-22" },
+		},
+		{
+			case: "days to review being generated again are not to review",
+			parts: [
+				{
+					...part("Old", "2026-11-16", "2026-11-22", "TO_REVIEW"),
+					redoing: true,
+				},
+				part("New", "2026-11-16", "2026-11-22", "GENERATING"),
+			],
+			toReviewDays: 0,
+			waitingDays: undefined,
+		},
+		{
+			case: "drafts, failed and generating days are not to review",
+			parts: [
+				part("Draft", "2026-11-16", "2026-11-17", "DRAFT"),
+				part("Failed", "2026-11-18", "2026-11-19", "FAILED"),
+				part("Generating", "2026-11-20", "2026-11-22", "GENERATING"),
+			],
+			toReviewDays: 0,
+			waitingDays: undefined,
+		},
+	])("days to review: $case", ({ parts, toReviewDays, waitingDays }) => {
+		const card = frontDeskCard([november([["2026-11-16", parts]])]);
+		expect(card).toMatchObject({
+			toReviewDays,
+			waitingDays,
+			firstToReviewDay: waitingDays?.from,
+		});
+	});
+
+	it("marks each strip day from today by the schedule holding it", () => {
+		const card = frontDeskCard([
+			november([
+				[
+					"2026-11-16",
+					[
+						part("Published", "2026-11-16", "2026-11-18", "PUBLISHED"),
+						part("Review", "2026-11-19", "2026-11-20", "TO_REVIEW"),
+					],
+				],
+			]),
+		]);
+		expect(card?.dayStrip.slice(0, 4)).toEqual([
+			{ day: "2026-11-18", mark: "published" },
+			{ day: "2026-11-19", mark: "toReview" },
+			{ day: "2026-11-20", mark: "toReview" },
+			{ day: "2026-11-21", mark: "none" },
+		]);
+	});
+
+	it("reads an older API's week without parts as one schedule over the week", () => {
+		const summary: ScheduleMonthSummary = {
+			...november([]),
+			weeks: [
+				{ periodStart: "2026-11-16", state: "PUBLISHED", scheduleId: "s-1" },
+			],
+		};
+		expect(frontDeskCard([summary])).toMatchObject({
+			publishedUpTo: "2026-11-22",
+			scheduledUpTo: "2026-11-22",
+		});
+	});
+});
+
+describe("firstRunOf", () => {
+	it.each([
+		{ case: "no day", days: [], run: undefined },
+		{
+			case: "one day",
+			days: ["2026-11-30"],
+			run: { from: "2026-11-30", to: "2026-11-30" },
+		},
+		{
+			case: "days in a row over a month's end",
+			days: ["2026-11-29", "2026-11-30", "2026-12-01"],
+			run: { from: "2026-11-29", to: "2026-12-01" },
+		},
+		{
+			case: "a gap ends the run",
+			days: ["2026-11-16", "2026-11-17", "2026-11-19", "2026-11-20"],
+			run: { from: "2026-11-16", to: "2026-11-17" },
+		},
+	])("$case", ({ days, run }) => {
+		expect(firstRunOf(days)).toEqual(run);
+	});
+});
+
+describe("dayCountOfRun", () => {
+	it.each([
+		{ from: "2026-11-22", to: "2026-11-22", count: 1 },
+		{ from: "2026-11-25", to: "2026-12-01", count: 7 },
+	])("$from to $to holds $count", ({ from, to, count }) => {
+		expect(dayCountOfRun({ from, to })).toBe(count);
+	});
+});
+
+describe("showsYear", () => {
+	it.each([
+		{ day: "2026-12-05", shows: false },
+		{ day: "2027-12-05", shows: true },
+		{ day: "2025-12-29", shows: true },
+	])("$day from 18 Nov 2026 shows its year: $shows", ({ day, shows }) => {
+		expect(showsYear(day, TODAY)).toBe(shows);
+	});
+});
+
+describe("dayMarkOf", () => {
+	it.each([
+		{ state: "PUBLISHED", mark: "published" },
+		{ state: "TO_REVIEW", mark: "toReview" },
+		{ state: "DRAFT", mark: "none" },
+		{ state: "GENERATING", mark: "none" },
+		{ state: undefined, mark: "none" },
+	] as const)("$state is $mark", ({ state, mark }) => {
+		expect(dayMarkOf(state)).toBe(mark);
+	});
+});

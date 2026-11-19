@@ -70,6 +70,13 @@ describe("mapRefusal", () => {
 			true
 		);
 	});
+	it("says a write wasn't saved while access is still being updated, when the screen words it", () => {
+		const stale = problem(503, "DECISION_ENGINE_STALE");
+		expect(
+			mapRefusal(stale, { ...rules, stillUpdating: "Still updating" }).message
+		).toBe("Still updating");
+		expect(mapRefusal(stale, rules).message).toBe("Failed");
+	});
 	it("shows a known alert code at form level", () => {
 		expect(mapRefusal(problem(400, "BAD_KEYS"), rules).message).toBe(
 			"Bad keys"

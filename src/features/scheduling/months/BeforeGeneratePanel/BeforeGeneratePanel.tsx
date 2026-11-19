@@ -1,12 +1,14 @@
-import { useId, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { AlertFilledIcon, TickFilledIcon } from "@/components/ui/Icon";
+import type { ReplacedDays } from "@/features/scheduling/dates/replacedDays";
+import { ReplaceRosterDialog } from "@/features/scheduling/dates/ReplaceRosterDialog";
 import type { MonthGenerationCheck } from "@/features/scheduling/months/api";
-import { formatMonthName } from "@/features/scheduling/months/monthWeeks";
+import { formatMonth } from "@/features/scheduling/months/monthWeeks";
 
 /** A link a line offers, drawn by the page with the label the panel chose. */
 export type PanelLink = (label: string) => ReactNode;
@@ -18,6 +20,12 @@ export type BeforeGeneratePanelProps = {
 	month: string;
 	/** Why Generate waits besides readiness (lists unreadable, no schedule:create); undefined when it may run. */
 	blockedNote?: string;
+	/** Says what Generate works out, in place of the month's words: the create flow names the ticked weeks. */
+	hint?: string;
+	/** A dates run's days, named in the title and on Generate in place of the month. */
+	days?: string;
+	/** The rosters to review a dates run replaces: Generate asks before it runs. */
+	replaces?: ReplacedDays;
 	/** Generate waits without a note: the lists it needs are still loading. */
 	waiting?: boolean;
 	/** The fix links, each only where the person may follow it. */
@@ -75,12 +83,16 @@ const Line = ({
  * warns, when no leave is approved in the month, and says how many requests
  * still wait. Generate is disabled, with the reason under it, while anything
  * blocks; `blockedNote` adds a reason the page knows (no schedule:create, or
- * lists it can't read).
+ * lists it can't read). With `replaces`, Generate first asks whether to
+ * replace the roster to review, and runs only once confirmed.
  */
 export const BeforeGeneratePanel = ({
 	check,
 	month,
 	blockedNote,
+	hint,
+	days,
+	replaces,
 	waiting = false,
 	links = {},
 	generating,
@@ -90,8 +102,9 @@ export const BeforeGeneratePanel = ({
 	const { t, i18n } = useTranslation();
 	const titleId = useId();
 	const noteId = useId();
+	const [askingToReplace, setAskingToReplace] = useState(false);
 	const language = formattingLocale(i18n);
-	const monthName = formatMonthName(month, language);
+	const monthName = formatMonth(month, language);
 	const department = check.departmentName;
 	const hasShift = check.shiftCount > 0;
 	const staffing = check.staffingConstraint;
@@ -118,7 +131,9 @@ export const BeforeGeneratePanel = ({
 			)}
 		>
 			<h2 className="text-lg font-medium text-neutral-900" id={titleId}>
-				{t(`${key}.title`, { month: monthName })}
+				{days === undefined
+					? t(`${key}.title`, { month: monthName })
+					: t(`${key}.titleDays`, { days })}
 			</h2>
 			<ul className="flex flex-col gap-3">
 				<Line
@@ -166,7 +181,7 @@ export const BeforeGeneratePanel = ({
 			</ul>
 			<div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 border-t border-neutral-400 pt-4">
 				<p className="min-w-0 flex-1 basis-80 text-sm text-neutral-800">
-					{t(`${key}.hint`, { month: monthName })}
+					{hint ?? t(`${key}.hint`, { month: monthName })}
 				</p>
 				<div className="flex flex-col items-end gap-1 max-sm:w-full">
 					<Button
@@ -174,9 +189,17 @@ export const BeforeGeneratePanel = ({
 						className="max-sm:w-full"
 						disabled={note !== undefined || waiting}
 						loading={generating}
-						onClick={onGenerate}
+						onClick={
+							replaces
+								? (): void => {
+										setAskingToReplace(true);
+									}
+								: onGenerate
+						}
 					>
-						{t(`${key}.generate`, { month: monthName })}
+						{days === undefined
+							? t(`${key}.generate`, { month: monthName })
+							: t(`${key}.generateDays`, { days })}
 					</Button>
 					{note && (
 						<p className="text-sm text-neutral-800" id={noteId}>
@@ -185,6 +208,18 @@ export const BeforeGeneratePanel = ({
 					)}
 				</div>
 			</div>
+			{replaces && askingToReplace && (
+				<ReplaceRosterDialog
+					replaces={replaces}
+					onClose={() => {
+						setAskingToReplace(false);
+					}}
+					onConfirm={() => {
+						setAskingToReplace(false);
+						onGenerate();
+					}}
+				/>
+			)}
 		</section>
 	);
 };

@@ -10,7 +10,7 @@ const name = unitNameSchema({
 	length: "length",
 	characters: "characters",
 });
-const heads = headsSchema({ required: "required", max: "max" });
+const heads = headsSchema({ max: "max" });
 const head = { membershipId: "m-1", displayName: "Marcus", status: "ACTIVE" };
 const messageOf = (result: {
 	success: boolean;
@@ -38,8 +38,8 @@ describe("unit name rule", () => {
 });
 
 describe("heads rule", () => {
-	it("requires one to twenty people", () => {
-		expect(messageOf(heads.safeParse([]))).toBe("required");
+	it("allows none, so a head can be chosen later, and at most twenty", () => {
+		expect(heads.safeParse([]).success).toBe(true);
 		expect(
 			heads.safeParse(Array.from({ length: MAX_HEADS }, () => head)).success
 		).toBe(true);

@@ -1,5 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
+import { Callout } from "@/components/ui/Callout";
+import { rosterIssuesFixture } from "@/features/scheduling/roster/rosterIssueFixtures";
+import {
+	IssueSummary,
+	RosterIssueGroups,
+} from "@/features/scheduling/roster/RosterIssueGroups";
 import { RosterSidePanel } from "@/features/scheduling/RosterSidePanel";
 import "@/common/i18n";
 
@@ -44,7 +50,14 @@ export const WithTitledSection: Story = {
 			{
 				key: "startingPoints",
 				title: "Where people started the week",
-				items: [{ key: "m-1", lines: ["Aisha Rahman: Day 4 of a run"] }],
+				items: [
+					{
+						key: "m-1",
+						lines: [
+							"Aisha Rahman has worked 3 days in a row before this week.",
+						],
+					},
+				],
 			},
 		],
 	},
@@ -66,6 +79,31 @@ export const WithItemAction: Story = {
 						action: { label: "Find cover", onClick: fn() },
 					},
 				],
+			},
+		],
+	},
+};
+
+/** Issues as it opens: the counts under the title, the result card, then the groups by what to do. */
+export const IssuesByWhatToDo: Story = {
+	args: {
+		title: "Issues",
+		summary: (
+			<IssueSummary counts={{ mustFix: 2, notMet: 1, forInformation: 1 }} />
+		),
+		sections: [
+			{
+				key: "issues",
+				content: (
+					<RosterIssueGroups
+						issues={rosterIssuesFixture()}
+						validationNote={
+							<Callout tone="error">Validated: 1 rule broken</Callout>
+						}
+						onFindCover={fn()}
+						onShow={fn()}
+					/>
+				),
 			},
 		],
 	},

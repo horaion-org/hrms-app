@@ -2,16 +2,20 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
-import { leaveOptionsQuery, leaveRequestQuery } from "@/features/leave/api";
+import {
+	leaveOptionsQuery,
+	leaveRequestQuery,
+	rosteredDaysQuery,
+} from "@/features/leave/api";
 import { rangeDays } from "@/features/leave/dates";
 import { leaveTypeOptions } from "@/features/leave/leaveTypeOptions";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
 import { useCellCoverOffer } from "@/features/scheduling/coverOffers/useCellCoverOffer";
 import { dayTypeInSentence } from "@/features/scheduling/dayTypes";
-import { formatDay } from "@/features/scheduling/periods";
+import { formatDay } from "@/common/formatDay";
 import type { RosterCellPanelState } from "@/features/scheduling/RosterCellPanel/cellPanelState";
 import { useLeaveMove } from "@/features/scheduling/RosterCellPanel/useLeaveMove";
-import { leaveLinkSearch } from "@/features/scheduling/RosterDayNotes/leaveLinkSearch";
+import { leaveLinkSearch } from "@/features/scheduling/roster/RosterDayNotes/leaveLinkSearch";
 import {
 	rosterChangePreviewQuery,
 	type RosterChange,
@@ -77,6 +81,8 @@ export type RosterCellPanelInput = {
 	/** On a published roster: the schedule's cover offers and its time zone. */
 	coverOffers?: { offers: ReadonlyArray<CoverOffer>; timeZone: string };
 	onCoverRecorded?: () => void;
+	/** Opens with not working chosen and this day type picked, as a fix from Issues asks. */
+	presetDayType?: string;
 };
 
 /**
@@ -102,15 +108,18 @@ export const useRosterCellPanel = ({
 	hasIssues,
 	coverOffers,
 	onCoverRecorded,
+	presetDayType,
 }: RosterCellPanelInput): RosterCellPanelState => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
 	const client = useQueryClient();
-	const [mode, setMode] = useState<RosterPanelMode>();
+	const [mode, setMode] = useState<RosterPanelMode | undefined>(
+		presetDayType === undefined ? undefined : "dayOff"
+	);
 	const [shiftId, setShiftId] = useState<string>();
 	const [partnerId, setPartnerId] = useState<string>();
 	const [leaveType, setLeaveType] = useState<string>();
-	const [chosenDayType, setDayType] = useState<string>();
+	const [chosenDayType, setDayType] = useState(presetDayType);
 	const [remark, setRemark] = useState("");
 	// The fingerprint of the checks the person ticked: new checks need a new tick.
 	const [tickedFor, setTickedFor] = useState<string | null>(null);
@@ -198,6 +207,25 @@ export const useRosterCellPanel = ({
 					leaveEditing.viewerMembershipId
 				)
 			: undefined;
+
+	// Pending part-day leave on a shift: what approving it would do, from the API (ADR-0077, part 4).
+	const pendingPartDay =
+		assignment.flag === "LEAVE_REQUESTED" &&
+		requestLink !== undefined &&
+		Boolean(assignment.leaveStartTime && assignment.leaveEndTime);
+	const partDayOutcome = useQuery(
+		rosteredDaysQuery(
+			target.companyId,
+			{
+				start: assignment.day,
+				end: assignment.day,
+				startTime: assignment.leaveStartTime ?? undefined,
+				endTime: assignment.leaveEndTime ?? undefined,
+			},
+			ownDay ? undefined : (membershipId ?? undefined),
+			pendingPartDay
+		)
+	);
 
 	// The roster change the choice makes, and its preview.
 	const choice = editChoiceOf({
@@ -358,6 +386,10 @@ export const useRosterCellPanel = ({
 		ownDay,
 		leaveDay,
 		requestLink,
+		// Only a day whose shift approving would keep in part has something to say.
+		pendingPartDayDays: pendingPartDay
+			? (partDayOutcome.data ?? []).filter((day) => day.gap)
+			: [],
 		requestDays: request.data
 			? rangeDays({ start: request.data.startDate, end: request.data.endDate })
 					.length

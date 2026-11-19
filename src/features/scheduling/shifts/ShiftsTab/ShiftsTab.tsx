@@ -2,17 +2,23 @@ import { useQuery } from "@tanstack/react-query";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { DepartmentPath } from "@/common/companyPath";
+import { matchesSearch } from "@/common/matchesSearch";
 import type { FunctionComponent } from "@/common/types";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
-import { Toast } from "@/components/ui/Toast";
 import { placeOf } from "@/features/organisation/assignmentTargets";
 import { ListToolbar } from "@/features/organisation/ListToolbar";
 import { constraintsQuery } from "@/features/scheduling/constraints/api";
-import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
+import {
+	capacityProblemOf,
+	type CapacityProblem,
+} from "@/features/scheduling/constraints/capacityProblems";
+import { useJobTitleHolders } from "@/features/scheduling/constraints/useJobTitleHolders";
+import { useConstraintsInUnits } from "@/features/scheduling/constraints/useConstraintsInUnits";
+import { departmentUnitOf } from "@/features/scheduling/departmentSetup/departmentUnit";
 import { ReadinessCallout } from "@/features/scheduling/readiness/ReadinessCallout";
 import type { ReturnLink } from "@/features/scheduling/readiness/readinessCopy";
 import { useSchedulingReadiness } from "@/features/scheduling/readiness/useSchedulingReadiness";
-import { initialDepartmentOf } from "@/features/scheduling/setupDepartment";
+import { initialDepartmentOf } from "@/features/scheduling/departmentSetup/setupDepartment";
 import {
 	constraintsNamingShift,
 	deleteCopy,
@@ -25,11 +31,18 @@ import {
 } from "@/features/scheduling/shifts/api";
 import { ShiftDialog } from "@/features/scheduling/shifts/ShiftDialog";
 import { deleteShiftRefusal } from "@/features/scheduling/shifts/shiftRefusal";
-import { ShiftTable } from "@/features/scheduling/shifts/ShiftTable";
+import {
+	ShiftTable,
+	type ShiftTableNeeds,
+} from "@/features/scheduling/shifts/ShiftTable";
+import {
+	staffingNeedsByShift,
+	type ShiftNeed,
+} from "@/features/scheduling/shifts/staffingNeeds";
 import { useShiftActions } from "@/features/scheduling/shifts/useShiftActions";
 import { useShiftRoleOptions } from "@/features/scheduling/shifts/useShiftRoleOptions";
 import { useShiftsInUnits } from "@/features/scheduling/shifts/useShiftsInUnits";
-import { useDraftCount } from "@/features/scheduling/useDraftCount";
+import { useDraftCount } from "@/features/scheduling/departmentSetup/useDraftCount";
 import { workspaceQuery } from "@/features/workspace/api";
 import { DepartmentFilter } from "@/features/workspace/DepartmentFilter";
 import { departmentChips } from "@/features/workspace/filterChips";
@@ -69,14 +82,9 @@ const unitOf = (shift: DepartmentShift): DepartmentPath => ({
 	departmentId: shift.departmentId,
 });
 
-const matches = (shift: DepartmentShift, search: string): boolean => {
-	const text = search.trim().toLocaleLowerCase();
-	return (
-		text === "" ||
-		shift.name.toLocaleLowerCase().includes(text) ||
-		shift.departmentName.toLocaleLowerCase().includes(text)
-	);
-};
+const matches = (shift: DepartmentShift, search: string): boolean =>
+	matchesSearch(shift.name, search) ||
+	matchesSearch(shift.departmentName, search);
 
 export type ShiftsTabProps = {
 	companyId: string;
@@ -121,15 +129,32 @@ export const ShiftsTab = ({
 	const [search, setSearch] = useState("");
 	const [dialog, setDialog] = useState<DialogState>();
 	const [deleting, setDeleting] = useState<DepartmentShift>();
-	const [toast, setToast] = useState<{ id: number; message: string }>();
-	const notify = (message: string): void => {
-		setToast((previous) => ({ id: (previous?.id ?? 0) + 1, message }));
-	};
 
 	const rows =
 		list.status === "ready"
 			? list.items.filter((shift) => matches(shift, search))
 			: [];
+	// What the staffing constraints ask of each shift, where constraints may be read; why one can never be met,
+	// where job titles may be read. Without either the column or the warning is left out.
+	const constraints = useConstraintsInUnits(companyId, units);
+	const holders = useJobTitleHolders(companyId, units);
+	// A need's warning reads its own live constraint, found by id, against who holds its job titles now.
+	const capacityOf = (need: ShiftNeed): CapacityProblem | undefined => {
+		const constraint =
+			constraints.status === "ready"
+				? constraints.items.find(
+						(each) => each.constraintId === need.constraintId
+					)
+				: undefined;
+		return constraint && holders && capacityProblemOf(constraint, holders);
+	};
+	const needs: ShiftTableNeeds | undefined =
+		constraints.status === "ready"
+			? {
+					byShift: staffingNeedsByShift(constraints.items),
+					capacityOf: holders ? capacityOf : undefined,
+				}
+			: undefined;
 	// The Branch is the header's scope; the Department is the one filter.
 	const chips = departmentChips(
 		units,
@@ -169,16 +194,16 @@ export const ShiftsTab = ({
 		reached && unitOf(reached),
 		reached && { kind: "shift", id: reached.shiftId }
 	);
-	// Deleting also says how many of the department's constraints name the shift, where they may be read.
+	// Edit and delete also say how many of the department's constraints name the shift, where they may be read.
 	const readsConstraints =
-		deleting !== undefined &&
-		access.can("constraint:read", departmentScope(deleting.departmentId));
+		reached !== undefined &&
+		access.can("constraint:read", departmentScope(reached.departmentId));
 	const departmentConstraints = useQuery(
-		constraintsQuery(companyId, deleting && unitOf(deleting), readsConstraints)
+		constraintsQuery(companyId, reached && unitOf(reached), readsConstraints)
 	);
 	const namedBy =
-		deleting && departmentConstraints.data
-			? constraintsNamingShift(departmentConstraints.data, deleting.shiftId)
+		reached && departmentConstraints.data
+			? constraintsNamingShift(departmentConstraints.data, reached.shiftId)
 			: undefined;
 
 	const saveShift = async (body: ShiftBody): Promise<void> => {
@@ -188,12 +213,10 @@ export const ShiftsTab = ({
 				shiftId: dialog.shift.shiftId,
 				body,
 			});
-			notify(t("scheduling.shifts.edited"));
 			return;
 		}
 		if (!dialogUnit) return;
 		await actions.createShift.mutateAsync({ unit: dialogUnit, body });
-		notify(t("scheduling.shifts.added"));
 	};
 	const closeDelete = (): void => {
 		actions.deleteShift.reset();
@@ -251,6 +274,7 @@ export const ShiftsTab = ({
 					canDelete={canDelete}
 					canEdit={canEdit}
 					className="mt-8"
+					needs={needs}
 					shifts={rows}
 					showBranch={!units.branch}
 					showDepartment={!units.department}
@@ -296,7 +320,16 @@ export const ShiftsTab = ({
 					}
 					impactNote={
 						dialog.kind === "edit"
-							? editNote(t, "shift", dialog.shift.departmentName, draftCount)
+							? [
+									editNote(t, "shift", dialog.shift.departmentName, draftCount),
+									...(namedBy
+										? [
+												t("scheduling.reach.namedByConstraintsOnEdit", {
+													count: namedBy,
+												}),
+											]
+										: []),
+								].join(" ")
 							: undefined
 					}
 					onSave={saveShift}
@@ -328,25 +361,10 @@ export const ShiftsTab = ({
 					onConfirm={() => {
 						actions.deleteShift.mutate(
 							{ unit: unitOf(deleting), shiftId: deleting.shiftId },
-							{
-								onSuccess: () => {
-									closeDelete();
-									notify(t("scheduling.shifts.deleted"));
-								},
-							}
+							{ onSuccess: closeDelete }
 						);
 					}}
 				/>
-			)}
-			{toast && (
-				<Toast
-					key={toast.id}
-					onDismiss={() => {
-						setToast(undefined);
-					}}
-				>
-					{toast.message}
-				</Toast>
 			)}
 		</>
 	);

@@ -4,7 +4,7 @@ import { expect, it } from "vitest";
 import { leaveFixture } from "@/features/leave/fixtures";
 import * as stories from "./LeaveRequestDetails.stories";
 
-const { Pending } = composeStories(stories);
+const { Pending, PartDay } = composeStories(stories);
 
 it("given_aPendingRequest_when_shown_then_listsItsDetailsAndOnlyTheRowsTheApiSent", () => {
 	render(<Pending />);
@@ -25,4 +25,11 @@ it("given_aRequestMadeLateInNewYork_when_shown_then_readsTheBranchDayNotTheUtcOr
 
 	expect(screen.getByText("Nov 08, 2026")).toBeInTheDocument();
 	expect(screen.queryByText("Nov 09, 2026")).not.toBeInTheDocument();
+});
+
+it("given_aPartDay_when_shown_then_namesThePartUnderThePeriodAndCountsHours", () => {
+	render(<PartDay />);
+
+	expect(screen.getByText("Morning 09:00–13:00")).toBeInTheDocument();
+	expect(screen.getByText("4 h")).toBeInTheDocument();
 });

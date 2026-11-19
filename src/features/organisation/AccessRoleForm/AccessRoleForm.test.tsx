@@ -8,10 +8,6 @@ import {
 	AccessRoleForm,
 	type AccessRoleFormProps,
 } from "@/features/organisation/AccessRoleForm";
-import {
-	isCompanyOnly,
-	PERMISSION_KEYS,
-} from "@/features/workspace/permissionKeys";
 
 const MANAGER: AccessRoleFormProps["initial"] = {
 	kind: "LOCAL",
@@ -32,10 +28,16 @@ const show = (props: Partial<AccessRoleFormProps> = {}): void => {
 	);
 };
 
-const box = (group: string, name: string): HTMLElement =>
-	within(screen.getByRole("group", { name: group })).getByRole("checkbox", {
-		name,
-	});
+/** A permission's box in an area, opening the area's Details first. */
+const box = async (area: string, name: string): Promise<HTMLElement> => {
+	const group = screen.getByRole("group", { name: area });
+	const details = within(group).getByRole("button", { name: /^Details/ });
+	if (details.getAttribute("aria-expanded") === "false")
+		await userEvent.setup().click(details);
+	return within(group).getByRole("checkbox", { name });
+};
+const levelSelects = (): Array<HTMLElement> =>
+	screen.getAllByRole("button", { name: /^Level for / });
 const nameField = (): HTMLElement =>
 	screen.getByRole("textbox", { name: /Role name/ });
 const typeField = (): HTMLElement =>
@@ -49,8 +51,8 @@ const chooseType = async (
 const COMPANY_HINT =
 	"Can include company settings, branches and access roles. It can only be given at the whole company.";
 const LOCAL_HINT = "You pick the places when you give someone the role.";
-// A local role is offered every key that isn't company-only.
-const LOCAL_KEYS = PERMISSION_KEYS.filter((key) => !isCompanyOnly(key)).length;
+const NOTHING_YET =
+	"This role allows nothing yet beyond a person’s own roster, leave and preferences.";
 
 describe("AccessRoleForm", () => {
 	it("asks for the role type first, with no default, and locks the permissions until it is chosen", async () => {
@@ -75,8 +77,7 @@ describe("AccessRoleForm", () => {
 				"Choose where this role can be used to see the permissions it can hold."
 			)
 		).toBeVisible();
-		for (const item of screen.getAllByRole("checkbox"))
-			expect(item).toBeDisabled();
+		for (const item of levelSelects()) expect(item).toBeDisabled();
 
 		await chooseType(user, "Across the whole company");
 
@@ -90,10 +91,8 @@ describe("AccessRoleForm", () => {
 				"Choose where this role can be used to see the permissions it can hold."
 			)
 		).not.toBeInTheDocument();
-		expect(box("Branches", "Create branches")).toBeEnabled();
-		expect(
-			screen.getByText(`0 of ${PERMISSION_KEYS.length} selected`)
-		).toBeVisible();
+		expect(await box("Organisation", "Create branches")).toBeEnabled();
+		expect(screen.getByText(NOTHING_YET)).toBeVisible();
 
 		await chooseType(user, "In the branches or departments you choose");
 
@@ -102,9 +101,13 @@ describe("AccessRoleForm", () => {
 				name: "In the branches or departments you choose",
 			})
 		).toBeChecked();
-		// A local role offers no company-only permission, and counts what it may hold.
-		expect(screen.queryByRole("group", { name: "Company" })).toBeNull();
-		expect(screen.getByText(`0 of ${LOCAL_KEYS} selected`)).toBeVisible();
+		// A local role offers no company-only permission, and names those areas once.
+		expect(screen.queryByRole("group", { name: "Company details" })).toBeNull();
+		expect(
+			screen.getByText(
+				"Only for whole-company roles: Company details, Employment terms, Work policy, and Approval flows."
+			)
+		).toBeVisible();
 	});
 
 	it("starts a new role empty and submits its type, the trimmed name and its permissions", async () => {
@@ -121,7 +124,7 @@ describe("AccessRoleForm", () => {
 		expect(screen.getByText("Choose at least one permission.")).toBeVisible();
 
 		await chooseType(user, "In the branches or departments you choose");
-		await user.click(box("Branches", "Edit branches"));
+		await user.click(await box("Organisation", "Edit branches"));
 		expect(submit).toBeDisabled();
 		await user.type(nameField(), " Supervisor ");
 		expect(submit).toBeEnabled();
@@ -142,7 +145,7 @@ describe("AccessRoleForm", () => {
 		const submit = screen.getByRole("button", { name: "Save changes" });
 
 		expect(submit).toBeDisabled();
-		await user.click(box("Branches", "Edit branches"));
+		await user.click(await box("Organisation", "Edit branches"));
 
 		expect(screen.getByText("1 added")).toBeVisible();
 		expect(submit).toBeEnabled();
@@ -172,7 +175,7 @@ describe("AccessRoleForm", () => {
 				"A role for chosen places can’t hold company-wide permissions, so “See the workspace”, “Create branches”, and “See the activity record” were removed."
 			)
 		).toBeVisible();
-		expect(box("Branches", "See branches")).toBeChecked();
+		expect(await box("Organisation", "See branches")).toBeChecked();
 		expect(
 			screen.getByText("Where it can be used changed, 3 removed")
 		).toBeVisible();
@@ -180,7 +183,7 @@ describe("AccessRoleForm", () => {
 		// Going back to a company role doesn't bring them back, and the notice goes.
 		await chooseType(user, "Across the whole company");
 		expect(screen.queryByText(/were removed/)).not.toBeInTheDocument();
-		expect(box("Branches", "Create branches")).not.toBeChecked();
+		expect(await box("Organisation", "Create branches")).not.toBeChecked();
 		await chooseType(user, "In the branches or departments you choose");
 		await user.click(screen.getByRole("button", { name: "Save changes" }));
 
@@ -209,7 +212,7 @@ describe("AccessRoleForm", () => {
 				name: "Across the whole company",
 			})
 		).toBeChecked();
-		expect(box("Branches", "Create branches")).toBeChecked();
+		expect(await box("Organisation", "Create branches")).toBeChecked();
 		expect(screen.queryByText(/was removed/)).not.toBeInTheDocument();
 	});
 
@@ -273,15 +276,89 @@ describe("AccessRoleForm", () => {
 		).not.toBeInTheDocument();
 	});
 
-	it("offers no way to change a read-only role", () => {
-		show({ readOnly: true });
+	it("offers no way to change a read-only role, nor to decide on new permissions", async () => {
+		show({ readOnly: true, newPermissions: ["report:read"] });
 
 		for (const choice of within(typeField()).getAllByRole("radio"))
 			expect(choice).toBeDisabled();
 		expect(nameField()).toBeDisabled();
-		expect(box("Branches", "See branches")).toBeDisabled();
+		for (const item of levelSelects()) expect(item).toBeDisabled();
+		expect(await box("Organisation", "See branches")).toBeDisabled();
 		expect(
 			screen.queryByRole("button", { name: "Save changes" })
 		).not.toBeInTheDocument();
+		expect(
+			screen.queryByText("New since this role was last edited")
+		).not.toBeInTheDocument();
+	});
+
+	it("says what the role allows in one sentence, as it changes", async () => {
+		const user = userEvent.setup();
+		show();
+
+		expect(
+			screen.getByText("This role has some of Organisation.")
+		).toBeVisible();
+
+		await user.click(
+			screen.getByRole("button", { name: "Level for Organisation" })
+		);
+		await user.click(screen.getByRole("option", { name: "Can view" }));
+
+		expect(screen.getByText("This role views Organisation.")).toBeVisible();
+	});
+
+	it("adds a permission new since the role was last saved", async () => {
+		const user = userEvent.setup();
+		const onSubmit = vi.fn(() => Promise.resolve());
+		show({
+			initial: { ...MANAGER, permissions: ["schedule:read"] },
+			newPermissions: ["shift_preference:read"],
+			onSubmit,
+		});
+		expect(
+			screen.getByText("New since this role was last edited")
+		).toBeVisible();
+		expect(
+			screen.getByText("See people’s shift preferences in Shift preferences")
+		).toBeVisible();
+
+		await user.click(screen.getByRole("button", { name: "Add it" }));
+
+		expect(screen.getByText("1 added")).toBeVisible();
+		expect(
+			screen.queryByText("New since this role was last edited")
+		).not.toBeInTheDocument();
+		await user.click(screen.getByRole("button", { name: "Save changes" }));
+		expect(onSubmit).toHaveBeenCalledWith({
+			kind: "LOCAL",
+			name: "Manager",
+			permissions: ["shift_preference:read", "schedule:read"],
+		});
+	});
+
+	it("saves the role unchanged when a new permission is left out, and puts it back on discard", async () => {
+		const user = userEvent.setup();
+		const onSubmit = vi.fn(() => Promise.resolve());
+		show({ newPermissions: ["report:read"], onSubmit });
+		const submit = screen.getByRole("button", { name: "Save changes" });
+		expect(submit).toBeDisabled();
+
+		await user.click(screen.getByRole("button", { name: "Leave it out" }));
+
+		expect(
+			screen.queryByText("New since this role was last edited")
+		).not.toBeInTheDocument();
+		expect(screen.getByText("1 new permission left out")).toBeVisible();
+		expect(submit).toBeEnabled();
+
+		await user.click(screen.getByRole("button", { name: "Discard changes" }));
+		expect(
+			screen.getByText("New since this role was last edited")
+		).toBeVisible();
+
+		await user.click(screen.getByRole("button", { name: "Leave it out" }));
+		await user.click(submit);
+		expect(onSubmit).toHaveBeenCalledWith(MANAGER);
 	});
 });

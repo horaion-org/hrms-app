@@ -4,11 +4,12 @@ import {
 	UNIT_NAME_PATTERN,
 	unitNameSchema,
 } from "@/features/organisation/createSchemas";
-import { shiftMinutes } from "@/features/scheduling/scheduleDraft";
+import { shiftMinutes } from "@/features/scheduling/shifts/shiftHours";
 import {
 	SHIFT_COLOUR_PATTERN,
 	WEEKDAYS,
 } from "@/features/scheduling/shifts/api";
+import { NAME_LIMITS } from "@/features/organisation/nameSchema";
 
 /** The most job titles one shift may apply to. */
 export const MAX_ROLES = 20;
@@ -37,7 +38,7 @@ export const shiftSchema = (t: TFunction): ShiftSchema => {
 	const shape = z.object({
 		name: unitNameSchema({
 			required: t(`${key}.nameRequired`),
-			length: t(`${key}.nameLength`),
+			length: t(`${key}.nameLength`, NAME_LIMITS),
 			characters: t(`${key}.nameCharacters`),
 		}),
 		group: z

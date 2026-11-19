@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import dayjs from "dayjs";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import type { TFunction } from "i18next";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Refusal } from "@/common/refusal";
-import { useDebouncedValue } from "@/common/useDebouncedValue";
 import type { DateRange } from "@/components/forms/Calendar";
 import { dayParameter, shownDayOf } from "@/common/dayView";
 import type { FunctionComponent } from "@/common/types";
@@ -36,17 +36,16 @@ import { LeaveTimeline } from "@/features/leave/LeaveTimeline";
 import type { LeaveRequest, LeaveRequestBody } from "@/features/leave/types";
 import { useLeaveApplyActions } from "@/features/leave/useLeaveActions";
 import { useLeaveDecision } from "@/features/leave/useLeaveDecision";
+import { useApplyEmployees } from "@/features/leave/useApplyEmployees";
 import {
 	useLeaveRequests,
 	useMyLeaveRequests,
 	usePendingLeaveCount,
 	type LeaveList,
 } from "@/features/leave/useLeaveRequests";
-import { peopleQuery } from "@/features/people/api";
 import { workspaceQuery } from "@/features/workspace/api";
 import { LEAVE_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { retry } from "@/features/workspace/retry";
-import { recordScope } from "@/features/workspace/scopes";
 import { DepartmentFilter } from "@/features/workspace/DepartmentFilter";
 import { departmentChips, filterChip } from "@/features/workspace/filterChips";
 import { unitSelectionOf } from "@/features/workspace/unitSearch";
@@ -126,7 +125,7 @@ export const Leave = (): FunctionComponent => {
 	const pendingCount = usePendingLeaveCount(companyId);
 	const [range, setRange] = useState<DateRange>(defaultRange);
 	// A phone shows the timeline one day at a time; the timeline closes up the others' columns.
-	const today = dayjs().format("YYYY-MM-DD");
+	const today = dayjs().format(ISO_DATE_FORMAT);
 	const timelineDays = rangeDays(range);
 	const shownDay = shownDayOf(timelineDays, search.day, today);
 	const mine = useMyLeaveRequests(
@@ -155,21 +154,7 @@ export const Leave = (): FunctionComponent => {
 			setMessage(text);
 		},
 	});
-	const [employeeSearch, setEmployeeSearch] = useState("");
-	const settled = useDebouncedValue(employeeSearch.trim());
-	const people = useQuery(
-		peopleQuery(
-			companyId,
-			{
-				page: 1,
-				sort: { field: "displayName", desc: false },
-				status: "ACTIVE",
-				search: settled,
-			},
-			(canApply && dialog?.mode === "apply") ||
-				(canRecord && dialog?.mode === "record")
-		)
-	);
+	const employees = useApplyEmployees(companyId, dialog?.mode, units);
 	const applyFormOpen =
 		dialog?.mode === "apply" ||
 		dialog?.mode === "applyOwn" ||
@@ -262,19 +247,6 @@ export const Leave = (): FunctionComponent => {
 				</>
 			)
 		);
-	// Who an application on someone's behalf may name: those the caller may apply, or record, for.
-	const employees = {
-		search: employeeSearch,
-		onSearch: setEmployeeSearch,
-		options: (people.data?.items ?? []).filter((person) =>
-			access.can(
-				dialog?.mode === "record"
-					? "leave_request:review"
-					: "leave_request:create",
-				recordScope(person.departmentId)
-			)
-		),
-	};
 	const create = (
 		membershipId: string | null,
 		body: LeaveRequestBody
@@ -290,7 +262,7 @@ export const Leave = (): FunctionComponent => {
 			onError: (error: Error): void => {
 				const next = applyRefusal(error, t);
 				setRefusal(next);
-				if (next.refreshMembers) void people.refetch();
+				if (next.refreshMembers) employees.refresh();
 			},
 		};
 		if (dialog?.mode === "record" && membershipId !== null) {
@@ -505,6 +477,9 @@ export const Leave = (): FunctionComponent => {
 							? {
 									busy: applying,
 									employees: dialog.mode === "applyOwn" ? undefined : employees,
+									readsTimeOff: access.canAnywhere(
+										"member_employment_terms:read"
+									),
 									refusal,
 									onCreate: create,
 								}

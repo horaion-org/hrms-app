@@ -6,6 +6,7 @@ import { TickIcon } from "@/components/ui/Icon";
 import type { SchedulingReadiness } from "@/features/scheduling/readiness/api";
 import {
 	checklistOf,
+	constraintsNeedingAttentionOf,
 	type ReturnLink,
 	type SetupView,
 } from "@/features/scheduling/readiness/readinessCopy";
@@ -25,15 +26,8 @@ export type ReadinessCalloutProps = {
 	className?: string;
 };
 
-/**
- * Guides a first run on the Shifts and Constraints tabs from the API's
- * readiness answer. Under every department, it names those not ready to
- * schedule, each narrowing the tab to it. For one department not ready, a
- * checklist: add a shift, then a staffing constraint. Once that department
- * is ready and the wizard sent the person here, the way back. Nothing is
- * drawn otherwise.
- */
-export const ReadinessCallout = ({
+/** The readiness itself: the departments not ready, one department's checklist, or the way back. */
+const ReadinessChecklist = ({
 	rows,
 	department,
 	view,
@@ -117,5 +111,47 @@ export const ReadinessCallout = ({
 				</li>
 			</ol>
 		</Callout>
+	);
+};
+
+/**
+ * Guides a first run on the Shifts and Constraints tabs from the API's
+ * readiness answer. Under every department, it names those not ready to
+ * schedule, each narrowing the tab to it. For one department not ready, a
+ * checklist: add a shift, then a staffing constraint. Once that department
+ * is ready and the wizard sent the person here, the way back. Above it, when
+ * any rule there no longer fits its shifts or job titles, a warning counting
+ * them, with a link to Constraints from the Shifts tab. Nothing is drawn
+ * otherwise.
+ */
+export const ReadinessCallout = (
+	props: ReadinessCalloutProps
+): FunctionComponent => {
+	const { t } = useTranslation();
+	const key = "scheduling.readiness";
+	const needingAttention = constraintsNeedingAttentionOf(
+		props.rows,
+		props.department?.departmentId
+	);
+	const checklist = <ReadinessChecklist {...props} />;
+	if (needingAttention === 0) return checklist;
+	return (
+		<>
+			<Callout className={props.className} tone="warning">
+				<span className="flex flex-wrap items-center gap-x-4 gap-y-1">
+					{t(`${key}.constraintsNeedAttention`, { count: needingAttention })}
+					{props.view === "shifts" && (
+						<Button
+							search={(previous) => ({ ...previous, view: "constraints" })}
+							to="/scheduling"
+							variant="textlink"
+						>
+							{t(`${key}.goToConstraints`)}
+						</Button>
+					)}
+				</span>
+			</Callout>
+			{checklist}
+		</>
 	);
 };

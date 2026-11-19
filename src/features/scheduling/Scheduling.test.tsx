@@ -66,16 +66,18 @@ it("shows API history and links to the saved schedule", async () => {
 	app = await openApp("/scheduling");
 	renderAuthApp(app);
 	const history = await screen.findByRole("table", {
-		name: "Schedule history",
+		name: "History",
 	});
-	const row = within(history).getByRole("row", { name: /^API schedule/ });
-	expect(within(row).getByText("Draft")).toBeInTheDocument();
+	const row = within(history).getByRole("row", { name: /API schedule/ });
+	expect(within(row).getAllByText("Draft")[0]).toBeInTheDocument();
 	expect(
-		within(row).getByRole("link", { name: "View schedule API schedule" })
+		within(row).getByRole("link", {
+			name: /^View the Front Office schedule for Oct 12\s?–\s?18, 2026$/,
+		})
 	).toHaveAttribute("href", expect.stringContaining("departmentId=d-1"));
 });
 
-it("groups the schedules by month, from this week's month to 12 months ahead", async () => {
+it("shows a card per department, read from this week's month to 12 months ahead", async () => {
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
 	vi.useFakeTimers({ now: new Date(2026, 10, 12), toFake: ["Date"] });
 	const calls = stubApi({
@@ -97,12 +99,15 @@ it("groups the schedules by month, from this week's month to 12 months ahead", a
 	app = await openApp("/scheduling");
 	renderAuthApp(app);
 
-	const november = await screen.findByRole("region", { name: "November 2026" });
+	const departments = await screen.findByRole("region", {
+		name: "Departments",
+	});
 	expect(
-		within(november).getByRole("link", {
-			name: "Open Front Office, November 2026",
-		})
-	).toHaveAttribute("href", "/scheduling/months/2026-11?department=d-1");
+		within(departments).getAllByRole("link", {
+			name: "Open the Front Office roster",
+		})[0]
+	).toHaveAttribute("href", "/scheduling/department?department=d-1");
+	expect(screen.queryByRole("region", { name: "November 2026" })).toBeNull();
 	const read = calls.find(
 		(call) => call.path === "/api/v1/companies/c-1/schedule-months"
 	);
@@ -118,7 +123,7 @@ it("labels and tones every API status in the history", async () => {
 			label: "Generation requested",
 			background: "bg-warning-100",
 		},
-		{ status: "GENERATED", label: "Generated", background: "bg-warning-100" },
+		{ status: "GENERATED", label: "To review", background: "bg-warning-100" },
 		{
 			status: "GENERATION_FAILED",
 			label: "Generation failed",
@@ -153,13 +158,13 @@ it("labels and tones every API status in the history", async () => {
 	app = await openApp("/scheduling");
 	renderAuthApp(app);
 	const history = await screen.findByRole("table", {
-		name: "Schedule history",
+		name: "History",
 	});
 	for (const { status, label, background } of statuses) {
 		const row = within(history).getByRole("row", {
-			name: new RegExp(`^${status} schedule`),
+			name: new RegExp(`${status} schedule`),
 		});
-		expect(within(row).getByText(label)).toHaveClass(background);
+		expect(within(row).getAllByText(label)[0]).toHaveClass(background);
 	}
 });
 
@@ -206,12 +211,12 @@ it("opens a draft in the wizard and any other schedule's roster, from its histor
 	app = await openApp("/scheduling");
 	renderAuthApp(app);
 	const history = await screen.findByRole("table", {
-		name: "Schedule history",
+		name: "History",
 	});
 	for (const { status, href } of views) {
-		const name = `View schedule ${status} schedule`;
+		const name = /^View the Front Office schedule for /;
 		const row = within(history).getByRole("row", {
-			name: new RegExp(`^${status} schedule`),
+			name: new RegExp(`${status} schedule`),
 		});
 		expect(within(row).getByRole("link", { name })).toHaveAttribute(
 			"href",
@@ -223,6 +228,10 @@ it("opens a draft in the wizard and any other schedule's roster, from its histor
 const SCHEDULE_PATH =
 	"/api/v1/companies/c-1/branches/b-1/departments/d-1/schedules/s-1";
 
+/** The delete dialog names the fixture's department and week (12 – 18 Oct 2026), as en-US writes it. */
+const DELETE_TITLE =
+	/^Delete the Front Office roster for Oct 12\s?–\s?18, 2026\?$/;
+
 const listOf = (schedules: Array<Schedule>): StubReply => ({
 	status: 200,
 	body: envelope({ content: schedules, page: { hasNext: false } }),
@@ -231,7 +240,7 @@ const listOf = (schedules: Array<Schedule>): StubReply => ({
 /** The history's "More actions" menu for schedule s-1, opened. */
 const openRowMenu = async (): Promise<void> => {
 	const history = await screen.findByRole("table", {
-		name: "Schedule history",
+		name: "History",
 	});
 	await userEvent.click(
 		within(history).getByRole("button", {
@@ -266,7 +275,7 @@ it("offers no row menu without schedule:delete", async () => {
 		]),
 	});
 
-	await screen.findByRole("table", { name: "Schedule history" });
+	await screen.findByRole("table", { name: "History" });
 	expect(
 		screen.queryByRole("button", {
 			name: "More actions for Front Office - Week 42",
@@ -287,13 +296,13 @@ it("deletes a schedule from its history row after a danger confirm naming its de
 	await openRowMenu();
 	await user.click(screen.getByRole("menuitem", { name: "Delete" }));
 	const dialog = screen.getByRole("dialog", {
-		name: "Delete Front Office - Week 42?",
+		name: DELETE_TITLE,
 	});
 	expect(dialog).toHaveTextContent(
-		/This removes the Front Office schedule for .+, with its roster\. This can’t be undone\./
+		/This removes the Front Office roster for .+ from the roster page\. A roster that was generated is kept in History, where you can open it and put it back while its days are still free\./
 	);
 	const confirm = within(dialog).getByRole("button", {
-		name: "Delete schedule",
+		name: "Delete these days",
 	});
 	expect(confirm).toHaveClass("bg-error-600");
 	await user.click(confirm);
@@ -318,13 +327,13 @@ it("explains why a schedule being generated can't be deleted yet", async () => {
 	await openRowMenu();
 	await user.click(screen.getByRole("menuitem", { name: "Delete" }));
 	const dialog = screen.getByRole("dialog", {
-		name: "Delete Front Office - Week 42?",
+		name: DELETE_TITLE,
 	});
 	expect(dialog).toHaveTextContent(
-		"This schedule is being generated. You can delete it once the run finishes."
+		"These days are being generated. You can delete them once the run finishes."
 	);
 	expect(
-		within(dialog).getByRole("button", { name: "Delete schedule" })
+		within(dialog).getByRole("button", { name: "Delete these days" })
 	).toBeDisabled();
 	const footerClose = within(dialog)
 		.getAllByRole("button", { name: "Close" })
@@ -350,10 +359,10 @@ it("shows a refused delete inside the dialog and keeps it open", async () => {
 	await openRowMenu();
 	await user.click(screen.getByRole("menuitem", { name: "Delete" }));
 	const dialog = screen.getByRole("dialog", {
-		name: "Delete Front Office - Week 42?",
+		name: DELETE_TITLE,
 	});
 	await user.click(
-		within(dialog).getByRole("button", { name: "Delete schedule" })
+		within(dialog).getByRole("button", { name: "Delete these days" })
 	);
 
 	expect(await within(dialog).findByRole("alert")).toHaveTextContent(
@@ -375,7 +384,7 @@ it("lists the header's one Branch and narrows it to a Department through Filters
 		[`GET ${SCHEDULES_PATH}`]: listOf([scheduleFixture()]),
 	});
 	const user = userEvent.setup();
-	await screen.findByRole("table", { name: "Schedule history" });
+	await screen.findByRole("table", { name: "History" });
 
 	// One Branch in reach: the header names it as text.
 	expect(
@@ -417,7 +426,7 @@ it("lists every Branch once All branches is chosen, with every Department under 
 	app = await openApp("/scheduling");
 	renderAuthApp(app);
 	const user = userEvent.setup();
-	await screen.findByRole("table", { name: "Schedule history" });
+	await screen.findByRole("table", { name: "History" });
 
 	expect(screen.getByRole("button", { name: "Branch" })).toHaveTextContent(
 		"Orchard"
@@ -465,7 +474,7 @@ it("offers no Filters while the header Branch has only one Department to choose"
 	app = await openApp("/scheduling?branch=b-1");
 	renderAuthApp(app);
 	const user = userEvent.setup();
-	await screen.findByRole("table", { name: "Schedule history" });
+	await screen.findByRole("table", { name: "History" });
 	expect(screen.getByRole("button", { name: "Filters" })).toBeVisible();
 
 	await user.click(screen.getByRole("button", { name: "Branch" }));
@@ -551,7 +560,8 @@ describe("Scheduling's tabs", () => {
 
 	const openScheduling = async (
 		workspace: Workspace,
-		path = "/scheduling"
+		path = "/scheduling",
+		more: Parameters<typeof stubApi>[0] = {}
 	): Promise<ReturnType<typeof stubApi>> => {
 		vi.spyOn(window, "scrollTo").mockImplementation(() => {});
 		const calls = stubApi({
@@ -571,6 +581,7 @@ describe("Scheduling's tabs", () => {
 				status: 200,
 				body: envelope([kitchenCover]),
 			},
+			...more,
 		});
 		app = await openApp(path);
 		renderAuthApp(app);
@@ -624,6 +635,66 @@ describe("Scheduling's tabs", () => {
 		).toEqual(["branchId=b-1"]);
 	});
 
+	it("given_jobTitleRead_when_constraintsShown_then_aLiveRuleAskingMoreThanHoldItsTitlesWarnsItsShiftsWillBeShort", async () => {
+		/** A Kitchen job title held by `holderCount` people, as the job titles list answers it. */
+		const jobTitle = (jobTitleId: string, holderCount: number): unknown => ({
+			jobTitleId,
+			branchId: "b-1",
+			branchName: "Orchard",
+			departmentId: "d-1",
+			departmentName: "Kitchen",
+			name: jobTitleId,
+			description: null,
+			status: "ACTIVE",
+			holderCount,
+		});
+		const calls = await openScheduling(
+			companyWideWorkspace([
+				"schedule:read",
+				"constraint:read",
+				"job_title:read",
+			]),
+			"/scheduling?view=constraints",
+			{
+				// Morning cover asks for at least 2 of these; only 1 person holds either.
+				[`GET /api/v1/companies/c-1/job-titles`]: {
+					status: 200,
+					body: envelope({
+						content: [
+							jobTitle("front-desk-lead", 1),
+							jobTitle("front-desk-staff", 0),
+						],
+						page: { totalElements: 2 },
+					}),
+				},
+			}
+		);
+
+		const row = await screen.findByRole("listitem", { name: /Morning cover/ });
+		await waitFor(() => {
+			expect(
+				within(row).getByText(/^It asks for 2, but only 1 person holds/)
+			).toBeVisible();
+		});
+		// The check reads the live rule, never the generated rosters' staffing read.
+		expect(
+			calls.some((call) => call.path === `${SCHEDULES_PATH}/staffing`)
+		).toBe(false);
+	});
+
+	it("given_noJobTitleRead_when_constraintsShown_then_flagsNothingForCapacity", async () => {
+		const calls = await openScheduling(
+			companyWideWorkspace(["constraint:read"]),
+			"/scheduling?view=constraints"
+		);
+
+		const row = await screen.findByRole("listitem", { name: /Morning cover/ });
+		expect(within(row).queryByText("Needs attention")).toBeNull();
+		expect(
+			calls.some((call) => call.path === "/api/v1/companies/c-1/job-titles")
+		).toBe(false);
+	});
+
 	it("given_viewConstraints_when_opened_then_listsTheCompanysConstraintsInTheHeadersBranch", async () => {
 		const calls = await openScheduling(
 			companyWideWorkspace(["schedule:read", "constraint:read"]),
@@ -631,7 +702,7 @@ describe("Scheduling's tabs", () => {
 		);
 
 		expect(
-			await screen.findByRole("row", { name: /Morning cover/ })
+			await screen.findByRole("listitem", { name: /Morning cover/ })
 		).toHaveTextContent("Kitchen");
 		expect(
 			calls

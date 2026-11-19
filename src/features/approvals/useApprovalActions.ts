@@ -35,8 +35,10 @@ export const useApprovalFlowActions = (
 	companyId: string
 ): ApprovalFlowActions => {
 	const client = useQueryClient();
-	const reload = (): Promise<void> =>
-		client.invalidateQueries({ queryKey: approvalKeys.all(companyId) });
+	// In the background: a write is done when the API answers, so a slow re-read never holds its dialog.
+	const reload = (): void => {
+		void client.invalidateQueries({ queryKey: approvalKeys.all(companyId) });
+	};
 	return {
 		create: useMutation({
 			meta: { successMessage: "approvals.flows.added" },

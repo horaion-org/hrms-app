@@ -1,11 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
+import {
+	partRedoOf,
+	weekRunsAround,
+} from "@/features/scheduling/dates/datesSetup";
 import { getRouteApi, useNavigate } from "@tanstack/react-router";
-import { useEffect, useId, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import type { DepartmentPath } from "@/common/companyPath";
 import { dateTimeFormatIn } from "@/common/dateTimeFormatIn";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
+import { mondayOf } from "@/common/weeks";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { ArrowLeftIcon } from "@/components/ui/Icon";
@@ -14,67 +19,80 @@ import { ApprovalTrail } from "@/features/approvals/ApprovalTrail";
 import {
 	approvalMetaLine,
 	approvalStanding,
-	type ApprovalStanding,
 } from "@/features/approvals/approvalStanding";
 import {
 	GeneratedRoster,
+	rosterEditingOf,
 	type GeneratedRosterProps,
-	type RosterEditing,
-} from "@/features/scheduling/GeneratedRoster";
-import { GenerationFailurePanel } from "@/features/scheduling/GenerationFailurePanel";
+} from "@/features/scheduling/roster/GeneratedRoster";
+import { GenerationFailurePanel } from "@/features/scheduling/roster/GenerationFailurePanel";
 import { scheduleMonthQuery } from "@/features/scheduling/months/api";
+import { formatMonth, monthOf } from "@/features/scheduling/months/monthWeeks";
 import {
-	formatMonth,
-	formatMonthName,
-	monthOf,
-} from "@/features/scheduling/months/monthWeeks";
-import {
+	listsWeekParts,
 	rosterWeekLink,
 	rosterWeeksOf,
 } from "@/features/scheduling/months/rosterWeeks";
 import { formatPeriod } from "@/features/scheduling/periods";
+import { publishModeOf } from "@/features/scheduling/schedules/PublishScheduleDialog";
+import { CheckedPublishDialog } from "@/features/scheduling/rulesCheck/CheckedPublishDialog";
+import { hasRosterHours } from "@/features/scheduling/hours/rosterHoursRows";
 import {
-	PublishScheduleDialog,
-	type PublishMode,
-} from "@/features/scheduling/PublishScheduleDialog";
-import { RegenerateMonthDialog } from "@/features/scheduling/RegenerateMonthDialog";
-import { RejectedRosterCallout } from "@/features/scheduling/RejectedRosterCallout";
-import { RejectScheduleDialog } from "@/features/scheduling/RejectScheduleDialog";
+	useRosterHours,
+	type RosterHoursState,
+} from "@/features/scheduling/hours/useRosterHours";
+import { useRosterPreferenceOutcomes } from "@/features/scheduling/preferenceOutcomes/usePreferenceOutcomes";
+import { RegenerateMonthDialog } from "@/features/scheduling/months/RegenerateMonthDialog";
+import { RegenerateScheduleDialog } from "@/features/scheduling/schedules/RegenerateScheduleDialog";
+import { regenerationOf } from "@/features/scheduling/schedules/regeneration";
+import { RejectedRosterCallout } from "@/features/scheduling/schedules/RejectedRosterCallout";
+import { RejectScheduleDialog } from "@/features/scheduling/schedules/RejectScheduleDialog";
 import {
 	publishedRosterOtherThan,
 	publishedWeekQuery,
 } from "@/features/scheduling/publishedWeek/api";
 import { PublishedWeekCallout } from "@/features/scheduling/publishedWeek/PublishedWeekCallout";
 import type { RosterSearch } from "@/features/scheduling/roster/rosterSearch";
-import { RosterHeader } from "@/features/scheduling/RosterHeader";
+import { RosterHeader } from "@/features/scheduling/roster/RosterHeader";
+import { RosterHours } from "@/features/scheduling/hours/RosterHours";
+import { useRosterRulesCheck } from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
+import { validationStanding } from "@/features/scheduling/rulesCheck/issuesFromValidation";
+import { hasHandChanges } from "@/features/scheduling/roster/rosterSummary";
+import { useRepairWarmUpOnValidate } from "@/features/scheduling/cover/useRepairWarmUp";
 import { coverOffersQuery } from "@/features/scheduling/coverOffers/api";
 import { rosterChangeShiftsQuery } from "@/features/scheduling/rosterChanges/api";
-import { ScheduleMenu } from "@/features/scheduling/ScheduleMenu";
+import type { RosterChangeTarget } from "@/features/scheduling/rosterChanges/useRosterChangeActions";
+import { generationFailure } from "@/features/scheduling/roster/generationFailure";
+import { ScheduleMenu } from "@/features/scheduling/schedules/ScheduleMenu";
 import {
 	decidable,
-	generationInProgress,
-	hasRoster,
-	regenerable,
-	rosterEditable,
+	GENERATION_POLL_INTERVAL_MS,
 	rosterRunId,
-	withdrawable,
+	type Schedule,
 } from "@/features/scheduling/schedules/api";
+import { rosterPagePermissions } from "@/features/scheduling/schedules/rosterPagePermissions";
 import {
 	approvalActionFacts,
 	scheduleActions,
 	type ScheduleActionId,
 } from "@/features/scheduling/schedules/scheduleActions";
 import {
-	actionWaitsForEarlierWeek,
-	publishWaitsFor,
-} from "@/features/scheduling/schedules/publishOrder";
+	lastPublishedPartStartOf,
+	daysLeftBeforeOf,
+	partLinesOf,
+} from "@/features/scheduling/schedules/partLines";
+import { WeekPartsCallout } from "@/features/scheduling/schedules/WeekPartsCallout";
+import { WeekPartLinks } from "@/features/scheduling/months/WeekPartLinks";
+import { departmentTimelineLink } from "@/features/scheduling/timeline/timelineSearch";
+import { isoDateIn } from "@/features/scheduling/roster/roster";
 import { scheduleDetailItems } from "@/features/scheduling/schedules/scheduleDetails";
 import {
 	rosterShown,
+	scheduleNoticeFactsOf,
 	scheduleNotices,
-	type ScheduleNoticeFacts,
 	type ScheduleNoticeId,
 } from "@/features/scheduling/schedules/scheduleNotices";
+import { weekPassed } from "@/features/scheduling/schedules/weekPassed";
 import { scheduleSetupLink } from "@/features/scheduling/schedules/scheduleViewLink";
 import { useCompanySchedule } from "@/features/scheduling/schedules/useSchedule";
 import { useScheduleApproval } from "@/features/scheduling/schedules/useScheduleApproval";
@@ -84,13 +102,12 @@ import {
 } from "@/features/scheduling/schedules/useScheduleAssignments";
 import { useScheduleConstraints } from "@/features/scheduling/schedules/useScheduleConstraints";
 import { useScheduleShifts } from "@/features/scheduling/schedules/useScheduleShifts";
-import { WithdrawApprovalDialog } from "@/features/scheduling/WithdrawApprovalDialog";
+import { WithdrawApprovalDialog } from "@/features/scheduling/schedules/WithdrawApprovalDialog";
 import {
 	startingContextQuery,
 	type StartingContext,
 } from "@/features/scheduling/startingContext/api";
 import { runsByMember } from "@/features/scheduling/startingContext/startingGrid";
-import { departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 import {
 	useCurrentCompanyId,
@@ -117,18 +134,16 @@ const ROSTER_PROBLEMS = {
 } as const;
 
 /**
- * Back to the schedule's month page, named by the month ("November 2026"),
- * once the schedule is known; back to Scheduling before that.
+ * Back to the department's timeline from the schedule's first week, once the
+ * schedule is known; back to Scheduling before that.
  */
 const BackLink = ({
-	month,
-	departmentId,
+	schedule,
 }: {
-	month?: string;
-	departmentId?: string;
+	schedule?: Pick<Schedule, "departmentId" | "periodStart">;
 }): FunctionComponent => {
-	const { t, i18n } = useTranslation();
-	if (month === undefined || departmentId === undefined)
+	const { t } = useTranslation();
+	if (schedule === undefined)
 		return (
 			<Button
 				leadingIcon={<ArrowLeftIcon />}
@@ -141,12 +156,11 @@ const BackLink = ({
 	return (
 		<Button
 			leadingIcon={<ArrowLeftIcon />}
-			params={{ month }}
-			search={{ department: departmentId }}
-			to="/scheduling/months/$month"
+			search={{ department: schedule.departmentId, from: schedule.periodStart }}
+			to="/scheduling/department"
 			variant="textlink"
 		>
-			{formatMonth(month, formattingLocale(i18n))}
+			{t("scheduling.timeline.backFromSchedule")}
 		</Button>
 	);
 };
@@ -183,10 +197,11 @@ const readyItems = <Item,>(
 	list: { status: "ready"; items: Array<Item> } | { status: string }
 ): Array<Item> => ("items" in list ? list.items : []);
 
-/** The roster itself, once the schedule has one: its rows, or why they aren't shown yet. */
+/** The roster itself, once the schedule has one: its rows and their hours, or why they aren't shown yet. */
 const RosterBody = ({
 	assignments,
 	startingContext,
+	hours,
 	...roster
 }: Omit<
 	GeneratedRosterProps,
@@ -195,6 +210,8 @@ const RosterBody = ({
 	assignments: AssignmentList;
 	/** Where members started the week; undefined until read, or when it can't be. */
 	startingContext?: StartingContext;
+	/** The roster's hours by person, shown under the grid. */
+	hours: RosterHoursState;
 }): FunctionComponent => {
 	const { t } = useTranslation();
 	const viewerMembershipId = useCurrentMembershipId();
@@ -204,19 +221,30 @@ const RosterBody = ({
 				{t(`${key}.${ROSTER_PROBLEMS[assignments.status]}`)}
 			</Problem>
 		);
+	const startingRuns = startingContext
+		? runsByMember(startingContext)
+		: undefined;
 	return (
-		<GeneratedRoster
-			{...roster}
-			assignments={assignments.items}
-			startingRuns={startingContext ? runsByMember(startingContext) : undefined}
-			viewerMembershipId={viewerMembershipId}
-			// Only a frozen context can go stale: members whose week before changed since generation.
-			membersWithChangedStart={
-				startingContext?.frozen === true
-					? startingContext.staleMemberProfileIds.length
-					: 0
-			}
-		/>
+		<>
+			<GeneratedRoster
+				{...roster}
+				assignments={assignments.items}
+				startingRuns={startingRuns}
+				viewerMembershipId={viewerMembershipId}
+				// Only a frozen context can go stale: members whose week before changed since generation.
+				membersWithChangedStart={
+					startingContext?.frozen === true
+						? startingContext.staleMemberProfileIds.length
+						: 0
+				}
+			/>
+			<RosterHours
+				assignments={assignments.items}
+				className="mt-8"
+				coveredFrom={roster.schedule.coveredFrom}
+				hours={hours}
+			/>
+		</>
 	);
 };
 
@@ -227,26 +255,8 @@ type OpenDialog =
 	| "withdraw"
 	| "withdrawPublication"
 	| "regenerate"
+	| "regenerateSchedule"
 	| undefined;
-
-/** What the header's primary button confirms, by where the viewer stands on the roster's approval. */
-const publishModeOf = (
-	standing: ApprovalStanding,
-	instanceSteps: ReadonlyArray<{ stepOrder: number; label: string }>
-): PublishMode => {
-	if (standing.kind === "toSubmit")
-		return { kind: "submit", stepLabels: standing.stepLabels };
-	if (standing.kind === "pending")
-		return {
-			kind: "approve",
-			instanceId: standing.instanceId,
-			step: standing.step,
-			nextLabel: instanceSteps.find(
-				(step) => step.stepOrder === standing.step.order + 1
-			)?.label,
-		};
-	return { kind: "publish" };
-};
 
 /**
  * One schedule read by its id alone. It is read again every
@@ -287,6 +297,7 @@ const ApiSchedule = ({
 	};
 	const access = useAccess();
 	const [openDialog, setOpenDialog] = useState<OpenDialog>();
+	const [shortShifts, setShortShifts] = useState(0);
 	const closeDialog = (): void => {
 		setOpenDialog(undefined);
 	};
@@ -327,6 +338,23 @@ const ApiSchedule = ({
 		runId,
 		state.status === "ready" ? state.schedule.rosterRevision : 0
 	);
+	// The roster's hours by person, while the hours ledger holds its days.
+	const rosterHours = useRosterHours(
+		companyId,
+		unit,
+		scheduleId,
+		runId,
+		state.status === "ready" ? state.schedule.rosterRevision : 0,
+		state.status === "ready" && hasRosterHours(state.schedule)
+	);
+	// What the roster made of each person's shift preferences, said in a chosen day's panel.
+	const preferenceOutcomes = useRosterPreferenceOutcomes(
+		companyId,
+		unit,
+		scheduleId,
+		runId,
+		state.status === "ready" ? state.schedule.rosterRevision : 0
+	);
 	// The frozen shifts and constraints only name what the findings refer to.
 	const rosterSchedule = showsRoster ? state.schedule : undefined;
 	const shifts = useScheduleShifts(
@@ -339,24 +367,48 @@ const ApiSchedule = ({
 		companyId,
 		state.status === "ready" ? state.schedule : undefined
 	);
-	// A generated roster awaiting its decision, or a published one, may be
-	// changed by hand under its own key (hrms-backend-v2 docs/adr/0062, 0063);
-	// the editor reads the frozen shifts it offers through that key, so it
-	// needs no shift:read.
-	const mayEditShifts =
-		state.status === "ready" &&
-		runId !== undefined &&
-		rosterEditable(state.schedule) &&
-		access.can(
-			"schedule:edit_shift",
-			departmentScope(state.schedule.departmentId)
-		);
+	// What the viewer may do here, each at the schedule's Department. The roster
+	// editor reads the frozen shifts it offers under its own key, so it needs no
+	// shift:read; Validate schedule joins Issues and Changed, and Repair stays
+	// with those who may change the roster.
+	const permissions = rosterPagePermissions(
+		state.status === "ready" ? state.schedule : undefined,
+		access
+	);
+	const { mayEditShifts, mayValidate } = permissions;
+	const rosterRevision =
+		state.status === "ready" ? state.schedule.rosterRevision : 0;
+	const handChanged = hasHandChanges(assignments);
+	const validation = useRosterRulesCheck(
+		mayValidate && runId !== undefined && unit !== undefined
+			? { companyId, unit, scheduleId, runId }
+			: undefined,
+		rosterRevision,
+		handChanged
+	);
+	// Where hand changes go, for someone who may change this roster now.
+	const editTarget: RosterChangeTarget | undefined =
+		mayEditShifts && runId !== undefined && unit !== undefined
+			? { companyId, unit, scheduleId, runId }
+			: undefined;
+	// Validate schedule lighting up after a hand change warms the engine's worker for the check to come.
+	useRepairWarmUpOnValidate(
+		editTarget,
+		rosterRevision,
+		validationStanding({
+			revision: rosterRevision,
+			last: validation.last,
+			hasChanges: handChanged,
+		}) === "outOfDate"
+	);
 	const editorShifts = useQuery(
 		rosterChangeShiftsQuery(companyId, unit, scheduleId, mayEditShifts)
 	);
 	// A published roster asks the member before adding or moving their work.
 	const publishedForEditing =
-		mayEditShifts && state.schedule.status === "PUBLISHED";
+		mayEditShifts &&
+		state.status === "ready" &&
+		state.schedule.status === "PUBLISHED";
 	const coverOffers = useQuery(
 		coverOffersQuery(companyId, unit, scheduleId, publishedForEditing)
 	);
@@ -365,9 +417,7 @@ const ApiSchedule = ({
 			companyId,
 			unit,
 			scheduleId,
-			showsRoster &&
-				unit !== undefined &&
-				access.can("schedule:read", departmentScope(unit.departmentId))
+			showsRoster && permissions.mayRead
 		)
 	);
 	// Another schedule already published for the week means this one can't be generated again or published.
@@ -378,10 +428,13 @@ const ApiSchedule = ({
 	const publishedWeek = useQuery(
 		publishedWeekQuery(
 			companyId,
-			unit && access.can("schedule:read", departmentScope(unit.departmentId))
-				? unit
-				: undefined,
-			awaitingPublication?.periodStart
+			permissions.mayRead ? unit : undefined,
+			awaitingPublication?.periodStart,
+			// A part asks about its own days: an earlier part published doesn't hold it up (API ADR-0113).
+			awaitingPublication && {
+				coveredFrom: awaitingPublication.coveredFrom,
+				coveredTo: awaitingPublication.coveredTo,
+			}
 		)
 	);
 	const weekPublishedBy = publishedRosterOtherThan(
@@ -396,12 +449,10 @@ const ApiSchedule = ({
 			companyId,
 			unit?.departmentId ?? "",
 			month,
-			unit !== undefined &&
-				access.can("schedule:read", departmentScope(unit.departmentId))
+			permissions.mayRead
 		)
 	).data;
-	const publishNoteId = useId();
-	const monthName = month ? formatMonthName(month, formattingLocale(i18n)) : "";
+	const monthName = month ? formatMonth(month, formattingLocale(i18n)) : "";
 	if (state.status !== "ready")
 		return (
 			<>
@@ -411,61 +462,72 @@ const ApiSchedule = ({
 				</Problem>
 			</>
 		);
-	// Regenerating names the month's weeks, so it waits for the month's read.
-	const openRegenerate =
-		scheduleMonth !== undefined &&
-		regenerable(state.schedule) &&
-		weekPublishedBy === undefined &&
-		access.can(
-			"schedule:generate",
-			departmentScope(state.schedule.departmentId)
-		)
-			? (): void => {
-					setOpenDialog("regenerate");
-				}
-			: undefined;
-	const editing: RosterEditing | undefined =
-		mayEditShifts && runId !== undefined && unit !== undefined
-			? {
-					target: { companyId, unit, scheduleId, runId },
-					revision: state.schedule.rosterRevision,
-					shifts: editorShifts.data ?? [],
-					nonWorkingDayTypes: state.schedule.nonWorkingDayTypes,
-					notifiesMembers: state.schedule.status === "PUBLISHED",
-					...(publishedForEditing
-						? {
-								coverOffers: {
-									offers: coverOffers.data ?? [],
-									failed: coverOffers.isError,
-									retry: (): void => {
-										void coverOffers.refetch();
-									},
-								},
-							}
-						: {}),
-					// Leave choices need the leave keys as well, here at the schedule's Department.
-					...(access.canAll(
-						["leave_request:read", "leave_request:review"],
-						departmentScope(state.schedule.departmentId)
-					)
-						? { leave: { viewerMembershipId } }
-						: {}),
-				}
-			: undefined;
+	// A passed week's rules and roster are final, so it is never generated again (API ADR-0091).
+	const passed = weekPassed(state.schedule, new Date());
 	const schedule = state.schedule;
-	const noticeFacts: ScheduleNoticeFacts = {
-		status: schedule.status,
-		generating: generationInProgress(schedule),
-		hasRoster: hasRoster(schedule),
+	// A part of its week (API ADR-0113): what holds the week's other days, and the week's schedules.
+	const weekParts =
+		scheduleMonth?.weeks.find(
+			(week) => week.periodStart === schedule.periodStart
+		)?.parts ?? [];
+	// A part or a withdrawn roster takes its own route, a whole week the month run (API ADR-0134, 0135).
+	const regeneration = regenerationOf(schedule, weekParts, {
+		weekPassed: passed,
+		monthRead: scheduleMonth !== undefined,
 		weekPublishedElsewhere: weekPublishedBy !== undefined,
-	};
+		...permissions,
+	});
+	const openRegenerate = regeneration.offered
+		? (): void => {
+				setOpenDialog(
+					regeneration.path === "monthRun" ? "regenerate" : "regenerateSchedule"
+				);
+			}
+		: undefined;
+	const editing = rosterEditingOf({
+		target: editTarget,
+		schedule: state.schedule,
+		shifts: editorShifts.data ?? [],
+		coverOffers: {
+			offers: coverOffers.data ?? [],
+			failed: coverOffers.isError,
+			retry: (): void => {
+				void coverOffers.refetch();
+			},
+		},
+		// Leave choices need the leave keys as well, here at the schedule's Department.
+		leave: permissions.mayHandleLeave ? { viewerMembershipId } : undefined,
+	});
+	const partLines = partLinesOf(
+		{
+			covered: { from: schedule.coveredFrom, to: schedule.coveredTo },
+			// Said once the month read names the week's parts, never guessed before it.
+			runs: scheduleMonth
+				? weekRunsAround(
+						schedule,
+						weekParts,
+						isoDateIn(schedule.timeZone, new Date())
+					)
+				: [],
+			// A redo part in the week (API ADR-0129): this schedule is one, or one redoes some of its days.
+			redo: partRedoOf(schedule, weekParts),
+			lastPublishedPartStart: lastPublishedPartStartOf(weekParts),
+		},
+		(days) =>
+			formatPeriod({ start: days.from, end: days.to }, formattingLocale(i18n)),
+		t
+	);
+	const noticeFacts = scheduleNoticeFactsOf(schedule, {
+		weekPublishedElsewhere: weekPublishedBy !== undefined,
+		weekPassed: passed,
+		laterPartPublished: regeneration.path === "laterPartPublished",
+		monthWeeks: scheduleMonth?.weeks,
+	});
 	const moment = dateTimeFormatIn(formattingLocale(i18n), schedule.timeZone, {
 		dateStyle: "medium",
 		timeStyle: "short",
 	});
-	const mayReject =
-		decidable(schedule) &&
-		access.can("schedule:publish", departmentScope(schedule.departmentId));
+	const { mayReject } = permissions;
 	const standing = approvalStanding({
 		awaitingDecision: decidable(schedule),
 		publication: schedule.publication,
@@ -476,10 +538,9 @@ const ApiSchedule = ({
 		status: schedule.status,
 		mayPublish: mayReject && weekPublishedBy === undefined,
 		mayReject,
-		mayWithdraw:
-			withdrawable(schedule) &&
-			access.can("schedule:publish", departmentScope(schedule.departmentId)),
+		mayWithdraw: permissions.mayWithdraw,
 		mayRegenerate: openRegenerate !== undefined,
+		regeneratesPart: regeneration.partOfWeek,
 		hasRoster: rosterShown(noticeFacts),
 		...approvalActionFacts(standing),
 	});
@@ -525,14 +586,27 @@ const ApiSchedule = ({
 				stage="blocked"
 			/>
 		),
+		regenerationFailed: (
+			<Callout tone="warning">
+				{t("scheduling.generation.regenerationFailed", {
+					reason: generationFailure(schedule.generation, t).message,
+				})}
+			</Callout>
+		),
 		rejected: (
 			<RejectedRosterCallout
 				rejectedStep={schedule.publication.rejectedAtStep?.stepLabel}
 				schedule={schedule}
-				showsNextStep={regenerable(schedule)}
+				showsNextStep={openRegenerate !== undefined}
 			/>
 		),
-		generating: <Callout>{t("scheduling.generation.inProgress")}</Callout>,
+		generating: (
+			<Callout>
+				{t("scheduling.generation.inProgress", {
+					seconds: GENERATION_POLL_INTERVAL_MS / 1000,
+				})}
+			</Callout>
+		),
 		failed: (
 			<GenerationFailurePanel
 				generation={schedule.generation}
@@ -540,6 +614,9 @@ const ApiSchedule = ({
 			/>
 		),
 		draft: <Callout>{t(`${key}.draft`)}</Callout>,
+		weekPassed: <Callout>{t(`${key}.weekPassed`)}</Callout>,
+		laterPartPublished: <Callout>{t(`${key}.laterPartPublished`)}</Callout>,
+		rulesChanged: <Callout>{t(`${key}.rulesChanged`)}</Callout>,
 		unpublished: (
 			<Callout>
 				<Trans
@@ -549,12 +626,6 @@ const ApiSchedule = ({
 			</Callout>
 		),
 	};
-	// Weeks are published in order: Publish (and Submit, and the last step's Approve) waits for an earlier week.
-	const waitsFor = publishWaitsFor(schedule);
-	const primaryWaits =
-		primary !== undefined &&
-		waitsFor !== undefined &&
-		actionWaitsForEarlierWeek(primary.id);
 	const departmentWeeks = scheduleMonth && {
 		weeks: rosterWeeksOf(scheduleMonth, t),
 		onWeekChange: (week: string): void => {
@@ -564,7 +635,7 @@ const ApiSchedule = ({
 	};
 	return (
 		<>
-			<BackLink departmentId={schedule.departmentId} month={month} />
+			<BackLink schedule={schedule} />
 			{/* Only where an approval is involved: without a flow the page is as before. */}
 			{(standing.kind !== "direct" || approval.instance) && (
 				<p className="sr-only" role="status">
@@ -580,31 +651,25 @@ const ApiSchedule = ({
 						{primary && (
 							<div className="flex flex-col items-end gap-2 max-sm:order-last max-sm:w-full">
 								<Button
-									aria-describedby={primaryWaits ? publishNoteId : undefined}
 									className="max-sm:w-full"
-									disabled={primaryWaits}
 									onClick={runAction[primary.id]}
 								>
 									{t(primary.labelKey, { month: monthName })}
 								</Button>
-								{primaryWaits && (
-									<p
-										className="text-right text-sm text-neutral-700 max-sm:text-left"
-										id={publishNoteId}
-									>
-										{t("scheduling.months.roster.publishFirst", {
-											week: formatPeriod(waitsFor, formattingLocale(i18n)),
-										})}
-									</p>
-								)}
 							</div>
 						)}
 						<ScheduleMenu
 							withExport
 							companyId={companyId}
 							schedule={schedule}
+							weekParts={weekParts}
 							onDeleted={() => {
-								void navigate({ to: "/scheduling" });
+								void navigate(
+									departmentTimelineLink(
+										schedule.departmentId,
+										schedule.periodStart
+									)
+								);
 							}}
 						>
 							{menu.length > 0 &&
@@ -670,6 +735,20 @@ const ApiSchedule = ({
 					{notices[notice]}
 				</div>
 			))}
+			<WeekPartsCallout
+				className="mt-6"
+				departmentId={schedule.departmentId}
+				lines={partLines}
+				mayCreateHere={permissions.mayCreateHere}
+			/>
+			{listsWeekParts(weekParts) && (
+				<WeekPartLinks
+					className="mt-6"
+					currentScheduleId={schedule.scheduleId}
+					departmentId={schedule.departmentId}
+					parts={weekParts}
+				/>
+			)}
 			{rosterShown(noticeFacts) && (
 				<RosterBody
 					approval={trail}
@@ -677,23 +756,30 @@ const ApiSchedule = ({
 					constraints={readyItems(constraints)}
 					departmentWeeks={departmentWeeks}
 					editing={editing}
+					hours={rosterHours}
+					preferenceOutcomes={preferenceOutcomes}
 					schedule={schedule}
 					shifts={readyItems(shifts)}
 					startingContext={startingContext.data}
+					validation={mayValidate ? validation : undefined}
 					view={view}
 					details={scheduleDetailItems(
 						schedule,
 						(instant) => moment.format(new Date(instant)),
 						t
 					)}
+					onShortShiftsChange={setShortShifts}
 					onViewChange={onViewChange}
 				/>
 			)}
 			{openDialog === "publish" && (
-				<PublishScheduleDialog
+				<CheckedPublishDialog
 					companyId={companyId}
+					daysLeftBefore={daysLeftBeforeOf(partLines, schedule.coveredFrom)}
 					mode={publishModeOf(standing, approval.instance?.steps ?? [])}
 					schedule={schedule}
+					shortShifts={shortShifts}
+					shownOn="schedulePage"
 					onClose={closeDialog}
 					onDone={decided}
 				/>
@@ -727,10 +813,20 @@ const ApiSchedule = ({
 					onClose={closeDialog}
 				/>
 			)}
+			{openDialog === "regenerateSchedule" && (
+				<RegenerateScheduleDialog
+					companyId={companyId}
+					regeneration={regeneration}
+					schedule={schedule}
+					onClose={closeDialog}
+				/>
+			)}
 			{openDialog === "regenerate" && scheduleMonth && (
+				// The week's page regenerates this week only; the month page regenerates the month.
 				<RegenerateMonthDialog
 					companyId={companyId}
 					month={scheduleMonth}
+					weeks={[mondayOf(schedule.periodStart)]}
 					onClose={closeDialog}
 				/>
 			)}

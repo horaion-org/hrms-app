@@ -26,7 +26,7 @@ import {
 	saidApartBy,
 	type IssuesAbout,
 } from "@/features/scheduling/roster/rosterMarks";
-import type { RosterDayNotesProps } from "@/features/scheduling/RosterDayNotes";
+import type { RosterDayNotesProps } from "@/features/scheduling/roster/RosterDayNotes";
 import {
 	coverGapOf,
 	issuesAboutOf,
@@ -50,7 +50,7 @@ import type {
 /** What the roster reads of its schedule: its week, the zone its days are in and, for the findings, its generation. */
 export type RosterSchedule = Pick<
 	Schedule,
-	"periodStart" | "periodEnd" | "timeZone"
+	"periodStart" | "periodEnd" | "coveredFrom" | "coveredTo" | "timeZone"
 > &
 	Partial<Pick<Schedule, "generation">>;
 
@@ -73,6 +73,13 @@ export type RosterViewInput = {
 	/** The page gives a Details list, and an approval trail, only when it has them. */
 	hasDetails: boolean;
 	hasApproval: boolean;
+	/**
+	 * Whether the roster may be validated here (someone who may change it):
+	 * Issues then opens even when empty, to show what validating found.
+	 */
+	hasValidation?: boolean;
+	/** Issues the last validation adds to the generation's: the working-time rules it found broken. */
+	brokenRuleIssues?: number;
 	/** Days may be changed by hand: a chosen day opens its editor rather than its shift. */
 	editable: boolean;
 	/** The manager's tools are shown, so a chosen day's panel starts with what needs a look. */
@@ -88,6 +95,8 @@ export type RosterView = {
 	days: Array<string>;
 	/** The week's days inside the period, which a phone steps through. */
 	periodDays: Array<string>;
+	/** The week's days the schedule does not cover (API ADR-0113): greyed, with no cells. */
+	outsideDays: Array<string>;
 	/** The one day a phone shows. */
 	shownDay: string | undefined;
 	rows: Array<RosterRow>;
@@ -195,11 +204,14 @@ export const rosterViewOf = ({
 	membersWithChangedStart,
 	hasDetails,
 	hasApproval,
+	hasValidation = false,
+	brokenRuleIssues = 0,
 	editable,
 	withSummary,
 	changesLeave,
 }: RosterViewInput): RosterView => {
-	const period = { start: schedule.periodStart, end: schedule.periodEnd };
+	// The days this schedule covers: its whole week, or a run of it (API ADR-0113).
+	const period = { start: schedule.coveredFrom, end: schedule.coveredTo };
 	const week = view.week ?? mondayOf(today);
 	const days = weekDays(period, week);
 	const rows = rosterFromAssignments(assignments, period);
@@ -218,12 +230,13 @@ export const rosterViewOf = ({
 		)
 	);
 	const listCounts: Record<RosterPanel, number> = {
-		issues: issueCount({
-			findings: counts,
-			membersWithChangedStart,
-			leaveAndCoverDays: leaveAndCover.length,
-			daysToDecide: toDecide.length,
-		}),
+		issues:
+			issueCount({
+				findings: counts,
+				membersWithChangedStart,
+				leaveAndCoverDays: leaveAndCover.length,
+				daysToDecide: toDecide.length,
+			}) + brokenRuleIssues,
 		changes: changed.length,
 		details: hasDetails ? 1 : 0,
 		approval: hasApproval ? 1 : 0,
@@ -239,10 +252,10 @@ export const rosterViewOf = ({
 		(day) => day >= period.start && day <= period.end
 	);
 	const shownDay = shownDayOf(periodDays, chosenRow?.day ?? view.day, today);
+	const openable = (panel: RosterPanel): boolean =>
+		listCounts[panel] > 0 || (panel === "issues" && hasValidation);
 	const openList =
-		view.panel && !chosenRow && listCounts[view.panel] > 0
-			? view.panel
-			: undefined;
+		view.panel && !chosenRow && openable(view.panel) ? view.panel : undefined;
 	const chosenMemberRow = rows.find(
 		(row) => row.membershipId === chosenRow?.member?.membershipId
 	);
@@ -253,6 +266,7 @@ export const rosterViewOf = ({
 		period,
 		days,
 		periodDays,
+		outsideDays: days.filter((day) => !periodDays.includes(day)),
 		shownDay,
 		rows,
 		findings,

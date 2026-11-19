@@ -33,10 +33,33 @@ describe("generationFailure", () => {
 			"engine_unreachable",
 			"The scheduling engine couldn’t be reached in time, so nothing was generated.",
 		],
-		["CANCELLED", "The engine’s job was cancelled before it finished."],
+		[
+			"CANCELLED",
+			"Generating stopped before a roster was saved. Generate again.",
+		],
+		[
+			"too_many_jobs",
+			"The scheduling engine was busy. Generate again in a few minutes.",
+		],
+		[
+			"engine_run_timed_out",
+			"The scheduling engine didn’t finish this week’s roster in time, so generating was stopped. Generate again; if it keeps failing, contact support.",
+		],
+		[
+			"redone_days_changed",
+			"The days this schedule redoes were published or started generating while it ran, so nothing changed. Generate it again, or delete it.",
+		],
 		[
 			"engine_http_503",
-			"The scheduling engine answered with an error (HTTP 503).",
+			"The scheduling engine returned an error, so nothing was generated. Generate again; if it keeps failing, contact support.",
+		],
+		[
+			"rule.soft_not_allowed",
+			"This scheduling engine can’t run a rule set to If possible yet. Set those rules to Must, then generate again.",
+		],
+		[
+			"rule.days_not_worked_together_not_supported",
+			"This scheduling engine can’t keep days off together yet. Remove the “Keep days off together” rule from this schedule, then generate again.",
 		],
 		["a_code_added_later", "This schedule couldn’t be generated."],
 	])(

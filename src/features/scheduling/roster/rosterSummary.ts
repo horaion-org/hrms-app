@@ -6,6 +6,7 @@ import {
 	type RosterStats,
 } from "@/features/scheduling/roster/roster";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
+import type { AssignmentList } from "@/features/scheduling/schedules/useScheduleAssignments";
 
 /** What the summary line reads: the roster's counts and its hours. */
 export type RosterFigures = RosterStats & { hours: number };
@@ -101,12 +102,13 @@ type IssueSource = {
 };
 
 /**
- * What "Issues n" counts, the one definition of that number: every roster
- * note the engine left (each conflict, each error message and each day's
- * message), every setup issue (each diagnostic), and one for starting
+ * Whether Issues has anything to list, so its week bar button shows: every
+ * roster note the engine left (each conflict, each error message and each
+ * day's message), every setup issue (each diagnostic), and one for starting
  * points that changed since generation, each day whose leave or cover the
- * roster marks, and each day a manager must decide. A note that only qualifies the
- * others ("these notes are from generation") is shown but not counted.
+ * roster marks, and each day a manager must decide. The number on the
+ * button is not this sum but the Must fix count (`issueCounts`), with the
+ * Could not be met count beside it.
  */
 export const ISSUE_SOURCES: ReadonlyArray<IssueSource> = [
 	{ key: "rosterNotes", count: ({ findings }) => findings?.roster ?? 0 },
@@ -123,7 +125,7 @@ export const ISSUE_SOURCES: ReadonlyArray<IssueSource> = [
 	{ key: "daysToDecide", count: ({ daysToDecide }) => daysToDecide },
 ];
 
-/** The Issues count: the sum of `ISSUE_SOURCES`. */
+/** How much Issues has to list: the sum of `ISSUE_SOURCES`; above zero, its button shows. */
 export const issueCount = (facts: IssueFacts): number =>
 	ISSUE_SOURCES.reduce((total, source) => total + source.count(facts), 0);
 
@@ -156,19 +158,23 @@ const flagsOf = (row: ScheduleAssignment): DayFlags => ({
 	leavesShiftShort: Boolean(row.uncoveredShift),
 });
 
+/** Orders roster rows by day, then by the member's name; a row with no member sorts first within its day. */
+export const byDayThenName = (
+	first: ScheduleAssignment,
+	second: ScheduleAssignment
+): number =>
+	first.day.localeCompare(second.day) ||
+	(first.member?.displayName ?? "").localeCompare(
+		second.member?.displayName ?? ""
+	);
+
 /** The days a manager must decide (a shift or the day off), by day and then by name. */
 export const daysToDecide = (
 	assignments: ReadonlyArray<ScheduleAssignment>
 ): Array<ScheduleAssignment> =>
 	assignments
 		.filter((row) => row.member && asksForDecision(flagsOf(row)))
-		.sort(
-			(first, second) =>
-				first.day.localeCompare(second.day) ||
-				(first.member?.displayName ?? "").localeCompare(
-					second.member?.displayName ?? ""
-				)
-		);
+		.sort(byDayThenName);
 
 /** The days the roster marks for leave or a shift left short, by day and then by name. */
 export const leaveAndCoverDays = (
@@ -176,24 +182,14 @@ export const leaveAndCoverDays = (
 ): Array<ScheduleAssignment> =>
 	assignments
 		.filter((row) => row.member && marksLeaveOrCover(flagsOf(row)))
-		.sort(
-			(first, second) =>
-				first.day.localeCompare(second.day) ||
-				(first.member?.displayName ?? "").localeCompare(
-					second.member?.displayName ?? ""
-				)
-		);
+		.sort(byDayThenName);
 
 /** The days changed by hand since generation, by day and then by name. */
 export const changedDays = (
 	assignments: ReadonlyArray<ScheduleAssignment>
 ): Array<ScheduleAssignment> =>
-	assignments
-		.filter((row) => row.lastChange && row.member)
-		.sort(
-			(first, second) =>
-				first.day.localeCompare(second.day) ||
-				(first.member?.displayName ?? "").localeCompare(
-					second.member?.displayName ?? ""
-				)
-		);
+	assignments.filter((row) => row.lastChange && row.member).sort(byDayThenName);
+
+/** Whether the roster, once read, has any day changed by hand since generation. */
+export const hasHandChanges = (assignments: AssignmentList): boolean =>
+	assignments.status === "ready" && changedDays(assignments.items).length > 0;

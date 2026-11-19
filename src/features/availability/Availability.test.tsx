@@ -23,6 +23,7 @@ import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 import {
 	MEMBER_WEEK_FIXTURES,
+	memberWeekFixture,
 	WEEKDAY_MORNINGS,
 	weeklyAvailabilityFixture,
 } from "@/features/availability/fixtures";
@@ -33,6 +34,7 @@ const WORKSPACE = "GET /api/v1/me/workspace";
 const MY_PROFILE = "GET /api/v1/companies/c-1/me/profile";
 const MINE_PATH = "/api/v1/companies/c-1/me/availability";
 const TEAM_PATH = "/api/v1/companies/c-1/availability";
+const MEMBERS_PATH = "/api/v1/companies/c-1/member-profiles";
 const READ = "work_availability:read";
 const UPDATE = "work_availability:update";
 
@@ -396,6 +398,92 @@ describe("Availability", () => {
 		).toEqual([]);
 	});
 
+	it.each([
+		["All branches", "all", ""],
+		["one Branch", "b-1", "&branchId=b-1"],
+	])(
+		"saves a row's week under %s, closing the editor, confirming it and showing the new hours",
+		async (_scope, branch, branchSearch) => {
+			const user = userEvent.setup();
+			const thisWeek = mondayOf(new Date());
+			const aishaWeek = `${MEMBERS_PATH}/m-aisha/availability/weeks/${thisWeek}`;
+			const savedAisha = memberWeekFixture({
+				membershipId: "m-aisha",
+				source: "OVERRIDE",
+				windows: [{ date: thisWeek, startTime: "10:00", endTime: "14:00" }],
+			});
+			const calls = stubApi({
+				...routes("FULL_TIME", {
+					status: 200,
+					body: envelope(companyWideWorkspace([READ, UPDATE])),
+				}),
+				// The list as it was, then as the save left it.
+				[`GET ${TEAM_PATH}`]: [
+					{
+						status: 200,
+						body: envelope({
+							weekStartMonday: thisWeek,
+							members: MEMBER_WEEK_FIXTURES,
+						}),
+					},
+					{
+						status: 200,
+						body: envelope({
+							weekStartMonday: thisWeek,
+							members: [savedAisha],
+						}),
+					},
+				],
+				[`PUT ${aishaWeek}`]: {
+					status: 200,
+					body: envelope({
+						membershipId: "m-aisha",
+						weekStartMonday: thisWeek,
+						days: weeklyAvailabilityFixture(WEEKDAY_MORNINGS).days,
+					}),
+				},
+			});
+			const opened = await open(`/availability?view=team&branch=${branch}`);
+			await user.click(
+				await screen.findByRole("button", {
+					name: "Edit Aisha Rahman’s availability",
+				})
+			);
+			const dialog = await screen.findByRole("dialog", {
+				name: "Edit availability",
+			});
+
+			await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+			// The save settles with its confirmation, the one the app's toast shows ("Availability saved.").
+			await waitFor(() => {
+				expect(
+					opened.queryClient
+						.getMutationCache()
+						.getAll()
+						.map((save) => [save.state.status, save.meta?.successMessage])
+				).toEqual([["success", "availability.saved"]]);
+			});
+			await waitFor(() => {
+				expect(
+					screen.queryByRole("dialog", { name: "Edit availability" })
+				).not.toBeInTheDocument();
+			});
+			expect(
+				await within(
+					screen.getByRole("table", { name: "Team availability" })
+				).findByText("10:00–14:00")
+			).toBeVisible();
+			// The header's scope is read before and after the save: no Branch under All branches.
+			const listSearch = `weekStartMonday=${thisWeek}${branchSearch}`;
+			expect(
+				calls
+					.filter((call) => call.path === TEAM_PATH)
+					.map((call) => call.search)
+			).toEqual([listSearch, listSearch]);
+		}
+	);
+
 	it("moves a week on, and back to this week, through the URL", async () => {
 		const user = userEvent.setup();
 		const calls = stubApi(routes("FULL_TIME", workspaceReply([READ])));
@@ -421,5 +509,121 @@ describe("Availability", () => {
 		await waitFor(() => {
 			expect(router.state.location.search).not.toHaveProperty("week");
 		});
+	});
+});
+
+/** Opens "Apply availability", chooses `name` and goes on to their week. */
+const applyFor = async (
+	user: ReturnType<typeof userEvent.setup>,
+	name: string
+): Promise<void> => {
+	await user.click(
+		await screen.findByRole("button", { name: "Apply availability" })
+	);
+	const step = await screen.findByRole("dialog", {
+		name: "Apply availability",
+	});
+	await user.click(within(step).getByRole("button", { name: "Employee" }));
+	// An option's name is the person's name, then the line that tells them apart.
+	await user.click(
+		await screen.findByRole("option", { name: new RegExp(`^${name}`) })
+	);
+	await user.click(within(step).getByRole("button", { name: "Continue" }));
+};
+
+describe("Availability: applying for someone", () => {
+	it("offers Apply on the Team tab to someone holding the update key", async () => {
+		stubApi(routes("FULL_TIME", workspaceReply([READ, UPDATE])));
+		await open("/availability");
+
+		expect(
+			await screen.findByRole("button", { name: "Apply availability" })
+		).toBeVisible();
+	});
+
+	it("does not offer Apply without the update key", async () => {
+		stubApi(routes("FULL_TIME", workspaceReply([READ])));
+		await open("/availability");
+
+		await screen.findByText("Aisha Rahman");
+		expect(
+			screen.queryByRole("button", { name: "Apply availability" })
+		).not.toBeInTheDocument();
+	});
+
+	it("does not offer Apply on a part-timer's own week", async () => {
+		stubApi(routes("PART_TIME", workspaceReply([READ, UPDATE])));
+		await open("/availability?view=mine");
+
+		await screen.findByRole("tab", { name: "My availability", selected: true });
+		expect(
+			screen.queryByRole("button", { name: "Apply availability" })
+		).not.toBeInTheDocument();
+	});
+
+	it("searches only the part-timers the person may set for", async () => {
+		const user = userEvent.setup();
+		stubApi(routes("FULL_TIME", workspaceReply([READ], [READ, UPDATE])));
+		await open("/availability");
+
+		await user.click(
+			await screen.findByRole("button", { name: "Apply availability" })
+		);
+		const step = await screen.findByRole("dialog", {
+			name: "Apply availability",
+		});
+		// Sales holds the update key; Faris is filed in Kitchen, which does not.
+		await user.click(within(step).getByRole("button", { name: "Employee" }));
+		expect(
+			(await screen.findAllByRole("option")).map((option) => option.textContent)
+		).toEqual(["Aisha Rahman Sales", "Cheryl Ng Sales"]);
+		await user.keyboard("{Escape}");
+		await user.type(
+			within(step).getByRole("searchbox", { name: "Search employees" }),
+			"Faris"
+		);
+		expect(
+			within(step).getByText("No one you may apply for matches this search.")
+		).toBeVisible();
+	});
+
+	it("opens the chosen part-timer's week and saves it as their row does", async () => {
+		const user = userEvent.setup();
+		const aishaWeek = `${MEMBERS_PATH}/m-aisha/availability/weeks/${mondayOf(new Date())}`;
+		const calls = stubApi({
+			...routes("FULL_TIME", workspaceReply([READ, UPDATE])),
+			[`PUT ${aishaWeek}`]: { status: 204 },
+		});
+		await open("/availability");
+
+		await applyFor(user, "Aisha Rahman");
+		const dialog = await screen.findByRole("dialog", {
+			name: "Edit availability",
+		});
+		expect(
+			within(dialog).getByRole("radio", { name: "This week only" })
+		).toBeChecked();
+		await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+		await waitFor(() => {
+			expect(
+				calls.filter((call) => call.method === "PUT").map((call) => call.path)
+			).toEqual([aishaWeek]);
+		});
+	});
+
+	it("applies for this week when the week shown has ended", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi(routes("FULL_TIME", workspaceReply([READ, UPDATE])));
+		await open(`/availability?week=${weekFromThis(-2)}`);
+
+		await applyFor(user, "Aisha Rahman");
+
+		expect(
+			await screen.findByRole("dialog", { name: "Edit availability" })
+		).toHaveTextContent(dayjs(mondayOf(new Date())).format("MMM D"));
+		expect(
+			calls.filter((call) => call.path === TEAM_PATH).map((call) => call.search)
+		).toContain(`weekStartMonday=${mondayOf(new Date())}&branchId=b-1`);
 	});
 });

@@ -29,11 +29,16 @@ import {
 	type ScheduleBody,
 } from "@/features/scheduling/schedules/api";
 import {
+	regenerableOncePublished,
+	regenerateSchedule,
+} from "@/features/scheduling/schedules/regeneration";
+import {
 	generatedScheduleFixture,
 	generationFindingsFixture,
 	generationFixture,
 	scheduleAssignmentsFixture,
 	scheduleFixture,
+	workedAroundLeaveFixture,
 } from "@/features/scheduling/schedules/fixtures";
 import {
 	CONSTRAINT_FIXTURES,
@@ -42,6 +47,8 @@ import {
 import {
 	decisionRefusal,
 	deleteRefusal,
+	datesGenerationRefusal,
+	datesRefusalText,
 	monthGenerationRefusal,
 	refusalOfCode,
 	withdrawalRefusal,
@@ -61,7 +68,6 @@ const BODY: ScheduleBody = {
 	name: "Front Office - Week 42",
 	periodStart: "2026-10-12",
 	includeLeave: true,
-	allowOpenShifts: false,
 	includedShiftIds: ["front-desk-am"],
 	includedConstraintIds: ["morning-cover"],
 };
@@ -171,6 +177,70 @@ describe("schedules client", () => {
 			`PUT ${SCHEDULES}/s-1`,
 		]);
 		expect(calls[1]?.body).toEqual(body);
+	});
+
+	it("reads a schedule's covered days, and the whole week from an API without them", async () => {
+		const part = { ...scheduleFixture(), coveredFrom: "2026-10-15" };
+		// Undefined is left out of the JSON reply, as an API without the fields sends it.
+		const older = {
+			...scheduleFixture(),
+			coveredFrom: undefined as never,
+			coveredTo: undefined as never,
+		};
+		stubApi({
+			[`GET ${SCHEDULES}/s-1`]: [
+				{ status: 200, body: envelope(part) },
+				{ status: 200, body: envelope(older) },
+			],
+		});
+
+		const read = await fetchSchedule("c-1", UNIT, "s-1");
+		const olderRead = await fetchSchedule("c-1", UNIT, "s-1");
+
+		expect([read.coveredFrom, read.coveredTo]).toEqual([
+			"2026-10-15",
+			"2026-10-18",
+		]);
+		expect([olderRead.coveredFrom, olderRead.coveredTo]).toEqual([
+			"2026-10-12",
+			"2026-10-18",
+		]);
+	});
+
+	it("reads a schedule's chosen people, and everyone (null) from an API without them", async () => {
+		const chosen = { ...scheduleFixture(), memberProfileIds: ["m-1", "m-2"] };
+		// Undefined is left out of the JSON reply, as an API without the field sends it.
+		const older = { ...scheduleFixture(), memberProfileIds: undefined };
+		stubApi({
+			[`GET ${SCHEDULES}/s-1`]: [
+				{ status: 200, body: envelope(chosen) },
+				{ status: 200, body: envelope(older) },
+			],
+		});
+
+		const read = await fetchSchedule("c-1", UNIT, "s-1");
+		const olderRead = await fetchSchedule("c-1", UNIT, "s-1");
+
+		expect(read.memberProfileIds).toEqual(["m-1", "m-2"]);
+		expect(olderRead.memberProfileIds).toBeNull();
+	});
+
+	it("sends a part's covered days when saving one", async () => {
+		const calls = stubApi({
+			[`POST ${SCHEDULES}`]: { status: 201, body: envelope(scheduleFixture()) },
+		});
+		const body = {
+			...BODY,
+			coveredFrom: "2026-10-15",
+			coveredTo: "2026-10-18",
+		};
+
+		await createSchedule("c-1", UNIT, body);
+
+		expect(calls[0]?.body).toMatchObject({
+			coveredFrom: "2026-10-15",
+			coveredTo: "2026-10-18",
+		});
 	});
 
 	it("parses a generated schedule with who asked for it", async () => {
@@ -319,6 +389,26 @@ describe("schedules client", () => {
 		);
 		expect(calls.map((call) => `${call.method} ${call.path}`)).toEqual([
 			`POST ${SCHEDULES}/s-1/approval`,
+		]);
+		expect(calls[0]?.body).toBeUndefined();
+	});
+
+	it("generates a withdrawn roster again through its own route, with no body", async () => {
+		const requested = generatedScheduleFixture({
+			status: "GENERATION_REQUESTED",
+		});
+		const calls = stubApi({
+			[`POST ${SCHEDULES}/s-1/regeneration`]: {
+				status: 200,
+				body: envelope(requested),
+			},
+		});
+
+		await expect(regenerateSchedule("c-1", UNIT, "s-1")).resolves.toEqual(
+			requested
+		);
+		expect(calls.map((call) => `${call.method} ${call.path}`)).toEqual([
+			`POST ${SCHEDULES}/s-1/regeneration`,
 		]);
 		expect(calls[0]?.body).toBeUndefined();
 	});
@@ -502,6 +592,40 @@ describe("a schedule's generation", () => {
 	});
 
 	it.each([
+		[
+			"a withdrawn roster",
+			generatedScheduleFixture({
+				status: "GENERATED",
+				publicationWithdrawnAt: "2026-10-13T09:00:00Z",
+			}),
+			true,
+		],
+		[
+			"a published roster",
+			generatedScheduleFixture({ status: "PUBLISHED" }),
+			false,
+		],
+		[
+			"a roster rejected after its publication was withdrawn",
+			generatedScheduleFixture({
+				status: "REJECTED",
+				publicationWithdrawnAt: "2026-10-13T09:00:00Z",
+			}),
+			true,
+		],
+		[
+			"a never-published roster",
+			generatedScheduleFixture({ status: "GENERATED" }),
+			false,
+		],
+	])(
+		"knows whether %s may be asked to generate again through its own route",
+		(_, schedule, expected) => {
+			expect(regenerableOncePublished(schedule)).toBe(expected);
+		}
+	);
+
+	it.each([
 		["a draft", scheduleFixture(), undefined],
 		["a requested schedule", generatedScheduleFixture(), undefined],
 		[
@@ -577,7 +701,6 @@ describe("a schedule's decision", () => {
 							stepLabels: ["Endorse", "Publish"],
 							submission,
 							rejectedAtStep: null,
-							waitingForWeek: null,
 						},
 					})
 				),
@@ -596,7 +719,6 @@ describe("a schedule's decision", () => {
 			stepLabels: ["Endorse", "Publish"],
 			submission,
 			rejectedAtStep: null,
-			waitingForWeek: null,
 		});
 		expect(
 			(await fetchSchedule("c-1", UNIT, "s-2")).publication.submission
@@ -615,7 +737,6 @@ describe("a schedule's decision", () => {
 							stepLabels: ["Endorse", "Publish"],
 							submission: null,
 							rejectedAtStep: { stepOrder: 2, stepLabel: "Publish" },
-							waitingForWeek: null,
 						},
 					})
 				),
@@ -637,42 +758,30 @@ describe("a schedule's decision", () => {
 		).toBeNull();
 	});
 
-	it("given_aHeldUpWeek_when_parsed_then_itsPublicationNamesTheWeekItWaitsFor_andNoneFromAnApiBeforeIt", async () => {
-		const waitingForWeek = {
-			periodStart: "2026-11-09",
-			periodEnd: "2026-11-15",
-		};
+	it("given_anApiStillSendingWaitingForWeek_when_parsed_then_itParsesAndTheFieldIsDropped", async () => {
 		stubApi({
 			[`GET ${SCHEDULES}/s-1`]: {
 				status: 200,
-				body: envelope(
-					generatedScheduleFixture({
-						status: "GENERATED",
-						publication: {
-							requiresApproval: false,
-							stepLabels: [],
-							submission: null,
-							rejectedAtStep: null,
-							waitingForWeek,
-						},
-					})
-				),
-			},
-			[`GET ${SCHEDULES}/s-2`]: {
-				status: 200,
 				body: envelope({
-					...generatedScheduleFixture({ scheduleId: "s-2" }),
-					publication: { requiresApproval: false, stepLabels: [] },
+					...generatedScheduleFixture({ status: "GENERATED" }),
+					publication: {
+						requiresApproval: false,
+						stepLabels: [],
+						submission: null,
+						rejectedAtStep: null,
+						// Always null since API ADR-0130; each schedule is published on its own.
+						waitingForWeek: null,
+					},
 				}),
 			},
 		});
 
-		expect(
-			(await fetchSchedule("c-1", UNIT, "s-1")).publication.waitingForWeek
-		).toEqual(waitingForWeek);
-		expect(
-			(await fetchSchedule("c-1", UNIT, "s-2")).publication.waitingForWeek
-		).toBeNull();
+		expect((await fetchSchedule("c-1", UNIT, "s-1")).publication).toEqual({
+			requiresApproval: false,
+			stepLabels: [],
+			submission: null,
+			rejectedAtStep: null,
+		});
 	});
 
 	it("reads a schedule from an API without decisions as undecided", async () => {
@@ -912,6 +1021,90 @@ describe("a schedule's roster", () => {
 		expect(olderApi?.member?.partTime).toBe(false);
 	});
 
+	it("reads a part-day leave's duration and times, and none from an older API", async () => {
+		const [first, second] = scheduleAssignmentsFixture() as [
+			ScheduleAssignment,
+			ScheduleAssignment,
+		];
+		stubApi({
+			[`GET ${SCHEDULES}/s-1/assignments`]: {
+				status: 200,
+				body: envelope([
+					{
+						...first,
+						leaveDurationName: "Morning",
+						leaveStartTime: "07:00",
+						leaveEndTime: "11:00",
+					},
+					second,
+				]),
+			},
+		});
+
+		const [partDay, olderApi] = await fetchScheduleAssignments(
+			"c-1",
+			UNIT,
+			"s-1"
+		);
+
+		expect(partDay).toMatchObject({
+			leaveDurationName: "Morning",
+			leaveStartTime: "07:00",
+			leaveEndTime: "11:00",
+		});
+		expect(olderApi?.leaveStartTime).toBeUndefined();
+	});
+
+	it("reads a shift kept around part-day leave: the time still worked and the part gap", async () => {
+		const [, second] = scheduleAssignmentsFixture() as [
+			ScheduleAssignment,
+			ScheduleAssignment,
+		];
+		stubApi({
+			[`GET ${SCHEDULES}/s-1/assignments`]: {
+				status: 200,
+				body: envelope([workedAroundLeaveFixture(), second]),
+			},
+		});
+
+		const [kept, olderApi] = await fetchScheduleAssignments("c-1", UNIT, "s-1");
+
+		expect(kept).toMatchObject({
+			workedTimes: [
+				{ start: "09:00", end: "11:00" },
+				{ start: "13:00", end: "15:00" },
+			],
+			uncoveredFrom: "11:00",
+			uncoveredTo: "13:00",
+		});
+		expect(olderApi?.workedTimes).toBeUndefined();
+	});
+
+	it("reads a stretched day's overtime stretch, and none from an older API", async () => {
+		const [first, second] = scheduleAssignmentsFixture() as [
+			ScheduleAssignment,
+			ScheduleAssignment,
+		];
+		stubApi({
+			[`GET ${SCHEDULES}/s-1/assignments`]: {
+				status: 200,
+				body: envelope([
+					{ ...first, stretch: { beforeMinutes: 0, afterMinutes: 120 } },
+					second,
+				]),
+			},
+		});
+
+		const [stretched, olderApi] = await fetchScheduleAssignments(
+			"c-1",
+			UNIT,
+			"s-1"
+		);
+
+		expect(stretched?.stretch).toEqual({ beforeMinutes: 0, afterMinutes: 120 });
+		expect(olderApi?.stretch).toBeUndefined();
+	});
+
 	it("reads the types a day can be made when not worked, and none from an older API", async () => {
 		stubApi({
 			[`GET ${SCHEDULES}/s-1`]: {
@@ -1028,7 +1221,11 @@ describe("schedule refusals", () => {
 		],
 		[
 			"SCHEDULE_ONCE_PUBLISHED",
-			"This roster was published once, so it can’t be regenerated. Change its days on the roster instead.",
+			"It was published once, so a month run leaves it as it is. Open it to generate it again or to change it by hand.",
+		],
+		[
+			"SCHEDULE_LATER_PART_PUBLISHED",
+			"A later schedule of this week is published, or was published and withdrawn, and it was worked out from these days, so this one can’t be generated again. Change its roster by hand, or choose these days on the Generate page.",
 		],
 	])(
 		"words a month week refused with %s in a week's own words",
@@ -1046,7 +1243,7 @@ describe("schedule refusals", () => {
 		[
 			"PUBLISHED_SCHEDULE_NOT_DELETABLE",
 			409,
-			"This schedule is published, so it can’t be deleted. Change its days on the roster instead.",
+			"These days are published, so they can’t be deleted. Change them on the roster instead.",
 		],
 		["SCHEDULE_NOT_FOUND", 404, "This schedule no longer exists."],
 		[
@@ -1097,6 +1294,103 @@ describe("schedule refusals", () => {
 		expect(monthGenerationRefusal(problem(status, code), t)).toBe(copy);
 	});
 
+	it("given_aWeekThatCannotBeGenerated_when_monthRefused_then_saysGoBackToSetup", () => {
+		expect(
+			monthGenerationRefusal(problem(400, "MONTH_WEEK_CANNOT_BE_GENERATED"), t)
+		).toBe(
+			"A week you ticked changed since Setup, so nothing was generated. It is now left out and named above; generate again, or go back to Setup to choose other weeks."
+		);
+	});
+
+	it.each([
+		[
+			400,
+			"SCHEDULE_DATES_INVALID",
+			/^These dates can’t be scheduled any more\. Go back to Setup/,
+		],
+		[
+			409,
+			"SCHEDULE_DAYS_ALL_TAKEN",
+			/^The days changed since Setup read them.*Go back to Setup/,
+		],
+		[
+			409,
+			"SCHEDULE_DAYS_BEFORE_ROSTER",
+			/^The days changed since Setup read them/,
+		],
+		[409, "SCHEDULE_WEEK_TAKEN", /^The days changed since Setup read them/],
+		[
+			409,
+			"SCHEDULE_DAYS_BEING_GENERATED",
+			/^The days changed since Setup read them/,
+		],
+		[403, "FORBIDDEN", /^You don’t have permission to generate schedules/],
+	])(
+		"words a %i %s dates generation refusal with what to do",
+		(status, code, copy) => {
+			expect(datesGenerationRefusal(problem(status, code), t)).toMatch(copy);
+		}
+	);
+
+	it("words the plan's refusals with their days and what to do", () => {
+		const days = { from: "2026-11-19", to: "2026-11-22" };
+
+		expect(
+			datesRefusalText(
+				{ code: "SCHEDULE_DAYS_ALL_TAKEN", days, scheduledDays: null },
+				t,
+				"en-GB"
+			)
+		).toBe(
+			"Every day from Thu 19 Nov to Sun 22 Nov has been published, so nothing would change. Choose a first day after Sun 22 Nov."
+		);
+		expect(
+			datesRefusalText(
+				{
+					code: "SCHEDULE_WEEK_TAKEN",
+					days,
+					scheduledDays: { from: "2026-11-18", to: "2026-11-20" },
+				},
+				t,
+				"en-GB"
+			)
+		).toMatch(
+			/^The week of 16\s?–\s?22 Nov 2026 has a schedule for 18\s?–\s?20 Nov 2026 with no roster yet\. Open it from the month page to generate it, or delete it, then choose these dates again\.$/
+		);
+	});
+
+	it("given_beforeRoster_when_worded_then_saysPublished", () => {
+		expect(
+			datesRefusalText(
+				{
+					code: "SCHEDULE_DAYS_BEFORE_ROSTER",
+					days: { from: "2026-11-19", to: "2026-11-22" },
+					scheduledDays: { from: "2026-11-23", to: "2026-11-29" },
+				},
+				t,
+				"en-GB"
+			)
+		).toMatch(
+			/^19\s?–\s?22 Nov 2026 come before 23\s?–\s?29 Nov 2026, which have been published and stay as they are\. Choose a first day after Sun 29 Nov\.$/
+		);
+	});
+
+	it("given_daysBeingGenerated_when_worded_then_saysWaitThenChooseAgain", () => {
+		expect(
+			datesRefusalText(
+				{
+					code: "SCHEDULE_DAYS_BEING_GENERATED",
+					days: { from: "2026-11-18", to: "2026-11-19" },
+					scheduledDays: null,
+				},
+				t,
+				"en-GB"
+			)
+		).toMatch(
+			/^18\s?–\s?19 Nov 2026 are being generated right now\. Wait until that finishes on the month page, then choose these dates again\.$/
+		);
+	});
+
 	it("falls back to a plain failure for a month generation", () => {
 		expect(monthGenerationRefusal(new Error("offline"), t)).toBe(
 			"We couldn’t generate the month. Try again."
@@ -1123,11 +1417,6 @@ describe("schedule refusals", () => {
 			"SCHEDULE_WEEK_ALREADY_PUBLISHED",
 			409,
 			"This department already has a published roster for this week. Only one roster can be published per week, so schedule a different week instead.",
-		],
-		[
-			"SCHEDULE_EARLIER_WEEK_UNPUBLISHED",
-			409,
-			"Publish the earlier week first. Weeks are published in order.",
 		],
 		["SCHEDULE_NOT_FOUND", 404, "This schedule no longer exists."],
 		[

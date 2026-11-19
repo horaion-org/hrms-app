@@ -21,6 +21,7 @@ import {
 	type ShiftRole,
 	type Weekday,
 } from "@/features/scheduling/shifts/api";
+import { shiftMinutes } from "@/features/scheduling/shifts/shiftHours";
 
 /*
  * A schedule being set up in the Create Schedule steps. The schedule exists
@@ -73,7 +74,6 @@ export type ScheduleSetup = {
 	/** The Monday the week-long period starts, as an ISO date. */
 	periodStart: string;
 	includeLeave: boolean;
-	allowOpenShifts: boolean;
 };
 
 /** People allocated to each job title of each shift, by shift id then job title id. */
@@ -125,41 +125,6 @@ export const emptyScheduleDraft = (): ScheduleDraft => ({
 	demand: {},
 });
 
-/** How long a shift lasts in minutes, counting past midnight. */
-export const shiftMinutes = (
-	shift: Pick<ScheduleShift, "startTime" | "endTime">
-): number => {
-	const length =
-		(minutesOfDay(shift.endTime) -
-			minutesOfDay(shift.startTime) +
-			MINUTES_PER_DAY) %
-		MINUTES_PER_DAY;
-	return length === 0 ? MINUTES_PER_DAY : length;
-};
-
-/** How long a shift lasts in hours, counting past midnight. */
-export const shiftHours = (
-	shift: Pick<ScheduleShift, "startTime" | "endTime">
-): number => shiftMinutes(shift) / 60;
-
-/** A shift's length less its unpaid break, in minutes. */
-export const paidShiftMinutes = (
-	shift: Pick<ScheduleShift, "startTime" | "endTime" | "unpaidBreakMinutes">
-): number => shiftMinutes(shift) - shift.unpaidBreakMinutes;
-
-/**
- * Minutes as hours to two places, as the roster export shows them. Sum the
- * minutes first and round the total once, so totals match the export and the
- * hours ledger.
- */
-export const hoursFromMinutes = (minutes: number): number =>
-	Math.round((minutes * 100) / 60) / 100;
-
-/** A shift's paid hours, to two places. */
-export const paidShiftHours = (
-	shift: Pick<ScheduleShift, "startTime" | "endTime" | "unpaidBreakMinutes">
-): number => hoursFromMinutes(paidShiftMinutes(shift));
-
 /** How many people a shift's role is allocated; none until set. */
 export const allocatedTo = (
 	allocations: Allocations,
@@ -176,10 +141,6 @@ export const allocatedStaff = (
 			total + allocatedTo(allocations, shift.shiftId, role.jobTitleId),
 		0
 	);
-
-/** Monday to Friday exactly, which reads better as "Weekdays". */
-export const isWeekdays = (days: Array<Weekday>): boolean =>
-	days.length === 5 && WEEKDAYS.slice(0, 5).every((day) => days.includes(day));
 
 /** The shifts the draft includes, in the list's order. */
 export const includedShifts = (
@@ -304,7 +265,6 @@ export const fromSchedule = (
 		name: schedule.name,
 		periodStart: schedule.periodStart,
 		includeLeave: schedule.includeLeave,
-		allowOpenShifts: schedule.allowOpenShifts,
 	},
 	saved: {
 		scheduleId: schedule.scheduleId,

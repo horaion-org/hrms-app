@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import type { TFunction } from "i18next";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import type { IsoDate } from "@/components/forms/Calendar";
 import type { BadgeTone } from "@/components/ui/Badge";
 import type { BulkAssignResult } from "@/features/skills/api";
@@ -17,8 +18,6 @@ export type ExpiryStatus =
 	| { kind: "EXPIRING"; daysLeft: number }
 	| { kind: "EXPIRED" }
 	| { kind: "MISSING" };
-
-const ISO_DATE = "YYYY-MM-DD";
 
 /**
  * Where a holding stands on `today`; undefined for a skill that does not
@@ -67,7 +66,10 @@ export const expiryBadge = (
  * months: the day before the same date that many months later.
  */
 export const prefillExpiry = (issuedOn: IsoDate, months: number): IsoDate =>
-	dayjs(issuedOn).add(months, "month").subtract(1, "day").format(ISO_DATE);
+	dayjs(issuedOn)
+		.add(months, "month")
+		.subtract(1, "day")
+		.format(ISO_DATE_FORMAT);
 
 /**
  * A person's skills best first: highest proficiency, then unrated skills

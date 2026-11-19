@@ -1,4 +1,5 @@
 import {
+	skipToken,
 	useMutation,
 	useQuery,
 	useQueryClient,
@@ -11,6 +12,7 @@ import {
 	revokeAccessRole,
 	setAccessRoleAssignmentStatus,
 	type AccessRoleGrant,
+	type AccessRoleHolder,
 	type UnitStatus,
 } from "@/features/organisation/api";
 import type { AccessRoleAssignmentRow } from "@/features/organisation/AccessRoleAssignments";
@@ -18,15 +20,21 @@ import { workspaceQuery } from "@/features/workspace/api";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
 
-/** Who holds an access role and where, as the rows the people table shows. */
+/**
+ * Who holds an access role and where, as the rows the people table shows.
+ * Asks for nothing while `accessRoleId` is empty, so a path is never sent
+ * without its role.
+ */
 export const useAccessRoleHolders = (
 	companyId: string,
 	accessRoleId: string
 ): UseQueryResult<Array<AccessRoleAssignmentRow>> =>
 	useQuery({
 		queryKey: ["organisation", companyId, "access-role-holders", accessRoleId],
-		queryFn: ({ signal }) =>
-			fetchAccessRoleHolders(companyId, accessRoleId, signal),
+		queryFn: accessRoleId
+			? ({ signal }): Promise<Array<AccessRoleHolder>> =>
+					fetchAccessRoleHolders(companyId, accessRoleId, signal)
+			: skipToken,
 		meta: administrativeMeta(companyId),
 		retry,
 		select: (holders) =>
@@ -90,7 +98,8 @@ export const firstFailure = (error: unknown): unknown =>
  * refusal of one never hides the outcome of the others: when every request
  * fails, the first refusal is thrown as it is; when only some do, a
  * `PartialChangeError` says how many. Either way the lists and the
- * workspace are reloaded, since the person may hold the role themselves.
+ * workspace are reloaded, since the person may hold the role themselves;
+ * the reload runs in the background, so it never holds the dialog.
  */
 export const useChangeAccessRoleHolders = (
 	companyId: string
@@ -122,10 +131,13 @@ export const useChangeAccessRoleHolders = (
 				failures,
 			});
 		},
-		onSettled: () =>
-			Promise.all([
-				client.invalidateQueries({ queryKey: ["organisation", companyId] }),
-				client.invalidateQueries({ queryKey: workspaceQuery.queryKey }),
-			]),
+		meta: {
+			successMessage: "organisation.accessRoles.assignments.toast.changed",
+		},
+		// Reloaded in the background: the change is done when the API answers.
+		onSettled: () => {
+			void client.invalidateQueries({ queryKey: ["organisation", companyId] });
+			void client.invalidateQueries({ queryKey: workspaceQuery.queryKey });
+		},
 	});
 };

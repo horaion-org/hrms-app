@@ -2,7 +2,10 @@ import type { TFunction } from "i18next";
 import { z } from "zod";
 import { ApiProblemError } from "@/common/problem";
 import { mapRefusal, type Refusal } from "@/common/refusal";
-import type { TermsFormValues } from "@/features/employmentTerms/termsForm";
+import {
+	RATE_BOUNDS_IN_TIMES,
+	type TermsFormValues,
+} from "@/features/employmentTerms/termsForm";
 
 /** The dialog's fields a refusal can point at. */
 export type TermsField = keyof Pick<
@@ -10,9 +13,12 @@ export type TermsField = keyof Pick<
 	| "name"
 	| "description"
 	| "daysPerWeek"
-	| "dayHours"
 	| "weekHours"
 	| "restWeekday"
+	| "overtimeTimes"
+	| "extraHoursPaidAs"
+	| "restDayTimes"
+	| "dayOffTimes"
 >;
 
 /** The refusal's `memberCount` extension. */
@@ -58,11 +64,28 @@ export const termsSaveRefusal = (
 				message: t(`${key}.descriptionLength`),
 			},
 			daysPerWeek: { field: "daysPerWeek", message: t(`${key}.daysInvalid`) },
-			dayMinutes: { field: "dayHours", message: t(`${key}.dayRejected`) },
 			weekMinutes: { field: "weekHours", message: t(`${key}.weekRejected`) },
 			restDay: { field: "restWeekday", message: t(`${key}.restDayRequired`) },
-			dailyOvertime: { field: "dayHours", message: t(`${key}.dailyNeedsDay`) },
-			shiftWork: { field: "dayHours", message: t(`${key}.shiftNoDaily`) },
+			dailyOvertime: {
+				field: "daysPerWeek",
+				message: t(`${key}.dailyNeedsDays`),
+			},
+			overtimePercent: {
+				field: "overtimeTimes",
+				message: t(`${key}.overtimeRateRejected`, RATE_BOUNDS_IN_TIMES),
+			},
+			extraHoursPaidAs: {
+				field: "extraHoursPaidAs",
+				message: t(`${key}.paidAsCovered`),
+			},
+			restDayWorkPercent: {
+				field: "restDayTimes",
+				message: t(`${key}.rateRange`, RATE_BOUNDS_IN_TIMES),
+			},
+			dayOffWorkPercent: {
+				field: "dayOffTimes",
+				message: t(`${key}.rateRange`, RATE_BOUNDS_IN_TIMES),
+			},
 		},
 		forbidden: t(`${key}.forbidden`),
 		failed: t(`${key}.failed`),

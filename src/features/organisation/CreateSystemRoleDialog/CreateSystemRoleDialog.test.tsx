@@ -74,11 +74,20 @@ const openDialog = async (): Promise<HTMLElement> => {
 	);
 	return screen.findByRole("dialog", { name: "Create access role" });
 };
-const box = (dialog: HTMLElement, group: string, name: string): HTMLElement =>
-	within(within(dialog).getByRole("group", { name: group })).getByRole(
-		"checkbox",
-		{ name }
-	);
+/** A permission's box in an area of the dialog, opening the area's Details first. */
+const box = async (
+	dialog: HTMLElement,
+	area: string,
+	name: string
+): Promise<HTMLElement> => {
+	const group = within(dialog).getByRole("group", { name: area });
+	const details = within(group).getByRole("button", { name: /^Details/ });
+	if (details.getAttribute("aria-expanded") === "false")
+		await userEvent.click(details);
+	return within(group).getByRole("checkbox", { name });
+};
+const levelSelects = (list: HTMLElement): Array<HTMLElement> =>
+	within(list).getAllByRole("button", { name: /^Level for / });
 const submit = (dialog: HTMLElement): Promise<void> =>
 	userEvent.click(
 		within(dialog).getByRole("button", { name: "Create access role" })
@@ -116,8 +125,7 @@ describe("create access role through the Access roles page", () => {
 		for (const choice of within(typeField(dialog)).getAllByRole("radio"))
 			expect(choice).not.toBeChecked();
 		const list = within(dialog).getByRole("group", { name: "Permissions" });
-		for (const item of within(list).getAllByRole("checkbox"))
-			expect(item).toBeDisabled();
+		for (const item of levelSelects(list)) expect(item).toBeDisabled();
 		expect(
 			within(dialog).getByText(
 				"Choose where this role can be used to see the permissions it can hold."
@@ -133,9 +141,9 @@ describe("create access role through the Access roles page", () => {
 		).toHaveAccessibleDescription(
 			"You pick the places when you give someone the role."
 		);
-		expect(box(dialog, "Branches", "See branches")).toBeEnabled();
+		expect(await box(dialog, "Organisation", "See branches")).toBeEnabled();
 		expect(
-			within(dialog).queryByRole("group", { name: "Company" })
+			within(dialog).queryByRole("group", { name: "Company details" })
 		).not.toBeInTheDocument();
 	});
 
@@ -163,12 +171,9 @@ describe("create access role through the Access roles page", () => {
 		const dialog = await openDialog();
 		await chooseType(dialog, "Across the whole company");
 		const list = within(dialog).getByRole("group", { name: "Permissions" });
-		// One box per key, plus each resource's own.
-		expect(within(list).getAllByRole("checkbox")).toHaveLength(
-			PERMISSION_KEYS.length + 23
-		);
-		for (const item of within(list).getAllByRole("checkbox"))
-			expect(item).toBeEnabled();
+		// One level per menu area, Settings' included.
+		expect(levelSelects(list)).toHaveLength(14);
+		for (const item of levelSelects(list)) expect(item).toBeEnabled();
 		expect(
 			within(dialog).getByText("Choose at least 1 permission.")
 		).toBeVisible();
@@ -179,9 +184,11 @@ describe("create access role through the Access roles page", () => {
 		await open();
 		const dialog = await openDialog();
 		await chooseType(dialog, "Across the whole company");
-		expect(box(dialog, "Branches", "See branches")).toBeEnabled();
-		expect(box(dialog, "Branches", "Edit branches")).toBeDisabled();
-		expect(box(dialog, "Access roles", "Create access roles")).toBeEnabled();
+		expect(await box(dialog, "Organisation", "See branches")).toBeEnabled();
+		expect(await box(dialog, "Organisation", "Edit branches")).toBeDisabled();
+		expect(
+			await box(dialog, "Access roles", "Create access roles")
+		).toBeEnabled();
 		expect(
 			within(dialog).getByText(
 				"Choose at least 1 permission. You can only grant permissions you hold."
@@ -200,10 +207,14 @@ describe("create access role through the Access roles page", () => {
 			await within(dialog).findByText("Choose at least one permission.")
 		).toBeVisible();
 		await waitFor(() => {
-			// The first box of the list: the People section comes first.
-			expect(box(dialog, "People", "People")).toHaveFocus();
+			// The list's first control: the Dashboard area comes first.
+			expect(
+				within(dialog).getByRole("button", { name: "Level for Dashboard" })
+			).toHaveFocus();
 		});
-		await userEvent.click(box(dialog, "Activity", "See the activity record"));
+		await userEvent.click(
+			await box(dialog, "Organisation", "See the activity record")
+		);
 		await waitFor(() => {
 			expect(
 				within(dialog).queryByText("Choose at least one permission.")
@@ -231,6 +242,7 @@ describe("create access role through the Access roles page", () => {
 			"roster_planner",
 			"department_manager",
 			"leave_approver",
+			"executive",
 			"viewer",
 			"scratch",
 		]);
@@ -251,7 +263,7 @@ describe("create access role through the Access roles page", () => {
 		expect(within(dialog).getByLabelText("Role name")).toHaveValue(
 			"Leave approver"
 		);
-		expect(box(dialog, "Leave", "Approve or reject leave")).toBeChecked();
+		expect(await box(dialog, "Leave", "Approve or reject leave")).toBeChecked();
 		await submit(dialog);
 		await waitFor(() => {
 			expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -297,9 +309,11 @@ describe("create access role through the Access roles page", () => {
 			)
 		).toBeVisible();
 		expect(
-			box(dialog, "People", "See people and their profiles")
+			await box(dialog, "People", "See people and their profiles")
 		).toBeChecked();
-		expect(box(dialog, "Leave", "Approve or reject leave")).not.toBeChecked();
+		expect(
+			await box(dialog, "Leave", "Approve or reject leave")
+		).not.toBeChecked();
 
 		await userEvent.click(
 			within(templates).getByRole("radio", { name: "Start from scratch" })
@@ -307,7 +321,7 @@ describe("create access role through the Access roles page", () => {
 
 		expect(within(dialog).getByLabelText("Role name")).toHaveValue("");
 		expect(
-			box(dialog, "People", "See people and their profiles")
+			await box(dialog, "People", "See people and their profiles")
 		).not.toBeChecked();
 		expect(
 			within(dialog).queryByText(/weren’t added because/)
@@ -327,8 +341,8 @@ describe("create access role through the Access roles page", () => {
 			"  Branch manager "
 		);
 		// Edit needs View, so ticking it ticks both.
-		await userEvent.click(box(dialog, "Branches", "Edit branches"));
-		expect(box(dialog, "Branches", "See branches")).toBeChecked();
+		await userEvent.click(await box(dialog, "Organisation", "Edit branches"));
+		expect(await box(dialog, "Organisation", "See branches")).toBeChecked();
 		expect(within(dialog).getByText("2 selected")).toBeVisible();
 		await submit(dialog);
 		await waitFor(() => {
@@ -352,8 +366,10 @@ describe("create access role through the Access roles page", () => {
 		const dialog = await openDialog();
 		await chooseType(dialog, "Across the whole company");
 		// Create needs View, so both are chosen.
-		await userEvent.click(box(dialog, "Branches", "Create branches"));
-		await userEvent.click(box(dialog, "Activity", "See the activity record"));
+		await userEvent.click(await box(dialog, "Organisation", "Create branches"));
+		await userEvent.click(
+			await box(dialog, "Organisation", "See the activity record")
+		);
 
 		await chooseType(dialog, "In the branches or departments you choose");
 
@@ -362,7 +378,7 @@ describe("create access role through the Access roles page", () => {
 				"A role for chosen places can’t hold company-wide permissions, so “Create branches” and “See the activity record” were removed."
 			)
 		).toBeVisible();
-		expect(box(dialog, "Branches", "See branches")).toBeChecked();
+		expect(await box(dialog, "Organisation", "See branches")).toBeChecked();
 		expect(within(dialog).getByText("1 selected")).toBeVisible();
 	});
 
@@ -375,7 +391,7 @@ describe("create access role through the Access roles page", () => {
 		const dialog = await openDialog();
 		await chooseType(dialog, "In the branches or departments you choose");
 		await userEvent.type(within(dialog).getByLabelText("Role name"), "Manager");
-		await userEvent.click(box(dialog, "Branches", "See branches"));
+		await userEvent.click(await box(dialog, "Organisation", "See branches"));
 		await submit(dialog);
 
 		expect(
@@ -398,7 +414,7 @@ describe("create access role through the Access roles page", () => {
 		const dialog = await openDialog();
 		await chooseType(dialog, "In the branches or departments you choose");
 		await userEvent.type(within(dialog).getByLabelText("Role name"), "Manager");
-		await userEvent.click(box(dialog, "Branches", "See branches"));
+		await userEvent.click(await box(dialog, "Organisation", "See branches"));
 		await submit(dialog);
 		expect(
 			await within(dialog).findByText(
@@ -435,14 +451,14 @@ describe("create access role through the Access roles page", () => {
 				within(dialog).getByLabelText("Role name"),
 				"Manager"
 			);
-			await userEvent.click(box(dialog, "Branches", "See branches"));
+			await userEvent.click(await box(dialog, "Organisation", "See branches"));
 			await submit(dialog);
 			const alert = await within(dialog).findByText(String(message));
 			expect(alert).toHaveAttribute("role", "alert");
 			await waitFor(() => {
 				expect(alert).toHaveFocus();
 			});
-			expect(box(dialog, "Branches", "See branches")).toBeChecked();
+			expect(await box(dialog, "Organisation", "See branches")).toBeChecked();
 		}
 	);
 });

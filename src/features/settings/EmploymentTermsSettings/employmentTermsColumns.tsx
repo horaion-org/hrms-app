@@ -4,9 +4,15 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import type { DataTableColumn } from "@/components/ui/DataTable";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
-import type { TermsOverviewItem } from "@/features/employmentTerms/api";
-import { restShort, weekShort } from "@/features/employmentTerms/summary";
-import { actionsColumn, nameColumn } from "@/features/organisation/listColumns";
+import type {
+	TermsOverviewItem,
+	TermsPresets,
+} from "@/features/employmentTerms/api";
+import {
+	isPartTimeWeek,
+	termsSentence,
+} from "@/features/employmentTerms/summary";
+import { actionsColumn } from "@/features/organisation/listColumns";
 import { ALL_BRANCHES } from "@/features/workspace/unitSelection";
 
 const key = "employmentTerms.panel";
@@ -18,8 +24,8 @@ export type TermsRowAction = {
 };
 
 export type EmploymentTermsColumnsOptions = {
-	/** The locale the working week is written in. */
-	language: string;
+	/** The API's figures and common weeks, to name each terms' kind and when overtime starts; undefined until loaded. */
+	presets: TermsPresets | undefined;
 	/** Whether the reader may change terms (`employment_terms:update`); without it there are no row actions. */
 	canUpdate: boolean;
 	/** Whether each count links to the People list (people and their terms readable company-wide). */
@@ -43,16 +49,50 @@ const statusCell = (terms: TermsOverviewItem, t: TFunction): ReactNode => (
 );
 
 /**
- * The employment terms list's columns: the terms with their description, the
- * working week and rest, how many people hold them (and are scheduled onto
- * them), the status, and, for someone who may change terms, the row actions
- * (Edit, and a menu to change the start date, make default, activate or
- * deactivate, or delete terms nobody holds).
+ * The terms in full, as a sentence (the approved design's list): the name
+ * with a pill for part-time or for terms outside the Act's hour rules, the
+ * terms' sentence with its overtime rate, then the description.
+ */
+const termsCell = (
+	terms: TermsOverviewItem,
+	presets: TermsPresets | undefined,
+	t: TFunction
+): ReactNode => {
+	const partTime = isPartTimeWeek(
+		terms.weekMinutes,
+		presets?.partTimeBelowMinutes ?? null
+	);
+	return (
+		<span className="flex flex-col gap-1">
+			<span className="flex flex-wrap items-center gap-2">
+				{terms.name}
+				{partTime && <Badge>{t("employmentTerms.dialog.partTimeBadge")}</Badge>}
+				{!terms.hoursLimitsApply && <Badge>{t(`${key}.notCovered`)}</Badge>}
+			</span>
+			<span className="font-normal text-neutral-900">
+				{termsSentence(terms, presets, t)}
+			</span>
+			{terms.description && (
+				<span className="font-normal text-neutral-700">
+					{terms.description}
+				</span>
+			)}
+		</span>
+	);
+};
+
+/**
+ * The employment terms list's columns, few so they fit beside the Settings
+ * menu: the terms in full (kind, week, rest day, overtime, description), how
+ * many people hold them (and are scheduled onto them), the status, and, for
+ * someone who may change terms, the row actions (Edit, and a menu to change
+ * the start date, make default, activate or deactivate, or delete terms
+ * nobody holds). On a phone the people and status read on the name's line.
  */
 export const employmentTermsColumns = (
 	t: TFunction,
 	{
-		language,
+		presets,
 		canUpdate,
 		canListHolders,
 		onEdit,
@@ -60,24 +100,23 @@ export const employmentTermsColumns = (
 		onRowAction,
 	}: EmploymentTermsColumnsOptions
 ): Array<DataTableColumn<TermsOverviewItem>> => [
-	nameColumn<TermsOverviewItem>(
-		t(`${key}.terms`),
-		(terms) => terms.description
-	),
 	{
-		id: "week",
-		header: t(`${key}.week`),
-		cell: (terms) => (
-			<>
-				<span className="block">{weekShort(terms, t, language)}</span>
-				<span className="block text-neutral-700">{restShort(terms, t)}</span>
-			</>
-		),
+		id: "name",
+		header: t(`${key}.terms`),
+		cell: (terms) => termsCell(terms, presets, t),
+		sortValue: (terms) => terms.name,
+		cellClassName: "font-semibold",
+		pin: "start",
 	},
 	{
 		id: "people",
 		header: t(`${key}.people`),
+		// The terms column takes the room; the counts, status and actions keep to their content.
+		// A sortable header needs its text plus about 70 px (padding, gap and the sort button at
+		// its touch size): 144 px holds "Personas" (about 64 px), the wider of English and Spanish.
+		headerClassName: "w-36",
 		sortValue: (terms) => terms.holderCount,
+		hideBelow: "md",
 		cell: (terms) => (
 			<>
 				{canListHolders && terms.holderCount > 0 ? (
@@ -111,61 +150,68 @@ export const employmentTermsColumns = (
 	{
 		id: "status",
 		header: t("organisation.list.status"),
-		headerClassName: "w-40",
+		// 176 px holds the widest pill, Spanish "Predeterminadas" (about 136 px with its padding), with room
+		// to spare; Active and Default share a line where they fit and wrap where they do not.
+		headerClassName: "w-44",
 		sortValue: (terms) => terms.status,
 		cell: (terms) => statusCell(terms, t),
+		hideBelow: "md",
 	},
 	...(canUpdate
 		? [
-				actionsColumn<TermsOverviewItem>(
-					t,
-					(terms) => (
-						<>
-							<OverflowMenuItem
-								disabled={terms.status !== "ACTIVE"}
-								onClick={() => {
-									onChangeFromDate(terms);
-								}}
-							>
-								{t(`${key}.menu.changeFromDate`)}
-							</OverflowMenuItem>
-							<OverflowMenuItem
-								disabled={terms.isDefault || terms.status !== "ACTIVE"}
-								onClick={() => {
-									onRowAction({ kind: "default", terms });
-								}}
-							>
-								{t(`${key}.menu.makeDefault`)}
-							</OverflowMenuItem>
-							<OverflowMenuItem
-								disabled={terms.isDefault || terms.status === "UNKNOWN"}
-								onClick={() => {
-									onRowAction({ kind: "status", terms });
-								}}
-							>
-								{t(
-									terms.status === "INACTIVE"
-										? "organisation.list.activateItem"
-										: "organisation.list.deactivateItem"
-								)}
-							</OverflowMenuItem>
-							{terms.holderCount + terms.scheduledCount === 0 &&
-								!terms.isDefault && (
-									<OverflowMenuItem
-										onClick={() => {
-											onRowAction({ kind: "delete", terms });
-										}}
-									>
-										{t("organisation.list.deleteItem")}
-									</OverflowMenuItem>
-								)}
-						</>
+				{
+					...actionsColumn<TermsOverviewItem>(
+						t,
+						(terms) => (
+							<>
+								<OverflowMenuItem
+									disabled={terms.status !== "ACTIVE"}
+									onClick={() => {
+										onChangeFromDate(terms);
+									}}
+								>
+									{t(`${key}.menu.changeFromDate`)}
+								</OverflowMenuItem>
+								<OverflowMenuItem
+									disabled={terms.isDefault || terms.status !== "ACTIVE"}
+									onClick={() => {
+										onRowAction({ kind: "default", terms });
+									}}
+								>
+									{t(`${key}.menu.makeDefault`)}
+								</OverflowMenuItem>
+								<OverflowMenuItem
+									disabled={terms.isDefault || terms.status === "UNKNOWN"}
+									onClick={() => {
+										onRowAction({ kind: "status", terms });
+									}}
+								>
+									{t(
+										terms.status === "INACTIVE"
+											? "organisation.list.activateItem"
+											: "organisation.list.deactivateItem"
+									)}
+								</OverflowMenuItem>
+								{terms.holderCount + terms.scheduledCount === 0 &&
+									!terms.isDefault && (
+										<OverflowMenuItem
+											onClick={() => {
+												onRowAction({ kind: "delete", terms });
+											}}
+										>
+											{t("organisation.list.deleteItem")}
+										</OverflowMenuItem>
+									)}
+							</>
+						),
+						(terms) => terms.status !== "UNKNOWN",
+						(terms) => {
+							onEdit(terms);
+						}
 					),
-					(terms) => terms.status !== "UNKNOWN",
-					(terms) => {
-						onEdit(terms);
-					}
-				),
+					// Two icons need less than the shared 140 px.
+					headerClassName: "w-24",
+				},
 			]
 		: []),
 ];

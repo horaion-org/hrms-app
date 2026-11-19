@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import { OrganisationCheckPanel } from "@/features/organisation/OrganisationCheckPanel";
 import type { OrganisationCheck } from "@/features/organisation/import/api";
+import "@/common/i18n";
 
 const check: OrganisationCheck = {
 	totalRows: 4,

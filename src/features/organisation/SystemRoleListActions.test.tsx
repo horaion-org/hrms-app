@@ -25,6 +25,7 @@ import { renderAuthApp } from "@/features/auth/testing";
 import { PERMISSION_KEYS } from "@/features/workspace/permissionKeys";
 
 const ROLES = "GET /api/v1/companies/c-1/access-roles";
+const PEOPLE = "GET /api/v1/companies/c-1/member-profiles";
 const ROLE_PATH = "/api/v1/companies/c-1/access-roles/r-2";
 const HOLDERS = `GET ${ROLE_PATH}/access-role-assignments`;
 const ASSIGNMENT_PATH = "/api/v1/companies/c-1/access-role-assignments/a-2";
@@ -41,6 +42,38 @@ const role = (
 	permissions: ["branch:read", "department:read"],
 	holderCount: 2,
 	...overrides,
+});
+
+/** The System Admin role as the API lists it: built in, company-wide, every key but the owner-only one. */
+const systemAdmin = (): Record<string, unknown> =>
+	role({
+		name: "System Admin",
+		protectedRole: true,
+		protectedRoleType: "SYSTEM_ADMIN",
+		kind: "COMPANY",
+		permissions: PERMISSION_KEYS.filter(
+			(key) => key !== "access_role:assign_system_admin"
+		),
+	});
+
+/** An active person as the People list returns them, filed at Orchard › Kitchen. */
+const activePerson = (
+	membershipId: string,
+	displayName: string
+): Record<string, unknown> => ({
+	membershipId,
+	employeeCode: `EMP-${membershipId}`,
+	displayName,
+	email: `${membershipId}@example.com`,
+	phone: null,
+	branchId: "b-1",
+	branchName: "Orchard",
+	departmentId: "d-1",
+	departmentName: "Kitchen",
+	jobTitleId: null,
+	jobTitleName: null,
+	status: "ACTIVE",
+	invitationPending: false,
 });
 
 // The person testing is `m-c-1`, so the first holder is them.
@@ -87,7 +120,6 @@ const routes = (
 	[`DELETE ${ROLE_PATH}`]: { status: 204 },
 	[`DELETE ${ASSIGNMENT_PATH}`]: { status: 204 },
 });
-
 
 let app: OpenedApp | undefined;
 beforeEach(() => {
@@ -136,10 +168,17 @@ describe("Access role list actions", () => {
 			within(menu)
 				.getAllByRole("menuitem")
 				.map((item) => item.textContent)
-		).toEqual(["View", "Duplicate", "Deactivate", "Delete"]);
-		// A role somebody holds can't be deleted.
+		).toEqual([
+			"View",
+			"Duplicate",
+			"Deactivate",
+			"Delete: remove it from the people who hold it first",
+		]);
+		// A role somebody holds can't be deleted, and the item says why.
 		expect(
-			within(menu).getByRole("menuitem", { name: "Delete" })
+			within(menu).getByRole("menuitem", {
+				name: "Delete: remove it from the people who hold it first",
+			})
 		).toHaveAttribute("aria-disabled", "true");
 	});
 
@@ -236,6 +275,34 @@ describe("Access role list actions", () => {
 		expect(calls.some((call) => call.method === "PUT")).toBe(false);
 	});
 
+	it("won't offer Delete for a role given as default access, and says why", async () => {
+		stubApi({
+			...routes(role({ holderCount: 0 })),
+			"GET /api/v1/companies/c-1/default-access-rules": {
+				status: 200,
+				body: envelope([
+					{
+						defaultAccessRuleId: "d-1",
+						accessRoleId: "r-2",
+						setAt: "COMPANY",
+						branchId: null,
+						departmentId: null,
+						appliesTo: "OWN_BRANCH",
+					},
+				]),
+			},
+		});
+		const menu = await openMenu();
+
+		await waitFor(() => {
+			expect(
+				within(menu).getByRole("menuitem", {
+					name: "Delete: remove it from Default access first",
+				})
+			).toHaveAttribute("aria-disabled", "true");
+		});
+	});
+
 	it("deletes a role nobody holds after asking, and explains a refusal", async () => {
 		const calls = stubApi({
 			...routes(role({ holderCount: 0 })),
@@ -282,14 +349,17 @@ describe("Access role list actions", () => {
 		expect(
 			within(dialog).queryByRole("radiogroup", { name: "Start from" })
 		).not.toBeInTheDocument();
-		const box = (group: string, name: string): HTMLElement =>
-			within(within(dialog).getByRole("group", { name: group })).getByRole(
-				"checkbox",
-				{ name }
-			);
-		expect(box("Branches", "See branches")).toBeChecked();
-		expect(box("Departments", "See departments")).toBeChecked();
-		expect(box("Branches", "Edit branches")).not.toBeChecked();
+		const organisation = within(dialog).getByRole("group", {
+			name: "Organisation",
+		});
+		await userEvent.click(
+			within(organisation).getByRole("button", { name: /^Details/ })
+		);
+		const box = (name: string): HTMLElement =>
+			within(organisation).getByRole("checkbox", { name });
+		expect(box("See branches")).toBeChecked();
+		expect(box("See departments")).toBeChecked();
+		expect(box("Edit branches")).not.toBeChecked();
 	});
 
 	it("duplicates a company role as a company role, keeping its company-only permissions", async () => {
@@ -309,11 +379,14 @@ describe("Access role list actions", () => {
 		expect(
 			within(dialog).getByRole("radio", { name: "Across the whole company" })
 		).toBeChecked();
+		const organisation = within(dialog).getByRole("group", {
+			name: "Organisation",
+		});
+		await userEvent.click(
+			within(organisation).getByRole("button", { name: /^Details/ })
+		);
 		expect(
-			within(within(dialog).getByRole("group", { name: "Branches" })).getByRole(
-				"checkbox",
-				{ name: "Create branches" }
-			)
+			within(organisation).getByRole("checkbox", { name: "Create branches" })
 		).toBeChecked();
 		await userEvent.click(
 			within(dialog).getByRole("button", { name: "Create access role" })
@@ -349,12 +422,12 @@ describe("Access role people", () => {
 				status: 200,
 				body: envelope({ content: [], page: { totalElements: 0 } }),
 			},
-			"GET /api/v1/companies/c-1/me/colleagues": {
+			[PEOPLE]: {
 				status: 200,
 				body: envelope({ content: [], page: { totalElements: 0 } }),
 			},
 		});
-		app = await openApp("/settings/access-roles/r-2");
+		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
 		await userEvent.click(
@@ -393,7 +466,7 @@ describe("Access role people", () => {
 			...routes(),
 			[`PUT ${ASSIGNMENT_PATH}`]: { status: 200, body: envelope({}) },
 		});
-		app = await openApp("/settings/access-roles/r-2");
+		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
 		await userEvent.click(
@@ -423,7 +496,7 @@ describe("Access role people", () => {
 
 	it("removes the role from one person everywhere from More actions, after asking", async () => {
 		const calls = stubApi(routes());
-		app = await openApp("/settings/access-roles/r-2");
+		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
 		await userEvent.click(
@@ -450,7 +523,7 @@ describe("Access role people", () => {
 
 	it("marks an inactive role and offers no assigning while it is switched off", async () => {
 		stubApi(routes(role({ status: "INACTIVE" })));
-		app = await openApp("/settings/access-roles/r-2");
+		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
 		expect(
@@ -459,6 +532,60 @@ describe("Access role people", () => {
 			)
 		).toBeVisible();
 		expect(screen.getByText("Inactive")).toBeVisible();
+		expect(
+			screen.queryByRole("button", { name: "Assign role" })
+		).not.toBeInTheDocument();
+	});
+
+	it("shows the holders read-only to a reader who can't assign, saying who can", async () => {
+		stubApi(
+			routes(role(), ["access_role:read", "branch:read", "department:read"])
+		);
+		app = await openApp("/settings/access-roles/r-2?tab=people");
+		renderAuthApp(app);
+
+		expect(
+			await screen.findByText(
+				"Only the System Owner or a System Admin can give, change or remove access roles."
+			)
+		).toBeVisible();
+		expect(
+			screen.queryByRole("button", { name: "Assign role" })
+		).not.toBeInTheDocument();
+	});
+
+	it("lets the System Owner give the System Admin role", async () => {
+		stubApi(routes(systemAdmin()));
+		app = await openApp("/settings/access-roles/r-2?tab=people");
+		renderAuthApp(app);
+
+		expect(
+			await screen.findByRole("button", { name: "Assign role" })
+		).toBeVisible();
+		expect(
+			screen.queryByText(
+				"Only the System Owner can give or remove the System Admin role."
+			)
+		).not.toBeInTheDocument();
+	});
+
+	it("shows a System Admin the System Admin role's holders read-only, saying only the System Owner can change them", async () => {
+		stubApi(
+			routes(
+				systemAdmin(),
+				PERMISSION_KEYS.filter(
+					(key) => key !== "access_role:assign_system_admin"
+				)
+			)
+		);
+		app = await openApp("/settings/access-roles/r-2?tab=people");
+		renderAuthApp(app);
+
+		expect(
+			await screen.findByText(
+				"Only the System Owner can give or remove the System Admin role."
+			)
+		).toBeVisible();
 		expect(
 			screen.queryByRole("button", { name: "Assign role" })
 		).not.toBeInTheDocument();
@@ -507,7 +634,6 @@ const spreadHolders = [
 	},
 ];
 
-const COLLEAGUES = "GET /api/v1/companies/c-1/me/colleagues";
 const ASSIGNMENTS = "/access-role-assignments";
 
 describe("Access role people, checked at each assignment's own place", () => {
@@ -515,12 +641,12 @@ describe("Access role people, checked at each assignment's own place", () => {
 		stubApi({
 			...routes(),
 			"GET /api/v1/me/workspace": kitchenAssigner(),
-			[COLLEAGUES]: {
+			[PEOPLE]: {
 				status: 200,
 				body: envelope({ content: [], page: { totalElements: 0 } }),
 			},
 		});
-		app = await openApp("/settings/access-roles/r-2");
+		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
 		await userEvent.click(
@@ -538,17 +664,15 @@ describe("Access role people, checked at each assignment's own place", () => {
 		const calls = stubApi({
 			...routes(role({ permissions: ["department:read"] })),
 			"GET /api/v1/me/workspace": kitchenAssigner(),
-			[COLLEAGUES]: {
+			[PEOPLE]: {
 				status: 200,
 				body: envelope({
-					content: [
-						{ membershipId: "m-5", displayName: "Alice Lim", status: "ACTIVE" },
-					],
+					content: [activePerson("m-5", "Alice Lim")],
 					page: { totalElements: 1 },
 				}),
 			},
 		});
-		app = await openApp("/settings/access-roles/r-2");
+		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
 		await userEvent.click(
@@ -564,10 +688,10 @@ describe("Access role people, checked at each assignment's own place", () => {
 		await userEvent.click(within(dialog).getByLabelText("Person"));
 		expect(
 			await screen.findByRole("option", { name: "Alice Lim" })
-		).toBeVisible();
+		).toHaveTextContent("Orchard › Kitchen");
 
-		// Recipients come from the colleagues directory; places never need the unit lists.
-		expect(calls.some((call) => call.path.endsWith("/me/colleagues"))).toBe(
+		// Recipients come from the People list; places never need the unit lists.
+		expect(calls.some((call) => call.path.endsWith("/member-profiles"))).toBe(
 			true
 		);
 		expect(
@@ -584,12 +708,12 @@ describe("Access role people, checked at each assignment's own place", () => {
 			...routes(),
 			"GET /api/v1/me/workspace": kitchenAssigner(),
 			[HOLDERS]: { status: 200, body: envelope(spreadHolders) },
-			[COLLEAGUES]: {
+			[PEOPLE]: {
 				status: 200,
 				body: envelope({ content: [], page: { totalElements: 0 } }),
 			},
 		});
-		app = await openApp("/settings/access-roles/r-2");
+		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
 		// Priya holds it company-wide, out of reach: nothing on her row can be changed.
@@ -623,13 +747,35 @@ describe("Access role people, checked at each assignment's own place", () => {
 		expect(calls.some((call) => call.path.endsWith("/a-3"))).toBe(false);
 	});
 
+	it("names the places when only some can be removed", async () => {
+		stubApi({
+			...routes(),
+			"GET /api/v1/me/workspace": kitchenAssigner(),
+			[HOLDERS]: { status: 200, body: envelope(spreadHolders) },
+		});
+		app = await openApp("/settings/access-roles/r-2?tab=people");
+		renderAuthApp(app);
+
+		await userEvent.click(
+			await screen.findByRole("button", { name: "More actions for Daniel Tan" })
+		);
+		await userEvent.click(screen.getByRole("menuitem", { name: "Delete" }));
+		const dialog = await screen.findByRole("dialog", {
+			name: "Remove Daniel Tan from this role",
+		});
+
+		expect(dialog).toHaveTextContent(
+			"Daniel Tan will no longer have the Manager role at Orchard › Kitchen. Places you can’t change keep it. This takes effect immediately."
+		);
+	});
+
 	it("removes a grouped person only where the person may assign", async () => {
 		const calls = stubApi({
 			...routes(),
 			"GET /api/v1/me/workspace": kitchenAssigner(),
 			[HOLDERS]: { status: 200, body: envelope(spreadHolders) },
 		});
-		app = await openApp("/settings/access-roles/r-2");
+		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
 		await userEvent.click(
@@ -656,7 +802,7 @@ describe("Access role people, checked at each assignment's own place", () => {
 	it("says how many changes failed when only some did, keeping the dialog open (F12)", async () => {
 		const calls = stubApi({
 			...routes(),
-			[COLLEAGUES]: {
+			[PEOPLE]: {
 				status: 200,
 				body: envelope({ content: [], page: { totalElements: 0 } }),
 			},
@@ -665,7 +811,7 @@ describe("Access role people, checked at each assignment's own place", () => {
 				"AUTHORIZATION_DENIED"
 			),
 		});
-		app = await openApp("/settings/access-roles/r-2");
+		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
 		await userEvent.click(
@@ -718,16 +864,16 @@ describe("Company roles and access previews in the assign dialog", () => {
 		kind: "COMPANY",
 		permissions: ["branch:read", "branch:create"],
 	});
-	const noColleagues = {
-		[COLLEAGUES]: {
+	const noPeople = {
+		[PEOPLE]: {
 			status: 200,
 			body: envelope({ content: [], page: { totalElements: 0 } }),
 		},
 	};
 
 	it("offers a company role only at the whole company", async () => {
-		stubApi({ ...routes(companyRole), ...noColleagues });
-		app = await openApp("/settings/access-roles/r-2");
+		stubApi({ ...routes(companyRole), ...noPeople });
+		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
 		await userEvent.click(
@@ -744,10 +890,10 @@ describe("Company roles and access previews in the assign dialog", () => {
 	it("says a company role can't be given by someone who can't assign at the whole company", async () => {
 		stubApi({
 			...routes(companyRole),
-			...noColleagues,
+			...noPeople,
 			"GET /api/v1/me/workspace": kitchenAssigner(),
 		});
-		app = await openApp("/settings/access-roles/r-2");
+		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
 		await userEvent.click(
@@ -776,7 +922,7 @@ describe("Company roles and access previews in the assign dialog", () => {
 				"ACCESS_ROLE_KIND_CONFLICT"
 			),
 		});
-		app = await openApp("/settings/access-roles/r-2");
+		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
 		await userEvent.click(
@@ -807,7 +953,7 @@ describe("Company roles and access previews in the assign dialog", () => {
 		});
 		const calls = stubApi({
 			...routes(manager),
-			...noColleagues,
+			...noPeople,
 			[ROLES]: {
 				status: 200,
 				body: envelope({
@@ -835,7 +981,7 @@ describe("Company roles and access previews in the assign dialog", () => {
 				]),
 			},
 		});
-		app = await openApp("/settings/access-roles/r-2");
+		app = await openApp("/settings/access-roles/r-2?tab=people");
 		renderAuthApp(app);
 
 		await userEvent.click(

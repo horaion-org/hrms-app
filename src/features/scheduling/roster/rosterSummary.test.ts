@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { rosterFromAssignments } from "@/features/scheduling/roster/roster";
+import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 import { scheduleAssignmentsFixture } from "@/features/scheduling/schedules/fixtures";
 import {
+	byDayThenName,
 	changedDays,
+	hasHandChanges,
 	daysToDecide,
 	issueCount,
 	leaveAndCoverDays,
@@ -174,6 +177,72 @@ describe("changedDays", () => {
 			"2026-10-13 Aisha Rahman",
 			"2026-10-13 Ben Ong",
 			"2026-10-13 Chen Wei",
+		]);
+	});
+});
+
+describe("hasHandChanges", () => {
+	const [first, ...rest] = scheduleAssignmentsFixture();
+	const handChanged = [
+		{
+			...first!,
+			lastChange: {
+				changeId: "rc-1",
+				appliedAt: "2026-10-10T09:00:00Z",
+				appliedBy: null,
+				remark: null,
+				before: {
+					kind: "OFF" as const,
+					dayType: "OFF",
+					shift: null,
+					jobTitle: null,
+				},
+			},
+		},
+		...rest,
+	];
+
+	it.each([
+		["a roster still loading", { status: "pending" } as const, false],
+		["a roster as generated", { status: "ready", items: rest } as const, false],
+		[
+			"a roster with a day changed by hand",
+			{ status: "ready", items: handChanged } as const,
+			true,
+		],
+	])("reads %s", (_case, assignments, expected) => {
+		expect(hasHandChanges(assignments)).toBe(expected);
+	});
+});
+
+describe("byDayThenName", () => {
+	/** The fixture's first row, moved to `day` and given to `name`; null leaves it without a member. */
+	const rowOf = (day: string, name: string | null): ScheduleAssignment => {
+		const row = scheduleAssignmentsFixture()[0]!;
+		return {
+			...row,
+			day,
+			member: name === null ? null : { ...row.member!, displayName: name },
+		};
+	};
+
+	it("orders rows by day, then by name, a row without a member first within its day", () => {
+		const rows = [
+			rowOf("2026-10-13", "Aisha Rahman"),
+			rowOf("2026-10-12", "Chen Wei"),
+			rowOf("2026-10-12", null),
+			rowOf("2026-10-12", "Ben Ong"),
+		];
+
+		expect(
+			[...rows]
+				.sort(byDayThenName)
+				.map((row) => `${row.day} ${row.member?.displayName ?? "-"}`)
+		).toEqual([
+			"2026-10-12 -",
+			"2026-10-12 Ben Ong",
+			"2026-10-12 Chen Wei",
+			"2026-10-13 Aisha Rahman",
 		]);
 	});
 });

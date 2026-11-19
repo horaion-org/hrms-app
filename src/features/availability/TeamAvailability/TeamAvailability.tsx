@@ -4,12 +4,10 @@ import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { EditIcon } from "@/components/ui/Icon";
+import { WeekGrid, type WeekGridRowData } from "@/components/ui/WeekGrid";
 import type { MemberWeek } from "@/features/availability/api";
 import { windowsByDay } from "@/features/availability/availabilityModel";
-import {
-	WeekGrid,
-	type WeekGridRowData,
-} from "@/features/availability/WeekGrid";
+import { availabilityCells } from "@/features/availability/WeekGrid/availabilityCells";
 
 export type TeamAvailabilityProps = {
 	/** The Branch's part-timers for the week, as the API listed them. */
@@ -82,7 +80,7 @@ export const TeamAvailability = ({
 		.sort((a, b) => a.displayName.localeCompare(b.displayName, i18n.language))
 		.map((member) => ({
 			id: member.membershipId,
-			days: windowsByDay(member.windows),
+			days: availabilityCells(windowsByDay(member.windows)),
 			heading: (
 				<MemberHeading member={member} showDepartment={showDepartment} />
 			),

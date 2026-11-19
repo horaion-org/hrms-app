@@ -5,6 +5,7 @@ import {
 	constraintFixture,
 } from "@/features/scheduling/constraints/fixtures";
 import {
+	constraintsNamingJobTitle,
 	constraintsNamingShift,
 	deleteCopy,
 	draftsUsing,
@@ -73,6 +74,56 @@ describe("constraintsNamingShift", () => {
 		];
 
 		expect(constraintsNamingShift(constraints, "late")).toBe(1);
+	});
+
+	it("given_aBannedPatternNamingTheShiftOnItsSecondDay_when_counted_then_itCounts", () => {
+		const pattern = constraintFixture({
+			constraintId: "e",
+			name: "No late after a night",
+			type: "BANNED_SHIFT_PATTERN",
+			values: [
+				{ field: "PATTERN_DAY_1", value: "night", name: "Night" },
+				{ field: "PATTERN_DAY_2", value: "late", name: "Late" },
+			],
+		});
+
+		expect(constraintsNamingShift([pattern], "late")).toBe(1);
+		expect(constraintsNamingShift([pattern], "early")).toBe(0);
+	});
+});
+
+describe("constraintsNamingJobTitle", () => {
+	it("given_constraints_when_counted_then_countsDepartmentRowsCountingOrStandingInWithTheTitle", () => {
+		const lead = { field: "JOB_TITLE" as const, value: "lead", name: "Lead" };
+		const constraints = [
+			constraintFixture({
+				constraintId: "a",
+				name: "Counts lead",
+				type: "SHIFT_STAFFING",
+				values: [lead],
+			}),
+			constraintFixture({
+				constraintId: "b",
+				name: "Lead stands in",
+				type: "SHIFT_STAFFING_WITH_STAND_INS",
+				values: [{ ...lead, field: "STAND_IN_JOB_TITLE" }],
+			}),
+			constraintFixture({
+				constraintId: "c",
+				name: "Plain value",
+				type: "REST_BETWEEN_SHIFTS",
+				values: [{ field: "REST_HOURS", value: "lead", name: null }],
+			}),
+			companyConstraintFixture({
+				constraintId: "d",
+				name: "Company lead",
+				type: "SHIFT_STAFFING",
+				lock: "LOCKED",
+				values: [lead],
+			}),
+		];
+
+		expect(constraintsNamingJobTitle(constraints, "lead")).toBe(2);
 	});
 });
 
@@ -153,10 +204,10 @@ describe("deleteCopy", () => {
 
 	it("given_constraintsNamingTheShift_when_deleting_then_addsThatTheyStopApplying", () => {
 		expect(deleteCopy(t, "shift", "Late", "Bar", 0, 1).description).toBe(
-			"It's removed from Bar. Generated and published schedules keep their copy. 1 constraint names this shift; it will stop applying to it."
+			"It's removed from Bar. Generated and published schedules keep their copy. 1 constraint names this shift and will need attention."
 		);
 		expect(deleteCopy(t, "shift", "Late", "Bar", 0, 2).description).toBe(
-			"It's removed from Bar. Generated and published schedules keep their copy. 2 constraints name this shift; they'll stop applying to it."
+			"It's removed from Bar. Generated and published schedules keep their copy. 2 constraints name this shift and will need attention."
 		);
 		expect(deleteCopy(t, "shift", "Late", "Bar", 0, 0)).toEqual({
 			title: "Delete Late?",

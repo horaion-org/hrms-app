@@ -31,13 +31,11 @@ export const PROFILE_REFUSAL_CODES = {
 	/** The name belongs to a login the person also uses in another company. */
 	identityShared: "409 IDENTITY_SHARED_ACROSS_COMPANIES",
 	selfDeactivation: "409 CANNOT_DEACTIVATE_SELF",
-	ownerDeactivation: "409 COMPANY_OWNER_CANNOT_BE_DEACTIVATED",
+	ownerDeactivation: "409 SYSTEM_OWNER_CANNOT_BE_DEACTIVATED",
 	/** The person was chosen as their own manager. */
 	reportsToSelf: "400 REPORTS_TO_SELF",
 	/** An inactive person can't be moved to another Department while they stay inactive. */
 	inactiveMove: "400 INVALID_DEPARTMENT_MEMBER",
-	/** Moving or deactivating them would leave their Department without a head. */
-	lastDepartmentHead: "409 LAST_ACTIVE_DEPARTMENT_HEAD",
 	/** Nobody, or nobody the person may see. */
 	profileNotFound: "404 MEMBER_PROFILE_NOT_FOUND",
 	invitationNotPending: "409 INVITATION_NOT_PENDING",
@@ -79,7 +77,6 @@ export const profileRefusal = (
 	const department = field("departmentId", t(`${key}.departmentUnavailable`));
 	const jobTitle = field("jobTitleId", t(`${key}.jobTitleUnavailable`));
 	const rejected = t(`${key}.rejected`);
-	const lastHead = t(`${key}.lastDepartmentHead`);
 	return mapRefusal<ProfileField>(error, {
 		codes: {
 			"409 MEMBER_EMAIL_ALREADY_REGISTERED": field(
@@ -95,6 +92,11 @@ export const profileRefusal = (
 			"400 JOB_TITLE_REQUIRES_DEPARTMENT": field(
 				"jobTitleId",
 				t(`${key}.jobTitleNeedsDepartment`)
+			),
+			// Full-time or part-time follows the terms (Part 3); only Contract or Intern is stored.
+			"400 EMPLOYMENT_TYPE_FOLLOWS_TERMS": field(
+				"employmentType",
+				t(`${key}.employmentTypeFollowsTerms`)
 			),
 			"404 REPORTS_TO_NOT_FOUND": {
 				...field("reportsTo", t(`${key}.managerUnavailable`)),
@@ -113,16 +115,12 @@ export const profileRefusal = (
 				),
 				[codes.reportsToSelf]: field("reportsTo", t(`${key}.managerSelf`)),
 				[codes.inactiveMove]: field("departmentId", t(`${key}.inactiveMove`)),
-				...(edit.departmentChanged && {
-					[codes.lastDepartmentHead]: field("departmentId", lastHead),
-				}),
 			}),
 		},
 		alerts: {
 			"400 IDENTITY_REJECTED": t(`${key}.identityRejected`),
 			[codes.rateLimited]: t("auth.retryHold.later"),
 			...(edit && {
-				[codes.lastDepartmentHead]: lastHead,
 				[codes.profileNotFound]: t(`${key}.profileMissing`),
 				[codes.invitationNotDelivered]: t(`${key}.invitationNotDelivered`),
 			}),
@@ -160,7 +158,6 @@ export const profileActionRefusal = (error: unknown, t: TFunction): string =>
 		alerts: {
 			[codes.selfDeactivation]: t("people.form.selfDeactivation"),
 			[codes.ownerDeactivation]: t("people.form.ownerDeactivation"),
-			[codes.lastDepartmentHead]: t("people.form.lastDepartmentHead"),
 			[codes.invitationNotPending]: t("people.profile.invitationNotPending"),
 			[codes.invitationNotDelivered]: t("people.form.invitationNotDelivered"),
 			[codes.profileNotFound]: t("people.form.profileMissing"),

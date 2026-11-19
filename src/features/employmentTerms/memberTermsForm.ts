@@ -90,6 +90,39 @@ export const memberTermsBodyOf = (
 	contractedDayMinutes: minutesOf(values.ownDay),
 });
 
+/** The entry someone is on on a day: the latest one starting on or before it, scheduled ones included. */
+const entryOn = (
+	history: ReadonlyArray<HistoryEntry>,
+	date: string
+): HistoryEntry | undefined =>
+	history
+		.filter((entry) => entry.effectiveFrom <= date)
+		.reduce<HistoryEntry | undefined>(
+			(latest, entry) =>
+				latest === undefined || entry.effectiveFrom > latest.effectiveFrom
+					? entry
+					: latest,
+			undefined
+		);
+
+/**
+ * Whether a change would leave someone as they are: from its start date
+ * they already hold the same terms with the same own hours, whether from
+ * an entry in force or a change already scheduled.
+ */
+export const alreadyHeldFrom = (
+	history: ReadonlyArray<HistoryEntry>,
+	change: MemberTermsBody
+): boolean => {
+	const held = entryOn(history, change.effectiveFrom);
+	return (
+		held !== undefined &&
+		held.termsId === change.employmentTermsId &&
+		held.contractedWeekMinutes === change.contractedWeekMinutes &&
+		held.contractedDayMinutes === change.contractedDayMinutes
+	);
+};
+
 const key = "employmentTerms.change";
 
 /** Why a day breaks the rule, in the app's words. */
@@ -103,16 +136,20 @@ const startProblem = (rule: StartRule, date: string, t: TFunction): string => {
 /**
  * Mirrors the API's rules for one person's terms: terms and a start are
  * chosen, a later change starts on a Monday, and their own hours are
- * whole minutes no more than the terms'.
+ * whole minutes no more than the terms'. A change that leaves them as they
+ * are from that date is refused at the terms (`alreadyHeldFrom`).
  */
 export const memberTermsFormSchema = (
 	t: TFunction,
 	{
 		termsOf,
 		startRule,
+		history,
 	}: {
 		termsOf: (termsId: string) => EmploymentTerms | undefined;
 		startRule: StartRule;
+		/** Their history, to refuse a change that changes nothing; empty when correcting an entry. */
+		history: ReadonlyArray<HistoryEntry>;
 	}
 ): z.ZodType<MemberTermsFormValues, MemberTermsFormValues> =>
 	z
@@ -137,6 +174,12 @@ export const memberTermsFormSchema = (
 					"effectiveFrom",
 					startProblem(startRule, values.effectiveFrom, t)
 				);
+			if (
+				values.termsId !== "" &&
+				values.effectiveFrom !== "" &&
+				alreadyHeldFrom(history, memberTermsBodyOf(values))
+			)
+				problem("termsId", t(`${key}.alreadyHeld`));
 			const terms = termsOf(values.termsId);
 			const own = (
 				field: "ownWeek" | "ownDay",

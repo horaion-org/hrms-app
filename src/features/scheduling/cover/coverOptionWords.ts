@@ -5,7 +5,11 @@ import type {
 	CoverOption,
 	CoverUnavailableReason,
 } from "@/features/scheduling/cover/api";
-import { formatTimeRange } from "@/features/scheduling/formatShift";
+import type {
+	CoverEngineNote,
+	CoverOrder,
+} from "@/features/scheduling/cover/coverWithEngine";
+import { formatTimeRange } from "@/features/scheduling/shifts/formatShift";
 import type { ScheduleShift } from "@/features/scheduling/schedules/api";
 
 /*
@@ -38,7 +42,9 @@ export type CoverNames = {
 
 /** The shift's roles as one phrase: "Front Desk Staff or Front Desk Lead". */
 const jobTitlesOf = (shift: CoverShift | undefined, t: TFunction): string =>
-	(shift?.roles ?? []).map((role) => role.name).join(t(`${key}.jobTitlesOr`));
+	t("scheduling.constraints.listOr", {
+		items: (shift?.roles ?? []).map((role) => role.name),
+	});
 
 /**
  * What is short: "Front Desk AM · Sat, Oct 17 · 09:00 – 15:00 · Front Desk
@@ -148,7 +154,10 @@ export const neighbourLine = (
 	});
 	return shifts.length === 0
 		? t(`${key}.noNeighbours`, { name })
-		: t(`${key}.neighbours`, { name, shifts: shifts.join(t(`${key}.and`)) });
+		: t(`${key}.neighbours`, {
+				name,
+				shifts: t("scheduling.constraints.list", { items: shifts }),
+			});
 };
 
 /** Why someone can't cover the shift, in a few words. */
@@ -157,3 +166,28 @@ export const reasonText = (
 	shift: CoverShift | undefined,
 	t: TFunction
 ): string => t(`${key}.reason.${reason}`, { jobTitles: jobTitlesOf(shift, t) });
+
+/**
+ * What the list's order means, as the line under "Who covers": before the
+ * engine has answered, also what the order does not check.
+ */
+export const coverOrderNote = (order: CoverOrder, t: TFunction): string =>
+	t(`${key}.withEngine.order.${order}`);
+
+/**
+ * Where each of the engine's notes on a card is worded. The two the engine
+ * also gives as reasons keep their sentence from "Why nobody was assigned".
+ */
+const ENGINE_NOTE_KEYS = {
+	fills: "scheduling.cover.withEngine.note.fills",
+	couldTake: "scheduling.cover.withEngine.note.couldTake",
+	notConsidered: "scheduling.cover.withEngine.note.notConsidered",
+	notCheckedInTime: "scheduling.cover.engine.whyNot.reason.not_checked",
+	partTimeNoShift: "scheduling.cover.engine.whyNot.reason.no_shift_part_time",
+} as const satisfies Record<CoverEngineNote, string>;
+
+/** The line the engine's answer adds to someone's card; none before the engine has answered. */
+export const engineNoteLines = (
+	note: CoverEngineNote | undefined,
+	t: TFunction
+): Array<string> => (note === undefined ? [] : [t(ENGINE_NOTE_KEYS[note])]);

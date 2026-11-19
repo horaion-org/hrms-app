@@ -17,7 +17,32 @@ export type Entries = Record<string, Record<string, CellValue>>;
 /** How the Generate step speaks of the week before. */
 export type PreviousWeek =
 	| { kind: "none" }
-	| { kind: "carried"; periodStart: string; uncovered: number };
+	| {
+			kind: "carried";
+			periodStart: string;
+			uncovered: number;
+			/** The days of a roster part shorter than its week, which carries over instead of a whole week. */
+			days?: { from: string; to: string };
+	  };
+
+/** What "Before this week" says is unknown: nothing, only this week's days, only the week before, or both. */
+export type UnknownBefore =
+	"nothing" | "daysOfThisWeek" | "weekBefore" | "both";
+
+/**
+ * What is unknown before a run's first generated day, from this week's days
+ * still unknown and whether a roster covers the day before the first of them
+ * (before the first generated day when none is unknown): an earlier part of
+ * this week, or the week before. Pure.
+ */
+export const unknownBeforeOf = (
+	unknownDays: ReadonlyArray<string>,
+	rosterBefore: PreviousWeek
+): UnknownBefore => {
+	const rostered = rosterBefore.kind === "carried";
+	if (unknownDays.length === 0) return rostered ? "nothing" : "weekBefore";
+	return rostered ? "daysOfThisWeek" : "both";
+};
 
 /** How the dialog splits the days before the period: the nearer week, and any earlier days. */
 export type SplitDays = { earlier: Array<string>; nearer: Array<string> };
@@ -27,6 +52,12 @@ const OFF_PREFIX = "off:";
 
 /** The days nearest the period the dialog shows first. */
 export const NEARER_DAYS = 7;
+
+/** Whether a Select's value is a cell value: not known, a day off or a shift. */
+export const isCellValue = (value: string): value is CellValue =>
+	value === "" ||
+	value.startsWith(OFF_PREFIX) ||
+	value.startsWith(SHIFT_PREFIX);
 
 /** The value a cell holds when it names the shift worked. */
 export const shiftCellValue = (shiftId: string): CellValue =>
@@ -185,4 +216,23 @@ export const runsByMember = (context: StartingContext): Map<string, number> =>
 				? [[memberProfileId, consecutiveWorkingDays] as const]
 				: []
 		)
+	);
+
+/**
+ * The dates of `days` someone has no known value on, in date order: a cell
+ * that is neither locked (a roster or leave covers it) nor known. The days
+ * nobody answered for a week's rest day.
+ */
+export const unansweredDays = (
+	week: StartingDays,
+	days: { from: string; to: string }
+): Array<string> =>
+	week.days.filter(
+		(date) =>
+			date >= days.from &&
+			date <= days.to &&
+			week.members.some((member) => {
+				const cell = cellOn(member, date);
+				return cell !== undefined && !cell.locked && cell.kind === null;
+			})
 	);

@@ -5,6 +5,7 @@ import { App } from "@/App";
 import { queryClient } from "@/common/query-client";
 import { connectSession } from "@/features/auth/connectSession";
 import { connectAccess } from "@/features/workspace/connectAccess";
+import { PageLoading } from "@/pages/PageLoading";
 import { routeTree } from "@/routeTree.gen";
 import "@/styles/tailwind.css";
 import "@/common/i18n";
@@ -16,6 +17,8 @@ const router = createRouter({
 	defaultPreload: "intent",
 	// TanStack Query owns freshness, so the router always calls the loader and lets the cache decide.
 	defaultPreloadStaleTime: 0,
+	// Shown when a route's loader takes a while, e.g. a read waiting out an access update.
+	defaultPendingComponent: PageLoading,
 });
 
 connectSession(router, queryClient);

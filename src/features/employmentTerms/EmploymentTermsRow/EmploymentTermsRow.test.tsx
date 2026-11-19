@@ -94,6 +94,19 @@ const CHANGER = workspaceReply(
 	["member_employment_terms:read", "member_employment_terms:update"]
 );
 
+/** A changer who may also edit the profile, so Edit profile opens with Change…. */
+const EDITOR = workspaceReply(
+	["member_profile:read", "employment_terms:read"],
+	[
+		"member_profile:update",
+		"member_employment_terms:read",
+		"member_employment_terms:update",
+	]
+);
+
+/** Edit profile, where terms are changed. */
+const EDITING = "/people/m-1?edit=true";
+
 const routes = (
 	workspace: StubReply,
 	terms: StubReply | Array<StubReply> = {
@@ -142,7 +155,7 @@ const open = async (entry = "/people/m-1"): Promise<HTMLElement> => {
 };
 
 describe("A person's employment terms", () => {
-	it("read in plain words, since when, with the change ahead and a link to the terms", async () => {
+	it("read in short, since when, with the change ahead and a link to the terms", async () => {
 		stubApi(routes(CHANGER));
 		const card = await open();
 
@@ -153,12 +166,69 @@ describe("A person's employment terms", () => {
 			"href",
 			"/settings?section=employment&terms=terms-six-day-shift"
 		);
+		// The kind beside the name, then the week in a few words; the full sentence lives in Settings.
+		// given_terms_when_shown_then_noShiftWorkPill: shift work is gone (API ADR-0124).
+		expect(within(card).queryByText("Shift work")).toBeNull();
 		expect(card).toHaveTextContent(
-			"Works 6 days a week in shifts of up to 12 hours."
+			"44 h over 6 days · Roster picks the rest day · Since 1 Mar 2025"
 		);
-		expect(card).toHaveTextContent("Since 1 Mar 2025");
-		expect(card).toHaveTextContent("From 4 Jan 2027: Five-day week, 44 h");
-		expect(within(card).getByRole("button", { name: "Change…" })).toBeVisible();
+		expect(card).not.toHaveTextContent("Full-time, 6 days a week");
+		expect(card).toHaveTextContent(
+			"Changes to Five-day week, 44 h from 4 Jan 2027."
+		);
+		// Read, terms are only shown: they are changed under Edit profile.
+		expect(within(card).queryByRole("button", { name: "Change…" })).toBeNull();
+		expect(within(card).getByRole("button", { name: "History" })).toBeVisible();
+	});
+
+	it("given_anyTerms_when_shown_then_noMismatchCallout", async () => {
+		// An API before full-time or part-time followed the terms still sends a mismatch: it is not shown.
+		stubApi(
+			routes(CHANGER, {
+				status: 200,
+				body: envelope({
+					...MEMBER_TERMS,
+					mismatch: { employmentType: "PART_TIME", effectiveWeekMinutes: 2640 },
+				}),
+			})
+		);
+		const card = await open();
+
+		await within(card).findByRole("button", { name: "History" });
+		expect(card).not.toHaveTextContent("Their employment type");
+		expect(within(card).queryByRole("note")).toBeNull();
+	});
+
+	it("offer Change… under Edit profile, with the change ahead said there too", async () => {
+		stubApi(routes(EDITOR));
+		const card = await open(EDITING);
+
+		expect(
+			await within(card).findByRole("button", { name: "Change…" })
+		).toBeVisible();
+		expect(card).toHaveTextContent(
+			"Changes to Five-day week, 44 h from 4 Jan 2027."
+		);
+	});
+
+	it("show History read-only when read, with no correction or cancelling", async () => {
+		const user = userEvent.setup();
+		stubApi(routes(CHANGER));
+		const card = await open();
+
+		await user.click(
+			await within(card).findByRole("button", { name: "History" })
+		);
+		const history = await screen.findByRole("dialog", {
+			name: "Employment terms history",
+		});
+		expect(history).toHaveTextContent("Five-day week, 44 h");
+		expect(
+			within(history).queryByRole("button", { name: /^Correct the entry/ })
+		).toBeNull();
+		expect(
+			within(history).queryByRole("button", { name: /^Cancel the change/ })
+		).toBeNull();
 	});
 
 	it("are read-only without member_employment_terms:update", async () => {
@@ -199,7 +269,6 @@ describe("A person's employment terms", () => {
 		).toHaveTextContent("Standard week");
 		expect(card).toHaveTextContent("Since 3 Jun 2024");
 		expect(card).not.toHaveTextContent(/\(default\)|Not set for them/);
-		expect(within(card).getByRole("button", { name: "Change…" })).toBeVisible();
 
 		await user.click(within(card).getByRole("button", { name: "History" }));
 		const history = await screen.findByRole("dialog", {
@@ -229,14 +298,16 @@ describe("A person's employment terms", () => {
 		const card = await open();
 
 		expect(
-			await within(card).findByText(/From 4 Jan 2027: Five-day week, 44 h/)
+			await within(card).findByText(
+				"Changes to Five-day week, 44 h from 4 Jan 2027."
+			)
 		).toBeVisible();
 		expect(card).not.toHaveTextContent("Part-time, 20 h");
 	});
 
-	it("change from a Monday, with their own hours, and warn of a mismatch", async () => {
+	it("change from a Monday, with contracted hours, and no employment type mismatch", async () => {
 		const calls = stubApi(
-			routes(CHANGER, undefined, {
+			routes(EDITOR, undefined, {
 				[`POST ${MEMBER_TERMS_PATH}`]: {
 					status: 201,
 					body: envelope(MEMBER_TERMS),
@@ -244,7 +315,7 @@ describe("A person's employment terms", () => {
 			})
 		);
 		const user = userEvent.setup();
-		const card = await open();
+		const card = await open(EDITING);
 
 		await user.click(
 			await within(card).findByRole("button", { name: "Change…" })
@@ -259,11 +330,27 @@ describe("A person's employment terms", () => {
 		await user.click(
 			await screen.findByRole("option", { name: "Five-day week, 44 h" })
 		);
-		expect(dialog).toHaveTextContent("Works 5 days a week, 8.8 hours a day.");
-		await user.type(within(dialog).getByLabelText("Hours a week"), "20");
 		expect(dialog).toHaveTextContent(
-			"Their employment type is Full-time, but these terms are part-time (20 h a week)."
+			"Full-time, 5 days a week, 44 h (8 h 48 min a day)."
 		);
+		// Contracted hours wait behind their question until asked for.
+		expect(
+			within(dialog).queryByLabelText("Contracted hours a week")
+		).toBeNull();
+		await user.click(
+			within(dialog).getByRole("button", {
+				name: "Contracted for fewer hours than the terms?",
+			})
+		);
+		expect(dialog).toHaveTextContent(
+			"The terms give 44 h a week. Leave empty to use the terms’ hours."
+		);
+		await user.type(
+			within(dialog).getByLabelText("Contracted hours a week"),
+			"20"
+		);
+		// Full-time or part-time follows the terms, so nothing is compared with an employment type.
+		expect(dialog).not.toHaveTextContent("Their employment type");
 		await user.click(
 			within(dialog).getByRole("button", { name: "Change terms" })
 		);
@@ -284,11 +371,15 @@ describe("A person's employment terms", () => {
 		expect(
 			await screen.findByText(/^Employment terms changed from /)
 		).toBeVisible();
+		// The dialog's submit stays inside it: Edit profile's own form around the row is not saved.
+		expect(
+			calls.some((call) => call.method === "PUT" && call.path === PROFILE)
+		).toBe(false);
 	});
 
 	it("explain a refusal on the field it is about", async () => {
 		stubApi(
-			routes(CHANGER, undefined, {
+			routes(EDITOR, undefined, {
 				[`POST ${MEMBER_TERMS_PATH}`]: problemReply(
 					409,
 					"EMPLOYMENT_TERMS_CHANGE_EXISTS"
@@ -296,7 +387,7 @@ describe("A person's employment terms", () => {
 			})
 		);
 		const user = userEvent.setup();
-		const card = await open();
+		const card = await open(EDITING);
 
 		await user.click(
 			await within(card).findByRole("button", { name: "Change…" })
@@ -304,6 +395,10 @@ describe("A person's employment terms", () => {
 		const dialog = await screen.findByRole("dialog", {
 			name: "Change employment terms",
 		});
+		await user.click(within(dialog).getByRole("button", { name: /^Terms/ }));
+		await user.click(
+			await screen.findByRole("option", { name: "Five-day week, 44 h" })
+		);
 		await user.click(
 			within(dialog).getByRole("button", { name: "Change terms" })
 		);
@@ -315,9 +410,67 @@ describe("A person's employment terms", () => {
 		).toBeVisible();
 	});
 
+	it("open with no terms chosen, their terms now said above, and ask for terms before sending", async () => {
+		const calls = stubApi(routes(EDITOR));
+		const user = userEvent.setup();
+		const card = await open(EDITING);
+
+		await user.click(
+			await within(card).findByRole("button", { name: "Change…" })
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Change employment terms",
+		});
+		expect(dialog).toHaveTextContent("Now: Six-day shift, 12 h");
+		expect(
+			within(dialog).getByRole("button", { name: /^Terms/ })
+		).toHaveTextContent("Choose terms");
+		await user.click(
+			within(dialog).getByRole("button", { name: "Change terms" })
+		);
+
+		expect(await within(dialog).findByText("Choose the terms.")).toBeVisible();
+		expect(
+			calls.some(
+				(call) => call.method === "POST" && call.path === MEMBER_TERMS_PATH
+			)
+		).toBe(false);
+	});
+
+	it("refuse a change to the terms they already hold from that date, and send nothing", async () => {
+		const calls = stubApi(routes(EDITOR));
+		const user = userEvent.setup();
+		const card = await open(EDITING);
+
+		await user.click(
+			await within(card).findByRole("button", { name: "Change…" })
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Change employment terms",
+		});
+		await user.click(within(dialog).getByRole("button", { name: /^Terms/ }));
+		await user.click(
+			await screen.findByRole("option", { name: "Six-day shift, 12 h" })
+		);
+		await user.click(
+			within(dialog).getByRole("button", { name: "Change terms" })
+		);
+
+		expect(
+			await within(dialog).findByText(
+				"They already hold these terms from that date. Choose different terms, or close this."
+			)
+		).toBeVisible();
+		expect(
+			calls.some(
+				(call) => call.method === "POST" && call.path === MEMBER_TERMS_PATH
+			)
+		).toBe(false);
+	});
+
 	it("list their history, cancel a change ahead, and correct an entry", async () => {
 		const calls = stubApi(
-			routes(CHANGER, undefined, {
+			routes(EDITOR, undefined, {
 				[`DELETE ${MEMBER_TERMS_PATH}/entry-upcoming`]: { status: 204 },
 				[`PUT ${MEMBER_TERMS_PATH}/entry-first`]: {
 					status: 200,
@@ -326,7 +479,7 @@ describe("A person's employment terms", () => {
 			})
 		);
 		const user = userEvent.setup();
-		const card = await open();
+		const card = await open(EDITING);
 
 		await user.click(
 			await within(card).findByRole("button", { name: "History" })
@@ -391,7 +544,7 @@ describe("A person's employment terms", () => {
 describe("Correcting an entry on terms deactivated since", () => {
 	it("keeps them chosen, marked inactive", async () => {
 		stubApi(
-			routes(CHANGER, {
+			routes(EDITOR, {
 				status: 200,
 				body: envelope({
 					...MEMBER_TERMS,
@@ -407,7 +560,7 @@ describe("Correcting an entry on terms deactivated since", () => {
 			})
 		);
 		const user = userEvent.setup();
-		const card = await open();
+		const card = await open(EDITING);
 
 		await user.click(
 			await within(card).findByRole("button", { name: "History" })

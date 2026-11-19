@@ -17,16 +17,22 @@ import {
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 import { constraintFixture } from "@/features/scheduling/constraints/fixtures";
+import { withDatesRun } from "@/features/scheduling/months/datesRunState";
+import {
+	editableMember,
+	midMonthOpenings,
+} from "@/features/scheduling/hours/fixtures";
 import {
 	monthGenerationCheckFixture,
 	monthGenerationFixture,
-	monthSummaryFixture,
 	monthWeekFixture,
 	scheduleMonthFixture,
+	twoPartWeekFixture,
 	ungeneratedMonthFixture,
 } from "@/features/scheduling/months/fixtures";
 import { departmentShiftFixture } from "@/features/scheduling/shifts/fixtures";
 import { schedulingWorkspace } from "@/features/scheduling/schedules/fixtures";
+import { firstWeek } from "@/features/scheduling/startingContext/fixtures";
 
 let app: OpenedApp | undefined;
 
@@ -98,23 +104,80 @@ it("given_novemberOfKitchen_when_opened_then_fiveWeekCardsInMondayOrderWithTheir
 	]);
 	expect(within(cards[1]!).getByText("To review")).toBeInTheDocument();
 	expect(
-		screen.getByText(
-			"5 weeks, Nov 2 to Dec 6. 1 published · 1 to review · 2 tentative."
-		)
+		screen.getByText("5 weeks, Nov 2 to Dec 6. 1 published · 3 to review.")
 	).toBeInTheDocument();
 	expect(calls.find((call) => call.path === `${MONTHS}/2026-11`)?.search).toBe(
 		"departmentId=d-1"
 	);
 });
 
-it("given_theWeekUnderReview_when_shown_then_reviewLinksToItsRoster", async () => {
+it("given_aWeekOfTwoSchedules_when_shown_then_itsCardListsBothEachOpeningItsOwnRoster", async () => {
+	await openMonth(
+		{
+			...signedIn(),
+			[`GET ${MONTHS}/2027-02`]: ok(
+				scheduleMonthFixture({
+					month: "2027-02",
+					weeks: [
+						monthWeekFixture({
+							periodStart: "2027-02-15",
+							periodEnd: "2027-02-21",
+							state: "TO_REVIEW",
+							scheduleId: "s-2",
+							coveredFrom: "2027-02-20",
+							coveredTo: "2027-02-21",
+							parts: twoPartWeekFixture(),
+						}),
+					],
+				})
+			),
+		},
+		"/scheduling/months/2027-02?department=d-1"
+	);
+
+	const parts = await screen.findByRole("navigation", {
+		name: "This week’s parts",
+	});
+	expect(
+		within(parts)
+			.getAllByRole("link")
+			.map((link) => [link.textContent, link.getAttribute("href")])
+	).toEqual([
+		[
+			expect.stringMatching(/^Wed, Feb 17\s?–\s?Fri, Feb 19$/),
+			"/scheduling/s-1",
+		],
+		[
+			expect.stringMatching(/^Sat, Feb 20\s?–\s?Sun, Feb 21$/),
+			"/scheduling/s-2",
+		],
+	]);
+});
+
+it("given_aMonth_when_opened_then_theFootnoteSaysOnlyThatStaffSeePublishedWeeks", async () => {
 	await openMonth({
 		...signedIn(),
 		[`GET ${MONTHS}/2026-11`]: ok(scheduleMonthFixture()),
 	});
 
-	const review = await screen.findByRole("link", { name: /^Review/ });
-	expect(review).toHaveAttribute("href", "/scheduling/s-2");
+	expect(
+		await screen.findByText("Staff see a week only after it is published.")
+	).toBeInTheDocument();
+	expect(screen.queryByText(/in order|Tentative/)).toBeNull();
+});
+
+it("given_weeksToReview_when_shown_then_eachReviewLinksToItsOwnRoster", async () => {
+	await openMonth({
+		...signedIn(),
+		[`GET ${MONTHS}/2026-11`]: ok(scheduleMonthFixture()),
+	});
+
+	const reviews = await screen.findAllByRole("link", { name: /^Review/ });
+	expect(reviews.map((review) => review.getAttribute("href"))).toEqual([
+		"/scheduling/s-2",
+		"/scheduling/s-3",
+		"/scheduling/s-4",
+	]);
 });
 
 it("given_theMonthSteps_when_nextIsChosen_then_decemberOfTheSameDepartmentIsRead", async () => {
@@ -155,7 +218,7 @@ it("given_theMonthSteps_when_nextIsChosen_then_decemberOfTheSameDepartmentIsRead
 	expect(
 		screen.getByText("No week of December 2026 has a schedule yet.")
 	).toBeInTheDocument();
-	expect(screen.getByRole("link", { name: "November" })).toHaveAttribute(
+	expect(screen.getByRole("link", { name: "November 2026" })).toHaveAttribute(
 		"href",
 		"/scheduling/months/2026-11?department=d-1"
 	);
@@ -235,16 +298,22 @@ it("given_aMonthNothingWasGeneratedIn_when_generated_then_everyWeekIsSentAndTheM
 	);
 
 	expect(
-		await screen.findByRole("heading", { name: "Before you generate December" })
+		await screen.findByRole("heading", {
+			name: "Before you generate December 2026",
+		})
 	).toBeInTheDocument();
 	expect(screen.getByText("Kitchen has 3 shifts.")).toBeInTheDocument();
-	const generate = screen.getByRole("button", { name: "Generate December" });
+	const generate = screen.getByRole("button", {
+		name: "Generate December 2026",
+	});
 	await vi.waitFor(() => {
 		expect(generate).toBeEnabled();
 	});
 	await userEvent.click(generate);
 
-	expect(await screen.findByText("Generating December…")).toBeInTheDocument();
+	expect(
+		await screen.findByText("Generating December 2026…")
+	).toBeInTheDocument();
 	const post = calls.find(
 		(call) => call.method === "POST" && call.path === `${DECEMBER}/generation`
 	);
@@ -255,9 +324,98 @@ it("given_aMonthNothingWasGeneratedIn_when_generated_then_everyWeekIsSentAndTheM
 		)
 	).toEqual(["2026-12-07", "2026-12-14", "2026-12-21", "2026-12-28"]);
 	expect(
-		screen.queryByRole("heading", { name: "Before you generate December" })
+		screen.queryByRole("heading", { name: "Before you generate December 2026" })
 	).toBeNull();
 	expect(screen.getAllByText("Generating").length).toBeGreaterThanOrEqual(4);
+});
+
+it("given_theGenerationCheckStillLoading_when_opened_then_saysTheMonthIsBeingChecked", async () => {
+	await openMonth(
+		{
+			...decemberRoutes([ok(ungeneratedMonthFixture())]),
+			// A 503 is retried, so the check is still loading while the test looks.
+			[`GET ${DECEMBER}/generation-check`]: problemReply(
+				503,
+				"SERVICE_UNAVAILABLE"
+			),
+		},
+		"/scheduling/months/2026-12?department=d-1"
+	);
+
+	expect(
+		await screen.findByText("Checking December 2026 before you generate…")
+	).toHaveAttribute("role", "status");
+	expect(
+		screen.queryByRole("button", { name: "Generate December 2026" })
+	).toBeNull();
+});
+
+it("given_aFailedGenerationCheck_when_tryAgainIsChosen_then_theCheckIsReadAgain", async () => {
+	await openMonth(
+		{
+			...decemberRoutes([ok(ungeneratedMonthFixture())]),
+			[`GET ${DECEMBER}/generation-check`]: [
+				problemReply(400, "BAD_REQUEST"),
+				ok(monthGenerationCheckFixture()),
+			],
+		},
+		"/scheduling/months/2026-12?department=d-1"
+	);
+
+	expect(
+		await screen.findByText(
+			"We couldn’t check December 2026 before generating."
+		)
+	).toHaveAttribute("role", "alert");
+	await userEvent.click(screen.getByRole("button", { name: "Try again" }));
+
+	expect(
+		await screen.findByRole("heading", {
+			name: "Before you generate December 2026",
+		})
+	).toBeInTheDocument();
+});
+
+it("given_aWeekPublishedSinceTheRead_when_generated_then_namesItWithoutSendingToSetup", async () => {
+	const december = ungeneratedMonthFixture();
+	const publishedSince = ungeneratedMonthFixture({
+		weeks: december.weeks.map((week, index) =>
+			index === 0
+				? {
+						...week,
+						state: "PUBLISHED" as const,
+						includedInMonthGeneration: false,
+					}
+				: week
+		),
+	});
+	await openMonth(
+		{
+			...decemberRoutes([ok(december), ok(publishedSince)]),
+			[`POST ${DECEMBER}/generation`]: problemReply(
+				400,
+				"MONTH_WEEK_CANNOT_BE_GENERATED"
+			),
+		},
+		"/scheduling/months/2026-12?department=d-1"
+	);
+	const generate = await screen.findByRole("button", {
+		name: "Generate December 2026",
+	});
+	await vi.waitFor(() => {
+		expect(generate).toBeEnabled();
+	});
+
+	await userEvent.click(generate);
+
+	// The month is read again, so the refusal names the week as it now is.
+	const alert = await screen.findByText(
+		/^The week of Dec 7\s?–\s?13 was published/
+	);
+	expect(alert).toHaveTextContent(
+		"Nothing was generated. The page now shows December 2026 as it is; try again for the other weeks."
+	);
+	expect(alert).not.toHaveTextContent("Setup");
 });
 
 it("given_aRefusedWeekInTheAnswer_when_generated_then_itsCardSaysWhy", async () => {
@@ -276,7 +434,7 @@ it("given_aRefusedWeekInTheAnswer_when_generated_then_itsCardSaysWhy", async () 
 		"/scheduling/months/2026-12?department=d-1"
 	);
 	const generate = await screen.findByRole("button", {
-		name: "Generate December",
+		name: "Generate December 2026",
 	});
 	await vi.waitFor(() => {
 		expect(generate).toBeEnabled();
@@ -319,6 +477,148 @@ it("given_aFailedWeek_when_shown_then_itsCardSaysWhy", async () => {
 	).toBeInTheDocument();
 });
 
+it("given_aFailedWeekAndStoppedWeeks_when_tryAgain_then_postsExactlyThoseWeeks", async () => {
+	const stopped = {
+		state: "DRAFT" as const,
+		queueRefusal: { code: "EARLIER_WEEK_FAILED", at: "2026-11-17T09:20:00Z" },
+	};
+	const december = ungeneratedMonthFixture();
+	const failedDecember = ungeneratedMonthFixture({
+		weeks: december.weeks.map((week, index) => ({
+			...week,
+			scheduleId: `s-${index + 1}`,
+			...[
+				{ state: "TO_REVIEW" as const },
+				{
+					state: "FAILED" as const,
+					failure: {
+						runStatus: "FAILED",
+						errorCode: "engine_unreachable",
+						engineOutcome: null,
+					},
+				},
+				stopped,
+				stopped,
+			][index],
+		})),
+	});
+	const calls = await openMonth(
+		decemberRoutes([ok(failedDecember)]),
+		"/scheduling/months/2026-12?department=d-1"
+	);
+
+	const callout = (
+		await screen.findByText(
+			/^The week of Dec 14\s?–\s?20 could not be generated, so Dec 21\s?–\s?27 and Dec 28, 2026\s–\sJan 3, 2027 were not generated either\.$/
+		)
+	).closest("[role=note]") as HTMLElement;
+	expect(
+		screen.getAllByText(
+			/^Not generated: The week of Dec 14\s?–\s?20 failed first\. Try again from this page\.$/
+		)
+	).toHaveLength(2);
+	await userEvent.click(
+		within(callout).getByRole("button", { name: "Try again" })
+	);
+
+	await vi.waitFor(() => {
+		const post = calls.find(
+			(call) => call.method === "POST" && call.path === `${DECEMBER}/generation`
+		);
+		expect(post?.body).toMatchObject({
+			weeks: ["2026-12-14", "2026-12-21", "2026-12-28"],
+			newWeeks: [],
+		});
+	});
+});
+
+it("given_aStoppedWeekChangedByHand_when_tryAgain_then_asksFirstAndPostsThoseWeeksOnConfirm", async () => {
+	const user = userEvent.setup();
+	const stopped = {
+		state: "TO_REVIEW" as const,
+		queueRefusal: { code: "EARLIER_WEEK_FAILED", at: "2026-11-17T09:20:00Z" },
+	};
+	const december = ungeneratedMonthFixture();
+	const failedDecember = ungeneratedMonthFixture({
+		weeks: december.weeks.map((week, index) => ({
+			...week,
+			scheduleId: `s-${index + 1}`,
+			...[
+				{ state: "TO_REVIEW" as const, handChangedDays: 2 },
+				{
+					state: "TO_REVIEW" as const,
+					failure: {
+						runStatus: "SUCCEEDED",
+						errorCode: null,
+						engineOutcome: "INFEASIBLE",
+					},
+				},
+				{ ...stopped, handChangedDays: 1 },
+				stopped,
+			][index],
+		})),
+	});
+	const calls = await openMonth(
+		decemberRoutes([ok(failedDecember)]),
+		"/scheduling/months/2026-12?department=d-1"
+	);
+
+	const callout = (
+		await screen.findByText(
+			/^The week of Dec 14\s?–\s?20 could not be generated/
+		)
+	).closest("[role=note]") as HTMLElement;
+	await user.click(within(callout).getByRole("button", { name: "Try again" }));
+
+	const dialog = await screen.findByRole("dialog", {
+		name: "Generate these weeks again?",
+	});
+	expect(dialog).toHaveTextContent(/Dec 21\s?–\s?27 was changed by hand\./);
+	expect(dialog).not.toHaveTextContent(/Dec 7\s?–\s?13/);
+	expect(
+		calls.some(
+			(call) => call.method === "POST" && call.path === `${DECEMBER}/generation`
+		)
+	).toBe(false);
+	await user.click(
+		within(dialog).getByRole("button", { name: "Generate again" })
+	);
+	await vi.waitFor(() => {
+		const post = calls.find(
+			(call) => call.method === "POST" && call.path === `${DECEMBER}/generation`
+		);
+		expect(post?.body).toMatchObject({
+			weeks: ["2026-12-14", "2026-12-21", "2026-12-28"],
+		});
+	});
+});
+
+it("given_stoppedWeeksAndNoScheduleGenerate_when_shown_then_theCalloutHasNoTryAgain", async () => {
+	const december = ungeneratedMonthFixture();
+	const failedDecember = ungeneratedMonthFixture({
+		weeks: december.weeks.map((week, index) => ({
+			...week,
+			scheduleId: `s-${index + 1}`,
+			state: index === 0 ? ("FAILED" as const) : ("DRAFT" as const),
+			queueRefusal:
+				index === 0
+					? null
+					: { code: "EARLIER_WEEK_FAILED", at: "2026-11-17T09:20:00Z" },
+		})),
+	});
+	await openMonth(
+		{ ...decemberRoutes([ok(failedDecember)]), ...signedIn() },
+		"/scheduling/months/2026-12?department=d-1"
+	);
+
+	const callout = (
+		await screen.findByText(
+			/^The week of Dec 7\s?–\s?13 could not be generated/
+		)
+	).closest("[role=note]") as HTMLElement;
+	expect(within(callout).queryByRole("button")).toBeNull();
+});
+
 it("given_noScheduleGenerate_when_aMonthIsNotGenerated_then_noPanelAndTheNoScheduleLine", async () => {
 	const calls = await openMonth(
 		{ ...decemberRoutes([ok(ungeneratedMonthFixture())]), ...signedIn() },
@@ -329,7 +629,7 @@ it("given_noScheduleGenerate_when_aMonthIsNotGenerated_then_noPanelAndTheNoSched
 		await screen.findByText("No week of December 2026 has a schedule yet.")
 	).toBeInTheDocument();
 	expect(
-		screen.queryByRole("heading", { name: "Before you generate December" })
+		screen.queryByRole("heading", { name: "Before you generate December 2026" })
 	).toBeNull();
 	expect(calls.some((call) => call.path.endsWith("/generation-check"))).toBe(
 		false
@@ -344,7 +644,7 @@ it("given_aCoveredWeekChangedByHand_when_generated_then_asksFirstAndPostsOnConfi
 			index === 0
 				? {
 						...week,
-						state: "TENTATIVE" as const,
+						state: "TO_REVIEW" as const,
 						scheduleId: "s-7",
 						handChangedDays: 1,
 					}
@@ -356,7 +656,7 @@ it("given_aCoveredWeekChangedByHand_when_generated_then_asksFirstAndPostsOnConfi
 		"/scheduling/months/2026-12?department=d-1"
 	);
 	const generate = await screen.findByRole("button", {
-		name: "Generate December",
+		name: "Generate December 2026",
 	});
 	await vi.waitFor(() => {
 		expect(generate).toBeEnabled();
@@ -365,14 +665,14 @@ it("given_aCoveredWeekChangedByHand_when_generated_then_asksFirstAndPostsOnConfi
 	await user.click(generate);
 
 	const dialog = await screen.findByRole("dialog", {
-		name: "Regenerate December?",
+		name: "Regenerate December 2026?",
 	});
 	expect(dialog).toHaveTextContent(/Dec 7\s?–\s?13 was changed by hand\./);
 	expect(calls.some((call) => call.path === `${DECEMBER}/generation`)).toBe(
 		false
 	);
 	await user.click(
-		within(dialog).getByRole("button", { name: "Regenerate December" })
+		within(dialog).getByRole("button", { name: "Regenerate December 2026" })
 	);
 	await vi.waitFor(() => {
 		expect(
@@ -384,57 +684,225 @@ it("given_aCoveredWeekChangedByHand_when_generated_then_asksFirstAndPostsOnConfi
 	});
 });
 
-describe("a month held back by an earlier month's week", () => {
-	const tentativeDecember = ungeneratedMonthFixture({
+describe("regenerating a month whose weeks all have a roster", () => {
+	const generatedDecember = ungeneratedMonthFixture({
 		weeks: ungeneratedMonthFixture().weeks.map((week, index) => ({
 			...week,
-			state: "TENTATIVE" as const,
+			state: "TO_REVIEW" as const,
 			scheduleId: `s-${index + 10}`,
 		})),
 	});
-	const novemberToReview = monthSummaryFixture({
-		month: "2026-11",
-		weeks: [
-			{ periodStart: "2026-11-16", state: "TO_REVIEW", scheduleId: "s-2" },
-		],
-	});
 
-	it("given_everyWeekTentativeAndAWeekToReviewInNovember_when_opened_then_saysWhichWeekTheyWaitFor", async () => {
-		// Thursday 12 Nov 2026: the summaries are read from November.
-		vi.useFakeTimers({ toFake: ["Date"], now: new Date(2026, 10, 12) });
-		const calls = await openMonth(
-			{
-				...signedIn(),
-				[`GET ${DECEMBER}`]: ok(tentativeDecember),
-				[`GET ${MONTHS}`]: ok([novemberToReview]),
-			},
+	it("given_scheduleGenerate_when_regenerateIsChosen_then_asksInTheDialog", async () => {
+		const user = userEvent.setup();
+		await openMonth(
+			decemberRoutes([ok(generatedDecember)]),
 			"/scheduling/months/2026-12?department=d-1"
 		);
 
-		const line = await screen.findByText(/These weeks wait for/);
-		expect(line).toHaveTextContent(
-			/^These weeks wait for Nov 16\s?–\s?22, 2026 to be published first\.$/
+		await user.click(
+			await screen.findByRole("button", { name: "Regenerate December 2026" })
 		);
-		expect(within(line).getByRole("link")).toHaveAttribute(
-			"href",
-			"/scheduling/months/2026-11?department=d-1"
-		);
-		expect(calls.find((call) => call.path === MONTHS)?.search).toBe(
-			"from=2026-11&to=2026-11&departmentId=d-1"
-		);
+
+		expect(
+			await screen.findByRole("dialog", { name: "Regenerate December 2026?" })
+		).toBeInTheDocument();
+		expect(
+			screen.queryByRole("heading", {
+				name: "Before you generate December 2026",
+			})
+		).toBeNull();
 	});
 
-	it("given_aWeekToReviewInTheMonthItself_when_opened_then_noWaitingLineAndNoSummaryRead", async () => {
-		const calls = await openMonth({
-			...signedIn(),
-			[`GET ${MONTHS}/2026-11`]: ok(scheduleMonthFixture()),
-		});
+	it("given_noScheduleGenerate_when_opened_then_noRegenerate", async () => {
+		await openMonth(
+			{ ...decemberRoutes([ok(generatedDecember)]), ...signedIn() },
+			"/scheduling/months/2026-12?department=d-1"
+		);
 
 		await screen.findByRole("heading", {
 			level: 1,
-			name: "Kitchen · November 2026",
+			name: "Kitchen · December 2026",
 		});
-		expect(screen.queryByText(/These weeks wait for/)).toBeNull();
+		expect(
+			screen.queryByRole("button", { name: "Regenerate December 2026" })
+		).toBeNull();
+	});
+
+	it("given_aMonthBeingGenerated_when_opened_then_noRegenerate", async () => {
+		await openMonth(
+			decemberRoutes([ok(generatingDecember)]),
+			"/scheduling/months/2026-12?department=d-1"
+		);
+
+		expect(
+			await screen.findByText("Generating December 2026…")
+		).toBeInTheDocument();
+		expect(
+			screen.queryByRole("button", { name: "Regenerate December 2026" })
+		).toBeNull();
+	});
+});
+
+// Each schedule is published on its own (API ADR-0130): no week waits for another.
+describe("a generated week after an earlier week still to review", () => {
+	it("given_twoWeeksToReview_when_opened_then_eachReadsToReviewAndOffersReview_andNothingWaits", async () => {
+		const calls = await openMonth({
+			...signedIn(),
+			[`GET ${MONTHS}/2026-11`]: ok(
+				scheduleMonthFixture({
+					weeks: [
+						monthWeekFixture({
+							periodStart: "2026-11-09",
+							periodEnd: "2026-11-15",
+							state: "TO_REVIEW",
+							scheduleId: "s-2",
+						}),
+						monthWeekFixture({
+							periodStart: "2026-11-16",
+							periodEnd: "2026-11-22",
+							state: "TO_REVIEW",
+							scheduleId: "s-3",
+						}),
+					],
+				})
+			),
+		});
+
+		const later = await screen.findByRole("region", {
+			name: /^Nov 16\s?–\s?22$/,
+		});
+		expect(within(later).getByText("To review")).toBeInTheDocument();
+		expect(
+			within(later).getByRole("link", { name: /^Review Nov 16\s?–\s?22$/ })
+		).toHaveAttribute("href", "/scheduling/s-3");
+		expect(screen.queryByText(/wait for|Tentative/)).toBeNull();
 		expect(calls.some((call) => call.path === MONTHS)).toBe(false);
 	});
+});
+
+describe("the hours worked this month before its first scheduled week", () => {
+	/** December whose weeks all have a roster, the first starting on the 7th. */
+	const generatedDecember = ungeneratedMonthFixture({
+		weeks: ungeneratedMonthFixture().weeks.map((week, index) => ({
+			...week,
+			state: "TO_REVIEW" as const,
+			scheduleId: `s-${index + 10}`,
+		})),
+	});
+	const FIRST_WEEK = `${KITCHEN_UNIT}/schedules/s-10`;
+	const hoursRoutes = (permissions: Array<string>): Routes => ({
+		...decemberRoutes([ok(generatedDecember)]),
+		...signedIn(permissions),
+		[`GET ${FIRST_WEEK}/opening-balances`]: ok({
+			...midMonthOpenings([editableMember("p-tan")]),
+			monthStart: "2026-12-01",
+			asOf: "2026-12-07",
+		}),
+		[`GET ${FIRST_WEEK}/starting-days`]: ok(firstWeek()),
+	});
+
+	it("given_unknownHours_when_opened_then_theMonthSaysForHowManyAndAddsThemOnItsFirstWeek", async () => {
+		const user = userEvent.setup();
+		await openMonth(
+			hoursRoutes([...GENERATORS, "schedule:update"]),
+			"/scheduling/months/2026-12?department=d-1"
+		);
+
+		expect(
+			await screen.findByText(
+				"Hours worked before Dec 7 are unknown for 1 person."
+			)
+		).toBeVisible();
+		await user.click(screen.getByRole("button", { name: "Add them" }));
+
+		const dialog = await screen.findByRole("dialog", {
+			name: "Hours already worked this month (Dec 1 to Dec 6)",
+		});
+		expect(dialog).toHaveTextContent(
+			"Changing these hours doesn’t change a roster already generated. Regenerate the month to use them."
+		);
+	});
+
+	it("given_unknownHours_when_regenerateIsChosen_then_theDialogSaysSoAndAddThemOpensTheHours", async () => {
+		const user = userEvent.setup();
+		await openMonth(
+			hoursRoutes([...GENERATORS, "schedule:update"]),
+			"/scheduling/months/2026-12?department=d-1"
+		);
+		await screen.findByText(
+			"Hours worked before Dec 7 are unknown for 1 person."
+		);
+
+		await user.click(
+			await screen.findByRole("button", { name: "Regenerate December 2026" })
+		);
+		const regenerate = await screen.findByRole("dialog", {
+			name: "Regenerate December 2026?",
+		});
+		expect(regenerate).toHaveTextContent(
+			"Hours worked before Dec 7 are unknown for 1 person."
+		);
+		await user.click(
+			within(regenerate).getByRole("button", { name: "Add them" })
+		);
+
+		expect(
+			await screen.findByRole("dialog", {
+				name: "Hours already worked this month (Dec 1 to Dec 6)",
+			})
+		).toBeVisible();
+		expect(
+			screen.queryByRole("dialog", { name: "Regenerate December 2026?" })
+		).toBeNull();
+	});
+
+	it("given_noScheduleUpdate_when_opened_then_theLineHasNoButton", async () => {
+		await openMonth(
+			hoursRoutes(GENERATORS),
+			"/scheduling/months/2026-12?department=d-1"
+		);
+
+		expect(
+			await screen.findByText(
+				"Hours worked before Dec 7 are unknown for 1 person."
+			)
+		).toBeVisible();
+		expect(screen.queryByRole("button", { name: "Add them" })).toBeNull();
+	});
+});
+
+it("given_aRunByDatesPastTheMonthEnd_when_arrived_then_saysWhatIsGeneratedAndLinksToTheNextMonth", async () => {
+	await openMonth({
+		...signedIn(),
+		[`GET ${MONTHS}/2026-11`]: ok(scheduleMonthFixture()),
+	});
+	await app!.router.navigate({
+		to: "/scheduling/months/$month",
+		params: { month: "2026-11" },
+		search: { department: "d-1" },
+		state: withDatesRun({}, { firstDay: "2026-11-30", lastDay: "2026-12-03" }),
+	});
+
+	const link = await screen.findByRole("link", { name: "December 2026" });
+	expect(link).toHaveAttribute(
+		"href",
+		"/scheduling/months/2026-12?department=d-1"
+	);
+	expect(link.parentElement).toHaveTextContent(
+		/^Schedules for Nov 30\s?–\s?Dec 3, 2026 are being generated\. Dec 1\s?–\s?3, 2026 are on the December 2026 page\.$/
+	);
+});
+
+it("given_noRunByDates_when_opened_then_noNoticeOfOne", async () => {
+	await openMonth({
+		...signedIn(),
+		[`GET ${MONTHS}/2026-11`]: ok(scheduleMonthFixture()),
+	});
+
+	await screen.findByRole("heading", {
+		level: 1,
+		name: "Kitchen · November 2026",
+	});
+	expect(screen.queryByText(/are being generated/)).toBeNull();
 });

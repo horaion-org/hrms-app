@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
@@ -73,7 +74,7 @@ const HistoryLine = ({
 		change.beforeStartDate !== change.afterStartDate ||
 		change.beforeEndDate !== change.afterEndDate;
 	// The local calendar day: a late-evening change must not read as the next day.
-	const changedOn = dayjs(change.changedAt).format("YYYY-MM-DD");
+	const changedOn = dayjs(change.changedAt).format(ISO_DATE_FORMAT);
 	return (
 		<li className="text-sm text-neutral-800">
 			<p className="font-medium">
@@ -173,7 +174,17 @@ const ChangeLeaveConfirmation = ({
 	const [remark, setRemark] = useState("");
 	const [confirmed, setConfirmed] = useState(false);
 	const rostered = useQuery(
-		rosteredDaysQuery(companyId, dates, request.membershipId)
+		rosteredDaysQuery(
+			companyId,
+			{
+				...dates,
+				// A part-day request keeps its times and shift choice when its date moves.
+				startTime: request.startTime ?? undefined,
+				endTime: request.endTime ?? undefined,
+				allowsShiftSameDay: request.allowsShiftSameDay ?? undefined,
+			},
+			request.membershipId
+		)
 	);
 	const oldDays = new Set(
 		rangeDays({ start: request.startDate, end: request.endDate })

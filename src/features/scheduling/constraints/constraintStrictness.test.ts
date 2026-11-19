@@ -32,7 +32,7 @@ const daysOff = (
 	values: [
 		{ field: "COMPARISON", value: comparison },
 		{ field: "DAYS_OFF", value: days },
-		{ field: "PERIOD_DAYS", value: period },
+		{ field: "PERIOD_WEEKS", value: period },
 	],
 });
 
@@ -62,29 +62,29 @@ describe("compareStrictness", () => {
 
 	it("reads days off by the comparison and the window against it", () => {
 		const type = typeOf("DAYS_OFF_PER_PERIOD");
-		const twoInSeven = daysOff("AT_LEAST", "2", "7");
+		const twoInTwoWeeks = daysOff("AT_LEAST", "2", "2");
 		expect(
-			compareStrictness(type, twoInSeven, daysOff("AT_LEAST", "3", "7"))
+			compareStrictness(type, twoInTwoWeeks, daysOff("AT_LEAST", "3", "2"))
 		).toBe("STRICTER");
 		expect(
-			compareStrictness(type, twoInSeven, daysOff("AT_LEAST", "2", "6"))
+			compareStrictness(type, twoInTwoWeeks, daysOff("AT_LEAST", "2", "1"))
 		).toBe("STRICTER");
 		expect(
 			compareStrictness(
 				type,
-				daysOff("AT_LEAST", "2", "6"),
-				daysOff("AT_LEAST", "3", "7")
+				daysOff("AT_LEAST", "2", "1"),
+				daysOff("AT_LEAST", "3", "2")
 			)
 		).toBe("INCOMPARABLE");
 		expect(
 			compareStrictness(
 				type,
-				daysOff("AT_MOST", "3", "6"),
-				daysOff("AT_MOST", "2", "6")
+				daysOff("AT_MOST", "3", "1"),
+				daysOff("AT_MOST", "2", "1")
 			)
 		).toBe("STRICTER");
 		expect(
-			compareStrictness(type, twoInSeven, daysOff("AT_MOST", "2", "7"))
+			compareStrictness(type, twoInTwoWeeks, daysOff("AT_MOST", "2", "2"))
 		).toBe("INCOMPARABLE");
 	});
 
@@ -110,15 +110,15 @@ describe("compareStrictness", () => {
 		expect(
 			compareStrictness(
 				type,
-				daysOff("AT_LEAST", "2", "7", "SHOULD"),
-				daysOff("AT_LEAST", "2", "7", "MUST")
+				daysOff("AT_LEAST", "2", "2", "SHOULD"),
+				daysOff("AT_LEAST", "2", "2", "MUST")
 			)
 		).toBe("STRICTER");
 		expect(
 			compareStrictness(
 				type,
-				daysOff("AT_LEAST", "2", "7", "MUST"),
-				daysOff("AT_LEAST", "2", "7", "SHOULD")
+				daysOff("AT_LEAST", "2", "2", "MUST"),
+				daysOff("AT_LEAST", "2", "2", "SHOULD")
 			)
 		).toBe("LOOSER");
 	});
@@ -153,15 +153,15 @@ describe("compareStrictness", () => {
 			expect(
 				compareStrictness(
 					type,
-					daysOff("EXACTLY", "2", "7"),
-					daysOff("EXACTLY", "2", "7")
+					daysOff("EXACTLY", "2", "2"),
+					daysOff("EXACTLY", "2", "2")
 				)
 			).toBe("SAME");
 			expect(
 				compareStrictness(
 					type,
-					daysOff("EXACTLY", "2", "7"),
-					daysOff("EXACTLY", "3", "7")
+					daysOff("EXACTLY", "2", "2"),
+					daysOff("EXACTLY", "3", "2")
 				)
 			).toBe("INCOMPARABLE");
 		});
@@ -171,15 +171,15 @@ describe("compareStrictness", () => {
 			expect(
 				compareStrictness(
 					type,
-					daysOff("AT_LEAST", "2", "7"),
-					daysOff("AT_LEAST", "2", "7")
+					daysOff("AT_LEAST", "2", "2"),
+					daysOff("AT_LEAST", "2", "2")
 				)
 			).toBe("SAME");
 			expect(
 				compareStrictness(
 					type,
-					daysOff("AT_LEAST", "2", "7"),
-					daysOff("AT_LEAST", "3", "7")
+					daysOff("AT_LEAST", "2", "2"),
+					daysOff("AT_LEAST", "3", "2")
 				)
 			).toBe("INCOMPARABLE");
 		});
@@ -189,8 +189,8 @@ describe("compareStrictness", () => {
 			expect(
 				compareStrictness(
 					type,
-					daysOff("AT_LEAST", "2", "7"),
-					daysOff("AT_LEAST", "1", "7")
+					daysOff("AT_LEAST", "2", "2"),
+					daysOff("AT_LEAST", "1", "2")
 				)
 			).toBe("SAME");
 		});

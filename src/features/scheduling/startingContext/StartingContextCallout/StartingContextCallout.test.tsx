@@ -9,17 +9,20 @@ import {
 	firstWeek,
 } from "@/features/scheduling/startingContext/fixtures";
 import { StartingContextCallout } from "@/features/scheduling/startingContext/StartingContextCallout";
+import { previousWeekOf } from "@/features/scheduling/startingContext/startingGrid";
 
 const show = (
 	week: StartingDays,
 	enteredCount: number,
-	onAdd?: () => void
+	onAdd?: () => void,
+	unknownDays?: Array<string>
 ): void => {
 	render(
 		<I18nextProvider i18n={authTestI18n}>
 			<StartingContextCallout
 				enteredCount={enteredCount}
-				week={week}
+				previous={previousWeekOf(week)}
+				unknownDays={unknownDays}
 				onAdd={onAdd}
 			/>
 		</I18nextProvider>
@@ -27,43 +30,126 @@ const show = (
 };
 
 describe("StartingContextCallout", () => {
-	it("given_noPreviousRoster_when_shown_then_saysEveryoneStartsRestedAndOffersLastWeek", async () => {
+	it("given_noPreviousRosterAndNothingEntered_when_shown_then_warnsWhatIsUnknownAndOffersAButton", async () => {
 		const onAdd = vi.fn();
 		show(firstWeek(), 0, onAdd);
 
 		const note = screen.getByRole("note");
+		expect(note).toHaveClass("bg-warning-50");
 		expect(note).toHaveTextContent(
-			"No roster before this week. Everyone starts rested."
+			"Horaion doesn’t know what people worked last week." +
+				"Without it, everyone is treated as rested, so someone who worked Sunday night could be given Monday morning." +
+				"Add last week’s shifts"
 		);
-		expect(note).toHaveClass("bg-ink-blue-50");
 		await userEvent.click(
-			screen.getByRole("button", { name: "Add last week" })
+			screen.getByRole("button", { name: "Add last week’s shifts" })
 		);
 		expect(onAdd).toHaveBeenCalledOnce();
 	});
 
-	it("given_daysEnteredForOnePerson_when_shown_then_saysSoAndOffersToEdit", () => {
-		show(firstWeek(), 1, vi.fn());
+	it("given_daysEnteredForOnePerson_when_shown_then_calmlySaysSoAndOffersToEditThem", async () => {
+		const onAdd = vi.fn();
+		show(firstWeek(), 1, onAdd);
 
-		expect(screen.getByRole("note")).toHaveTextContent(
-			"No roster before this week. Days are added for 1 person; everyone else starts rested."
+		const note = screen.getByRole("note");
+		expect(note).toHaveClass("bg-ink-blue-50");
+		expect(note).toHaveTextContent(
+			"No roster before these days. Days are added for 1 person. For everyone else, the earlier days of this week count as worked for weekly rest days and days a week; rest between shifts and days in a row start fresh."
 		);
-		expect(
-			screen.getByRole("button", { name: "Edit last week" })
-		).toBeInTheDocument();
+		await userEvent.click(
+			screen.getByRole("button", { name: "Edit last week’s shifts" })
+		);
+		expect(onAdd).toHaveBeenCalledOnce();
 	});
 
-	it("given_aPreviousRosterMissingANewJoiner_when_shown_then_carriedOverWithTheNewJoinerNamed", () => {
+	it("given_aWeekThatHasBegunAndNothingEntered_when_shown_then_oneWarningNamesItsUnknownDaysWithTheButton", () => {
+		show(firstWeek(), 0, vi.fn(), ["2026-11-09", "2026-11-10"]);
+
+		const note = screen.getByRole("note");
+		expect(note).toHaveClass("bg-warning-50");
+		expect(note).toHaveTextContent(
+			"Horaion doesn’t know what people worked on Mon, Nov 9 and Tue, Nov 10, or the week before." +
+				"Mark any rest days or days off already given, so the week counts them. Left unknown, they count as days worked." +
+				"Add last week’s shifts"
+		);
+	});
+
+	it("given_daysEnteredButSomeOfThisWeeksDaysStillUnknown_when_shown_then_theCalmLineNamesThem", () => {
+		show(firstWeek(), 1, vi.fn(), ["2026-11-10"]);
+
+		const note = screen.getByRole("note");
+		expect(note).toHaveClass("bg-ink-blue-50");
+		expect(note).toHaveTextContent(
+			"Still unknown for some people: Tue, Nov 10. Left unknown, they count as days worked."
+		);
+	});
+
+	it("given_aPreviousRosterMissingANewJoiner_when_shown_then_carriedOverWithTheNewJoinerNamedAndASmallLink", () => {
 		show(carriedWeek(), 0, vi.fn());
 
-		expect(screen.getByRole("note")).toHaveTextContent(
-			"Carried over from the week of Nov 2. 1 person isn’t on that roster and starts rested."
+		const note = screen.getByRole("note");
+		expect(note).toHaveClass("bg-ink-blue-50");
+		expect(note).toHaveTextContent(
+			"Carried over from the week of Nov 2. 1 person isn’t on that roster: for them, rest between shifts and days in a row start fresh."
+		);
+		expect(
+			screen.getByRole("button", { name: "Edit last week’s shifts" })
+		).toHaveClass("text-ink-blue-700");
+	});
+
+	it("given_aRosterPartCarriedOver_when_shown_then_calmlyNamesItsDays", () => {
+		render(
+			<I18nextProvider i18n={authTestI18n}>
+				<StartingContextCallout
+					enteredCount={0}
+					previous={{
+						kind: "carried",
+						periodStart: "2026-11-16",
+						uncovered: 0,
+						days: { from: "2026-11-16", to: "2026-11-18" },
+					}}
+				/>
+			</I18nextProvider>
+		);
+
+		const note = screen.getByRole("note");
+		expect(note).toHaveClass("bg-ink-blue-50");
+		expect(note).toHaveTextContent(
+			/^Carried over from the roster of Nov 16\s?–\s?18, 2026\.$/
 		);
 	});
 
-	it("given_aDraftThePersonMayNotChange_when_shown_then_noButton", () => {
+	it("given_aDraftThePersonMayNotChange_when_shown_then_stillWarnsButOffersNoControl", () => {
 		show(firstWeek(), 0);
 
+		expect(screen.getByRole("note")).toHaveTextContent(
+			"Horaion doesn’t know what people worked last week."
+		);
 		expect(screen.queryByRole("button")).not.toBeInTheDocument();
+	});
+
+	// The tester's case: a dates run from Thursday after Mon and Tue were rostered; only Wednesday is unknown.
+	it("given_unknownDaysAfterAnEarlierRosteredPart_when_shown_then_namesOnlyThoseDays", () => {
+		render(
+			<I18nextProvider i18n={authTestI18n}>
+				<StartingContextCallout
+					enteredCount={0}
+					previous={{ kind: "none" }}
+					unknownDays={["2027-07-07"]}
+					previousOfUnknownDays={{
+						kind: "carried",
+						periodStart: "2027-07-05",
+						uncovered: 0,
+						days: { from: "2027-07-05", to: "2027-07-06" },
+					}}
+				/>
+			</I18nextProvider>
+		);
+
+		const note = screen.getByRole("note");
+		expect(note).toHaveTextContent(
+			/^Horaion doesn’t know what people worked on Wed, Jul 7\.Mark any rest days/
+		);
+		expect(note).not.toHaveTextContent("the week before");
 	});
 });

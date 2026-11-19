@@ -7,6 +7,7 @@ import en from "@/assets/locales/en/translations.json";
 import es from "@/assets/locales/es/translations.json";
 import type {
 	ConstraintField,
+	ConstraintRequirement,
 	ConstraintType,
 } from "@/features/scheduling/constraints/api";
 import {
@@ -42,10 +43,11 @@ const read = (
 	type: ConstraintType,
 	values: Array<SentenceValue>,
 	language = "en",
-	fullTimersOnly = false
+	fullTimersOnly = false,
+	requirement: ConstraintRequirement | null = null
 ): string => {
 	const t = i18n.getFixedT(language);
-	const constraint = { type, values, fullTimersOnly };
+	const constraint = { type, values, fullTimersOnly, requirement };
 	const words = constraintWords(constraint, t);
 	const parts = Object.fromEntries(
 		Object.entries(words).map(([field, text]) => [
@@ -176,6 +178,7 @@ describe("sentencePartsOf with constraintWords", () => {
 	const MID = named("SHIFT", "Mid");
 	const SUPERVISOR = named("JOB_TITLE", "Supervisor");
 
+	// On duty throughout is retired (ADR-0128 in the API); a schedule generated with the rule still reads it.
 	it.each([
 		[
 			"AT_LEAST",
@@ -232,7 +235,7 @@ describe("sentencePartsOf with constraintWords", () => {
 			"Opening and Mid each have no one as Supervisor on duty at any time.",
 		],
 	])(
-		"reads on duty %s %s over %#",
+		"reads a frozen on-duty copy %s %s over %#",
 		(comparison, headcount, shifts, sentence) => {
 			expect(
 				read(
@@ -275,36 +278,67 @@ describe("sentencePartsOf with constraintWords", () => {
 	);
 
 	it.each([
-		[
-			"AT_LEAST",
-			"2",
-			"Everyone gets at least 2 days off in any 7 days in a row.",
-		],
-		[
-			"AT_LEAST",
-			"1",
-			"Everyone gets at least 1 day off in any 7 days in a row.",
-		],
-		[
-			"AT_MOST",
-			"3",
-			"Everyone gets at most 3 days off in any 7 days in a row.",
-		],
-		[
-			"EXACTLY",
-			"2",
-			"Everyone gets exactly 2 days off in any 7 days in a row.",
-		],
-		["AT_MOST", "0", "Everyone gets no days off in any 7 days in a row."],
-		["EXACTLY", "0", "Everyone gets no days off in any 7 days in a row."],
-	])("reads days off %s %s", (comparison, daysOff, sentence) => {
+		["AT_LEAST", "1", "1", "At least 1 day off every week."],
+		["AT_LEAST", "2", "2", "At least 2 days off every 2 weeks."],
+		["AT_MOST", "2", "2", "At most 2 days off every 2 weeks."],
+		["EXACTLY", "2", "2", "Exactly 2 days off every 2 weeks."],
+		["AT_LEAST", "4", "4", "At least 4 days off every 4 weeks."],
+		["AT_MOST", "0", "1", "No days off every week."],
+		["EXACTLY", "0", "3", "No days off every 3 weeks."],
+	])(
+		"reads days off %s %s every %s weeks",
+		(comparison, daysOff, weeks, sentence) => {
+			expect(
+				read("DAYS_OFF_PER_PERIOD", [
+					plain("COMPARISON", comparison),
+					plain("DAYS_OFF", daysOff),
+					plain("PERIOD_WEEKS", weeks),
+				])
+			).toBe(sentence);
+		}
+	);
+
+	it.each([
+		["OFF", "1", "1", "At least 1 Day off every week."],
+		["REST", "2", "2", "At least 2 Rest days every 2 weeks."],
+	])(
+		"reads a days-off rule counting only %s with the day type in place of days off",
+		(dayType, daysOff, weeks, sentence) => {
+			expect(
+				read("DAYS_OFF_PER_PERIOD", [
+					plain("COMPARISON", "AT_LEAST"),
+					plain("DAYS_OFF", daysOff),
+					plain("PERIOD_WEEKS", weeks),
+					plain("DAY_TYPE", dayType),
+				])
+			).toBe(sentence);
+		}
+	);
+
+	it("reads a days-off rule in weeks in Spanish", () => {
 		expect(
-			read("DAYS_OFF_PER_PERIOD", [
-				plain("COMPARISON", comparison),
-				plain("DAYS_OFF", daysOff),
-				plain("PERIOD_DAYS", "7"),
-			])
-		).toBe(sentence);
+			read(
+				"DAYS_OFF_PER_PERIOD",
+				[
+					plain("COMPARISON", "AT_LEAST"),
+					plain("DAYS_OFF", "2"),
+					plain("PERIOD_WEEKS", "2"),
+					plain("DAY_TYPE", "REST"),
+				],
+				"es"
+			)
+		).toBe("Al menos 2 Días de descanso cada 2 semanas.");
+	});
+
+	it("reads a days-off rule that kept its period in days as one with a period still to choose, never in days", () => {
+		const sentence = read("DAYS_OFF_PER_PERIOD", [
+			plain("COMPARISON", "AT_LEAST"),
+			plain("DAYS_OFF", "1"),
+			plain("PERIOD_DAYS", "6"),
+		]);
+
+		expect(sentence).toBe("At least 1 day off in a period still to choose.");
+		expect(sentence).not.toMatch(/days in a row|window|rolling/);
 	});
 
 	it("reads avoided days off with the weekdays joined by and", () => {
@@ -322,6 +356,214 @@ describe("sentencePartsOf with constraintWords", () => {
 	])("reads rest of %s hours", (hours, sentence) => {
 		expect(read("REST_BETWEEN_SHIFTS", [plain("REST_HOURS", hours)])).toBe(
 			sentence
+		);
+	});
+
+	it.each([
+		[
+			"12",
+			"Nobody whose Employment Act limits apply works more than 12 hours in a day, overtime included.",
+		],
+		[
+			"1",
+			"Nobody whose Employment Act limits apply works more than 1 hour in a day, overtime included.",
+		],
+	])("reads most hours a day of %s", (hours, sentence) => {
+		expect(
+			read("MAX_WORK_HOURS_PER_DAY", [plain("WORK_HOURS_A_DAY", hours)])
+		).toBe(sentence);
+	});
+
+	it.each([
+		[
+			"72",
+			"Nobody whose Employment Act limits apply works more than 72 hours of overtime in a calendar month.",
+		],
+		[
+			"1",
+			"Nobody whose Employment Act limits apply works more than 1 hour of overtime in a calendar month.",
+		],
+		["0", "Nobody whose Employment Act limits apply works overtime."],
+	])("reads most overtime a month of %s", (hours, sentence) => {
+		expect(
+			read("MAX_OVERTIME_HOURS_PER_MONTH", [
+				plain("OVERTIME_HOURS_A_MONTH", hours),
+			])
+		).toBe(sentence);
+	});
+
+	it.each([
+		[
+			"240",
+			"A shift is given around leave on the same day only if at least 240 minutes of it are worked.",
+		],
+		[
+			"1",
+			"A shift is given around leave on the same day only if at least 1 minute of it is worked.",
+		],
+	])(
+		"reads the shortest part of a shift of %s minutes",
+		(minutes, sentence) => {
+			expect(
+				read("SHORTEST_PART_SHIFT", [plain("PART_SHIFT_MINUTES", minutes)])
+			).toBe(sentence);
+		}
+	);
+
+	it.each([
+		[
+			"2",
+			"Everyone may be called back to work on a rest or off day at most 2 times each week.",
+		],
+		[
+			"1",
+			"Everyone may be called back to work on a rest or off day at most 1 time each week.",
+		],
+		["0", "Nobody is called back to work on a rest or off day."],
+	])(
+		"reads most call-backs of %s, each week without a span",
+		(callBacks, sentence) => {
+			expect(
+				read("MAX_CALL_BACKS_PER_PERSON", [plain("CALL_BACKS", callBacks)])
+			).toBe(sentence);
+		}
+	);
+
+	it("reads most call-backs over any number of days in a row", () => {
+		expect(
+			read("MAX_CALL_BACKS_PER_PERSON", [
+				plain("CALL_BACKS", "2"),
+				plain("CALL_BACK_SPAN_DAYS", "4"),
+			])
+		).toBe(
+			"Everyone may be called back to work on a rest or off day at most 2 times in any 4 days in a row."
+		);
+	});
+
+	it.each([
+		[
+			"1",
+			"When a shift is short for some hours, someone on the shift just before or after it may stay on or start early by up to 1 hour, and fills those hours. Used only when you ask the engine in Find cover, never when a roster is generated. It applies to rosters generated after it is added; regenerate an existing roster to use it.",
+		],
+		[
+			"2",
+			"When a shift is short for some hours, someone on the shift just before or after it may stay on or start early by up to 2 hours, and fills those hours. Used only when you ask the engine in Find cover, never when a roster is generated. It applies to rosters generated after it is added; regenerate an existing roster to use it.",
+		],
+	])("reads an overtime stretch of %s hours", (hours, sentence) => {
+		expect(read("OVERTIME_STRETCH", [plain("STRETCH_HOURS", hours)])).toBe(
+			sentence
+		);
+	});
+
+	// Pay rates are retired (ADR-0123 in the API); a schedule generated with the rule still reads it.
+	it("given_aFrozenPayRatesCopy_when_worded_then_stillReads", () => {
+		expect(
+			read("PAY_RATES", [
+				plain("OVERTIME_PERCENT", "150"),
+				plain("REST_DAY_WORK_PERCENT", "200"),
+				plain("TIME_OFF_EARNED_PERCENT", "100"),
+			])
+		).toBe(
+			"An hour of overtime costs 150% of a normal hour, and an hour of work on a rest day 200%. Work on a day off counts as ordinary hours."
+		);
+	});
+
+	it("reads the pay rates with a day off at its own rate", () => {
+		expect(
+			read("PAY_RATES", [
+				plain("OVERTIME_PERCENT", "150"),
+				plain("REST_DAY_WORK_PERCENT", "200"),
+				plain("DAY_OFF_WORK_PERCENT", "120"),
+			])
+		).toBe(
+			"An hour of overtime costs 150% of a normal hour, and an hour of work on a rest day 200%. An hour of work on a day off costs 120% of a normal hour."
+		);
+	});
+
+	it("reads keep days off together as what the roster tries to do", () => {
+		expect(read("KEEP_DAYS_OFF_TOGETHER", [])).toBe(
+			"Keep each person’s rest days, days off and leave together where the roster allows."
+		);
+	});
+
+	it.each([
+		[
+			"en",
+			"No days off on Friday and Saturday.",
+			"Each person’s rest days, days off and leave in each Monday-to-Sunday week are together.",
+		],
+		[
+			"es",
+			"Sin días libres el Viernes y Sábado.",
+			"Los días de descanso, días libres y permisos de cada persona en cada semana de lunes a domingo van juntos.",
+		],
+	])(
+		"reads the two rules asked as a Must as what never happens (%s)",
+		(language, avoid, together) => {
+			const weekend = [plain("WEEKDAY", "FRI"), plain("WEEKDAY", "SAT")];
+
+			expect(read("AVOID_DAYS_OFF_ON", weekend, language, false, "MUST")).toBe(
+				avoid
+			);
+			expect(read("KEEP_DAYS_OFF_TOGETHER", [], language, false, "MUST")).toBe(
+				together
+			);
+		}
+	);
+
+	it.each([
+		["MUST", "Nobody works Night then Morning on consecutive days."],
+		[
+			"SHOULD",
+			"Try not to give anyone Night then Morning on consecutive days.",
+		],
+	] as const)(
+		"reads a banned shift pattern asked as %s day by day",
+		(requirement, sentence) => {
+			const nightThenMorning = [
+				named("PATTERN_DAY_1", "Night"),
+				named("PATTERN_DAY_2", "Morning"),
+			];
+
+			expect(
+				read("BANNED_SHIFT_PATTERN", nightThenMorning, "en", false, requirement)
+			).toBe(sentence);
+		}
+	);
+
+	it("reads the shifts of one day of a banned pattern as alternatives, every filled day, and in Spanish", () => {
+		const values = [
+			named("PATTERN_DAY_1", "Night"),
+			named("PATTERN_DAY_1", "Late"),
+			named("PATTERN_DAY_2", "Night"),
+			named("PATTERN_DAY_3", "Morning"),
+		];
+
+		expect(read("BANNED_SHIFT_PATTERN", values, "en", false, "MUST")).toBe(
+			"Nobody works Night or Late then Night then Morning on consecutive days."
+		);
+		expect(
+			read(
+				"BANNED_SHIFT_PATTERN",
+				[named("PATTERN_DAY_1", "Noche"), named("PATTERN_DAY_2", "Mañana")],
+				"es",
+				false,
+				"MUST"
+			)
+		).toBe("Nadie trabaja Noche y luego Mañana en días seguidos.");
+	});
+
+	it("reads no overtime when generating as what a generated roster does", () => {
+		expect(read("NO_OVERTIME_WHEN_GENERATING", [])).toBe(
+			"A generated roster gives nobody overtime past their normal day or week and calls nobody back on a rest day. Shifts it can’t staff without extra hours are left short, and overtime is offered when you ask the engine in Find cover."
+		);
+	});
+
+	it("reads most hours a day in Spanish", () => {
+		expect(
+			read("MAX_WORK_HOURS_PER_DAY", [plain("WORK_HOURS_A_DAY", "12")], "es")
+		).toBe(
+			"Nadie a quien se apliquen los límites de horas de la Ley de Empleo trabaja más de 12 horas en un día, horas extra incluidas."
 		);
 	});
 
@@ -452,14 +694,19 @@ describe("sentencePartsOf with constraintWords", () => {
 
 describe("firmnessOf", () => {
 	it.each([
-		["AVOID_DAYS_OFF_ON", null, "SHOULD"],
-		["REST_BETWEEN_SHIFTS", null, "MUST"],
-		["MAX_DAYS_WITHOUT_DAY_TYPES", null, "MUST"],
-		["DAY_TYPE_DAYS_PER_WEEK", null, "MUST"],
-		["SHIFT_STAFFING", "SHOULD", "SHOULD"],
-		["DAYS_OFF_PER_PERIOD", "MUST", "MUST"],
-		["SHIFT_STAFFING", null, null],
-	] as const)("reads %s with %s as %s", (type, requirement, firmness) => {
-		expect(firmnessOf({ type, requirement })).toBe(firmness);
-	});
+		["ALWAYS_SHOULD", null, "SHOULD"],
+		["ALWAYS_MUST", null, "MUST"],
+		["MUST_OR_SHOULD", "SHOULD", "SHOULD"],
+		["MUST_OR_SHOULD", "MUST", "MUST"],
+		["MUST_OR_SHOULD", null, null],
+		["SETTING", null, null],
+		["UNKNOWN", null, null],
+		[undefined, "SHOULD", "SHOULD"],
+		[undefined, null, null],
+	] as const)(
+		"reads a %s type with %s as %s",
+		(requirementPolicy, requirement, firmness) => {
+			expect(firmnessOf({ requirement, requirementPolicy })).toBe(firmness);
+		}
+	);
 });

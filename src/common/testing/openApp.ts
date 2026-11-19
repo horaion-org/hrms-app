@@ -18,9 +18,15 @@ export type OpenedApp = {
 	disconnect: () => void;
 };
 
-/** The app's real route tree, loaded at `entry` and wired to the Session and access refresh. */
-export const openApp = async (entry: string): Promise<OpenedApp> => {
-	const queryClient = new QueryClient();
+/**
+ * The app's real route tree, loaded at `entry` and wired to the Session and
+ * access refresh. Pass `queryClient` to test with particular query defaults,
+ * such as the app's own retry rule.
+ */
+export const openApp = async (
+	entry: string,
+	queryClient = new QueryClient()
+): Promise<OpenedApp> => {
 	const router = createRouter({
 		routeTree,
 		context: { queryClient },

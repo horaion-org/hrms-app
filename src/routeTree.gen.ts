@@ -20,14 +20,18 @@ import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as SignUpRouteImport } from './routes/sign-up'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated._app'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated._app.index'
+import { Route as AuthenticatedAppSplatRouteImport } from './routes/_authenticated._app.$'
 import { Route as AuthenticatedAppActivityRouteImport } from './routes/_authenticated._app.activity'
 import { Route as AuthenticatedAppAvailabilityRouteImport } from './routes/_authenticated._app.availability'
 import { Route as AuthenticatedAppForbiddenRouteImport } from './routes/_authenticated._app.forbidden'
+import { Route as AuthenticatedAppInsightsRouteImport } from './routes/_authenticated._app.insights'
 import { Route as AuthenticatedAppLeaveRouteImport } from './routes/_authenticated._app.leave'
 import { Route as AuthenticatedAppNotificationsRouteImport } from './routes/_authenticated._app.notifications'
 import { Route as AuthenticatedAppPeopleRouteImport } from './routes/_authenticated._app.people'
+import { Route as AuthenticatedAppReportsRouteImport } from './routes/_authenticated._app.reports'
 import { Route as AuthenticatedAppSchedulingRouteImport } from './routes/_authenticated._app.scheduling'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated._app.settings'
+import { Route as AuthenticatedAppShiftPreferencesRouteImport } from './routes/_authenticated._app.shift-preferences'
 import { Route as AuthenticatedAppMePasswordRouteImport } from './routes/_authenticated._app.me.password'
 import { Route as AuthenticatedAppMeProfileRouteImport } from './routes/_authenticated._app.me.profile'
 import { Route as AuthenticatedAppOrganisationIndexRouteImport } from './routes/_authenticated._app.organisation.index'
@@ -40,11 +44,13 @@ import { Route as AuthenticatedAppPeopleMembershipIdRouteImport } from './routes
 import { Route as AuthenticatedAppPeopleImportRouteImport } from './routes/_authenticated._app.people_.import'
 import { Route as AuthenticatedAppPeopleNewRouteImport } from './routes/_authenticated._app.people_.new'
 import { Route as AuthenticatedAppSchedulingScheduleIdRouteImport } from './routes/_authenticated._app.scheduling_.$scheduleId'
+import { Route as AuthenticatedAppSchedulingDepartmentRouteImport } from './routes/_authenticated._app.scheduling_.department'
 import { Route as AuthenticatedAppSchedulingNewRouteImport } from './routes/_authenticated._app.scheduling_.new'
 import { Route as AuthenticatedAppSettingsAccessRolesRouteImport } from './routes/_authenticated._app.settings_.access-roles'
 import { Route as AuthenticatedAppMeSchedulesScheduleIdRouteImport } from './routes/_authenticated._app.me.schedules.$scheduleId'
 import { Route as AuthenticatedAppOrganisationSystemRolesAccessRoleIdRouteImport } from './routes/_authenticated._app.organisation.system-roles_.$accessRoleId'
 import { Route as AuthenticatedAppOrganisationSystemRolesNewRouteImport } from './routes/_authenticated._app.organisation.system-roles_.new'
+import { Route as AuthenticatedAppSchedulingHistoryScheduleIdRouteImport } from './routes/_authenticated._app.scheduling_.history.$scheduleId'
 import { Route as AuthenticatedAppSchedulingMonthsMonthRouteImport } from './routes/_authenticated._app.scheduling_.months.$month'
 import { Route as AuthenticatedAppSettingsAccessRolesAccessRoleIdRouteImport } from './routes/_authenticated._app.settings_.access-roles_.$accessRoleId'
 import { Route as AuthenticatedAppSettingsAccessRolesNewRouteImport } from './routes/_authenticated._app.settings_.access-roles_.new'
@@ -104,6 +110,11 @@ const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppSplatRoute = AuthenticatedAppSplatRouteImport.update({
+  id: '/$',
+  path: '/$',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppActivityRoute =
   AuthenticatedAppActivityRouteImport.update({
     id: '/activity',
@@ -122,6 +133,12 @@ const AuthenticatedAppForbiddenRoute =
     path: '/forbidden',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppInsightsRoute =
+  AuthenticatedAppInsightsRouteImport.update({
+    id: '/insights',
+    path: '/insights',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppLeaveRoute = AuthenticatedAppLeaveRouteImport.update({
   id: '/leave',
   path: '/leave',
@@ -138,6 +155,11 @@ const AuthenticatedAppPeopleRoute = AuthenticatedAppPeopleRouteImport.update({
   path: '/people',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppReportsRoute = AuthenticatedAppReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppSchedulingRoute =
   AuthenticatedAppSchedulingRouteImport.update({
     id: '/scheduling',
@@ -148,6 +170,12 @@ const AuthenticatedAppSettingsRoute =
   AuthenticatedAppSettingsRouteImport.update({
     id: '/settings',
     path: '/settings',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppShiftPreferencesRoute =
+  AuthenticatedAppShiftPreferencesRouteImport.update({
+    id: '/shift-preferences',
+    path: '/shift-preferences',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppMePasswordRoute =
@@ -222,6 +250,12 @@ const AuthenticatedAppSchedulingScheduleIdRoute =
     path: '/scheduling/$scheduleId',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppSchedulingDepartmentRoute =
+  AuthenticatedAppSchedulingDepartmentRouteImport.update({
+    id: '/scheduling_/department',
+    path: '/scheduling/department',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppSchedulingNewRoute =
   AuthenticatedAppSchedulingNewRouteImport.update({
     id: '/scheduling_/new',
@@ -250,6 +284,12 @@ const AuthenticatedAppOrganisationSystemRolesNewRoute =
   AuthenticatedAppOrganisationSystemRolesNewRouteImport.update({
     id: '/organisation/system-roles_/new',
     path: '/organisation/system-roles/new',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppSchedulingHistoryScheduleIdRoute =
+  AuthenticatedAppSchedulingHistoryScheduleIdRouteImport.update({
+    id: '/scheduling_/history/$scheduleId',
+    path: '/scheduling/history/$scheduleId',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppSchedulingMonthsMonthRoute =
@@ -293,14 +333,18 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/$': typeof AuthenticatedAppSplatRoute
   '/activity': typeof AuthenticatedAppActivityRoute
   '/availability': typeof AuthenticatedAppAvailabilityRoute
   '/forbidden': typeof AuthenticatedAppForbiddenRoute
+  '/insights': typeof AuthenticatedAppInsightsRoute
   '/leave': typeof AuthenticatedAppLeaveRoute
   '/notifications': typeof AuthenticatedAppNotificationsRoute
   '/people': typeof AuthenticatedAppPeopleRoute
+  '/reports': typeof AuthenticatedAppReportsRoute
   '/scheduling': typeof AuthenticatedAppSchedulingRoute
   '/settings': typeof AuthenticatedAppSettingsRoute
+  '/shift-preferences': typeof AuthenticatedAppShiftPreferencesRoute
   '/me/password': typeof AuthenticatedAppMePasswordRoute
   '/me/profile': typeof AuthenticatedAppMeProfileRoute
   '/organisation/branches': typeof AuthenticatedAppOrganisationBranchesRoute
@@ -312,12 +356,14 @@ export interface FileRoutesByFullPath {
   '/people/import': typeof AuthenticatedAppPeopleImportRoute
   '/people/new': typeof AuthenticatedAppPeopleNewRoute
   '/scheduling/$scheduleId': typeof AuthenticatedAppSchedulingScheduleIdRoute
+  '/scheduling/department': typeof AuthenticatedAppSchedulingDepartmentRoute
   '/scheduling/new': typeof AuthenticatedAppSchedulingNewRoute
   '/settings/access-roles': typeof AuthenticatedAppSettingsAccessRolesRoute
   '/organisation/': typeof AuthenticatedAppOrganisationIndexRoute
   '/me/schedules/$scheduleId': typeof AuthenticatedAppMeSchedulesScheduleIdRoute
   '/organisation/system-roles/$accessRoleId': typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
   '/organisation/system-roles/new': typeof AuthenticatedAppOrganisationSystemRolesNewRoute
+  '/scheduling/history/$scheduleId': typeof AuthenticatedAppSchedulingHistoryScheduleIdRoute
   '/scheduling/months/$month': typeof AuthenticatedAppSchedulingMonthsMonthRoute
   '/settings/access-roles/$accessRoleId': typeof AuthenticatedAppSettingsAccessRolesAccessRoleIdRoute
   '/settings/access-roles/new': typeof AuthenticatedAppSettingsAccessRolesNewRoute
@@ -334,14 +380,18 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
+  '/$': typeof AuthenticatedAppSplatRoute
   '/activity': typeof AuthenticatedAppActivityRoute
   '/availability': typeof AuthenticatedAppAvailabilityRoute
   '/forbidden': typeof AuthenticatedAppForbiddenRoute
+  '/insights': typeof AuthenticatedAppInsightsRoute
   '/leave': typeof AuthenticatedAppLeaveRoute
   '/notifications': typeof AuthenticatedAppNotificationsRoute
   '/people': typeof AuthenticatedAppPeopleRoute
+  '/reports': typeof AuthenticatedAppReportsRoute
   '/scheduling': typeof AuthenticatedAppSchedulingRoute
   '/settings': typeof AuthenticatedAppSettingsRoute
+  '/shift-preferences': typeof AuthenticatedAppShiftPreferencesRoute
   '/me/password': typeof AuthenticatedAppMePasswordRoute
   '/me/profile': typeof AuthenticatedAppMeProfileRoute
   '/organisation/branches': typeof AuthenticatedAppOrganisationBranchesRoute
@@ -353,12 +403,14 @@ export interface FileRoutesByTo {
   '/people/import': typeof AuthenticatedAppPeopleImportRoute
   '/people/new': typeof AuthenticatedAppPeopleNewRoute
   '/scheduling/$scheduleId': typeof AuthenticatedAppSchedulingScheduleIdRoute
+  '/scheduling/department': typeof AuthenticatedAppSchedulingDepartmentRoute
   '/scheduling/new': typeof AuthenticatedAppSchedulingNewRoute
   '/settings/access-roles': typeof AuthenticatedAppSettingsAccessRolesRoute
   '/organisation': typeof AuthenticatedAppOrganisationIndexRoute
   '/me/schedules/$scheduleId': typeof AuthenticatedAppMeSchedulesScheduleIdRoute
   '/organisation/system-roles/$accessRoleId': typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
   '/organisation/system-roles/new': typeof AuthenticatedAppOrganisationSystemRolesNewRoute
+  '/scheduling/history/$scheduleId': typeof AuthenticatedAppSchedulingHistoryScheduleIdRoute
   '/scheduling/months/$month': typeof AuthenticatedAppSchedulingMonthsMonthRoute
   '/settings/access-roles/$accessRoleId': typeof AuthenticatedAppSettingsAccessRolesAccessRoleIdRoute
   '/settings/access-roles/new': typeof AuthenticatedAppSettingsAccessRolesNewRoute
@@ -377,14 +429,18 @@ export interface FileRoutesById {
   '/sign-in': typeof SignInRoute
   '/sign-up': typeof SignUpRoute
   '/_authenticated/_app': typeof AuthenticatedAppRouteWithChildren
+  '/_authenticated/_app/$': typeof AuthenticatedAppSplatRoute
   '/_authenticated/_app/activity': typeof AuthenticatedAppActivityRoute
   '/_authenticated/_app/availability': typeof AuthenticatedAppAvailabilityRoute
   '/_authenticated/_app/forbidden': typeof AuthenticatedAppForbiddenRoute
+  '/_authenticated/_app/insights': typeof AuthenticatedAppInsightsRoute
   '/_authenticated/_app/leave': typeof AuthenticatedAppLeaveRoute
   '/_authenticated/_app/notifications': typeof AuthenticatedAppNotificationsRoute
   '/_authenticated/_app/people': typeof AuthenticatedAppPeopleRoute
+  '/_authenticated/_app/reports': typeof AuthenticatedAppReportsRoute
   '/_authenticated/_app/scheduling': typeof AuthenticatedAppSchedulingRoute
   '/_authenticated/_app/settings': typeof AuthenticatedAppSettingsRoute
+  '/_authenticated/_app/shift-preferences': typeof AuthenticatedAppShiftPreferencesRoute
   '/_authenticated/_app/': typeof AuthenticatedAppIndexRoute
   '/_authenticated/_app/me/password': typeof AuthenticatedAppMePasswordRoute
   '/_authenticated/_app/me/profile': typeof AuthenticatedAppMeProfileRoute
@@ -397,12 +453,14 @@ export interface FileRoutesById {
   '/_authenticated/_app/people_/import': typeof AuthenticatedAppPeopleImportRoute
   '/_authenticated/_app/people_/new': typeof AuthenticatedAppPeopleNewRoute
   '/_authenticated/_app/scheduling_/$scheduleId': typeof AuthenticatedAppSchedulingScheduleIdRoute
+  '/_authenticated/_app/scheduling_/department': typeof AuthenticatedAppSchedulingDepartmentRoute
   '/_authenticated/_app/scheduling_/new': typeof AuthenticatedAppSchedulingNewRoute
   '/_authenticated/_app/settings_/access-roles': typeof AuthenticatedAppSettingsAccessRolesRoute
   '/_authenticated/_app/organisation/': typeof AuthenticatedAppOrganisationIndexRoute
   '/_authenticated/_app/me/schedules/$scheduleId': typeof AuthenticatedAppMeSchedulesScheduleIdRoute
   '/_authenticated/_app/organisation/system-roles_/$accessRoleId': typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
   '/_authenticated/_app/organisation/system-roles_/new': typeof AuthenticatedAppOrganisationSystemRolesNewRoute
+  '/_authenticated/_app/scheduling_/history/$scheduleId': typeof AuthenticatedAppSchedulingHistoryScheduleIdRoute
   '/_authenticated/_app/scheduling_/months/$month': typeof AuthenticatedAppSchedulingMonthsMonthRoute
   '/_authenticated/_app/settings_/access-roles_/$accessRoleId': typeof AuthenticatedAppSettingsAccessRolesAccessRoleIdRoute
   '/_authenticated/_app/settings_/access-roles_/new': typeof AuthenticatedAppSettingsAccessRolesNewRoute
@@ -421,14 +479,18 @@ export interface FileRouteTypes {
     | '/register'
     | '/sign-in'
     | '/sign-up'
+    | '/$'
     | '/activity'
     | '/availability'
     | '/forbidden'
+    | '/insights'
     | '/leave'
     | '/notifications'
     | '/people'
+    | '/reports'
     | '/scheduling'
     | '/settings'
+    | '/shift-preferences'
     | '/me/password'
     | '/me/profile'
     | '/organisation/branches'
@@ -440,12 +502,14 @@ export interface FileRouteTypes {
     | '/people/import'
     | '/people/new'
     | '/scheduling/$scheduleId'
+    | '/scheduling/department'
     | '/scheduling/new'
     | '/settings/access-roles'
     | '/organisation/'
     | '/me/schedules/$scheduleId'
     | '/organisation/system-roles/$accessRoleId'
     | '/organisation/system-roles/new'
+    | '/scheduling/history/$scheduleId'
     | '/scheduling/months/$month'
     | '/settings/access-roles/$accessRoleId'
     | '/settings/access-roles/new'
@@ -462,14 +526,18 @@ export interface FileRouteTypes {
     | '/register'
     | '/sign-in'
     | '/sign-up'
+    | '/$'
     | '/activity'
     | '/availability'
     | '/forbidden'
+    | '/insights'
     | '/leave'
     | '/notifications'
     | '/people'
+    | '/reports'
     | '/scheduling'
     | '/settings'
+    | '/shift-preferences'
     | '/me/password'
     | '/me/profile'
     | '/organisation/branches'
@@ -481,12 +549,14 @@ export interface FileRouteTypes {
     | '/people/import'
     | '/people/new'
     | '/scheduling/$scheduleId'
+    | '/scheduling/department'
     | '/scheduling/new'
     | '/settings/access-roles'
     | '/organisation'
     | '/me/schedules/$scheduleId'
     | '/organisation/system-roles/$accessRoleId'
     | '/organisation/system-roles/new'
+    | '/scheduling/history/$scheduleId'
     | '/scheduling/months/$month'
     | '/settings/access-roles/$accessRoleId'
     | '/settings/access-roles/new'
@@ -504,14 +574,18 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/_authenticated/_app'
+    | '/_authenticated/_app/$'
     | '/_authenticated/_app/activity'
     | '/_authenticated/_app/availability'
     | '/_authenticated/_app/forbidden'
+    | '/_authenticated/_app/insights'
     | '/_authenticated/_app/leave'
     | '/_authenticated/_app/notifications'
     | '/_authenticated/_app/people'
+    | '/_authenticated/_app/reports'
     | '/_authenticated/_app/scheduling'
     | '/_authenticated/_app/settings'
+    | '/_authenticated/_app/shift-preferences'
     | '/_authenticated/_app/'
     | '/_authenticated/_app/me/password'
     | '/_authenticated/_app/me/profile'
@@ -524,12 +598,14 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/people_/import'
     | '/_authenticated/_app/people_/new'
     | '/_authenticated/_app/scheduling_/$scheduleId'
+    | '/_authenticated/_app/scheduling_/department'
     | '/_authenticated/_app/scheduling_/new'
     | '/_authenticated/_app/settings_/access-roles'
     | '/_authenticated/_app/organisation/'
     | '/_authenticated/_app/me/schedules/$scheduleId'
     | '/_authenticated/_app/organisation/system-roles_/$accessRoleId'
     | '/_authenticated/_app/organisation/system-roles_/new'
+    | '/_authenticated/_app/scheduling_/history/$scheduleId'
     | '/_authenticated/_app/scheduling_/months/$month'
     | '/_authenticated/_app/settings_/access-roles_/$accessRoleId'
     | '/_authenticated/_app/settings_/access-roles_/new'
@@ -628,6 +704,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/_app/$': {
+      id: '/_authenticated/_app/$'
+      path: '/$'
+      fullPath: '/$'
+      preLoaderRoute: typeof AuthenticatedAppSplatRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/_app/activity': {
       id: '/_authenticated/_app/activity'
       path: '/activity'
@@ -647,6 +730,13 @@ declare module '@tanstack/react-router' {
       path: '/forbidden'
       fullPath: '/forbidden'
       preLoaderRoute: typeof AuthenticatedAppForbiddenRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/insights': {
+      id: '/_authenticated/_app/insights'
+      path: '/insights'
+      fullPath: '/insights'
+      preLoaderRoute: typeof AuthenticatedAppInsightsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/_app/leave': {
@@ -670,6 +760,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppPeopleRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/_app/reports': {
+      id: '/_authenticated/_app/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof AuthenticatedAppReportsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/_app/scheduling': {
       id: '/_authenticated/_app/scheduling'
       path: '/scheduling'
@@ -682,6 +779,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedAppSettingsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/shift-preferences': {
+      id: '/_authenticated/_app/shift-preferences'
+      path: '/shift-preferences'
+      fullPath: '/shift-preferences'
+      preLoaderRoute: typeof AuthenticatedAppShiftPreferencesRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/_app/me/password': {
@@ -768,6 +872,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppSchedulingScheduleIdRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/_app/scheduling_/department': {
+      id: '/_authenticated/_app/scheduling_/department'
+      path: '/scheduling/department'
+      fullPath: '/scheduling/department'
+      preLoaderRoute: typeof AuthenticatedAppSchedulingDepartmentRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/_app/scheduling_/new': {
       id: '/_authenticated/_app/scheduling_/new'
       path: '/scheduling/new'
@@ -801,6 +912,13 @@ declare module '@tanstack/react-router' {
       path: '/organisation/system-roles/new'
       fullPath: '/organisation/system-roles/new'
       preLoaderRoute: typeof AuthenticatedAppOrganisationSystemRolesNewRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/_app/scheduling_/history/$scheduleId': {
+      id: '/_authenticated/_app/scheduling_/history/$scheduleId'
+      path: '/scheduling/history/$scheduleId'
+      fullPath: '/scheduling/history/$scheduleId'
+      preLoaderRoute: typeof AuthenticatedAppSchedulingHistoryScheduleIdRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/_app/scheduling_/months/$month': {
@@ -842,14 +960,18 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAppRouteChildren {
+  AuthenticatedAppSplatRoute: typeof AuthenticatedAppSplatRoute
   AuthenticatedAppActivityRoute: typeof AuthenticatedAppActivityRoute
   AuthenticatedAppAvailabilityRoute: typeof AuthenticatedAppAvailabilityRoute
   AuthenticatedAppForbiddenRoute: typeof AuthenticatedAppForbiddenRoute
+  AuthenticatedAppInsightsRoute: typeof AuthenticatedAppInsightsRoute
   AuthenticatedAppLeaveRoute: typeof AuthenticatedAppLeaveRoute
   AuthenticatedAppNotificationsRoute: typeof AuthenticatedAppNotificationsRoute
   AuthenticatedAppPeopleRoute: typeof AuthenticatedAppPeopleRoute
+  AuthenticatedAppReportsRoute: typeof AuthenticatedAppReportsRoute
   AuthenticatedAppSchedulingRoute: typeof AuthenticatedAppSchedulingRoute
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
+  AuthenticatedAppShiftPreferencesRoute: typeof AuthenticatedAppShiftPreferencesRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
   AuthenticatedAppMePasswordRoute: typeof AuthenticatedAppMePasswordRoute
   AuthenticatedAppMeProfileRoute: typeof AuthenticatedAppMeProfileRoute
@@ -862,12 +984,14 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppPeopleImportRoute: typeof AuthenticatedAppPeopleImportRoute
   AuthenticatedAppPeopleNewRoute: typeof AuthenticatedAppPeopleNewRoute
   AuthenticatedAppSchedulingScheduleIdRoute: typeof AuthenticatedAppSchedulingScheduleIdRoute
+  AuthenticatedAppSchedulingDepartmentRoute: typeof AuthenticatedAppSchedulingDepartmentRoute
   AuthenticatedAppSchedulingNewRoute: typeof AuthenticatedAppSchedulingNewRoute
   AuthenticatedAppSettingsAccessRolesRoute: typeof AuthenticatedAppSettingsAccessRolesRoute
   AuthenticatedAppOrganisationIndexRoute: typeof AuthenticatedAppOrganisationIndexRoute
   AuthenticatedAppMeSchedulesScheduleIdRoute: typeof AuthenticatedAppMeSchedulesScheduleIdRoute
   AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute: typeof AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute
   AuthenticatedAppOrganisationSystemRolesNewRoute: typeof AuthenticatedAppOrganisationSystemRolesNewRoute
+  AuthenticatedAppSchedulingHistoryScheduleIdRoute: typeof AuthenticatedAppSchedulingHistoryScheduleIdRoute
   AuthenticatedAppSchedulingMonthsMonthRoute: typeof AuthenticatedAppSchedulingMonthsMonthRoute
   AuthenticatedAppSettingsAccessRolesAccessRoleIdRoute: typeof AuthenticatedAppSettingsAccessRolesAccessRoleIdRoute
   AuthenticatedAppSettingsAccessRolesNewRoute: typeof AuthenticatedAppSettingsAccessRolesNewRoute
@@ -876,14 +1000,18 @@ interface AuthenticatedAppRouteChildren {
 }
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
+  AuthenticatedAppSplatRoute: AuthenticatedAppSplatRoute,
   AuthenticatedAppActivityRoute: AuthenticatedAppActivityRoute,
   AuthenticatedAppAvailabilityRoute: AuthenticatedAppAvailabilityRoute,
   AuthenticatedAppForbiddenRoute: AuthenticatedAppForbiddenRoute,
+  AuthenticatedAppInsightsRoute: AuthenticatedAppInsightsRoute,
   AuthenticatedAppLeaveRoute: AuthenticatedAppLeaveRoute,
   AuthenticatedAppNotificationsRoute: AuthenticatedAppNotificationsRoute,
   AuthenticatedAppPeopleRoute: AuthenticatedAppPeopleRoute,
+  AuthenticatedAppReportsRoute: AuthenticatedAppReportsRoute,
   AuthenticatedAppSchedulingRoute: AuthenticatedAppSchedulingRoute,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
+  AuthenticatedAppShiftPreferencesRoute: AuthenticatedAppShiftPreferencesRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
   AuthenticatedAppMePasswordRoute: AuthenticatedAppMePasswordRoute,
   AuthenticatedAppMeProfileRoute: AuthenticatedAppMeProfileRoute,
@@ -903,6 +1031,8 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppPeopleNewRoute: AuthenticatedAppPeopleNewRoute,
   AuthenticatedAppSchedulingScheduleIdRoute:
     AuthenticatedAppSchedulingScheduleIdRoute,
+  AuthenticatedAppSchedulingDepartmentRoute:
+    AuthenticatedAppSchedulingDepartmentRoute,
   AuthenticatedAppSchedulingNewRoute: AuthenticatedAppSchedulingNewRoute,
   AuthenticatedAppSettingsAccessRolesRoute:
     AuthenticatedAppSettingsAccessRolesRoute,
@@ -914,6 +1044,8 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
     AuthenticatedAppOrganisationSystemRolesAccessRoleIdRoute,
   AuthenticatedAppOrganisationSystemRolesNewRoute:
     AuthenticatedAppOrganisationSystemRolesNewRoute,
+  AuthenticatedAppSchedulingHistoryScheduleIdRoute:
+    AuthenticatedAppSchedulingHistoryScheduleIdRoute,
   AuthenticatedAppSchedulingMonthsMonthRoute:
     AuthenticatedAppSchedulingMonthsMonthRoute,
   AuthenticatedAppSettingsAccessRolesAccessRoleIdRoute:

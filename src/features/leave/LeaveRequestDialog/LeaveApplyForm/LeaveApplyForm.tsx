@@ -1,17 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import dayjs from "dayjs";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import { useId, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Refusal } from "@/common/refusal";
 import type { FunctionComponent } from "@/common/types";
 import { DatePicker } from "@/components/forms/DatePicker";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
-import { Input } from "@/components/forms/Input";
 import { Select } from "@/components/forms/Select";
 import { Textarea } from "@/components/forms/Textarea";
+import { TimeSelect } from "@/components/forms/TimeSelect";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
-import { SearchIcon } from "@/components/ui/Icon";
 import { Dialog } from "@/components/ui/Dialog";
 import {
 	LEAVE_NOTES_MAX_LENGTH,
@@ -19,21 +19,30 @@ import {
 	leaveOptionsQuery,
 	rosteredDaysQuery,
 } from "@/features/leave/api";
+import {
+	dayPortionBody,
+	dayPortionChoiceOf,
+	dayPortionOptions,
+	dayPortionTimes,
+	FULL_DAY_VALUE,
+} from "@/features/leave/dayPortion";
+import { durationText, minutesBetween } from "@/features/leave/leaveLength";
 import type { ApplyField } from "@/features/leave/leaveRefusal";
 import { leaveTypeOptions } from "@/features/leave/leaveTypeOptions";
+import { durationShort } from "@/features/employmentTerms/hours";
+import {
+	memberTimeOffBalanceQuery,
+	myTimeOffBalanceQuery,
+} from "@/features/employmentTerms/timeOffBalance";
 import type { LeaveRequestBody } from "@/features/leave/types";
+import {
+	ApplyEmployeePicker,
+	type ApplyEmployees,
+} from "./ApplyEmployeePicker";
 import { RosteredDaysNotice } from "../RosteredDaysNotice";
 
-/** The people offered when applying: a search the caller owns and its current answer. */
-export type ApplyEmployees = {
-	search: string;
-	onSearch: (text: string) => void;
-	options: Array<{
-		membershipId: string;
-		displayName: string;
-		employeeCode: string;
-	}>;
-};
+export type { ApplyEmployees } from "./ApplyEmployeePicker";
+import { remarksText } from "./remarksText";
 
 export type LeaveApplyFormProps = {
 	/**
@@ -45,6 +54,11 @@ export type LeaveApplyFormProps = {
 	recording?: boolean;
 	/** Who leave may be applied for; left out when the caller applies for themself. */
 	employees?: ApplyEmployees;
+	/**
+	 * The caller may read the chosen person's time off earned
+	 * (`member_employment_terms:read`); their own is always read.
+	 */
+	readsTimeOff?: boolean;
 	/** While the application is being sent. */
 	busy: boolean;
 	/** Why the last application was refused: on a field, or as the form's alert. */
@@ -65,13 +79,16 @@ export type LeaveApplyFormInput = Omit<
  * person, the leave type, the dates and the remarks, which a type with
  * `requiresReason` asks for as a reason. The types offered are those that
  * apply to that person's home Department (the API's ADR-0077), read here
- * once the person is known, grouped by how they are counted. It only
- * collects; the caller sends.
+ * once the person is known, grouped by how they are counted. On one date,
+ * with a type that can be taken in part days, it also asks how much of the
+ * day: the full day, one of the person's leave durations, or their own
+ * times (Custom). It only collects; the caller sends.
  */
 export const LeaveApplyForm = ({
 	companyId,
 	recording = false,
 	employees,
+	readsTimeOff = false,
 	busy,
 	refusal,
 	onClose,
@@ -81,19 +98,20 @@ export const LeaveApplyForm = ({
 	const id = useId();
 	const [membershipId, setMembershipId] = useState("");
 	const [chosenType, setChosenType] = useState<string | null>(null);
-	const today = dayjs().format("YYYY-MM-DD");
+	const today = dayjs().format(ISO_DATE_FORMAT);
 	const [dates, setDates] = useState({ start: today, end: today });
 	// The applicant's remarks, sent as the API's `notes`. A leave type that asks for a reason makes them required
 	// and relabels them "Reason for leave"; that is not the reviewer's rejection reason.
 	const [remarks, setRemarks] = useState("");
 	const [missingRemarks, setMissingRemarks] = useState(false);
 	const [takeOffConfirmed, setTakeOffConfirmed] = useState(false);
+	const [chosenPortion, setChosenPortion] = useState(FULL_DAY_VALUE);
+	const [customTimes, setCustomTimes] = useState({ start: "", end: "" });
 	const own = employees === undefined;
 	const chosen = employees?.options.find(
 		(person) => person.membershipId === membershipId
 	);
 	const fields = refusal?.fields ?? {};
-	const employeeError = fields.employee ? `${id}-employee-error` : undefined;
 	const remarksIds = formRowIds(`${id}-remarks`);
 	// Until the person is known there is nothing to offer: the types depend on their Department.
 	const personKnown = own || chosen !== undefined;
@@ -110,22 +128,53 @@ export const LeaveApplyForm = ({
 		: (typeOptions[0]?.value ?? "");
 	const noTypesApply =
 		optionsReadable && options.isSuccess && typeOptions.length === 0;
+	const chosenLeaveType = leaveTypes.find(
+		(leaveType) => leaveType.code === typeCode
+	);
+	// Off in lieu draws on the time off a person earned (API ADR-0126): the form says how much is left.
+	const earnedType = chosenLeaveType?.grantKind === "EARNED";
+	const ownTimeOff = useQuery(
+		myTimeOffBalanceQuery(companyId ?? "", own && earnedType && optionsReadable)
+	).data;
+	const memberTimeOff = useQuery(
+		memberTimeOffBalanceQuery(
+			companyId ?? "",
+			chosen?.membershipId ?? "",
+			!own && earnedType && optionsReadable && readsTimeOff
+		)
+	).data;
+	const timeOffBalance = own ? ownTimeOff : memberTimeOff;
 	const remarksRequired =
-		recording ||
-		(leaveTypes.find((leaveType) => leaveType.code === typeCode)
-			?.requiresReason ??
-			false);
+		recording || (chosenLeaveType?.requiresReason ?? false);
+	const typeAllowsPartDays = chosenLeaveType?.allowsPartDays ?? false;
+	const oneDate = dates.start === dates.end;
+	const durations = optionsReadable ? (options.data?.durations ?? []) : [];
+	const portionOptions = dayPortionOptions(durations, t);
+	// Part days are one date of a type that allows them; otherwise, or when the pick no longer applies, the full day.
+	const partDaysOffered = oneDate && typeAllowsPartDays;
+	const portionValue =
+		partDaysOffered &&
+		portionOptions.some((option) => option.value === chosenPortion)
+			? chosenPortion
+			: FULL_DAY_VALUE;
+	const portion = dayPortionChoiceOf(portionValue);
+	const customMinutes =
+		customTimes.start && customTimes.end
+			? minutesBetween(customTimes.start, customTimes.end)
+			: 0;
+	const customIncomplete = portion.kind === "CUSTOM" && customMinutes === 0;
+	const portionIds = formRowIds(`${id}-portion`);
+	const remarksWords = remarksText(t, recording, remarksRequired);
 	const remarksError =
-		missingRemarks && remarksRequired
-			? t("leave.leaveReasonRequired")
-			: fields.notes;
+		missingRemarks && remarksRequired ? remarksWords.missing : fields.notes;
 	const typeError = fields.type ? `${id}-type-error` : undefined;
 	const rosterReadable =
 		companyId !== undefined && (own || chosen !== undefined);
 	const rostered = useQuery(
 		rosteredDaysQuery(
 			companyId ?? "",
-			dates,
+			// With part of the day chosen, each day says what the leave would do to its shift.
+			{ ...dates, ...dayPortionTimes(portion, durations, customTimes) },
 			chosen?.membershipId,
 			rosterReadable
 		)
@@ -138,6 +187,7 @@ export const LeaveApplyForm = ({
 	const incomplete =
 		(!own && !chosen) ||
 		typeCode === "" ||
+		customIncomplete ||
 		rosterUnknown ||
 		(recording && rosteredDays.length > 0 && !takeOffConfirmed);
 	return (
@@ -163,13 +213,14 @@ export const LeaveApplyForm = ({
 			onClose={onClose}
 		>
 			<form
+				noValidate
 				className="space-y-6"
 				id={id}
 				onSubmit={(event) => {
 					event.preventDefault();
 					if (incomplete) return;
 					const trimmedRemarks = remarks.trim();
-					if ((remarksRequired || recording) && trimmedRemarks === "") {
+					if (remarksRequired && trimmedRemarks === "") {
 						setMissingRemarks(true);
 						return;
 					}
@@ -177,6 +228,7 @@ export const LeaveApplyForm = ({
 						leaveType: typeCode,
 						startDate: dates.start,
 						endDate: dates.end,
+						...dayPortionBody(portion, customTimes),
 						...(trimmedRemarks === "" ? {} : { notes: trimmedRemarks }),
 						...(recording
 							? { takeOffRosteredDays: rosteredDays.length > 0 }
@@ -190,52 +242,13 @@ export const LeaveApplyForm = ({
 					</p>
 				)}
 				{!own && (
-					<div className="space-y-2">
-						<p className="text-sm font-medium" id={`${id}-employee`}>
-							{t("leave.employee")}
-						</p>
-						{/* A name lookup: no saved entries over the list, and a Search key on a phone's keyboard. */}
-						<Input
-							aria-label={t("leave.searchEmployee")}
-							autoComplete="off"
-							enterKeyHint="search"
-							leadingIcon={<SearchIcon />}
-							placeholder={t("leave.searchEmployee")}
-							type="search"
-							value={employees.search}
-							onChange={(event) => {
-								employees.onSearch(event.target.value);
-							}}
-						/>
-						<Select
-							aria-describedby={employeeError}
-							aria-labelledby={`${id}-employee`}
-							className="w-full"
-							placeholder={t("leave.chooseEmployee")}
-							status={fields.employee ? "error" : undefined}
-							value={membershipId}
-							options={employees.options.map((person) => ({
-								value: person.membershipId,
-								label: `${person.displayName} · ${person.employeeCode}`,
-							}))}
-							onChange={setMembershipId}
-						/>
-						{employees.options.length === 0 &&
-							employees.search.trim() !== "" && (
-								<p className="text-sm text-neutral-700">
-									{t("leave.noEmployees")}
-								</p>
-							)}
-						{fields.employee && (
-							<p
-								className="text-sm text-error-700"
-								id={`${id}-employee-error`}
-								role="alert"
-							>
-								{fields.employee}
-							</p>
-						)}
-					</div>
+					<ApplyEmployeePicker
+						employees={employees}
+						error={fields.employee}
+						id={id}
+						membershipId={membershipId}
+						onChoose={setMembershipId}
+					/>
 				)}
 				<div className="space-y-2">
 					<p className="text-sm font-medium" id={`${id}-type`}>
@@ -287,6 +300,13 @@ export const LeaveApplyForm = ({
 							{fields.type}
 						</p>
 					)}
+					{earnedType && timeOffBalance && (
+						<p className="text-sm text-neutral-700">
+							{t("leave.timeOffBalance", {
+								balance: durationShort(timeOffBalance.balanceMinutes, t),
+							})}
+						</p>
+					)}
 				</div>
 				<div className="space-y-2">
 					<p className="text-sm font-medium">{t("leave.applyPeriod")}</p>
@@ -295,12 +315,89 @@ export const LeaveApplyForm = ({
 						value={dates}
 						onChange={setDates}
 					/>
+					{!oneDate && typeAllowsPartDays && (
+						<p className="text-sm text-neutral-700">
+							{t("leave.portion.severalDays")}
+						</p>
+					)}
 					{fields.endDate && (
 						<p className="text-sm text-error-700" role="alert">
 							{fields.endDate}
 						</p>
 					)}
 				</div>
+				{partDaysOffered && (
+					<FormRow
+						error={fields.duration}
+						htmlFor={`${id}-portion`}
+						label={t("leave.portion.label")}
+						layout="stacked"
+					>
+						<Select
+							aria-labelledby={portionIds.labelId}
+							className="w-full"
+							options={portionOptions}
+							status={fields.duration ? "error" : undefined}
+							value={portionValue}
+							aria-describedby={
+								fields.duration ? portionIds.errorId : undefined
+							}
+							onChange={setChosenPortion}
+						/>
+					</FormRow>
+				)}
+				{portion.kind === "CUSTOM" && (
+					<div className="flex flex-col gap-6 sm:flex-row">
+						{(["start", "end"] as const).map((edge) => {
+							const timeIds = formRowIds(`${id}-${edge}`);
+							// Equal times hold Submit back; say why under the end, as the duration dialog does.
+							const error =
+								edge === "end" &&
+								customTimes.start !== "" &&
+								customTimes.start === customTimes.end
+									? t("leave.portion.timesEqual")
+									: undefined;
+							const hint =
+								edge === "end" && customMinutes > 0
+									? t(
+											customTimes.end < customTimes.start
+												? "leave.portion.lengthNextDay"
+												: "leave.portion.length",
+											{ length: durationText(customMinutes, t) }
+										)
+									: undefined;
+							return (
+								<FormRow
+									key={edge}
+									required
+									className="sm:flex-1"
+									error={error}
+									hint={hint}
+									htmlFor={`${id}-${edge}`}
+									label={t(`leave.portion.${edge}`)}
+									layout="stacked"
+								>
+									<TimeSelect
+										aria-labelledby={timeIds.labelId}
+										className="w-full"
+										placeholder={t("leave.portion.chooseTime")}
+										value={customTimes[edge]}
+										aria-describedby={
+											error
+												? timeIds.errorId
+												: hint
+													? timeIds.hintId
+													: undefined
+										}
+										onChange={(time) => {
+											setCustomTimes((times) => ({ ...times, [edge]: time }));
+										}}
+									/>
+								</FormRow>
+							);
+						})}
+					</div>
+				)}
 				<RosteredDaysNotice
 					confirmed={recording ? takeOffConfirmed : undefined}
 					days={rosteredDays}
@@ -316,7 +413,9 @@ export const LeaveApplyForm = ({
 				/>
 				<FormRow
 					error={remarksError}
+					hint={remarksWords.hint}
 					htmlFor={`${id}-remarks`}
+					label={remarksWords.label}
 					layout="stacked"
 					required={remarksRequired}
 					counter={
@@ -324,27 +423,10 @@ export const LeaveApplyForm = ({
 							? undefined
 							: t("leave.remarksCounter", { count: remarks.length })
 					}
-					hint={
-						recording
-							? t("leave.remarkHintEmployee")
-							: t(
-									remarksRequired
-										? "leave.leaveReasonHint"
-										: "leave.remarksHint"
-								)
-					}
-					label={
-						recording
-							? t("leave.remark")
-							: t(
-									remarksRequired
-										? "leave.leaveReason"
-										: "leave.remarksOptional"
-								)
-					}
 				>
 					<Textarea
 						id={`${id}-remarks`}
+						placeholder={remarksWords.placeholder}
 						required={remarksRequired}
 						status={remarksError ? "error" : undefined}
 						value={remarks}
@@ -354,11 +436,6 @@ export const LeaveApplyForm = ({
 						maxLength={
 							recording ? LEAVE_REMARK_MAX_LENGTH : LEAVE_NOTES_MAX_LENGTH
 						}
-						placeholder={t(
-							remarksRequired
-								? "leave.leaveReasonPlaceholder"
-								: "leave.remarksPlaceholder"
-						)}
 						onChange={(event) => {
 							setRemarks(event.target.value);
 							setMissingRemarks(false);

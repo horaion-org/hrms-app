@@ -1,5 +1,5 @@
+import { useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
-import type { TFunction } from "i18next";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
@@ -22,6 +22,9 @@ import {
 	type StatusFilter,
 } from "@/features/organisation/listColumns";
 import { jobTitleColumns } from "@/features/organisation/jobTitleColumns";
+import { jobTitleStatusCopy } from "@/features/organisation/jobTitleStatusCopy";
+import { constraintsQuery } from "@/features/scheduling/constraints/api";
+import { constraintsNamingJobTitle } from "@/features/scheduling/setupReach";
 import { useSetJobTitleStatus } from "@/features/organisation/useChangeListRow";
 import { useJobTitles } from "@/features/organisation/useOrganisationList";
 import { JOB_TITLE_READ_KEYS } from "@/features/workspace/permissionKeys";
@@ -34,32 +37,7 @@ import { selectedUnits } from "@/features/workspace/unitSelection";
 import { useAccess } from "@/features/workspace/useAccess";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 import { useUnitSelection } from "@/features/workspace/useUnitSelection";
-
-/** What the status confirm says; deactivating a title people hold names how many keep it. */
-const statusChangeCopy = (
-	jobTitle: JobTitle,
-	t: TFunction
-): { title: string; description: string; confirmLabel: string } => {
-	const key = "organisation.jobTitles.status";
-	if (jobTitle.status === "INACTIVE")
-		return {
-			title: t(`${key}.activateTitle`, { name: jobTitle.name }),
-			description: t(`${key}.activateDescription`),
-			confirmLabel: t(`${key}.activateConfirm`),
-		};
-	const count = jobTitle.holderCount;
-	return {
-		title: t(`${key}.deactivateTitle`, { name: jobTitle.name }),
-		description:
-			count > 0
-				? t(`${key}.deactivateDescriptionHeld`, { count })
-				: t(`${key}.deactivateDescription`),
-		confirmLabel:
-			count > 0
-				? t(`${key}.deactivateConfirmHeld`, { count })
-				: t(`${key}.deactivateConfirm`),
-	};
-};
+import { ListProblem } from "@/features/organisation/ListProblem";
 
 const route = getRouteApi("/_authenticated/_app/organisation/job-titles");
 
@@ -96,6 +74,27 @@ export const JobTitles = (): FunctionComponent => {
 	// The Job title whose status the person asked to change, until they confirm or cancel.
 	const [changing, setChanging] = useState<JobTitle>();
 	const setJobTitleStatus = useSetJobTitleStatus(companyId);
+	// Deactivating says how many of the department's rules name the title, where they may be read.
+	const readsConstraints =
+		changing?.status === "ACTIVE" &&
+		access.can("constraint:read", departmentScope(changing.departmentId));
+	const departmentConstraints = useQuery(
+		constraintsQuery(
+			companyId,
+			changing && {
+				branchId: changing.branchId,
+				departmentId: changing.departmentId,
+			},
+			readsConstraints
+		)
+	);
+	const namedBy =
+		changing && departmentConstraints.data
+			? constraintsNamingJobTitle(
+					departmentConstraints.data,
+					changing.jobTitleId
+				)
+			: undefined;
 	const closeChange = (): void => {
 		setJobTitleStatus.reset();
 		setChanging(undefined);
@@ -205,13 +204,14 @@ export const JobTitles = (): FunctionComponent => {
 			)}
 			{changing && (
 				<ConfirmDialog
-					{...statusChangeCopy(changing, t)}
+					{...jobTitleStatusCopy(changing, t, namedBy)}
 					cancelLabel={t("organisation.list.cancel")}
 					submitting={setJobTitleStatus.isPending}
 					error={
 						setJobTitleStatus.error
 							? mapRefusal(setJobTitleStatus.error, {
 									forbidden: t("organisation.jobTitles.status.forbidden"),
+									stillUpdating: t("organisation.stillUpdatingWrite"),
 									failed: t("organisation.jobTitles.status.failed"),
 								}).message
 							: undefined
@@ -229,15 +229,14 @@ export const JobTitles = (): FunctionComponent => {
 				/>
 			)}
 			{view.problem ? (
-				<p
-					className="mt-8 text-sm text-neutral-700 data-alert:text-error-700"
-					data-alert={view.problem.alert || undefined}
-					role={view.problem.alert ? "alert" : undefined}
-				>
-					{view.problem.message}
-				</p>
+				<ListProblem problem={view.problem} />
 			) : (
 				<>
+					{view.updating && (
+						<p className="mt-8 text-sm text-neutral-700" role="status">
+							{view.updating}
+						</p>
+					)}
 					<DataTable
 						manualSorting
 						className="mt-8"

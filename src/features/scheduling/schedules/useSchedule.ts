@@ -24,6 +24,7 @@ import {
 	type ScheduleBody,
 	type SchedulePolling,
 } from "@/features/scheduling/schedules/api";
+import { regenerateSchedule } from "@/features/scheduling/schedules/regeneration";
 import { departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 
@@ -38,6 +39,18 @@ export type ScheduleState =
 
 const refused = (error: unknown, status: number): boolean =>
 	error instanceof ApiProblemError && error.status === status;
+
+/** How old a cached schedule read may be to count as made for this visit: the route's own read lands just before the page mounts. */
+const ENTRY_READ_MAX_AGE_MS = 2_000;
+
+/**
+ * Whether a page opening on a cached schedule reads it again, however fresh
+ * the cache calls it: yes when the read is older than the visit. Its days,
+ * roster and revision may have changed since (a later run took some of its
+ * days), and a change sent at the old revision is refused.
+ */
+export const readAgainOnEntry = (readAt: number, now: number): boolean =>
+	now - readAt > ENTRY_READ_MAX_AGE_MS;
 
 /**
  * `unit` or `scheduleId` undefined asks for nothing and stays pending.
@@ -80,7 +93,8 @@ export const useSchedule = (
  * when `schedule:read` is held nowhere in the company or the API refuses with
  * a 403; `missing` when the API answers 404, which is also its answer for a
  * schedule outside the Departments where the key is held. `polling` reads it
- * again while its generation is in progress.
+ * again while its generation is in progress. A page opening on a read cached
+ * before the visit reads it again (`readAgainOnEntry`).
  */
 export const useCompanySchedule = (
 	companyId: string,
@@ -89,9 +103,11 @@ export const useCompanySchedule = (
 ): ScheduleState => {
 	const access = useAccess();
 	const allowed = access.canAnywhere("schedule:read");
-	const schedule = useQuery(
-		companyScheduleQuery(companyId, scheduleId, allowed, polling)
-	);
+	const schedule = useQuery({
+		...companyScheduleQuery(companyId, scheduleId, allowed, polling),
+		refetchOnMount: (query) =>
+			readAgainOnEntry(query.state.dataUpdatedAt, Date.now()) && "always",
+	});
 
 	if (access.status !== "ready") return { status: access.status };
 	if (!allowed) return { status: "hidden" };
@@ -119,6 +135,8 @@ export type ScheduleActions = {
 	submit: UseMutationResult<Schedule, Error, Decided>;
 	reject: UseMutationResult<Schedule, Error, Rejected>;
 	withdraw: UseMutationResult<Schedule, Error, Withdrawn>;
+	/** Generate a withdrawn roster again through its own route (API ADR-0134). */
+	regenerate: UseMutationResult<Schedule, Error, Decided>;
 };
 
 /**
@@ -159,6 +177,8 @@ export const useScheduleActions = (companyId: string): ScheduleActions => {
 	};
 	return {
 		create: useMutation({
+			// The month wizard opens the saved week's dialog straight after, which shows what was saved.
+			meta: { successMessage: false },
 			mutationFn: ({ unit, body }: Created) =>
 				createSchedule(companyId, unit, body),
 			onSuccess: saved,
@@ -207,6 +227,14 @@ export const useScheduleActions = (companyId: string): ScheduleActions => {
 			meta: { successMessage: "scheduling.decision.withdrawn" },
 			mutationFn: ({ unit, scheduleId, remark }: Withdrawn) =>
 				withdrawPublication(companyId, unit, scheduleId, remark),
+			onSuccess: saved,
+			onError: reload,
+		}),
+		regenerate: useMutation({
+			// The page shows the new run's progress itself.
+			meta: { successMessage: false },
+			mutationFn: ({ unit, scheduleId }: Decided) =>
+				regenerateSchedule(companyId, unit, scheduleId),
 			onSuccess: saved,
 			onError: reload,
 		}),

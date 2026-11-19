@@ -7,6 +7,7 @@ import {
 	rosterFromAssignments,
 	type RosterDayNote,
 	type RosterRow,
+	type RosterShiftCell,
 } from "@/features/scheduling/roster/roster";
 import {
 	daysToDecide,
@@ -15,7 +16,10 @@ import {
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 import {
 	generationFindingsFixture,
+	keptAroundLeaveFixture,
 	scheduleAssignmentsFixture,
+	shortenedShiftFixture,
+	workedAroundLeaveFixture,
 } from "@/features/scheduling/schedules/fixtures";
 import {
 	cellIssues,
@@ -26,6 +30,8 @@ import {
 	issuesOfHeader,
 	rowIssueCount,
 	saidApartBy,
+	overtimePills,
+	shiftStatus,
 	showsRole,
 	tileStatus,
 	tileStatusKey,
@@ -144,6 +150,46 @@ describe("dayNoteLines", () => {
 					key: "leaveRequested",
 					leaveTypeName: "Annual",
 					leaveRequestId: "r1",
+				},
+			],
+		],
+		[
+			"part-day leave requested, with its part of the day",
+			{
+				flag: "LEAVE_REQUESTED",
+				leaveTypeName: "Annual",
+				leavePortion: {
+					durationName: "Morning",
+					startTime: "07:00",
+					endTime: "11:00",
+				},
+			},
+			undefined,
+			[
+				{
+					kind: "leave",
+					key: "leaveRequested",
+					leaveTypeName: "Annual",
+					leavePortion: {
+						durationName: "Morning",
+						startTime: "07:00",
+						endTime: "11:00",
+					},
+				},
+			],
+		],
+		[
+			"part of a shift short around part-day leave",
+			{
+				uncoveredShiftName: "Morning",
+				uncoveredTime: { start: "09:00", end: "11:00" },
+			},
+			undefined,
+			[
+				{
+					kind: "cover",
+					shiftName: "Morning",
+					time: { start: "09:00", end: "11:00" },
 				},
 			],
 		],
@@ -278,9 +324,27 @@ describe("dayIssueCount", () => {
 		expect(dayIssueCount(placed, "2026-10-17")).toEqual({
 			count: 1,
 			tone: "attention",
+			peopleShort: true,
 		});
 		expect(dayIssueCount(placed, "2026-10-18")).toBeUndefined();
 		expect(dayIssueCount(undefined, "2026-10-17")).toBeUndefined();
+	});
+
+	it("counts the people a day's short shifts are short, so a half-filled shift lowers it", () => {
+		const shortBy = (missing: number): ReturnType<typeof placeFindings> =>
+			placeFindings(
+				generationFindingsFixture({
+					conflicts: [
+						{ ...generationFindingsFixture().conflicts[0]!, missing },
+					],
+					errors: [],
+					assignmentMessages: [],
+				}),
+				["2026-10-17"]
+			);
+
+		expect(dayIssueCount(shortBy(2), "2026-10-17")?.count).toBe(2);
+		expect(dayIssueCount(shortBy(1), "2026-10-17")?.count).toBe(1);
 	});
 });
 
@@ -434,5 +498,104 @@ describe("issuesOfHeader", () => {
 		expect(saturday.findings[0]?.kind).toBe("conflict");
 		expect(saturday.daysToDecide).toEqual([]);
 		expect(saturday.leaveAndCover).toEqual([]);
+	});
+});
+
+describe("shiftStatus", () => {
+	let t: TFunction;
+	beforeAll(async () => {
+		const i18n = createInstance();
+		await i18n.init({ lng: "en", resources: { en: { translation: en } } });
+		t = i18n.t;
+	});
+
+	/** The Monday cell of one assignment, as the roster builds it. */
+	const mondayOf = (assignment: ScheduleAssignment): RosterShiftCell =>
+		rosterFromAssignments([assignment], {
+			start: "2026-10-12",
+			end: "2026-10-18",
+		})[0]!.days["2026-10-12"] as RosterShiftCell;
+
+	it("given_aStretchedShift_when_worded_then_saysByHowMuch", () => {
+		const stretched = {
+			...scheduleAssignmentsFixture()[0]!,
+			dayType: null,
+			stretch: { beforeMinutes: 60, afterMinutes: 60 },
+		};
+
+		expect(shiftStatus(mondayOf(stretched), false, t)).toBe(
+			"Stretched 2 h into overtime"
+		);
+	});
+
+	it("given_aStretchedShift_when_marked_then_aPillPerSideWithItsTimes", () => {
+		const stretched = {
+			...scheduleAssignmentsFixture()[0]!,
+			dayType: null,
+			stretch: { beforeMinutes: 60, afterMinutes: 60 },
+		};
+
+		expect(overtimePills(mondayOf(stretched), t)).toEqual([
+			"+OT 08:00 – 09:00",
+			"+OT 15:00 – 16:00",
+		]);
+		expect(
+			overtimePills(mondayOf(scheduleAssignmentsFixture()[0]!), t)
+		).toEqual([]);
+	});
+
+	it("given_aStretchedShiftOnARestDay_when_worded_then_saysBothTheRestDayAndTheStretch", () => {
+		const stretched = {
+			...scheduleAssignmentsFixture()[0]!,
+			dayType: "REST",
+			stretch: { beforeMinutes: 60, afterMinutes: 60 },
+		};
+
+		expect(shiftStatus(mondayOf(stretched), false, t)).toBe(
+			"On rest day · Stretched 2 h into overtime"
+		);
+	});
+
+	it("given_aShiftKeptAroundLeaveAndALeaveReader_when_worded_then_namesTheLeaveAndItsTime", () => {
+		expect(shiftStatus(mondayOf(shortenedShiftFixture()), true, t)).toBe(
+			"Annual leave 09:00–11:00"
+		);
+	});
+
+	it("given_aShiftKeptAroundLeaveForSomeoneWithoutLeaveRead_when_worded_then_saysOffAndTheTime", () => {
+		const blind = {
+			...shortenedShiftFixture(),
+			leaveTypeName: null,
+			leaveDurationName: null,
+			leaveStartTime: null,
+			leaveEndTime: null,
+			uncoveredShift: null,
+		};
+
+		expect(shiftStatus(mondayOf(blind), false, t)).toBe("Off 09:00–11:00");
+	});
+
+	it("given_leaveInTheMiddleForSomeoneWithoutLeaveRead_when_worded_then_saysOffBetweenThePieces", () => {
+		const blind = { ...workedAroundLeaveFixture(), leaveTypeName: null };
+
+		expect(shiftStatus(mondayOf(blind), false, t)).toBe("Off 11:00–13:00");
+	});
+
+	it("given_leaveAtTheEndOfAShiftOnARestDay_when_worded_then_theLeaveComesAheadOfTheDayType", () => {
+		const restDay = keptAroundLeaveFixture(
+			{ ...scheduleAssignmentsFixture()[0]!, dayType: "REST" },
+			{ start: "13:00", end: "15:00" },
+			[{ start: "09:00", end: "13:00" }]
+		);
+
+		expect(shiftStatus(mondayOf(restDay), true, t)).toBe(
+			"Annual leave 13:00–15:00"
+		);
+	});
+
+	it("given_aWholeShiftOnARestDay_when_worded_then_asTileStatus", () => {
+		const restDay = { ...scheduleAssignmentsFixture()[0]!, dayType: "REST" };
+
+		expect(shiftStatus(mondayOf(restDay), true, t)).toBe("On rest day");
 	});
 });

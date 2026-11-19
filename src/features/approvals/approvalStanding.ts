@@ -173,6 +173,7 @@ export type ApprovalLine = {
 	key:
 		| "approvals.meta.waitingOnYou"
 		| "approvals.meta.waiting"
+		| "approvals.meta.yourSubmission"
 		| "approvals.meta.needsApproval"
 		| "approvals.meta.failed";
 	values: Record<string, string | number>;
@@ -191,10 +192,18 @@ export const stepValues = (
 export const stepSummary = (labels: ReadonlyArray<string>): string =>
 	labels.join(" → ");
 
+/** The pending meta line's key by the viewer's role: a submitter is told they can't approve their own. */
+const PENDING_LINE_OF_ROLE = {
+	decider: "approvals.meta.waitingOnYou",
+	submitter: "approvals.meta.yourSubmission",
+	waiting: "approvals.meta.waiting",
+} as const satisfies Record<string, ApprovalLine["key"]>;
+
 /**
  * The header's meta line for a standing: "Waiting on you · step 1 of 2
- * (Endorse)", "Waiting for approval · …", what submitting goes through, or
- * that the submission couldn't be read. None without a flow.
+ * (Endorse)", "Waiting for approval · …", that the viewer submitted it and
+ * can't approve it, what submitting goes through, or that the submission
+ * couldn't be read. None without a flow.
  */
 export const approvalMetaLine = (
 	standing: ApprovalStanding
@@ -202,10 +211,7 @@ export const approvalMetaLine = (
 	switch (standing.kind) {
 		case "pending":
 			return {
-				key:
-					standing.role === "decider"
-						? "approvals.meta.waitingOnYou"
-						: "approvals.meta.waiting",
+				key: PENDING_LINE_OF_ROLE[standing.role],
 				values: stepValues(standing.step),
 			};
 		case "toSubmit":

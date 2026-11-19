@@ -13,12 +13,12 @@ beforeAll(async () => {
 
 const REST = {
 	type: "REST_BETWEEN_SHIFTS" as const,
-	requirement: null,
+	requirement: "MUST" as const,
 	values: [{ field: "REST_HOURS" as const, value: "11", name: null }],
 };
 
 describe("ConstraintStatement", () => {
-	it("puts a Must tag before a fixed must type's sentence, saying what happens when unmet", () => {
+	it("puts a Must tag before a must rule's sentence, saying what happens when unmet", () => {
 		const { container } = render(<ConstraintStatement constraint={REST} />);
 
 		expect(screen.getByText("Must")).toHaveAttribute(
@@ -28,6 +28,32 @@ describe("ConstraintStatement", () => {
 		expect(container).toHaveTextContent(
 			"Must Everyone gets at least 11 hours off between shifts."
 		);
+		expect(screen.getByText("Must")).toHaveClass("bg-neutral-400");
+	});
+
+	it("puts no tag before a setting, which is neither a Must nor an If possible", () => {
+		const { container } = render(
+			<ConstraintStatement
+				constraint={{
+					type: "MAX_CALL_BACKS_PER_PERSON",
+					requirement: null,
+					values: [{ field: "CALL_BACKS", value: "2", name: null }],
+				}}
+			/>
+		);
+
+		expect(screen.queryByText("Must")).toBeNull();
+		expect(container).toHaveTextContent(
+			"Everyone may be called back to work on a rest or off day at most 2 times each week."
+		);
+	});
+
+	it("tags rest between shifts chosen as a Should as If possible", () => {
+		render(
+			<ConstraintStatement constraint={{ ...REST, requirement: "SHOULD" }} />
+		);
+
+		expect(screen.getByText("If possible")).toBeVisible();
 	});
 
 	it("tags a chosen Should as If possible, and an always-should type too", () => {
@@ -39,7 +65,7 @@ describe("ConstraintStatement", () => {
 						requirement: "SHOULD",
 						values: [
 							{ field: "DAYS_OFF", value: "2", name: null },
-							{ field: "PERIOD_DAYS", value: "7", name: null },
+							{ field: "PERIOD_WEEKS", value: "1", name: null },
 						],
 					}}
 				/>
@@ -47,6 +73,7 @@ describe("ConstraintStatement", () => {
 					constraint={{
 						type: "AVOID_DAYS_OFF_ON",
 						requirement: null,
+						requirementPolicy: "ALWAYS_SHOULD",
 						values: [{ field: "WEEKDAY", value: "SUN", name: null }],
 					}}
 				/>
@@ -54,10 +81,42 @@ describe("ConstraintStatement", () => {
 		);
 
 		expect(screen.getAllByText("If possible")).toHaveLength(2);
+		for (const tag of screen.getAllByText("If possible"))
+			expect(tag).toHaveClass("bg-warning-100");
 		expect(screen.getAllByText("If possible")[0]).toHaveAttribute(
 			"title",
 			"Kept when it can be. The schedule shows where it wasn't."
 		);
+	});
+
+	it("marks a field holding a value that no longer fits, and says what to do under the sentence", () => {
+		render(
+			<ConstraintStatement
+				constraint={{
+					type: "SHIFT_STAFFING",
+					requirement: "MUST",
+					values: [
+						{ field: "COMPARISON", value: "AT_LEAST", name: null },
+						{ field: "HEADCOUNT", value: "2", name: null },
+						{
+							field: "JOB_TITLE",
+							value: "lead",
+							name: "Lead",
+							problem: "NOT_LISTED",
+						},
+						{ field: "SHIFT", value: "closing", name: "Closing" },
+					],
+				}}
+			/>
+		);
+
+		expect(screen.getByText("Lead")).toHaveClass("text-warning-700");
+		expect(screen.getByText("Closing")).not.toHaveClass("text-warning-700");
+		expect(
+			screen.getByText(
+				"Lead isn’t on every one of the constraint’s shifts any more. Edit the constraint, or add Lead to each of its shifts."
+			)
+		).toBeVisible();
 	});
 
 	it("shows who it applies to under the sentence only when given", () => {

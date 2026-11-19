@@ -14,12 +14,16 @@ import {
 	fillEmpty,
 	hasEnteredDayOn,
 	initialEntries,
+	isCellValue,
 	offCellValue,
 	offDayTypes,
 	previousWeekOf,
 	runsByMember,
 	splitDays,
+	unansweredDays,
+	unknownBeforeOf,
 	withCell,
+	type PreviousWeek,
 } from "@/features/scheduling/startingContext/startingGrid";
 
 describe("startingGrid", () => {
@@ -184,4 +188,100 @@ describe("startingGrid", () => {
 
 		expect([...runs]).toEqual([["p-tan", 3]]);
 	});
+});
+
+describe("isCellValue", () => {
+	it.each(["", "off:", "off:REST", "shift:s-night"])(
+		"given_%s_when_asked_then_aCellValue",
+		(value) => {
+			expect(isCellValue(value)).toBe(true);
+		}
+	);
+
+	it("given_anythingElse_when_asked_then_notACellValue", () => {
+		expect(isCellValue("s-night")).toBe(false);
+	});
+});
+
+describe("unansweredDays", () => {
+	it("given_daysSomeoneDoesNotKnow_when_asked_then_thoseDatesOnly", () => {
+		const week = firstWeek();
+		const answered = {
+			...week,
+			members: week.members.map((member) =>
+				member.memberProfileId === "p-siti"
+					? {
+							...member,
+							cells: member.cells.map((cell) =>
+								cell.date === "2026-11-08"
+									? {
+											...cell,
+											kind: "OFF" as const,
+											source: "ENTERED" as const,
+										}
+									: cell
+							),
+						}
+					: member
+			),
+		};
+
+		expect(
+			unansweredDays(answered, { from: "2026-11-06", to: "2026-11-08" })
+		).toEqual(["2026-11-06", "2026-11-07"]);
+	});
+});
+
+describe("unknownBeforeOf", () => {
+	const NONE: PreviousWeek = { kind: "none" };
+	const WEEK_ROSTERED: PreviousWeek = {
+		kind: "carried",
+		periodStart: "2027-06-28",
+		uncovered: 0,
+	};
+	const MONDAY_TUESDAY_ROSTERED: PreviousWeek = {
+		kind: "carried",
+		periodStart: "2027-07-05",
+		uncovered: 0,
+		days: { from: "2027-07-05", to: "2027-07-06" },
+	};
+
+	it.each([
+		{
+			case: "nothing unknown after a rostered week",
+			unknownDays: [],
+			rosterBefore: WEEK_ROSTERED,
+			expected: "nothing",
+		},
+		{
+			case: "a Monday start with nothing before",
+			unknownDays: [],
+			rosterBefore: NONE,
+			expected: "weekBefore",
+		},
+		{
+			case: "Mon and Tue unknown after a rostered week",
+			unknownDays: ["2027-07-05", "2027-07-06"],
+			rosterBefore: WEEK_ROSTERED,
+			expected: "daysOfThisWeek",
+		},
+		{
+			case: "a Wednesday start with nothing before",
+			unknownDays: ["2027-07-05", "2027-07-06"],
+			rosterBefore: NONE,
+			expected: "both",
+		},
+		// The tester's case: from Thursday, Mon and Tue rostered as a part, the week before rostered.
+		{
+			case: "only Wednesday unknown after Mon and Tue rostered",
+			unknownDays: ["2027-07-07"],
+			rosterBefore: MONDAY_TUESDAY_ROSTERED,
+			expected: "daysOfThisWeek",
+		},
+	] as const)(
+		"given_$case_when_decided_then_$expected",
+		({ unknownDays, rosterBefore, expected }) => {
+			expect(unknownBeforeOf(unknownDays, rosterBefore)).toBe(expected);
+		}
+	);
 });

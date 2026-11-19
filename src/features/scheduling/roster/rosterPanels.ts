@@ -1,6 +1,12 @@
 import type { TFunction } from "i18next";
-import { formatDay } from "@/features/scheduling/periods";
-import type { RosterRow } from "@/features/scheduling/roster/roster";
+import type { BadgeTone } from "@/components/ui/Badge";
+import { timeRangeText } from "@/features/leave/dayPortion";
+import { formatDay } from "@/common/formatDay";
+import {
+	leaveLineText,
+	leavePortionOf,
+	type RosterRow,
+} from "@/features/scheduling/roster/roster";
 import { LEAVE_MARKER_KEYS } from "@/features/scheduling/roster/rosterMarks";
 import {
 	assignmentCell,
@@ -16,11 +22,14 @@ export type PanelItem = {
 	lines: ReadonlyArray<string>;
 	/** A button under the lines, such as Find cover on a shift left short. */
 	action?: { label: string; onClick: () => void };
+	/** A tag beside the title in its own tone, such as a rule's "If possible". */
+	tag?: { label: string; tone: BadgeTone };
 };
 
 /**
  * Each day the roster marks for leave or cover: whose and which day, then
- * what is marked ("Leave requested: Annual leave", "Needs cover: Morning").
+ * what is marked ("Leave requested: Annual leave", "Needs cover: Morning",
+ * or for part of a shift "Short 09:00–11:00: Aisha Rahman is on leave").
  * With `onFindCover`, a shift left short has a Find cover button.
  */
 export const leaveAndCoverItems = (
@@ -42,13 +51,22 @@ export const leaveAndCoverItems = (
 			title: `${name} · ${formatDay(row.day, language)}`,
 			lines: [
 				...(marker
-					? [row.leaveTypeName ? `${marker}: ${row.leaveTypeName}` : marker]
+					? [
+							row.leaveTypeName
+								? `${marker}: ${leaveLineText(row.leaveTypeName, leavePortionOf(row), t)}`
+								: marker,
+						]
 					: []),
 				...(row.uncoveredShift
 					? [
-							t("scheduling.rosterMarkers.needsCover", {
-								shift: row.uncoveredShift.name,
-							}),
+							row.uncoveredFrom && row.uncoveredTo
+								? t("scheduling.rosterMarkers.partGap", {
+										time: timeRangeText(row.uncoveredFrom, row.uncoveredTo, t),
+										name,
+									})
+								: t("scheduling.rosterMarkers.needsCover", {
+										shift: row.uncoveredShift.name,
+									}),
 						]
 					: []),
 			],
@@ -86,7 +104,7 @@ export const daysToDecideItems = (
 		],
 	}));
 
-/** "Aisha Rahman: Day 4 of a run" for each member who brought working days into the period. */
+/** "Aisha Rahman has worked 3 days in a row before this week." for each member who brought working days into the period. */
 export const startingPointItems = (
 	rows: ReadonlyArray<RosterRow>,
 	startingRuns: ReadonlyMap<string, number> | undefined,
@@ -99,10 +117,12 @@ export const startingPointItems = (
 				: startingRuns?.get(row.memberProfileId);
 		if (run === undefined) return [];
 		const name = row.name ?? t("scheduling.detail.formerMember");
-		const dayOfRun = t("scheduling.startingContext.runBadge", {
-			count: run + 1,
-		});
-		return [{ key: row.key, lines: [`${name}: ${dayOfRun}`] }];
+		return [
+			{
+				key: row.key,
+				lines: [t("scheduling.detail.workedInARow", { name, count: run })],
+			},
+		];
 	});
 
 /**

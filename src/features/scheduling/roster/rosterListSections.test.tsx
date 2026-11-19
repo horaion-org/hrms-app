@@ -1,10 +1,10 @@
 import type { TFunction } from "i18next";
 import { describe, expect, it, vi } from "vitest";
-import { coverOfferFixture } from "@/features/scheduling/coverOffers/fixtures";
 import type { RosterSidePanelSection } from "@/features/scheduling/RosterSidePanel";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 import {
 	emptyFindingsFixture,
+	generationFindingsFixture,
 	generatedScheduleFixture,
 	generationFixture,
 	scheduleAssignmentsFixture,
@@ -20,13 +20,6 @@ import { rosterViewOf } from "./rosterView";
 /** Echoes the key and its values, so sections can be read without copy. */
 const t = ((key: string, values?: Record<string, unknown>) =>
 	values ? `${key}(${Object.values(values).join("|")})` : key) as TFunction;
-
-const TARGET = {
-	companyId: "c-1",
-	unit: { branchId: "b-1", departmentId: "d-1" },
-	scheduleId: "s-1",
-	runId: "run-1",
-};
 
 /** The fixture roster with Aisha's Tuesday to decide. */
 const withDayToDecide = (): Array<ScheduleAssignment> =>
@@ -63,6 +56,7 @@ const inputOf = (
 	t,
 	language: "en",
 	membersWithChangedStart: 0,
+	issues: [],
 	onShowAllIssues: vi.fn(),
 	...overrides,
 });
@@ -78,104 +72,8 @@ const shownKeys = (
 		.map(({ key }) => key);
 
 describe("rosterListSections", () => {
-	it("given_findCoverAndAShiftLeftShort_when_issuesAreListed_then_itsRowHasFindCover", () => {
-		const leaveGap = scheduleAssignmentsFixture().map((row) =>
-			row.member?.membershipId === "m-1" && row.day === "2026-10-12"
-				? { ...row, uncoveredShift: row.shift }
-				: row
-		);
-		const onFindCover = vi.fn();
-
-		const sections = rosterListSections(
-			"issues",
-			inputOf({ onFindCover }, undefined, leaveGap)
-		);
-		const row = sections.find(({ key }) => key === "leaveAndCover")?.items?.[0];
-		row?.action?.onClick();
-
-		expect(row?.action?.label).toBe("scheduling.cover.findCover");
-		expect(onFindCover).toHaveBeenCalledWith(
-			expect.objectContaining({ day: "2026-10-12" })
-		);
-	});
-
-	it("given_noFindCover_when_issuesAreListed_then_noButtonOnTheRow", () => {
-		const leaveGap = scheduleAssignmentsFixture().map((row) =>
-			row.member?.membershipId === "m-1" && row.day === "2026-10-12"
-				? { ...row, uncoveredShift: row.shift }
-				: row
-		);
-
-		const sections = rosterListSections(
-			"issues",
-			inputOf({}, undefined, leaveGap)
-		);
-
-		expect(
-			sections.find(({ key }) => key === "leaveAndCover")?.items?.[0]?.action
-		).toBeUndefined();
-	});
-
 	it.each<[string, Parameters<typeof rosterListSections>, Array<string>]>([
-		["Issues with nothing in it", ["issues", inputOf()], []],
-		[
-			"Issues with a day to decide",
-			["issues", inputOf({}, undefined, withDayToDecide())],
-			["daysToDecide"],
-		],
-		[
-			"Issues with starting points",
-			["issues", inputOf({ startingRuns: new Map([["mp-1", 3]]) })],
-			["startingPoints"],
-		],
-		[
-			"Issues on a published roster with offers out",
-			[
-				"issues",
-				inputOf({
-					coverOffers: {
-						offers: [coverOfferFixture()],
-						failed: false,
-						retry: vi.fn(),
-						target: TARGET,
-						timeZone: "Asia/Singapore",
-					},
-				}),
-			],
-			["offersOut"],
-		],
-		[
-			"Issues on a published roster whose offers couldn't be read",
-			[
-				"issues",
-				inputOf({
-					coverOffers: {
-						offers: [],
-						failed: true,
-						retry: vi.fn(),
-						target: TARGET,
-						timeZone: "Asia/Singapore",
-					},
-				}),
-			],
-			["offersOut"],
-		],
-		[
-			"Issues on a published roster with no offer out",
-			[
-				"issues",
-				inputOf({
-					coverOffers: {
-						offers: [],
-						failed: false,
-						retry: vi.fn(),
-						target: TARGET,
-						timeZone: "Asia/Singapore",
-					},
-				}),
-			],
-			[],
-		],
+		["Issues, as one list by what to do", ["issues", inputOf()], ["issues"]],
 		[
 			"Issues opened from Aisha's row header",
 			[
@@ -233,11 +131,57 @@ describe("rosterListSections", () => {
 describe("issueNoteLines", () => {
 	it("given_changedStartsAndNoFindings_when_said_then_saysOnlyTheChangedStarts", () => {
 		expect(issueNoteLines(inputOf({ membersWithChangedStart: 2 }))).toEqual([
-			"scheduling.startingContext.stale(2)",
+			{
+				title: "scheduling.issues.startChanged.title(2)",
+				detail: "scheduling.issues.startChanged.detail",
+				topic: "scheduling.issues.topics.startChanged",
+			},
 		]);
 	});
 
 	it("given_nothingChangedSinceGeneration_when_said_then_saysNothing", () => {
 		expect(issueNoteLines(inputOf())).toEqual([]);
+	});
+
+	it("given_handChanges_when_said_then_saysTheNotesAreFromGenerationOnlyWhereValidateIsNotThere", () => {
+		const [first, ...rest] = scheduleAssignmentsFixture();
+		const edited = [
+			{
+				...first!,
+				lastChange: {
+					changeId: "rc-1",
+					appliedAt: "2026-10-10T09:00:00Z",
+					appliedBy: { membershipId: "m-9", displayName: "Sam Tan" },
+					remark: null,
+					before: {
+						kind: "OFF" as const,
+						dayType: "OFF",
+						shift: null,
+						jobTitle: null,
+					},
+				},
+			},
+			...rest,
+		];
+		const withFindings = (
+			overrides: Partial<RosterListInput>
+		): RosterListInput => {
+			const input = inputOf(overrides, { week: "2026-10-12" }, edited);
+			return {
+				...input,
+				roster: { ...input.roster, findings: generationFindingsFixture() },
+			};
+		};
+
+		expect(issueNoteLines(withFindings({}))).toEqual([
+			{
+				title: "scheduling.issues.fromGeneration.title",
+				detail: "scheduling.issues.fromGeneration.detail",
+				topic: "scheduling.issues.topics.fromGeneration",
+			},
+		]);
+		expect(
+			issueNoteLines(withFindings({ validationNote: <p>Validated</p> }))
+		).toEqual([]);
 	});
 });

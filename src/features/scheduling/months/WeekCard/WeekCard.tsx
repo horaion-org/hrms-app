@@ -1,4 +1,5 @@
 import { useId } from "react";
+import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
@@ -6,42 +7,145 @@ import type { FunctionComponent } from "@/common/types";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import type { MonthWeek } from "@/features/scheduling/months/api";
+import {
+	dayCountOf,
+	namedSpansOf,
+} from "@/features/scheduling/dates/datesSetup";
 import { DayCoverMarks } from "@/features/scheduling/months/DayCoverMarks";
-import { formatWeekDates } from "@/features/scheduling/months/monthWeeks";
+import {
+	formatPartDays,
+	formatWeekDates,
+} from "@/features/scheduling/months/monthWeeks";
+import {
+	weekGapsOf,
+	type WeekGap,
+} from "@/features/scheduling/months/weekGaps";
+import { listsWeekParts } from "@/features/scheduling/months/rosterWeeks";
+import { WeekPartLinks } from "@/features/scheduling/months/WeekPartLinks";
+import { weekHeadline } from "@/features/scheduling/months/weekHeadline";
 import {
 	hasRoster,
+	showsCoverSummary,
 	weekAction,
 	weekStateTones,
 } from "@/features/scheduling/months/weekStateLooks";
+import { refusalOfCode } from "@/features/scheduling/schedules/scheduleRefusal";
 import { scheduleViewLink } from "@/features/scheduling/schedules/scheduleViewLink";
 
 export type WeekCardProps = {
 	week: MonthWeek;
-	/** Why a failed week gave no roster, in today's failure words. */
+	/**
+	 * Why the week's newest run gave no roster, in today's failure words: a
+	 * failed week, or a week whose regeneration failed and kept its roster.
+	 */
 	failureMessage?: string;
 	/** Why the last month run refused this week, in today's refusal words. */
 	refusal?: string;
+	/** The dates of the month's failed week, named when its failure took this week out of the queue. */
+	failedWeek?: string;
 	/** The week's Department, for the link to a draft's setup. */
 	departmentId: string;
+	/** The branch's today (ISO date): days before it with no roster can't be scheduled. */
+	today: string;
+	/** Whether the viewer may schedule days here, which "Schedule <days>" does. */
+	mayCreate: boolean;
 	className?: string;
 };
 
 const key = "scheduling.months";
 
 /**
+ * What a week of one part says (API ADR-0113): the days that part covers,
+ * named when a manager named it; nothing for a week one schedule covers
+ * whole. A week of several parts lists them instead (`WeekPartLinks`).
+ */
+const coversLineOf = (
+	week: MonthWeek,
+	datesOf: (from: string, to: string) => string,
+	t: TFunction
+): string | undefined => {
+	const { coveredFrom, coveredTo } = week;
+	if (!coveredFrom || !coveredTo) return undefined;
+	if (coveredFrom === week.periodStart && coveredTo === week.periodEnd)
+		return undefined;
+	const range = datesOf(coveredFrom, coveredTo);
+	const named = namedSpansOf(week.parts).find(
+		(span) => span.from <= coveredFrom && span.to >= coveredTo
+	);
+	return named
+		? t(`${key}.cover.coversNamed`, { name: named.name, range })
+		: t(`${key}.cover.covers`, { range });
+};
+
+/** A run of the week's days with no roster, and "Schedule <days>" for days that can be scheduled, where allowed. */
+const WeekGapLine = ({
+	gap,
+	departmentId,
+	mayCreate,
+}: {
+	gap: WeekGap;
+	departmentId: string;
+	mayCreate: boolean;
+}): FunctionComponent => {
+	const { t, i18n } = useTranslation();
+	const days = formatPartDays(
+		{ start: gap.days.from, end: gap.days.to },
+		formattingLocale(i18n)
+	);
+	const count = dayCountOf(gap.days.from, gap.days.to);
+	return (
+		<div className="flex flex-col items-start gap-1 text-sm text-neutral-800">
+			<p>
+				{gap.kind === "passed"
+					? t(`${key}.cover.passedNoRoster`, { days, count })
+					: gap.kind === "beforePublished"
+						? t("scheduling.roster.noneBeforePublished", { days, count })
+						: t(`${key}.cover.noRoster`, { days, count })}
+			</p>
+			{gap.kind === "open" && mayCreate && (
+				// The same dates run the roster page's "Schedule <days>" opens (WeekPartsCallout).
+				<Button
+					size="sm"
+					to="/scheduling/new"
+					variant="secondary"
+					search={{
+						department: departmentId,
+						for: "dates",
+						firstDay: gap.days.from,
+						lastDay: gap.days.to,
+					}}
+				>
+					{t("scheduling.roster.remainingButton", { rest: days })}
+				</Button>
+			)}
+		</div>
+	);
+};
+
+/**
  * One week of a Department's month: its dates, its state, its seven days'
  * cover and how many were changed by hand, and one action: Review on the
  * week under review, Open on any other week with a schedule (a draft opens
- * its setup, any other its roster), none on a week not generated yet. A
- * tentative or missing week has a dashed frame: it is not final. A failed
- * week says why; a week the last month run refused says why too. A week
- * being generated shows its state only.
+ * its setup, any other its roster), none on a week not generated yet. A week
+ * of several schedules shows the state of its part needing attention first
+ * (a published newest part never hides an earlier one to review), lists
+ * each part by its days and state, each opening its own roster, and offers
+ * Review on the first part to review. A
+ * week not generated has a dashed frame: it is not final. A failed
+ * week says why, and so does a week whose regeneration failed and that shows
+ * its earlier roster; a week the last month run refused, or one a month run took
+ * out of its queue, says why too (the last run's refusal first); a week whose
+ * rules changed since it was generated says so. A week being generated shows
+ * its state only.
  */
 export const WeekCard = ({
 	week,
 	failureMessage,
 	refusal,
+	failedWeek,
 	departmentId,
+	today,
+	mayCreate,
 	className,
 }: WeekCardProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -50,10 +154,31 @@ export const WeekCard = ({
 		{ start: week.periodStart, end: week.periodEnd },
 		formattingLocale(i18n)
 	);
-	const action = weekAction(week);
+	const headline = weekHeadline(week);
+	const gaps = weekGapsOf(week, today);
+	const action = weekAction(headline);
 	const shortShifts = week.days.reduce((sum, day) => sum + day.shortShifts, 0);
 	const handChangedDays = week.handChangedDays ?? 0;
-	const dashed = week.state === "TENTATIVE" || week.state === "NOT_GENERATED";
+	const dashed = week.state === "NOT_GENERATED";
+	const datesOf = (from: string, to: string): string =>
+		formatWeekDates({ start: from, end: to }, formattingLocale(i18n));
+	const severalParts = listsWeekParts(week.parts);
+	const coversLine = severalParts ? undefined : coversLineOf(week, datesOf, t);
+	// A week with a roster whose newest run failed kept its earlier roster (API ADR-0112).
+	const failureLine = !failureMessage
+		? undefined
+		: week.state === "FAILED"
+			? failureMessage
+			: hasRoster(week.state)
+				? t("scheduling.generation.regenerationFailed", {
+						reason: failureMessage,
+					})
+				: undefined;
+	const refusalWords =
+		refusal ??
+		(week.queueRefusal
+			? refusalOfCode(week.queueRefusal.code, t, failedWeek)
+			: undefined);
 
 	return (
 		<section
@@ -70,55 +195,75 @@ export const WeekCard = ({
 				<h2 className="text-base font-bold text-neutral-900" id={titleId}>
 					{dates}
 				</h2>
-				<Badge tone={weekStateTones[week.state]}>
-					{t(`${key}.states.${week.state}`)}
+				<Badge tone={weekStateTones[headline.state]}>
+					{t(`${key}.states.${headline.state}`)}
 				</Badge>
 			</div>
-			{week.state === "FAILED" && failureMessage && (
-				<p className="text-sm text-neutral-800">{failureMessage}</p>
+			{coversLine && <p className="text-sm text-neutral-800">{coversLine}</p>}
+			{failureLine && <p className="text-sm text-neutral-800">{failureLine}</p>}
+			{week.rulesChanged === true && (
+				<p className="text-sm text-neutral-800">{t(`${key}.rulesChanged`)}</p>
 			)}
-			{refusal && (
+			{refusalWords && (
 				<p className="text-sm text-neutral-800">
-					{t(`${key}.generate.refused`, { reason: refusal })}
+					{t(`${key}.generate.refused`, { reason: refusalWords })}
 				</p>
 			)}
 			<DayCoverMarks days={week.days} />
-			{hasRoster(week.state) && (
+			{showsCoverSummary(week) && (
 				<div className="text-sm text-neutral-800">
 					<p>
 						{shortShifts > 0
 							? t(`${key}.cover.shiftsShort`, { count: shortShifts })
-							: t(`${key}.cover.everyShiftCovered`)}
+							: gaps.length === 0 && t(`${key}.cover.everyShiftCovered`)}
 					</p>
 					{handChangedDays > 0 && (
 						<p>{t(`${key}.cover.handChanged`, { count: handChangedDays })}</p>
 					)}
 				</div>
 			)}
-			{action && week.scheduleId && (
-				<Button
-					{...scheduleViewLink({
-						scheduleId: week.scheduleId,
-						departmentId,
-						// Only a draft opens elsewhere (its setup); every other week opens its roster.
-						status: week.state === "DRAFT" ? "DRAFT" : "GENERATED",
-					})}
-					className="mt-auto self-start"
-					variant={action === "review" ? "primary" : "secondary"}
-					aria-label={t(
-						action === "review"
-							? `${key}.actions.reviewWeek`
-							: `${key}.actions.openWeek`,
-						{ week: dates }
-					)}
-				>
-					{t(
-						action === "review"
-							? `${key}.actions.review`
-							: `${key}.actions.open`
-					)}
-				</Button>
+			{gaps.map((gap) => (
+				<WeekGapLine
+					key={gap.days.from}
+					departmentId={departmentId}
+					gap={gap}
+					mayCreate={mayCreate}
+				/>
+			))}
+			{severalParts && (
+				<WeekPartLinks
+					className="mt-auto"
+					departmentId={departmentId}
+					parts={week.parts}
+				/>
 			)}
+			{/* A week of several schedules opens each from its list; Review still leads to the part to review. */}
+			{action &&
+				headline.scheduleId &&
+				(!severalParts || action === "review") && (
+					<Button
+						{...scheduleViewLink({
+							scheduleId: headline.scheduleId,
+							departmentId,
+							// Only a draft opens elsewhere (its setup); every other week opens its roster.
+							status: headline.state === "DRAFT" ? "DRAFT" : "GENERATED",
+						})}
+						className="mt-auto self-start"
+						variant={action === "review" ? "primary" : "secondary"}
+						aria-label={t(
+							action === "review"
+								? `${key}.actions.reviewWeek`
+								: `${key}.actions.openWeek`,
+							{ week: dates }
+						)}
+					>
+						{t(
+							action === "review"
+								? `${key}.actions.review`
+								: `${key}.actions.open`
+						)}
+					</Button>
+				)}
 		</section>
 	);
 };

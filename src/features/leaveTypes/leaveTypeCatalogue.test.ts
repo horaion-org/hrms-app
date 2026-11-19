@@ -50,6 +50,26 @@ describe("catalogueSections", () => {
 		expect(sections.inactive.map((type) => type.name)).toEqual(["Study leave"]);
 	});
 
+	it("given_offInLieuEarned_when_split_then_itsOwnGroupBetweenPerOccasionAndNoAllowance", () => {
+		const sections = catalogueSections([
+			managedLeaveTypeFixture({
+				leaveTypeId: "u",
+				name: "Unpaid leave",
+				grantKind: "UNTRACKED",
+			}),
+			managedLeaveTypeFixture({
+				leaveTypeId: "o",
+				name: "Off in lieu",
+				grantKind: "EARNED",
+			}),
+		]);
+		expect(sections.groups.map((group) => group.grantKind)).toEqual([
+			"EARNED",
+			"UNTRACKED",
+		]);
+		expect(sections.inactive).toEqual([]);
+	});
+
 	it("lists a type of a kind the app does not know with the inactive ones, never in a group", () => {
 		const sections = catalogueSections([
 			managedLeaveTypeFixture({

@@ -1,16 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { DepartmentPath } from "@/common/companyPath";
+import { joinClassNames } from "@/common/joinClassNames";
 import { ApiProblemError } from "@/common/problem";
 import type { FunctionComponent } from "@/common/types";
-import {
-	openingBalancesKey,
-	openingBalancesQuery,
-	saveOpeningBalances,
-	type OpeningBalances,
-	type OpeningEntry,
-} from "@/features/scheduling/hours/api";
+import type { DayRun } from "@/features/scheduling/dates/api";
+import { OpeningHoursSection } from "@/features/scheduling/hours/OpeningHoursSection";
 import {
 	saveStartingDays,
 	startingDaysKey,
@@ -21,8 +17,13 @@ import { StartingContextCallout } from "@/features/scheduling/startingContext/St
 import { StartingDaysDialog } from "@/features/scheduling/startingContext/StartingDaysDialog";
 import {
 	enteredMemberCount,
+	previousWeekOf,
 	initialEntries,
+	unansweredDays,
 } from "@/features/scheduling/startingContext/startingGrid";
+
+/** Which dialog to open once the draft has been read: last week's days, or the hours worked this month. */
+export type StartingPointDialog = "days" | "hours";
 
 export type StartingContextSectionProps = {
 	companyId: string;
@@ -32,30 +33,39 @@ export type StartingContextSectionProps = {
 	nonWorkingDayTypes: ReadonlyArray<string>;
 	/** Whether the person may change the draft (`schedule:update`, still a draft). */
 	canEdit: boolean;
-	/** Opens the grid as soon as the openings have been read, for a caller that just saved the draft to add them to. */
-	openOnStart?: boolean;
+	/** Opens a dialog as soon as the draft has been read, for a caller that just saved the draft to add to it. */
+	openOnStart?: StartingPointDialog;
+	/**
+	 * Called once the dialog has opened on start, so the caller forgets it: a later visit to the step then opens
+	 * nothing by itself, only the dialog's own button does.
+	 */
+	onOpenedOnStart?: () => void;
+	/**
+	 * Whether the hours worked this month show; true when left out. Left out
+	 * for a later week of a month run: a month has one opening per person,
+	 * entered on its first week.
+	 */
+	showsHours?: boolean;
+	/** This week's days before its first generated day, when it has begun; the notice names those still unknown. */
+	daysBefore?: DayRun;
 	className?: string;
 };
 
-/** The refusal codes the dialog words itself; anything else is a plain failure. */
+/** The refusal codes the days dialog words itself; anything else is a plain failure. */
 const PROBLEMS = {
 	INVALID_STARTING_DAY: "scheduling.startingContext.invalid",
 	SCHEDULE_NOT_DRAFT: "scheduling.startingContext.notDraft",
-	INVALID_OPENING_BALANCE: "scheduling.startingContext.opening.invalid",
-	OPENING_BALANCE_LOCKED: "scheduling.startingContext.opening.locked",
-	OPENING_BALANCES_PUBLISHED: "scheduling.startingContext.opening.published",
 } as const;
 
 type ProblemCode = keyof typeof PROBLEMS;
-type ProblemKey = (typeof PROBLEMS)[ProblemCode];
 
 const isProblemCode = (code: string | undefined): code is ProblemCode =>
 	code !== undefined && code in PROBLEMS;
 
-/** The words for a refused request: a known refusal's own, or the plain failure. */
+/** The words for a refused save: a known refusal's own, or the plain failure. */
 const problemKeyOf = (
 	error: unknown
-): ProblemKey | "scheduling.startingContext.failed" => {
+): (typeof PROBLEMS)[ProblemCode] | "scheduling.startingContext.failed" => {
 	const code = error instanceof ApiProblemError ? error.errorCode : undefined;
 	return isProblemCode(code)
 		? PROBLEMS[code]
@@ -63,27 +73,11 @@ const problemKeyOf = (
 };
 
 /**
- * What one save answered: the days always went through by then; the openings
- * may have been refused, which the dialog shows while keeping the typed hours
- * (the two are separate requests).
- */
-type Saved = { openingsRefusal?: unknown };
-
-/** What one save sends: the week's entered days and, when any changed, the openings. */
-type Entered = {
-	days: Array<EnteredDay>;
-	openings: Array<OpeningEntry> | undefined;
-};
-
-/**
- * The days before the period on the Generate step: the calm line saying where
- * everyone starts, and, where the draft may change, the grid to add last
- * week's days and, for a roster starting mid-month, each member's hours and
- * overtime so far this month. The grid opens only once the openings have been
- * read (or failed to read), so it never saves over figures it did not see.
- * Saving puts the days, then only the openings that changed; the days' answer
- * is kept even when the openings are refused, and the dialog stays open with
- * the typed hours so the person can fix them and save again.
+ * Where everyone starts on the Generate step, in two parts: the line about
+ * last week with the grid to add its days, and, below it, the hours people
+ * already worked this month with their own dialog (OpeningHoursSection).
+ * Each saves on its own. Under the line about last week, one fixed sentence
+ * says the shifts already rostered in the 7 days after stay as they are.
  */
 export const StartingContextSection = ({
 	companyId,
@@ -91,99 +85,84 @@ export const StartingContextSection = ({
 	scheduleId,
 	nonWorkingDayTypes,
 	canEdit,
-	openOnStart = false,
+	openOnStart,
+	onOpenedOnStart,
+	showsHours = true,
+	daysBefore,
 	className,
 }: StartingContextSectionProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const queryClient = useQueryClient();
-	const [open, setOpen] = useState(false);
+	const [daysOpen, setDaysOpen] = useState(false);
+	const [hoursOpen, setHoursOpen] = useState(false);
 	const week = useQuery(startingDaysQuery(companyId, unit, scheduleId));
-	const openings = useQuery(openingBalancesQuery(companyId, unit, scheduleId));
 	const saving = useMutation({
-		mutationFn: async (entered: Entered): Promise<Saved> => {
-			const answeredWeek = await saveStartingDays(
-				companyId,
-				unit,
-				scheduleId,
-				entered.days
-			);
+		mutationFn: (days: Array<EnteredDay>) =>
+			saveStartingDays(companyId, unit, scheduleId, days),
+		meta: { successMessage: "scheduling.startingContext.saved" },
+		onSuccess: (answered) => {
 			queryClient.setQueryData(
 				startingDaysKey(companyId, scheduleId),
-				answeredWeek
+				answered
 			);
-			if (entered.openings === undefined) return {};
-			try {
-				const answeredOpenings: OpeningBalances = await saveOpeningBalances(
-					companyId,
-					unit,
-					scheduleId,
-					entered.openings
-				);
-				queryClient.setQueryData(
-					openingBalancesKey(companyId, scheduleId),
-					answeredOpenings
-				);
-				return {};
-			} catch (refusal) {
-				return { openingsRefusal: refusal };
-			}
-		},
-		onSuccess: (saved) => {
-			if (saved.openingsRefusal === undefined) setOpen(false);
+			setDaysOpen(false);
 		},
 	});
-	// Opened once, on the same condition the link waits for, so the grid never saves over figures it did not see.
+	// Opened once, when the draft has been read.
 	const [openedOnStart, setOpenedOnStart] = useState(false);
-	if (
-		openOnStart &&
-		canEdit &&
-		!openedOnStart &&
-		week.data !== undefined &&
-		!openings.isPending
-	) {
+	if (openOnStart && canEdit && !openedOnStart && week.data !== undefined) {
 		setOpenedOnStart(true);
-		setOpen(true);
+		if (openOnStart === "days") setDaysOpen(true);
+		else setHoursOpen(true);
 	}
+	useEffect(() => {
+		if (openedOnStart) onOpenedOnStart?.();
+	}, [openedOnStart, onOpenedOnStart]);
 	if (week.data === undefined) return null;
-	const openingsRefusal = saving.data?.openingsRefusal;
-	const problem = saving.isError
-		? t(problemKeyOf(saving.error))
-		: openingsRefusal === undefined
-			? undefined
-			: t("scheduling.startingContext.opening.daysSavedHoursNot", {
-					reason: t(problemKeyOf(openingsRefusal)),
-				});
 	return (
-		<>
+		<div className={joinClassNames("flex flex-col gap-4", className)}>
 			<StartingContextCallout
-				className={className}
 				enteredCount={enteredMemberCount(initialEntries(week.data))}
-				week={week.data}
+				previous={previousWeekOf(week.data)}
+				unknownDays={daysBefore && unansweredDays(week.data, daysBefore)}
 				onAdd={
-					canEdit && !openings.isPending
+					canEdit
 						? (): void => {
 								saving.reset();
-								setOpen(true);
+								setDaysOpen(true);
 							}
 						: undefined
 				}
 			/>
-			{open && (
+			<p className="text-sm text-neutral-700">
+				{t("scheduling.startingContext.fittedAroundAfter")}
+			</p>
+			{showsHours && (
+				<OpeningHoursSection
+					canEdit={canEdit}
+					companyId={companyId}
+					generated={false}
+					open={hoursOpen}
+					scheduleId={scheduleId}
+					unit={unit}
+					onOpenChange={setHoursOpen}
+				/>
+			)}
+			{daysOpen && (
 				<StartingDaysDialog
 					open
 					nonWorkingDayTypes={nonWorkingDayTypes}
-					openings={openings.data}
-					problem={problem}
+					problem={saving.isError ? t(problemKeyOf(saving.error)) : undefined}
 					saving={saving.isPending}
 					week={week.data}
 					onClose={() => {
-						setOpen(false);
+						setDaysOpen(false);
 					}}
-					onSave={(days, changedOpenings) => {
-						saving.mutate({ days, openings: changedOpenings });
+					onSave={(days) => {
+						saving.mutate(days);
 					}}
 				/>
 			)}
-		</>
+		</div>
 	);
 };

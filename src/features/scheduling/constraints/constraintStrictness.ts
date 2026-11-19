@@ -97,6 +97,10 @@ const byField = (
 	}
 };
 
+/** Whether a constraint of a type with the choice is a Must; one saved without a requirement ran as one, as the API reads it. */
+const isMust = (constraint: ComparedConstraint): boolean =>
+	(constraint.requirement ?? "MUST") === "MUST";
+
 /** How `candidate` compares with the `parent` it would replace, field by field as `type` declares. */
 export const compareStrictness = (
 	type: ConstraintTypeOption,
@@ -105,11 +109,7 @@ export const compareStrictness = (
 ): Strictness => {
 	const comparison = textsOf(parent, "COMPARISON")[0];
 	const requirement = type.hasRequirement
-		? ofOrder(
-				Number(candidate.requirement === "MUST") -
-					Number(parent.requirement === "MUST"),
-				true
-			)
+		? ofOrder(Number(isMust(candidate)) - Number(isMust(parent)), true)
 		: "SAME";
 	return combine([
 		requirement,

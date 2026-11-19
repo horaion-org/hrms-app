@@ -1,13 +1,14 @@
-import type {
-	ConstraintComparison,
-	ConstraintField,
-	ConstraintFieldKind,
-	ConstraintFieldSpec,
-	FieldStrictness,
-	ConstraintOptions,
-	ConstraintTypeOption,
-	ConstraintValue,
-	DepartmentConstraint,
+import {
+	PATTERN_DAYS,
+	type ConstraintComparison,
+	type ConstraintField,
+	type ConstraintFieldKind,
+	type ConstraintFieldSpec,
+	type FieldStrictness,
+	type ConstraintOptions,
+	type ConstraintTypeOption,
+	type ConstraintValue,
+	type DepartmentConstraint,
 } from "@/features/scheduling/constraints/api";
 import type { ScheduleConstraint } from "@/features/scheduling/schedules/api";
 import {
@@ -28,19 +29,52 @@ const STRICTNESS: Record<ConstraintField, FieldStrictness> = {
 	STAND_INS_PER_PERSON: "HIGHER_IS_STRICTER",
 	DAYS_OFF: "FOLLOWS_COMPARISON",
 	PERIOD_DAYS: "AGAINST_COMPARISON",
+	PERIOD_WEEKS: "AGAINST_COMPARISON",
 	REST_HOURS: "HIGHER_IS_STRICTER",
 	JOB_TITLE: "MUST_MATCH",
 	STAND_IN_JOB_TITLE: "MUST_MATCH",
 	SHIFT: "MUST_MATCH",
+	PATTERN_DAY_1: "MUST_MATCH",
+	PATTERN_DAY_2: "MUST_MATCH",
+	PATTERN_DAY_3: "MUST_MATCH",
+	PATTERN_DAY_4: "MUST_MATCH",
+	PATTERN_DAY_5: "MUST_MATCH",
+	PATTERN_DAY_6: "MUST_MATCH",
+	PATTERN_DAY_7: "MUST_MATCH",
 	WEEKDAY: "SUPERSET_IS_STRICTER",
 	DAY_TYPE: "MUST_MATCH",
 	DAYS_IN_A_ROW: "LOWER_IS_STRICTER",
 	DAY_TYPE_COUNT: "FOLLOWS_COMPARISON",
+	WORK_HOURS_A_DAY: "LOWER_IS_STRICTER",
+	OVERTIME_HOURS_A_MONTH: "LOWER_IS_STRICTER",
+	PART_SHIFT_MINUTES: "HIGHER_IS_STRICTER",
+	CALL_BACKS: "LOWER_IS_STRICTER",
+	CALL_BACK_SPAN_DAYS: "MUST_MATCH",
+	OVERTIME_PERCENT: "MUST_MATCH",
+	REST_DAY_WORK_PERCENT: "MUST_MATCH",
+	TIME_OFF_EARNED_PERCENT: "MUST_MATCH",
+	DAY_OFF_WORK_PERCENT: "MUST_MATCH",
+	STRETCH_HOURS: "LOWER_IS_STRICTER",
 };
 
 /** Types that link to nothing may be set for the whole company; the rest by a Department only. */
 const DEPARTMENT_ONLY = ["DEPARTMENT"] as const;
 const ANY_LEVEL = ["COMPANY", "DEPARTMENT"] as const;
+
+/** A field whose values depend on no other field's, and that takes every code of its kind. */
+const NO_DEPENDENCY: Pick<
+	ConstraintFieldSpec,
+	"listedBy" | "listsSomeOf" | "excludes" | "choices" | "partialComparisons"
+> = {
+	listedBy: null,
+	listsSomeOf: [],
+	excludes: null,
+	choices: [],
+	partialComparisons: [],
+};
+
+/** The non-working day types, as the API names the codes a non-working day-type field takes (ADR-0087). */
+const NON_WORKING_DAY_TYPES = ["OFF", "REST"];
 
 /** A field chosen from a list; one value unless the counts say otherwise. */
 const choice = (
@@ -57,6 +91,7 @@ const choice = (
 	max: null,
 	strictness: STRICTNESS[field],
 	comparisons: null,
+	...NO_DEPENDENCY,
 });
 
 /** A number field in its range. */
@@ -73,6 +108,7 @@ const number = (
 	max,
 	strictness: STRICTNESS[field],
 	comparisons: null,
+	...NO_DEPENDENCY,
 });
 
 /** A comparison field that takes only some comparisons, as the weekly rule's does. */
@@ -83,6 +119,27 @@ const comparisonOf = (
 	comparisons,
 });
 
+/** Job titles a chosen shift lists, as the staffing types declare them (ADR-0085). */
+const listedByShift = (field: ConstraintField): ConstraintFieldSpec => ({
+	...choice(field, "JOB_TITLE", 1, 20),
+	listedBy: "SHIFT",
+});
+
+/** Shifts that each list one of `counted`, as the staffing types declare them. */
+const shiftsListing = (
+	counted: Array<ConstraintField>
+): ConstraintFieldSpec => ({
+	...choice("SHIFT", "SHIFT", 1, 20),
+	listsSomeOf: counted,
+});
+
+/** A number the type may leave out, as the API's optional numbers. */
+const optionalNumber = (
+	field: ConstraintField,
+	min: number,
+	max: number
+): ConstraintFieldSpec => ({ ...number(field, min, max), minCount: 0 });
+
 /** Neither added by the system nor limited to full-timers, as every type but the day-type rules. */
 const ORDINARY = { addedBySystem: false, fullTimersOnly: false } as const;
 
@@ -92,62 +149,56 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 		type: "SHIFT_STAFFING",
 		category: "STAFFING",
 		hasRequirement: true,
+		requirementPolicy: "MUST_OR_SHOULD",
 		onePerDepartment: false,
 		levels: [...DEPARTMENT_ONLY],
 		...ORDINARY,
 		fields: [
 			choice("COMPARISON", "COMPARISON"),
 			number("HEADCOUNT", 0, 999),
-			choice("JOB_TITLE", "JOB_TITLE", 1, 20),
-			choice("SHIFT", "SHIFT", 1, 20),
+			listedByShift("JOB_TITLE"),
+			shiftsListing(["JOB_TITLE"]),
 		],
 	},
 	{
 		type: "SHIFT_STAFFING_WITH_STAND_INS",
 		category: "STAFFING",
 		hasRequirement: true,
+		requirementPolicy: "MUST_OR_SHOULD",
 		onePerDepartment: false,
 		levels: [...DEPARTMENT_ONLY],
 		...ORDINARY,
 		fields: [
 			number("HEADCOUNT", 0, 999),
 			number("STAND_INS_PER_PERSON", 1, 10),
-			choice("JOB_TITLE", "JOB_TITLE", 1, 20),
-			choice("STAND_IN_JOB_TITLE", "JOB_TITLE", 1, 20),
-			choice("SHIFT", "SHIFT", 1, 20),
-		],
-	},
-	{
-		type: "ROLE_PRESENCE",
-		category: "ROLE_COVERAGE",
-		hasRequirement: true,
-		onePerDepartment: false,
-		levels: [...DEPARTMENT_ONLY],
-		...ORDINARY,
-		fields: [
-			choice("COMPARISON", "COMPARISON"),
-			number("HEADCOUNT", 0, 999),
-			choice("JOB_TITLE", "JOB_TITLE", 1, 20),
-			choice("SHIFT", "SHIFT", 1, 20),
+			listedByShift("JOB_TITLE"),
+			{ ...listedByShift("STAND_IN_JOB_TITLE"), excludes: "JOB_TITLE" },
+			shiftsListing(["JOB_TITLE", "STAND_IN_JOB_TITLE"]),
 		],
 	},
 	{
 		type: "DAYS_OFF_PER_PERIOD",
 		category: "SHIFT_PATTERN",
 		hasRequirement: true,
+		requirementPolicy: "MUST_OR_SHOULD",
 		onePerDepartment: false,
 		levels: [...ANY_LEVEL],
 		...ORDINARY,
 		fields: [
 			choice("COMPARISON", "COMPARISON"),
 			number("DAYS_OFF", 0, 31),
-			number("PERIOD_DAYS", 1, 7),
+			number("PERIOD_WEEKS", 1, 4),
+			{
+				...choice("DAY_TYPE", "DAY_TYPE", 0, 2),
+				choices: NON_WORKING_DAY_TYPES,
+			},
 		],
 	},
 	{
 		type: "AVOID_DAYS_OFF_ON",
 		category: "SHIFT_PATTERN",
-		hasRequirement: false,
+		hasRequirement: true,
+		requirementPolicy: "MUST_OR_SHOULD",
 		onePerDepartment: false,
 		levels: [...ANY_LEVEL],
 		...ORDINARY,
@@ -156,16 +207,31 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 	{
 		type: "REST_BETWEEN_SHIFTS",
 		category: "WORKING_HOURS",
-		hasRequirement: false,
+		hasRequirement: true,
+		requirementPolicy: "MUST_OR_SHOULD",
 		onePerDepartment: true,
 		levels: [...ANY_LEVEL],
 		...ORDINARY,
 		fields: [number("REST_HOURS", 1, 24)],
 	},
 	{
+		type: "BANNED_SHIFT_PATTERN",
+		category: "WORKING_HOURS",
+		hasRequirement: true,
+		requirementPolicy: "MUST_OR_SHOULD",
+		onePerDepartment: false,
+		levels: [...DEPARTMENT_ONLY],
+		...ORDINARY,
+		// Days 1 and 2 are required, 3 to 7 optional, each 1 to 20 shifts (ADR-0107 in the API).
+		fields: PATTERN_DAYS.map((day, index) =>
+			choice(day, "SHIFT", index < 2 ? 1 : 0, 20)
+		),
+	},
+	{
 		type: "MAX_DAYS_WITHOUT_DAY_TYPES",
 		category: "SHIFT_PATTERN",
-		hasRequirement: false,
+		hasRequirement: true,
+		requirementPolicy: "MUST_OR_SHOULD",
 		onePerDepartment: false,
 		levels: [...ANY_LEVEL],
 		fields: [
@@ -178,16 +244,85 @@ export const CONSTRAINT_TYPE_OPTIONS: Array<ConstraintTypeOption> = [
 	{
 		type: "DAY_TYPE_DAYS_PER_WEEK",
 		category: "SHIFT_PATTERN",
-		hasRequirement: false,
+		hasRequirement: true,
+		requirementPolicy: "MUST_OR_SHOULD",
 		onePerDepartment: false,
 		levels: [...ANY_LEVEL],
 		fields: [
 			comparisonOf(["AT_LEAST", "EXACTLY"]),
 			number("DAY_TYPE_COUNT", 1, 7),
-			choice("DAY_TYPE", "DAY_TYPE", 1, 1),
+			{
+				...choice("DAY_TYPE", "DAY_TYPE", 1, 1),
+				choices: NON_WORKING_DAY_TYPES,
+			},
 		],
 		addedBySystem: true,
 		fullTimersOnly: true,
+	},
+	{
+		type: "MAX_WORK_HOURS_PER_DAY",
+		category: "WORKING_HOURS",
+		hasRequirement: true,
+		requirementPolicy: "MUST_OR_SHOULD",
+		onePerDepartment: true,
+		levels: [...ANY_LEVEL],
+		fields: [number("WORK_HOURS_A_DAY", 1, 24)],
+		addedBySystem: true,
+		fullTimersOnly: false,
+	},
+	{
+		type: "MAX_OVERTIME_HOURS_PER_MONTH",
+		category: "WORKING_HOURS",
+		hasRequirement: true,
+		requirementPolicy: "MUST_OR_SHOULD",
+		onePerDepartment: true,
+		levels: [...ANY_LEVEL],
+		fields: [number("OVERTIME_HOURS_A_MONTH", 0, 744)],
+		addedBySystem: true,
+		fullTimersOnly: false,
+	},
+	{
+		type: "MAX_CALL_BACKS_PER_PERSON",
+		category: "WORKING_HOURS",
+		hasRequirement: true,
+		requirementPolicy: "MUST_OR_SHOULD",
+		onePerDepartment: true,
+		levels: [...ANY_LEVEL],
+		...ORDINARY,
+		fields: [
+			number("CALL_BACKS", 0, 31),
+			optionalNumber("CALL_BACK_SPAN_DAYS", 2, 31),
+		],
+	},
+	{
+		type: "NO_OVERTIME_WHEN_GENERATING",
+		category: "WORKING_HOURS",
+		hasRequirement: false,
+		requirementPolicy: "SETTING",
+		onePerDepartment: true,
+		levels: [...ANY_LEVEL],
+		...ORDINARY,
+		fields: [],
+	},
+	{
+		type: "OVERTIME_STRETCH",
+		category: "WORKING_HOURS",
+		hasRequirement: false,
+		requirementPolicy: "SETTING",
+		onePerDepartment: true,
+		levels: [...ANY_LEVEL],
+		...ORDINARY,
+		fields: [number("STRETCH_HOURS", 1, 4)],
+	},
+	{
+		type: "KEEP_DAYS_OFF_TOGETHER",
+		category: "SHIFT_PATTERN",
+		hasRequirement: true,
+		requirementPolicy: "MUST_OR_SHOULD",
+		onePerDepartment: false,
+		levels: [...ANY_LEVEL],
+		...ORDINARY,
+		fields: [],
 	},
 ];
 
@@ -198,17 +333,27 @@ export const DAY_TYPE_CHOICES = ["OFF", "REST", "LEAVE"];
 export const CONSTRAINT_OPTIONS: ConstraintOptions = {
 	types: CONSTRAINT_TYPE_OPTIONS,
 	dayTypeChoices: DAY_TYPE_CHOICES,
-	shifts: SHIFT_FIXTURES.map(({ shiftId, name, roles }) => ({
-		shiftId,
-		name,
-		jobTitleIds: roles.map((role) => role.jobTitleId),
-	})),
+	dayTypeNames: { OFF: "Day off", REST: "Rest day" },
+	// By group then name, as the API lists them.
+	shifts: [...SHIFT_FIXTURES]
+		.sort(
+			(first, second) =>
+				first.group.localeCompare(second.group) ||
+				first.name.localeCompare(second.name)
+		)
+		.map(({ shiftId, name, group, roles }) => ({
+			shiftId,
+			name,
+			jobTitleIds: roles.map((role) => role.jobTitleId),
+			listedIds: { JOB_TITLE: roles.map((role) => role.jobTitleId) },
+			group,
+		})),
 	jobTitles: [
-		{ jobTitleId: "cashier", name: "Cashier" },
-		{ jobTitleId: "front-desk-lead", name: "Front Desk Lead" },
-		{ jobTitleId: "front-desk-staff", name: "Front Desk Staff" },
-		{ jobTitleId: "service-staff", name: "Service Staff" },
-		{ jobTitleId: "supervisor", name: "Supervisor" },
+		{ jobTitleId: "cashier", name: "Cashier", listedIds: {} },
+		{ jobTitleId: "front-desk-lead", name: "Front Desk Lead", listedIds: {} },
+		{ jobTitleId: "front-desk-staff", name: "Front Desk Staff", listedIds: {} },
+		{ jobTitleId: "service-staff", name: "Service Staff", listedIds: {} },
+		{ jobTitleId: "supervisor", name: "Supervisor", listedIds: {} },
 	],
 };
 
@@ -216,16 +361,22 @@ export const CONSTRAINT_OPTIONS: ConstraintOptions = {
 export const CONSTRAINT_OPTIONS_RESPONSE = {
 	types: CONSTRAINT_OPTIONS.types,
 	dayTypeChoices: CONSTRAINT_OPTIONS.dayTypeChoices,
+	dayTypeNames: CONSTRAINT_OPTIONS.dayTypeNames,
 	links: {
-		SHIFT: CONSTRAINT_OPTIONS.shifts.map(({ shiftId, name, jobTitleIds }) => ({
-			id: shiftId,
-			name,
-			jobTitleIds,
-		})),
+		SHIFT: CONSTRAINT_OPTIONS.shifts.map(
+			({ shiftId, name, jobTitleIds, listedIds, group }) => ({
+				id: shiftId,
+				name,
+				jobTitleIds,
+				listedIds,
+				group,
+			})
+		),
 		JOB_TITLE: CONSTRAINT_OPTIONS.jobTitles.map(({ jobTitleId, name }) => ({
 			id: jobTitleId,
 			name,
 			jobTitleIds: [],
+			listedIds: {},
 		})),
 	},
 };
@@ -235,6 +386,7 @@ const plain = (field: ConstraintField, value: string): ConstraintValue => ({
 	field,
 	value,
 	name: null,
+	problem: null,
 });
 
 /** A job title or shift, with its name. */
@@ -246,6 +398,7 @@ const named = (
 	field,
 	value,
 	name,
+	problem: null,
 });
 
 /** One of Front Office's live constraints; `constraintId`, `name`, `type` and `values` set it apart. */
@@ -299,7 +452,7 @@ export const COMPANY_CONSTRAINT_FIXTURES: Array<DepartmentConstraint> = [
 		name: "Company rest",
 		type: "REST_BETWEEN_SHIFTS",
 		category: "WORKING_HOURS",
-		requirement: null,
+		requirement: "MUST",
 		lock: "LOCKED",
 		values: [plain("REST_HOURS", "11")],
 	}),
@@ -308,7 +461,7 @@ export const COMPANY_CONSTRAINT_FIXTURES: Array<DepartmentConstraint> = [
 		name: "Company weekends",
 		type: "AVOID_DAYS_OFF_ON",
 		category: "SHIFT_PATTERN",
-		requirement: null,
+		requirement: "SHOULD",
 		lock: "DEFAULT",
 		values: [plain("WEEKDAY", "SAT")],
 	}),
@@ -321,7 +474,7 @@ export const WEEKLY_RULE_FIXTURE: DepartmentConstraint =
 		name: "Rest days each week",
 		type: "DAY_TYPE_DAYS_PER_WEEK",
 		category: "SHIFT_PATTERN",
-		requirement: null,
+		requirement: "MUST",
 		lock: "LOCKED",
 		values: [
 			plain("COMPARISON", "AT_LEAST"),
@@ -330,17 +483,72 @@ export const WEEKLY_RULE_FIXTURE: DepartmentConstraint =
 		],
 	});
 
+/** The work policy's most hours a day the system adds, locked: 12 hours, overtime included. */
+export const MOST_HOURS_A_DAY_FIXTURE: DepartmentConstraint =
+	companyConstraintFixture({
+		constraintId: "most-hours-a-day",
+		name: "Most hours a day",
+		type: "MAX_WORK_HOURS_PER_DAY",
+		category: "WORKING_HOURS",
+		requirement: null,
+		lock: "LOCKED",
+		values: [plain("WORK_HOURS_A_DAY", "12")],
+	});
+
+/** The work policy's most overtime a month the system adds, locked: 72 hours. */
+export const MOST_OVERTIME_A_MONTH_FIXTURE: DepartmentConstraint =
+	companyConstraintFixture({
+		constraintId: "most-overtime-a-month",
+		name: "Most overtime a month",
+		type: "MAX_OVERTIME_HOURS_PER_MONTH",
+		category: "WORKING_HOURS",
+		requirement: null,
+		lock: "LOCKED",
+		values: [plain("OVERTIME_HOURS_A_MONTH", "72")],
+	});
+
+/** The work policy's pay rates for extra hours, at MOM's overtime and rest-day rates, a default for every department. */
+export const PAY_RATES_FIXTURE: DepartmentConstraint = companyConstraintFixture(
+	{
+		constraintId: "pay-rates",
+		name: "Pay rates",
+		type: "PAY_RATES",
+		category: "WORKING_HOURS",
+		requirement: null,
+		lock: "DEFAULT",
+		values: [
+			plain("OVERTIME_PERCENT", "150"),
+			plain("REST_DAY_WORK_PERCENT", "200"),
+			plain("TIME_OFF_EARNED_PERCENT", "100"),
+		],
+	}
+);
+
 /** Front Office's days limit: at most 6 days in a row without a Rest day or a Day off. */
 export const DAYS_LIMIT_FIXTURE: DepartmentConstraint = constraintFixture({
 	constraintId: "days-limit",
 	name: "Days in a row",
 	type: "MAX_DAYS_WITHOUT_DAY_TYPES",
 	category: "SHIFT_PATTERN",
-	requirement: null,
+	requirement: "MUST",
 	values: [
 		plain("DAYS_IN_A_ROW", "6"),
 		plain("DAY_TYPE", "OFF"),
 		plain("DAY_TYPE", "REST"),
+	],
+});
+
+/** A banned pattern of three days: Overnight Ops twice, then Front Desk AM, a Must (ADR-0107 in the API). */
+export const BANNED_PATTERN_FIXTURE: DepartmentConstraint = constraintFixture({
+	constraintId: "banned-pattern",
+	name: "No morning after nights",
+	type: "BANNED_SHIFT_PATTERN",
+	category: "WORKING_HOURS",
+	requirement: "MUST",
+	values: [
+		named("PATTERN_DAY_1", "overnight-ops", "Overnight Ops"),
+		named("PATTERN_DAY_2", "overnight-ops", "Overnight Ops"),
+		named("PATTERN_DAY_3", "front-desk-am", "Front Desk AM"),
 	],
 });
 
@@ -356,7 +564,7 @@ export const DEPARTMENTS_POLICY_FIXTURE: DepartmentConstraint =
 		values: [
 			plain("COMPARISON", "AT_LEAST"),
 			plain("DAYS_OFF", "2"),
-			plain("PERIOD_DAYS", "7"),
+			plain("PERIOD_WEEKS", "1"),
 		],
 		appliesToDepartments: [
 			{
@@ -381,7 +589,7 @@ export const BRANCH_POLICY_FIXTURE: DepartmentConstraint =
 		name: "Orchard weekends",
 		type: "AVOID_DAYS_OFF_ON",
 		category: "SHIFT_PATTERN",
-		requirement: null,
+		requirement: "SHOULD",
 		lock: "DEFAULT",
 		values: [plain("WEEKDAY", "SUN")],
 		appliesToBranches: [{ branchId: "b-1", branchName: "Orchard" }],
@@ -393,8 +601,7 @@ export const CONSTRAINT_FIXTURES: Array<DepartmentConstraint> = [
 		constraintId: "closing-supervisor",
 		requiresPeople: true,
 		name: "Closing supervisor",
-		type: "ROLE_PRESENCE",
-		category: "ROLE_COVERAGE",
+		type: "SHIFT_STAFFING",
 		requirement: "SHOULD",
 		values: [
 			plain("COMPARISON", "AT_LEAST"),
@@ -436,7 +643,7 @@ export const CONSTRAINT_FIXTURES: Array<DepartmentConstraint> = [
 		name: "Rest between shifts",
 		type: "REST_BETWEEN_SHIFTS",
 		category: "WORKING_HOURS",
-		requirement: null,
+		requirement: "MUST",
 		values: [plain("REST_HOURS", "10")],
 	}),
 	constraintFixture({
@@ -447,7 +654,7 @@ export const CONSTRAINT_FIXTURES: Array<DepartmentConstraint> = [
 		values: [
 			plain("COMPARISON", "AT_LEAST"),
 			plain("DAYS_OFF", "2"),
-			plain("PERIOD_DAYS", "7"),
+			plain("PERIOD_WEEKS", "1"),
 		],
 	}),
 	constraintFixture({
@@ -455,7 +662,7 @@ export const CONSTRAINT_FIXTURES: Array<DepartmentConstraint> = [
 		name: "Weekend days on",
 		type: "AVOID_DAYS_OFF_ON",
 		category: "SHIFT_PATTERN",
-		requirement: null,
+		requirement: "SHOULD",
 		status: "INACTIVE",
 		values: [plain("WEEKDAY", "FRI"), plain("WEEKDAY", "SAT")],
 	}),

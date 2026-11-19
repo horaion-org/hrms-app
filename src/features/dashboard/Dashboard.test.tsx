@@ -19,12 +19,19 @@ import {
 } from "@/common/testing/stubApi";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
+import {
+	shortageFixture,
+	staffingRuleFixture,
+	teamCoverOfferFixture,
+} from "@/features/dashboard/fixtures";
 import { leaveFixture } from "@/features/leave/fixtures";
 
 const REFRESH = "POST /api/v1/public/sessions/refreshes";
 const ME = "GET /api/v1/me";
 const WORKSPACE = "GET /api/v1/me/workspace";
 const LEAVE_PATH = "/api/v1/companies/c-1/leave-requests";
+const SCHEDULES_PATH = "/api/v1/companies/c-1/schedules";
+const REPORTS_PATH = "/api/v1/companies/c-1/reports";
 const LEAVE = `GET ${LEAVE_PATH}`;
 const AUDIT_EVENTS = "GET /api/v1/companies/c-1/audit-events";
 const APPROVE =
@@ -87,11 +94,10 @@ const workspaceReply = (permissions: Array<string>): StubReply => ({
 	),
 });
 
-/** Pending: 2 shown of 3; approved 5; rejected 2 — so 70% resolved. */
+/** Pending leave: one request shown of 3. Approved leave, read for who is off: none. */
 const leaveByStatus = (call: { search: string }): StubReply => {
 	const status = new URLSearchParams(call.search).get("status");
-	if (status === "APPROVED") return page([], 5);
-	if (status === "REJECTED") return page([], 2);
+	if (status === "APPROVED") return page([], 0);
 	return page([leaveFixture({ leaveRequestId: "leave-aisha" })], 3);
 };
 
@@ -130,7 +136,7 @@ const open = async (entry = "/"): Promise<OpenedApp> => {
 };
 
 describe("Dashboard", () => {
-	it("given_grants_when_opened_then_showsApprovalsNotificationsAndActivity", async () => {
+	it("given_grants_when_opened_then_showsATileAndACardForWhatNeedsThePerson", async () => {
 		stubApi(routes());
 		await open();
 
@@ -142,26 +148,58 @@ describe("Dashboard", () => {
 				element?.tagName === "P" && element.textContent === "Welcome, José."
 		);
 		expect(pageGreeting).toHaveClass("lg:hidden");
-		const approvals = await screen.findByRole("region", {
-			name: "Pending Approvals",
+		const leave = await screen.findByRole("region", {
+			name: "Leave to decide",
 		});
-		await within(approvals).findByText("3");
-		expect(approvals).toHaveTextContent("70% Resolved");
-		const notifications = screen.getByRole("region", {
-			name: "Pending leave requests",
+		expect(await within(leave).findByText("Aisha Rahman")).toBeInTheDocument();
+		// One grid whose cards share their row's height; a card with no neighbour takes the row.
+		const place = leave.parentElement;
+		expect(place).toHaveClass("lg:col-span-2");
+		expect(place?.parentElement).toHaveClass(
+			"grid",
+			"grid-cols-1",
+			"lg:grid-cols-2"
+		);
+		expect(place?.parentElement).not.toHaveClass("items-start");
+		// The tile above the cards leads to the list, and nothing else restates it.
+		const tiles = screen.getByRole("navigation", { name: "What needs you" });
+		expect(
+			within(tiles).getByRole("link", { name: /Leave.*3.*to decide/ })
+		).toHaveAttribute("href", "/#leave-to-decide");
+		// Approvals appear once: no Pending Approvals tile, no notifications list, no shortcuts.
+		expect(
+			screen.queryByRole("region", { name: "Pending Approvals" })
+		).toBeNull();
+		expect(screen.queryByRole("list", { name: "Quick Actions" })).toBeNull();
+		expect(
+			screen.getByRole("link", { name: "Recent Activity" })
+		).toHaveAttribute("href", "/activity");
+	});
+
+	it("given_moreLeaveThanThreeRows_when_opened_then_listsThreeAndLinksToTheRest", async () => {
+		const pending = Array.from({ length: 7 }, (_, index) =>
+			leaveFixture({ leaveRequestId: `leave-${index}` })
+		);
+		stubApi({
+			...routes(),
+			[LEAVE]: (call) =>
+				new URLSearchParams(call.search).get("status") === "PENDING"
+					? page(pending, 7)
+					: page([], 0),
 		});
+		await open();
+
+		const leave = await screen.findByRole("region", {
+			name: "Leave to decide",
+		});
+		expect(await within(leave).findAllByRole("listitem")).toHaveLength(3);
 		expect(
-			await within(notifications).findByText("from Aisha Rahman", {
-				exact: false,
-			})
-		).toBeInTheDocument();
-		expect(within(notifications).queryByText("Example")).toBeNull();
+			within(leave).getByRole("link", { name: "See all 7" })
+		).toHaveAttribute("href", "/leave?view=requests");
+		// The full list is a page of its own, so the card offers no toggle.
 		expect(
-			await screen.findByText("Kent Chua added to People")
-		).toBeInTheDocument();
-		expect(
-			screen.getByRole("list", { name: "Quick Actions" })
-		).toBeInTheDocument();
+			within(leave).queryByRole("button", { name: /^Show all/ })
+		).toBeNull();
 	});
 
 	it("given_severalBranches_when_theHeaderBranchChanges_then_theFiguresFollowIt", async () => {
@@ -201,7 +239,7 @@ describe("Dashboard", () => {
 		expect(branchesAsked()).toContain("b-1");
 	});
 
-	it("given_aPendingRequest_when_approvedAndConfirmed_then_sendsIt", async () => {
+	it("given_aPendingRequest_when_reviewedApprovedAndConfirmed_then_sendsIt", async () => {
 		// Before the fixture's leave starts, so the optional comment stays optional.
 		vi.spyOn(Date, "now").mockReturnValue(BEFORE_THE_FIXTURES_LEAVE);
 		const user = userEvent.setup();
@@ -216,24 +254,22 @@ describe("Dashboard", () => {
 		});
 		await open();
 		const notifications = await screen.findByRole("region", {
-			name: "Pending leave requests",
+			name: "Leave to decide",
 		});
-		await within(notifications).findByText("from Aisha Rahman", {
-			exact: false,
-		});
-
-		const approve = within(notifications).getAllByRole("button", {
-			name: "Approve",
-		})[0]!;
-		await waitFor(() => {
-			expect(approve).toBeEnabled();
-		});
-		await user.click(approve);
+		// The row's one action opens the request, where it is approved or rejected.
+		await user.click(
+			await within(notifications).findByRole("button", {
+				name: /^Review: Aisha Rahman/,
+			})
+		);
+		const dialog = await screen.findByRole("dialog", { name: "Leave request" });
+		await user.click(
+			await within(dialog).findByRole("button", { name: "Approve" })
+		);
 		// Approving asks for confirmation first, with an optional comment.
 		expect(
 			calls.filter((call) => `${call.method} ${call.path}` === APPROVE)
 		).toHaveLength(0);
-		const dialog = await screen.findByRole("dialog", { name: "Leave request" });
 		await user.click(
 			within(dialog).getByRole("button", { name: "Confirm approval" })
 		);
@@ -248,11 +284,15 @@ describe("Dashboard", () => {
 		).toHaveLength(1);
 	});
 
-	it("given_noGrants_when_opened_then_leavesOutApprovalsAndActivity", async () => {
+	it("given_noGrants_when_opened_then_leavesOutWhatTheyCannotActOn", async () => {
 		const calls = stubApi(routes([]));
 		await open();
 
-		await screen.findByRole("region", { name: "Active Workforce" });
+		await waitFor(() => {
+			expect(
+				screen.queryByRole("link", { name: "Recent Activity" })
+			).toBeNull();
+		});
 		await waitFor(() => {
 			expect(
 				screen.queryByRole("region", { name: "Pending Approvals" })
@@ -267,6 +307,389 @@ describe("Dashboard", () => {
 		expect(calls.some((call) => call.path.endsWith("/audit-events"))).toBe(
 			false
 		);
+		expect(calls.some((call) => call.path.startsWith(SCHEDULES_PATH))).toBe(
+			false
+		);
+		expect(screen.queryByRole("region", { name: "Shifts short" })).toBeNull();
+	});
+
+	it("given_rosterGrants_when_opened_then_leadsToTheShortShiftAndShowsEachCard", async () => {
+		stubApi({
+			...routes(["schedule:read", "schedule:edit_shift", "leave_request:read"]),
+			[`GET ${SCHEDULES_PATH}/shortages`]: {
+				status: 200,
+				body: envelope({
+					from: "2026-11-16",
+					to: "2026-11-29",
+					shortages: [shortageFixture()],
+				}),
+			},
+			[`GET ${SCHEDULES_PATH}/cover-offers`]: {
+				status: 200,
+				body: envelope({ offers: [teamCoverOfferFixture()] }),
+			},
+			[`GET ${SCHEDULES_PATH}/days-off`]: {
+				status: 200,
+				body: envelope({ from: "2026-11-16", to: "2026-11-16", daysOff: [] }),
+			},
+			["GET /api/v1/companies/c-1/schedule-months"]: {
+				status: 200,
+				body: envelope([]),
+			},
+		});
+		await open();
+
+		const short = await screen.findByRole("region", { name: "Shifts short" });
+		// Of three cards the first takes the row; its tile leads to it.
+		expect(short.parentElement).toHaveClass("lg:col-span-2");
+		expect(
+			screen.getByRole("link", { name: /Shifts.*1.*short/ })
+		).toHaveAttribute("href", "/#short-shifts");
+		expect(
+			await within(short).findByRole("link", { name: /^Find cover: Morning/ })
+		).toHaveAttribute(
+			"href",
+			"/scheduling/s-1?week=2026-11-16&day=2026-11-18&cover=fs-am%7C2026-11-18"
+		);
+		const offers = screen.getByRole("region", { name: "Cover offers waiting" });
+		expect(await within(offers).findByText("Kent Chua")).toBeInTheDocument();
+		// Two cards beside each other below the first, neither alone in a row.
+		const leave = await screen.findByRole("region", {
+			name: "Leave to decide",
+		});
+		expect(leave.parentElement).not.toHaveClass("lg:col-span-2");
+		expect(offers.parentElement).not.toHaveClass("lg:col-span-2");
+		// With no Department to roster, nothing is said about the coming week: no card and no tile.
+		expect(screen.queryByRole("region", { name: "Next roster" })).toBeNull();
+		const tiles = screen.getByRole("navigation", { name: "What needs you" });
+		expect(within(tiles).queryByText("Rosters")).toBeNull();
+		// Approvals are out of this person's reach, so they have no tile either.
+		expect(within(tiles).getAllByRole("listitem")).toHaveLength(4);
+	});
+
+	it("given_aRuleNobodyCanStaff_when_opened_then_namesItOnceWithItsCause", async () => {
+		stubApi({
+			...routes(["schedule:read"]),
+			[`GET ${SCHEDULES_PATH}/shortages`]: {
+				status: 200,
+				body: envelope({
+					from: "2026-11-16",
+					to: "2026-11-29",
+					shortages: ["2026-11-18", "2026-11-19", "2026-11-20"].map((day) =>
+						shortageFixture({ day })
+					),
+				}),
+			},
+			[`GET ${SCHEDULES_PATH}/staffing`]: {
+				status: 200,
+				body: envelope({
+					from: "2026-11-16",
+					to: "2026-11-29",
+					rules: [
+						staffingRuleFixture({
+							shifts: [{ shiftId: "sh-am", name: "Morning", daysAWeek: 7 }],
+						}),
+					],
+				}),
+			},
+		});
+		await open();
+
+		const short = await screen.findByRole("region", { name: "Shifts short" });
+		expect(await within(short).findAllByRole("listitem")).toHaveLength(1);
+		expect(short).toHaveTextContent(
+			"Front desk AM · needs 3, 2 hold the title · 3 shifts"
+		);
+		expect(
+			screen.getByRole("link", { name: /Shifts.*3.*short/ })
+		).toBeInTheDocument();
+	});
+
+	it("given_nothingToActOn_when_opened_then_keepsEveryTileAtZeroAndSaysAllClearInOneLine", async () => {
+		stubApi({
+			...routes(["schedule:read", "leave_request:read"]),
+			[LEAVE]: page([], 0),
+			[`GET ${SCHEDULES_PATH}/shortages`]: {
+				status: 200,
+				body: envelope({ from: "2026-11-16", to: "2026-11-29", shortages: [] }),
+			},
+			[`GET ${SCHEDULES_PATH}/staffing`]: {
+				status: 200,
+				body: envelope({ from: "2026-11-16", to: "2026-11-29", rules: [] }),
+			},
+			[`GET ${SCHEDULES_PATH}/days-off`]: {
+				status: 200,
+				body: envelope({ from: "2026-11-16", to: "2026-11-16", daysOff: [] }),
+			},
+			["GET /api/v1/companies/c-1/schedule-months"]: {
+				status: 200,
+				body: envelope([]),
+			},
+		});
+		await open();
+
+		await waitFor(() => {
+			expect(screen.getByRole("note")).toHaveTextContent(
+				/^All clear\. Nothing needs you right now\.$/
+			);
+		});
+		// Each tile keeps its place at zero, and none of them is a link.
+		const tiles = screen.getByRole("navigation", { name: "What needs you" });
+		expect(
+			within(tiles)
+				.getAllByRole("listitem")
+				.map((tile) => tile.textContent)
+		).toEqual(["Shifts0short", "Leave0to decide", "People0off today"]);
+		expect(within(tiles).queryByRole("link")).toBeNull();
+		expect(screen.queryByRole("region", { name: "Shifts short" })).toBeNull();
+		expect(
+			screen.queryByRole("region", { name: "Leave to decide" })
+		).toBeNull();
+	});
+});
+
+describe("Home's two views", () => {
+	/** Three short Morning shifts under a rule nobody can staff, as one read answers them. */
+	const shortUnderARuleAt = (path: string): Record<string, StubReply> => ({
+		[`GET ${path}/shortages`]: {
+			status: 200,
+			body: envelope({
+				from: "2026-11-16",
+				to: "2026-11-29",
+				shortages: ["2026-11-18", "2026-11-19", "2026-11-20"].map((day) =>
+					shortageFixture({ day })
+				),
+			}),
+		},
+		[`GET ${path}/staffing`]: {
+			status: 200,
+			body: envelope({
+				from: "2026-11-16",
+				to: "2026-11-29",
+				rules: [
+					staffingRuleFixture({
+						shifts: [{ shiftId: "sh-am", name: "Morning", daysAWeek: 7 }],
+					}),
+				],
+			}),
+		},
+	});
+	/** The same answer from the roster's reads and from Reports' own. */
+	const shortUnderARule = {
+		...shortUnderARuleAt(SCHEDULES_PATH),
+		...shortUnderARuleAt(REPORTS_PATH),
+	};
+
+	it("given_someoneWhoReadsReportsAndBuildsNoRoster_when_opened_then_startsOnTheOverview", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			...routes(["report:read", "schedule:read"]),
+			...shortUnderARule,
+		});
+		const opened = await open();
+
+		expect(
+			await screen.findByRole("tab", { name: "Overview" })
+		).toHaveAttribute("aria-selected", "true");
+		const short = await screen.findByRole("region", { name: "People short" });
+		expect(short).toHaveTextContent("3");
+		expect(within(short).getByText("Act")).toBeInTheDocument();
+		expect(
+			screen.getByRole("region", { name: "Why shifts go short" })
+		).toHaveTextContent("Front desk AM");
+
+		await user.click(screen.getByRole("tab", { name: "What needs you" }));
+
+		await waitFor(() => {
+			expect(opened.router.state.location.search).toMatchObject({
+				tab: "needs-you",
+			});
+		});
+		expect(
+			await screen.findByRole("region", { name: "Shifts short" })
+		).toBeInTheDocument();
+	});
+
+	it("given_reportReadAlone_when_opened_then_showsTheOverviewAndAsksNothingOfTheRosters", async () => {
+		const calls = stubApi({
+			...routes(["report:read"]),
+			...shortUnderARuleAt(REPORTS_PATH),
+		});
+		await open();
+
+		expect(
+			await screen.findByRole("region", { name: "People short" })
+		).toHaveTextContent("3");
+		// The rule is named, without links to pages this reader cannot open.
+		const causes = screen.getByRole("region", { name: "Why shifts go short" });
+		expect(causes).toHaveTextContent("Front desk AM");
+		expect(within(causes).queryByRole("link")).toBeNull();
+		// Next week's rosters are the roster's to tell, so nothing is said of them.
+		expect(
+			screen.queryByRole("region", { name: "Next week published" })
+		).toBeNull();
+		expect(calls.some((call) => call.path.startsWith(SCHEDULES_PATH))).toBe(
+			false
+		);
+	});
+
+	it("given_aRosterBuilder_when_opened_then_startsOnWhatNeedsThemWithTheOverviewOneTabAway", async () => {
+		stubApi({
+			...routes(["report:read", "schedule:read", "schedule:edit_shift"]),
+			...shortUnderARule,
+		});
+		await open();
+
+		expect(
+			await screen.findByRole("tab", { name: "What needs you" })
+		).toHaveAttribute("aria-selected", "true");
+		expect(screen.getByRole("tab", { name: "Overview" })).toBeInTheDocument();
+		expect(
+			await screen.findByRole("region", { name: "Shifts short" })
+		).toBeInTheDocument();
+	});
+
+	it("given_noReportRead_when_opened_then_showsTheToDoListAloneWithNoTabs", async () => {
+		const calls = stubApi({
+			...routes(["leave_request:read", "schedule:read"]),
+			...shortUnderARuleAt(SCHEDULES_PATH),
+		});
+		await open("/?tab=overview");
+
+		await screen.findByRole("region", { name: "Shifts short" });
+		expect(screen.queryByRole("tablist")).toBeNull();
+		expect(calls.some((call) => call.path.startsWith(REPORTS_PATH))).toBe(
+			false
+		);
+	});
+});
+
+const PREFERENCES_PATH = "/api/v1/companies/c-1/me/dashboard-preferences";
+
+/** The member's saved choice: these sections hidden. */
+const savedHidden = (hiddenSections: Array<string>): StubReply => ({
+	status: 200,
+	body: envelope({ hiddenSections }),
+});
+
+/** Whether Home asked for pending leave, the read behind "Leave to decide". */
+const askedForPendingLeave = (
+	calls: Array<{ method: string; path: string; search: string }>
+): boolean =>
+	calls.some(
+		(call) =>
+			`${call.method} ${call.path}` === LEAVE &&
+			new URLSearchParams(call.search).get("status") === "PENDING"
+	);
+
+describe("Customise Home", () => {
+	it("given_nothingSaved_when_opened_then_showsEverySection", async () => {
+		stubApi({ ...routes(), [`GET ${PREFERENCES_PATH}`]: savedHidden([]) });
+		await open();
+
+		expect(
+			await screen.findByRole("region", { name: "Leave to decide" })
+		).toBeInTheDocument();
+	});
+
+	it("given_aHiddenSection_when_opened_then_neitherShowsNorReadsIt", async () => {
+		const calls = stubApi({
+			...routes(),
+			[`GET ${PREFERENCES_PATH}`]: savedHidden(["leave-to-decide"]),
+		});
+		await open();
+
+		await screen.findByRole("button", { name: "Customise" });
+		await waitFor(() => {
+			expect(calls.some((call) => call.path === PREFERENCES_PATH)).toBe(true);
+		});
+		expect(
+			screen.queryByRole("region", { name: "Leave to decide" })
+		).toBeNull();
+		expect(askedForPendingLeave(calls)).toBe(false);
+	});
+
+	it("given_anUnknownSavedKey_when_opened_then_ignoresIt", async () => {
+		stubApi({
+			...routes(),
+			[`GET ${PREFERENCES_PATH}`]: savedHidden(["a-retired-section"]),
+		});
+		await open();
+
+		expect(
+			await screen.findByRole("region", { name: "Leave to decide" })
+		).toBeInTheDocument();
+	});
+
+	it("given_theDialog_when_aSectionIsCleared_then_hidesItAndSavesTheChoice", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...routes(),
+			[`GET ${PREFERENCES_PATH}`]: savedHidden([]),
+			[`PUT ${PREFERENCES_PATH}`]: savedHidden(["leave-to-decide"]),
+		});
+		await open();
+		await screen.findByRole("region", { name: "Leave to decide" });
+
+		await user.click(screen.getByRole("button", { name: "Customise" }));
+		await user.click(
+			await screen.findByRole("checkbox", { name: "Leave to decide" })
+		);
+		await user.click(screen.getByRole("button", { name: "Done" }));
+
+		await waitFor(() => {
+			expect(
+				screen.queryByRole("region", { name: "Leave to decide" })
+			).toBeNull();
+		});
+		expect(calls.find((call) => call.method === "PUT")?.body).toEqual({
+			hiddenSections: ["leave-to-decide"],
+		});
+	});
+
+	it("given_hiddenSections_when_reset_then_showsEverySectionAgain", async () => {
+		const user = userEvent.setup();
+		const calls = stubApi({
+			...routes(),
+			[`GET ${PREFERENCES_PATH}`]: savedHidden(["leave-to-decide"]),
+			[`PUT ${PREFERENCES_PATH}`]: savedHidden([]),
+		});
+		await open();
+
+		await user.click(await screen.findByRole("button", { name: "Customise" }));
+		await user.click(
+			await screen.findByRole("button", { name: "Reset to default" })
+		);
+		await user.click(screen.getByRole("button", { name: "Done" }));
+
+		expect(
+			await screen.findByRole("region", { name: "Leave to decide" })
+		).toBeInTheDocument();
+		expect(calls.find((call) => call.method === "PUT")?.body).toEqual({
+			hiddenSections: [],
+		});
+	});
+
+	it("given_aRefusedSave_when_aSectionIsCleared_then_putsItBackAndSaysSo", async () => {
+		const user = userEvent.setup();
+		stubApi({
+			...routes(),
+			[`GET ${PREFERENCES_PATH}`]: savedHidden([]),
+			[`PUT ${PREFERENCES_PATH}`]: { status: 500 },
+		});
+		await open();
+		await screen.findByRole("region", { name: "Leave to decide" });
+
+		await user.click(screen.getByRole("button", { name: "Customise" }));
+		const box = await screen.findByRole("checkbox", {
+			name: "Leave to decide",
+		});
+		await user.click(box);
+
+		expect(
+			await screen.findByText(/^We couldn’t save your choice\./)
+		).toBeInTheDocument();
+		expect(box).toBeChecked();
 	});
 });
 
@@ -414,7 +837,7 @@ describe("Set up your company", () => {
 		);
 		await open();
 
-		await screen.findByRole("region", { name: "Pending Approvals" });
+		await screen.findByRole("region", { name: "Leave to decide" });
 		expect(
 			screen.queryByRole("region", { name: "Set up your company" })
 		).not.toBeInTheDocument();

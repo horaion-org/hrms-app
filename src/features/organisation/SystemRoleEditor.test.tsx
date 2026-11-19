@@ -1,7 +1,10 @@
-import { screen, waitFor, within } from "@testing-library/react";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { I18nextProvider } from "react-i18next";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
+import { SuccessNotifications } from "@/common/SuccessNotifications";
 import {
 	currentUserReply,
 	openApp,
@@ -16,6 +19,7 @@ import {
 } from "@/common/testing/stubApi";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
+import { authTestI18n } from "@/features/auth/testingI18n";
 import { PERMISSION_KEYS } from "@/features/workspace/permissionKeys";
 
 const WORKSPACE = "GET /api/v1/me/workspace";
@@ -89,10 +93,16 @@ const open = async (entry: string): Promise<OpenedApp> => {
 	return app;
 };
 
-const box = (group: string, name: string): HTMLElement =>
-	within(screen.getByRole("group", { name: group })).getByRole("checkbox", {
-		name,
-	});
+/** A permission's box in an area, opening the area's Details first. */
+const box = async (area: string, name: string): Promise<HTMLElement> => {
+	const group = screen.getByRole("group", { name: area });
+	const details = within(group).queryByRole("button", { name: /^Details/ });
+	if (details?.getAttribute("aria-expanded") === "false")
+		await userEvent.setup().click(details);
+	return within(group).getByRole("checkbox", { name });
+};
+const levelSelects = (): Array<HTMLElement> =>
+	screen.getAllByRole("button", { name: /^Level for / });
 const save = (): HTMLElement =>
 	screen.getByRole("button", { name: "Save changes" });
 const typeField = (): HTMLElement =>
@@ -134,12 +144,12 @@ describe("Access role editor", () => {
 				name: "Across the whole company",
 			})
 		).toBeChecked();
-		expect(box("Branches", "See branches")).toBeChecked();
-		expect(box("Branches", "Create branches")).toBeChecked();
-		expect(box("Branches", "Edit branches")).not.toBeChecked();
-		expect(box("Departments", "See departments")).toBeChecked();
+		expect(await box("Organisation", "See branches")).toBeChecked();
+		expect(await box("Organisation", "Create branches")).toBeChecked();
+		expect(await box("Organisation", "Edit branches")).not.toBeChecked();
+		expect(await box("Organisation", "See departments")).toBeChecked();
 		expect(
-			screen.getByText(`3 of ${PERMISSION_KEYS.length} selected`)
+			screen.getByText("This role has some of Organisation.")
 		).toBeVisible();
 		expect(save()).toBeDisabled();
 		expect(
@@ -155,8 +165,8 @@ describe("Access role editor", () => {
 
 		await user.clear(name);
 		await user.type(name, "  Area manager ");
-		await user.click(box("Departments", "Edit departments"));
-		await user.click(box("Branches", "Create branches"));
+		await user.click(await box("Organisation", "Edit departments"));
+		await user.click(await box("Organisation", "Create branches"));
 
 		expect(screen.getByText("1 added, 1 removed")).toBeVisible();
 		await user.click(save());
@@ -185,6 +195,25 @@ describe("Access role editor", () => {
 		});
 	});
 
+	it("says the role was saved", async () => {
+		const user = userEvent.setup();
+		stubApi(routes());
+		const opened = await open(EDITOR);
+		// The app-level toast queue, which `renderAuthApp` leaves out.
+		render(
+			<I18nextProvider i18n={authTestI18n}>
+				<QueryClientProvider client={opened.queryClient}>
+					<SuccessNotifications />
+				</QueryClientProvider>
+			</I18nextProvider>
+		);
+		await user.click(await box("Organisation", "Edit departments"));
+
+		await user.click(save());
+
+		expect(await screen.findByText("Access role saved.")).toBeInTheDocument();
+	});
+
 	it("shows saved permissions when reopening the editor without a page refresh", async () => {
 		const user = userEvent.setup();
 		let saved = false;
@@ -206,16 +235,16 @@ describe("Access role editor", () => {
 		});
 		await open(EDITOR);
 		await screen.findByRole("textbox", { name: /Role name/ });
-		await user.click(box("Departments", "Edit departments"));
+		await user.click(await box("Organisation", "Edit departments"));
 		await user.click(save());
 		await user.click(
 			await screen.findByRole("button", { name: "Edit Manager" })
 		);
 		await screen.findByRole("textbox", { name: /Role name/ });
 
-		await waitFor(() =>
-			expect(box("Departments", "Edit departments")).toBeChecked()
-		);
+		await waitFor(async () => {
+			expect(await box("Organisation", "Edit departments")).toBeChecked();
+		});
 		expect(save()).toBeDisabled();
 	});
 
@@ -233,15 +262,14 @@ describe("Access role editor", () => {
 			)
 		).toBeVisible();
 		expect(
-			within(screen.getByRole("group", { name: "Branches" })).queryByRole(
+			await box("Organisation", "See branches")
+		).toHaveAccessibleDescription(/Not at departments$/);
+		expect(
+			within(screen.getByRole("group", { name: "Organisation" })).queryByRole(
 				"checkbox",
 				{ name: "Create branches" }
 			)
 		).not.toBeInTheDocument();
-		expect(box("Branches", "See branches")).toHaveAccessibleDescription(
-			/Not at departments$/
-		);
-		expect(screen.getByText("2 of 51 selected")).toBeVisible();
 		expect(
 			screen.getByText("Where it can be used changed, 1 removed")
 		).toBeVisible();
@@ -313,12 +341,14 @@ describe("Access role editor", () => {
 		const name = await screen.findByRole("textbox", { name: /Role name/ });
 
 		await user.type(name, " two");
-		await user.click(box("Branches", "See branches"));
+		await user.click(await box("Organisation", "See branches"));
+		// "Create branches" needs it, so clearing it asks first.
+		await user.click(screen.getByRole("button", { name: "Remove all 2" }));
 		expect(screen.getByText("2 removed")).toBeVisible();
 		await user.click(screen.getByRole("button", { name: "Discard changes" }));
 
 		expect(name).toHaveValue("Manager");
-		expect(box("Branches", "Create branches")).toBeChecked();
+		expect(await box("Organisation", "Create branches")).toBeChecked();
 		expect(save()).toBeDisabled();
 		expect(calls.some((call) => call.method === "PUT")).toBe(false);
 	});
@@ -329,8 +359,9 @@ describe("Access role editor", () => {
 		await open(EDITOR);
 		await screen.findByRole("textbox", { name: /Role name/ });
 
-		await user.click(box("Branches", "See branches"));
-		await user.click(box("Departments", "See departments"));
+		await user.click(await box("Organisation", "See branches"));
+		await user.click(screen.getByRole("button", { name: "Remove all 2" }));
+		await user.click(await box("Organisation", "See departments"));
 
 		expect(screen.getByText("Choose at least one permission.")).toBeVisible();
 		expect(save()).toBeDisabled();
@@ -380,13 +411,13 @@ describe("Access role editor", () => {
 		await open(EDITOR);
 		await screen.findByRole("textbox", { name: /Role name/ });
 
-		await user.click(box("Branches", "Edit branches"));
+		await user.click(await box("Organisation", "Edit branches"));
 		await user.click(save());
 
 		expect(await screen.findByRole("alert")).toHaveTextContent(
 			"This role includes permissions you don’t hold, or you can no longer change access roles."
 		);
-		expect(box("Branches", "Edit branches")).toBeChecked();
+		expect(await box("Organisation", "Edit branches")).toBeChecked();
 	});
 
 	it("shows a permission this app's catalog doesn't know as locked and saves it back untouched", async () => {
@@ -403,11 +434,11 @@ describe("Access role editor", () => {
 				"This role has a permission this version of the app doesn’t recognise. It is kept as it is when you save. Reload the page to update the app and change it."
 			)
 		).toBeVisible();
-		const unknown = box("Not recognised", "leave:approve");
+		const unknown = await box("Not recognised", "leave:approve");
 		expect(unknown).toBeChecked();
 		expect(unknown).toBeDisabled();
 
-		await user.click(box("Branches", "Edit branches"));
+		await user.click(await box("Organisation", "Edit branches"));
 		await user.click(save());
 
 		await waitFor(() => {
@@ -430,14 +461,13 @@ describe("Access role editor, read-only", () => {
 		for (const choice of within(typeField()).getAllByRole("radio"))
 			expect(choice).toBeDisabled();
 		expect(screen.getByRole("textbox", { name: /Role name/ })).toBeDisabled();
-		for (const item of screen.getAllByRole("checkbox"))
-			expect(item).toBeDisabled();
+		for (const item of levelSelects()) expect(item).toBeDisabled();
 		expect(
 			screen.queryByRole("button", { name: "Save changes" })
 		).not.toBeInTheDocument();
 	};
 
-	it("shows the Company Owner role with every permission and no way to change it", async () => {
+	it("shows the System Owner role with every permission and no way to change it", async () => {
 		const user = userEvent.setup();
 		stubApi({
 			...routes(),
@@ -446,7 +476,7 @@ describe("Access role editor, read-only", () => {
 				body: envelope({
 					content: [
 						role({
-							name: "Company Owner",
+							name: "System Owner",
 							protectedRole: true,
 							status: "ACTIVE",
 							permissions: PERMISSION_KEYS,
@@ -456,7 +486,7 @@ describe("Access role editor, read-only", () => {
 				}),
 			},
 			[ROLE]: roleReply({
-				name: "Company Owner",
+				name: "System Owner",
 				protectedRole: true,
 				status: "ACTIVE",
 				permissions: PERMISSION_KEYS,
@@ -466,22 +496,25 @@ describe("Access role editor, read-only", () => {
 
 		await user.click(
 			await screen.findByRole("button", {
-				name: "More actions for Company Owner",
+				name: "More actions for System Owner",
 			})
 		);
 		// View opens the role on who has it; its permissions are one tab over.
 		await user.click(await screen.findByRole("menuitem", { name: "View" }));
-		await user.click(await screen.findByRole("tab", { name: "Permissions" }));
+		await user.click(
+			await screen.findByRole("tab", { name: "What it allows" })
+		);
 
 		expect(
 			await screen.findByText(
-				"The Company Owner role always has every permission and can’t be changed."
+				"This role is built in: it always has full access and can’t be changed."
 			)
 		).toBeVisible();
 		expectReadOnly();
 		expect(screen.getByText("Full access")).toBeVisible();
-		for (const item of screen.getAllByRole("checkbox"))
-			expect(item).toBeChecked();
+		// Every area is held in full: Can manage, or Can view where there is only seeing.
+		for (const item of levelSelects())
+			expect(item).toHaveTextContent(/^Can (manage|view)$/);
 	});
 
 	it("shows a role holding a permission the person doesn't, since the API would refuse any change", async () => {

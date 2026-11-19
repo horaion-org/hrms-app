@@ -1,9 +1,12 @@
 import type { TFunction } from "i18next";
-import { expect, it } from "vitest";
+import { ApiProblemError } from "@/common/problem";
+import { expect, it, vi } from "vitest";
 import {
 	actionsColumn,
 	branchColumn,
 	createdColumn,
+	describeList,
+	failedReadProblem,
 	nameColumn,
 	statusColumn,
 } from "@/features/organisation/listColumns";
@@ -35,4 +38,96 @@ it("keeps name, status and actions in the shared columns on phones and leaves Br
 	expect(actions.hideBelow).toBeUndefined();
 	expect(branchColumn(t).hideBelow).toBe("md");
 	expect(createdColumn(t, "en-GB").hideBelow).toBe("md");
+});
+
+it("says a list is waiting on an access update and offers Try again", () => {
+	const retry = vi.fn();
+	const view = describeList(
+		{ status: "error", stillUpdating: true, retry },
+		"",
+		false,
+		"No branches yet.",
+		t
+	);
+
+	expect(view.problem).toEqual({
+		message: "organisation.list.stillUpdating",
+		alert: true,
+		retry,
+	});
+});
+
+it("offers Try again on any other failed read too", () => {
+	const retry = vi.fn();
+	const view = describeList(
+		{ status: "error", stillUpdating: false, retry },
+		"",
+		false,
+		"No branches yet.",
+		t
+	);
+
+	expect(view.problem?.message).toBe("organisation.list.failed");
+	expect(view.problem?.retry).toBe(retry);
+});
+
+it("says access is being updated while a refused read waits to try again, not just Loading", () => {
+	const view = describeList(
+		{ status: "pending", stillUpdating: true },
+		"",
+		false,
+		"No branches yet.",
+		t
+	);
+
+	expect(view.empty).toBe("organisation.list.waitingForAccess");
+});
+
+it("words a read refused while access is updated as such, with Try again reading it again", () => {
+	const refetch = vi.fn(() => Promise.resolve());
+	const stale = new ApiProblemError({
+		message: "API request refused",
+		status: 503,
+		errorCode: "DECISION_ENGINE_STALE",
+		fieldErrors: [],
+		reason: "http",
+	});
+	const problem = failedReadProblem({ error: stale, refetch }, "Couldn't load", t);
+
+	expect(problem.message).toBe("organisation.list.stillUpdating");
+	problem.retry?.();
+	expect(refetch).toHaveBeenCalledOnce();
+});
+
+it("keeps a screen's own failure wording for any other failed read", () => {
+	const problem = failedReadProblem(
+		{ error: new Error("Failed to fetch"), refetch: () => Promise.resolve() },
+		"Couldn't load",
+		t
+	);
+
+	expect(problem.message).toBe("Couldn't load");
+	expect(problem.retry).toBeDefined();
+});
+
+it("keeps a list's rows and says access is being updated while a re-read waits on it", () => {
+	const rows = [{ name: "Orchard" }];
+	const waiting = describeList(
+		{ status: "ready", items: rows, total: 1, stillUpdating: true },
+		"",
+		false,
+		"No branches yet.",
+		t
+	);
+	expect(waiting.rows).toEqual(rows);
+	expect(waiting.updating).toBe("organisation.list.waitingForAccess");
+
+	const landed = describeList(
+		{ status: "ready", items: rows, total: 1, stillUpdating: false },
+		"",
+		false,
+		"No branches yet.",
+		t
+	);
+	expect(landed.updating).toBeUndefined();
 });

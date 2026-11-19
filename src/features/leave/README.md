@@ -9,14 +9,18 @@ is sampled or kept in page state beyond the timeline's window.
 ## Shape
 
 - `api.ts` — the zod schemas, `leaveRequestsQuery` (one entry per page, sort, filter and window), the
-  active-Branches query that drives the country and Branch filters, `leaveOptionsQuery` (the leave types that
-  apply to the person an application is for, read by the apply form once that person is known), and the writes: apply (own or on behalf, with
+  active-Branches query that drives the country and Branch filters, `leaveOptionsQuery` (the leave types and Leave
+  durations that apply to the person an application is for, read by the apply form once that person is known), and the writes: apply (own or on behalf, with
   remarks, required when the leave type asks for a reason), approve (with an optional comment) and reject (with
   a reason), plus withdraw, record, change and cancel, the history and the rostered days. A request's `leaveType` is any code: a company names its own types. Its admins manage them under
   Settings › Leave (`features/leaveTypes`, `features/settings/LeaveTypesSettings`); every change there reloads
   the `leave-types` and `leave` queries.
 - `leaveTypeLabel.ts` — what a request's leave type is called: the company's name, or the app's words for a code
   of the old fixed list when an older API sends no name, or "Leave".
+- `dayPortion.ts` — how much of one day a request takes, as pure rules: the "How much of the day" options
+  (Full day, each Leave duration that applies to the person, Custom), the body each adds, and the words for a
+  request's amount ("4 h", "3 days") and part of the day ("Morning 09:00–13:00", "Custom 10:00–12:00").
+  `leaveLength.ts` counts the minutes between two times, past midnight included.
 - `leaveTypeOptions.ts` — the applicable leave types (active, never the scheduler's day off) as Select options,
   grouped by Grant kind in the company's order.
 - `leaveSearch.ts` — what belongs in the URL (`view`, `branch`, `status`, `sort`, `page`) and the API queries
@@ -49,7 +53,8 @@ is sampled or kept in page state beyond the timeline's window.
   application; without `review` a request is only read. It reviews a request with its remarks; approve with
   an optional comment or reject with a reason, each confirmed in a second step; or apply for yourself or
   someone found through the People search, choosing from the grouped leave types, with remarks that become a
-  required Reason when the type asks for one.
+  required Reason when the type asks for one. On one date, with a type that can be taken in part days, the form
+  also asks how much of the day: the full day, a Leave duration or Custom start and end times.
   The shell holds the review (its step and both notes) and the footer; its parts are `LeaveRequestDetails`
   (what the request says), `LeaveDecisionStep` (the reason or comment being confirmed) and `LeaveApplyForm`
   (a new application, with its own state and footer). `RosteredDaysNotice` names the days that hold a shift;

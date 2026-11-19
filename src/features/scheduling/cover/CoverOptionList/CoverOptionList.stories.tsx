@@ -37,6 +37,7 @@ const meta = {
 	args: {
 		options: [BEN, CHEN],
 		selected: "m-2",
+		note: "In order of fewest extra hours. Rest between shifts and the job title that is short aren’t checked here: ask the engine below.",
 		onSelect: fn(),
 		unavailable: [
 			{ membershipId: "m-1", name: "Aisha Rahman", reason: "On leave" },
@@ -53,8 +54,21 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-/** Two options, the first suggested and chosen; Can't help collapsed. */
+/** Before the engine is asked: two options, the first chosen and nobody suggested; Can't help collapsed. */
 export const TwoOptions: Story = {};
+
+/** After the engine answered: its choice first, marked Suggested and chosen. */
+export const SuggestedByTheEngine: Story = {
+	args: {
+		options: [
+			{ ...CHEN, lines: [...CHEN.lines, "The engine: fills the gap"] },
+			BEN,
+		],
+		suggested: "m-3",
+		selected: "m-3",
+		note: "The engine’s choice first, then by fewest extra hours.",
+	},
+};
 
 /** One option only. */
 export const OneOption: Story = { args: { options: [BEN] } };

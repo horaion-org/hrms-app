@@ -8,20 +8,29 @@ import { FilterChips } from "@/components/ui/FilterChips";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
 import { OffersOutSection } from "@/features/scheduling/coverOffers/OffersOutSection";
-import { FindingList } from "@/features/scheduling/FindingList";
-import { FindingsPanel } from "@/features/scheduling/FindingsPanel";
-import { formatDay } from "@/features/scheduling/periods";
+import { FindingList } from "@/features/scheduling/roster/FindingList";
+import { formatDay } from "@/common/formatDay";
 import { findingFamily } from "@/features/scheduling/roster/findings/finding";
 import {
 	issuesOfHeader,
 	type IssuesAbout,
 } from "@/features/scheduling/roster/rosterMarks";
+import { ChangeTimeline } from "@/features/scheduling/roster/ChangeTimeline";
+import { changeTimeline } from "@/features/scheduling/roster/changeTimeline";
 import {
-	changedDayItems,
 	daysToDecideItems,
 	leaveAndCoverItems,
-	startingPointItems,
 } from "@/features/scheduling/roster/rosterPanels";
+import {
+	issueTopic,
+	type IssueNote,
+	type RosterIssue,
+} from "@/features/scheduling/roster/rosterIssueGroups";
+import {
+	FixableIssueGroups,
+	RosterIssueGroups,
+	type IssueFixing,
+} from "@/features/scheduling/roster/RosterIssueGroups";
 import type { RosterPanel } from "@/features/scheduling/roster/rosterSearch";
 import type { RosterView } from "@/features/scheduling/roster/rosterView";
 import type { RosterChangeTarget } from "@/features/scheduling/rosterChanges/useRosterChangeActions";
@@ -67,30 +76,58 @@ export type RosterListInput = {
 	details?: ReadonlyArray<DescriptionListItem>;
 	/** The roster's approval trail for Approval. */
 	approval?: ReactNode;
+	/**
+	 * What Validate schedule says of the list, first in Issues: that the
+	 * schedule changed since the list was made (with the action), that it is
+	 * being validated, refused, could not be checked, or holds clean.
+	 */
+	validationNote?: ReactNode;
+	/** Every Issues item by what to do (`issuesOfRoster`). */
+	issues: ReadonlyArray<RosterIssue>;
+	/** Scrolls an item's cell into view and outlines it. */
+	onShowIssue?: (issue: RosterIssue) => void;
 	/** Shows every issue again, from a header's narrowed Issues list. */
 	onShowAllIssues: () => void;
 	/** On a roster that may be changed: opens Find cover for a short shift, from its Issues row. */
 	onFindCover?: (gap: CoverGapRequest) => void;
+	/** On a roster that may be changed: what the fixes Issues makes itself need (`FixableIssueGroups`). */
+	issueFixing?: IssueFixing;
 };
 
-/** One line each, said above the findings in the Issues panel. */
+/**
+ * The notes about the whole list, each a row under More information: that
+ * the days before this week changed, and that the notes are from
+ * generation, said only where Validate schedule is not there to say how
+ * the list stands (it would contradict "Validated").
+ */
 export const issueNoteLines = ({
 	roster: { findings, editedDays },
 	membersWithChangedStart,
+	validationNote,
 	t,
 }: Pick<
 	RosterListInput,
-	"roster" | "membersWithChangedStart" | "t"
->): Array<string> => [
+	"roster" | "membersWithChangedStart" | "validationNote" | "t"
+>): Array<IssueNote> => [
 	...(membersWithChangedStart > 0
 		? [
-				t("scheduling.startingContext.stale", {
-					count: membersWithChangedStart,
-				}),
+				{
+					title: t("scheduling.issues.startChanged.title", {
+						count: membersWithChangedStart,
+					}),
+					detail: t("scheduling.issues.startChanged.detail"),
+					topic: issueTopic("startChanged", t),
+				},
 			]
 		: []),
-	...(findings && editedDays.size > 0
-		? [t("scheduling.rosterEdit.findingsOutOfDate")]
+	...(findings && editedDays.size > 0 && !validationNote
+		? [
+				{
+					title: t("scheduling.issues.fromGeneration.title"),
+					detail: t("scheduling.issues.fromGeneration.detail"),
+					topic: issueTopic("fromGeneration", t),
+				},
+			]
 		: []),
 ];
 
@@ -167,87 +204,70 @@ export const headerIssueSections = (
 	];
 };
 
-/** The whole Issues list, or one header's part of it when it was opened from a header. */
+/**
+ * The whole Issues list by what to do, the validation result at its head and
+ * the cover offers out under More information; or one header's part of
+ * it when it was opened from a header.
+ */
 export const issuesSections = (
 	input: RosterListInput
 ): Array<RosterSidePanelSection> => {
 	const {
-		roster: {
-			rows,
-			days,
-			findings,
-			names,
-			toDecide,
-			leaveAndCover,
-			issuesAbout,
-		},
+		roster: { issuesAbout },
 		assignments,
-		t,
-		language,
-		startingRuns,
 		coverOffers,
 		onFindCover,
+		validationNote,
+		issues,
+		onShowIssue,
+		issueFixing,
 	} = input;
 	if (issuesAbout) return headerIssueSections(issuesAbout, input);
-	return [
-		// Each note is a section of its own, spaced like the sections around it.
-		...issueNoteLines(input).map((line) => ({
-			key: line,
-			items: [{ key: line, lines: [line] }],
-		})),
-		{
-			key: "findings",
-			content: findings && names && (
-				<FindingsPanel
-					findings={findings}
-					names={names}
-					visibleDays={days}
-					onFindCover={onFindCover}
+	const list = {
+		issues,
+		validationNote,
+		information: coverOffers &&
+			(coverOffers.failed || coverOffers.offers.length > 0) && (
+				<OffersOutSection
+					assignments={assignments}
+					failed={coverOffers.failed}
+					offers={coverOffers.offers}
+					target={coverOffers.target}
+					timeZone={coverOffers.timeZone}
+					onRetry={coverOffers.retry}
 				/>
 			),
-		},
+		onFindCover,
+		onShow: onShowIssue,
+	};
+	return [
 		{
-			key: "daysToDecide",
-			title: t(`${key}.daysToDecide`),
-			items: daysToDecideItems(toDecide, t, language),
-		},
-		{
-			key: "leaveAndCover",
-			title: t(`${key}.leaveAndCover`),
-			items: leaveAndCoverItems(leaveAndCover, t, language, onFindCover),
-		},
-		{
-			key: "offersOut",
-			content: coverOffers &&
-				(coverOffers.failed || coverOffers.offers.length > 0) && (
-					<OffersOutSection
-						assignments={assignments}
-						failed={coverOffers.failed}
-						offers={coverOffers.offers}
-						target={coverOffers.target}
-						timeZone={coverOffers.timeZone}
-						onRetry={coverOffers.retry}
-					/>
-				),
-		},
-		{
-			key: "startingPoints",
-			title: t(`${key}.startingPoints`),
-			items: startingPointItems(rows, startingRuns, t),
+			key: "issues",
+			content: issueFixing ? (
+				<FixableIssueGroups {...list} fixing={issueFixing} />
+			) : (
+				<RosterIssueGroups {...list} />
+			),
 		},
 	];
 };
 
-/** Changed: the latest hand change, then every changed day. */
+/** Changed: the latest hand change (with its Undo), then the timeline of every changed day. */
 export const changesSections = ({
 	roster: { changed },
 	latestChange,
 	t,
 	language,
-}: RosterListInput): Array<RosterSidePanelSection> => [
-	{ key: "latest", content: latestChange },
-	{ key: "days", items: changedDayItems(changed, t, language) },
-];
+}: RosterListInput): Array<RosterSidePanelSection> => {
+	const timeline = changeTimeline(changed, t, language);
+	return [
+		{ key: "latest", content: latestChange },
+		{
+			key: "days",
+			content: timeline.length > 0 && <ChangeTimeline days={timeline} />,
+		},
+	];
+};
 
 /** Details: the schedule's history. */
 export const detailsSections = ({

@@ -1,8 +1,12 @@
 import { useNavigate } from "@tanstack/react-router";
+import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
+import { FormRow, formRowIds } from "@/components/forms/FormRow";
+import { EmploymentTermsRow } from "@/features/employmentTerms/EmploymentTermsRow";
 import type { MemberProfileDetail } from "@/features/people/api";
 import {
+	describeMemberRoles,
 	roleNames,
 	rolesByPlace,
 	type MemberRoles,
@@ -11,6 +15,8 @@ import { profileEditValues } from "@/features/people/profileRequest";
 import { ProfileForm } from "@/features/people/ProfileForm";
 import { ProfileHeader } from "@/features/people/ProfileHeader";
 import { ProfileNotesAndSkills } from "@/features/people/ProfileNotesAndSkills";
+import { PROFILE_FIELD_WIDTH } from "@/features/people/profileLayout";
+import { personScope } from "@/features/people/profileEditAccess";
 import { useEditProfile } from "@/features/people/useEditProfile";
 import { scopeOfPlace } from "@/features/organisation/assignmentTargets";
 import { useAccess } from "@/features/workspace/useAccess";
@@ -25,8 +31,10 @@ export type PersonProfileEditProps = {
  * A person's profile, ready to change, under the same header as when read;
  * shown only to someone who may change it (see `profileEditAccess`). The
  * system role edits one assignment with its own target; other assignments
- * are listed but left alone. Their skills are changed in their own
- * card, each change saved at once.
+ * are listed but left alone. Their employment terms sit in the Employment
+ * card with Change…, which records a dated change in its own dialog, not a
+ * field of this form. Their skills are changed in their own card, each
+ * change saved at once.
  */
 export const PersonProfileEdit = ({
 	profile,
@@ -36,6 +44,7 @@ export const PersonProfileEdit = ({
 	const navigate = useNavigate();
 	const access = useAccess();
 	const { t } = useTranslation();
+	const termsId = useId();
 	// Roles are read anywhere; where one may be assigned is checked per place below and in the form.
 	const manageRole =
 		access.canAnywhere("access_role:read") &&
@@ -54,6 +63,12 @@ export const PersonProfileEdit = ({
 		: undefined;
 	const heldChangeable =
 		!rolePlace || access.can("access_role:assign", scopeOfPlace(rolePlace));
+	// Someone who reads roles but may not give them sees them read-only, with who can (API ADR-0108).
+	const readOnlyRoles =
+		access.canAnywhere("access_role:read") &&
+		!access.canAnywhere("access_role:assign")
+			? describeMemberRoles(roles, t)
+			: undefined;
 	const save = useEditProfile(
 		companyId,
 		profile,
@@ -79,10 +94,33 @@ export const PersonProfileEdit = ({
 					roleEditable: ready && heldChangeable,
 					rolePlace,
 					otherRoles: roleNames(elsewhere),
+					readOnlyRoles,
 					header: (actions) => (
 						<ProfileHeader actions={actions} profile={profile} />
 					),
 				}}
+				employmentTermsField={
+					access.can("member_employment_terms:read", personScope(profile)) ? (
+						<FormRow
+							fieldWidth={PROFILE_FIELD_WIDTH}
+							htmlFor={termsId}
+							label={t("people.form.employmentTerms")}
+						>
+							{/* Not a form control: the row is a group the label names, so a screen reader announces it. */}
+							<div
+								aria-labelledby={formRowIds(termsId).labelId}
+								id={termsId}
+								role="group"
+							>
+								<EmploymentTermsRow
+									editing
+									companyId={companyId}
+									profile={profile}
+								/>
+							</div>
+						</FormRow>
+					) : undefined
+				}
 				onSubmit={save}
 				onCancel={() => {
 					void navigate({

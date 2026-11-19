@@ -152,15 +152,24 @@ export const describeMemberRoles = (
 	}
 };
 
+/** A person's defaults as assignments and their roles, as `defaultAccessAssignments` makes them. */
+export type MemberDefaultAccess = {
+	assignments: ReadonlyArray<MemberAccessRoleAssignment>;
+	roles: ReadonlyArray<AccessRole>;
+};
+
 /**
  * Where a person's system roles give them permissions, for their profile:
  * each place the reader can see, or why that isn't shown. Undefined when
- * the reader may not read roles, which leaves it out.
+ * the reader may not read roles, which leaves it out. `defaults`, when
+ * given, adds the default access that reaches them (API ADR-0118) beside
+ * the roles given by hand, each named for where it was set.
  */
 export const describeMemberAccess = (
 	roles: MemberRoles,
 	placeLabel: (place: PlaceRef) => string | undefined,
-	t: TFunction
+	t: TFunction,
+	defaults?: MemberDefaultAccess
 ): Array<PlaceAccessText> | string | undefined => {
 	switch (roles.status) {
 		case "hidden":
@@ -171,7 +180,10 @@ export const describeMemberAccess = (
 			return t("people.profile.rolesFailed");
 		case "ready":
 			return describeAccess(
-				accessSummary(roles.assignments, roles.accessRoles),
+				accessSummary(
+					[...roles.assignments, ...(defaults?.assignments ?? [])],
+					[...roles.accessRoles, ...(defaults?.roles ?? [])]
+				),
 				placeLabel,
 				t
 			);

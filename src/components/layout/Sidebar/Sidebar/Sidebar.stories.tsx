@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/Button";
 import en from "@/assets/locales/en/translations.json";
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import "@/common/i18n";
 import { Sidebar, SidebarItem } from "@/components/layout/Sidebar";
 import { withMemoryRouter } from "@/components/utils/MemoryRouterHarness";
 import {
@@ -89,6 +90,35 @@ export const Organisation: Story = {
 
 export const WithFooter: Story = {
 	args: { footer: <Button>{en.auth.logOut}</Button> },
+};
+
+/** From `lg`, the rail collapsed to icons; each entry's name is its tooltip. */
+export const Collapsed: Story = {
+	args: {
+		collapsed: true,
+		collapseToggle: <Button>{en.shell.expandMenu}</Button>,
+		children: [
+			<SidebarItem
+				key="dashboard"
+				collapsed
+				activeIcon={DashboardFilledIcon}
+				activeOptions={{ exact: true }}
+				icon={DashboardIcon}
+				label="Dashboard"
+				to="/"
+			/>,
+			<SidebarItem
+				key="scheduling"
+				collapsed
+				activeIcon={SchedulingFilledIcon}
+				icon={SchedulingIcon}
+				label="Scheduling"
+				search={{ module: "scheduling" }}
+				to="/register"
+			/>,
+		],
+		footer: <Button>{en.auth.logOut}</Button>,
+	},
 };
 
 /** Below `lg` (phones and tablets): the bar with the logo and Menu; Menu shows the navigation and footer under it. */

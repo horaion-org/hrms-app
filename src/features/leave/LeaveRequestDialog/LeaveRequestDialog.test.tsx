@@ -4,11 +4,14 @@ import {
 	type RenderResult,
 	render as renderPlain,
 	screen,
+	waitFor,
 } from "@testing-library/react";
 import dayjs from "dayjs";
 import userEvent from "@testing-library/user-event";
 import { expect, it, vi } from "vitest";
 import { I18nextProvider } from "react-i18next";
+import { configureApiClient, resetApiClient } from "@/common/api-client";
+import { envelope, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { approvalKeys } from "@/features/approvals/api";
 import { leaveOptionsQuery, rosteredDaysQuery } from "@/features/leave/api";
@@ -17,6 +20,7 @@ import {
 	LEAVE_FIXTURES,
 	LEAVE_TYPE_FIXTURES,
 	leaveAtStepFixture,
+	partDayLeaveFixture,
 } from "@/features/leave/fixtures";
 import {
 	LeaveRequestDialog,
@@ -91,6 +95,26 @@ const employees = {
 	],
 };
 
+it("says under an empty rejection reason what to enter, not the browser's bubble", async () => {
+	const user = userEvent.setup();
+	const onReject = vi.fn();
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				mode="reject"
+				request={pending}
+				review={reviewWith({ onReject })}
+				onClose={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	const reason = screen.getByRole("textbox", { name: "Reason for rejection" });
+	expect(reason.closest("form")).toHaveAttribute("novalidate");
+	await user.click(screen.getByRole("button", { name: "Confirm rejection" }));
+	expect(onReject).not.toHaveBeenCalled();
+	expect(reason).toHaveAccessibleDescription("Enter a reason for rejection.");
+});
+
 it("requires a meaningful rejection reason and returns to review when cancelled", async () => {
 	const user = userEvent.setup();
 	const onReject = vi.fn();
@@ -156,6 +180,55 @@ it("confirms an approval with an optional trimmed comment and returns to review 
 		"Enjoy the break.",
 		false
 	);
+});
+
+/**
+ * Presses a button as a browser does: React redraws before the browser runs
+ * the button's own action, so a button redrawn in place as an enabled submit
+ * submits its form with the same press.
+ */
+const pressAsBrowser = async (
+	user: ReturnType<typeof userEvent.setup>,
+	button: HTMLElement
+): Promise<void> => {
+	await user.click(button);
+	if (
+		button instanceof HTMLButtonElement &&
+		button.isConnected &&
+		button.type === "submit" &&
+		!button.disabled
+	)
+		button.form?.requestSubmit();
+};
+
+it("opens each decision's confirmation step on its first press without deciding, and decides only on Confirm", async () => {
+	const user = userEvent.setup();
+	const onApprove = vi.fn<LeaveReview["onApprove"]>();
+	const onReject = vi.fn<LeaveReview["onReject"]>();
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				request={pending}
+				review={reviewWith({ onApprove, onReject })}
+				today={BEFORE_THE_LEAVE}
+				onClose={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+	await pressAsBrowser(user, screen.getByRole("button", { name: "Approve" }));
+	expect(onApprove).not.toHaveBeenCalled();
+	expect(
+		screen.getByRole("textbox", { name: "Comment (optional)" })
+	).toBeInTheDocument();
+	await user.click(screen.getByRole("button", { name: "Confirm approval" }));
+	expect(onApprove).toHaveBeenCalledOnce();
+	await user.click(screen.getByRole("button", { name: "Cancel" }));
+	await pressAsBrowser(user, screen.getByRole("button", { name: "Reject" }));
+	expect(onReject).not.toHaveBeenCalled();
+	expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+	expect(
+		screen.getByRole("textbox", { name: "Reason for rejection" })
+	).toBeInTheDocument();
 });
 
 it("asks for a comment before approving leave that started before today, then sends it", async () => {
@@ -285,7 +358,7 @@ it("applies for the chosen employee with the chosen type and dates, and shows a 
 	expect(employees.onSearch).toHaveBeenCalledWith("A");
 	await user.click(screen.getByRole("button", { name: "Employee" }));
 	await user.click(
-		screen.getByRole("option", { name: "Aisha Rahman · EMP-10517" })
+		screen.getByRole("option", { name: "Aisha Rahman EMP-10517" })
 	);
 	await user.click(screen.getByRole("button", { name: "Type" }));
 	await user.click(screen.getByRole("option", { name: "Sick leave" }));
@@ -476,6 +549,7 @@ it("asks for a reason when the chosen leave type requires one, and sends it as r
 	await user.click(screen.getByRole("option", { name: "Other" }));
 	const reason = screen.getByRole("textbox", { name: "Reason" });
 	expect(reason).toBeRequired();
+	expect(reason.closest("form")).toHaveAttribute("novalidate");
 	expect(reason).toHaveAttribute("placeholder", "What is this leave for?");
 	expect(reason).toHaveAccessibleDescription(
 		"Say what this leave is for. Reviewers of this request can read it."
@@ -634,4 +708,43 @@ it("keeps the approval route's limit on a rejection reason at a flow's step", as
 	expect(
 		screen.getByRole("textbox", { name: "Reason for rejection" })
 	).toHaveAttribute("maxLength", "500");
+});
+
+it("asks what approving a part day with no shift that day would do, sending its times and choice", async () => {
+	const user = userEvent.setup();
+	configureApiClient({
+		accessToken: () => Promise.resolve("test-pass"),
+		renew: () => Promise.resolve({ kind: "expired" }),
+		onUnauthenticated: () => {},
+	});
+	const calls = stubApi({
+		"GET /api/v1/companies/c-1/member-profiles/m-aisha/leave-requests/rostered-days":
+			{ status: 200, body: envelope([]) },
+	});
+	render(
+		<I18nextProvider i18n={authTestI18n}>
+			<LeaveRequestDialog
+				lifecycle={{ companyId: "c-1", own: false, onDone: vi.fn() }}
+				request={partDayLeaveFixture({ allowsShiftSameDay: false })}
+				review={reviewWith()}
+				today={BEFORE_THE_LEAVE}
+				onClose={vi.fn()}
+			/>
+		</I18nextProvider>
+	);
+
+	await user.click(screen.getByRole("button", { name: "Approve" }));
+
+	await waitFor(() => {
+		const read = calls.find((call) => call.path.endsWith("/rostered-days"));
+		expect(Object.fromEntries(new URLSearchParams(read?.search))).toMatchObject(
+			{
+				startTime: "09:00",
+				endTime: "13:00",
+				allowsShiftSameDay: "false",
+			}
+		);
+	});
+	resetApiClient();
+	vi.unstubAllGlobals();
 });

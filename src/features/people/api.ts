@@ -176,13 +176,23 @@ export type EmploymentType = z.infer<typeof employmentTypeSchema>;
 
 export const EMPLOYMENT_TYPES = employmentTypeSchema.options;
 
+/**
+ * The employment types a person may be given. Full-time or part-time
+ * follows their employment terms (API ADR on Part 3), so only these labels
+ * are offered; the other two are still read from older records.
+ */
+export const LABEL_EMPLOYMENT_TYPES: ReadonlyArray<EmploymentType> = [
+	"CONTRACT",
+	"INTERN",
+];
+
 export const isEmploymentType = (value: string): value is EmploymentType =>
 	employmentTypeSchema.safeParse(value).success;
 
 /**
- * A new person, as the API takes them. When selected, their Department (and its Branch) is
- * in the URL; otherwise they join the company without unit placement. Optional fields are left out rather than sent
- * empty; dates are ISO `YYYY-MM-DD` and the phone is E.164.
+ * A new person, as the API takes them. When selected, their Department (and its Branch) is in the URL; otherwise they
+ * join the company without unit placement. Optional fields are left out rather than sent empty; dates are ISO
+ * `YYYY-MM-DD` and the phone is E.164. `sendInvitation` false adds them without the invitation e-mail.
  */
 export type CreateMemberProfileBody = {
 	displayName: string;
@@ -195,17 +205,15 @@ export type CreateMemberProfileBody = {
 	employmentType?: EmploymentType;
 	hireDate?: string;
 	probationEndDate?: string;
+	sendInvitation?: boolean;
 };
 
-/**
- * A Department of a Branch: where a new person joins, and where a system
- * role is granted. Changes to an existing person never name it in their URL.
- */
+/** A Department of a Branch: where a new person joins and a system role is granted; never in an existing person's URL. */
 export type MemberProfilePlace = { branchId: string; departmentId: string };
 
 /**
- * Adds a person to one Department, or to the company without a Department, and invites them by email; the identity
- * provider sends their temporary password. Returns them as the list shows them.
+ * Adds a person to one Department, or to the company without a Department, and invites them by email unless the body
+ * says not to; the identity provider sends their temporary password. Returns them as the list shows them.
  */
 export const createMemberProfile = (
 	companyId: string,
@@ -231,6 +239,13 @@ const isoDateSchema = z.string().nullable();
 const memberProfileDetailSchema = memberProfileSchema.extend({
 	dateOfBirth: isoDateSchema,
 	employmentType: employmentTypeSchema.nullable(),
+	/**
+	 * Whether the person is part-time today by their employment terms (own
+	 * hours, else the terms' week, under 35 h). Null when the caller may not
+	 * read terms; absent from an API before full-time or part-time followed
+	 * the terms.
+	 */
+	partTime: z.boolean().nullish(),
 	hireDate: isoDateSchema,
 	probationEndDate: isoDateSchema,
 	endDate: isoDateSchema,

@@ -9,6 +9,8 @@ import {
 	scheduleMonthPath,
 	scheduleMonthsPath,
 } from "@/features/scheduling/paths";
+import { anyWeekGenerating } from "@/features/scheduling/months/weekStateLooks";
+import { GENERATION_POLL_INTERVAL_MS } from "@/features/scheduling/schedules/api";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
 import type { UnitSelection } from "@/features/workspace/unitSelection";
@@ -24,7 +26,6 @@ export const weekStateSchema = z
 	.enum([
 		"PUBLISHED",
 		"TO_REVIEW",
-		"TENTATIVE",
 		"GENERATING",
 		"FAILED",
 		"REJECTED",
@@ -35,10 +36,33 @@ export const weekStateSchema = z
 	.catch("UNKNOWN");
 
 /**
- * What the manager sees of one week: TO_REVIEW is the Department's earliest
- * generated week awaiting a decision, TENTATIVE a generated week after it.
+ * What the manager sees of one week: TO_REVIEW is any generated week awaiting
+ * its decision. Each schedule is published on its own (API ADR-0130), so an
+ * older API's TENTATIVE reads as UNKNOWN.
  */
 export type WeekState = z.infer<typeof weekStateSchema>;
+
+/** One live schedule of a week: a week may hold several, one per run of days, in day order (API ADR-0113). */
+const weekPartSchema = z.object({
+	scheduleId: z.string(),
+	name: z.string(),
+	/** Whether the name is one the manager gave, not the default week name; the app never compares names. */
+	named: z.boolean(),
+	coveredFrom: z.string(),
+	coveredTo: z.string(),
+	state: weekStateSchema,
+	/** A redo part (API ADR-0129): until its roster is ready, the week's other parts keep the days it redoes. */
+	redoing: z.boolean().default(false),
+	/**
+	 * Published, or published and then withdrawn. Only a part published now
+	 * holds the days before it back from a run by dates; a withdrawn one is
+	 * to review. Left out by an older API, which reads as false.
+	 */
+	publishedOnce: z.boolean().optional(),
+});
+
+/** One schedule of a week, by the days it covers. */
+export type WeekPart = z.infer<typeof weekPartSchema>;
 
 const monthWeekSchema = z.object({
 	/** The week's Monday. */
@@ -48,7 +72,14 @@ const monthWeekSchema = z.object({
 	/** The week's live schedule, or null when it has none. */
 	scheduleId: z.string().nullable(),
 	/** Seven days, Monday first, when the week has a roster to show; otherwise empty. */
-	days: z.array(z.object({ date: z.string(), shortShifts: z.number() })),
+	days: z.array(
+		z.object({
+			date: z.string(),
+			shortShifts: z.number(),
+			/** False on a day no part with a roster covers: drawn as no roster. Absent from an older API. */
+			covered: z.boolean().default(true),
+		})
+	),
 	/** Cells changed by hand, or null without a roster. */
 	handChangedDays: z.number().nullable(),
 	/** Whether generating the month generates this week; absent from an API without it. */
@@ -61,6 +92,28 @@ const monthWeekSchema = z.object({
 			engineOutcome: z.string().nullable(),
 		})
 		.nullish(),
+	/** Whether the rules changed since the week was generated, so regenerating it applies them (API ADR-0091). */
+	rulesChanged: z.boolean().nullish(),
+	/**
+	 * Why a month run took the week out of its queue, until the week is queued
+	 * or generated again; null otherwise and from an API without it.
+	 */
+	queueRefusal: z
+		.object({
+			/** The refusal's code, e.g. EARLIER_WEEK_FAILED. */
+			code: z.string(),
+			/** When the week left the queue. */
+			at: z.string(),
+		})
+		.nullable()
+		.default(null),
+	/** The days the week's newest part covers, or null without a schedule; absent from an older API. */
+	coveredFrom: z.string().nullish(),
+	coveredTo: z.string().nullish(),
+	/** The newest part's name, or null without a schedule. */
+	name: z.string().nullish(),
+	/** The week's live schedules in day order; the state and schedule above are the newest part's. */
+	parts: z.array(weekPartSchema).default([]),
 });
 
 /** One week of a Department's month, as the month page shows it. */
@@ -73,6 +126,8 @@ export const scheduleMonthSchema = z.object({
 	departmentName: z.string(),
 	branchId: z.string(),
 	branchName: z.string(),
+	/** The branch's IANA time zone, whose today decides which weeks have passed; absent from an older API. */
+	timeZone: z.string().nullish(),
 	weeks: z.array(monthWeekSchema),
 });
 
@@ -90,6 +145,8 @@ export const scheduleMonthSummarySchema = z.object({
 			periodStart: z.string(),
 			state: weekStateSchema,
 			scheduleId: z.string().nullable(),
+			/** The week's live schedules in day order (API ADR-0113); absent from an older API. */
+			parts: z.array(weekPartSchema).optional(),
 		})
 	),
 });
@@ -163,11 +220,8 @@ export const scheduleMonthSummariesKey = (
 	MonthRange,
 ] => [...scheduleMonthsKey(companyId), "summaries", units, range] as const;
 
-/** How often a month with a week being generated is read again. */
-const GENERATION_POLL_INTERVAL_MS = 15_000;
-
 /**
- * One Department's month; `allowed` false asks for nothing. While a week is
+ * One Department's month; `allowed` false asks for nothing. While a week, or any part of one, is
  * being generated it is read again every 15 seconds, and no longer after.
  */
 export const scheduleMonthQuery = (
@@ -178,15 +232,16 @@ export const scheduleMonthQuery = (
 ): QueryOptionsFor<ScheduleMonth, ReturnType<typeof scheduleMonthKey>> =>
 	queryOptions({
 		queryKey: scheduleMonthKey(companyId, departmentId, month),
-		queryFn: allowed
-			? ({ signal }): Promise<ScheduleMonth> =>
-					fetchScheduleMonth(companyId, departmentId, month, signal)
-			: skipToken,
+		queryFn: ({ signal }): Promise<ScheduleMonth> =>
+			fetchScheduleMonth(companyId, departmentId, month, signal),
+		// `enabled`, not skipToken: the month page, its route loader and the timeline share this key, and a
+		// refetch or retry runs the query function of whichever observer set it last.
+		enabled: allowed,
 		// One Department's month: a 404 may mean it moved out of reach.
 		meta: administrativeMeta(companyId, { record: true }),
 		staleTime: 30_000,
 		refetchInterval: (query): number | false =>
-			query.state.data?.weeks.some((week) => week.state === "GENERATING")
+			query.state.data && anyWeekGenerating(query.state.data.weeks)
 				? GENERATION_POLL_INTERVAL_MS
 				: false,
 		refetchIntervalInBackground: false,
@@ -267,7 +322,8 @@ export type NewWeek = {
 /** What generating a month sends: the setup of the weeks it creates, and each one's choice. */
 export type GenerateMonthBody = {
 	includeLeave: boolean;
-	allowOpenShifts: boolean;
+	/** The Mondays of the weeks to generate. */
+	weeks: Array<string>;
 	newWeeks: Array<NewWeek>;
 };
 
@@ -290,7 +346,7 @@ export const fetchMonthGenerationCheck = (
 
 /**
  * Generates one Department's month: creates the weeks it still needs with
- * the body's choices, then starts every week that isn't published,
+ * the body's choices, then starts every chosen week that isn't published,
  * generating or ended. Answers each week's outcome.
  */
 export const generateMonth = (

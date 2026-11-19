@@ -2,7 +2,15 @@ import { act, screen, waitFor, within } from "@testing-library/react";
 import { afterFocusReturns } from "@/common/testing/afterFocusReturns";
 import { companyWideWorkspace } from "@/common/testing/effectiveWorkspace";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	afterEach,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 import { resetApiClient } from "@/common/api-client";
 import {
 	currentUserReply,
@@ -59,6 +67,12 @@ const routes = (grants = permissions): Record<string, StubReply> => ({
 	[MEMBERS]: page([member]),
 	[CREATE]: { status: 201, body: envelope(branch) },
 });
+// The router splits each page's code out; loading it once here keeps that
+// first load out of the first test's time.
+beforeAll(async () => {
+	await import("@/pages/Branches");
+	await import("@/pages/Departments");
+});
 let app: OpenedApp | undefined;
 beforeEach(() => {
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
@@ -84,23 +98,34 @@ const openDialog = async (): Promise<HTMLElement> => {
 	);
 	return screen.findByRole("dialog", { name: "Create branch" });
 };
+/** Puts `text` in a field at once, as a paste does; typing it key by key is what made these tests slow. */
+const enter = async (
+	user: ReturnType<typeof userEvent.setup>,
+	field: HTMLElement,
+	text: string
+): Promise<void> => {
+	await user.click(field);
+	await user.paste(text);
+};
 const fill = async (
 	dialog: HTMLElement,
 	name = "Orchard Road"
 ): Promise<void> => {
 	const user = userEvent.setup();
-	await user.type(within(dialog).getByLabelText("Branch name"), name);
-	await user.type(within(dialog).getByLabelText("Branch code"), "  orc  ");
-	await user.type(within(dialog).getByLabelText("City"), "  São  Paulo  ");
+	await enter(user, within(dialog).getByLabelText("Branch name"), name);
+	await enter(user, within(dialog).getByLabelText("Branch code"), "  orc  ");
+	await enter(user, within(dialog).getByLabelText("City"), "  São  Paulo  ");
 	await user.click(within(dialog).getByLabelText("Country"));
-	await user.type(
+	await enter(
+		user,
 		screen.getByRole("combobox", { name: "Search countries" }),
 		"singap"
 	);
 	await user.click(await screen.findByRole("option", { name: "Singapore" }));
 	await afterFocusReturns();
 	await user.click(within(dialog).getByLabelText("Time zone"));
-	await user.type(
+	await enter(
+		user,
 		screen.getByRole("combobox", { name: "Search city, region or offset" }),
 		"singapore"
 	);
@@ -406,30 +431,33 @@ describe("create branch through the Branches page", () => {
 		expect(within(fresh).getByLabelText("Branch name")).toHaveValue("");
 		expect(within(fresh).getByLabelText("Branch code")).toHaveValue("");
 	});
-	it("validates missing heads only on submit and clears the error after choosing one", async () => {
-		stubApi(routes());
+	it("creates a branch with no head, saying the head is optional and that anyone in the company can be chosen", async () => {
+		const calls = stubApi({
+			...routes(),
+			[BRANCHES]: [page([]), page([branch])],
+		});
 		await open();
 		const dialog = await openDialog();
-		await userEvent.type(
-			within(dialog).getByLabelText("Branch name"),
-			"Orchard"
+		await fill(dialog);
+		const heads = within(dialog).getByLabelText("Branch heads");
+		expect(heads).not.toHaveAttribute("aria-required");
+		expect(heads).toHaveAccessibleDescription(
+			"Optional. You can choose a head later. Anyone in the company can be chosen, up to 20."
 		);
-		expect(within(dialog).queryByRole("alert")).not.toBeInTheDocument();
+		await userEvent.click(
+			within(dialog).getByRole("button", { name: "Remove Marcus Lim" })
+		);
 		await userEvent.click(
 			within(dialog).getByRole("button", { name: "Create branch" })
 		);
-		expect(
-			await within(dialog).findByText("Choose at least one branch head.")
-		).toBeVisible();
-		await userEvent.click(within(dialog).getByLabelText("Branch heads"));
-		await userEvent.click(
-			await screen.findByRole("option", { name: "Marcus Lim" })
-		);
 		await waitFor(() => {
-			expect(
-				within(dialog).queryByText("Choose at least one branch head.")
-			).not.toBeInTheDocument();
+			expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 		});
+		expect(
+			calls.find(
+				(call) => call.method === "POST" && call.path.endsWith("/branches")
+			)?.body
+		).toMatchObject({ initialHeadCompanyMembershipIds: [] });
 	});
 	it.each([
 		["", "Enter a branch code."],
@@ -531,7 +559,7 @@ describe("create branch through the Branches page", () => {
 			await fill(dialog);
 			const city = within(dialog).getByLabelText("City");
 			await userEvent.clear(city);
-			if (value) await userEvent.type(city, value);
+			if (value) await userEvent.paste(value);
 			expect(city).toHaveAttribute("aria-invalid", "false");
 			await userEvent.click(
 				within(dialog).getByRole("button", { name: "Create branch" })
@@ -544,7 +572,7 @@ describe("create branch through the Branches page", () => {
 				)
 			).toBe(false);
 			await userEvent.clear(city);
-			await userEvent.type(city, "St. John's");
+			await userEvent.paste("St. John's");
 			expect(city).toHaveAttribute("aria-invalid", "false");
 		}
 	);
@@ -561,7 +589,7 @@ describe("create branch through the Branches page", () => {
 		await fill(dialog);
 		const city = within(dialog).getByLabelText("City");
 		await userEvent.clear(city);
-		await userEvent.type(city, value);
+		await userEvent.paste(value);
 		if (value === "𐐀".repeat(100))
 			expect(within(dialog).getAllByText("100/100")).toHaveLength(1);
 		await userEvent.click(

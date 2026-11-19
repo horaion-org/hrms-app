@@ -7,6 +7,19 @@ import { describe, expect, it, vi } from "vitest";
 import { ApiProblemError } from "@/common/problem";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { ConstraintDialog } from "@/features/scheduling/constraints/ConstraintDialog";
+import { typeGroupsOf } from "@/features/scheduling/constraints/ConstraintDialog/typeGroups";
+import {
+	changeTypeLink,
+	chooseType,
+	nameField,
+	pick,
+	readyOptions,
+	renderDialog,
+	start,
+	submitButton,
+	trigger,
+	typeName,
+} from "@/features/scheduling/constraints/ConstraintDialog/constraintDialogTesting";
 import {
 	constraintSchema,
 	type ConstraintDialogBody,
@@ -17,17 +30,13 @@ import {
 	CONSTRAINT_FIXTURES,
 	CONSTRAINT_OPTIONS,
 	CONSTRAINT_TYPE_OPTIONS,
+	MOST_HOURS_A_DAY_FIXTURE,
+	MOST_OVERTIME_A_MONTH_FIXTURE,
 	WEEKLY_RULE_FIXTURE,
 } from "@/features/scheduling/constraints/fixtures";
-import type { ConstraintOptionsState } from "@/features/scheduling/constraints/useConstraintOptions";
 import { reachValueOf } from "@/features/workspace/unitReach";
 import { schedulingWorkspace } from "@/features/scheduling/schedules/fixtures";
 import { workspaceQuery } from "@/features/workspace/api";
-
-const options: ConstraintOptionsState = {
-	status: "ready",
-	options: CONSTRAINT_OPTIONS,
-};
 
 const problem = (status: number, errorCode: string): ApiProblemError =>
 	new ApiProblemError({
@@ -37,66 +46,6 @@ const problem = (status: number, errorCode: string): ApiProblemError =>
 		fieldErrors: [],
 		reason: "http",
 	});
-
-const renderDialog = (
-	props: Partial<Parameters<typeof ConstraintDialog>[0]> = {}
-): { onSave: ReturnType<typeof vi.fn>; onClose: ReturnType<typeof vi.fn> } => {
-	const onSave = vi.fn().mockResolvedValue(undefined);
-	const onClose = vi.fn();
-	render(
-		<I18nextProvider i18n={authTestI18n}>
-			<ConstraintDialog
-				options={options}
-				onClose={onClose}
-				onSave={onSave}
-				{...props}
-			/>
-		</I18nextProvider>
-	);
-	return { onSave, onClose };
-};
-
-const trigger = (name: RegExp): HTMLElement =>
-	screen.getByRole("button", { name });
-
-/** Opens a select and picks each option, closing it again. */
-const pick = async (
-	user: ReturnType<typeof userEvent.setup>,
-	name: RegExp,
-	...labels: Array<string>
-): Promise<void> => {
-	await user.click(trigger(name));
-	await labels.reduce(
-		(previous, label) =>
-			previous.then(async () => {
-				await user.click(await screen.findByRole("option", { name: label }));
-			}),
-		Promise.resolve()
-	);
-	if (screen.queryByRole("listbox")) await user.keyboard("{Escape}");
-};
-
-const nameField = (): HTMLElement =>
-	screen.getByRole("textbox", { name: /^Name/ });
-
-/** Replaces the name, suggested or not, with one typed in. */
-const typeName = async (
-	user: ReturnType<typeof userEvent.setup>,
-	name: string
-): Promise<void> => {
-	await user.clear(nameField());
-	await user.type(nameField(), name);
-};
-
-/** Names the constraint and chooses its type, as every new constraint starts. */
-const start = async (
-	user: ReturnType<typeof userEvent.setup>,
-	type: string
-): Promise<void> => {
-	await screen.findByRole("dialog", { name: "Add constraint" });
-	await typeName(user, "Morning cover");
-	await pick(user, /^What it controls/, type);
-};
 
 /** Orchard with Kitchen and Bar, and Marina; the Applies to field chooses from these. */
 const REACH = {
@@ -163,7 +112,7 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 			screen.getByRole("spinbutton", { name: /^Hours off/ }),
 			"11"
 		);
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith(
@@ -185,13 +134,13 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 				"Company rest is set by the company and locked. You can only make it stricter here."
 			)
 		).toBeVisible();
-		expect(trigger(/^What it controls/)).toBeDisabled();
+		expect(changeTypeLink()).toBeNull();
 
 		await typeName(user, "Front rest");
 		const hours = screen.getByRole("spinbutton", { name: /^Hours off/ });
 		await user.clear(hours);
 		await user.type(hours, "10");
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		expect(
 			await screen.findByText(
@@ -210,14 +159,14 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 		const hours = screen.getByRole("spinbutton", { name: /^Hours off/ });
 		await user.clear(hours);
 		await user.type(hours, "12");
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 		expect(await screen.findByRole("alert")).toHaveTextContent(
 			"We couldn’t add the constraint. Try again."
 		);
 
 		await user.clear(hours);
 		await user.type(hours, "10");
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		await waitFor(() => {
 			expect(screen.getByRole("alert")).toHaveTextContent(
@@ -237,7 +186,7 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 		const hours = screen.getByRole("spinbutton", { name: /^Hours off/ });
 		await user.clear(hours);
 		await user.type(hours, "12");
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith(
@@ -256,7 +205,7 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 		await screen.findByRole("dialog", { name: "Set for this department" });
 
 		await typeName(user, "No weekends");
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith(
@@ -270,14 +219,14 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 		const { onSave } = renderDialog({ editing: companyRest, withLock: true });
 		await screen.findByRole("dialog", { name: "Edit constraint" });
 
-		expect(trigger(/^What it controls/)).toBeDisabled();
+		expect(changeTypeLink()).toBeNull();
 		expect(
 			screen.getByText(
 				"A company constraint’s type can’t be changed. Add a new constraint instead."
 			)
 		).toBeVisible();
 
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith(
 				expect.objectContaining({ type: companyRest.type })
@@ -285,11 +234,155 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 		});
 	});
 
+	it("given_mostHoursADay_when_edited_then_showsMomsLimitAndKeepsAFigureAboveIt", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog({
+			withLock: true,
+			editing: MOST_HOURS_A_DAY_FIXTURE,
+			reach: { choices: REACH.choices, initial: reachValueOf() },
+		});
+		await screen.findByRole("dialog", { name: "Edit constraint" });
+
+		expect(screen.getByText("Most hours a day")).toBeVisible();
+		expect(changeTypeLink()).toBeNull();
+		expect(screen.queryByRole("button", { name: /^Lock/ })).toBeNull();
+		expect(screen.queryByRole("button", { name: /^Status/ })).toBeNull();
+		expect(screen.getByText("1 to 24. MOM’s limit is 12.")).toBeVisible();
+		const hours = screen.getByRole("spinbutton", { name: /^Hours a day/ });
+		expect(hours).toHaveAttribute("max", "24");
+
+		await user.clear(hours);
+		await user.type(hours, "13");
+		await user.click(submitButton());
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "MAX_WORK_HOURS_PER_DAY",
+					lock: "LOCKED",
+					values: [{ field: "WORK_HOURS_A_DAY", value: "13" }],
+				})
+			);
+		});
+	});
+
+	it("given_mostOvertimeAMonth_when_edited_then_explainsRestDayWorkAndKeepsNoOvertime", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog({
+			withLock: true,
+			editing: MOST_OVERTIME_A_MONTH_FIXTURE,
+			reach: { choices: REACH.choices, initial: reachValueOf() },
+		});
+		await screen.findByRole("dialog", { name: "Edit constraint" });
+
+		expect(
+			screen.getByText(
+				"0 to 744. MOM’s limit is 72; rest-day work is outside it, except hours past the normal day."
+			)
+		).toBeVisible();
+		const hours = screen.getByRole("spinbutton", {
+			name: /^Overtime hours a month/,
+		});
+
+		await user.clear(hours);
+		await user.type(hours, "0");
+		await user.click(submitButton());
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "MAX_OVERTIME_HOURS_PER_MONTH",
+					values: [{ field: "OVERTIME_HOURS_A_MONTH", value: "0" }],
+				})
+			);
+		});
+	});
+
+	it("given_theLockedMostHoursADay_when_aDepartmentAsksForMore_then_refusedBeforeSendingAndFewerIsSent", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog({ replacing: MOST_HOURS_A_DAY_FIXTURE });
+		await screen.findByRole("dialog", { name: "Set for this department" });
+		await typeName(user, "Kitchen hours");
+		const hours = screen.getByRole("spinbutton", { name: /^Hours a day/ });
+
+		await user.clear(hours);
+		await user.type(hours, "13");
+		await user.click(submitButton());
+		expect(
+			await screen.findByText(
+				"These values wouldn’t be at least as strict as the company’s locked constraint in every part. Make them stricter, or keep the company’s."
+			)
+		).toBeVisible();
+		expect(onSave).not.toHaveBeenCalled();
+
+		await user.clear(hours);
+		await user.type(hours, "10");
+		await user.click(submitButton());
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "MAX_WORK_HOURS_PER_DAY",
+					overridesConstraintId: "most-hours-a-day",
+					values: [{ field: "WORK_HOURS_A_DAY", value: "10" }],
+				})
+			);
+		});
+	});
+
+	it("given_aCeilingSavedWithoutARequirement_when_theCompanyEditsIt_then_opensAsMustAndSavesIfPossible", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog({
+			withLock: true,
+			editing: MOST_HOURS_A_DAY_FIXTURE,
+			reach: { choices: REACH.choices, initial: reachValueOf() },
+		});
+		await screen.findByRole("dialog", { name: "Edit constraint" });
+
+		expect(screen.getByRole("radio", { name: "Must" })).toBeChecked();
+		expect(
+			screen.getByText(
+				"Asked “if possible”, the roster may pass this figure when a shift could not be staffed otherwise, and each time it does is listed in Issues."
+			)
+		).toBeVisible();
+		await user.click(screen.getByRole("radio", { name: "If possible" }));
+		await user.click(submitButton());
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "MAX_WORK_HOURS_PER_DAY",
+					requirement: "SHOULD",
+					lock: "LOCKED",
+				})
+			);
+		});
+	});
+
+	it("given_theLockedMostHoursADay_when_aDepartmentMakesItIfPossible_then_refusedBeforeSending", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog({ replacing: MOST_HOURS_A_DAY_FIXTURE });
+		await screen.findByRole("dialog", { name: "Set for this department" });
+		await typeName(user, "Kitchen hours");
+
+		await user.click(screen.getByRole("radio", { name: "If possible" }));
+		await user.click(submitButton());
+
+		expect(
+			await screen.findByText(
+				"These values wouldn’t be at least as strict as the company’s locked constraint in every part. Make them stricter, or keep the company’s."
+			)
+		).toBeVisible();
+		expect(onSave).not.toHaveBeenCalled();
+	});
+
 	it("given_aNewCompanyRule_when_added_then_itsTypeCanBeChosen", async () => {
 		renderDialog({ withLock: true });
 		await screen.findByRole("dialog", { name: "Add constraint" });
 
-		expect(trigger(/^What it controls/)).toBeEnabled();
+		expect(
+			screen.getByRole("radio", { name: "Rest between shifts" })
+		).toBeVisible();
 	});
 
 	it("given_theApiRefusesAsNotStricter_when_saved_then_explainsIt", async () => {
@@ -301,7 +394,7 @@ describe("ConstraintDialog for the Scheduling policy (ADR-0058)", () => {
 		await screen.findByRole("dialog", { name: "Set for this department" });
 
 		await typeName(user, "No weekends");
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		expect(
 			await screen.findByText(
@@ -325,7 +418,7 @@ describe("ConstraintDialog for a work-policy constraint's reach (ADR-0072)", () 
 			screen.getByRole("spinbutton", { name: /^Hours off/ }),
 			"11"
 		);
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalled();
@@ -348,7 +441,7 @@ describe("ConstraintDialog for a work-policy constraint's reach (ADR-0072)", () 
 			screen.getByRole("spinbutton", { name: /^Hours off/ }),
 			"11"
 		);
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		expect(
 			await screen.findByText("Choose at least one branch.")
@@ -379,52 +472,294 @@ describe("ConstraintDialog for a work-policy constraint's reach (ADR-0072)", () 
 });
 
 describe("ConstraintDialog", () => {
-	it("given_noTypeYet_when_rendered_then_offersEveryTypeUnderItsCategory", async () => {
-		const user = userEvent.setup();
+	it("given_noTypeYet_when_rendered_then_offersEveryTypeAsACardUnderItsCategory", async () => {
 		renderDialog();
-		await screen.findByRole("dialog", { name: "Add constraint" });
+		await screen.findByRole("dialog", {
+			name: "Add constraint",
+			description: "Step 1 of 2: choose what it decides",
+		});
 
 		expect(screen.queryByRole("spinbutton")).toBeNull();
-		expect(screen.queryByRole("button", { name: /^Status/ })).toBeNull();
-		await user.click(trigger(/^What it controls/));
-
+		expect(screen.queryByRole("textbox", { name: /^Name/ })).toBeNull();
+		expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
 		expect(
-			screen.getAllByRole("option").map((option) => option.textContent)
-		).toEqual([
-			"People on a shift",
-			"People on a shift, with stand-ins",
-			"Someone on duty for the whole shift",
-			"Days off in a run of days",
-			"Days to avoid giving off",
-			"Limit on days in a row",
-			"Rest between shifts",
-		]);
+			screen.getAllByRole("radio").map((radio) => radio.getAttribute("value"))
+		).toEqual(
+			typeGroupsOf(CONSTRAINT_TYPE_OPTIONS).flatMap((group) =>
+				group.types.map((option) => option.type)
+			)
+		);
 		for (const [category, count] of [
 			["People on shifts", 2],
-			["On duty throughout", 1],
-			["Days off", 3],
-			["Rest and hours", 1],
+			["Days off", 4],
+			["Rest and hours", 5],
 		] as const)
 			expect(
-				within(screen.getByRole("group", { name: category })).getAllByRole(
-					"option"
+				within(screen.getByRole("radiogroup", { name: category })).getAllByRole(
+					"radio"
 				)
 			).toHaveLength(count);
+		// On duty throughout is retired (ADR-0128 in the API): no kind, and no empty group for its category.
+		expect(screen.queryByRole("radio", { name: /Someone on duty/ })).toBeNull();
+		expect(
+			screen.queryByRole("radiogroup", { name: "On duty throughout" })
+		).toBeNull();
 	});
 
-	it("given_aTypeChosen_when_rendered_then_itsHintIsAWorkedExample", async () => {
+	it("given_aKindChosen_when_continued_then_theFormKeepsItAtTheTopAndChangeGoesBack", async () => {
 		const user = userEvent.setup();
 		renderDialog();
-		await screen.findByRole("dialog", { name: "Add constraint" });
-		expect(screen.getByText("Choose one to see an example.")).toBeVisible();
-
-		await pick(user, /^What it controls/, "Rest between shifts");
+		await chooseType(user, "Rest between shifts");
 
 		expect(
-			screen.getByText(
-				"For example: Everyone gets at least 11 hours off between shifts."
+			screen.getByRole("dialog", { description: "Step 2 of 2" })
+		).toBeVisible();
+		// Continue only moves on: nothing is checked or refused yet.
+		expect(screen.queryByRole("alert")).toBeNull();
+		expect(
+			screen.getByText("The shortest gap between one shift and the next.")
+		).toBeVisible();
+		await user.click(changeTypeLink()!);
+
+		expect(
+			screen.getByRole("radio", { name: "Rest between shifts" })
+		).toBeChecked();
+	});
+
+	// Pay rates moved onto employment terms (ADR-0123 in the API): the API no longer offers the rule, nor does the dialog.
+	it("given_theWorkPolicy_when_addingARule_then_payRatesNotOffered", async () => {
+		renderDialog();
+
+		await screen.findByRole("dialog", { name: "Add constraint" });
+		expect(
+			screen.getByRole("radio", { name: "Rest between shifts" })
+		).toBeVisible();
+
+		expect(
+			screen.queryByRole("radio", { name: /Pay rates for extra hours/ })
+		).toBeNull();
+	});
+
+	it("given_restBetweenShifts_when_chosen_then_offersMustOrIfPossibleAndSendsTheChoice", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog();
+		await start(user, "Rest between shifts");
+
+		await user.click(screen.getByRole("radio", { name: /^If possible/ }));
+		await user.type(
+			screen.getByRole("spinbutton", { name: /^Hours off/ }),
+			"11"
+		);
+		await user.click(submitButton());
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "REST_BETWEEN_SHIFTS",
+					requirement: "SHOULD",
+				})
+			);
+		});
+	});
+
+	it("given_aBannedShiftPattern_when_daysAreFilled_then_eachLaterDayAppearsInTurnAndTheDaysAreSentInOrder", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog();
+		await start(user, "Shifts not to follow each other");
+
+		expect(trigger(/^Day 1/)).toBeVisible();
+		expect(trigger(/^Day 2/)).toBeVisible();
+		expect(screen.queryByRole("button", { name: /^Day 3/ })).toBeNull();
+		await pick(user, /^Day 1/, "Overnight Ops Night");
+		await pick(user, /^Day 2/, "Front Desk AM Front Desk");
+		expect(trigger(/^Day 3/)).toBeVisible();
+		expect(screen.queryByRole("button", { name: /^Day 4/ })).toBeNull();
+		await user.click(submitButton());
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "BANNED_SHIFT_PATTERN",
+					requirement: "MUST",
+					values: [
+						{ field: "PATTERN_DAY_1", value: "overnight-ops" },
+						{ field: "PATTERN_DAY_2", value: "front-desk-am" },
+					],
+				})
+			);
+		});
+	});
+
+	it("given_callBacks_when_noneAllowed_then_zeroIsSent", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog();
+		await start(user, "Call-backs on a rest or off day");
+
+		await user.type(
+			screen.getByRole("spinbutton", { name: /^Most call-backs a person/ }),
+			"0"
+		);
+		await user.click(submitButton());
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "MAX_CALL_BACKS_PER_PERSON",
+					values: [{ field: "CALL_BACKS", value: "0" }],
+				})
+			);
+		});
+	});
+
+	it("given_callBacks_when_leftEachWeek_then_noSpanIsSent", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog();
+		await start(user, "Call-backs on a rest or off day");
+
+		await user.type(
+			screen.getByRole("spinbutton", { name: /^Most call-backs a person/ }),
+			"2"
+		);
+		expect(
+			screen.getByRole("radio", { name: "Each week (Monday to Sunday)" })
+		).toBeChecked();
+		expect(
+			screen.getByRole("region", { name: "How it reads" })
+		).toHaveTextContent("at most 2 times each week.");
+		await user.click(submitButton());
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					values: [{ field: "CALL_BACKS", value: "2" }],
+				})
+			);
+		});
+	});
+
+	it("given_callBacks_when_countedOverFourDaysInARow_then_theSpanIsSent", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog();
+		await start(user, "Call-backs on a rest or off day");
+
+		await user.type(
+			screen.getByRole("spinbutton", { name: /^Most call-backs a person/ }),
+			"2"
+		);
+		await user.click(
+			screen.getByRole("radio", { name: "Any number of days in a row" })
+		);
+		await user.type(
+			screen.getByRole("spinbutton", { name: /^Counted over/ }),
+			"4"
+		);
+		expect(
+			screen.getByRole("region", { name: "How it reads" })
+		).toHaveTextContent("at most 2 times in any 4 days in a row.");
+		await user.click(submitButton());
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					values: [
+						{ field: "CALL_BACKS", value: "2" },
+						{ field: "CALL_BACK_SPAN_DAYS", value: "4" },
+					],
+				})
+			);
+		});
+	});
+
+	it("given_aStaffingRule_when_aWholeShiftGroupIsChosen_then_everyShiftOfTheGroupIsSavedAndTheirJobTitlesShareNone", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog();
+		await start(user, "People on a shift");
+
+		await user.click(trigger(/^Shifts/));
+		await user.click(
+			await screen.findByRole("option", { name: "Whole group: Service" })
+		);
+		await user.keyboard("{Escape}");
+
+		expect(trigger(/^Shifts/)).toHaveTextContent("3 selected");
+		await user.click(trigger(/^Job titles that count/));
+		expect(
+			await screen.findByText(
+				"The chosen shifts share no job title. Choose shifts that take the same job title, or fewer shifts."
 			)
 		).toBeVisible();
+		await user.keyboard("{Escape}");
+		await user.click(submitButton());
+		expect(onSave).not.toHaveBeenCalled();
+	});
+
+	it("given_theShiftPicker_when_aGroupChipIsChosen_then_theGroupsSitTogetherAboveTheShiftsAndItsShiftsAreTicked", async () => {
+		const user = userEvent.setup();
+		renderDialog();
+		await start(user, "People on a shift");
+
+		await user.click(trigger(/^Shifts/));
+		const chips = within(
+			await screen.findByRole("group", { name: "Shift groups" })
+		).getAllByRole("option");
+		// Every group together, in the order its first shift is listed; only a group of several says its count.
+		expect(chips.map((chip) => chip.textContent)).toEqual([
+			"Concierge",
+			"Front Desk",
+			"Kitchen",
+			"Night",
+			"Service 3 shifts",
+		]);
+		await user.click(
+			screen.getByRole("option", { name: "Whole group: Service" })
+		);
+
+		expect(
+			screen.getByRole("option", { name: "Whole group: Service" })
+		).toHaveAttribute("aria-checked", "true");
+		for (const name of [
+			"Lunch Rush Service",
+			"Swing Shift Service",
+			"Closing Crew Service",
+		])
+			expect(screen.getByRole("option", { name })).toHaveAttribute(
+				"aria-selected",
+				"true"
+			);
+		expect(
+			screen.getByRole("option", { name: "Breakfast Prep Kitchen" })
+		).toHaveAttribute("aria-selected", "false");
+	});
+
+	it("given_jobTitlesChosen_when_aWholeShiftGroupIsChosen_then_aJobTitleTheGroupDoesNotAllListIsRemovedAndSaid", async () => {
+		const user = userEvent.setup();
+		renderDialog();
+		await start(user, "People on a shift");
+		await pick(user, /^Shifts/, "Lunch Rush Service");
+		await pick(user, /^Job titles that count/, "Cashier");
+
+		await user.click(trigger(/^Shifts/));
+		await user.click(
+			await screen.findByRole("option", { name: "Whole group: Service" })
+		);
+		await user.keyboard("{Escape}");
+
+		expect(
+			await screen.findByText(
+				"Cashier was removed: not everything chosen in Shifts lists it."
+			)
+		).toBeVisible();
+		expect(trigger(/^Shifts/)).toHaveTextContent("3 selected");
+	});
+
+	it("given_theChooser_when_rendered_then_eachKindSaysWhatItDoesWithAWorkedExample", async () => {
+		renderDialog();
+
+		expect(
+			await screen.findByRole("radio", { name: "Rest between shifts" })
+		).toHaveAccessibleDescription(
+			"The shortest gap between one shift and the next.For example: Everyone gets at least 11 hours off between shifts."
+		);
 	});
 
 	it("given_aType_when_chosen_then_rendersOneRowPerFieldOfItsSpecByKind", async () => {
@@ -487,7 +822,7 @@ describe("ConstraintDialog", () => {
 		const { onSave } = renderDialog();
 		await start(user, "People on a shift");
 
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		const alerts = await screen.findAllByRole("alert");
 		// In reading order: shifts, comparison, people, job titles; how firm starts as Must.
@@ -508,19 +843,19 @@ describe("ConstraintDialog", () => {
 		expect(screen.getByRole("radio", { name: "Must" })).toBeChecked();
 		await pick(user, /^At least, at most or exactly/, "At least");
 		await user.type(screen.getByRole("spinbutton", { name: /^People/ }), "2");
+		await pick(user, /^Shifts/, "Front Desk AM Front Desk");
 		await pick(
 			user,
 			/^Job titles that count/,
 			"Front Desk Staff",
 			"Front Desk Lead"
 		);
-		await pick(user, /^Shifts/, "Front Desk AM");
 		expect(
 			screen.getByRole("region", { name: "How it reads" })
 		).toHaveTextContent(
 			"Must Front Desk AM needs at least 2 people as Front Desk Lead or Front Desk Staff.Front Desk AM"
 		);
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith({
@@ -543,7 +878,7 @@ describe("ConstraintDialog", () => {
 	it("given_IfPossibleChosen_when_previewed_then_theTagFollows", async () => {
 		const user = userEvent.setup();
 		renderDialog();
-		await start(user, "Days off in a run of days");
+		await start(user, "Days off each week");
 		const preview = screen.getByRole("region", { name: "How it reads" });
 		expect(within(preview).getByText("Must")).toBeVisible();
 
@@ -560,39 +895,126 @@ describe("ConstraintDialog", () => {
 		renderDialog();
 		await screen.findByRole("dialog", { name: "Add constraint" });
 
-		await pick(user, /^What it controls/, "People on a shift");
+		await chooseType(user, "People on a shift");
 		expect(nameField()).toHaveValue("People on a shift");
-		await pick(user, /^Shifts/, "Front Desk AM");
+		await pick(user, /^Shifts/, "Front Desk AM Front Desk");
 		expect(nameField()).toHaveValue("Front Desk AM staffing");
 
 		await typeName(user, "Morning cover");
-		await pick(user, /^Shifts/, "Breakfast Prep");
+		await pick(user, /^Shifts/, "Breakfast Prep Kitchen");
 		expect(nameField()).toHaveValue("Morning cover");
 	});
 
-	it("given_aShiftThatListsNoneOfTheJobTitles_when_chosen_then_warnsAndStillSaves", async () => {
+	it("given_noShiftYet_when_jobTitlesOpened_then_asksForAShiftFirst", async () => {
 		const user = userEvent.setup();
-		const { onSave } = renderDialog();
+		renderDialog();
 		await start(user, "People on a shift");
-		await pick(user, /^Shifts/, "Front Desk AM");
-		await pick(user, /^At least, at most or exactly/, "At least");
-		await user.type(screen.getByRole("spinbutton", { name: /^People/ }), "2");
 
-		await pick(user, /^Job titles that count/, "Front Desk Lead");
-		expect(screen.queryByText(/doesn't list/)).toBeNull();
+		await user.click(trigger(/^Job titles that count/));
 
-		// Swaps Front Desk Lead (ticked again, so off) for Cashier, which Front Desk AM does not list.
-		await pick(user, /^Job titles that count/, "Front Desk Lead", "Cashier");
+		expect(await screen.findByText("Choose in Shifts first.")).toBeVisible();
+		expect(screen.queryByRole("option", { name: "Cashier" })).toBeNull();
+	});
+
+	it("given_aShiftChosen_when_jobTitlesOpened_then_offersOnlyTheOnesItLists", async () => {
+		const user = userEvent.setup();
+		renderDialog();
+		await start(user, "People on a shift");
+		await pick(user, /^Shifts/, "Front Desk AM Front Desk");
+
+		await user.click(trigger(/^Job titles that count/));
+
+		const listbox = await screen.findByRole("listbox");
+		expect(
+			within(listbox)
+				.getAllByRole("option")
+				.map((option) => option.textContent)
+		).toEqual(expect.arrayContaining(["Front Desk Lead", "Front Desk Staff"]));
+		expect(
+			within(listbox).queryByRole("option", { name: "Cashier" })
+		).toBeNull();
+	});
+
+	it("given_aSecondShiftChosen_when_jobTitlesOutsideTheOverlap_then_takesThemOutAndSaysSo", async () => {
+		const user = userEvent.setup();
+		renderDialog();
+		await start(user, "People on a shift");
+		await pick(user, /^Shifts/, "Lunch Rush Service");
+		await pick(user, /^Job titles that count/, "Cashier", "Supervisor");
+
+		// Closing Crew takes Supervisor but not Cashier.
+		await pick(user, /^Shifts/, "Closing Crew Service");
+
 		expect(
 			screen.getByText(
-				"Front Desk AM doesn't list Cashier, so no one can be counted there. Add them to the shift or choose other job titles."
+				"Cashier was removed: not everything chosen in Shifts lists it."
 			)
 		).toBeVisible();
+		expect(trigger(/^Job titles that count/)).toHaveTextContent("Supervisor");
+		expect(trigger(/^Job titles that count/)).not.toHaveTextContent("Cashier");
+	});
 
-		await user.click(screen.getByRole("button", { name: "Save" }));
-		await waitFor(() => {
-			expect(onSave).toHaveBeenCalledOnce();
+	it("given_twoShiftsThatShareNoJobTitle_when_jobTitlesOpened_then_saysTheyShareNone", async () => {
+		const user = userEvent.setup();
+		renderDialog();
+		await start(user, "People on a shift");
+		await pick(
+			user,
+			/^Shifts/,
+			"Front Desk AM Front Desk",
+			"Lunch Rush Service"
+		);
+
+		await user.click(trigger(/^Job titles that count/));
+
+		expect(
+			await screen.findByText(
+				"The chosen shifts share no job title. Choose shifts that take the same job title, or fewer shifts."
+			)
+		).toBeVisible();
+		expect(screen.queryByRole("option", { name: "Cashier" })).toBeNull();
+	});
+
+	it("given_oneShiftThatListsNoneOffered_when_jobTitlesOpened_then_keepsTheOneShiftLine", async () => {
+		const user = userEvent.setup();
+		renderDialog();
+		await start(user, "People on a shift");
+		await pick(user, /^Shifts/, "Concierge Support Concierge");
+
+		await user.click(trigger(/^Job titles that count/));
+
+		expect(
+			await screen.findByText("Nothing chosen in Shifts lists one yet.")
+		).toBeVisible();
+		expect(
+			screen.queryByText(/The chosen shifts share no job title/)
+		).toBeNull();
+	});
+
+	it("given_aSavedRuleWithValuesThatNoLongerFit_when_opened_then_takesThemOutAndNamesThem", async () => {
+		const stale = constraint("closing-supervisor");
+		renderDialog({
+			editing: {
+				...stale,
+				values: stale.values.map((value) =>
+					value.field === "JOB_TITLE"
+						? { ...value, problem: "NOT_LISTED" }
+						: value
+				),
+			},
 		});
+		await screen.findByRole("dialog", { name: "Edit constraint" });
+
+		const names = stale.values
+			.filter((value) => value.field === "JOB_TITLE")
+			.map((value) => value.name);
+		expect(
+			screen.getByText(
+				`These no longer fit and were taken out: ${names.join(", ")}. Save to keep the constraint without them, or choose again.`
+			)
+		).toBeVisible();
+		for (const name of names)
+			expect(trigger(/^Job titles that count/)).not.toHaveTextContent(name!);
 	});
 
 	it("given_aSavedConstraint_when_editing_then_keepsItsName", async () => {
@@ -610,23 +1032,20 @@ describe("ConstraintDialog", () => {
 		expect(trigger(/^Status/)).toHaveTextContent("Active");
 	});
 
-	it("given_aTypeWithoutARequirement_when_saved_then_offersNoneAndSendsNone", async () => {
+	it("given_daysToAvoidGivingOff_when_added_then_startsIfPossibleAndSendsIt", async () => {
 		const user = userEvent.setup();
 		const { onSave } = renderDialog();
 		await start(user, "Days to avoid giving off");
 
-		expect(screen.queryByRole("radiogroup")).toBeNull();
-		expect(
-			screen.getByText("Always if possible for this kind of constraint.")
-		).toBeVisible();
+		expect(screen.getByRole("radio", { name: /^If possible/ })).toBeChecked();
 		await pick(user, /^Days of the week/, "Saturday", "Friday");
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith(
 				expect.objectContaining({
 					type: "AVOID_DAYS_OFF_ON",
-					requirement: null,
+					requirement: "SHOULD",
 					// Monday first, whatever order they were chosen in.
 					values: [
 						{ field: "WEEKDAY", value: "FRI" },
@@ -637,7 +1056,31 @@ describe("ConstraintDialog", () => {
 		});
 	});
 
-	it("given_theWeeklyRule_when_edited_then_offersItsComparisonsAndNumberWithItsDayTypeFixed", async () => {
+	it("given_keepDaysOffTogetherAsAMust_when_saved_then_saysScatteredDaysCannotKeepItAndSendsMust", async () => {
+		const user = userEvent.setup();
+		const { onSave } = renderDialog();
+		await start(user, "Keep days off together");
+		const scattered =
+			"As a Must, someone whose available days are scattered, such as a part-timer on Monday, Wednesday and Friday, cannot keep it, so it is best applied to full-timers.";
+
+		expect(screen.getByRole("radio", { name: /^If possible/ })).toBeChecked();
+		expect(screen.queryByText(scattered)).toBeNull();
+		await user.click(screen.getByRole("radio", { name: /^Must/ }));
+		expect(screen.getByText(scattered)).toBeVisible();
+		await user.click(submitButton());
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					type: "KEEP_DAYS_OFF_TOGETHER",
+					requirement: "MUST",
+					values: [],
+				})
+			);
+		});
+	});
+
+	it("given_theWeeklyRule_when_edited_then_offersItsComparisonsNumberAndOneNonWorkingDayType", async () => {
 		const user = userEvent.setup();
 		const { onSave } = renderDialog({
 			withLock: true,
@@ -646,21 +1089,25 @@ describe("ConstraintDialog", () => {
 		});
 		await screen.findByRole("dialog", { name: "Edit constraint" });
 
-		expect(trigger(/^What it controls/)).toHaveTextContent(
-			"Required days each week"
-		);
-		expect(trigger(/^What it controls/)).toBeDisabled();
+		expect(screen.getByText("Required days each week")).toBeVisible();
+		expect(changeTypeLink()).toBeNull();
 		expect(screen.queryByRole("button", { name: /^Lock/ })).toBeNull();
 		expect(screen.queryByRole("button", { name: /^Status/ })).toBeNull();
 		expect(screen.queryByRole("radiogroup", { name: /Applies to/ })).toBeNull();
 		expect(trigger(/^Day types/)).toHaveTextContent("Rest day");
-		expect(trigger(/^Day types/)).toBeDisabled();
+		expect(trigger(/^Day types/)).toBeEnabled();
+		await user.click(trigger(/^Day types/));
+		// The non-working day types only: never leave (ADR-0087).
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual(["Day off", "Rest day"]);
+		await user.click(screen.getByRole("option", { name: "Day off" }));
 		await user.click(trigger(/^At least, at most or exactly/));
 		expect(
 			screen.getAllByRole("option").map((option) => option.textContent)
 		).toEqual(["At least", "Exactly"]);
 		await user.click(screen.getByRole("option", { name: "Exactly" }));
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith(
@@ -670,11 +1117,49 @@ describe("ConstraintDialog", () => {
 					values: [
 						{ field: "COMPARISON", value: "EXACTLY" },
 						{ field: "DAY_TYPE_COUNT", value: "1" },
-						{ field: "DAY_TYPE", value: "REST" },
+						{ field: "DAY_TYPE", value: "OFF" },
 					],
 				})
 			);
 		});
+	});
+
+	it("given_theWeeklyRuleReplacedByADepartment_when_opened_then_itsDayTypeStaysTheCompanys", async () => {
+		renderDialog({ replacing: WEEKLY_RULE_FIXTURE });
+		await screen.findByRole("dialog", { name: "Set for this department" });
+
+		expect(trigger(/^Day types/)).toHaveTextContent("Rest day");
+		expect(trigger(/^Day types/)).toBeDisabled();
+	});
+
+	it("given_aNewDaysOffRule_when_chosen_then_everyNonWorkingDayTypeCountsAndAllComparisonsAreOffered", async () => {
+		const user = userEvent.setup();
+		renderDialog();
+		await start(user, "Days off each week");
+
+		expect(trigger(/^Day types/)).toHaveTextContent(/2/);
+		await user.click(trigger(/^At least, at most or exactly/));
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual(["At least", "At most", "Exactly"]);
+	});
+
+	it("given_aDaysOffRuleExactly_when_onlyDayOffCounts_then_keepsExactlyAndOffersAllThree", async () => {
+		const user = userEvent.setup();
+		renderDialog();
+		await start(user, "Days off each week");
+		await pick(user, /^At least, at most or exactly/, "Exactly");
+
+		// Unticking Rest day leaves only Day off counted (ADR-0104).
+		await pick(user, /^Day types/, "Rest day");
+
+		expect(trigger(/^At least, at most or exactly/)).toHaveTextContent(
+			"Exactly"
+		);
+		await user.click(trigger(/^At least, at most or exactly/));
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual(["At least", "At most", "Exactly"]);
 	});
 
 	it("given_aPeopleType_when_chosen_then_offersAllThreeComparisons", async () => {
@@ -701,10 +1186,8 @@ describe("ConstraintDialog", () => {
 		});
 		await start(user, "Limit on days in a row");
 
-		expect(screen.queryByRole("radiogroup")).toBeNull();
-		expect(
-			screen.getByText("Always a must for this kind of constraint.")
-		).toBeVisible();
+		expect(screen.getByRole("radiogroup", { name: /^How firm/ })).toBeVisible();
+		await user.click(screen.getByRole("radio", { name: /^Must/ }));
 		expect(
 			screen.getByRole("spinbutton", { name: /^Most days in a row/ })
 		).toHaveAttribute("max", "14");
@@ -731,12 +1214,12 @@ describe("ConstraintDialog", () => {
 		).toHaveTextContent(
 			"No full-timer goes more than 12 days in a row without a Rest day or Public holiday off."
 		);
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith(
 				expect.objectContaining({
 					type: "MAX_DAYS_WITHOUT_DAY_TYPES",
-					requirement: null,
+					requirement: "MUST",
 					values: [
 						{ field: "DAYS_IN_A_ROW", value: "12" },
 						{ field: "DAY_TYPE", value: "REST" },
@@ -756,7 +1239,7 @@ describe("ConstraintDialog", () => {
 			screen.getByRole("spinbutton", { name: /^Hours off/ }),
 			"25"
 		);
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 
 		expect(
 			await screen.findByText("Enter a whole number from 1 to 24.")
@@ -764,16 +1247,14 @@ describe("ConstraintDialog", () => {
 		expect(onSave).not.toHaveBeenCalled();
 	});
 
-	it("given_aConstraint_when_editing_then_startsFromItsValuesChecksAcrossFieldsAndResetReturnsToThem", async () => {
+	it("given_aConstraint_when_editing_then_startsFromItsValuesAndChecksAcrossFields", async () => {
 		const user = userEvent.setup();
 		const { onSave } = renderDialog({ editing: constraint("two-days-off") });
 		await screen.findByRole("dialog", { name: "Edit constraint" });
 		const daysOff = screen.getByRole("spinbutton", { name: /^Days off/ });
 
 		expect(nameField()).toHaveValue("Two days off");
-		expect(trigger(/^What it controls/)).toHaveTextContent(
-			"Days off in a run of days"
-		);
+		expect(screen.getByText("Days off each week")).toBeVisible();
 		expect(screen.getByRole("radio", { name: "Must" })).toBeChecked();
 		expect(trigger(/^At least, at most or exactly/)).toHaveTextContent(
 			"At least"
@@ -782,7 +1263,7 @@ describe("ConstraintDialog", () => {
 
 		await user.clear(daysOff);
 		await user.type(daysOff, "8");
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.click(submitButton());
 		expect(
 			await screen.findByText(
 				"Days off can’t be more than the days in the period."
@@ -790,9 +1271,9 @@ describe("ConstraintDialog", () => {
 		).toBeVisible();
 		expect(onSave).not.toHaveBeenCalled();
 
-		await user.click(screen.getByRole("button", { name: "Reset" }));
-		expect(daysOff).toHaveValue(2);
-		await user.click(screen.getByRole("button", { name: "Save" }));
+		await user.clear(daysOff);
+		await user.type(daysOff, "2");
+		await user.click(submitButton());
 
 		await waitFor(() => {
 			expect(onSave).toHaveBeenCalledWith({
@@ -803,31 +1284,90 @@ describe("ConstraintDialog", () => {
 				values: [
 					{ field: "COMPARISON", value: "AT_LEAST" },
 					{ field: "DAYS_OFF", value: "2" },
-					{ field: "PERIOD_DAYS", value: "7" },
+					{ field: "PERIOD_WEEKS", value: "1" },
 				],
 			});
 		});
 	});
 
-	it("given_aDaysOffConstraint_when_itsPeriodIsLongerThanAWeek_then_refusedWithTheDeclaredRange", async () => {
+	it("given_aDaysOffConstraint_when_itsPeriodIsChosen_then_offeredAsEveryWeekToEvery4WeeksAndSentInWeeks", async () => {
 		const user = userEvent.setup();
 		const { onSave } = renderDialog({ editing: constraint("two-days-off") });
 		await screen.findByRole("dialog", { name: "Edit constraint" });
-		const periodDays = screen.getByRole("spinbutton", {
-			name: /^Days in a row/,
+
+		expect(trigger(/^How often/)).toHaveTextContent("Every week");
+		expect(
+			screen.getByText(
+				"Weeks run Monday to Sunday. A period of 2 to 4 weeks is a fixed block that carries on from one schedule to the next."
+			)
+		).toBeVisible();
+		await user.click(trigger(/^How often/));
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual([
+			"Every week",
+			"Every 2 weeks",
+			"Every 3 weeks",
+			"Every 4 weeks",
+		]);
+		await user.click(screen.getByRole("option", { name: "Every 2 weeks" }));
+		const daysOff = screen.getByRole("spinbutton", { name: /^Days off/ });
+		await user.clear(daysOff);
+		await user.type(daysOff, "8");
+		await user.click(submitButton());
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					values: [
+						{ field: "COMPARISON", value: "AT_LEAST" },
+						{ field: "DAYS_OFF", value: "8" },
+						{ field: "PERIOD_WEEKS", value: "2" },
+					],
+				})
+			);
 		});
+	});
 
-		expect(
-			screen.getByText("For example 7: any 7 days in a row. 1 to 7.")
-		).toBeVisible();
+	it("given_aDaysOffConstraintThatKeptItsPeriodInDays_when_edited_then_asksForAPeriodInWeeksAndSendsNoDays", async () => {
+		const user = userEvent.setup();
+		const twoDaysOff = constraint("two-days-off");
+		const { onSave } = renderDialog({
+			editing: {
+				...twoDaysOff,
+				values: [
+					...twoDaysOff.values.filter(
+						(value) => value.field !== "PERIOD_WEEKS"
+					),
+					{
+						field: "PERIOD_DAYS",
+						value: "6",
+						name: null,
+						problem: "PERIOD_IN_DAYS",
+					},
+				],
+			},
+		});
+		await screen.findByRole("dialog", { name: "Edit constraint" });
 
-		await user.clear(periodDays);
-		await user.type(periodDays, "8");
-		await user.click(screen.getByRole("button", { name: "Save" }));
-		expect(
-			await screen.findByText("Enter a whole number from 1 to 7.")
-		).toBeVisible();
+		await user.click(submitButton());
+		expect(await screen.findByText("Choose one.")).toBeVisible();
 		expect(onSave).not.toHaveBeenCalled();
+
+		await pick(user, /^How often/, "Every week");
+		await user.click(submitButton());
+
+		await waitFor(() => {
+			expect(onSave).toHaveBeenCalledWith(
+				expect.objectContaining({
+					values: [
+						{ field: "COMPARISON", value: "AT_LEAST" },
+						{ field: "DAYS_OFF", value: "2" },
+						{ field: "PERIOD_WEEKS", value: "1" },
+					],
+				})
+			);
+		});
 	});
 
 	it.each([
@@ -849,7 +1389,7 @@ describe("ConstraintDialog", () => {
 			});
 			await screen.findByRole("dialog", { name: "Edit constraint" });
 
-			await user.click(screen.getByRole("button", { name: "Save" }));
+			await user.click(submitButton());
 
 			expect(await screen.findByRole("alert")).toHaveTextContent(copy);
 			expect(onClose).not.toHaveBeenCalled();
@@ -865,8 +1405,8 @@ describe("ConstraintDialog", () => {
 				"You don’t have permission to see this department’s constraint types."
 			)
 		).toBeVisible();
-		expect(trigger(/^What it controls/)).toBeDisabled();
-		expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+		expect(screen.queryByRole("radio")).toBeNull();
+		expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
 	});
 });
 
@@ -876,7 +1416,7 @@ describe("ConstraintDialog with a Department field", () => {
 		const [departmentId, setDepartmentId] = useState(initial);
 		return (
 			<ConstraintDialog
-				options={departmentId ? options : { status: "pending" }}
+				options={departmentId ? readyOptions : { status: "pending" }}
 				department={{
 					kind: "choose",
 					companyId: "c-1",
@@ -905,20 +1445,21 @@ describe("ConstraintDialog with a Department field", () => {
 		);
 	};
 
-	it("given_noDepartmentYet_when_named_then_keepsSaveDisabledAndAsksForTheDepartmentFirst", async () => {
+	it("given_noDepartmentYet_when_rendered_then_asksForTheDepartmentFirstAndOffersNoKind", async () => {
 		const user = userEvent.setup();
 		renderInCompany(<ChoosingDialog initial="" />);
 		await screen.findByRole("dialog", { name: "Add constraint" });
 
-		await typeName(user, "Rest");
-
-		expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
 		expect(screen.getByText("Choose a department first.")).toBeVisible();
-		expect(trigger(/^What it controls/)).toBeDisabled();
+		expect(screen.queryByRole("radio")).toBeNull();
+		expect(screen.getByRole("button", { name: "Continue" })).toBeDisabled();
 
 		await user.click(trigger(/^Department/));
 		await user.click(screen.getByRole("option", { name: /Front Office/ }));
-		expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
+		await user.click(
+			await screen.findByRole("radio", { name: "Rest between shifts" })
+		);
+		expect(screen.getByRole("button", { name: "Continue" })).toBeEnabled();
 	});
 
 	it("given_valuesFilledIn_when_theDepartmentChanges_then_clearsThemAndKeepsTheRest", async () => {
@@ -937,17 +1478,15 @@ describe("ConstraintDialog with a Department field", () => {
 			null
 		);
 		expect(nameField()).toHaveValue("Morning cover");
-		expect(trigger(/^What it controls/)).toHaveTextContent(
-			"Rest between shifts"
-		);
+		expect(screen.getByText("Rest between shifts")).toBeVisible();
 	});
 
-	it("given_aFixedDepartmentAndANote_when_editing_then_showsTheDepartmentDisabledAndTheNote", async () => {
+	it("given_aFixedDepartmentAndANote_when_editing_then_namesTheDepartmentUnderTheTitleAndShowsTheNote", async () => {
 		renderInCompany(
 			<ConstraintDialog
 				editing={CONSTRAINT_FIXTURES[2]}
 				impactNote="Saving changes this constraint for Front Office and new schedules."
-				options={options}
+				options={readyOptions}
 				department={{
 					kind: "fixed",
 					departmentId: "d-1",
@@ -959,10 +1498,10 @@ describe("ConstraintDialog with a Department field", () => {
 		);
 		await screen.findByRole("dialog", { name: "Edit constraint" });
 
-		expect(trigger(/^Department/)).toBeDisabled();
-		expect(trigger(/^Department/)).toHaveTextContent(
-			"Main branch › Front Office"
-		);
+		expect(
+			screen.getByRole("dialog", { description: "Main branch › Front Office" })
+		).toBeVisible();
+		expect(screen.queryByRole("button", { name: /^Department/ })).toBeNull();
 		expect(
 			screen.getByText(
 				"Saving changes this constraint for Front Office and new schedules."
@@ -1012,7 +1551,7 @@ describe("constraintSchema", () => {
 			expect.objectContaining({
 				path: ["values", "STAND_IN_JOB_TITLE"],
 				message:
-					"A stand-in job title can’t also be one of the counted job titles.",
+					"Already chosen in Job titles that count: choose it in one place only.",
 			}),
 		]);
 	});
@@ -1027,5 +1566,29 @@ describe("constraintSchema", () => {
 		});
 
 		expect(parsed.error?.issues[0]?.message).toBe("Choose at most 20.");
+	});
+
+	it("given_aBannedPatternWithAnEmptyDayBeforeAFilledOne_when_parsed_then_asksForThatDayOrToClearTheRest", () => {
+		const pattern = CONSTRAINT_TYPE_OPTIONS.find(
+			(option) => option.type === "BANNED_SHIFT_PATTERN"
+		)!;
+		const parsed = constraintSchema(pattern, t).safeParse({
+			name: "No morning after nights",
+			type: "BANNED_SHIFT_PATTERN",
+			requirement: "MUST",
+			status: "ACTIVE" as const,
+			values: {
+				PATTERN_DAY_1: ["overnight-ops"],
+				PATTERN_DAY_2: ["overnight-ops"],
+				PATTERN_DAY_4: ["front-desk-am"],
+			},
+		});
+
+		expect(parsed.error?.issues).toEqual([
+			expect.objectContaining({
+				path: ["values", "PATTERN_DAY_3"],
+				message: "Choose a shift for Day 3, or clear the days after it.",
+			}),
+		]);
 	});
 });

@@ -56,9 +56,11 @@ const lists = (): Record<string, StubReply> => ({
 	[`POST ${GENERATION}`]: ok(monthGenerationFixture()),
 });
 
-/** The hook for Kitchen's December, holding `permissions` company-wide. */
+/** The hook for Kitchen's December, holding `permissions` company-wide, generating `chosenWeeks` when given. */
 const generateFor = (
-	permissions: Array<string>
+	permissions: Array<string>,
+	chosenWeeks?: Array<string>,
+	month = ungeneratedMonthFixture()
 ): ReturnType<
 	typeof renderHook<ReturnType<typeof useGenerateMonth>, unknown>
 > => {
@@ -81,7 +83,7 @@ const generateFor = (
 			)}
 		</QueryClientProvider>
 	);
-	return renderHook(() => useGenerateMonth("c-1", ungeneratedMonthFixture()), {
+	return renderHook(() => useGenerateMonth("c-1", month, chosenWeeks), {
 		wrapper,
 	});
 };
@@ -114,7 +116,7 @@ describe("useGenerateMonth", () => {
 			expect(post?.search).toBe("departmentId=d-1");
 			expect(post?.body).toEqual({
 				includeLeave: true,
-				allowOpenShifts: false,
+				weeks: ["2026-12-07", "2026-12-14", "2026-12-21", "2026-12-28"],
 				newWeeks: ["2026-12-07", "2026-12-14", "2026-12-21", "2026-12-28"].map(
 					(periodStart) => ({
 						periodStart,
@@ -144,7 +146,7 @@ describe("useGenerateMonth", () => {
 					choices: {
 						"2026-12-14": { shiftIds: [SHIFT.shiftId], constraintIds: [] },
 					},
-					setup: { includeLeave: false, allowOpenShifts: true },
+					setup: { includeLeave: false },
 				});
 			});
 
@@ -178,6 +180,44 @@ describe("useGenerateMonth", () => {
 		});
 	});
 
+	it("given_chosenWeeksWithoutAWeekToCreate_when_read_then_notBlockedForCannotCreate", async () => {
+		stubApi(lists());
+		const { result } = generateFor(
+			["schedule:generate", "shift:read", "constraint:read"],
+			[]
+		);
+
+		await waitFor(() => {
+			expect(result.current?.block).toBeUndefined();
+		});
+	});
+
+	it(
+		"given_chosenWeeks_when_generated_then_postsOnlyThoseWeeks",
+		{ timeout: 15_000 },
+		async () => {
+			const calls = stubApi(lists());
+			const { result } = generateFor(EVERY_KEY, ["2026-12-21", "2026-12-07"]);
+			await waitFor(() => {
+				expect(calls.filter((call) => call.method === "GET")).toHaveLength(2);
+			});
+
+			await act(async () => {
+				await result.current.generate();
+			});
+
+			const body = calls.find((call) => call.method === "POST")?.body as {
+				weeks: Array<string>;
+				newWeeks: Array<{ periodStart: string }>;
+			};
+			expect(body.weeks).toEqual(["2026-12-07", "2026-12-21"]);
+			expect(body.newWeeks.map((week) => week.periodStart)).toEqual([
+				"2026-12-07",
+				"2026-12-21",
+			]);
+		}
+	);
+
 	it("given_noScheduleCreate_when_read_then_blockedForCannotCreate", async () => {
 		stubApi(lists());
 		const { result } = generateFor([
@@ -189,5 +229,26 @@ describe("useGenerateMonth", () => {
 		await waitFor(() => {
 			expect(result.current?.block).toBe("cannotCreate");
 		});
+	});
+
+	it("given_noWeekLeftToGenerate_when_generated_then_blockedAndNothingIsSent", async () => {
+		const calls = stubApi(lists());
+		const over = ungeneratedMonthFixture();
+		const noneCovered = {
+			...over,
+			weeks: over.weeks.map((week) => ({
+				...week,
+				includedInMonthGeneration: false,
+			})),
+		};
+		const { result } = generateFor(EVERY_KEY, undefined, noneCovered);
+
+		await waitFor(() => {
+			expect(result.current?.block).toBe("nothingToGenerate");
+		});
+		await act(async () => {
+			await result.current.generate().catch(() => undefined);
+		});
+		expect(calls.some((call) => call.method === "POST")).toBe(false);
 	});
 });

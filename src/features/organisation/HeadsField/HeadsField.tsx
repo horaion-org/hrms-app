@@ -11,7 +11,7 @@ import { useCompanyMemberSearch } from "@/features/organisation/useCompanyMember
 export type HeadsFieldProps = { companyId: string } & MemberFieldProps;
 
 /**
- * Chooses one to twenty heads (or up to `max` people) by searching the company's active people, or
+ * Chooses up to twenty heads, or none (or up to `max` people) by searching the company's active people, or
  * one person with `multiple={false}`. Invalidate
  * `["organisation", companyId, "members"]` to reload the options.
  */

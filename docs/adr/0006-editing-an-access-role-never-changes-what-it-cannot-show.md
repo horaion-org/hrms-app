@@ -2,6 +2,10 @@
 
 Status: Proposed — Moses is asked to accept this decision in the PR before merge.
 
+> Note 2026-11-17 (API ADR-0108): the Company Owner role is now called System Owner, and a second built-in role,
+> System Admin, is read-only in the same way. The editor never offers `access_role:assign` or
+> `access_role:assign_system_admin`, which only those two roles hold.
+
 The system role editor sends a role's whole permission set on every save, because the API's `PUT` replaces the set. Three rules keep that save from changing authority the person did not see or could not have granted.
 
 A permission key the role holds that is not in the app's copy of the catalog (`features/workspace/permissionKeys.ts`) cannot be shown as a checkbox. The editor keeps such keys aside and sends them back unchanged with every save. Dropping them would silently remove a permission from everyone holding the role whenever the app is a release behind the API.
@@ -26,7 +30,7 @@ The app's catalogue is now generated from the API's permission contract (ADR-000
 
 ## Amended 2026-11-09: ticking also ticks what a permission's screens use
 
-Some screens read another resource besides their own: the schedule wizard lists shifts (`shift:read`), the person form lists job titles (`job_title:read`). The API does not require these, since a prerequisite is always the same resource, so the app keeps its own list of such pairs (`PERMISSION_USES` in `features/workspace/permissionKeys.ts`), each only where its code makes the call. Ticking a permission also ticks what it uses, when the person may give it, and says what was added and why. Unlike a prerequisite this never cascades back: clearing a used permission leaves what uses it ticked, and those rows warn what their holders will miss. As before, it applies only to what the person ticks; opening a role never changes it. (Ported from the unmerged `permission-clarity` work of 2026-10-12.)
+Some screens read another resource besides their own: the schedule wizard lists shifts (`shift:read`), the person form lists job titles (`job_title:read`). The API does not require these, since a prerequisite is always the same resource, so the app kept its own list of such pairs. Since the API's ADR-0101 the contract declares them per key (`worksWith`, read through `usesOf` in `features/workspace/permissionKeys.ts`), each with a reason code the app words. Ticking a permission also ticks what it uses, when the person may give it, and says what was added and why. Unlike a prerequisite this never cascades back: clearing a used permission leaves what uses it ticked, and those rows warn what their holders will miss. As before, it applies only to what the person ticks; opening a role never changes it. (Ported from the unmerged `permission-clarity` work of 2026-10-12.)
 
 ## Amended 2026-11-09: the editor groups permissions by what people do
 

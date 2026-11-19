@@ -4,14 +4,17 @@ import userEvent from "@testing-library/user-event";
 import { I18nextProvider } from "react-i18next";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { configureApiClient, resetApiClient } from "@/common/api-client";
-import { envelope, problemReply, stubApi } from "@/common/testing/stubApi";
+import { envelope, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
 	editableMember,
 	midMonthOpenings,
 } from "@/features/scheduling/hours/fixtures";
 import { firstWeek } from "@/features/scheduling/startingContext/fixtures";
-import { StartingContextSection } from "@/features/scheduling/startingContext/StartingContextSection";
+import {
+	StartingContextSection,
+	type StartingPointDialog,
+} from "@/features/scheduling/startingContext/StartingContextSection";
 
 const UNIT = { branchId: "b-1", departmentId: "d-1" };
 const SCHEDULE =
@@ -29,7 +32,12 @@ afterEach(() => {
 	vi.unstubAllGlobals();
 });
 
-const show = (openOnStart = false): void => {
+const show = (
+	openOnStart?: StartingPointDialog,
+	showsHours?: boolean,
+	daysBefore?: { from: string; to: string },
+	onOpenedOnStart?: () => void
+): void => {
 	const client = new QueryClient({
 		defaultOptions: { queries: { retry: false } },
 	});
@@ -39,131 +47,121 @@ const show = (openOnStart = false): void => {
 				<StartingContextSection
 					canEdit
 					companyId="c-1"
+					daysBefore={daysBefore}
 					nonWorkingDayTypes={[]}
 					openOnStart={openOnStart}
 					scheduleId="s-1"
+					showsHours={showsHours}
 					unit={UNIT}
+					onOpenedOnStart={onOpenedOnStart}
 				/>
 			</QueryClientProvider>
 		</I18nextProvider>
 	);
 };
 
-/** Leaves the opening balances read pending forever, as a slow request would. */
-const holdOpenings = (): void => {
-	const answered = globalThis.fetch;
-	vi.stubGlobal("fetch", (url: string, init?: RequestInit) =>
-		url.includes("/opening-balances")
-			? new Promise<Response>(() => {})
-			: answered(url, init)
-	);
+const reads = {
+	[`GET ${SCHEDULE}/starting-days`]: {
+		status: 200,
+		body: envelope(firstWeek()),
+	},
+	[`GET ${SCHEDULE}/opening-balances`]: {
+		status: 200,
+		body: envelope(midMonthOpenings([editableMember("p-tan")])),
+	},
 };
 
 describe("StartingContextSection", () => {
-	it("given_openingsStillLoading_when_shown_then_lastWeekCannotBeOpenedYet", async () => {
-		stubApi({
-			[`GET ${SCHEDULE}/starting-days`]: {
-				status: 200,
-				body: envelope(firstWeek()),
-			},
-		});
-		holdOpenings();
+	it("given_aDraftStartingMidMonth_when_shown_then_lastWeekAndTheHoursWorkedThisMonthAreTwoLines", async () => {
+		stubApi(reads);
 		show();
 
-		expect(await screen.findByText(/No roster before this week/)).toBeVisible();
 		expect(
-			screen.queryByRole("button", { name: /last week/ })
-		).not.toBeInTheDocument();
-	});
-
-	it("given_openOnStartWhileTheOpeningsLoad_when_shown_then_theGridWaitsForThem", async () => {
-		stubApi({
-			[`GET ${SCHEDULE}/starting-days`]: {
-				status: 200,
-				body: envelope(firstWeek()),
-			},
-		});
-		holdOpenings();
-		show(true);
-
-		expect(await screen.findByText(/No roster before this week/)).toBeVisible();
-		expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
-	});
-
-	it("given_openOnStart_when_theOpeningsAnswer_then_theGridOpens", async () => {
-		stubApi({
-			[`GET ${SCHEDULE}/starting-days`]: {
-				status: 200,
-				body: envelope(firstWeek()),
-			},
-			[`GET ${SCHEDULE}/opening-balances`]: {
-				status: 200,
-				body: envelope(midMonthOpenings()),
-			},
-		});
-		show(true);
-
-		expect(await screen.findByRole("dialog")).toBeVisible();
-	});
-
-	it("given_theOpeningsAreRefusedAfterTheDays_when_saved_then_saysTheDaysWentThroughAndKeepsTheDialog", async () => {
-		const calls = stubApi({
-			[`GET ${SCHEDULE}/starting-days`]: {
-				status: 200,
-				body: envelope(firstWeek()),
-			},
-			[`PUT ${SCHEDULE}/starting-days`]: {
-				status: 200,
-				body: envelope(firstWeek()),
-			},
-			[`GET ${SCHEDULE}/opening-balances`]: {
-				status: 200,
-				body: envelope(midMonthOpenings([editableMember("p-tan")])),
-			},
-			[`PUT ${SCHEDULE}/opening-balances`]: problemReply(
-				409,
-				"OPENING_BALANCE_LOCKED"
-			),
-		});
-		show();
-
-		await userEvent.click(
-			await screen.findByRole("button", { name: /last week/ })
-		);
-		await userEvent.type(
-			screen.getByRole("spinbutton", {
-				name: /Tan Wei Ming, paid hours worked/,
-			}),
-			"72"
-		);
-		await userEvent.click(screen.getByRole("button", { name: "Save days" }));
-
-		expect(
-			await screen.findByText(/Last week’s days were saved, but the hours/)
+			await screen.findByText(/No roster before these days/)
 		).toBeVisible();
 		expect(
-			screen.getByRole("spinbutton", {
-				name: /Tan Wei Ming, paid hours worked/,
-			})
-		).toHaveValue(72);
-		expect(calls.map((call) => `${call.method} ${call.path}`)).toContain(
-			`PUT ${SCHEDULE}/starting-days`
-		);
+			await screen.findByText(
+				"Hours worked before Nov 9 are unknown for 1 person."
+			)
+		).toBeVisible();
+		expect(
+			screen.getByRole("button", { name: "Edit last week’s shifts" })
+		).toBeVisible();
+		expect(screen.getByRole("button", { name: "Add them" })).toBeVisible();
 	});
 
-	it("given_noOpeningChanged_when_saved_then_onlyTheDaysArePut", async () => {
+	it("given_aDraft_when_shown_then_saysShiftsRosteredInTheDaysAfterStayAsTheyAre", async () => {
+		stubApi(reads);
+		show();
+
+		expect(
+			await screen.findByText(
+				"Shifts already rostered in the 7 days after this schedule stay as they are; nobody is given a shift here that leaves too little rest before them."
+			)
+		).toBeVisible();
+	});
+
+	it("given_showsHoursFalse_when_shown_then_onlyTheDaysBeforeTheWeek", async () => {
+		const calls = stubApi(reads);
+		show(undefined, false);
+
+		expect(
+			await screen.findByText(/No roster before these days/)
+		).toBeVisible();
+		expect(screen.queryByRole("button", { name: "Add them" })).toBeNull();
+		expect(
+			calls.some((call) => call.path === `${SCHEDULE}/opening-balances`)
+		).toBe(false);
+	});
+
+	it("given_daysBeforeTheFirstGeneratedDay_when_shown_then_theNoticeNamesThoseStillUnknown", async () => {
+		stubApi(reads);
+		show(undefined, false, { from: "2026-11-07", to: "2026-11-08" });
+
+		expect(
+			await screen.findByText(
+				"Still unknown for some people: Sat, Nov 7 and Sun, Nov 8. Left unknown, they count as days worked."
+			)
+		).toBeVisible();
+	});
+
+	it("given_openOnStartDays_when_theDraftIsRead_then_theGridOfDaysOpens", async () => {
+		stubApi(reads);
+		show("days");
+
+		expect(
+			await screen.findByRole("dialog", { name: "Before this week" })
+		).toBeVisible();
+	});
+
+	it("given_openOnStart_when_theDialogOpens_then_theCallerIsToldOnceSoItNeverOpensByItselfAgain", async () => {
+		stubApi(reads);
+		const onOpenedOnStart = vi.fn();
+		show("days", undefined, undefined, onOpenedOnStart);
+
+		await screen.findByRole("dialog", { name: "Before this week" });
+		await vi.waitFor(() => {
+			expect(onOpenedOnStart).toHaveBeenCalledTimes(1);
+		});
+	});
+
+	it("given_openOnStartHours_when_theDraftIsRead_then_theHoursOpen", async () => {
+		stubApi(reads);
+		show("hours");
+
+		expect(
+			await screen.findByRole("dialog", {
+				name: "Hours already worked this month (Nov 1 to Nov 8)",
+			})
+		).toBeVisible();
+	});
+
+	it("given_daysSaved_when_saved_then_onlyTheDaysArePut", async () => {
 		const calls = stubApi({
-			[`GET ${SCHEDULE}/starting-days`]: {
-				status: 200,
-				body: envelope(firstWeek()),
-			},
+			...reads,
 			[`PUT ${SCHEDULE}/starting-days`]: {
 				status: 200,
 				body: envelope(firstWeek()),
-			},
-			[`GET ${SCHEDULE}/opening-balances`]: {
-				status: 200,
-				body: envelope(midMonthOpenings([editableMember("p-tan")])),
 			},
 		});
 		show();

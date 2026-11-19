@@ -290,7 +290,7 @@ describe("Edit on the System Roles list", () => {
 		stubApi({
 			...routes(workspaceReply(["access_role:read", "access_role:update"])),
 			[ACCESS_ROLES]: pageReply([
-				role("r-1", "Company Owner", true),
+				role("r-1", "System Owner", true),
 				role("r-2", "Manager"),
 			]),
 		});
@@ -301,7 +301,7 @@ describe("Edit on the System Roles list", () => {
 			await within(table).findByRole("button", { name: "Edit Manager" })
 		).toBeEnabled();
 		expect(
-			within(table).getByRole("button", { name: "Edit Company Owner" })
+			within(table).getByRole("button", { name: "Edit System Owner" })
 		).toBeDisabled();
 	});
 

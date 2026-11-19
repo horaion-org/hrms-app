@@ -77,8 +77,9 @@ export const PeopleImport = (): FunctionComponent => {
 		clearShownImport: () => {
 			void navigate({ search: {} });
 		},
-		onChecked: (result) => {
-			setSendInvitations(result.invitationsAvailable);
+		// Each new file starts unticked: sending is the manager's own choice, never the default.
+		onChecked: () => {
+			setSendInvitations(false);
 		},
 	});
 	const current = useQuery({
@@ -209,7 +210,9 @@ export const PeopleImport = (): FunctionComponent => {
 							label={t("people.importPage.check.sendInvitations")}
 							description={
 								check.invitationsAvailable
-									? t("people.importPage.check.invitationsOn")
+									? t("people.importPage.check.invitationsOn", {
+											count: check.readyRows,
+										})
 									: t("people.importPage.check.invitationsOff")
 							}
 							onChange={(event) => {

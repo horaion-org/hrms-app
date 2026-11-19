@@ -1,6 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import { useId, useMemo, useState, type ReactNode } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -37,8 +38,8 @@ import {
 	useJobTitles,
 } from "@/features/organisation/useOrganisationList";
 import {
-	EMPLOYMENT_TYPES,
 	isEmploymentType,
+	LABEL_EMPLOYMENT_TYPES,
 	isMemberStatus,
 	MEMBER_STATUSES,
 	type MemberProfilePlace,
@@ -52,6 +53,7 @@ import {
 	profileRefusal,
 } from "@/features/people/profileRefusal";
 import { PROFILE_FIELD_WIDTH } from "@/features/people/profileLayout";
+import { InvitationChoice } from "@/features/people/InvitationChoice";
 import { workspaceQuery } from "@/features/workspace/api";
 import { DepartmentSelector } from "@/features/workspace/DepartmentSelector";
 import { retry } from "@/features/workspace/retry";
@@ -74,6 +76,11 @@ export type ProfileFormEdit = {
 	rolePlace?: { branchId?: string; departmentId?: string };
 	/** Other assignments: shown, never changed here. */
 	otherRoles: ReadonlyArray<string>;
+	/**
+	 * Every role the person holds, shown read-only to someone who may read
+	 * roles but not change them (API ADR-0108); absent otherwise.
+	 */
+	readOnlyRoles?: string;
 	/** The page's header, given the form's Cancel and Save changes buttons to place. */
 	header: (actions: ReactNode) => ReactNode;
 };
@@ -94,13 +101,10 @@ export type ProfileFormProps = {
 		place: MemberProfilePlace | undefined,
 		role: { shown: boolean; place?: AssignmentTarget }
 	) => Promise<void>;
-	/** Leaves without saving; when editing, after asking if anything changed. */
+	/** Leaves without saving, after asking if anything was typed or changed. */
 	onCancel: () => void;
-	/**
-	 * A further Employment card row, such as Add employee's employment terms,
-	 * given the Employment type chosen so far (empty when none).
-	 */
-	employmentTermsField?: (employmentType: string) => ReactNode;
+	/** A further Employment card row, such as Add employee's employment terms. */
+	employmentTermsField?: ReactNode;
 	className?: string;
 } & (
 	| {
@@ -130,7 +134,7 @@ const NOTHING = (): void => {};
  *
  * With `edit` it changes an existing person: their employee ID is shown,
  * their status can be changed, their email address only while they have
- * yet to log in, and leaving with changes asks first.
+ * yet to log in. Leaving with changes asks first, adding or editing.
  */
 export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 	const {
@@ -148,9 +152,10 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 	const formId = useId();
 	const [today] = useState(() => todayDate(Date.now()));
 	const [discarding, setDiscarding] = useState(false);
-	const [rolePlaceKey, setRolePlaceKey] = useState<string | undefined>(
-		edit?.rolePlace ? placeKey(edit.rolePlace) : undefined
-	);
+	const initialRolePlaceKey = edit?.rolePlace
+		? placeKey(edit.rolePlace)
+		: undefined;
+	const [rolePlaceKey, setRolePlaceKey] = useState(initialRolePlaceKey);
 	const departmentRequired = !access.can(
 		edit ? "member_profile:update" : "member_profile:create",
 		COMPANY_SCOPE
@@ -179,9 +184,9 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 		PROFILE_FIELDS,
 		NOTHING
 	);
-	const [departmentId, hireDate, employmentType] = useWatch({
+	const [departmentId, hireDate] = useWatch({
 		control,
-		name: ["departmentId", "hireDate", "employmentType"],
+		name: ["departmentId", "hireDate"],
 	});
 
 	// The Departments the selector offers, to find the chosen one's Branch and country.
@@ -216,7 +221,7 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 		targets.length > 0 &&
 		(edit?.roleEditable ?? true);
 	const roles = useAccessRoles(companyId, BY_NAME);
-	// The Company Owner role moves only through its own transfer, and no company role is given at a Department.
+	// The System Owner and System Admin roles are never given here, and no company role is given at a Department.
 	const roleOptions: Array<SelectOption> =
 		roles.status === "ready"
 			? roles.items
@@ -313,30 +318,23 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 	const roleError = errors.accessRoleId?.message;
 	const statusError = errors.status?.message;
 	const emailLocked = edit !== undefined && !edit.emailEditable;
-	const emailHint = edit
-		? emailLocked
-			? t(`${key}.emailLocked`)
-			: undefined
-		: t(`${key}.emailHint`);
+	const readOnlyRoles = edit?.readOnlyRoles;
+	// Adding, the invitation's line sits under its own box below the email address.
+	const emailHint = emailLocked ? t(`${key}.emailLocked`) : undefined;
 	const roleHint =
 		edit && edit.otherRoles.length > 0 ? (
 			<>
 				<span className="block">{t(`${key}.systemRoleHint`)}</span>
 				<span className="block">
-					{t(`${key}.otherRoles`, { roles: edit.otherRoles.join(", ") })}
+					{t(`${key}.otherRoles`, { roles: edit.otherRoles })}
 				</span>
 			</>
 		) : (
 			t(`${key}.systemRoleHint`)
 		);
+	// Adding or editing, Cancel asks first once anything was typed or chosen.
 	const cancel = (): void => {
-		if (
-			edit &&
-			(isDirty ||
-				rolePlaceKey !==
-					(edit.rolePlace ? placeKey(edit.rolePlace) : undefined))
-		)
-			setDiscarding(true);
+		if (isDirty || rolePlaceKey !== initialRolePlaceKey) setDiscarding(true);
 		else onCancel();
 	};
 	const actions = (
@@ -466,7 +464,7 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 							/>
 						</FormRow>
 						{date("dateOfBirth", t(`${key}.dateOfBirth`), {
-							maxDate: dayjs(today).subtract(1, "day").format("YYYY-MM-DD"),
+							maxDate: dayjs(today).subtract(1, "day").format(ISO_DATE_FORMAT),
 						})}
 						{edit && (
 							<FormRow
@@ -539,6 +537,9 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 								{...register("email")}
 							/>
 						</FormRow>
+						{!edit && (
+							<InvitationChoice control={control} disabled={isSubmitting} />
+						)}
 					</div>
 				</Card>
 				<Card icon={RoleIcon} title={t(`${key}.employment`)}>
@@ -565,7 +566,15 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 										status={typeError ? "error" : undefined}
 										value={field.value}
 										options={withNone(
-											EMPLOYMENT_TYPES.map((type) => ({
+											// Full-time or part-time follows the terms: only the labels are offered, and a
+											// full-time or part-time value an older record holds stays shown until changed.
+											[
+												...(isEmploymentType(field.value) &&
+												!LABEL_EMPLOYMENT_TYPES.includes(field.value)
+													? [field.value]
+													: []),
+												...LABEL_EMPLOYMENT_TYPES,
+											].map((type) => ({
 												value: type,
 												label: t(`${key}.employmentTypes.${type}`),
 											})),
@@ -578,7 +587,7 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 								)}
 							/>
 						</FormRow>
-						{employmentTermsField?.(employmentType)}
+						{employmentTermsField}
 						{date("hireDate", t(`${key}.hireDate`), {})}
 						{date(
 							"probationEndDate",
@@ -721,6 +730,23 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 								/>
 							)}
 						/>
+						{!showRole && readOnlyRoles !== undefined && (
+							<FormRow
+								fieldWidth={fieldWidth}
+								hint={t(`${key}.systemRoleReadOnlyHint`)}
+								htmlFor={idOf("readOnlyRoles")}
+								label={t(`${key}.systemRole`)}
+							>
+								<Input
+									disabled
+									readOnly
+									aria-describedby={formRowIds(idOf("readOnlyRoles")).hintId}
+									className="w-full"
+									id={idOf("readOnlyRoles")}
+									value={readOnlyRoles}
+								/>
+							</FormRow>
+						)}
 						{showRole && (
 							<>
 								<FormRow
@@ -806,9 +832,11 @@ export const ProfileForm = (props: ProfileFormProps): FunctionComponent => {
 					cancelLabel={t(`${key}.keepEditing`)}
 					confirmLabel={t(`${key}.discard`)}
 					title={t(`${key}.discardTitle`)}
-					description={t(`${key}.discardDescription`, {
-						name: initial.displayName,
-					})}
+					description={
+						edit
+							? t(`${key}.discardDescription`, { name: initial.displayName })
+							: t(`${key}.discardNewDescription`)
+					}
 					onConfirm={onCancel}
 					onClose={() => {
 						setDiscarding(false);

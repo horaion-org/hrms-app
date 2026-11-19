@@ -29,6 +29,10 @@ import {
 	useCreateSkill,
 	useUpdateSkill,
 } from "@/features/skills/useSkillCatalogue";
+import {
+	NAME_LIMITS,
+	NAME_MAX_LENGTH,
+} from "@/features/organisation/nameSchema";
 
 export type SkillSettingsDialogProps = {
 	companyId: string;
@@ -126,14 +130,17 @@ export const SkillSettingsDialog = ({
 		>
 			<UnitNameField
 				autoFocus
-				counter={t(`${key}.nameCounter`, { count: name.length })}
 				disabled={isSubmitting}
 				error={errors.name?.message}
-				hint={t(`${key}.nameHint`)}
+				hint={t(`${key}.nameHint`, NAME_LIMITS)}
 				id={`${formId}-name`}
 				label={t(`${key}.name`)}
 				placeholder={t(`${key}.namePlaceholder`)}
 				registration={register("name")}
+				counter={t(`${key}.nameCounter`, {
+					count: name.length,
+					max: NAME_MAX_LENGTH,
+				})}
 			/>
 			<FormRow
 				counter={t(`${key}.categoryCounter`, { count: category.length })}

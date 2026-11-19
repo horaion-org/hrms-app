@@ -72,7 +72,7 @@ it("prefills every field from the loaded settings with labelled controls", () =>
 	}
 });
 
-it("keeps the preferences fixed and says so", () => {
+it("keeps the preferences fixed and says so right beside them", () => {
 	renderForm();
 	for (const name of [
 		"Default Language",
@@ -81,11 +81,13 @@ it("keeps the preferences fixed and says so", () => {
 		"Country",
 	])
 		expect(screen.getByRole("button", { name })).toBeDisabled();
-	expect(
-		screen.getByText(
-			"Language, time zone, date format and country can’t be changed yet."
-		)
-	).toBeVisible();
+	const reason = screen.getByText(
+		"Language, time zone, date format and country can’t be changed yet."
+	);
+	expect(reason).toBeVisible();
+	expect(reason.previousElementSibling).toContainElement(
+		screen.getByRole("button", { name: "Country" })
+	);
 });
 
 it("enables Save Changes only once the workspace name changed", async () => {

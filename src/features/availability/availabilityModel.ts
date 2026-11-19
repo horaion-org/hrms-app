@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import { MINUTES_PER_DAY, minutesOfDay } from "@/common/timeOfDay";
-import { WEEKDAYS, type Weekday } from "@/common/weekdays";
+import { WEEKDAYS, weekdayOf, type Weekday } from "@/common/weekdays";
 import { mondayOf } from "@/common/weeks";
 
 /*
@@ -226,10 +226,6 @@ export const isPastWeek = (monday: string, today: Date | string): boolean =>
 
 /** Whether "YYYY-MM-DD" is a Monday, the only day a week may start on. */
 export const isMonday = (date: string): boolean => dayjs(date).day() === 1;
-
-/** The weekday a "YYYY-MM-DD" date falls on. */
-export const weekdayOf = (date: string): Weekday =>
-	WEEKDAYS[(dayjs(date).day() + 6) % 7] ?? "MON";
 
 /** One week's dated windows as the weekly windows the editor opens with. */
 export const weeklyWindowsOf = (

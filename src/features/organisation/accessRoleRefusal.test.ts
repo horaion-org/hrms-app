@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { ApiProblemError, UnreachableError } from "@/common/problem";
 import { authTestI18n } from "@/features/auth/testingI18n";
-import { accessRoleRefusal } from "@/features/organisation/accessRoleRefusal";
+import {
+	accessRoleRefusal,
+	accessRoleRowRefusal,
+} from "@/features/organisation/accessRoleRefusal";
 
 const t = authTestI18n.t.bind(authTestI18n);
 const MANAGER = { name: "Manager", kind: "LOCAL" } as const;
@@ -40,7 +43,11 @@ describe("access role refusal mapping", () => {
 	});
 
 	it.each([
-		[409, "PROTECTED_ACCESS_ROLE", "The Company Owner role can’t be changed."],
+		[
+			409,
+			"PROTECTED_ACCESS_ROLE",
+			"The System Owner and System Admin roles can’t be changed.",
+		],
 		[404, "ACCESS_ROLE_NOT_FOUND", "This role no longer exists."],
 		[
 			403,
@@ -85,5 +92,19 @@ describe("access role refusal mapping", () => {
 		expect(
 			accessRoleRefusal(new UnreachableError("offline"), MANAGER, t)
 		).toEqual({ message: "We couldn’t save the role. Try again." });
+	});
+});
+
+describe("access role row refusal mapping", () => {
+	it("says to remove a role from default access before deleting it", () => {
+		expect(
+			accessRoleRowRefusal(
+				problem(409, "ACCESS_ROLE_USED_AS_DEFAULT"),
+				"delete",
+				t
+			)
+		).toBe(
+			"This role is given as default access. Remove it under Default access on this page first, then delete it."
+		);
 	});
 });

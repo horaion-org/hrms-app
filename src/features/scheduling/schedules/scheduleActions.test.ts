@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { scheduleFixture } from "@/features/scheduling/schedules/fixtures";
 import {
 	approvalActionFacts,
+	mayDeleteSchedule,
 	scheduleActions,
 	type ScheduleActionFacts,
 	type ScheduleActionId,
@@ -12,6 +14,7 @@ const NOTHING: ScheduleActionFacts = {
 	mayReject: false,
 	mayWithdraw: false,
 	mayRegenerate: false,
+	regeneratesPart: false,
 	hasRoster: true,
 	approvalStanding: "none",
 	isLastStep: false,
@@ -21,6 +24,22 @@ const NOTHING: ScheduleActionFacts = {
 const ALL = { mayPublish: true, mayReject: true, mayRegenerate: true };
 
 describe("scheduleActions", () => {
+	it.each([
+		[false, "scheduling.detail.regenerateWeek"],
+		[true, "scheduling.detail.regenerateDays"],
+	])(
+		"labels Regenerate of a part of its week (%s) by what it regenerates",
+		(regeneratesPart, labelKey) => {
+			const { primary } = scheduleActions({
+				...NOTHING,
+				status: "REJECTED",
+				mayRegenerate: true,
+				regeneratesPart,
+			});
+			expect(primary).toMatchObject({ id: "regenerate", labelKey });
+		}
+	);
+
 	it.each<
 		[
 			string,
@@ -163,4 +182,26 @@ describe("approvalActionFacts", () => {
 	])("maps %o", (standing, facts) => {
 		expect(approvalActionFacts(standing)).toEqual(facts);
 	});
+});
+
+describe("mayDeleteSchedule", () => {
+	/** An access that holds `schedule:delete` or not. */
+	const accessWith = (canDelete: boolean): { can: () => boolean } => ({
+		can: () => canDelete,
+	});
+	it.each([
+		["GENERATED", true, true],
+		["DRAFT", true, true],
+		["GENERATION_FAILED", true, true],
+		["REJECTED", true, true],
+		["PUBLISHED", true, false],
+		["GENERATED", false, false],
+	] as const)(
+		"a %s schedule with delete %s: %s",
+		(status, canDelete, expected) => {
+			expect(
+				mayDeleteSchedule(scheduleFixture({ status }), accessWith(canDelete))
+			).toBe(expected);
+		}
+	);
 });

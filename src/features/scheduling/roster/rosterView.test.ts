@@ -127,6 +127,22 @@ describe("rosterViewOf", () => {
 		expect(periodDays).toEqual(days);
 	});
 
+	it("given_aPart_when_viewed_then_sevenDaysAndTheOthersOutside", () => {
+		const { days, periodDays, outsideDays, rows } = viewOf({
+			view: {},
+			schedule: { ...schedule, coveredFrom: "2026-10-15" },
+		});
+
+		expect(days).toHaveLength(7);
+		expect(periodDays).toEqual(days.slice(3));
+		expect(outsideDays).toEqual(["2026-10-12", "2026-10-13", "2026-10-14"]);
+		expect(
+			rows.every((row) =>
+				Object.keys(row.days).every((day) => day >= "2026-10-15")
+			)
+		).toBe(true);
+	});
+
 	it("given_issuesOpenedFromAMembersHeader_when_derived_then_listsOnlyThatMember", () => {
 		const view: RosterSearch = {
 			week: "2026-10-12",
@@ -148,6 +164,7 @@ describe("rosterViewOf", () => {
 			membersWithChangedStart: 2,
 			hasDetails: true,
 			hasApproval: true,
+			hasValidation: true,
 		});
 
 		// The changed starts count once, as the one line Issues says them in; the requested leave once.

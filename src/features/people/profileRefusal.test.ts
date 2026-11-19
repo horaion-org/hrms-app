@@ -68,6 +68,11 @@ describe("profileRefusal, adding or editing", () => {
 			"jobTitleId",
 			"people.form.jobTitleNeedsDepartment",
 		],
+		[
+			"400 EMPLOYMENT_TYPE_FOLLOWS_TERMS",
+			"employmentType",
+			"people.form.employmentTypeFollowsTerms",
+		],
 	] as const)("puts %s on %s", (code, field, key) => {
 		expect(profileRefusal(fromCode(code), t)).toEqual({
 			fields: { [field]: copy(key) },
@@ -131,7 +136,7 @@ describe("profileRefusal, editing only", () => {
 		],
 		["409 CANNOT_DEACTIVATE_SELF", "status", "people.form.selfDeactivation"],
 		[
-			"409 COMPANY_OWNER_CANNOT_BE_DEACTIVATED",
+			"409 SYSTEM_OWNER_CANNOT_BE_DEACTIVATED",
 			"status",
 			"people.form.ownerDeactivation",
 		],
@@ -153,16 +158,6 @@ describe("profileRefusal, editing only", () => {
 		["502 INVITATION_NOT_DELIVERED", "people.form.invitationNotDelivered"],
 	] as const)("answers %s with %s", (code, key) => {
 		expect(profileRefusal(fromCode(code), t, EDIT).message).toBe(copy(key));
-	});
-
-	it("puts the last head on the Department when the Department changed, else says it in the alert", () => {
-		const lastHead = fromCode("409 LAST_ACTIVE_DEPARTMENT_HEAD");
-		expect(profileRefusal(lastHead, t, MOVE).fields).toEqual({
-			departmentId: copy("people.form.lastDepartmentHead"),
-		});
-		expect(profileRefusal(lastHead, t, EDIT).message).toBe(
-			copy("people.form.lastDepartmentHead")
-		);
 	});
 
 	it("reads a 403 after a Department change as that Department being out of reach", () => {
@@ -190,11 +185,7 @@ describe("profileRefusal, editing only", () => {
 describe("profileActionRefusal", () => {
 	it.each([
 		["409 CANNOT_DEACTIVATE_SELF", "people.form.selfDeactivation"],
-		[
-			"409 COMPANY_OWNER_CANNOT_BE_DEACTIVATED",
-			"people.form.ownerDeactivation",
-		],
-		["409 LAST_ACTIVE_DEPARTMENT_HEAD", "people.form.lastDepartmentHead"],
+		["409 SYSTEM_OWNER_CANNOT_BE_DEACTIVATED", "people.form.ownerDeactivation"],
 		["409 INVITATION_NOT_PENDING", "people.profile.invitationNotPending"],
 		["502 INVITATION_NOT_DELIVERED", "people.form.invitationNotDelivered"],
 		["404 MEMBER_PROFILE_NOT_FOUND", "people.form.profileMissing"],

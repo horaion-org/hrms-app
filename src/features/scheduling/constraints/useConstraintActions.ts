@@ -36,19 +36,19 @@ export const useConstraintActions = (companyId: string): ConstraintActions => {
 		});
 	return {
 		createConstraint: useMutation({
-			meta: { successMessage: false },
+			meta: { successMessage: "scheduling.constraints.added" },
 			mutationFn: ({ unit, body }: Saved) =>
 				createConstraint(companyId, unit, body),
 			onSuccess: reload,
 		}),
 		updateConstraint: useMutation({
-			meta: { successMessage: false },
+			meta: { successMessage: "scheduling.constraints.edited" },
 			mutationFn: ({ unit, constraintId, body }: Replaced) =>
 				updateConstraint(companyId, unit, constraintId, body),
 			onSuccess: reload,
 		}),
 		deleteConstraint: useMutation({
-			meta: { successMessage: false },
+			meta: { successMessage: "scheduling.constraints.deleted" },
 			mutationFn: ({ unit, constraintId }: Removed) =>
 				deleteConstraint(companyId, unit, constraintId),
 			onSuccess: reload,

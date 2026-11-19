@@ -1,5 +1,8 @@
 import type { TFunction } from "i18next";
-import type { DepartmentConstraint } from "@/features/scheduling/constraints/api";
+import {
+	isShiftField,
+	type DepartmentConstraint,
+} from "@/features/scheduling/constraints/api";
 import type { Schedule } from "@/features/scheduling/schedules/api";
 
 /*
@@ -27,18 +30,45 @@ export const draftsUsing = (
 			).includes(item.id)
 	).length;
 
-/** How many of the department's own constraints name the shift; company constraints name no shift. */
-export const constraintsNamingShift = (
-	constraints: ReadonlyArray<Pick<DepartmentConstraint, "level" | "values">>,
-	shiftId: string
+/** A constraint as the naming counts read it. */
+type NamingConstraint = Pick<DepartmentConstraint, "level" | "values">;
+
+/** How many of the department's own constraints hold a value `names` picks out; company constraints are left out. */
+const departmentConstraintsNaming = (
+	constraints: ReadonlyArray<NamingConstraint>,
+	names: (value: NamingConstraint["values"][number]) => boolean
 ): number =>
 	constraints.filter(
 		(constraint) =>
-			constraint.level !== "COMPANY" &&
-			constraint.values.some(
-				(value) => value.field === "SHIFT" && value.value === shiftId
-			)
+			constraint.level !== "COMPANY" && constraint.values.some(names)
 	).length;
+
+/**
+ * How many of the department's own constraints name the shift, in any shift
+ * field (a banned pattern names it by day); company constraints name no shift.
+ */
+export const constraintsNamingShift = (
+	constraints: ReadonlyArray<NamingConstraint>,
+	shiftId: string
+): number =>
+	departmentConstraintsNaming(
+		constraints,
+		(value) => isShiftField(value.field) && value.value === shiftId
+	);
+
+/**
+ * How many of the department's own constraints name the job title, counted
+ * or standing in: any value that is a link (it has a name) and is the job
+ * title's id. Company constraints name no job title.
+ */
+export const constraintsNamingJobTitle = (
+	constraints: ReadonlyArray<NamingConstraint>,
+	jobTitleId: string
+): number =>
+	departmentConstraintsNaming(
+		constraints,
+		(value) => value.name !== null && value.value === jobTitleId
+	);
 
 /**
  * The edit dialog's note on what saving reaches. `draftCount` is undefined
@@ -68,7 +98,8 @@ export type DeleteCopy = {
 
 /**
  * The delete confirmation's words: what the item is removed from and, for
- * a shift, how many of the department's constraints stop applying to it.
+ * a shift, how many of the department's constraints name it and will need
+ * attention (ADR-0085).
  * `draftCount` is undefined where the person may not read schedules.
  */
 export const deleteCopy = (

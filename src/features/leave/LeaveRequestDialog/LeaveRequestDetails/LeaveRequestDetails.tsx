@@ -4,6 +4,7 @@ import type { FunctionComponent } from "@/common/types";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
 import { formatPeriod, requestedDayOf } from "@/features/leave/dates";
+import { amountText, portionText } from "@/features/leave/dayPortion";
 import { leaveTypeLabel } from "@/features/leave/leaveTypeLabel";
 import { statusTone, type LeaveRequest } from "@/features/leave/types";
 
@@ -43,6 +44,9 @@ export const LeaveRequestDetails = ({
 						request.endDate,
 						formattingLocale(i18n)
 					)}
+					{portionText(request, t) && (
+						<span className="block font-normal">{portionText(request, t)}</span>
+					)}
 				</dd>
 				<dt className="text-neutral-800">{t("leave.requested")}</dt>
 				<dd className="font-semibold">
@@ -55,9 +59,7 @@ export const LeaveRequestDetails = ({
 				<dt className="text-neutral-800">{t("leave.requestedBy")}</dt>
 				<dd className="font-semibold">{request.requestedBy.displayName}</dd>
 				<dt className="text-neutral-800">{t("leave.duration")}</dt>
-				<dd className="font-semibold">
-					{t("leave.days", { count: request.workingDays })}
-				</dd>
+				<dd className="font-semibold">{amountText(request, t)}</dd>
 				<dt className="text-neutral-800">{t("leave.type")}</dt>
 				<dd className="font-semibold">{leaveTypeLabel(request, t)}</dd>
 				{request.notes && (

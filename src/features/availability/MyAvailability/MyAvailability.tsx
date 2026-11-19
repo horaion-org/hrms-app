@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { EditIcon } from "@/components/ui/Icon";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { WeekGrid } from "@/components/ui/WeekGrid";
 import { AvailabilityDialog } from "@/features/availability/AvailabilityDialog";
 import {
 	byDay,
@@ -19,7 +20,7 @@ import {
 	useReplaceMyWeekAvailability,
 	useResetMyWeekAvailability,
 } from "@/features/availability/useAvailability";
-import { WeekGrid } from "@/features/availability/WeekGrid";
+import { availabilityCells } from "@/features/availability/WeekGrid/availabilityCells";
 
 export type MyAvailabilityProps = {
 	companyId: string;
@@ -114,7 +115,7 @@ export const MyAvailability = ({
 			</div>
 			<WeekGrid
 				label={t(`${key}.label`)}
-				rows={[{ id: "mine", days: byDay(week) }]}
+				rows={[{ id: "mine", days: availabilityCells(byDay(week)) }]}
 				shownDay={shownDay}
 				weekStartMonday={weekStartMonday}
 			/>

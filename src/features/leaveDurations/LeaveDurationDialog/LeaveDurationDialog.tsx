@@ -5,11 +5,13 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
 import { TimeSelect } from "@/components/forms/TimeSelect";
+import { Checkbox } from "@/components/ui/Checkbox";
 import { durationText, minutesBetween } from "@/features/leave/leaveLength";
 import type {
 	LeaveDurationBody,
 	ManagedLeaveDuration,
 } from "@/features/leaveDurations/api";
+import { leavesLittleOfADay } from "@/features/leaveDurations/LeaveDurationDialog/leftOfADay";
 import { refusalFor } from "@/features/leaveDurations/LeaveDurationDialog/refusalFor";
 import {
 	initialLeaveDurationValues,
@@ -22,6 +24,10 @@ import { CreateFormDialog } from "@/features/organisation/CreateFormDialog";
 import { UnitNameField } from "@/features/organisation/UnitNameField";
 import { useCreateFormSubmit } from "@/features/organisation/useCreateFormSubmit";
 import { UnitReachField } from "@/features/workspace/UnitReachField";
+import {
+	NAME_LIMITS,
+	NAME_MAX_LENGTH,
+} from "@/features/organisation/nameSchema";
 
 export type LeaveDurationDialogProps = {
 	/** Set to edit an existing duration; its status and place stay as they are. */
@@ -38,8 +44,9 @@ const key = "settings.leave.durationDialog";
 
 /**
  * Adds a leave duration, or edits one: its name, when it starts and ends (an
- * end before the start runs into the next day), and where it applies. It
- * counts as the hours between its times, shown under the pair. Applies to
+ * end before the start runs into the next day), whether the person can still
+ * work a shift that day, and where it applies. It counts as the hours
+ * between its times, shown under the pair. Applies to
  * offers only the reaches and units the person manages, as the API's
  * coverage rule allows. Mount when opened and unmount when closed so every
  * attempt starts fresh.
@@ -65,9 +72,9 @@ export const LeaveDurationDialog = ({
 		handleSubmit,
 		formState: { errors, isSubmitting },
 	} = form;
-	const [name, startTime, endTime] = useWatch({
+	const [name, startTime, endTime, allowsShiftSameDay] = useWatch({
 		control,
-		name: ["name", "startTime", "endTime"],
+		name: ["name", "startTime", "endTime", "allowsShiftSameDay"],
 	});
 	const submit = useCreateFormSubmit(form, FIELDS, onClose);
 	const length = startTime && endTime ? minutesBetween(startTime, endTime) : 0;
@@ -144,19 +151,44 @@ export const LeaveDurationDialog = ({
 		>
 			<UnitNameField
 				autoFocus
-				counter={t(`${key}.nameCounter`, { count: name.length })}
 				disabled={isSubmitting}
 				error={errors.name?.message}
-				hint={t(`${key}.nameHint`)}
+				hint={t(`${key}.nameHint`, NAME_LIMITS)}
 				id={`${formId}-name`}
 				label={t(`${key}.name`)}
 				placeholder={t(`${key}.namePlaceholder`)}
 				registration={register("name")}
+				counter={t(`${key}.nameCounter`, {
+					count: name.length,
+					max: NAME_MAX_LENGTH,
+				})}
 			/>
 			<div className="flex flex-col gap-6 sm:flex-row">
 				{timeField("startTime")}
 				{timeField("endTime", lengthHint)}
 			</div>
+			<Controller
+				control={control}
+				name="allowsShiftSameDay"
+				render={({ field }) => (
+					<Checkbox
+						checked={field.value}
+						disabled={isSubmitting}
+						label={t(`${key}.allowsShiftSameDay`)}
+						name={field.name}
+						description={
+							// A tick that leaves very little of the day says how to keep the person off the roster.
+							allowsShiftSameDay && leavesLittleOfADay(length)
+								? t(`${key}.allowsShiftSameDayLittleLeft`)
+								: t(`${key}.allowsShiftSameDayDescription`)
+						}
+						onBlur={field.onBlur}
+						onChange={(event) => {
+							field.onChange(event.target.checked);
+						}}
+					/>
+				)}
+			/>
 			<Controller
 				control={control}
 				name="reach"

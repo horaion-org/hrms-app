@@ -1,3 +1,4 @@
+import { composeStories } from "@storybook/react-vite";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { expect, it, vi } from "vitest";
@@ -5,6 +6,7 @@ import { I18nextProvider } from "react-i18next";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { LEAVE_FIXTURES, leaveFixture } from "@/features/leave/fixtures";
 import { LeaveRequests } from "@/features/leave/LeaveRequests";
+import * as stories from "@/features/leave/LeaveRequests/LeaveRequests.stories";
 
 const handlers = {
 	onPageChange: vi.fn(),
@@ -167,4 +169,15 @@ it("reads each request's day in its member's Branch zone", () => {
 
 	// In the Period column only: the name's line shows the period alone, View the request day.
 	expect(screen.getByText("Requested Nov 08, 2026")).toBeInTheDocument();
+});
+
+it("counts a part day in hours and names the part under its date", () => {
+	const { PartDays } = composeStories(stories);
+	render(<PartDays />);
+
+	expect(screen.getByRole("cell", { name: "4 h" })).toBeInTheDocument();
+	expect(screen.getByRole("cell", { name: "2 h 30 min" })).toBeInTheDocument();
+	expect(screen.getAllByText("Morning 09:00–13:00").length).toBeGreaterThan(0);
+	expect(screen.getAllByText("Custom 10:00–12:30").length).toBeGreaterThan(0);
+	expect(screen.getByRole("cell", { name: "2 days" })).toBeInTheDocument();
 });

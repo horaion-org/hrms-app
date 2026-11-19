@@ -1,7 +1,15 @@
 import { screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import dayjs from "dayjs";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+	afterEach,
+	beforeAll,
+	beforeEach,
+	describe,
+	expect,
+	it,
+	vi,
+} from "vitest";
 import { resetApiClient } from "@/common/api-client";
 import {
 	currentUserReply,
@@ -34,14 +42,34 @@ import {
 	rosterChangePreviewFixture,
 	rosterCheckFixture,
 } from "@/features/scheduling/rosterChanges/fixtures";
+import { rulesCheckFixture } from "@/features/scheduling/rulesCheck/fixtures";
+import { confirmOnceChecked } from "@/features/scheduling/rulesCheck/testing";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 import {
 	monthWeekFixture,
 	scheduleMonthFixture,
 } from "@/features/scheduling/months/fixtures";
+import {
+	officerWeek,
+	partTimerWeek,
+	rosterHours,
+} from "@/features/scheduling/hours/fixtures";
 import { frozenShiftsFixture } from "@/features/scheduling/shifts/fixtures";
 
+/** Wednesday of the fixtures' week in their Singapore branch: the week has not passed (API ADR-0091). */
+const IN_THE_FIXTURE_WEEK = new Date("2026-10-14T09:00:00+08:00");
+/** The first minute of the Monday after the fixtures' week in their branch: the week has passed. */
+const AFTER_THE_FIXTURE_WEEK = new Date("2026-10-19T00:00:00+08:00");
+
+// The router splits each page's code out; loading it once here keeps that
+// first load out of the first test's time.
+beforeAll(async () => {
+	await import("@/pages/ScheduleDetail");
+});
 let app: OpenedApp | undefined;
+beforeEach(() => {
+	vi.useFakeTimers({ toFake: ["Date"], now: IN_THE_FIXTURE_WEEK });
+});
 afterEach(() => {
 	app?.disconnect();
 	app?.queryClient.clear();
@@ -60,6 +88,7 @@ const SCHEDULE =
 /** The schedule itself, read by its id alone. */
 const SCHEDULE_READ = "/api/v1/companies/c-1/schedules/s-1";
 const ASSIGNMENTS = `${SCHEDULE}/assignments`;
+const HOURS = `${SCHEDULE}/hours`;
 /** Whether the schedule's week already has its published roster, asked at its department. */
 const PUBLISHED_WEEK =
 	"/api/v1/companies/c-1/branches/b-1/departments/d-1/schedules/published-week";
@@ -99,7 +128,7 @@ const openRoster = async (
 
 /** October as the month read answers it: this roster's week, in `state`, the one week a run covers. */
 const octoberRead = (
-	state: "TO_REVIEW" | "TENTATIVE" | "FAILED" | "REJECTED" = "TO_REVIEW",
+	state: "TO_REVIEW" | "FAILED" | "REJECTED" = "TO_REVIEW",
 	handChangedDays = 0
 ): Routes => ({
 	[`GET ${OCTOBER_MONTH}`]: ok(
@@ -172,9 +201,11 @@ it("opens an older link that also names the department, reading the schedule by 
 	);
 	expect(readsOf(calls, SCHEDULE_READ)).toHaveLength(1);
 	expect(readsOf(calls, SCHEDULE)).toHaveLength(0);
-	expect(screen.getByRole("link", { name: "October 2026" })).toHaveAttribute(
+	expect(
+		screen.getByRole("link", { name: "Back to the roster" })
+	).toHaveAttribute(
 		"href",
-		"/scheduling/months/2026-10?department=d-1"
+		"/scheduling/department?department=d-1&from=2026-10-12"
 	);
 });
 
@@ -193,7 +224,7 @@ it("shows a generated schedule's header, figures and roster from the API", async
 	expect(
 		screen.getByRole("heading", { level: 1, name: "Front Office Schedule" })
 	).toBeInTheDocument();
-	expect(screen.getByText("Generated")).toBeInTheDocument();
+	expect(screen.getByText("To review")).toBeInTheDocument();
 	expect(screen.getByText("Times in Asia/Singapore")).toBeInTheDocument();
 	expect(screen.queryByText(/Requested by/)).toBeNull();
 	expect(
@@ -216,6 +247,40 @@ it("shows a generated schedule's header, figures and roster from the API", async
 		"Day offRest dayAbsentOn LeaveFront Desk AMLunch RushSwing Shift"
 	);
 	expect(readsOf(calls, ASSIGNMENTS)).toHaveLength(1);
+});
+
+it("shows the roster's hours by person under the grid, with the total", async () => {
+	await openRoster({
+		...signedIn(),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`GET ${HOURS}`]: ok(rosterHours([officerWeek(), partTimerWeek()])),
+	});
+
+	const hours = await screen.findByRole("table", { name: "Hours" });
+	const aisha = within(hours).getByRole("row", { name: /Aisha Rahman/ });
+	expect(within(aisha).getAllByText("28 h")[0]).toHaveClass("text-warning-900");
+	expect(within(hours).getByRole("row", { name: /Total/ })).toHaveTextContent(
+		"64 h"
+	);
+});
+
+it("shows no hours for a rejected roster, which no longer counts", async () => {
+	const calls = await openRoster({
+		...signedIn(),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "REJECTED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+	});
+
+	expect(
+		await screen.findByRole("table", { name: "Roster" })
+	).toBeInTheDocument();
+	expect(screen.queryByRole("heading", { name: "Hours" })).toBeNull();
+	expect(readsOf(calls, HOURS)).toHaveLength(0);
 });
 
 it("links a schedule to its setup in the wizard", async () => {
@@ -280,22 +345,106 @@ it("deletes the schedule from the header's menu and goes back to the overview", 
 	await user.click(screen.getByRole("menuitem", { name: "Delete" }));
 	await user.click(
 		within(
-			screen.getByRole("dialog", { name: "Delete Front Office - Week 42?" })
-		).getByRole("button", { name: "Delete schedule" })
+			screen.getByRole("dialog", {
+				name: /^Delete the Front Office roster for Oct 12\s?–\s?18, 2026\?$/,
+			})
+		).getByRole("button", { name: "Delete these days" })
 	);
 
-	// The overview's code is split from the roster's, and its first load in a test outlasts the default wait.
-	expect(
-		await screen.findByRole(
-			"heading",
-			{ level: 1, name: "Scheduling" },
-			{ timeout: 10_000 }
-		)
-	).toBeInTheDocument();
-	expect(app?.router.state.location.pathname).toBe("/scheduling");
+	// Deleting returns to the department timeline from the schedule's week, not the overview.
+	await waitFor(() => {
+		expect(app?.router.state.location.href).toBe(
+			"/scheduling/department?department=d-1&from=2026-10-12"
+		);
+	});
 	expect(
 		calls.filter((call) => call.method === "DELETE" && call.path === SCHEDULE)
 	).toHaveLength(1);
+});
+
+it("says a passed week is final and offers no regeneration, even to someone who may generate", async () => {
+	vi.setSystemTime(AFTER_THE_FIXTURE_WEEK);
+	await openRoster({
+		...signedIn(["schedule:read", "schedule:generate"]),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "REJECTED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		...octoberRead("REJECTED"),
+	});
+	const user = userEvent.setup();
+
+	expect(
+		await screen.findByText(
+			"This week has passed. Its rules and roster are final; change its days by hand if needed."
+		)
+	).toBeInTheDocument();
+	expect(await menuItemsOf(user)).not.toContain("Regenerate this week");
+	expect(
+		screen.queryByRole("button", { name: "Regenerate this week" })
+	).toBeNull();
+});
+
+it("says the rules changed since the roster was generated when the month read says so", async () => {
+	await openRoster({
+		...signedIn(["schedule:read", "schedule:generate"]),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`GET ${OCTOBER_MONTH}`]: ok(
+			scheduleMonthFixture({
+				month: "2026-10",
+				departmentName: "Front Office",
+				weeks: [
+					monthWeekFixture({
+						periodStart: "2026-10-12",
+						periodEnd: "2026-10-18",
+						state: "TO_REVIEW",
+						scheduleId: "s-1",
+						includedInMonthGeneration: true,
+						rulesChanged: true,
+					}),
+				],
+			})
+		),
+	});
+
+	expect(
+		await screen.findByText(
+			"Rules changed since this roster was generated. Regenerate to apply them."
+		)
+	).toBeInTheDocument();
+});
+
+it("says generating again failed and still shows the earlier roster when a regeneration failed", async () => {
+	await openRoster({
+		...signedIn(["schedule:read", "schedule:generate"]),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({
+				status: "GENERATED",
+				generation: generationFixture({
+					runId: "run-2",
+					status: "SUCCEEDED",
+					engineOutcome: "INFEASIBLE",
+				}),
+			})
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		...octoberRead(),
+	});
+
+	expect(
+		await screen.findByText(
+			"Generating again failed: No roster could meet every shift and constraint of this schedule. This is the earlier roster: keep working with it or generate again."
+		)
+	).toBeInTheDocument();
+	expect(
+		await screen.findByRole("table", { name: "Roster" })
+	).toBeInTheDocument();
+	expect(
+		screen.queryByRole("region", { name: "Why it wasn’t generated" })
+	).toBeNull();
 });
 
 it.each(["GENERATED", "PUBLISHED", "REJECTED"] as const)(
@@ -315,7 +464,7 @@ it.each(["GENERATED", "PUBLISHED", "REJECTED"] as const)(
 		]);
 		expect(screen.queryByRole("button", { name: "Publish roster" })).toBeNull();
 		expect(
-			screen.queryByRole("button", { name: "Regenerate October" })
+			screen.queryByRole("button", { name: "Regenerate this week" })
 		).toBeNull();
 	}
 );
@@ -326,7 +475,7 @@ it.each([
 		"Publish roster",
 		[
 			"Reject",
-			"Regenerate October",
+			"Regenerate this week",
 			"View setup",
 			"Details",
 			"Export roster",
@@ -335,7 +484,7 @@ it.each([
 	],
 	[
 		"REJECTED",
-		"Regenerate October",
+		"Regenerate this week",
 		["View setup", "Details", "Export roster", "Delete"],
 	],
 	[
@@ -451,7 +600,7 @@ it("says when the roster couldn't be downloaded and lets the person try again", 
 	).toBeEnabled();
 });
 
-it("regenerates the month over a hand-changed week after a danger confirm, then follows the new run", async () => {
+it("regenerates this week over its hand changes after a danger confirm, then follows the new run", async () => {
 	const calls = await openRoster({
 		...signedIn(["schedule:read", "schedule:generate"]),
 		[`GET ${SCHEDULE_READ}`]: [
@@ -464,16 +613,18 @@ it("regenerates the month over a hand-changed week after a danger confirm, then 
 	});
 	const user = userEvent.setup();
 
-	await chooseFromMenu(user, "Regenerate October");
-	const dialog = screen.getByRole("dialog", { name: "Regenerate October?" });
+	await chooseFromMenu(user, "Regenerate this week");
+	const dialog = screen.getByRole("dialog", {
+		name: "Generate this week again?",
+	});
 	expect(dialog).toHaveTextContent(
-		"The 1 week of October is worked out again. Nothing is published yet, so it can change."
+		/The week of Oct 12\s?–\s?18 is worked out again\./
 	);
 	expect(dialog).toHaveTextContent(
-		/Oct 12\s?–\s?18 was changed by hand\. Those changes will be replaced\./
+		/Oct 12\s?–\s?18 was changed by hand\. Those changes are replaced once the new roster is ready\./
 	);
 	const confirm = within(dialog).getByRole("button", {
-		name: "Regenerate October",
+		name: "Generate again",
 	});
 	expect(confirm).toHaveClass("bg-error-600");
 	await user.click(confirm);
@@ -483,15 +634,60 @@ it("regenerates the month over a hand-changed week after a danger confirm, then 
 	);
 	expect(screen.queryByRole("dialog")).toBeNull();
 	expect(
-		screen.queryByRole("button", { name: "Regenerate October" })
+		screen.queryByRole("button", { name: "Regenerate this week" })
 	).toBeNull();
 	const posts = postsOf(calls, OCTOBER_GENERATION);
 	expect(posts).toHaveLength(1);
 	expect(posts[0]?.search).toBe("departmentId=d-1");
 	expect(posts[0]?.body).toEqual({
 		includeLeave: true,
-		allowOpenShifts: false,
+		weeks: ["2026-10-12"],
 		newWeeks: [],
+	});
+});
+
+// A week's page regenerates only its own week: the month's other weeks are left as they are.
+it("given_aMonthWithAnotherWeek_when_thisWeekIsRegenerated_then_onlyThisWeekIsSent", async () => {
+	const calls = await openRoster({
+		...signedIn(["schedule:read", "schedule:generate"]),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`GET ${OCTOBER_MONTH}`]: ok(
+			scheduleMonthFixture({
+				month: "2026-10",
+				departmentName: "Front Office",
+				weeks: [
+					["2026-10-12", "2026-10-18", "s-1"],
+					["2026-10-19", "2026-10-25", "s-2"],
+				].map(([periodStart, periodEnd, scheduleId]) =>
+					monthWeekFixture({
+						periodStart,
+						periodEnd,
+						scheduleId,
+						state: "TO_REVIEW",
+						includedInMonthGeneration: true,
+					})
+				),
+			})
+		),
+		[`POST ${OCTOBER_GENERATION}`]: octoberStarted(),
+	});
+	const user = userEvent.setup();
+
+	await chooseFromMenu(user, "Regenerate this week");
+	await user.click(
+		within(
+			screen.getByRole("dialog", { name: "Generate this week again?" })
+		).getByRole("button", { name: "Generate again" })
+	);
+
+	await vi.waitFor(() => {
+		expect(postsOf(calls, OCTOBER_GENERATION)).toHaveLength(1);
+	});
+	expect(postsOf(calls, OCTOBER_GENERATION)[0]?.body).toMatchObject({
+		weeks: ["2026-10-12"],
 	});
 });
 
@@ -511,7 +707,7 @@ const scheduleAtRun = (
 };
 
 it("shows the new run's roster once the poll reports it finished, without a reload", async () => {
-	vi.useFakeTimers({ shouldAdvanceTime: true });
+	vi.useFakeTimers({ shouldAdvanceTime: true, now: IN_THE_FIXTURE_WEEK });
 	// What the API answers now: the run-1 roster, none while run-2 is open, then run-2's.
 	let roster = scheduleAssignmentsFixture();
 	const calls = await openRoster({
@@ -530,11 +726,11 @@ it("shows the new run's roster once the poll reports it finished, without a relo
 	expect(
 		await screen.findByRole("row", { name: /Aisha Rahman/ })
 	).toBeInTheDocument();
-	await chooseFromMenu(user, "Regenerate October");
+	await chooseFromMenu(user, "Regenerate this week");
 	roster = [];
 	await user.click(
 		within(screen.getByRole("dialog")).getByRole("button", {
-			name: "Regenerate October",
+			name: "Generate again",
 		})
 	);
 	expect(await screen.findByRole("note")).toHaveTextContent(
@@ -565,10 +761,10 @@ it("shows the generating state, not the old roster, while a new run is open", as
 	const user = userEvent.setup();
 
 	await screen.findByRole("table", { name: "Roster" });
-	await chooseFromMenu(user, "Regenerate October");
+	await chooseFromMenu(user, "Regenerate this week");
 	await user.click(
 		within(screen.getByRole("dialog")).getByRole("button", {
-			name: "Regenerate October",
+			name: "Generate again",
 		})
 	);
 
@@ -596,10 +792,12 @@ it("offers to generate a failed schedule's month again from its failure panel", 
 	await user.click(
 		await within(panel).findByRole("button", { name: "Generate again" })
 	);
-	const dialog = screen.getByRole("dialog", { name: "Regenerate October?" });
+	const dialog = screen.getByRole("dialog", {
+		name: "Generate this week again?",
+	});
 	expect(dialog).not.toHaveTextContent("changed by hand");
 	const confirm = within(dialog).getByRole("button", {
-		name: "Regenerate October",
+		name: "Generate again",
 	});
 	expect(confirm).not.toHaveClass("bg-error-600");
 	await user.click(confirm);
@@ -621,10 +819,12 @@ it("shows a refused regeneration inside the dialog and keeps it open", async () 
 	});
 	const user = userEvent.setup();
 
-	await chooseFromMenu(user, "Regenerate October");
-	const dialog = screen.getByRole("dialog", { name: "Regenerate October?" });
+	await chooseFromMenu(user, "Regenerate this week");
+	const dialog = screen.getByRole("dialog", {
+		name: "Generate this week again?",
+	});
 	await user.click(
-		within(dialog).getByRole("button", { name: "Regenerate October" })
+		within(dialog).getByRole("button", { name: "Generate again" })
 	);
 
 	expect(await within(dialog).findByRole("alert")).toHaveTextContent(
@@ -664,10 +864,10 @@ it.each([
 	await screen.findByText("Front Office Schedule");
 	if (screen.queryByRole("button", { name: MENU }))
 		expect(await menuItemsOf(userEvent.setup())).not.toContain(
-			"Regenerate October"
+			"Regenerate this week"
 		);
 	expect(
-		screen.queryByRole("button", { name: "Regenerate October" })
+		screen.queryByRole("button", { name: "Regenerate this week" })
 	).toBeNull();
 });
 
@@ -679,6 +879,7 @@ it("publishes a generated roster after a confirm, then says who published it", a
 			ok(generatedScheduleFixture({ status: "PUBLISHED" })),
 		],
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`POST ${SCHEDULE}/roster-check`]: ok(rulesCheckFixture()),
 		[`POST ${SCHEDULE}/approval`]: ok(
 			generatedScheduleFixture({ status: "PUBLISHED" })
 		),
@@ -688,13 +889,11 @@ it("publishes a generated roster after a confirm, then says who published it", a
 	await user.click(
 		await screen.findByRole("button", { name: "Publish roster" })
 	);
-	const dialog = screen.getByRole("dialog", { name: "Publish this roster?" });
+	const dialog = screen.getByRole("dialog", { name: "Publish these days?" });
 	expect(dialog).toHaveTextContent(
 		"It can’t be regenerated or deleted afterwards"
 	);
-	await user.click(
-		within(dialog).getByRole("button", { name: "Publish roster" })
-	);
+	await confirmOnceChecked(user, dialog, "Publish roster");
 
 	expect(await screen.findByText("Published")).toBeInTheDocument();
 	expect(screen.queryByRole("dialog")).toBeNull();
@@ -706,8 +905,12 @@ it("publishes a generated roster after a confirm, then says who published it", a
 	const decisions = calls.filter(
 		(call) => call.method === "POST" && call.path.startsWith(SCHEDULE)
 	);
-	expect(decisions.map((call) => call.path)).toEqual([`${SCHEDULE}/approval`]);
-	expect(decisions[0]?.body).toBeUndefined();
+	// The rules are checked first; every rule holds, so the one decision follows.
+	expect(decisions.map((call) => call.path.replace(SCHEDULE, ""))).toEqual([
+		"/roster-check",
+		"/approval",
+	]);
+	expect(decisions[1]?.body).toBeUndefined();
 });
 
 it("withholds Publish and Regenerate when another schedule is already the week's published roster, and links it", async () => {
@@ -733,10 +936,56 @@ it("withholds Publish and Regenerate when another schedule is already the week's
 	expect(screen.queryByRole("button", { name: "Publish roster" })).toBeNull();
 	const items = await menuItemsOf(userEvent.setup());
 	expect(items).toContain("Reject");
-	expect(items).not.toContain("Regenerate October");
+	expect(items).not.toContain("Regenerate this week");
 	expect(readsOf(calls, PUBLISHED_WEEK)[0]?.search).toBe(
-		`periodStart=${generatedScheduleFixture().periodStart}`
+		`periodStart=${generatedScheduleFixture().periodStart}&coveredFrom=2026-10-12&coveredTo=2026-10-18`
 	);
+});
+
+describe("a part beside a published part of its week", () => {
+	/** The API's answer when Monday to Wednesday are published as s-9: only days overlapping them are held. */
+	const publishedMondayToWednesday = (call: {
+		search: string;
+	}): ReturnType<typeof ok> => {
+		const asked = new URLSearchParams(call.search);
+		const overlaps = (asked.get("coveredFrom") ?? "") <= "2026-10-14";
+		return ok({
+			periodStart: "2026-10-12",
+			scheduleId: overlaps ? "s-9" : null,
+		});
+	};
+	const partRoutes = (
+		coveredFrom: string
+	): Parameters<typeof openRoster>[0] => ({
+		...signedIn(["schedule:read", "schedule:generate", "schedule:publish"]),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED", coveredFrom })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`GET ${PUBLISHED_WEEK}`]: publishedMondayToWednesday,
+	});
+
+	it("given_aLaterPartBesideAPublishedEarlierPart_when_shown_then_noPublishedWeekCallout", async () => {
+		const calls = await openRoster(partRoutes("2026-10-15"));
+
+		await screen.findByRole("table", { name: "Roster" });
+		await waitFor(() => {
+			expect(readsOf(calls, PUBLISHED_WEEK)[0]?.search).toBe(
+				"periodStart=2026-10-12&coveredFrom=2026-10-15&coveredTo=2026-10-18"
+			);
+		});
+		expect(
+			screen.queryByRole("link", { name: "Open the published roster" })
+		).toBeNull();
+	});
+
+	it("given_aPartWhoseOwnDaysArePublished_when_shown_then_saysSo", async () => {
+		await openRoster(partRoutes("2026-10-13"));
+
+		expect(
+			await screen.findByRole("link", { name: "Open the published roster" })
+		).toHaveAttribute("href", "/scheduling/s-9");
+	});
 });
 
 it("never asks about the week of a published roster itself", async () => {
@@ -807,7 +1056,7 @@ it("asks for a reason before rejecting a roster, then shows the reason", async (
 		calls.find((call) => call.path === `${SCHEDULE}/rejection`)?.body
 	).toEqual({ reason: "Two nights have no supervisor." });
 	expect(
-		screen.getByRole("button", { name: "Regenerate October" })
+		screen.getByRole("button", { name: "Regenerate this week" })
 	).toBeInTheDocument();
 });
 
@@ -828,10 +1077,8 @@ it("shows a refused decision inside the dialog and keeps it open", async () => {
 	await user.click(
 		await screen.findByRole("button", { name: "Publish roster" })
 	);
-	const dialog = screen.getByRole("dialog", { name: "Publish this roster?" });
-	await user.click(
-		within(dialog).getByRole("button", { name: "Publish roster" })
-	);
+	const dialog = screen.getByRole("dialog", { name: "Publish these days?" });
+	await confirmOnceChecked(user, dialog, "Publish roster");
 
 	expect(await within(dialog).findByRole("alert")).toHaveTextContent(
 		"This roster was already published or rejected. Reload the page to see it."
@@ -848,12 +1095,12 @@ it("offers neither Publish nor Reject to someone without schedule:publish", asyn
 		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
 	});
 
-	expect(await screen.findByText("Generated")).toBeInTheDocument();
+	expect(await screen.findByText("To review")).toBeInTheDocument();
 	expect(screen.queryByRole("button", { name: "Publish roster" })).toBeNull();
 	expect(await menuItemsOf(userEvent.setup())).not.toContain("Reject");
 });
 
-it("withdraws a published roster's publication with a remark, back to Generated", async () => {
+it("withdraws a published roster's publication with a remark, back to To review", async () => {
 	const calls = await openRoster({
 		...signedIn(["schedule:read", "schedule:publish"]),
 		[`GET ${SCHEDULE_READ}`]: [
@@ -877,7 +1124,7 @@ it("withdraws a published roster's publication with a remark, back to Generated"
 
 	await chooseFromMenu(user, "Withdraw publication");
 	const dialog = screen.getByRole("dialog", {
-		name: "Withdraw this roster’s publication?",
+		name: "Withdraw these days?",
 	});
 	const confirm = within(dialog).getByRole("button", {
 		name: "Withdraw publication",
@@ -900,12 +1147,12 @@ it("withdraws a published roster's publication with a remark, back to Generated"
 	);
 	await user.click(confirm);
 
-	expect(await screen.findByText("Generated")).toBeInTheDocument();
+	expect(await screen.findByText("To review")).toBeInTheDocument();
 	expect(
 		calls.find((call) => call.path === `${SCHEDULE}/publication-withdrawal`)
 			?.body
 	).toEqual({ remark: "Wrong week went out." });
-	expect(await menuItemsOf(user)).not.toContain("Regenerate October");
+	expect(await menuItemsOf(user)).not.toContain("Regenerate this week");
 });
 
 it("shows a refused withdrawal remark on its field and keeps the dialog open", async () => {
@@ -924,7 +1171,7 @@ it("shows a refused withdrawal remark on its field and keeps the dialog open", a
 
 	await chooseFromMenu(user, "Withdraw publication");
 	const dialog = screen.getByRole("dialog", {
-		name: "Withdraw this roster’s publication?",
+		name: "Withdraw these days?",
 	});
 	await user.type(
 		within(dialog).getByRole("textbox", {
@@ -1002,6 +1249,59 @@ const generatedWith = (findings = generationFindingsFixture()): StubReply =>
 		})
 	);
 
+// Before any validation the generation's own gaps count; the warning never blocks publishing.
+it("given_aShiftStillShort_when_publishing_then_theDialogWarnsWithTheCountAndStillPublishes", async () => {
+	const calls = await openRoster({
+		...signedIn(["schedule:read", "schedule:publish"]),
+		...FROZEN_SETUP,
+		[`GET ${SCHEDULE_READ}`]: generatedWith(),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`POST ${SCHEDULE}/approval`]: ok(
+			generatedScheduleFixture({ status: "PUBLISHED" })
+		),
+	});
+	const user = userEvent.setup();
+
+	await user.click(
+		await screen.findByRole("button", { name: "Publish roster" })
+	);
+	const dialog = screen.getByRole("dialog", { name: "Publish these days?" });
+	expect(dialog).toHaveTextContent(
+		"1 shift is still short of people, and staff will see the roster as it is. Find cover for it from Issues, or publish as it is."
+	);
+	await confirmOnceChecked(user, dialog, "Publish roster");
+
+	await vi.waitFor(() => {
+		expect(
+			calls.some(
+				(call) => call.method === "POST" && call.path === `${SCHEDULE}/approval`
+			)
+		).toBe(true);
+	});
+});
+
+it("given_noShiftShort_when_publishing_then_noWarning", async () => {
+	await openRoster({
+		...signedIn(["schedule:read", "schedule:publish"]),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({
+				status: "GENERATED",
+				generation: generationFixture({ findings: null }),
+			})
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+	});
+	const user = userEvent.setup();
+
+	await user.click(
+		await screen.findByRole("button", { name: "Publish roster" })
+	);
+
+	expect(
+		screen.getByRole("dialog", { name: "Publish these days?" })
+	).not.toHaveTextContent(/still short/);
+});
+
 it("counts what the engine found on one Issues button and lists it in the side panel", async () => {
 	const calls = await openRoster({
 		...signedIn(["schedule:read", "shift:read", "constraint:read"]),
@@ -1011,7 +1311,10 @@ it("counts what the engine found on one Issues button and lists it in the side p
 	});
 	const user = userEvent.setup();
 
-	const issues = await screen.findByRole("button", { name: "Issues: 4" });
+	// What is to fix: the shift short and Ben's run; nothing asked "if possible".
+	const issues = await screen.findByRole("button", {
+		name: "Issues: 2 to fix, 0 could not be met",
+	});
 	expect(issues).toHaveAttribute("aria-expanded", "false");
 	// Only the note that the roster isn't published; findings stay in the Issues panel.
 	expect(screen.getByRole("note")).toHaveTextContent("Not published.");
@@ -1022,24 +1325,27 @@ it("counts what the engine found on one Issues button and lists it in the side p
 	expect(issues).toHaveAttribute("aria-expanded", "true");
 	expect(issues).toHaveAttribute("aria-controls", panel.id);
 
-	const setup = screen.getByRole("region", { name: "Setup issues (1)" });
-	expect(setup).toHaveTextContent("Shifts nobody can take · 1");
-	expect(setup).toHaveTextContent(
+	const information = within(panel)
+		.getByRole("button", { name: /^More information, / })
+		.closest("section");
+	expect(information).toHaveTextContent(
 		"No one in this schedule can take Breakfast Prep."
 	);
-	expect(
-		within(setup).getByText(
-			"Shift Breakfast Prep: no employee holds an eligible role."
-		).tagName
-	).toBe("Q");
-	const roster = screen.getByRole("region", { name: "Roster notes (3)" });
-	expect(roster).toHaveTextContent("Sat, Oct 1709:00 – 15:00•1 person short");
-	expect(roster).toHaveTextContent("Rule: Morning cover");
-	expect(roster).toHaveTextContent(
-		"Ben OngBen Ong works more than five days in a row."
+	// The app's own sentence stands alone; the engine's is not repeated under it.
+	expect(information).not.toHaveTextContent(
+		"Shift Breakfast Prep: no employee holds an eligible role."
 	);
-	expect(roster).toHaveTextContent(
-		"Chen WeiSun, Oct 18Chen Wei covers the Sunday swing alone."
+	expect(information).toHaveTextContent(
+		"Chen Wei · Sun, Oct 18Chen Wei covers the Sunday swing alone."
+	);
+	const mustFix = within(panel)
+		.getByRole("button", { name: "Must fix, 2" })
+		.closest("section");
+	expect(mustFix).toHaveTextContent(
+		"1 Front Desk Staff short · Sat, Oct 17 · 09:00–15:00Rule: Morning cover"
+	);
+	expect(mustFix).toHaveTextContent(
+		"Ben OngBen Ong works more than five days in a row."
 	);
 	expect(screen.queryByRole("dialog")).toBeNull();
 	await waitFor(() => {
@@ -1064,7 +1370,7 @@ it("opens on the side panel its link names, and keeps what is opened in the URL"
 	expect(
 		await screen.findByRole("complementary", { name: "Issues" })
 	).toBeInTheDocument();
-	await user.click(screen.getByRole("button", { name: "Issues: 4" }));
+	await user.click(screen.getByRole("button", { name: /^Issues: / }));
 
 	expect(screen.queryByRole("complementary", { name: "Issues" })).toBeNull();
 	expect(app?.router.state.location.search).toEqual({ week: "2026-10-12" });
@@ -1100,14 +1406,13 @@ it("names findings without reading the setup it can't see", async () => {
 	});
 	const user = userEvent.setup();
 
-	await user.click(await screen.findByRole("button", { name: "Issues: 4" }));
+	await user.click(await screen.findByRole("button", { name: /^Issues: / }));
 
-	expect(
-		screen.getByRole("region", { name: "Roster notes (3)" })
-	).toHaveTextContent("Rule: People on a shift");
-	expect(
-		screen.getByRole("region", { name: "Setup issues (1)" })
-	).toHaveTextContent("No one in this schedule can take one of its shifts.");
+	const panel = screen.getByRole("complementary", { name: "Issues" });
+	expect(panel).toHaveTextContent("Rule: People on a shift");
+	expect(panel).toHaveTextContent(
+		"No one in this schedule can take one of its shifts."
+	);
 	expect(readsOf(calls, `${SCHEDULE}/shifts`)).toHaveLength(0);
 	expect(readsOf(calls, `${SCHEDULE}/constraints`)).toHaveLength(0);
 });
@@ -1123,7 +1428,7 @@ it("counts findings in the row and day headers, opens them in Issues, and says a
 	const roster = await screen.findByRole("table", { name: "Roster" });
 	expect(
 		within(roster).getByRole("button", {
-			name: "Saturday, October 17: 1 to look at. Show in Issues",
+			name: "Saturday, October 17: 1 person short. Show in Issues",
 		})
 	).toBeInTheDocument();
 	expect(within(roster).queryByRole("button", { name: /^Sunday/ })).toBeNull();
@@ -1139,11 +1444,11 @@ it("counts findings in the row and day headers, opens them in Issues, and says a
 	).toBe("Q");
 	await user.click(
 		within(roster).getByRole("button", {
-			name: "Ben Ong: 1 to look at. Show in Issues",
+			name: "Ben Ong: 1 issue. Show in Issues",
 		})
 	);
 
-	expect(screen.getByRole("button", { name: "Issues: 4" })).toHaveAttribute(
+	expect(screen.getByRole("button", { name: /^Issues: / })).toHaveAttribute(
 		"aria-expanded",
 		"true"
 	);
@@ -1169,7 +1474,7 @@ it("shows nothing about findings when the engine found nothing", async () => {
 	const roster = await screen.findByRole("table", { name: "Roster" });
 	expect(screen.queryByRole("button", { name: /^Issues/ })).toBeNull();
 	expect(
-		within(roster).queryByRole("button", { name: /to look at/ })
+		within(roster).queryByRole("button", { name: / issues?\. Show in Issues$/ })
 	).toBeNull();
 });
 
@@ -1210,19 +1515,27 @@ it("lists where members started the week, and that it changed since, under Issue
 
 	const roster = await screen.findByRole("table", { name: "Roster" });
 	await userEvent.click(
-		await screen.findByRole("button", { name: "Issues: 5" })
+		await screen.findByRole("button", { name: /^Issues: / })
 	);
 
 	const panel = screen.getByRole("complementary", { name: "Issues" });
 	// Three days worked before Monday make Monday the fourth day of the run.
-	expect(panel).toHaveTextContent("Aisha Rahman: Day 4 of a run");
-	expect(within(panel).getAllByText(/of a run/)).toHaveLength(1);
+	expect(panel).toHaveTextContent(
+		"Aisha Rahman has worked 3 days in a row before this week."
+	);
+	expect(within(panel).getAllByText(/in a row before this week/)).toHaveLength(
+		1
+	);
+	// The week before having changed is one row: a title, then what it means and what to do.
+	expect(
+		within(panel).getByText("1 person’s days before this week changed")
+	).toBeInTheDocument();
 	expect(
 		within(panel).getByText(
-			/^1 person’s days before this week changed after this schedule was generated\./
+			"This roster was generated from what was known then. To plan from the days as they are now, regenerate the month from its page."
 		)
 	).toBeInTheDocument();
-	expect(within(roster).queryByText(/of a run/)).toBeNull();
+	expect(within(roster).queryByText(/in a row before this week/)).toBeNull();
 	// Only the note that the roster isn't published; findings stay in the Issues panel.
 	expect(screen.getByRole("note")).toHaveTextContent("Not published.");
 	expect(readsOf(calls, `${SCHEDULE}/starting-context`)).toHaveLength(1);
@@ -1240,14 +1553,14 @@ it("shows the roster without starting points when they can't be read", async () 
 
 	const roster = await screen.findByRole("table", { name: "Roster" });
 	expect(within(roster).getAllByRole("row")).toHaveLength(4);
-	expect(within(roster).queryByText(/of a run/)).toBeNull();
+	expect(within(roster).queryByText(/in a row before this week/)).toBeNull();
 	expect(
-		screen.queryByText(/changed after this schedule was generated/)
+		screen.queryByText(/changed after this roster was generated/)
 	).toBeNull();
 });
 
 it("reads a schedule being generated every 15 seconds until its roster is ready", async () => {
-	vi.useFakeTimers({ shouldAdvanceTime: true });
+	vi.useFakeTimers({ shouldAdvanceTime: true, now: IN_THE_FIXTURE_WEEK });
 	const calls = await openRoster({
 		...signedIn(),
 		[`GET ${SCHEDULE_READ}`]: [
@@ -1538,7 +1851,7 @@ it("changes a generated roster's day by hand: preview, apply, mark, then undo", 
 		await within(panel).findByText("Front Desk AM, Mon, Oct 12: 2 → 1 people.")
 	).toBeVisible();
 	expect(panel).toHaveTextContent(
-		"Scheduling rules aren’t checked again for changes made by hand."
+		"Working-time rules aren’t checked for changes made by hand. After you apply this, press Validate schedule."
 	);
 	expect(panel).toHaveTextContent(
 		"Aisha Rahman Front Desk AM · 09:00 – 15:00 → Day off"
@@ -1573,7 +1886,7 @@ it("changes a generated roster's day by hand: preview, apply, mark, then undo", 
 	).toBeVisible();
 	expect(
 		screen.getByRole("complementary", { name: "Changed" })
-	).toHaveTextContent("Aisha Rahman · Mon, Oct 12Front Desk AM");
+	).toHaveTextContent(/Aisha Rahman · Mon, Oct 12.*Front Desk AM/);
 
 	await user.click(screen.getAllByRole("button", { name: "Undo" })[0]!);
 
@@ -2068,7 +2381,7 @@ describe("the roster in its month", () => {
 				monthWeekFixture({
 					periodStart: "2026-10-19",
 					periodEnd: "2026-10-25",
-					state: "TENTATIVE",
+					state: "TO_REVIEW",
 					scheduleId: "s-2",
 				}),
 				monthWeekFixture({
@@ -2089,18 +2402,7 @@ describe("the roster in its month", () => {
 			day: dayjs(row.day).add(days, "day").format("YYYY-MM-DD"),
 		}));
 	};
-	const heldUp = (): ReturnType<typeof generatedScheduleFixture> => {
-		const schedule = generatedScheduleFixture({ status: "GENERATED" });
-		return {
-			...schedule,
-			publication: {
-				...schedule.publication,
-				waitingForWeek: { periodStart: "2026-10-05", periodEnd: "2026-10-11" },
-			},
-		};
-	};
-
-	it("goes back to its month and steps to another week of it, the arrows staying in the month", async () => {
+	it("goes back to its department timeline and steps to another week of its month, the arrows staying in the month", async () => {
 		const calls = await openRoster({
 			...signedIn(),
 			[`GET ${SCHEDULE_READ}`]: ok(
@@ -2122,8 +2424,13 @@ describe("the roster in its month", () => {
 		const user = userEvent.setup();
 
 		expect(
-			await screen.findByRole("link", { name: "October 2026" })
-		).toHaveAttribute("href", "/scheduling/months/2026-10?department=d-1");
+			await screen.findByRole("link", {
+				name: "Back to the roster",
+			})
+		).toHaveAttribute(
+			"href",
+			"/scheduling/department?department=d-1&from=2026-10-12"
+		);
 		expect(readsOf(calls, OCTOBER)[0]?.search).toBe("departmentId=d-1");
 		await waitFor(() => {
 			expect(screen.getByRole("button", { name: "Week" })).toHaveTextContent(
@@ -2139,11 +2446,11 @@ describe("the roster in its month", () => {
 		await user.click(screen.getByRole("button", { name: "Next week" }));
 
 		await waitFor(() => {
-			expect(screen.getByRole("button", { name: "Week" })).toHaveTextContent(
-				"· Tentative"
-			);
+			expect(app?.router.state.location.pathname).toBe("/scheduling/s-2");
 		});
-		expect(app?.router.state.location.pathname).toBe("/scheduling/s-2");
+		expect(screen.getByRole("button", { name: "Week" })).toHaveTextContent(
+			"· To review"
+		);
 		// The month's last week has no schedule, so this is as far as the arrow goes.
 		expect(screen.getByRole("button", { name: "Next week" })).toBeDisabled();
 	});
@@ -2177,25 +2484,43 @@ describe("the roster in its month", () => {
 		).toBeDisabled();
 	});
 
-	it("reads Tentative, says it isn't published and holds Publish until the earlier week is published", async () => {
+	// Each schedule is published on its own (API ADR-0130): an earlier week still to review holds nothing up.
+	it("offers Publish on a generated week whose earlier week is generated and unpublished, not marked as waiting", async () => {
+		const unpublishedEarlierWeek = {
+			periodStart: "2026-10-05",
+			periodEnd: "2026-10-11",
+			state: "TO_REVIEW" as const,
+			scheduleId: "s-0",
+		};
+		const october = scheduleMonthFixture({
+			month: "2026-10",
+			departmentName: "Front Office",
+			weeks: [
+				monthWeekFixture(unpublishedEarlierWeek),
+				monthWeekFixture({
+					periodStart: "2026-10-12",
+					periodEnd: "2026-10-18",
+					state: "TO_REVIEW",
+					scheduleId: "s-1",
+				}),
+			],
+		});
 		await openRoster({
 			...signedIn(["schedule:read", "schedule:publish"]),
-			[`GET ${SCHEDULE_READ}`]: ok(heldUp()),
+			[`GET ${SCHEDULE_READ}`]: ok(
+				generatedScheduleFixture({ status: "GENERATED" })
+			),
 			[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
-			[`GET ${OCTOBER}`]: ok(october({ state: "TENTATIVE" })),
+			[`GET ${OCTOBER}`]: ok(october),
 		});
 
 		const publish = await screen.findByRole("button", {
 			name: "Publish roster",
 		});
-		expect(publish).toBeDisabled();
-		expect(publish).toHaveAccessibleDescription(
-			/^Publish Oct 5\s?–\s?11, 2026 first\. Weeks are published in order\.$/
-		);
-		expect(screen.getByText("Tentative")).toBeInTheDocument();
-		expect(screen.getByRole("note")).toHaveTextContent(
-			"Not published. Staff can’t see this week."
-		);
+		expect(publish).toBeEnabled();
+		expect(publish).not.toHaveAccessibleDescription();
+		expect(screen.getByText("To review")).toBeInTheDocument();
+		expect(screen.queryByText(/first\./)).toBeNull();
 	});
 
 	it("offers Publish on the week under review", async () => {
@@ -2211,10 +2536,10 @@ describe("the roster in its month", () => {
 		expect(
 			await screen.findByRole("button", { name: "Publish roster" })
 		).toBeEnabled();
-		expect(screen.getByText("Generated")).toBeInTheDocument();
+		expect(screen.getByText("To review")).toBeInTheDocument();
 	});
 
-	it("shows neither the note nor a held Publish on a published week", async () => {
+	it("shows no unpublished note on a published week", async () => {
 		await openRoster({
 			...signedIn(["schedule:read", "schedule:publish"]),
 			[`GET ${SCHEDULE_READ}`]: ok(
@@ -2228,6 +2553,51 @@ describe("the roster in its month", () => {
 			await screen.findByRole("row", { name: /Aisha Rahman/ })
 		).toBeInTheDocument();
 		expect(screen.queryByText("Not published.")).toBeNull();
-		expect(screen.queryByText(/Weeks are published in order/)).toBeNull();
+	});
+});
+
+// Each thing on the roster is asked under its own key (hrms-backend-v2 docs/adr/0097).
+describe("what a roster reader is offered", () => {
+	const SHIFT_PREFERENCES = `${SCHEDULE}/shift-preferences`;
+	const ROSTER_CHECK = `${SCHEDULE}/roster-check`;
+
+	const generatedRoster = (permissions: Array<string>): Routes => ({
+		...signedIn(permissions),
+		[`GET ${SCHEDULE_READ}`]: ok(
+			generatedScheduleFixture({ status: "GENERATED" })
+		),
+		[`GET ${ASSIGNMENTS}`]: ok(scheduleAssignmentsFixture()),
+		[`GET ${SHIFT_PREFERENCES}`]: ok({ scheduleId: "s-1", preferences: [] }),
+		[`POST ${ROSTER_CHECK}`]: ok(rulesCheckFixture()),
+	});
+
+	it("given_onlyTheRosterRead_when_opened_then_validateScheduleIsOfferedAndAsksTheCheck", async () => {
+		const user = userEvent.setup();
+		const calls = await openRoster(generatedRoster(["schedule:read"]));
+		await screen.findByRole("row", { name: /Aisha Rahman/ });
+
+		await user.click(screen.getByRole("button", { name: /Validate schedule/ }));
+
+		await waitFor(() => {
+			expect(postsOf(calls, ROSTER_CHECK)).toHaveLength(1);
+		});
+	});
+
+	it("given_noShiftPreferenceRead_when_opened_then_theRostersPreferencesAreNeverAsked", async () => {
+		const calls = await openRoster(generatedRoster(["schedule:read"]));
+		await screen.findByRole("row", { name: /Aisha Rahman/ });
+
+		expect(readsOf(calls, SHIFT_PREFERENCES)).toHaveLength(0);
+	});
+
+	it("given_theShiftPreferenceRead_when_opened_then_theRostersPreferencesAreAsked", async () => {
+		const calls = await openRoster(
+			generatedRoster(["schedule:read", "shift_preference:read"])
+		);
+		await screen.findByRole("row", { name: /Aisha Rahman/ });
+
+		await waitFor(() => {
+			expect(readsOf(calls, SHIFT_PREFERENCES)).toHaveLength(1);
+		});
 	});
 });

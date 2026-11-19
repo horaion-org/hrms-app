@@ -1,4 +1,5 @@
 import { Children, type ReactElement } from "react";
+import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { StepContext } from "@/components/ui/Stepper/Stepper.context";
@@ -23,11 +24,12 @@ export const Stepper = ({
 	currentStep,
 	onStepClick,
 }: StepperProps): FunctionComponent => {
+	const { t } = useTranslation();
 	const count = Children.count(children);
 
 	return (
 		<nav
-			aria-label="Steps"
+			aria-label={t("stepper.label")}
 			className={joinClassNames("@container/stepper w-full min-w-0", className)}
 		>
 			<ol className="flex w-full items-center" role="list">

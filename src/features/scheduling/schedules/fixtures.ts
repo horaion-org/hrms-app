@@ -3,14 +3,16 @@ import {
 	INCLUDED_CONSTRAINT_IDS,
 	constraintCopyId,
 } from "@/features/scheduling/constraints/fixtures";
-import type {
-	AssignmentOffReason,
-	GenerationFindings,
-	Schedule,
-	ScheduleAssignment,
-	ScheduleGeneration,
-	ScheduleStatus,
+import {
+	type AssignmentOffReason,
+	type GenerationFindings,
+	type Schedule,
+	type ScheduleAssignment,
+	type ScheduleGeneration,
+	type ScheduleStatus,
+	withCoveredDays,
 } from "@/features/scheduling/schedules/api";
+import type { DeletedSchedule } from "@/features/scheduling/schedules/deletedSchedules";
 import {
 	INCLUDED_SHIFT_IDS,
 	frozenShiftsFixture,
@@ -25,54 +27,52 @@ import type { Workspace } from "@/features/workspace/api";
  * (`shifts/fixtures.ts`, `constraints/fixtures.ts`).
  */
 
-/** Draft s-1; `overrides` set it apart. */
-export const scheduleFixture = (
-	overrides: Partial<Schedule> = {}
-): Schedule => ({
-	scheduleId: "s-1",
-	companyId: "c-1",
-	branchId: "b-1",
-	branchName: "Main branch",
-	departmentId: "d-1",
-	departmentName: "Front Office",
-	timeZone: "Asia/Singapore",
-	name: "Front Office - Week 42",
-	periodStart: "2026-10-12",
-	periodEnd: "2026-10-18",
-	includeLeave: true,
-	allowOpenShifts: false,
-	status: "DRAFT",
-	includedShiftIds: [
-		"front-desk-am",
-		"breakfast-prep",
-		"lunch-rush",
-		"swing-shift",
-	],
-	includedConstraintIds: [
-		"lunch-stand-ins",
-		"morning-cover",
-		"rest-between-shifts",
-	],
-	generationRequestedAt: null,
-	generationRequestedBy: null,
-	decidedAt: null,
-	decidedBy: null,
-	rejectionReason: null,
-	rosterRevision: 0,
-	publication: {
-		requiresApproval: false,
-		stepLabels: [],
-		submission: null,
-		rejectedAtStep: null,
-		waitingForWeek: null,
-	},
-	publicationWithdrawnAt: null,
-	nonWorkingDayTypes: ["OFF", "REST"],
-	generation: null,
-	createdAt: "2026-10-08T09:00:00Z",
-	updatedAt: "2026-10-08T09:00:00Z",
-	...overrides,
-});
+/** Draft s-1 covering its whole week; `overrides` set it apart. */
+export const scheduleFixture = (overrides: Partial<Schedule> = {}): Schedule =>
+	withCoveredDays({
+		scheduleId: "s-1",
+		companyId: "c-1",
+		branchId: "b-1",
+		branchName: "Main branch",
+		departmentId: "d-1",
+		departmentName: "Front Office",
+		timeZone: "Asia/Singapore",
+		name: "Front Office - Week 42",
+		periodStart: "2026-10-12",
+		periodEnd: "2026-10-18",
+		includeLeave: true,
+		status: "DRAFT",
+		includedShiftIds: [
+			"front-desk-am",
+			"breakfast-prep",
+			"lunch-rush",
+			"swing-shift",
+		],
+		includedConstraintIds: [
+			"lunch-stand-ins",
+			"morning-cover",
+			"rest-between-shifts",
+		],
+		generationRequestedAt: null,
+		generationRequestedBy: null,
+		decidedAt: null,
+		decidedBy: null,
+		rejectionReason: null,
+		rosterRevision: 0,
+		publication: {
+			requiresApproval: false,
+			stepLabels: [],
+			submission: null,
+			rejectedAtStep: null,
+		},
+		publicationWithdrawnAt: null,
+		memberProfileIds: null,
+		nonWorkingDayTypes: ["OFF", "REST"],
+		generation: null,
+		createdAt: "2026-10-08T09:00:00Z",
+		updatedAt: "2026-10-08T09:00:00Z",
+		...overrides,
+	});
 
 /** The three members of Front Office that schedule s-1's roster and findings name. */
 const ROSTER_MEMBERS = [
@@ -426,6 +426,23 @@ const ROSTER_WEEKS: Array<Array<WorkedDay | DayNotWorked>> = [
 ];
 
 /**
+ * Schedule s-1 generated, then deleted by Lina Tan on 15 October 2026 (in its
+ * Singapore branch) without ever being published; `overrides` set it apart.
+ */
+export const deletedScheduleFixture = (
+	overrides: Partial<DeletedSchedule> = {}
+): DeletedSchedule => ({
+	...generatedScheduleFixture({ status: "GENERATED" }),
+	deletion: {
+		deletedAt: "2026-10-15T03:00:00Z",
+		deletedByName: "Lina Tan",
+		cause: "MANAGER",
+	},
+	wasPublished: false,
+	...overrides,
+});
+
+/**
  * Schedule s-1's roster as `GET …/assignments` answers it: 21 rows, one per
  * member per day, by name then day. Aisha works Front Desk AM on weekdays,
  * with a day off Saturday and a rest day Sunday. Ben, a part-timer, is on
@@ -474,6 +491,46 @@ export const scheduleAssignmentsFixture = (): Array<ScheduleAssignment> => {
 		})
 	);
 };
+
+/**
+ * A worked row kept around approved part-day leave (the API's ADR-0077,
+ * part 4), as a leave reader gets it: the leave line, the pieces still
+ * worked, and the lost hours as a part gap on the row's own shift.
+ */
+export const keptAroundLeaveFixture = (
+	row: ScheduleAssignment,
+	leave: { start: string; end: string; durationName?: string | null },
+	workedTimes: Array<{ start: string; end: string }>
+): ScheduleAssignment => ({
+	...row,
+	leaveTypeName: "Annual leave",
+	leaveDurationName: leave.durationName ?? null,
+	leaveStartTime: leave.start,
+	leaveEndTime: leave.end,
+	workedTimes,
+	uncoveredShift: row.shift,
+	uncoveredFrom: leave.start,
+	uncoveredTo: leave.end,
+});
+
+/** Aisha's Monday Front Desk AM (09:00–15:00) shortened by morning leave 09:00–11:00. */
+export const shortenedShiftFixture = (): ScheduleAssignment =>
+	keptAroundLeaveFixture(
+		scheduleAssignmentsFixture()[0]!,
+		{ start: "09:00", end: "11:00", durationName: "Morning" },
+		[{ start: "11:00", end: "15:00" }]
+	);
+
+/** Aisha's Monday Front Desk AM worked around leave in the middle, 11:00–13:00. */
+export const workedAroundLeaveFixture = (): ScheduleAssignment =>
+	keptAroundLeaveFixture(
+		scheduleAssignmentsFixture()[0]!,
+		{ start: "11:00", end: "13:00" },
+		[
+			{ start: "09:00", end: "11:00" },
+			{ start: "13:00", end: "15:00" },
+		]
+	);
 
 type Branches = Workspace["companies"][number]["branches"];
 

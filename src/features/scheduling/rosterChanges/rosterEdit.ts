@@ -168,9 +168,10 @@ export type SwapPartners = {
 };
 
 /**
- * The other members' rows on the same day. A swap between two days off
- * changes nothing, so an off day only swaps with a working one. Leave and
- * former members can't swap; they are listed apart without saying why.
+ * The other members' rows on the same day. A swap between two days off, or
+ * two people on the same shift, changes nothing (the API refuses it), so
+ * those rows are not listed at all. Leave and former members can't swap;
+ * they are listed apart without saying why.
  */
 export const swapPartners = (
 	assignments: ReadonlyArray<ScheduleAssignment>,
@@ -180,7 +181,7 @@ export const swapPartners = (
 		(row) =>
 			row.day === assignment.day &&
 			row.assignmentId !== assignment.assignmentId &&
-			(assignment.shift !== null || row.shift !== null)
+			row.shift?.shiftId !== assignment.shift?.shiftId
 	);
 	const canSwap = (row: ScheduleAssignment): boolean =>
 		row.member !== null &&

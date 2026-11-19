@@ -1,5 +1,7 @@
-import type { Meta, StoryObj } from "@storybook/react-vite";
+import type { Decorator, Meta, StoryObj } from "@storybook/react-vite";
+import type { FunctionComponent } from "@/common/types";
 import { ConstraintOrigin } from "@/features/scheduling/constraints/ConstraintOrigin";
+import "@/common/i18n";
 
 const meta = {
 	title: "Scheduling/Constraint origin",
@@ -67,3 +69,14 @@ export const Department: Story = {
 };
 /** On the work policy's own list, only the lock. */
 export const LockOnly: Story = { args: { showLevel: false } };
+
+/** The locked company token in a cell as narrow as the constraints table's Set by column on a small screen. */
+export const LockedInANarrowCell: Story = {
+	decorators: [
+		(Story: Parameters<Decorator>[0]): NonNullable<FunctionComponent> => (
+			<div className="w-32 border border-neutral-400 p-3">
+				<Story />
+			</div>
+		),
+	],
+};

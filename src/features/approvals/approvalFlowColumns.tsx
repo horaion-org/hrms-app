@@ -33,9 +33,9 @@ export const stepsSummary = (
 		.join(" → ");
 
 /**
- * Settings › Approvals' columns: where each flow applies, its steps, whether
- * it is on and, for those who may change flows, the row's Edit button and
- * menu (`actions`).
+ * Settings › Approvals' columns: the flow's name (as Turn off and Delete
+ * ask about it), where it applies, its steps, whether it is on and, for
+ * those who may change flows, the row's Edit button and menu (`actions`).
  */
 export const approvalFlowColumns = (
 	t: TFunction,
@@ -46,11 +46,16 @@ export const approvalFlowColumns = (
 	}
 ): Array<DataTableColumn<ApprovalFlow>> => [
 	{
+		id: "name",
+		header: t(`${key}.name`),
+		cell: (flow) => flow.name,
+		cellClassName: "font-semibold",
+		pin: "start",
+	},
+	{
 		id: "appliesTo",
 		header: t(`${key}.appliesTo`),
 		cell: (flow) => appliesToLabel(flow, departmentName, t),
-		cellClassName: "font-semibold",
-		pin: "start",
 	},
 	{
 		id: "steps",

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { apiRequest, apiRequestVoid } from "@/common/api-client";
 import { companyPath } from "@/common/companyPath";
 import type { QueryOptionsFor } from "@/common/query-client";
+import { DEFAULT_ALLOWS_SHIFT_SAME_DAY } from "@/features/leave/api";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 import { retry } from "@/features/workspace/retry";
 import {
@@ -40,6 +41,8 @@ const managedLeaveDurationSchema = z.object({
 	endTime: z.string(),
 	/** The length between the two times. */
 	minutes: z.number().int(),
+	/** Whether the person can still work a shift that day; false keeps them off the roster that whole day. */
+	allowsShiftSameDay: z.boolean().catch(DEFAULT_ALLOWS_SHIFT_SAME_DAY),
 	status: leaveDurationStatusSchema,
 	displayOrder: z.number().int(),
 	/** Where it applies; both empty is the whole company. */
@@ -59,6 +62,8 @@ export type LeaveDurationBody = {
 	name: string;
 	startTime: string;
 	endTime: string;
+	/** Whether the person can still work a shift that day; requests already made keep their own copy. */
+	allowsShiftSameDay: boolean;
 	appliesToBranchIds: Array<string>;
 	appliesToDepartmentIds: Array<string>;
 };

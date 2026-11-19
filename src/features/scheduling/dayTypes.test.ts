@@ -29,6 +29,11 @@ describe("dayTypeLabel", () => {
 		expect(dayTypeLabel("PUBLIC_HOLIDAY_OFF", t)).toBe("Public holiday off");
 	});
 
+	it("given_aCodeWithoutATranslationButAStoredName_when_labelled_then_isTheStoredName", () => {
+		expect(dayTypeLabel("PUBLIC_HOLIDAY_OFF", t, 1, "Holiday")).toBe("Holiday");
+		expect(dayTypeLabel("REST", t, 1, "Stored rest")).toBe("Rest day");
+	});
+
 	it.each([
 		["REST", 2, "Rest days"],
 		["OFF", 2, "Days off"],

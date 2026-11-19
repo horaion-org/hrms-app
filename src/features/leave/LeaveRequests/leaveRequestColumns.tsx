@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import type { DataTableColumn } from "@/components/ui/DataTable";
 import { CrossIcon, TickIcon, ViewIcon } from "@/components/ui/Icon";
 import { formatPeriod, requestedDayOf } from "@/features/leave/dates";
+import { amountText, portionText } from "@/features/leave/dayPortion";
 import { leaveApprovalLine } from "@/features/leave/leaveApproval";
 import { leaveTypeLabel } from "@/features/leave/leaveTypeLabel";
 import { statusTone, type LeaveRequest } from "@/features/leave/types";
@@ -119,12 +120,20 @@ export const leaveRequestColumns = (
 			cell: (row) => (
 				<div>
 					<p className="font-semibold">{periodOf(row)}</p>
+					{portionText(row, t) && <p>{portionText(row, t)}</p>}
 					<p className="mt-1">{requestedOnOf(row)}</p>
 				</div>
 			),
-			// On the name's line, the period alone on one line; the request day is in View, one tap away.
+			// On the name's line, the period and any part of the day; the request day is in View, one tap away.
 			summary: (row) => (
-				<span className="font-semibold whitespace-nowrap">{periodOf(row)}</span>
+				<span className="flex flex-wrap gap-x-1">
+					<span className="font-semibold whitespace-nowrap">
+						{periodOf(row)}
+					</span>
+					{portionText(row, t) && (
+						<span className="whitespace-nowrap">{portionText(row, t)}</span>
+					)}
+				</span>
 			),
 		},
 		{
@@ -132,7 +141,7 @@ export const leaveRequestColumns = (
 			header: t("leave.duration"),
 			headerClassName: "min-w-28",
 			hideBelow: "md",
-			cell: (row) => t("leave.days", { count: row.workingDays }),
+			cell: (row) => amountText(row, t),
 		},
 		{
 			id: "leaveType",

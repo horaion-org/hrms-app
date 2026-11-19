@@ -30,6 +30,8 @@ export const schedulingReadinessSchema = z.object({
 	/** True exactly when nothing is missing. */
 	ready: z.boolean(),
 	missing: z.array(readinessGapSchema),
+	/** How many of its rules no longer fit their shifts or job titles; none from an older API. */
+	constraintsNeedingAttention: z.number().int().nonnegative().catch(0),
 });
 
 /** Whether one department is ready to schedule, as the API answers it. */

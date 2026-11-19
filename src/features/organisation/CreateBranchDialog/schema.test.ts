@@ -49,7 +49,7 @@ describe("create branch validation", () => {
 			["timeZone"],
 		]);
 	});
-	it("requires one to twenty heads", () => {
+	it("allows no head, so one can be chosen later, and at most twenty", () => {
 		expect(
 			schema.safeParse({
 				name: "Orchard",
@@ -59,7 +59,7 @@ describe("create branch validation", () => {
 				timeZone: "Asia/Singapore",
 				heads: [],
 			}).success
-		).toBe(false);
+		).toBe(true);
 		expect(
 			schema.safeParse({
 				name: "Orchard",

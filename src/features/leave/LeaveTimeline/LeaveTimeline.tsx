@@ -1,4 +1,5 @@
 import dayjs from "dayjs";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import { useId, useState, type CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { dayColumnClasses } from "@/common/dayView";
@@ -82,7 +83,7 @@ export const LeaveTimeline = ({
 		page,
 		Math.max(1, Math.ceil(employees.length / 10))
 	);
-	const today = dayjs().format("YYYY-MM-DD");
+	const today = dayjs().format(ISO_DATE_FORMAT);
 	const oneDay = shownDay !== undefined;
 	// Read by the classes below: the week's widths from `md`, one day's below it.
 	const widths = {

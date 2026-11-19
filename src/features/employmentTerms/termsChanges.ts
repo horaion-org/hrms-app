@@ -1,24 +1,25 @@
 import type { TFunction } from "i18next";
 import dayjs from "dayjs";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import { formatDate, type IsoDate } from "@/components/forms/Calendar";
 import type {
 	EmploymentTermsBody,
 	TermsOverviewItem,
 	WeekFields,
 } from "@/features/employmentTerms/api";
-import { formatHours } from "@/features/employmentTerms/hours";
-import { isPartTimeWeek } from "@/features/employmentTerms/summary";
+import { durationShort } from "@/features/employmentTerms/hours";
 
 /** The fields that change how hours are counted; name and description never do. */
-const WEEK_FIELDS: ReadonlyArray<keyof WeekFields> = [
-	"daysPerWeek",
-	"weekMinutes",
-	"dayMinutes",
-	"restDay",
-	"dailyOvertime",
-	"shiftWork",
-	"hoursLimitsApply",
-];
+const WEEK_FIELDS: ReadonlyArray<keyof EmploymentTermsBody & keyof WeekFields> =
+	[
+		"daysPerWeek",
+		"weekMinutes",
+		"restDay",
+		"dailyOvertime",
+		"hoursLimitsApply",
+		// It relabels past extra hours as time off earned, or back (API P4-B2).
+		"extraHoursPaidAs",
+	];
 
 /** Whether the working week changes; only then can it change from a date. */
 export const weekChanges = (
@@ -48,7 +49,7 @@ export const isMonday = (date: IsoDate): boolean => dayjs(date).day() === 1;
 export const nextMonday = (today: IsoDate): IsoDate => {
 	const day = dayjs(today);
 	const ahead = (8 - day.day()) % 7 || 7;
-	return day.add(ahead, "day").format("YYYY-MM-DD");
+	return day.add(ahead, "day").format(ISO_DATE_FORMAT);
 };
 
 /**
@@ -63,33 +64,11 @@ export const successorNameOf = (
 	t: TFunction,
 	language: string
 ): string => {
-	const hours = formatHours(next.weekMinutes, language);
-	const withHours = currentName.replace(/\d+([.,]\d+)?\s*h\b/, `${hours} h`);
+	const hours = durationShort(next.weekMinutes, t);
+	const withHours = currentName.replace(/\d+([.,]\d+)?\s*h\b/, hours);
 	if (withHours !== currentName) return withHours;
 	return t("employmentTerms.apply.successorName", {
 		name: currentName,
 		date: formatDate(fromDate, language),
 	});
-};
-
-/**
- * A part-time Employment type on terms that are not part-time, or the
- * reverse: worth a warning, never a refusal. Their own week counts when they
- * have one. Nothing is said when the company has no part-time line.
- */
-export const partTimeMismatch = (
-	employmentType: string | null,
-	termsWeekMinutes: number,
-	contractedWeekMinutes: number | null,
-	partTimeBelowMinutes: number | null
-): "partTimeOnFullTerms" | "fullTimeOnPartTerms" | undefined => {
-	if (partTimeBelowMinutes === null) return undefined;
-	const partTerms = isPartTimeWeek(
-		contractedWeekMinutes ?? termsWeekMinutes,
-		partTimeBelowMinutes
-	);
-	if (employmentType === "PART_TIME" && !partTerms)
-		return "partTimeOnFullTerms";
-	if (employmentType === "FULL_TIME" && partTerms) return "fullTimeOnPartTerms";
-	return undefined;
 };

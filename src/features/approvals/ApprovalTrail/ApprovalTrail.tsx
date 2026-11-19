@@ -73,7 +73,8 @@ const openSince = (
  * A submission's steps, first to last, with the open one after the decided
  * ones: each step's number, name and status in words, who decided and when,
  * and their comment; a skipped step names who approved it with the next one. The open step says whose turn it is and since when; an "all of
- * them" step counts its approvals and lists each named person.
+ * them" step counts its approvals and lists each named person. The submitter, whom the API never lets decide their
+ * own submission, is never named or counted as one being waited on; a step nobody may decide says so.
  */
 export const ApprovalTrail = ({
 	instance,
@@ -93,26 +94,35 @@ export const ApprovalTrail = ({
 		step.decisions.find(
 			(decision) => decision.decidedBy?.membershipId === member.membershipId
 		);
+	/** A step's named people who may decide it: never its submitter, whom the API refuses. */
+	const decidersOf = (step: ApprovalInstanceStep): Array<ApprovalParticipant> =>
+		step.members.filter(
+			(member) => member.membershipId !== instance.requestedBy?.membershipId
+		);
 	const waitingOn = (step: ApprovalInstanceStep): Array<ApprovalParticipant> =>
-		step.members.filter((member) => !decisionOf(step, member));
+		decidersOf(step).filter((member) => !decisionOf(step, member));
 	const eachPerson = (step: ApprovalInstanceStep): boolean =>
-		step.rule === "MEMBERS" && step.quorum === "ALL" && step.members.length > 1;
+		step.rule === "MEMBERS" &&
+		step.quorum === "ALL" &&
+		decidersOf(step).length > 1;
 
-	/** The open step's word: whose turn, or for "all of them", how many approved. */
+	/**
+	 * The open step's word: whose turn, or for "all of them", how many approved. Without anyone named left to wait
+	 * on, the API's count of who may decide now says it, nobody included.
+	 */
 	const openWord = (step: ApprovalInstanceStep): string => {
 		if (instance.canDecide === true) return t(`${key}.waitingOnYou`);
+		if (instance.eligibleCount === 0) return t(`${key}.nobodyCanDecide`);
 		if (eachPerson(step))
 			return t(`${key}.approvedOf`, {
-				count: step.members.length - waitingOn(step).length,
-				total: step.members.length,
+				count: decidersOf(step).length - waitingOn(step).length,
+				total: decidersOf(step).length,
 			});
-		if (step.rule === "MEMBERS") {
-			const left = waitingOn(step);
-			const only = left.length === 1 ? left[0] : undefined;
-			return only
-				? t(`${key}.waitingOnName`, { name: nameOf(only) })
-				: t(`${key}.waitingOnPeople`, { count: left.length });
-		}
+		const left = step.rule === "MEMBERS" ? waitingOn(step) : [];
+		const only = left.length === 1 ? left[0] : undefined;
+		if (only) return t(`${key}.waitingOnName`, { name: nameOf(only) });
+		if (left.length > 1)
+			return t(`${key}.waitingOnPeople`, { count: left.length });
 		return instance.eligibleCount === null
 			? t(`${key}.waiting`)
 			: t(`${key}.waitingOnPeople`, { count: instance.eligibleCount });
@@ -135,6 +145,11 @@ export const ApprovalTrail = ({
 	};
 	/** Who may decide a step nobody has decided yet, and, while it is open, since when. */
 	const whoDecides = (step: ApprovalInstanceStep, open: boolean): string => {
+		// Named people of whom only the submitter is left: nobody to name.
+		if (step.rule === "MEMBERS" && decidersOf(step).length === 0)
+			return open
+				? t(`${key}.sinceOnly`, { at: formatMoment(openSince(instance, step)) })
+				: t(`${key}.nobodyCanDecide`);
 		const who =
 			step.rule === "KEY_HOLDERS"
 				? t(
@@ -143,7 +158,7 @@ export const ApprovalTrail = ({
 							: `${key}.anyoneWhoCanPublish`,
 						{ department: departmentName }
 					)
-				: step.members.map(nameOf).join(", ");
+				: decidersOf(step).map(nameOf).join(", ");
 		return open
 			? t(`${key}.since`, {
 					who,
@@ -161,10 +176,11 @@ export const ApprovalTrail = ({
 			: whoDecides(step, open);
 	/** An "all of them" step's people: decided ones each on a row, the waiting ones folded once there are many. */
 	const people = (step: ApprovalInstanceStep): FunctionComponent => {
+		const deciders = decidersOf(step);
 		const waiting = waitingOn(step);
-		const decided = step.members.filter((member) => decisionOf(step, member));
-		const folds = step.members.length > LISTED_PEOPLE && waiting.length > 2;
-		const shown = folds ? decided : step.members;
+		const decided = deciders.filter((member) => decisionOf(step, member));
+		const folds = deciders.length > LISTED_PEOPLE && waiting.length > 2;
+		const shown = folds ? decided : deciders;
 		return (
 			<ul className="flex flex-col gap-1 text-neutral-700">
 				{shown.map((member) => {

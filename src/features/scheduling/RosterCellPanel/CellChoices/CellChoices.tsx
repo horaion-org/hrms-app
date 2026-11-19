@@ -4,7 +4,7 @@ import type { FunctionComponent } from "@/common/types";
 import { RadioCard } from "@/components/forms/RadioCard";
 import { Select } from "@/components/forms/Select";
 import { dayTypeLabel } from "@/features/scheduling/dayTypes";
-import { formatTimeRange } from "@/features/scheduling/formatShift";
+import { formatTimeRange } from "@/features/scheduling/shifts/formatShift";
 import {
 	assignmentCell,
 	rosterCellText,
@@ -129,13 +129,13 @@ export const CellChoices = ({
 						<p className="text-sm text-neutral-800">
 							{t(`${key}.notAvailable`, {
 								count: partners.unavailable.length,
-								names: partners.unavailable
-									.map(
+								names: t("scheduling.constraints.list", {
+									items: partners.unavailable.map(
 										(row) =>
 											row.member?.displayName ??
 											t("scheduling.detail.formerMember")
-									)
-									.join(", "),
+									),
+								}),
 							})}
 						</p>
 					)}

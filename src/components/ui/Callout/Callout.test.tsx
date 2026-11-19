@@ -31,4 +31,31 @@ describe("Callout", () => {
 			"bg-warning-50"
 		);
 	});
+
+	it("given_theNeutralTone_when_rendered_then_readsInGrey", () => {
+		render(<Callout tone="neutral">Changed since this list was made</Callout>);
+
+		expect(screen.getByRole("note")).toHaveClass(
+			"border-neutral-400",
+			"bg-neutral-100"
+		);
+	});
+
+	it("given_theSuccessTone_when_rendered_then_confirmsInSuccessColours", () => {
+		render(<Callout tone="success">Validated: no rule broken</Callout>);
+
+		expect(screen.getByRole("note")).toHaveClass(
+			"border-success-400",
+			"bg-success-50"
+		);
+	});
+
+	it("given_theErrorTone_when_rendered_then_namesWhatBlocksInErrorColours", () => {
+		render(<Callout tone="error">2 constraints need attention.</Callout>);
+
+		expect(screen.getByRole("note")).toHaveClass(
+			"border-error-400",
+			"bg-error-50"
+		);
+	});
 });

@@ -23,7 +23,12 @@ const meta = {
 	title: "Features/Settings/ApprovalsSettings",
 	component: ApprovalsSettings,
 	parameters: { layout: "padded" },
-	args: { companyId: COMPANY, canRead: true, canManage: true },
+	args: {
+		companyId: COMPANY,
+		canRead: true,
+		canManage: true,
+		subject: "SCHEDULE_PUBLICATION",
+	},
 	decorators: [storyProviders(client)],
 	beforeEach: ({ parameters }): void => {
 		client.setQueryData(
@@ -69,11 +74,12 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Rosters: the company default and Front Office's two-step flow; leave: no flow yet. Editable. */
+/** Roster approvals: the company default and Front Office's two-step flow. Editable. */
 export const Editable: Story = {};
 
-/** Both subjects set up: rosters as above, leave by Manager then HR for the whole company. */
-export const BothSubjects: Story = {
+/** Leave approvals: leave by Manager then HR for the whole company; the roster flows are not shown. */
+export const LeaveApprovals: Story = {
+	args: { subject: "LEAVE_REQUEST" },
 	parameters: {
 		flows: [companyFlowFixture(), approvalFlowFixture(), leaveFlowFixture()],
 	},
@@ -89,7 +95,7 @@ export const ReadOnly: Story = {
 	args: { canManage: false },
 };
 
-/** No flow: rosters publish and leave is decided in one step. */
+/** No flow: rosters publish in one step. */
 export const Empty: Story = {
 	parameters: { flows: [] },
 };

@@ -1,5 +1,7 @@
+import type { TimeOffBalance } from "@/features/employmentTerms/timeOffBalance";
 import type {
 	EmploymentTerms,
+	PayFields,
 	MemberTerms,
 	TermsOverview,
 	TermsOverviewItem,
@@ -10,11 +12,27 @@ import type {
 /** The part-time line the fixtures' company has: 35 h a week. */
 export const PART_TIME_BELOW_MINUTES = 2100;
 
-/** The figures the API reads terms against: 35 h line, 44 h full-time week, 12 h longest day. */
+/** The figures the API reads terms against: 35 h line, 44 h full-time week, 12 h longest day, the Act's rates. */
 export const REFERENCE: TermsReference = {
 	partTimeBelowMinutes: PART_TIME_BELOW_MINUTES,
 	fullTimeWeekMinutes: 2640,
 	maxNormalDayMinutes: 720,
+	minimumCoveredOvertimePercent: 150,
+	usualRestDayWorkPercent: 200,
+	timeOffPerExtraHourPercent: 100,
+	coveredPayLines: {
+		currency: "SGD",
+		workmanMonthly: 4500,
+		otherStaffMonthly: 2600,
+	},
+};
+
+/** What new terms pay: overtime at 1.5 times, rest day work at 2, a day off as normal hours, paid at a rate. */
+export const DEFAULT_PAY: PayFields = {
+	overtimePercent: 150,
+	restDayWorkPercent: 200,
+	dayOffWorkPercent: null,
+	extraHoursPaidAs: "RATE",
 };
 
 /** The seeded Default: 6 days, 44 h, a rest day set on the roster. */
@@ -29,8 +47,8 @@ export const STANDARD_WEEK: TermsOverviewItem = {
 	dayMinutes: null,
 	restDay: "ROSTERED",
 	dailyOvertime: false,
-	shiftWork: false,
 	hoursLimitsApply: true,
+	...DEFAULT_PAY,
 	// Everyone is backfilled onto the Default, so it is held like any terms.
 	holderCount: 64,
 	scheduledCount: 0,
@@ -47,8 +65,8 @@ export const FIVE_DAY_WEEK: TermsOverviewItem = {
 	dayMinutes: 528,
 	restDay: "SUN",
 	dailyOvertime: true,
-	shiftWork: false,
 	hoursLimitsApply: true,
+	...DEFAULT_PAY,
 	holderCount: 0,
 	scheduledCount: 0,
 };
@@ -61,11 +79,11 @@ export const SIX_DAY_SHIFT: TermsOverviewItem = {
 	isDefault: false,
 	daysPerWeek: 6,
 	weekMinutes: 2640,
-	dayMinutes: 720,
+	dayMinutes: 440,
 	restDay: "ROSTERED",
 	dailyOvertime: false,
-	shiftWork: true,
 	hoursLimitsApply: true,
+	...DEFAULT_PAY,
 	holderCount: 41,
 	scheduledCount: 2,
 };
@@ -81,8 +99,8 @@ export const PART_TIME_20: TermsOverviewItem = {
 	dayMinutes: 240,
 	restDay: "ROSTERED",
 	dailyOvertime: true,
-	shiftWork: false,
 	hoursLimitsApply: true,
+	...DEFAULT_PAY,
 	holderCount: 9,
 	scheduledCount: 0,
 };
@@ -91,31 +109,65 @@ export const TERMS_OVERVIEW: TermsOverview = {
 	terms: [STANDARD_WEEK, FIVE_DAY_WEEK, SIX_DAY_SHIFT, PART_TIME_20],
 };
 
-/** The presets route's answer: the country's figures and two common weeks (no figure lives in the app). */
+/** The presets route's answer: the country's figures and the five starting points (no figure lives in the app). */
 export const TERMS_PRESETS: TermsPresets = {
 	...REFERENCE,
 	presets: [
 		{
-			key: "FIVE_DAY",
-			name: "Five-day week, 44 h",
+			key: "FULL_TIME_5_DAYS",
+			name: "Full-time, 5 days",
 			daysPerWeek: 5,
 			weekMinutes: 2640,
 			dayMinutes: 528,
 			restDay: "SUN",
 			dailyOvertime: true,
-			shiftWork: false,
 			hoursLimitsApply: true,
+			...DEFAULT_PAY,
 		},
 		{
-			key: "SIX_DAY_SHIFT",
-			name: "Six-day shift, 12 h",
+			key: "FULL_TIME_5_AND_HALF_DAYS",
+			name: "Full-time, 5½ days",
+			daysPerWeek: 5.5,
+			weekMinutes: 2640,
+			dayMinutes: 480,
+			restDay: "SUN",
+			dailyOvertime: true,
+			hoursLimitsApply: true,
+			...DEFAULT_PAY,
+		},
+		{
+			key: "FULL_TIME_6_DAYS",
+			name: "Full-time, 6 days",
 			daysPerWeek: 6,
 			weekMinutes: 2640,
-			dayMinutes: 720,
+			dayMinutes: 440,
 			restDay: "ROSTERED",
 			dailyOvertime: false,
-			shiftWork: true,
 			hoursLimitsApply: true,
+			...DEFAULT_PAY,
+		},
+		{
+			key: "PART_TIME_20_H",
+			name: "Part-time, 20 h",
+			daysPerWeek: null,
+			weekMinutes: 1200,
+			dayMinutes: null,
+			restDay: "ROSTERED",
+			dailyOvertime: false,
+			hoursLimitsApply: true,
+			...DEFAULT_PAY,
+		},
+		{
+			key: "MANAGERS",
+			name: "Managers and executives",
+			daysPerWeek: 5,
+			weekMinutes: 2640,
+			dayMinutes: 528,
+			restDay: "SUN",
+			dailyOvertime: false,
+			hoursLimitsApply: false,
+			...DEFAULT_PAY,
+			extraHoursPaidAs: "NOTHING",
 		},
 	],
 };
@@ -146,16 +198,15 @@ export const MEMBER_TERMS: MemberTerms = {
 		basis: "ASSIGNED",
 		daysPerWeek: 6,
 		weekMinutes: 2640,
-		dayMinutes: 720,
+		dayMinutes: 440,
 		restDay: "ROSTERED",
 		dailyOvertime: false,
-		shiftWork: true,
 		hoursLimitsApply: true,
+		...DEFAULT_PAY,
 		contractedWeekMinutes: null,
 		contractedDayMinutes: null,
 		since: "2025-03-01",
 	},
-	mismatch: null,
 	history: [
 		{
 			id: "entry-upcoming",
@@ -196,13 +247,12 @@ export const MEMBER_ON_STANDARD: MemberTerms = {
 		dayMinutes: null,
 		restDay: "ROSTERED",
 		dailyOvertime: false,
-		shiftWork: false,
 		hoursLimitsApply: true,
+		...DEFAULT_PAY,
 		contractedWeekMinutes: null,
 		contractedDayMinutes: null,
 		since: "2024-06-03",
 	},
-	mismatch: null,
 	history: [
 		{
 			id: "entry-backfill",
@@ -219,3 +269,20 @@ export const MEMBER_ON_STANDARD: MemberTerms = {
 	],
 	reference: REFERENCE,
 };
+
+/** Mei's time off (the design's example): 4 h earned the week of 16 Nov 2026, then a half day of Off in lieu taken. */
+export const timeOffBalanceFixture = (
+	overrides: Partial<TimeOffBalance> = {}
+): TimeOffBalance => ({
+	balanceMinutes: 240,
+	entries: [
+		{ kind: "EARNED", weekStart: "2026-11-16", minutes: 480 },
+		{
+			kind: "TAKEN",
+			leaveRequestId: "lr-1",
+			date: "2026-11-27",
+			minutes: -240,
+		},
+	],
+	...overrides,
+});

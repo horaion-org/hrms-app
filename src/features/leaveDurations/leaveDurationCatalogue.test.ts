@@ -43,15 +43,19 @@ describe("movedOrder", () => {
 });
 
 describe("statusToggleBody", () => {
-	it("switches an active duration off, sending its times and reach back", () => {
+	it("switches an active duration off, sending its times, shift choice and reach back", () => {
 		expect(
 			statusToggleBody(
-				managedLeaveDurationFixture({ appliesToDepartments: [KITCHEN_REACH] })
+				managedLeaveDurationFixture({
+					allowsShiftSameDay: false,
+					appliesToDepartments: [KITCHEN_REACH],
+				})
 			)
 		).toEqual({
 			name: "Morning",
 			startTime: "09:00",
 			endTime: "13:00",
+			allowsShiftSameDay: false,
 			appliesToBranchIds: [],
 			appliesToDepartmentIds: ["d-kitchen"],
 			status: "INACTIVE",

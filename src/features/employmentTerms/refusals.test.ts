@@ -80,11 +80,9 @@ describe("termsSaveRefusal", () => {
 		["name", "name", "employmentTerms.dialog.rejected"],
 		["description", "description", "employmentTerms.dialog.descriptionLength"],
 		["daysPerWeek", "daysPerWeek", "employmentTerms.dialog.daysInvalid"],
-		["dayMinutes", "dayHours", "employmentTerms.dialog.dayRejected"],
 		["weekMinutes", "weekHours", "employmentTerms.dialog.weekRejected"],
 		["restDay", "restWeekday", "employmentTerms.dialog.restDayRequired"],
-		["dailyOvertime", "dayHours", "employmentTerms.dialog.dailyNeedsDay"],
-		["shiftWork", "dayHours", "employmentTerms.dialog.shiftNoDaily"],
+		["dailyOvertime", "daysPerWeek", "employmentTerms.dialog.dailyNeedsDays"],
 	] as const)("places the API's %s rule on %s", (apiField, field, key) => {
 		expect(
 			termsSaveRefusal(problem(400, undefined, [apiField]), "Full time", t)

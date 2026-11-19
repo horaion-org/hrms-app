@@ -6,18 +6,20 @@ import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
+import { ErrorText } from "@/components/ui/ErrorText";
 import {
 	ArrowLeftIcon,
 	ArrowRightIcon,
 	GenerateScheduleIcon,
 } from "@/components/ui/Icon";
-import { Stepper, StepperStep } from "@/components/ui/Stepper";
 import { Toast } from "@/components/ui/Toast";
 import { placeOf } from "@/features/organisation/assignmentTargets";
 import { useConstraintOptions } from "@/features/scheduling/constraints/useConstraintOptions";
-import { departmentUnitOf } from "@/features/scheduling/departmentUnit";
-import { ForecastStep } from "@/features/scheduling/ForecastStep";
-import { GenerateStep } from "@/features/scheduling/GenerateStep";
+import { departmentUnitOf } from "@/features/scheduling/departmentSetup/departmentUnit";
+import { ForecastStep } from "@/features/scheduling/createSchedule/ForecastStep";
+import { forecastStepPropsOf } from "@/features/scheduling/createSchedule/forecastStepProps";
+import { GenerateStep } from "@/features/scheduling/createSchedule/GenerateStep";
+import { ScheduleStepper } from "@/features/scheduling/createSchedule/ScheduleStepper";
 import {
 	publishedRosterOtherThan,
 	publishedWeekQuery,
@@ -30,14 +32,12 @@ import {
 	handChangedCoveredWeeks,
 	refusedWeeks,
 } from "@/features/scheduling/months/monthGeneration";
-import {
-	formatMonthName,
-	monthOf,
-} from "@/features/scheduling/months/monthWeeks";
+import { formatMonth, monthOf } from "@/features/scheduling/months/monthWeeks";
+import { weekChangedRefusal } from "@/features/scheduling/months/monthCopy";
 import { withRefusedWeeks } from "@/features/scheduling/months/refusedWeeksState";
 import { useGenerateMonth } from "@/features/scheduling/months/useGenerateMonth";
 import { PublishedWeekCallout } from "@/features/scheduling/publishedWeek/PublishedWeekCallout";
-import { RegenerateMonthDialog } from "@/features/scheduling/RegenerateMonthDialog";
+import { RegenerateMonthDialog } from "@/features/scheduling/months/RegenerateMonthDialog";
 import { StartingContextSection } from "@/features/scheduling/startingContext/StartingContextSection";
 import {
 	defaultPeriod,
@@ -54,12 +54,12 @@ import {
 	summarise,
 	tickedConstraintsOf,
 	tickedOf,
-	type ScheduleSetup,
 } from "@/features/scheduling/scheduleDraft";
-import type {
-	ScheduleBody,
-	ScheduleStatus,
-} from "@/features/scheduling/schedules/api";
+import {
+	draftProblemKey,
+	frozenNoticeKey,
+} from "@/features/scheduling/schedules/draftNotices";
+import { scheduleBodyOf } from "@/features/scheduling/schedules/scheduleBody";
 import {
 	monthGenerationRefusal,
 	scheduleRefusal,
@@ -68,27 +68,20 @@ import {
 import {
 	useSchedule,
 	useScheduleActions,
-	type ScheduleState,
 } from "@/features/scheduling/schedules/useSchedule";
 import { useScheduleConstraints } from "@/features/scheduling/schedules/useScheduleConstraints";
 import { useScheduleShifts } from "@/features/scheduling/schedules/useScheduleShifts";
 import {
 	ScheduleSetupStep,
 	type SetupFieldErrors,
-} from "@/features/scheduling/ScheduleSetupStep";
-import type { ScheduleSetupValues } from "@/features/scheduling/setupSchema";
-import {
-	fixLinkOf,
-	gateOf,
-	type Gate,
-} from "@/features/scheduling/readiness/readinessCopy";
-import {
-	ReadinessGateCallout,
-	type FixLink,
-} from "@/features/scheduling/readiness/ReadinessGateCallout";
+} from "@/features/scheduling/createSchedule/ScheduleSetupStep";
+import type { ScheduleSetupValues } from "@/features/scheduling/createSchedule/setupSchema";
+import { gateOf } from "@/features/scheduling/readiness/readinessCopy";
+import { ReadinessGateCallout } from "@/features/scheduling/readiness/ReadinessGateCallout";
+import { setupLinksOf } from "@/features/scheduling/readiness/setupLinks";
 import { useSchedulingReadiness } from "@/features/scheduling/readiness/useSchedulingReadiness";
-import { StepActions } from "@/features/scheduling/StepActions";
-import { stepCompletion } from "@/features/scheduling/stepCompletion";
+import { StepActions } from "@/features/scheduling/createSchedule/StepActions";
+import { stepCompletion } from "@/features/scheduling/createSchedule/stepCompletion";
 import { isScheduleStep, SCHEDULE_STEPS } from "@/features/scheduling/steps";
 import {
 	allOf,
@@ -97,11 +90,8 @@ import {
 	weekChoiceProblem,
 	type WeekChoiceIds,
 } from "@/features/scheduling/weekChoice";
-import { WeekChoiceDialog } from "@/features/scheduling/WeekChoiceDialog";
-import {
-	WeekChoiceSummary,
-	type SetupLink,
-} from "@/features/scheduling/WeekChoiceSummary";
+import { WeekChoiceDialog } from "@/features/scheduling/createSchedule/WeekChoiceDialog";
+import { WeekChoiceSummary } from "@/features/scheduling/WeekChoiceSummary";
 import { workspaceQuery } from "@/features/workspace/api";
 import {
 	SCHEDULE_READ_KEYS,
@@ -111,47 +101,6 @@ import { retry } from "@/features/workspace/retry";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 import { departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
-
-/** What saving a schedule sends: its setup and the ticked shifts and constraints, each the whole set. */
-const bodyOf = (
-	setup: ScheduleSetup,
-	includedShiftIds: Array<string>,
-	includedConstraintIds: Array<string>
-): ScheduleBody => ({
-	name: setup.name,
-	periodStart: setup.periodStart,
-	includeLeave: setup.includeLeave,
-	allowOpenShifts: setup.allowOpenShifts,
-	includedShiftIds,
-	includedConstraintIds,
-});
-
-/** The copy a draft that can't be shown is explained with. */
-const draftProblemKey = (
-	status: ScheduleState["status"]
-):
-	| "scheduling.draft.loading"
-	| "scheduling.draft.missing"
-	| "scheduling.draft.failed" => {
-	if (status === "error") return "scheduling.draft.failed";
-	if (status === "hidden" || status === "missing")
-		return "scheduling.draft.missing";
-	return "scheduling.draft.loading";
-};
-
-/** What a frozen schedule's notice says: generation requested, failed, or done (also once decided). */
-const frozenNoticeKey = (
-	status: ScheduleStatus
-):
-	| "scheduling.draft.generationRequested"
-	| "scheduling.draft.generated"
-	| "scheduling.draft.generationFailed" => {
-	if (status === "GENERATION_REQUESTED")
-		return "scheduling.draft.generationRequested";
-	if (status === "GENERATION_FAILED")
-		return "scheduling.draft.generationFailed";
-	return "scheduling.draft.generated";
-};
 
 /**
  * The Create Schedule steps: Setup, Forecast and Generate. The URL names the
@@ -311,13 +260,6 @@ export const CreateSchedule = (): FunctionComponent => {
 	const notify = (message: string): void => {
 		setToast((previous) => ({ id: (previous?.id ?? 0) + 1, message }));
 	};
-	const changeAllocation = (
-		shiftId: string,
-		jobTitleId: string,
-		allocated: number
-	): void => {
-		dispatch({ type: "allocationChanged", shiftId, jobTitleId, allocated });
-	};
 
 	const current = SCHEDULE_STEPS.indexOf(step);
 	if (current > 0 && named === undefined)
@@ -381,7 +323,7 @@ export const CreateSchedule = (): FunctionComponent => {
 				await scheduleActions.update.mutateAsync({
 					unit: saved,
 					scheduleId: saved.scheduleId,
-					body: bodyOf(setup, ticked, tickedConstraints),
+					body: scheduleBodyOf(setup, ticked, tickedConstraints, answered),
 				});
 			dispatch({ type: "setupSaved", setup });
 			goTo(1);
@@ -399,7 +341,7 @@ export const CreateSchedule = (): FunctionComponent => {
 			await scheduleActions.update.mutateAsync({
 				unit: saved,
 				scheduleId: saved.scheduleId,
-				body: bodyOf(draft.setup, ticked, tickedConstraints),
+				body: scheduleBodyOf(draft.setup, ticked, tickedConstraints, answered),
 			});
 			return true;
 		} catch (error) {
@@ -430,14 +372,12 @@ export const CreateSchedule = (): FunctionComponent => {
 			setConfirmingRegenerate(true);
 			return;
 		}
-		try {
-			await showMonth(await monthGeneration.generate());
-		} catch (error) {
-			setProblem(monthGenerationRefusal(error, t));
-		}
+		// A refusal shows from monthGeneration.error, worded with the month as it is read again.
+		await monthGeneration.generate().then(showMonth, () => undefined);
 	};
 	const included = includedShifts({ includedShiftIds: ticked }, shiftRows);
 	const summary = summarise(included, draft.allocations);
+	const forecastProps = forecastStepPropsOf(draft, dispatch, included);
 	const next = (): void => {
 		goTo(current + 1);
 	};
@@ -449,7 +389,6 @@ export const CreateSchedule = (): FunctionComponent => {
 		name: "",
 		periodStart: firstPeriod.start,
 		includeLeave: true,
-		allowOpenShifts: false,
 	};
 	const chosenStart = draft.setup?.periodStart;
 	// A reopened draft's week may lie outside the offered ones.
@@ -458,7 +397,6 @@ export const CreateSchedule = (): FunctionComponent => {
 			? offered
 			: withPeriod(offered, chosenStart, today);
 	const period = chosenStart ? periodStartingOn(chosenStart) : firstPeriod;
-	const periodLabel = formatPeriod(period, formattingLocale(i18n));
 	const isLast = current === SCHEDULE_STEPS.length - 1;
 	// Each step is ticked for what the draft holds, not for being behind the current one.
 	const completion = stepCompletion({
@@ -494,46 +432,11 @@ export const CreateSchedule = (): FunctionComponent => {
 							frozen
 						)
 					: undefined;
-	// The Scheduling tab that edits the week's department, where its list may be read.
-	const weekUnit = saved;
-	const editLink = (
-		view: SetupLink["search"]["view"],
-		readKey: PermissionKey
-	): SetupLink | undefined =>
-		weekUnit && access.can(readKey, departmentScope(weekUnit.departmentId))
-			? {
-					to: "/scheduling",
-					search: {
-						view,
-						branch: weekUnit.branchId,
-						department: weekUnit.departmentId,
-					},
-				}
-			: undefined;
-	const editShifts = editLink("shifts", "shift:read");
-	const editConstraints = editLink("constraints", "constraint:read");
-	// Whether the person may add what the department lacks there.
-	const canFix = {
-		shifts:
-			weekUnit !== undefined &&
-			access.can("shift:create", departmentScope(weekUnit.departmentId)),
-		constraints:
-			weekUnit !== undefined &&
-			access.can("constraint:create", departmentScope(weekUnit.departmentId)),
-	};
-	// The tab that fixes the gate, carrying the way back; only where that tab may be read.
-	const fixLink = (
-		gate: Gate | undefined,
-		returnTo: Parameters<typeof fixLinkOf>[2]
-	): FixLink | undefined =>
-		gate?.linkTo &&
-		weekUnit &&
-		(gate.linkTo === "shifts" ? editShifts : editConstraints)
-			? {
-					to: "/scheduling",
-					search: fixLinkOf(gate.linkTo, weekUnit, returnTo),
-				}
-			: undefined;
+	// The Scheduling tabs that edit the saved draft's department, where its lists may be read.
+	const { editShifts, editConstraints, canFix, fixLink } = setupLinksOf(
+		saved,
+		allowed
+	);
 	// The week can be chosen from its lists while the setup can change.
 	const canChooseWeek =
 		!frozen && !weekListsHidden && (saved === undefined || canSave);
@@ -564,22 +467,25 @@ export const CreateSchedule = (): FunctionComponent => {
 		saved && !frozen && weekConstraints
 			? weekChoiceProblem(weekChoice, weekConstraints)
 			: undefined;
+	// A month with no week left to generate (published, over or being generated) has nothing to send.
+	const nothingToGenerate = monthGeneration.block === "nothingToGenerate";
 	const canGenerateWeek =
 		canGenerate &&
 		generateGate === undefined &&
 		weekProblem === undefined &&
+		!nothingToGenerate &&
 		scheduleMonth.data !== undefined;
 	// Generate says the same, with the week's problem above it, and "Change" goes back to Setup.
 	const generateWeekSummary = weekLine && (
 		<>
 			{weekProblem && (
-				<p className="mb-3 text-sm text-error-700" role="alert">
+				<ErrorText className="mb-3">
 					{t(
 						weekProblem === "noShift"
 							? "scheduling.week.noShift"
 							: "scheduling.week.noStaffing"
 					)}
-				</p>
+				</ErrorText>
 			)}
 			<WeekChoiceSummary
 				actionLabel={canChooseWeek ? t("scheduling.week.change") : undefined}
@@ -621,24 +527,24 @@ export const CreateSchedule = (): FunctionComponent => {
 				? t(generateGate.nextNoteKey, { department: generateGate.department })
 				: weekProblem
 					? t("scheduling.week.problemNote")
-					: canGenerate
-						? // The month is still being read: no note.
-							""
-						: t("scheduling.create.generateForbidden");
+					: nothingToGenerate
+						? t("scheduling.months.generate.nothingToGenerate", {
+								month: formatMonth(draftMonth, formattingLocale(i18n)),
+							})
+						: canGenerate
+							? // The month is still being read: no note.
+								""
+							: t("scheduling.create.generateForbidden");
 
 	return (
 		<>
 			{header}
 			{notice && <Callout className="mt-6">{notice}</Callout>}
-			<Stepper className="mt-12" currentStep={current} onStepClick={goTo}>
-				{SCHEDULE_STEPS.map((name) => (
-					<StepperStep
-						key={name}
-						completed={completion[name]}
-						label={t(`scheduling.create.steps.${name}`)}
-					/>
-				))}
-			</Stepper>
+			<ScheduleStepper
+				completion={completion}
+				current={current}
+				onStepClick={goTo}
+			/>
 			<div className="mt-12">
 				{step === "setup" && (
 					<ScheduleSetupStep
@@ -654,23 +560,7 @@ export const CreateSchedule = (): FunctionComponent => {
 					/>
 				)}
 				{step === "forecast" && (
-					<ForecastStep
-						allocations={draft.allocations}
-						demand={draft.demand}
-						mode={draft.forecastMode}
-						periodLabel={periodLabel}
-						shifts={included}
-						onAllocationChange={changeAllocation}
-						onAutoFill={() => {
-							dispatch({ type: "demandAutoFilled", shifts: included });
-						}}
-						onDemandChange={(slotStart, jobTitleId, staff) => {
-							dispatch({ type: "demandChanged", slotStart, jobTitleId, staff });
-						}}
-						onModeChange={(mode) => {
-							dispatch({ type: "forecastModeChosen", mode });
-						}}
-					/>
+					<ForecastStep {...forecastProps} periodLabel={weekPeriodLabel} />
 				)}
 				{step === "generate" && (
 					<GenerateStep
@@ -715,10 +605,20 @@ export const CreateSchedule = (): FunctionComponent => {
 					/>
 				)}
 			</div>
-			{problem && (
-				<p className="mt-6 text-sm text-error-700" role="alert">
-					{problem}
-				</p>
+			{problem && <ErrorText className="mt-6">{problem}</ErrorText>}
+			{monthGeneration.error && scheduleMonth.data && (
+				<ErrorText className="mt-6">
+					{monthGenerationRefusal(
+						monthGeneration.error,
+						t,
+						weekChangedRefusal(
+							monthGeneration.sentWeeks,
+							scheduleMonth.data,
+							formattingLocale(i18n),
+							t
+						)
+					)}
+				</ErrorText>
 			)}
 			<StepActions
 				busy={busy}
@@ -745,7 +645,7 @@ export const CreateSchedule = (): FunctionComponent => {
 			{isLast && canGenerateWeek && (
 				<p className="mt-3 text-right text-sm text-neutral-700">
 					{t("scheduling.months.generate.draftGeneratesMonth", {
-						month: formatMonthName(draftMonth, formattingLocale(i18n)),
+						month: formatMonth(draftMonth, formattingLocale(i18n)),
 					})}
 				</p>
 			)}

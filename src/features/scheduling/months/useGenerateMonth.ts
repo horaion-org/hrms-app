@@ -7,6 +7,7 @@ import {
 	type ScheduleMonth,
 } from "@/features/scheduling/months/api";
 import {
+	coveredMondaysOf,
 	generateMonthBody,
 	MONTH_SETUP_DEFAULTS,
 	type MonthChoices,
@@ -21,10 +22,12 @@ import { useAccess } from "@/features/workspace/useAccess";
 
 /**
  * Why Generate can't run for this month, besides the Department's readiness:
- * no `schedule:create` for the weeks it would make, the Department's shifts or
+ * no week left to generate (the API refuses an empty list), no
+ * `schedule:create` for the weeks it would make, the Department's shifts or
  * constraints unreadable, or still loading (no note is shown for that one).
  */
-export type GenerateBlock = "listsHidden" | "cannotCreate" | "listsLoading";
+export type GenerateBlock =
+	"nothingToGenerate" | "listsHidden" | "cannotCreate" | "listsLoading";
 
 /** What one Generate sends besides the month: the chosen weeks and the setup of the weeks it creates. */
 export type GenerateInput = { choices?: MonthChoices; setup?: MonthSetup };
@@ -36,21 +39,25 @@ export type GenerateMonth = {
 	error: Error | null;
 	/** The last answer, for the weeks it refused. */
 	answer: MonthGeneration | undefined;
-	/** Set when the month needs new weeks and they can't be made yet: see GenerateBlock. */
+	/** The Mondays the last run sent, to name a week that changed when it is refused. */
+	sentWeeks: ReadonlyArray<string>;
+	/** Set when there is no week to generate, or the month needs new weeks that can't be made yet: see GenerateBlock. */
 	block: GenerateBlock | undefined;
 };
 
 /**
  * Generates one Department's month through the month route: every Generate
- * and Regenerate in the app goes through here. "Everything" for a week the
- * run creates is the week wizard's `allOf` over the Department's live shifts
- * and constraints, read as the wizard reads them (only where `shift:read`
- * and `constraint:read` are held there). After the post, every scheduling
- * query reloads, as after any schedule write.
+ * and Regenerate in the app goes through here. It generates `chosenWeeks`
+ * (Mondays), or every covered week when none are given. "Everything" for a
+ * week the run creates is the week wizard's `allOf` over the Department's
+ * live shifts and constraints, read as the wizard reads them (only where
+ * `shift:read` and `constraint:read` are held there). After the post, every
+ * scheduling query reloads, as after any schedule write.
  */
 export const useGenerateMonth = (
 	companyId: string,
-	scheduleMonth: ScheduleMonth | undefined
+	scheduleMonth: ScheduleMonth | undefined,
+	chosenWeeks?: ReadonlyArray<string>
 ): GenerateMonth => {
 	const access = useAccess();
 	const unit = scheduleMonth && {
@@ -82,38 +89,49 @@ export const useGenerateMonth = (
 			generateMonth(companyId, month.departmentId, month.month, body),
 		onSettled: reload,
 	});
+	const chosen =
+		chosenWeeks ?? (scheduleMonth ? coveredMondaysOf(scheduleMonth) : []);
 	const createsWeeks =
-		scheduleMonth !== undefined && weeksToCreate(scheduleMonth).length > 0;
-	const block: GenerateBlock | undefined = !createsWeeks
-		? undefined
-		: access.status !== "ready"
-			? "listsLoading"
-			: scope === undefined || !access.can("schedule:create", scope)
-				? "cannotCreate"
-				: !readsShifts || !readsConstraints
-					? "listsHidden"
-					: everything === undefined
-						? "listsLoading"
-						: undefined;
+		scheduleMonth !== undefined &&
+		weeksToCreate(scheduleMonth, chosen).length > 0;
+	const block: GenerateBlock | undefined =
+		scheduleMonth !== undefined && chosen.length === 0
+			? "nothingToGenerate"
+			: !createsWeeks
+				? undefined
+				: access.status !== "ready"
+					? "listsLoading"
+					: scope === undefined || !access.can("schedule:create", scope)
+						? "cannotCreate"
+						: !readsShifts || !readsConstraints
+							? "listsHidden"
+							: everything === undefined
+								? "listsLoading"
+								: undefined;
 
 	return {
 		// The body is built from this render's lists, so a click after they load always sends "everything".
 		generate: (input: GenerateInput = {}): Promise<MonthGeneration> => {
 			if (!scheduleMonth)
 				return Promise.reject(new Error("no month to generate"));
+			// The pages turn Generate off first; this keeps an empty list from ever being sent.
+			if (chosen.length === 0)
+				return Promise.reject(new Error("no week to generate"));
 			return mutation.mutateAsync({
 				month: scheduleMonth,
 				body: generateMonthBody(
 					scheduleMonth,
 					input.choices ?? {},
 					everything,
-					input.setup ?? MONTH_SETUP_DEFAULTS
+					input.setup ?? MONTH_SETUP_DEFAULTS,
+					chosen
 				),
 			});
 		},
 		isPending: mutation.isPending,
 		error: mutation.error,
 		answer: mutation.data,
+		sentWeeks: mutation.variables?.body.weeks ?? [],
 		block,
 	};
 };

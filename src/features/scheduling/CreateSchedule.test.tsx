@@ -83,12 +83,11 @@ const ALL = [
 const DRAFT = scheduleFixture();
 const DRAFT_SHIFTS = scheduleShiftsFixture();
 /** A reopened draft lands here. */
-const REOPEN = "/scheduling/new?step=forecast&scheduleId=s-1&departmentId=d-1";
+const REOPEN = "/scheduling/new?step=generate&scheduleId=s-1&departmentId=d-1";
 const DRAFT_SETUP = {
 	name: "Front Office - Week 42",
 	periodStart: "2026-10-12",
 	includeLeave: true,
-	allowOpenShifts: false,
 };
 
 type Call = { method: string; path: string; search: string; body: unknown };
@@ -178,14 +177,14 @@ const open = async (
 	return { opened: app, calls };
 };
 
-/** Opens the saved draft s-1 on its Forecast step, once its step is shown. */
+/** Opens the saved draft s-1 on its Generate step, once its step is shown. */
 const reopen = async (
 	extra: Record<string, StubReply | Array<StubReply>> = {},
 	permissions: Array<string> | Workspace = ALL,
 	entry = REOPEN
 ): Promise<{ opened: OpenedApp; calls: Array<Call> }> => {
 	const opened = await open(entry, extra, permissions);
-	await screen.findByRole("region", { name: "Staffing forecast" });
+	await screen.findByRole("region", { name: "Ready to generate" });
 	return opened;
 };
 
@@ -205,16 +204,17 @@ const writes = (calls: Array<Call>): Array<string> =>
 
 const next = (): HTMLElement => screen.getByRole("button", { name: "Next" });
 
-const checkbox = (name: string): HTMLElement =>
-	screen.getByRole("checkbox", { name: `Select ${name}` });
-
-/** Clicks Next from Forecast until the Generate step is shown. */
-const toGenerate = async (
+/** From the Forecast step, with nothing entered unless the test did, Next to the Generate step. */
+const forecastToGenerate = async (
 	user: ReturnType<typeof userEvent.setup>
 ): Promise<void> => {
+	await screen.findByRole("region", { name: "Staffing forecast" });
 	await user.click(next());
 	await screen.findByRole("region", { name: "Ready to generate" });
 };
+
+const checkbox = (name: string): HTMLElement =>
+	screen.getByRole("checkbox", { name: `Select ${name}` });
 
 /** Grants each key only at the Department it names, as a Department-level role would. */
 const grantedAt = (grants: Record<string, Array<string>>): Workspace => {
@@ -224,6 +224,12 @@ const grantedAt = (grants: Record<string, Array<string>>): Workspace => {
 			department.permissions.push(...(grants[department.uuid] ?? []));
 	return workspace;
 };
+
+/** A shift table's rows of shifts, leaving out its header row and its group headings. */
+const shiftRowsIn = (table: HTMLElement): Array<HTMLElement> =>
+	within(table)
+		.getAllByRole("row")
+		.filter((row) => within(row).queryAllByRole("columnheader").length === 0);
 
 describe("Create Schedule: the URL", () => {
 	/** The route's own search validator, as the router runs it. */
@@ -244,6 +250,29 @@ describe("Create Schedule: the URL", () => {
 		});
 	});
 
+	it("given_datesToPreFill_when_parsed_then_keepsThemAndDropsMalformedOnes", () => {
+		expect(
+			parseCreateScheduleSearch({
+				department: "d-1",
+				for: "dates",
+				firstDay: "2026-11-22",
+				lastDay: "2026-11-22",
+			})
+		).toEqual({
+			department: "d-1",
+			for: "dates",
+			firstDay: "2026-11-22",
+			lastDay: "2026-11-22",
+		});
+		expect(
+			parseCreateScheduleSearch({
+				for: "weeks",
+				firstDay: "22 Nov",
+				lastDay: 3,
+			})
+		).toEqual({});
+	});
+
 	it("given_aMalformedDepartmentOrWeek_when_parsed_then_dropsThem", () => {
 		expect(
 			parseCreateScheduleSearch({ department: "", week: "16-11" })
@@ -256,14 +285,12 @@ describe("Create Schedule: opening and setup", () => {
 		const user = userEvent.setup();
 		const { opened } = await open("/scheduling");
 
-		await user.click(
-			await screen.findByRole("link", { name: "Create schedule" })
-		);
+		await user.click(await screen.findByRole("link", { name: "Generate" }));
 		// The shell's first navigation into the wizard outlasts the default wait.
 		expect(
 			await screen.findByRole(
 				"heading",
-				{ level: 1, name: "Create schedule" },
+				{ level: 1, name: "Generate" },
 				{ timeout: 10_000 }
 			)
 		).toBeVisible();
@@ -274,7 +301,7 @@ describe("Create Schedule: opening and setup", () => {
 			screen.getByRole("region", { name: "Schedule setup" })
 		).toBeVisible();
 		expect(
-			screen.getByRole("link", { name: "Back to overview" })
+			screen.getByRole("link", { name: "Back to Scheduling" })
 		).toHaveAttribute("href", "/scheduling");
 	});
 
@@ -287,11 +314,11 @@ describe("Create Schedule: opening and setup", () => {
 				name: "Scheduling",
 			})
 		).toBeVisible();
-		expect(screen.queryByRole("link", { name: "Create schedule" })).toBeNull();
+		expect(screen.queryByRole("link", { name: "Generate" })).toBeNull();
 	});
 
 	it("given_aLaterStepWithoutADraft_when_linkedTo_then_returnsToSetup", async () => {
-		const { opened } = await open("/scheduling/new?step=forecast");
+		const { opened } = await open("/scheduling/new?step=generate");
 
 		expect(
 			await screen.findByRole("region", { name: "Schedule setup" })
@@ -302,7 +329,7 @@ describe("Create Schedule: opening and setup", () => {
 
 	it("given_aScheduleIdWithoutItsDepartment_when_linkedTo_then_returnsToSetup", async () => {
 		const { opened, calls } = await open(
-			"/scheduling/new?step=forecast&scheduleId=s-1"
+			"/scheduling/new?step=generate&scheduleId=s-1"
 		);
 
 		expect(
@@ -340,6 +367,33 @@ describe("Create Schedule: opening and setup", () => {
 			},
 		]);
 		expect(sent(calls, `POST ${SCHEDULES}`)).toEqual([]);
+	});
+
+	it("given_aChosenPeoplePartOfAWeek_when_setupCompletedAgain_then_thePutKeepsItsPeopleAndDays", async () => {
+		const user = userEvent.setup();
+		const part = scheduleFixture({
+			coveredFrom: "2026-10-15",
+			memberProfileIds: ["m-1", "m-2"],
+		});
+		const { calls } = await open(
+			"/scheduling/new?step=setup&scheduleId=s-1&departmentId=d-1",
+			{ [`GET ${SCHEDULE}`]: reply(part), [`PUT ${SCHEDULE}`]: reply(part) }
+		);
+		await screen.findByRole("textbox", { name: /Schedule name/ });
+
+		await user.click(next());
+
+		await screen.findByRole("region", { name: "Staffing forecast" });
+		expect(sent(calls, `PUT ${SCHEDULE}`)).toEqual([
+			{
+				...DRAFT_SETUP,
+				coveredFrom: "2026-10-15",
+				coveredTo: "2026-10-18",
+				includedShiftIds: INCLUDED_SHIFT_IDS,
+				includedConstraintIds: INCLUDED_CONSTRAINT_IDS,
+				memberProfileIds: ["m-1", "m-2"],
+			},
+		]);
 	});
 });
 
@@ -463,9 +517,7 @@ describe("Create Schedule: a reopened draft", () => {
 			name: /^What .+ uses$/,
 		});
 		const table = within(dialog).getByRole("table", { name: "Shifts" });
-		expect(within(table).getAllByRole("row")).toHaveLength(
-			SHIFT_FIXTURES.length + 1
-		);
+		expect(shiftRowsIn(table)).toHaveLength(SHIFT_FIXTURES.length);
 		for (const shift of SHIFT_FIXTURES)
 			if (INCLUDED_SHIFT_IDS.includes(shift.shiftId))
 				expect(checkbox(shift.name)).toBeChecked();
@@ -473,9 +525,12 @@ describe("Create Schedule: a reopened draft", () => {
 		expect(calls.map((call) => `${call.method} ${call.path}`)).toEqual(
 			expect.arrayContaining([`GET ${SCHEDULE}`, `GET ${SCHEDULE_SHIFTS}`])
 		);
-		// A tab per group, above the table.
-		const tabs = within(dialog).getByRole("tablist", { name: "Shift types" });
-		expect(within(tabs).getAllByRole("tab")).toHaveLength(6);
+		// A heading per group, in the table.
+		expect(
+			within(table)
+				.getAllByRole("columnheader")
+				.filter((header) => header.getAttribute("scope") === "colgroup")
+		).toHaveLength(new Set(SHIFT_FIXTURES.map((shift) => shift.group)).size);
 	});
 
 	it("given_aGeneratedSchedule_when_reopenedAtSetup_then_itsDoneStepsAreTickedAheadButNotJumpedTo", async () => {
@@ -499,7 +554,7 @@ describe("Create Schedule: a reopened draft", () => {
 		expect(within(steps).queryByRole("button")).not.toBeInTheDocument();
 	});
 
-	it("given_aDraftOnItsForecast_when_setupIsChosen_then_itIsTickedAndCanBeReturnedTo", async () => {
+	it("given_aDraftOnItsGenerate_when_setupIsChosen_then_itIsTickedAndCanBeReturnedTo", async () => {
 		const user = userEvent.setup();
 		await reopen();
 
@@ -513,7 +568,7 @@ describe("Create Schedule: a reopened draft", () => {
 	});
 
 	it("given_aDraftTheApiDoesNotHave_when_opened_then_saysSo", async () => {
-		await open("/scheduling/new?step=forecast&scheduleId=s-9&departmentId=d-1");
+		await open("/scheduling/new?step=generate&scheduleId=s-9&departmentId=d-1");
 
 		expect(
 			await screen.findByText(
@@ -521,7 +576,7 @@ describe("Create Schedule: a reopened draft", () => {
 			)
 		).toBeVisible();
 		expect(
-			screen.getByRole("link", { name: "Back to overview" })
+			screen.getByRole("link", { name: "Back to Scheduling" })
 		).toHaveAttribute("href", "/scheduling");
 		expect(screen.queryByRole("navigation", { name: "Steps" })).toBeNull();
 	});
@@ -583,7 +638,6 @@ describe("Create Schedule: a reopened draft", () => {
 		await reopen({
 			[`PUT ${SCHEDULE}`]: problemReply(409, "SCHEDULE_NOT_DRAFT"),
 		});
-		await screen.findByRole("row", { name: /Front Desk AM/ });
 
 		await user.click(screen.getByRole("button", { name: "Save draft" }));
 
@@ -618,6 +672,15 @@ describe("Create Schedule: a reopened draft", () => {
 });
 
 describe("Create Schedule: three steps", () => {
+	const FORECAST_OF_S1 =
+		"/scheduling/new?step=forecast&scheduleId=s-1&departmentId=d-1";
+	/** The draft's setup and ticks as every save sends them: no forecast in it. */
+	const SAVED_BODY = {
+		...DRAFT_SETUP,
+		includedShiftIds: INCLUDED_SHIFT_IDS,
+		includedConstraintIds: INCLUDED_CONSTRAINT_IDS,
+	};
+
 	it("given_theWizard_when_opened_then_itsStepsAreSetupForecastAndGenerate", async () => {
 		await open("/scheduling/new");
 
@@ -628,6 +691,79 @@ describe("Create Schedule: three steps", () => {
 				.map((step) => step.getAttribute("aria-label") ?? step.textContent)
 		).toEqual(["Step 1: Setup", "Step 2: Forecast", "Step 3: Generate"]);
 	});
+
+	it("given_aSetupSaved_when_nextIsClicked_then_landsOnForecastEmptyAndNextReachesGenerate", async () => {
+		const user = userEvent.setup();
+		const { opened } = await open(
+			"/scheduling/new?step=setup&scheduleId=s-1&departmentId=d-1",
+			{
+				[`PUT ${SCHEDULE}`]: reply(DRAFT),
+			}
+		);
+		await screen.findByRole("textbox", { name: /Schedule name/ });
+
+		await user.click(next());
+
+		await screen.findByRole("region", { name: "Staffing forecast" });
+		expect(opened.router.state.location.search).toMatchObject({
+			step: "forecast",
+		});
+		// It says its numbers are not used, and starts with nobody allocated.
+		expect(
+			screen.getByText(/^These numbers aren’t used to generate yet\./)
+		).toBeVisible();
+		for (const total of await screen.findAllByText(/staff allocated$/))
+			expect(total).toHaveTextContent("0 staff allocated");
+
+		// Nothing entered: Next still goes on.
+		await forecastToGenerate(user);
+		expect(opened.router.state.location.search).toMatchObject({
+			step: "generate",
+		});
+	});
+
+	it("given_aLinkNamingTheForecastStep_when_opened_then_opensForecast", async () => {
+		await open(FORECAST_OF_S1);
+
+		expect(
+			await screen.findByRole("region", { name: "Staffing forecast" })
+		).toBeVisible();
+		expect(screen.queryByRole("region", { name: "Schedule setup" })).toBeNull();
+	});
+
+	it.each([
+		["nothing entered", false],
+		["a number entered", true],
+	])(
+		"given_%s_onForecast_when_generated_then_theSaveAndTheMonthRunSendTheSameBodies",
+		async (_, entersANumber) => {
+			const user = userEvent.setup();
+			const { calls } = await open(FORECAST_OF_S1, {
+				[`PUT ${SCHEDULE}`]: reply(DRAFT),
+				[`POST ${OCTOBER_GENERATION}`]: octoberStarted(),
+			});
+			await screen.findByRole("region", { name: "Staffing forecast" });
+			if (entersANumber)
+				await user.click(
+					await screen.findByRole("button", { name: "More Front Desk Lead" })
+				);
+
+			await forecastToGenerate(user);
+			const generate = screen.getByRole("button", { name: "Generate" });
+			await waitFor(() => {
+				expect(generate).toBeEnabled();
+			});
+			await user.click(generate);
+
+			await waitFor(() => {
+				expect(sent(calls, `POST ${OCTOBER_GENERATION}`)).toHaveLength(1);
+			});
+			expect(sent(calls, `PUT ${SCHEDULE}`)).toEqual([SAVED_BODY]);
+			expect(sent(calls, `POST ${OCTOBER_GENERATION}`)).toEqual([
+				{ includeLeave: true, weeks: ["2026-10-12"], newWeeks: [] },
+			]);
+		}
+	);
 
 	it("given_anOldShiftsUrl_when_opened_then_opensSetup", async () => {
 		await open("/scheduling/new?step=shifts&scheduleId=s-1&departmentId=d-1");
@@ -661,24 +797,16 @@ describe("Create Schedule: three steps", () => {
 
 describe("Create Schedule: generating", () => {
 	it("given_everyStep_when_completed_then_reachesGenerateWithTheSummary", async () => {
-		const user = userEvent.setup();
 		await reopen();
-
-		// Nothing is allocated until the person says so.
-		expect((await screen.findAllByText("0 staff allocated"))[0]).toBeVisible();
-		await user.click(
-			screen.getByRole("button", { name: "More Front Desk Lead" })
-		);
-		await user.click(next());
 
 		await screen.findByRole("region", { name: "Ready to generate" });
 		const summary = screen.getByLabelText("Schedule summary");
-		// Four shifts with eleven roles between them; one role has someone.
+		// Four shifts with eleven roles between them; nobody is allocated yet.
 		expect(
 			within(summary)
 				.getAllByRole("definition")
 				.map((value) => value.textContent)
-		).toEqual(["4", "11", "9%"]);
+		).toEqual(["4", "11", "0%"]);
 		expect(screen.getByRole("button", { name: "Generate" })).toBeEnabled();
 		expect(screen.getByRole("button", { name: "Save draft" })).toBeEnabled();
 	});
@@ -689,13 +817,14 @@ describe("Create Schedule: generating", () => {
 			[`PUT ${SCHEDULE}`]: reply(DRAFT),
 			[`POST ${OCTOBER_GENERATION}`]: octoberStarted(),
 		});
-		await toGenerate(user);
 		const generate = screen.getByRole("button", { name: "Generate" });
 		await waitFor(() => {
 			expect(generate).toBeEnabled();
 		});
 		expect(
-			screen.getByText("Generates every week of October that isn’t published.")
+			screen.getByText(
+				"Generates every week of October 2026 that isn’t published."
+			)
 		).toBeVisible();
 
 		await user.click(generate);
@@ -719,8 +848,35 @@ describe("Create Schedule: generating", () => {
 		]);
 		// The draft is a covered week already: nothing new is created.
 		expect(sent(calls, `POST ${OCTOBER_GENERATION}`)).toEqual([
-			{ includeLeave: true, allowOpenShifts: false, newWeeks: [] },
+			{ includeLeave: true, weeks: ["2026-10-12"], newWeeks: [] },
 		]);
+	});
+
+	it("given_aMonthWithNoWeekLeftToGenerate_when_onGenerate_then_offSayingWhyAndNothingIsSent", async () => {
+		const over = scheduleMonthFixture({
+			month: "2026-10",
+			departmentName: "Front Office",
+			weeks: [
+				monthWeekFixture({
+					periodStart: "2026-10-12",
+					periodEnd: "2026-10-18",
+					state: "DRAFT",
+					scheduleId: "s-1",
+					days: [],
+					includedInMonthGeneration: false,
+				}),
+			],
+		});
+		const { calls } = await reopen({ [`GET ${OCTOBER}`]: reply(over) });
+
+		const generate = screen.getByRole("button", { name: "Generate" });
+		await waitFor(() => {
+			expect(generate).toHaveAccessibleDescription(
+				"No week of October 2026 can be generated: each is published, over or being generated."
+			);
+		});
+		expect(generate).toBeDisabled();
+		expect(calls.some((call) => call.path.endsWith("/generation"))).toBe(false);
 	});
 
 	it("given_aCoveredWeekChangedByHand_when_generated_then_asksFirstAndLandsOnTheMonth", async () => {
@@ -730,7 +886,6 @@ describe("Create Schedule: generating", () => {
 			[`PUT ${SCHEDULE}`]: reply(DRAFT),
 			[`POST ${OCTOBER_GENERATION}`]: octoberStarted(),
 		});
-		await toGenerate(user);
 		const generate = screen.getByRole("button", { name: "Generate" });
 		await waitFor(() => {
 			expect(generate).toBeEnabled();
@@ -738,11 +893,11 @@ describe("Create Schedule: generating", () => {
 
 		await user.click(generate);
 		const dialog = await screen.findByRole("dialog", {
-			name: "Regenerate October?",
+			name: "Regenerate October 2026?",
 		});
 		expect(writes(calls)).toEqual([`PUT ${SCHEDULE}`]);
 		await user.click(
-			within(dialog).getByRole("button", { name: "Regenerate October" })
+			within(dialog).getByRole("button", { name: "Regenerate October 2026" })
 		);
 
 		await waitFor(() => {
@@ -762,8 +917,6 @@ describe("Create Schedule: generating", () => {
 			[`PUT ${SCHEDULE}`]: reply(DRAFT),
 			[`POST ${OCTOBER_GENERATION}`]: problemReply(403, "FORBIDDEN"),
 		});
-		await screen.findByRole("row", { name: /Front Desk AM/ });
-		await toGenerate(user);
 		const generate = screen.getByRole("button", { name: "Generate" });
 		await waitFor(() => {
 			expect(generate).toBeEnabled();
@@ -782,8 +935,6 @@ describe("Create Schedule: generating", () => {
 		const { calls } = await reopen({
 			[`PUT ${SCHEDULE}`]: problemReply(404, "SHIFT_NOT_FOUND"),
 		});
-		await screen.findByRole("row", { name: /Front Desk AM/ });
-		await toGenerate(user);
 
 		await user.click(screen.getByRole("button", { name: "Generate" }));
 
@@ -794,13 +945,10 @@ describe("Create Schedule: generating", () => {
 	});
 
 	it("given_noGenerateKey_when_onTheGenerateStep_then_generateIsDisabledAndSaysWhy", async () => {
-		const user = userEvent.setup();
 		await reopen(
 			{},
 			ALL.filter((key) => key !== "schedule:generate")
 		);
-		await screen.findByRole("row", { name: /Front Desk AM/ });
-		await toGenerate(user);
 
 		const generate = screen.getByRole("button", { name: "Generate" });
 		expect(generate).toBeDisabled();
@@ -810,15 +958,12 @@ describe("Create Schedule: generating", () => {
 	});
 
 	it("given_theWeekAlreadyPublished_when_onTheGenerateStep_then_generateIsDisabledAndTheRosterLinked", async () => {
-		const user = userEvent.setup();
 		const { calls } = await reopen({
 			[`GET ${SCHEDULES}/published-week`]: reply({
 				periodStart: DRAFT_SETUP.periodStart,
 				scheduleId: "s-9",
 			}),
 		});
-		await screen.findByRole("row", { name: /Front Desk AM/ });
-		await toGenerate(user);
 
 		const generate = screen.getByRole("button", { name: "Generate" });
 		await waitFor(() => {
@@ -885,9 +1030,7 @@ describe("Create Schedule: generating", () => {
 			name: /^What .+ used$/,
 		});
 		const table = within(dialog).getByRole("table", { name: "Shifts" });
-		expect(within(table).getAllByRole("row")).toHaveLength(
-			INCLUDED_SHIFT_IDS.length + 1
-		);
+		expect(shiftRowsIn(table)).toHaveLength(INCLUDED_SHIFT_IDS.length);
 		// A copy whose source shift was since deleted is still shown.
 		expect(
 			within(table).getByRole("row", { name: /Breakfast Prep/ })
@@ -914,9 +1057,7 @@ describe("Create Schedule: generating", () => {
 		});
 
 		await user.click(next());
-		await screen.findByRole("region", { name: "Staffing forecast" });
-		await user.click(next());
-		await screen.findByRole("region", { name: "Ready to generate" });
+		await forecastToGenerate(user);
 		const generate = screen.getByRole("button", { name: "Generate" });
 		expect(generate).toBeDisabled();
 		expect(generate).toHaveAccessibleDescription(
@@ -1071,15 +1212,15 @@ describe("Create Schedule: where everyone starts", () => {
 			[`GET ${STARTING_DAYS}`]: reply(firstWeek()),
 			[`PUT ${STARTING_DAYS}`]: reply(withSitisSundayOff()),
 		});
-		await screen.findByRole("row", { name: /Front Desk AM/ });
-		await toGenerate(user);
 
 		expect(
 			await screen.findByText(
-				"No roster before this week. Days are added for 1 person; everyone else starts rested."
+				"No roster before these days. Days are added for 1 person. For everyone else, the earlier days of this week count as worked for weekly rest days and days a week; rest between shifts and days in a row start fresh."
 			)
 		).toBeInTheDocument();
-		await user.click(screen.getByRole("button", { name: "Edit last week" }));
+		await user.click(
+			screen.getByRole("button", { name: "Edit last week’s shifts" })
+		);
 		const dialog = await screen.findByRole("dialog", {
 			name: "Before this week",
 		});
@@ -1096,7 +1237,7 @@ describe("Create Schedule: where everyone starts", () => {
 		]);
 		expect(
 			screen.getByText(
-				"No roster before this week. Days are added for 2 people; everyone else starts rested."
+				"No roster before these days. Days are added for 2 people. For everyone else, the earlier days of this week count as worked for weekly rest days and days a week; rest between shifts and days in a row start fresh."
 			)
 		).toBeInTheDocument();
 	});
@@ -1121,11 +1262,9 @@ describe("Create Schedule: where everyone starts", () => {
 				[`GET ${STARTING_DAYS}`]: reply(firstWeek()),
 				[`PUT ${STARTING_DAYS}`]: problemReply(status, code),
 			});
-			await screen.findByRole("row", { name: /Front Desk AM/ });
-			await toGenerate(user);
 
 			await user.click(
-				await screen.findByRole("button", { name: "Edit last week" })
+				await screen.findByRole("button", { name: "Edit last week’s shifts" })
 			);
 			const dialog = await screen.findByRole("dialog", {
 				name: "Before this week",
@@ -1140,16 +1279,13 @@ describe("Create Schedule: where everyone starts", () => {
 	);
 
 	it("given_noUpdateKey_when_onTheGenerateStep_then_showsWhereEveryoneStartsWithoutAnEdit", async () => {
-		const user = userEvent.setup();
 		await reopen(
 			{ [`GET ${STARTING_DAYS}`]: reply(firstWeek()) },
 			ALL.filter((key) => key !== "schedule:update")
 		);
-		await screen.findByRole("row", { name: /Front Desk AM/ });
-		await toGenerate(user);
 
 		expect(
-			await screen.findByText(/^No roster before this week\./)
+			await screen.findByText(/^No roster before these days\./)
 		).toBeInTheDocument();
 		expect(screen.queryByRole("button", { name: /last week/ })).toBeNull();
 	});
@@ -1162,7 +1298,7 @@ describe("Create Schedule: the header's Branch", () => {
 			{},
 			twoBranchSchedulingWorkspace(ALL)
 		);
-		await screen.findByRole("region", { name: "Staffing forecast" });
+		await screen.findByRole("region", { name: "Ready to generate" });
 
 		const header = screen.getByRole("banner");
 		expect(

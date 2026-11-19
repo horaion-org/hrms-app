@@ -38,6 +38,24 @@ describe("published week client", () => {
 		expect(calls[0]?.search).toBe("periodStart=2026-11-09");
 	});
 
+	it("asks about a part's own days when given them", async () => {
+		const calls = stubApi({
+			[`GET ${PUBLISHED_WEEK}`]: {
+				status: 200,
+				body: envelope({ periodStart: "2026-11-09", scheduleId: null }),
+			},
+		});
+
+		await fetchPublishedWeek("c-1", UNIT, "2026-11-09", {
+			coveredFrom: "2026-11-12",
+			coveredTo: "2026-11-15",
+		});
+
+		expect(calls[0]?.search).toBe(
+			"periodStart=2026-11-09&coveredFrom=2026-11-12&coveredTo=2026-11-15"
+		);
+	});
+
 	it("reads a week without a published roster, its id null or left out, as null", async () => {
 		stubApi({
 			[`GET ${PUBLISHED_WEEK}`]: [

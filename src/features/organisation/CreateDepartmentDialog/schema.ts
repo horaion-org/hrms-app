@@ -5,6 +5,7 @@ import {
 	headsSchema,
 	unitNameSchema,
 } from "@/features/organisation/createSchemas";
+import { NAME_LIMITS } from "@/features/organisation/nameSchema";
 
 export const createDepartmentSchema = (
 	t: TFunction,
@@ -19,15 +20,12 @@ export const createDepartmentSchema = (
 		branchId: z.string().min(1, t(`${key}.branchRequired`)),
 		name: unitNameSchema({
 			required: t(`${key}.nameRequired`),
-			length: t(`${key}.nameLength`),
+			length: t(`${key}.nameLength`, NAME_LIMITS),
 			characters: t(`${key}.nameCharacters`),
 		}),
 		heads: editing
 			? z.array(companyMemberSchema)
-			: headsSchema({
-					required: t(`${key}.headsRequired`),
-					max: t(`${key}.headsMax`),
-				}),
+			: headsSchema({ max: t(`${key}.headsMax`) }),
 	});
 };
 

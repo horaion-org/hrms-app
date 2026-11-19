@@ -1,4 +1,5 @@
 import type { TFunction } from "i18next";
+import { isOneOf } from "@/common/isOneOf";
 import { dayTypeLabel } from "@/features/scheduling/dayTypes";
 import type { FindingNames } from "@/features/scheduling/roster/findings/findingNames";
 import {
@@ -9,8 +10,14 @@ import type { FindingsDiagnostic } from "@/features/scheduling/schedules/api";
 
 /*
  * The engine's diagnostics in the app's words. The first four codes are those
- * of the engine's `scheduling_core/diagnostics/checks.py`; the last two are
- * its findings about the days before a schedule, for a rule about day types.
+ * of the engine's `scheduling_core/diagnostics/checks.py`; the next two are
+ * its findings about the days before a schedule, for a rule about day types;
+ * the next says when someone may first start after rest carried in from
+ * before; the next says by when someone's last shifts must end for rest
+ * before their next shift after the schedule; the next says days of a days-off
+ * block before the schedule were not sent, which is information only; the last
+ * two say the same of a week's required days and of its most days worked, and
+ * keep the engine's sentence, which names the person, the week and what to do.
  * The set is open, so a code added later reads by its code and the engine's
  * own sentence.
  */
@@ -22,12 +29,17 @@ export const KNOWN_DIAGNOSTIC_CODES = [
 	"DEAD_SHIFT",
 	"PRIOR_RUN_NEEDS_DAY_TYPE",
 	"PRIOR_DAYS_UNKNOWN",
+	"PRIOR_REST_BLOCKS_SHIFTS",
+	"NEXT_SHIFT_REST_BLOCKS_SHIFTS",
+	"OFF_BLOCK_HISTORY_MISSING",
+	"DAY_TYPE_BLOCK_HISTORY_MISSING",
+	"DAYS_A_WEEK_HISTORY_MISSING",
 ] as const;
 
 type KnownDiagnosticCode = (typeof KNOWN_DIAGNOSTIC_CODES)[number];
 
 const isKnownCode = (code: string): code is KnownDiagnosticCode =>
-	(KNOWN_DIAGNOSTIC_CODES as ReadonlyArray<string>).includes(code);
+	isOneOf(KNOWN_DIAGNOSTIC_CODES, code);
 
 const key = "scheduling.findings.codes";
 
@@ -75,6 +87,13 @@ const entityCount = (
 	return typeof value === "number" ? value : 0;
 };
 
+/** How many characters an ISO date takes at the start of a date-time ("2026-11-23"). */
+const ISO_DATE_LENGTH = 10;
+
+/** The clock time of a local ISO date-time, "09:00" from "2026-11-23T09:00"; empty when absent. */
+const clockOf = (dateTime: string): string =>
+	dateTime.split("T")[1]?.slice(0, 5) ?? "";
+
 /** The name `id` stands for in `names`, or `fallback` when it doesn't resolve. */
 const nameOf = (
 	names: ReadonlyMap<string, string>,
@@ -94,6 +113,24 @@ const ruleDayTypesOf = (
 	return t("scheduling.constraints.listOr", {
 		items: codes.map((code) => dayTypeLabel(code, t)),
 	});
+};
+
+/**
+ * A sentence about one rule's days in a row, led by the rule's name when it
+ * resolves: two such rules (a company's 12 and a department's 6) otherwise
+ * read alike, or as one said twice.
+ */
+const underItsRule = (
+	diagnostic: FindingsDiagnostic,
+	names: FindingNames,
+	t: TFunction,
+	sentence: string
+): string => {
+	const ruleId = entityText(diagnostic, "ruleId");
+	const rule = ruleId === null ? undefined : names.rules.get(ruleId);
+	return rule === undefined
+		? sentence
+		: t("scheduling.findings.underRule", { rule, sentence });
 };
 
 /**
@@ -156,16 +193,107 @@ export const diagnosticSentence = (
 			// A rule that doesn't resolve has no day types to name, so its sentence names none.
 			return dayTypes === null
 				? t(`${key}.${code}.sentenceWithoutDayTypes`, run)
-				: t(`${key}.${code}.sentence`, { ...run, dayTypes });
+				: underItsRule(
+						diagnostic,
+						names,
+						t,
+						t(`${key}.${code}.sentence`, { ...run, dayTypes })
+					);
 		}
+		case "PRIOR_REST_BLOCKS_SHIFTS": {
+			// Local date-times as the engine keys them, "2026-11-23T09:00".
+			const restedAt = entityText(diagnostic, "restedAt") ?? "";
+			const previousEnd = entityText(diagnostic, "previousShiftEnd") ?? "";
+			return t(`${key}.${code}.sentence`, {
+				member: member(),
+				time: clockOf(restedAt),
+				day: restedAt ? day(restedAt.slice(0, ISO_DATE_LENGTH)) : "",
+				endDay: previousEnd ? day(previousEnd.slice(0, ISO_DATE_LENGTH)) : "",
+				endTime: clockOf(previousEnd),
+			});
+		}
+		case "NEXT_SHIFT_REST_BLOCKS_SHIFTS": {
+			// Local date-times as the engine keys them, "2026-11-22T19:00".
+			const mustEndBy = entityText(diagnostic, "mustEndBy") ?? "";
+			const nextStart = entityText(diagnostic, "nextShiftStart") ?? "";
+			return t(`${key}.${code}.sentence`, {
+				member: member(),
+				time: clockOf(mustEndBy),
+				day: mustEndBy ? day(mustEndBy.slice(0, ISO_DATE_LENGTH)) : "",
+				startDay: nextStart ? day(nextStart.slice(0, ISO_DATE_LENGTH)) : "",
+				startTime: clockOf(nextStart),
+			});
+		}
+		case "DAY_TYPE_BLOCK_HISTORY_MISSING":
+		case "DAYS_A_WEEK_HISTORY_MISSING":
+			// Only the heading is the app's: the engine's sentence already says who, which week and what to do.
+			return null;
+		case "OFF_BLOCK_HISTORY_MISSING":
+			// Without a member it is about everyone the rule counts.
+			if (entityText(diagnostic, "employeeId") === null)
+				return t(`${key}.${code}.wholeSchedule`);
+			return t(`${key}.${code}.sentence`, { member: member() });
 		case "PRIOR_DAYS_UNKNOWN":
 			// Without a member it is about the whole schedule: no day before it is known.
 			if (entityText(diagnostic, "employeeId") === null)
-				return t(`${key}.${code}.wholeSchedule`);
-			return t(`${key}.${code}.sentence`, {
-				member: member(),
-				count: entityCount(diagnostic, "knownDays"),
-				lookBack: entityCount(diagnostic, "lookBackDays"),
-			});
+				return underItsRule(
+					diagnostic,
+					names,
+					t,
+					t(`${key}.${code}.wholeSchedule`)
+				);
+			return underItsRule(
+				diagnostic,
+				names,
+				t,
+				t(`${key}.${code}.sentence`, {
+					member: member(),
+					count: entityCount(diagnostic, "knownDays"),
+					lookBack: entityCount(diagnostic, "lookBackDays"),
+				})
+			);
 	}
+};
+
+/** Who or what a diagnostic is about, and the day when it names one: the first line of its Issues row. */
+export type DiagnosticSubject = {
+	/** The member's name, else the shift's or job title's, else the kind of note in plain words. */
+	who: string;
+	/** The member it is about, when it names one. */
+	memberProfileId: string | null;
+	/** The ISO day it is about, when it names one. */
+	day: string | null;
+};
+
+/** The ISO day a diagnostic is about: when rest lets someone start, by when their shifts must end, or when a run needs a day type. */
+const dayOfDiagnostic = (diagnostic: FindingsDiagnostic): string | null =>
+	(
+		entityText(diagnostic, "restedAt") ??
+		entityText(diagnostic, "mustEndBy") ??
+		entityText(diagnostic, "dayTypeNeededBy")
+	)?.slice(0, ISO_DATE_LENGTH) ?? null;
+
+/**
+ * Who or what a diagnostic is about: the member it names, else its shift,
+ * else its job title, else its kind ("Rest carried in from before"). A name
+ * that does not resolve falls back to the kind, never to an id. Pure.
+ */
+export const diagnosticSubject = (
+	diagnostic: FindingsDiagnostic,
+	names: FindingNames | null,
+	t: TFunction
+): DiagnosticSubject => {
+	const memberProfileId = entityText(diagnostic, "employeeId");
+	const shiftId = entityText(diagnostic, "shiftId");
+	const roleId = entityText(diagnostic, "roleId");
+	const nameIn = (
+		lookup: ReadonlyMap<string, string> | undefined,
+		id: string | null
+	): string | undefined => (id === null ? undefined : lookup?.get(id));
+	const who =
+		nameIn(names?.members, memberProfileId) ??
+		nameIn(names?.shifts, shiftId) ??
+		nameIn(names?.jobTitles, roleId) ??
+		diagnosticLabel(diagnostic.code, t);
+	return { who, memberProfileId, day: dayOfDiagnostic(diagnostic) };
 };

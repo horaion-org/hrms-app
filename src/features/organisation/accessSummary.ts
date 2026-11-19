@@ -27,6 +27,8 @@ export type PlaceAccess = {
 	departmentId: string | null;
 	/** In catalogue order. */
 	permissions: Array<PermissionKey>;
+	/** The active roles held there, by name, in the order first held; what gives the access. */
+	roleNames: Array<string>;
 };
 
 /** The whole company first, then Branches, then Departments. */
@@ -46,19 +48,27 @@ export const accessSummary = (
 	assignments: ReadonlyArray<MemberAccessRoleAssignment>,
 	roles: ReadonlyArray<AccessRole>
 ): Array<PlaceAccess> => {
-	const byPlace = new Map<string, { place: PlaceRef; keys: Set<string> }>();
+	const byPlace = new Map<
+		string,
+		{ place: PlaceRef; keys: Set<string>; roleNames: Set<string> }
+	>();
 	for (const assignment of assignments) {
 		const role = roles.find(
 			(candidate) => candidate.accessRoleId === assignment.accessRoleId
 		);
 		if (assignment.status !== "ACTIVE" || role?.status !== "ACTIVE") continue;
 		const id = placeKey(assignment);
-		const entry = byPlace.get(id) ?? { place: assignment, keys: new Set() };
+		const entry = byPlace.get(id) ?? {
+			place: assignment,
+			keys: new Set(),
+			roleNames: new Set(),
+		};
 		for (const permission of role.permissions) entry.keys.add(permission);
+		entry.roleNames.add(role.name);
 		byPlace.set(id, entry);
 	}
 	return [...byPlace.values()]
-		.map(({ place, keys }) => {
+		.map(({ place, keys, roleNames }) => {
 			const level = levelOf(scopeOfPlace(place));
 			return {
 				branchId: place.branchId ?? null,
@@ -66,6 +76,7 @@ export const accessSummary = (
 				permissions: PERMISSION_KEYS.filter(
 					(key) => keys.has(key) && assignableAt(key, level)
 				),
+				roleNames: [...roleNames],
 			};
 		})
 		.filter((place) => place.permissions.length > 0)
@@ -144,8 +155,61 @@ export const placeLabels =
 		return undefined;
 	};
 
-/** One place's access in words: where, and one "Section: Level" line per section, e.g. "Scheduling: Manage". */
-export type PlaceAccessText = { place: string; lines: Array<string> };
+/** One place's access in words: where, the roles that give it, and one "Section: Level" line per section, e.g. "Scheduling: Manage". */
+export type PlaceAccessText = {
+	place: string;
+	roles: Array<string>;
+	lines: Array<string>;
+	/** Which Branch and Department the place is, so a group can tell a Department inside a Branch it also names. */
+	branchId?: string | null;
+	departmentId?: string | null;
+};
+
+/** Places given the same roles and the same access, as one entry naming them all. */
+export type SharedAccessText = {
+	places: Array<string>;
+	roles: Array<string>;
+	lines: Array<string>;
+};
+
+/**
+ * Whether a place is a Department of a Branch that the same group also names
+ * as a whole: the Branch's access covers it, so naming it again ("North
+ * Point and North Point › Security") adds nothing.
+ */
+const coveredByBranchIn = (
+	text: PlaceAccessText,
+	group: ReadonlyArray<PlaceAccessText>
+): boolean =>
+	Boolean(text.departmentId) &&
+	group.some(
+		(other) =>
+			!other.departmentId &&
+			Boolean(other.branchId) &&
+			other.branchId === text.branchId
+	);
+
+/**
+ * Groups places whose roles and access read the same, so a list is not
+ * repeated per place; each group keeps the order its first place had, and
+ * leaves out a Department whose Branch it already names.
+ */
+export const groupSameAccess = (
+	texts: ReadonlyArray<PlaceAccessText>
+): Array<SharedAccessText> => {
+	const groups = new Map<string, Array<PlaceAccessText>>();
+	for (const text of texts) {
+		const sameAs = JSON.stringify([text.roles, text.lines]);
+		groups.set(sameAs, [...(groups.get(sameAs) ?? []), text]);
+	}
+	return [...groups.values()].map((group) => ({
+		places: group
+			.filter((text) => !coveredByBranchIn(text, group))
+			.map((text) => text.place),
+		roles: group[0]!.roles,
+		lines: group[0]!.lines,
+	}));
+};
 
 /**
  * A summary in words, for a `DescriptionList`: per place, how much of each
@@ -163,5 +227,13 @@ export const describeAccess = (
 		const lines = sectionLevels(entry.permissions).map((section) =>
 			sectionLevelText(section, t)
 		);
-		return [{ place, lines }];
+		return [
+			{
+				place,
+				roles: entry.roleNames,
+				lines,
+				branchId: entry.branchId,
+				departmentId: entry.departmentId,
+			},
+		];
 	});

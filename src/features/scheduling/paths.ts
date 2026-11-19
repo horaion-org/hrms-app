@@ -50,6 +50,17 @@ export const companySchedulePath = (
 ): string =>
 	`${companyPath(companyId)}/schedules/${encodeURIComponent(scheduleId)}`;
 
+/** The company's deleted schedules in reach, kept as a record and only read. */
+export const deletedSchedulesPath = (companyId: string): string =>
+	`${companyPath(companyId)}/deleted-schedules`;
+
+/** One deleted schedule of the company by its id alone. */
+export const deletedSchedulePath = (
+	companyId: string,
+	scheduleId: string
+): string =>
+	`${deletedSchedulesPath(companyId)}/${encodeURIComponent(scheduleId)}`;
+
 /** One schedule of a department; its shifts, its constraints and its generation sit under it. */
 export const schedulePath = (
 	companyId: string,
@@ -75,6 +86,10 @@ export const scheduleMonthGenerationCheckPath = (
 	companyId: string,
 	month: string
 ): string => `${scheduleMonthPath(companyId, month)}/generation-check`;
+
+/** Schedules of any dates (API ADR-0114); the Department is a required query parameter. */
+export const scheduleDatesPath = (companyId: string): string =>
+	`${companyPath(companyId)}/schedule-dates`;
 
 /** Generating a Department's month; the Department is a required query parameter. */
 export const scheduleMonthGenerationPath = (

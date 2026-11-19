@@ -23,6 +23,8 @@ import es from "@/assets/locales/es/translations.json";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
+import { QueryClient } from "@tanstack/react-query";
+import { queryClient as appQueryClient } from "@/common/query-client";
 
 const REFRESH = "POST /api/v1/public/sessions/refreshes";
 const ME = "GET /api/v1/me";
@@ -470,7 +472,7 @@ describe("Branches", () => {
 		{ status: "ACTIVE", statusAction: "Deactivate" },
 		{ status: "INACTIVE", statusAction: "Activate" },
 	])(
-		"offers View and Duplicate as not yet built and changes a $status branch's status after asking",
+		"offers only what works, never a View or Duplicate that can't, and changes a $status branch's status after asking",
 		async ({ status, statusAction }) => {
 			const user = userEvent.setup();
 			const next = status === "ACTIVE" ? "INACTIVE" : "ACTIVE";
@@ -494,16 +496,10 @@ describe("Branches", () => {
 
 			const menu = screen.getByRole("menu");
 			const items = within(menu).getAllByRole("menuitem");
-			expect(items.map((item) => item.textContent)).toEqual([
-				"View",
-				"Duplicate",
-				statusAction,
-			]);
+			expect(items.map((item) => item.textContent)).toEqual([statusAction]);
 			expect(
 				within(menu).queryByRole("menuitem", { name: "Edit" })
 			).not.toBeInTheDocument();
-			expect(items[0]).toHaveAttribute("aria-disabled", "true");
-			expect(items[1]).toHaveAttribute("aria-disabled", "true");
 
 			await user.click(
 				within(menu).getByRole("menuitem", { name: statusAction })
@@ -828,7 +824,7 @@ describe("Access roles", () => {
 				{
 					accessRoleId: "r-1",
 					companyId: "c-1",
-					name: "Company Owner",
+					name: "System Owner",
 					protectedRole: true,
 					kind: "COMPANY",
 					status: "ACTIVE",
@@ -862,6 +858,10 @@ describe("Access roles", () => {
 		expect(
 			await screen.findByRole("heading", { level: 1, name: "Access roles" })
 		).toBeVisible();
+		// The roles page opens from Settings' list; its back link returns there.
+		expect(
+			within(screen.getByRole("main")).getByRole("link", { name: "Settings" })
+		).toHaveAttribute("href", "/settings");
 		const table = await screen.findByRole("table", { name: "Access roles" });
 		await within(table).findByText("Manager");
 		expect(
@@ -887,13 +887,13 @@ describe("Access roles", () => {
 					.map((cell) => cell.firstChild?.textContent)
 			)
 		).toEqual([
-			["Company Owner", "Whole company", "Full system access", "1 person"],
+			["System Owner", "Whole company", "Full system access", "1 person"],
 			// Keys this app doesn't know (leave:approve, leave:create) aren't summarised.
 			["Manager", "Branches or departments", "Organisation: View", "3 people"],
 			["Staff", "Branches or departments", "No permissions yet.", "0 people"],
 		]);
 		expect(
-			screen.getByRole("button", { name: "Edit Company Owner" })
+			screen.getByRole("button", { name: "Edit System Owner" })
 		).toBeDisabled();
 		expect(screen.getByRole("button", { name: "Edit Manager" })).toBeEnabled();
 		// The status filter waits behind Filters; nothing is set.
@@ -1371,4 +1371,43 @@ describe("Organisation navigation", () => {
 			within(navigation).getByRole("link", { name: "Organisation" })
 		).toHaveAttribute("data-status", "active");
 	});
+});
+
+it("keeps the rows and says access is being updated while a re-read is refused, then shows the new rows", async () => {
+	stubApi({
+		...baseRoutes(),
+		[BRANCHES]: [
+			pageReply([branch("b-1", "Main Branch", "INACTIVE")]),
+			problemReply(503, "DECISION_ENGINE_STALE", { "Retry-After": "1" }),
+			pageReply([branch("b-1", "Main Branch", "ACTIVE")]),
+		],
+	});
+	// The app's own query defaults, so the refusal waits its Retry-After as in the app.
+	app = await openApp(
+		"/organisation/branches",
+		new QueryClient({ defaultOptions: appQueryClient.getDefaultOptions() })
+	);
+	renderAuthApp(app);
+	expect(await screen.findAllByText("Inactive")).not.toHaveLength(0);
+
+	void app.queryClient.invalidateQueries({ queryKey: ["organisation"] });
+
+	expect(
+		await screen.findByText(
+			"Access is being updated after a recent change. Trying again in a few seconds…"
+		)
+	).toBeInTheDocument();
+	// The old rows stay on screen meanwhile.
+	expect(screen.getAllByText("Inactive")).not.toHaveLength(0);
+	await waitFor(
+		() => {
+			expect(screen.queryAllByText("Inactive")).toHaveLength(0);
+		},
+		{ timeout: 3_000 }
+	);
+	expect(
+		screen.queryByText(
+			"Access is being updated after a recent change. Trying again in a few seconds…"
+		)
+	).not.toBeInTheDocument();
 });

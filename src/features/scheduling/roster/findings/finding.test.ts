@@ -46,6 +46,19 @@ describe("findingTone", () => {
 		}
 	);
 
+	it("given_daysOfADaysOffBlockNotSent_when_toned_then_informationWhateverItsSeverity", () => {
+		const notSent: Finding = {
+			kind: "diagnostic",
+			diagnostic: {
+				...findings.diagnostics[0]!,
+				code: "OFF_BLOCK_HISTORY_MISSING",
+				severity: "warning",
+			},
+		};
+
+		expect(findingTone(notSent)).toBe("info");
+	});
+
 	it("given_aRosterNote_when_toned_then_readsAsAnError", () => {
 		expect(findingTone(conflict)).toBe("error");
 		expect(findingTone(message)).toBe("error");

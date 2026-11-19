@@ -76,6 +76,28 @@ describe("Select", () => {
 		}
 	);
 
+	it("shows an option's description as a second line under its label", async () => {
+		const user = userEvent.setup();
+		render(
+			<Select
+				aria-label="Person"
+				options={[
+					{ value: "m-1", label: "Alex Tan", description: "Sales · EMP-1" },
+					{ value: "m-2", label: "Alex Tan", description: "Kitchen · EMP-2" },
+				]}
+			/>
+		);
+
+		await user.click(screen.getByRole("button", { name: "Person" }));
+
+		expect(
+			screen.getByRole("option", { name: "Alex Tan Sales · EMP-1" })
+		).toBeVisible();
+		expect(
+			screen.getByRole("option", { name: "Alex Tan Kitchen · EMP-2" })
+		).toBeVisible();
+	});
+
 	it("selects every enabled option from Select All and clears them on a second click", async () => {
 		const user = userEvent.setup();
 		const onChange = vi.fn();
@@ -900,6 +922,33 @@ describe("Select", () => {
 		expect(trigger).toHaveTextContent("Choose departments");
 		expect(row.querySelector("svg")).toHaveClass("text-neutral-400");
 		expect(screen.queryByRole("checkbox")).not.toBeInTheDocument();
+	});
+
+	it("lists a group's heading as a plain label when whole groups aren't offered", async () => {
+		const user = userEvent.setup();
+		render(
+			<Select
+				multiple
+				aria-label="Shifts"
+				options={[{ value: "early", label: "Early", group: "Morning" }]}
+			/>
+		);
+		await user.click(screen.getByRole("button", { name: "Shifts" }));
+
+		expect(
+			screen.getAllByRole("option").map((option) => option.textContent)
+		).toEqual(["Early"]);
+		expect(screen.getByRole("group", { name: "Morning" })).toBeVisible();
+		// The plain heading and its rows look as they always have.
+		expect(screen.getByText("Morning")).toHaveClass(
+			"text-xs",
+			"uppercase",
+			"text-neutral-700"
+		);
+		expect(screen.getByRole("option", { name: "Early" })).toHaveClass("px-4");
+		expect(screen.getByRole("group", { name: "Morning" })).not.toHaveClass(
+			"border-t"
+		);
 	});
 
 	it("reaches the select-all row with the keyboard and keeps a controlled value until the caller updates it", async () => {

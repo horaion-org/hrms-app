@@ -1,5 +1,6 @@
 import { formattingLocale } from "@/common/formattingLocale";
 import { useMemo, useState } from "react";
+import { matchesSearch } from "@/common/matchesSearch";
 import { mapRefusal } from "@/common/refusal";
 import { useAccess } from "@/features/workspace/useAccess";
 import { branchScope, COMPANY_SCOPE } from "@/features/workspace/scopes";
@@ -17,7 +18,6 @@ import { ListToolbar } from "@/features/organisation/ListToolbar";
 import {
 	describeList,
 	isStatusFilter,
-	matchesSearch,
 	statusFilterChips,
 	statusFilterOptions,
 	type StatusFilter,
@@ -26,6 +26,7 @@ import { branchColumns } from "@/features/organisation/branchColumns";
 import { useSetBranchStatus } from "@/features/organisation/useChangeListRow";
 import { useBranches } from "@/features/organisation/useOrganisationList";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
+import { ListProblem } from "@/features/organisation/ListProblem";
 
 export const Branches = (): FunctionComponent => {
 	const companyId = useCurrentCompanyId();
@@ -144,6 +145,7 @@ export const Branches = (): FunctionComponent => {
 						setBranchStatus.error
 							? mapRefusal(setBranchStatus.error, {
 									forbidden: t("organisation.branches.status.forbidden"),
+									stillUpdating: t("organisation.stillUpdatingWrite"),
 									failed: t("organisation.branches.status.failed"),
 								}).message
 							: undefined
@@ -161,15 +163,14 @@ export const Branches = (): FunctionComponent => {
 				/>
 			)}
 			{view.problem ? (
-				<p
-					className="mt-8 text-sm text-neutral-700 data-alert:text-error-700"
-					data-alert={view.problem.alert || undefined}
-					role={view.problem.alert ? "alert" : undefined}
-				>
-					{view.problem.message}
-				</p>
+				<ListProblem problem={view.problem} />
 			) : (
 				<>
+					{view.updating && (
+						<p className="mt-8 text-sm text-neutral-700" role="status">
+							{view.updating}
+						</p>
+					)}
 					<DataTable
 						manualSorting
 						className="mt-8"

@@ -11,8 +11,12 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Sidebar, SidebarItem } from "@/components/layout/Sidebar";
 import { Button } from "@/components/ui/Button";
 import {
+	ArrowRightIcon,
+	ChevronLeftIcon,
+	ChevronRightIcon,
 	DashboardFilledIcon,
 	DashboardIcon,
+	FillShiftsIcon,
 	LeaveFilledIcon,
 	LeaveIcon,
 	OrganisationFilledIcon,
@@ -22,6 +26,8 @@ import {
 	SchedulingFilledIcon,
 	SchedulingIcon,
 	SettingsIcon,
+	SwapIcon,
+	TableIcon,
 	TimeIcon,
 } from "@/components/ui/Icon";
 import { AccountMenu } from "@/features/auth/AccountMenu";
@@ -32,20 +38,30 @@ import { SCHEDULING_KEYS } from "@/features/scheduling/schedulingSearch";
 import {
 	ORGANISATION_READ_KEYS,
 	PEOPLE_READ_KEYS,
+	REPORT_READ_KEYS,
 } from "@/features/workspace/permissionKeys";
 import { Can } from "@/features/workspace/Can";
 import { HeaderBranchScope } from "@/features/workspace/HeaderBranchScope";
 import { useHeaderBranchScope } from "@/features/workspace/useHeaderBranchScope";
 import { CompanySelection } from "@/pages/CompanySelection";
 import { NotificationBell } from "@/features/notifications/NotificationBell";
+import { useMenuCollapsed } from "@/pages/useMenuCollapsed";
 
 const headerIconClasses =
 	"h-12 w-12 [&>svg]:size-8 [&>svg]:text-ink-blue-900 hover:[&>svg]:text-ink-blue-700";
+
+// From `lg` a collapsed rail's footer buttons shrink to a 48 px circle around their icon.
+const collapsedFooterButtonClasses = "w-full lg:size-12 lg:px-0";
 
 export const MainLayout = (): FunctionComponent => {
 	const context = useRouteContext({ from: "/_authenticated" });
 	const [switching, setSwitching] = useState(false);
 	const { t } = useTranslation();
+	const { collapsed, toggleCollapsed } = useMenuCollapsed();
+	// The control says what it will do: collapse an open menu, expand a collapsed one.
+	const collapseLabel = collapsed
+		? t("shell.expandMenu")
+		: t("shell.collapseMenu");
 	const availability = useAvailabilityViews();
 	// The Branch the page lists, where it lists by Branch: the one scope shared by every list.
 	const branchScope = useHeaderBranchScope();
@@ -115,7 +131,20 @@ export const MainLayout = (): FunctionComponent => {
 			}
 			sidebar={
 				<Sidebar
+					collapsed={collapsed}
 					menuLabel={t("shell.menu")}
+					collapseToggle={
+						<Button
+							aria-expanded={!collapsed}
+							aria-label={collapseLabel}
+							className="size-10 [&>svg]:size-6 [&>svg]:text-white hover:[&>svg]:text-ink-blue-100"
+							title={collapseLabel}
+							variant="icon"
+							onClick={toggleCollapsed}
+						>
+							{collapsed ? <ChevronRightIcon /> : <ChevronLeftIcon />}
+						</Button>
+					}
 					footer={
 						<div className="flex flex-col gap-3">
 							{/* From `lg` Settings is the header's gear. */}
@@ -128,17 +157,37 @@ export const MainLayout = (): FunctionComponent => {
 							/>
 							{usableCompanies(context.currentUser).length > 1 && (
 								<Button
-									className="w-full"
+									title={collapsed ? t("auth.company.switch") : undefined}
 									variant="secondary"
+									className={
+										collapsed ? collapsedFooterButtonClasses : "w-full"
+									}
 									onClick={() => {
 										setSwitching(true);
 									}}
 								>
-									{t("auth.company.switch")}
+									{collapsed && (
+										<SwapIcon aria-hidden="true" className="max-lg:hidden" />
+									)}
+									<span className={collapsed ? "lg:sr-only" : undefined}>
+										{t("auth.company.switch")}
+									</span>
 								</Button>
 							)}
-							<Button className="w-full" onClick={logOut}>
-								{t("auth.logOut")}
+							<Button
+								className={collapsed ? collapsedFooterButtonClasses : "w-full"}
+								title={collapsed ? t("auth.logOut") : undefined}
+								onClick={logOut}
+							>
+								{collapsed && (
+									<ArrowRightIcon
+										aria-hidden="true"
+										className="max-lg:hidden"
+									/>
+								)}
+								<span className={collapsed ? "lg:sr-only" : undefined}>
+									{t("auth.logOut")}
+								</span>
 							</Button>
 						</div>
 					}
@@ -146,6 +195,7 @@ export const MainLayout = (): FunctionComponent => {
 					<SidebarItem
 						activeIcon={DashboardFilledIcon}
 						activeOptions={{ exact: true }}
+						collapsed={collapsed}
 						icon={DashboardIcon}
 						label={t("shell.navigation.dashboard")}
 						to="/"
@@ -155,31 +205,17 @@ export const MainLayout = (): FunctionComponent => {
 					<Can anyOf={SCHEDULING_KEYS} at="anywhere">
 						<SidebarItem
 							activeIcon={SchedulingFilledIcon}
+							collapsed={collapsed}
 							icon={SchedulingIcon}
 							label={t("shell.navigation.scheduling")}
 							to="/scheduling"
 						/>
 					</Can>
-					{/* Leave is for everyone: a member's own leave needs nothing granted. */}
-					<SidebarItem
-						activeIcon={LeaveFilledIcon}
-						icon={LeaveIcon}
-						label={t("shell.navigation.leave")}
-						to="/leave"
-					/>
-					{/* Availability is offered to a part-timer, for their own, and to anyone who may read others'. */}
-					{(availability.mine || availability.team) && (
-						<SidebarItem
-							activeIcon={TimeIcon}
-							icon={TimeIcon}
-							label={t("shell.navigation.availability")}
-							to="/availability"
-						/>
-					)}
 					{/* People and Organisation are offered only when the workspace grants something in them, at any scope. */}
 					<Can anyOf={PEOPLE_READ_KEYS} at="anywhere">
 						<SidebarItem
 							activeIcon={PeopleFilledIcon}
+							collapsed={collapsed}
 							icon={PeopleIcon}
 							label={t("shell.navigation.people")}
 							to="/people"
@@ -188,9 +224,48 @@ export const MainLayout = (): FunctionComponent => {
 					<Can anyOf={ORGANISATION_READ_KEYS} at="anywhere">
 						<SidebarItem
 							activeIcon={OrganisationFilledIcon}
+							collapsed={collapsed}
 							icon={OrganisationIcon}
 							label={t("shell.navigation.organisation")}
 							to="/organisation"
+						/>
+					</Can>
+					{/* Leave is for everyone: a member's own leave needs nothing granted. */}
+					<SidebarItem
+						activeIcon={LeaveFilledIcon}
+						collapsed={collapsed}
+						icon={LeaveIcon}
+						label={t("shell.navigation.leave")}
+						to="/leave"
+					/>
+					{/* Shift preferences are for everyone: a member's own need nothing granted. */}
+					<SidebarItem
+						activeIcon={FillShiftsIcon}
+						collapsed={collapsed}
+						icon={FillShiftsIcon}
+						label={t("shell.navigation.shiftPreferences")}
+						to="/shift-preferences"
+					/>
+					{/* Availability is offered to a part-timer, for their own, and to anyone who may read others'. */}
+					{(availability.mine || availability.team) && (
+						<SidebarItem
+							activeIcon={TimeIcon}
+							collapsed={collapsed}
+							icon={TimeIcon}
+							label={t("shell.navigation.availability")}
+							to="/availability"
+						/>
+					)}
+					{/* Timesheet goes here, between Availability and Reports, once its page exists. */}
+					{/* Reports has a key of its own, so it is offered where that is held, at any scope. It comes
+					    last: a place to look back, not a daily task. */}
+					<Can anyOf={REPORT_READ_KEYS} at="anywhere">
+						<SidebarItem
+							activeIcon={TableIcon}
+							collapsed={collapsed}
+							icon={TableIcon}
+							label={t("shell.navigation.reports")}
+							to="/reports"
 						/>
 					</Can>
 				</Sidebar>

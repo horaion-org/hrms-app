@@ -1,11 +1,15 @@
 import dayjs from "dayjs";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import { mondayOf } from "@/common/weeks";
 import type {
 	MonthRange,
 	ScheduleMonthSummary,
 	WeekState,
 } from "@/features/scheduling/months/api";
-import type { SchedulePeriod } from "@/features/scheduling/periods";
+import type {
+	RangeFormat,
+	SchedulePeriod,
+} from "@/features/scheduling/periods";
 
 /*
  * Months as "yyyy-MM", pure. A week belongs to the month its Monday falls
@@ -41,27 +45,22 @@ export const mondaysIn = (month: string): Array<string> => {
 	const first = mondayOf(`${month}-01`);
 	const start =
 		first < `${month}-01`
-			? dayjs(first).add(7, "day").format("YYYY-MM-DD")
+			? dayjs(first).add(7, "day").format(ISO_DATE_FORMAT)
 			: first;
 	const mondays: Array<string> = [];
 	for (
 		let monday = start;
 		monthOf(monday) === month;
-		monday = dayjs(monday).add(7, "day").format("YYYY-MM-DD")
+		monday = dayjs(monday).add(7, "day").format(ISO_DATE_FORMAT)
 	)
 		mondays.push(monday);
 	return mondays;
 };
 
-/** A date with its weekday in the person's language, e.g. "Mon 2 Nov". */
-export const formatWeekdayDate = (date: string, language: string): string =>
-	new Intl.DateTimeFormat(language, {
-		weekday: "short",
-		day: "numeric",
-		month: "short",
-	}).format(dayjs(date).toDate());
-
-/** A month in the person's language, e.g. "November 2026". */
+/**
+ * A month in the person's language, always with its year, e.g. "November
+ * 2026": thirteen months are offered, so a name alone would be ambiguous.
+ */
 export const formatMonth = (month: string, language: string): string =>
 	new Intl.DateTimeFormat(language, { month: "long", year: "numeric" }).format(
 		dayjs(`${month}-01`).toDate()
@@ -73,12 +72,6 @@ export const formatDayAndMonth = (date: string, language: string): string =>
 		dayjs(date).toDate()
 	);
 
-/** A month's name alone in the person's language, e.g. "November". */
-export const formatMonthName = (month: string, language: string): string =>
-	new Intl.DateTimeFormat(language, { month: "long" }).format(
-		dayjs(`${month}-01`).toDate()
-	);
-
 /** How many weeks are in each state; weeks not generated yet are left out. */
 export const stateCounts = (
 	weeks: ReadonlyArray<{ state: WeekState }>
@@ -88,11 +81,6 @@ export const stateCounts = (
 		if (state !== "NOT_GENERATED") counts[state] = (counts[state] ?? 0) + 1;
 	}
 	return counts;
-};
-
-/** `formatRange` is ES2021, past the ES2020 lib this project compiles against. */
-type RangeFormat = Intl.DateTimeFormat & {
-	formatRange: (start: Date, end: Date) => string;
 };
 
 /** A week's dates without the year, as the month page names a week, e.g. "16 – 22 Nov". */
@@ -107,6 +95,19 @@ export const formatWeekDates = (
 		}) as RangeFormat
 	).formatRange(dayjs(week.start).toDate(), dayjs(week.end).toDate());
 
+/** A part's days with their weekdays, as the week's schedules are listed, e.g. "Wed, Feb 17 – Fri, Feb 19". */
+export const formatPartDays = (
+	days: { start: string; end: string },
+	language: string
+): string =>
+	(
+		new Intl.DateTimeFormat(language, {
+			weekday: "short",
+			day: "numeric",
+			month: "short",
+		}) as RangeFormat
+	).formatRange(dayjs(days.start).toDate(), dayjs(days.end).toDate());
+
 /**
  * The week that starts in the month before and ends in this one, shown on
  * its Monday's month only; undefined when the month starts on a Monday.
@@ -117,45 +118,9 @@ export const crossingWeekOf = (month: string): SchedulePeriod | undefined => {
 	if (monday === first) return undefined;
 	return {
 		start: monday,
-		end: dayjs(monday).add(6, "day").format("YYYY-MM-DD"),
+		end: dayjs(monday).add(6, "day").format(ISO_DATE_FORMAT),
 	};
 };
-
-/**
- * For a month with tentative weeks, the earlier month whose week is under
- * review for the same Department, which comes first; undefined otherwise.
- */
-export const earlierReviewMonth = (
-	summaries: ReadonlyArray<ScheduleMonthSummary>,
-	summary: ScheduleMonthSummary
-): string | undefined => {
-	if (!summary.weeks.some((week) => week.state === "TENTATIVE"))
-		return undefined;
-	const reviewing = summaries.find(
-		(candidate) =>
-			candidate.departmentId === summary.departmentId &&
-			candidate.weeks.some((week) => week.state === "TO_REVIEW")
-	);
-	return reviewing && reviewing.month < summary.month
-		? reviewing.month
-		: undefined;
-};
-
-/**
- * The week an earlier month holds this month's weeks back with: the earliest
- * week to review in a month before `month`, as the publish-in-order rule
- * counts it; none when no earlier month has one.
- */
-export const waitingWeekBefore = (
-	summaries: ReadonlyArray<ScheduleMonthSummary>,
-	month: string
-): string | undefined =>
-	summaries
-		.filter((summary) => summary.month < month)
-		.flatMap((summary) => summary.weeks)
-		.filter((week) => week.state === "TO_REVIEW")
-		.map((week) => week.periodStart)
-		.sort()[0];
 
 /** The summaries grouped by month, earliest first; within a month, in the API's order (Branch, then Department). */
 export const summariesByMonth = (

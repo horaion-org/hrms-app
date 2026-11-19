@@ -1,10 +1,12 @@
 import type { TFunction } from "i18next";
 import { z } from "zod";
+import { isOneOf } from "@/common/isOneOf";
 import { unitNameSchema } from "@/features/organisation/createSchemas";
 import {
 	CONSTRAINT_REQUIREMENTS,
 	CONSTRAINT_STATUSES,
 	CONSTRAINT_TYPES,
+	PATTERN_DAYS,
 	POLICY_LOCKS,
 	type ConstraintBody,
 	type ConstraintField,
@@ -14,15 +16,32 @@ import {
 	type PolicyLock,
 } from "@/features/scheduling/constraints/api";
 import {
+	valuesListingNone,
+	type LinksByKind,
+} from "@/features/scheduling/constraints/ConstraintDialog/fieldChoices";
+import type { Constraint } from "@/features/scheduling/scheduleDraft";
+import {
 	unitReachBody,
 	unitReachSchema,
 	type UnitReachValue,
 } from "@/features/workspace/unitReach";
+import { NAME_LIMITS } from "@/features/organisation/nameSchema";
 
 /** Each field's values as the form holds them: as text, a field of one value as a list of one. */
 export type ConstraintFieldValues = Partial<
 	Record<ConstraintField, Array<string>>
 >;
+
+/** A constraint's values by field, as the form holds them; a value that no longer fits is left out. */
+export const valuesByField = (
+	values: Constraint["values"]
+): ConstraintFieldValues => {
+	const byField: ConstraintFieldValues = {};
+	for (const { field, value, problem } of values)
+		if (value !== null && !problem)
+			byField[field] = [...(byField[field] ?? []), value];
+	return byField;
+};
 
 /** What the form holds while being filled in. */
 export type ConstraintFormValues = {
@@ -52,19 +71,32 @@ const key = "scheduling.constraints.dialog";
 const isWholeNumber = (text = ""): boolean => /^\d+$/.test(text);
 
 /** One field's values as its spec allows: how many, and for a number its range. A field not touched yet has none. */
+/** Numbers chosen from their whole range, each worded, instead of typed: "Every 2 weeks". */
+const CHOSEN_NUMBER_FIELDS = [
+	"PERIOD_WEEKS",
+] as const satisfies ReadonlyArray<ConstraintField>;
+
+/** Whether a number field is chosen from its range rather than typed. */
+export const isChosenNumber = (field: ConstraintField): boolean =>
+	isOneOf(CHOSEN_NUMBER_FIELDS, field);
+
 const fieldSchema = (
 	spec: ConstraintFieldSpec,
 	t: TFunction
 ): z.ZodType<Array<string>> => {
+	// A number the type may leave out is valid with none; one given must still fit its range.
 	if (spec.kind === "NUMBER")
 		return z
 			.array(z.string())
 			.refine(
 				([text]) =>
-					isWholeNumber(text) &&
-					Number(text) >= (spec.min ?? 0) &&
-					Number(text) <= (spec.max ?? Number.MAX_SAFE_INTEGER),
-				t(`${key}.number`, { min: spec.min, max: spec.max })
+					(spec.minCount === 0 && text === undefined) ||
+					(isWholeNumber(text) &&
+						Number(text) >= (spec.min ?? 0) &&
+						Number(text) <= (spec.max ?? Number.MAX_SAFE_INTEGER)),
+				isChosenNumber(spec.field)
+					? t(`${key}.chooseOne`)
+					: t(`${key}.number`, { min: spec.min, max: spec.max })
 			)
 			.prefault([]);
 	return z
@@ -79,36 +111,116 @@ const fieldSchema = (
 		.prefault([]);
 };
 
-/** The only checks that tie two fields together, as the API's: days off within their period, no stand-in also counted. */
+/**
+ * What the form knows of the shifts and job titles to judge how fields fit
+ * each other: what each lists, and each one's name for the message.
+ */
+export type FieldFit = {
+	links: LinksByKind;
+	nameOf: (id: string) => string;
+};
+
+/** A week's days, so days off are checked against the days of a period in weeks. */
+const DAYS_IN_A_WEEK = 7;
+
+/**
+ * An optional day of a banned pattern left empty before a day with shifts,
+ * which the API refuses (ADR-0107): its days are read in order and an empty
+ * one is dropped. A required day left empty has its own count message.
+ */
+const patternDayLeftEmpty = (
+	values: ConstraintFieldValues,
+	fields: ReadonlyArray<ConstraintFieldSpec>
+): ConstraintField | undefined => {
+	const hasShifts = (field: ConstraintField): boolean =>
+		(values[field] ?? []).some(Boolean);
+	const optionalDays = fields
+		.filter((spec) => spec.minCount === 0)
+		.map((spec) => spec.field)
+		.filter((field) => isOneOf(PATTERN_DAYS, field));
+	return optionalDays.find(
+		(day, index) =>
+			!hasShifts(day) && optionalDays.slice(index + 1).some(hasShifts)
+	);
+};
+
+/**
+ * The checks that tie fields together, as the API's: days off within their
+ * period, a banned pattern's days filled in order, then, from the type's
+ * declarations, no value also chosen in the
+ * field it `excludes`, and no value of a `listsSomeOf` field that lists none
+ * of the chosen values of those fields.
+ */
 const checkConsistent = (
 	values: ConstraintFieldValues,
 	context: z.RefinementCtx,
-	t: TFunction
+	t: TFunction,
+	fields: ReadonlyArray<ConstraintFieldSpec>,
+	fit: FieldFit
 ): void => {
-	const [daysOff, periodDays] = [values.DAYS_OFF?.[0], values.PERIOD_DAYS?.[0]];
+	const [daysOff, periodWeeks] = [
+		values.DAYS_OFF?.[0],
+		values.PERIOD_WEEKS?.[0],
+	];
 	if (
 		isWholeNumber(daysOff) &&
-		isWholeNumber(periodDays) &&
-		Number(daysOff) > Number(periodDays)
+		isWholeNumber(periodWeeks) &&
+		Number(daysOff) > Number(periodWeeks) * DAYS_IN_A_WEEK
 	)
 		context.addIssue({
 			code: "custom",
 			path: ["values", "DAYS_OFF"],
 			message: t(`${key}.daysOffOverPeriod`),
 		});
-	const counted = values.JOB_TITLE ?? [];
-	if ((values.STAND_IN_JOB_TITLE ?? []).some((id) => counted.includes(id)))
+	const label = (field: ConstraintField): string =>
+		t(`scheduling.constraints.fields.${field}`);
+	const emptyDay = patternDayLeftEmpty(values, fields);
+	if (emptyDay)
 		context.addIssue({
 			code: "custom",
-			path: ["values", "STAND_IN_JOB_TITLE"],
-			message: t(`${key}.standInAlsoCounted`),
+			path: ["values", emptyDay],
+			message: t(`${key}.patternDayEmpty`, { day: label(emptyDay) }),
 		});
+	for (const spec of fields) {
+		const excluded = spec.excludes ? (values[spec.excludes] ?? []) : [];
+		if (
+			spec.excludes &&
+			(values[spec.field] ?? []).some((id) => excluded.includes(id))
+		)
+			context.addIssue({
+				code: "custom",
+				path: ["values", spec.field],
+				message: t(`${key}.dependency.alsoChosen`, {
+					field: label(spec.excludes),
+				}),
+			});
+	}
+	const listingNone = valuesListingNone(fields, values, fit.links);
+	for (const spec of fields) {
+		const ids = listingNone[spec.field];
+		if (!ids) continue;
+		const listed = spec.listsSomeOf.flatMap((field) => values[field] ?? []);
+		context.addIssue({
+			code: "custom",
+			path: ["values", spec.field],
+			message: t(`${key}.dependency.listsNone`, {
+				count: ids.length,
+				names: t("scheduling.constraints.list", {
+					items: ids.map(fit.nameOf),
+				}),
+				listed: t("scheduling.constraints.listOr", {
+					items: listed.map(fit.nameOf),
+				}),
+			}),
+		});
+	}
 };
 
 /**
  * Mirrors the API's checks for a constraint of `type`, built from its spec: how
  * many values each field takes, a number's range, a requirement exactly
- * when the type takes one, and the two checks that tie fields together.
+ * when the type takes one, and the checks that tie fields together, judged
+ * with `fit`.
  * Name uniqueness, and whether the job titles and shifts are still live,
  * remain server decisions. Yields the API's body: the type's fields only,
  * one entry per value, with `withLock` the work-policy constraint's lock, and
@@ -118,14 +230,15 @@ export const constraintSchema = (
 	type: ConstraintTypeOption | undefined,
 	t: TFunction,
 	withLock = false,
-	withReach = false
+	withReach = false,
+	fit: FieldFit = { links: {}, nameOf: (id) => id }
 ): z.ZodType<ConstraintDialogBody, ConstraintFormValues> => {
 	const fields = type?.fields ?? [];
 	return z
 		.object({
 			name: unitNameSchema({
 				required: t(`${key}.nameRequired`),
-				length: t(`${key}.nameLength`),
+				length: t(`${key}.nameLength`, NAME_LIMITS),
 				characters: t(`${key}.nameCharacters`),
 			}),
 			type: z.enum(CONSTRAINT_TYPES, { error: t(`${key}.typeRequired`) }),
@@ -154,7 +267,7 @@ export const constraintSchema = (
 						.transform(() => undefined),
 		})
 		.superRefine(({ values }, context) => {
-			checkConsistent(values, context, t);
+			checkConsistent(values, context, t, fields, fit);
 		})
 		.transform(({ values, lock, reach, ...constraint }) => ({
 			...constraint,

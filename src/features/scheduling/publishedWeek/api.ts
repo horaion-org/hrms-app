@@ -29,15 +29,23 @@ const publishedWeekSchema = z.object({
 /** A week and the schedule published for it, if any. */
 export type PublishedWeek = z.infer<typeof publishedWeekSchema>;
 
-/** Asks which schedule, if any, is the Department's published roster for the week starting `periodStart`. */
+/** A part's days of its week (API ADR-0113): the published part overlapping them is asked for. */
+export type CoveredDays = { coveredFrom: string; coveredTo: string };
+
+/**
+ * Asks which schedule, if any, is the Department's published roster for the
+ * week starting `periodStart`; with `covered`, the published part
+ * overlapping those days, so a later part isn't held up by an earlier one.
+ */
 export const fetchPublishedWeek = (
 	companyId: string,
 	unit: DepartmentPath,
 	periodStart: string,
+	covered?: CoveredDays,
 	signal?: AbortSignal
 ): Promise<PublishedWeek> =>
 	apiRequest(
-		`${schedulesPath(companyId, unit)}/published-week?periodStart=${encodeURIComponent(periodStart)}`,
+		`${schedulesPath(companyId, unit)}/published-week?${new URLSearchParams({ periodStart, ...covered }).toString()}`,
 		publishedWeekSchema,
 		{ signal }
 	);
@@ -46,14 +54,23 @@ export const fetchPublishedWeek = (
 export const publishedWeekKey = (
 	companyId: string,
 	departmentId: string,
-	periodStart: string
-): readonly ["scheduling", string, "published-week", string, string] =>
+	periodStart: string,
+	covered?: CoveredDays
+): readonly [
+	"scheduling",
+	string,
+	"published-week",
+	string,
+	string,
+	CoveredDays | undefined,
+] =>
 	[
 		SCHEDULING_QUERY_ROOT,
 		companyId,
 		"published-week",
 		departmentId,
 		periodStart,
+		covered,
 	] as const;
 
 /**
@@ -63,18 +80,20 @@ export const publishedWeekKey = (
 export const publishedWeekQuery = (
 	companyId: string,
 	unit: DepartmentPath | undefined,
-	periodStart: string | undefined
+	periodStart: string | undefined,
+	covered?: CoveredDays
 ): QueryOptionsFor<PublishedWeek, ReturnType<typeof publishedWeekKey>> =>
 	queryOptions({
 		queryKey: publishedWeekKey(
 			companyId,
 			unit?.departmentId ?? "",
-			periodStart ?? ""
+			periodStart ?? "",
+			covered
 		),
 		queryFn:
 			unit && periodStart
 				? ({ signal }): Promise<PublishedWeek> =>
-						fetchPublishedWeek(companyId, unit, periodStart, signal)
+						fetchPublishedWeek(companyId, unit, periodStart, covered, signal)
 				: skipToken,
 		meta: administrativeMeta(companyId),
 		staleTime: 30_000,

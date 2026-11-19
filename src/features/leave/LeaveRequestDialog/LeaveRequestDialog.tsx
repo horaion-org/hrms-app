@@ -131,7 +131,14 @@ export const LeaveRequestDialog = ({
 	const rostered = useQuery(
 		rosteredDaysQuery(
 			lifecycle?.companyId ?? "",
-			{ start: request?.startDate ?? "", end: request?.endDate ?? "" },
+			{
+				start: request?.startDate ?? "",
+				end: request?.endDate ?? "",
+				// A part-day request asks what approving would do to the shift, with its own shift choice.
+				startTime: request?.startTime ?? undefined,
+				endTime: request?.endTime ?? undefined,
+				allowsShiftSameDay: request?.allowsShiftSameDay ?? undefined,
+			},
 			request?.membershipId,
 			checksRoster
 		)
@@ -226,9 +233,12 @@ export const LeaveRequestDialog = ({
 		<Dialog
 			open
 			title={t("leave.requestTitle")}
+			// Each footer has its own key, so the press that opens a confirmation step
+			// never lands on that step's Confirm: React would otherwise redraw the same
+			// button as a submit before the browser runs the press's own action.
 			footer={
 				step !== "review" ? (
-					<div className="flex justify-end gap-3">
+					<div key="confirmation" className="flex justify-end gap-3">
 						<Button
 							variant="cancel"
 							onClick={() => {
@@ -253,7 +263,7 @@ export const LeaveRequestDialog = ({
 						</Button>
 					</div>
 				) : request.status === "PENDING" && canReview ? (
-					<div className="flex justify-end gap-3">
+					<div key="decisions" className="flex justify-end gap-3">
 						<Button
 							className="border-error-300! bg-error-50! text-error-600!"
 							disabled={deciding}

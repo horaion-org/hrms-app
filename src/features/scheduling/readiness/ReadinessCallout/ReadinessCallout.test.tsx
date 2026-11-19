@@ -51,6 +51,52 @@ const show = (props: Partial<ReadinessCalloutProps>): void => {
 };
 
 describe("ReadinessCallout", () => {
+	it("given_rulesThatNoLongerFit_when_shown_then_countsThemAndLinksToConstraintsFromTheShiftsTab", async () => {
+		show({
+			rows: [
+				readinessFixture({ constraintsNeedingAttention: 1 }),
+				{ ...BAR, constraintsNeedingAttention: 1 },
+			],
+		});
+
+		const [attention] = await screen.findAllByRole("note");
+		expect(attention).toHaveTextContent(
+			"2 constraints need attention: they no longer fit their shifts or job titles."
+		);
+		expect(
+			within(attention!).getByRole("link", { name: "Go to Constraints" })
+		).toBeVisible();
+	});
+
+	it("given_oneDepartmentChosen_when_onlyAnotherHasStaleRules_then_saysNothingAboutThem", async () => {
+		show({
+			rows: [
+				readinessFixture(),
+				{ ...BAR, ready: true, missing: [], constraintsNeedingAttention: 3 },
+			],
+			department: KITCHEN,
+		});
+
+		await screen.findByText("Rendered");
+		expect(screen.queryByText(/need attention/)).toBeNull();
+	});
+
+	it("given_theConstraintsTab_when_rulesNeedAttention_then_noLinkToItself", async () => {
+		show({
+			rows: [readinessFixture({ constraintsNeedingAttention: 1 })],
+			view: "constraints",
+		});
+
+		expect(
+			await screen.findByText(
+				"1 constraint needs attention: it no longer fits its shifts or job titles."
+			)
+		).toBeVisible();
+		expect(
+			screen.queryByRole("link", { name: "Go to Constraints" })
+		).toBeNull();
+	});
+
 	it("given_everyDepartment_when_someAreNotReady_then_namesThemAndEachNarrowsTheTab", async () => {
 		const user = userEvent.setup();
 		const onChooseDepartment = vi.fn();

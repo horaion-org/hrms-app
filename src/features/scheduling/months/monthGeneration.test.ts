@@ -5,14 +5,23 @@ import {
 	scheduleMonthFixture,
 	ungeneratedMonthFixture,
 } from "@/features/scheduling/months/fixtures";
+import type { MonthWeek } from "@/features/scheduling/months/api";
+import { datesPlanFixture } from "@/features/scheduling/dates/fixtures";
 import {
 	coveredWeeks,
+	datesStartBody,
+	generateMonthBody,
 	handChangedCoveredWeeks,
 	isGenerating,
 	refusedWeeks,
+	retryWeeksOf,
 	showsBeforeGenerate,
+	showsRegenerate,
+	startingWeekBody,
 	startingWeekOf,
+	startingWeeksOf,
 	weekNameOf,
+	weeksNoLongerCovered,
 	weeksToCreate,
 } from "@/features/scheduling/months/monthGeneration";
 
@@ -93,7 +102,7 @@ describe("month generation", () => {
 				}),
 				monthWeekFixture({
 					periodStart: "2026-11-16",
-					state: "TENTATIVE",
+					state: "TO_REVIEW",
 					handChangedDays: 0,
 					includedInMonthGeneration: true,
 				}),
@@ -122,6 +131,73 @@ describe("month generation", () => {
 		expect(refusedWeeks(answer)).toEqual({
 			"2026-12-14": "SCHEDULE_HAS_NO_EMPLOYEES",
 		});
+	});
+});
+
+describe("showsRegenerate", () => {
+	it("given_everyCoveredWeekGenerated_when_read_then_shows", () => {
+		const month = scheduleMonthFixture({
+			weeks: [
+				monthWeekFixture({
+					state: "TO_REVIEW",
+					includedInMonthGeneration: true,
+				}),
+				monthWeekFixture({
+					state: "TO_REVIEW",
+					includedInMonthGeneration: true,
+				}),
+			],
+		});
+
+		expect(showsRegenerate(month)).toBe(true);
+	});
+
+	it("given_aCoveredDraft_when_read_then_hidesForBeforeGenerate", () => {
+		const month = scheduleMonthFixture({
+			weeks: [
+				monthWeekFixture({
+					state: "TO_REVIEW",
+					includedInMonthGeneration: true,
+				}),
+				monthWeekFixture({ state: "DRAFT", includedInMonthGeneration: true }),
+			],
+		});
+
+		expect(showsRegenerate(month)).toBe(false);
+	});
+
+	it("given_aWeekBeingGenerated_when_read_then_hides", () => {
+		const month = scheduleMonthFixture({
+			weeks: [
+				monthWeekFixture({
+					state: "GENERATING",
+					includedInMonthGeneration: false,
+				}),
+				monthWeekFixture({
+					state: "TO_REVIEW",
+					includedInMonthGeneration: true,
+				}),
+			],
+		});
+
+		expect(showsRegenerate(month)).toBe(false);
+	});
+
+	it("given_everyWeekPublished_when_read_then_hides", () => {
+		const month = scheduleMonthFixture({
+			weeks: [
+				monthWeekFixture({
+					state: "PUBLISHED",
+					includedInMonthGeneration: false,
+				}),
+				monthWeekFixture({
+					state: "PUBLISHED",
+					includedInMonthGeneration: false,
+				}),
+			],
+		});
+
+		expect(showsRegenerate(month)).toBe(false);
 	});
 });
 
@@ -168,8 +244,393 @@ describe("startingWeekOf", () => {
 	});
 });
 
+/** Kitchen's December with the given states by Monday; a generating week is not covered, as the API says. */
+/** December with the given weeks in `states`, each held by one whole-week part as the API lists it, or by `parts`. */
+const decemberWith = (
+	states: Record<string, MonthWeek["state"]>,
+	parts: Record<string, MonthWeek["parts"]> = {}
+): ReturnType<typeof ungeneratedMonthFixture> => {
+	const month = ungeneratedMonthFixture();
+	return {
+		...month,
+		weeks: month.weeks.map((week) => {
+			const state = states[week.periodStart];
+			if (state === undefined) return week;
+			return {
+				...week,
+				state,
+				includedInMonthGeneration: state !== "GENERATING",
+				parts: parts[week.periodStart] ?? [
+					{
+						scheduleId: `s-${week.periodStart}`,
+						name: `Week of ${week.periodStart}`,
+						named: false,
+						coveredFrom: week.periodStart,
+						coveredTo: week.periodEnd,
+						state,
+						redoing: false,
+					},
+				],
+			};
+		}),
+	};
+};
+
+/** A published part of the week of 14 Dec, from `coveredFrom` to `coveredTo`. */
+const partOf14 = (
+	coveredFrom: string,
+	coveredTo: string
+): MonthWeek["parts"][number] => ({
+	scheduleId: "s-part",
+	name: "Week of 2026-12-14",
+	named: false,
+	coveredFrom,
+	coveredTo,
+	state: "PUBLISHED",
+	redoing: false,
+});
+
+const mondaysOf = (weeks: Array<MonthWeek>): Array<string> =>
+	weeks.map((week) => week.periodStart);
+
+describe("chosen weeks", () => {
+	const EVERYTHING = { shiftIds: ["sh-1"], constraintIds: ["co-1"] };
+	const SETUP = { includeLeave: true };
+
+	it("given_someWeeksChosen_when_bodyBuilt_then_weeksAreTheChosenMondaysAndNewWeeksOnlyTheChosenOnesToCreate", () => {
+		const month = decemberWith({ "2026-12-14": "DRAFT" });
+
+		const body = generateMonthBody(month, {}, EVERYTHING, SETUP, [
+			"2026-12-21",
+			"2026-12-14",
+		]);
+
+		expect(body.weeks).toEqual(["2026-12-14", "2026-12-21"]);
+		expect(body.newWeeks).toEqual([
+			{
+				periodStart: "2026-12-21",
+				includedShiftIds: ["sh-1"],
+				includedConstraintIds: ["co-1"],
+			},
+		]);
+	});
+
+	it("given_noChoiceOfWeeks_when_bodyBuilt_then_everyCoveredWeekIsSent", () => {
+		const month = decemberWith({ "2026-12-07": "GENERATING" });
+
+		const body = generateMonthBody(month, {}, EVERYTHING, SETUP);
+
+		expect(body.weeks).toEqual(["2026-12-14", "2026-12-21", "2026-12-28"]);
+		expect(body.newWeeks.map((week) => week.periodStart)).toEqual(body.weeks);
+	});
+
+	it("given_theFirstWeekNotChosen_when_startingWeekOf_then_theFirstChosenWeek", () => {
+		expect(
+			startingWeekOf(ungeneratedMonthFixture(), ["2026-12-14", "2026-12-21"])
+				?.periodStart
+		).toBe("2026-12-14");
+	});
+
+	it("given_consecutiveChosenWeeks_when_startingWeeksOf_then_onlyTheFirst", () => {
+		expect(
+			mondaysOf(
+				startingWeeksOf(ungeneratedMonthFixture(), [
+					"2026-12-14",
+					"2026-12-21",
+					"2026-12-28",
+				])
+			)
+		).toEqual(["2026-12-14"]);
+	});
+
+	it("given_aChosenWeekAfterAnUnchosenWeekWithoutARoster_when_startingWeeksOf_then_bothChosenWeeks", () => {
+		expect(
+			mondaysOf(
+				startingWeeksOf(ungeneratedMonthFixture(), ["2026-12-07", "2026-12-21"])
+			)
+		).toEqual(["2026-12-07", "2026-12-21"]);
+	});
+
+	it("given_aChosenWeekAfterAnUnchosenWeekUnderReview_when_startingWeeksOf_then_onlyTheFirst", () => {
+		const month = decemberWith({ "2026-12-14": "TO_REVIEW" });
+
+		expect(
+			mondaysOf(startingWeeksOf(month, ["2026-12-07", "2026-12-21"]))
+		).toEqual(["2026-12-07"]);
+	});
+
+	it("given_aChosenWeekAfterAGeneratingWeek_when_startingWeeksOf_then_notIncluded", () => {
+		const month = decemberWith({ "2026-12-14": "GENERATING" });
+
+		expect(
+			mondaysOf(startingWeeksOf(month, ["2026-12-07", "2026-12-21"]))
+		).toEqual(["2026-12-07"]);
+	});
+
+	it("given_aGapWeekRosteredOnlyToWednesday_when_startingWeeksOf_then_theNextChosenWeekIsAsked", () => {
+		const month = decemberWith(
+			{ "2026-12-14": "PUBLISHED" },
+			{ "2026-12-14": [partOf14("2026-12-14", "2026-12-16")] }
+		);
+
+		expect(
+			mondaysOf(startingWeeksOf(month, ["2026-12-07", "2026-12-21"]))
+		).toEqual(["2026-12-07", "2026-12-21"]);
+	});
+
+	it("given_aGapWeekWithAPartRosteredToSunday_when_startingWeeksOf_then_theNextChosenWeekCarriesOn", () => {
+		const month = decemberWith(
+			{ "2026-12-14": "PUBLISHED" },
+			{ "2026-12-14": [partOf14("2026-12-17", "2026-12-20")] }
+		);
+
+		expect(
+			mondaysOf(startingWeeksOf(month, ["2026-12-07", "2026-12-21"]))
+		).toEqual(["2026-12-07"]);
+	});
+
+	it("given_theFirstChosenWeekUnderReview_when_startingWeeksOf_then_onlyLaterGapWeeks", () => {
+		const month = decemberWith({ "2026-12-07": "TO_REVIEW" });
+
+		expect(
+			mondaysOf(startingWeeksOf(month, ["2026-12-07", "2026-12-21"]))
+		).toEqual(["2026-12-21"]);
+	});
+});
+
 describe("weekNameOf", () => {
 	it("given_aMonday_when_named_then_asTheApiNamesTheWeeksItCreates", () => {
 		expect(weekNameOf("2026-11-02")).toBe("Week of 2026-11-02");
+	});
+});
+
+describe("weeksNoLongerCovered", () => {
+	it("given_sentWeeksTheMonthNoLongerCovers_when_asked_then_thoseWeeksOnly", () => {
+		const month = ungeneratedMonthFixture();
+		month.weeks[1] = {
+			...month.weeks[1]!,
+			state: "PUBLISHED",
+			includedInMonthGeneration: false,
+		};
+		month.weeks[3] = { ...month.weeks[3]!, includedInMonthGeneration: false };
+
+		expect(
+			weeksNoLongerCovered(["2026-12-07", "2026-12-14"], month).map(
+				(week) => week.periodStart
+			)
+		).toEqual(["2026-12-14"]);
+	});
+});
+
+describe("retryWeeksOf", () => {
+	const STOPPED = {
+		code: "EARLIER_WEEK_FAILED",
+		at: "2026-11-17T09:20:00Z",
+	};
+	const december = ungeneratedMonthFixture();
+	/** December with each week's state and queue refusal set by index. */
+	const decemberWith = (
+		changes: Record<number, Partial<MonthWeek>>
+	): ReturnType<typeof ungeneratedMonthFixture> =>
+		ungeneratedMonthFixture({
+			weeks: december.weeks.map((week, index) => ({
+				...week,
+				...changes[index],
+			})),
+		});
+
+	it("given_aFailedWeekAndTheWeeksItStopped_when_asked_then_theFailedMondayAndEveryStoppedMonday", () => {
+		const month = decemberWith({
+			0: { state: "TO_REVIEW" },
+			1: { state: "FAILED" },
+			2: { state: "DRAFT", queueRefusal: STOPPED },
+			3: { state: "DRAFT", queueRefusal: STOPPED },
+		});
+
+		expect(retryWeeksOf(month)).toEqual([
+			"2026-12-14",
+			"2026-12-21",
+			"2026-12-28",
+		]);
+	});
+
+	it("given_twoFailedWeeksBeforeTheStoppedWeek_when_asked_then_theLaterFailedWeek", () => {
+		const month = decemberWith({
+			0: { state: "FAILED" },
+			1: { state: "FAILED" },
+			2: { state: "DRAFT", queueRefusal: STOPPED },
+		});
+
+		expect(retryWeeksOf(month)).toEqual(["2026-12-14", "2026-12-21"]);
+	});
+
+	it("given_aRegenerationThatFailedAndKeptItsRoster_when_asked_then_thatWeekIsTheFailedWeek", () => {
+		const month = decemberWith({
+			0: {
+				state: "TO_REVIEW",
+				failure: {
+					runStatus: "SUCCEEDED",
+					errorCode: null,
+					engineOutcome: "INFEASIBLE",
+				},
+			},
+			1: { state: "TO_REVIEW", queueRefusal: STOPPED },
+		});
+
+		expect(retryWeeksOf(month)).toEqual(["2026-12-07", "2026-12-14"]);
+	});
+
+	it("given_anotherRefusalCode_when_asked_then_thatWeekIsNotRetried", () => {
+		const month = decemberWith({
+			0: { state: "FAILED" },
+			1: {
+				state: "DRAFT",
+				queueRefusal: { ...STOPPED, code: "ASKER_MAY_NOT_GENERATE" },
+			},
+		});
+
+		expect(retryWeeksOf(month)).toEqual([]);
+	});
+
+	it("given_aFailedWeekWithoutStoppedWeeks_when_asked_then_nothing", () => {
+		expect(retryWeeksOf(decemberWith({ 0: { state: "FAILED" } }))).toEqual([]);
+	});
+
+	it("given_stoppedWeeksWithoutAFailedWeekBeforeThem_when_asked_then_nothing", () => {
+		const month = decemberWith({
+			0: { state: "DRAFT", queueRefusal: STOPPED },
+			1: { state: "FAILED" },
+		});
+
+		expect(retryWeeksOf(month)).toEqual([]);
+	});
+});
+
+describe("handChangedCoveredWeeks", () => {
+	it("given_chosenWeeks_when_asked_then_onlyTheChosenCoveredWeeksChangedByHand", () => {
+		const december = ungeneratedMonthFixture();
+		const month = ungeneratedMonthFixture({
+			weeks: december.weeks.map((week, index) => ({
+				...week,
+				state: "TO_REVIEW" as const,
+				handChangedDays: index < 2 ? 1 : 0,
+			})),
+		});
+
+		expect(
+			handChangedCoveredWeeks(month).map((week) => week.periodStart)
+		).toEqual(["2026-12-07", "2026-12-14"]);
+		expect(
+			handChangedCoveredWeeks(month, ["2026-12-14", "2026-12-21"]).map(
+				(week) => week.periodStart
+			)
+		).toEqual(["2026-12-14"]);
+	});
+});
+
+/** The whole setup of a Department: every shift and constraint. */
+const EVERYTHING = { shiftIds: ["sh-1", "sh-2"], constraintIds: ["c-1"] };
+/** A week's own choice, leaving one shift out. */
+const ONE_SHIFT = { shiftIds: ["sh-1"], constraintIds: ["c-1"] };
+
+describe("startingWeekBody", () => {
+	it("given_aWeekNotBegunYet_when_saved_then_theWholeWeekWithNoCoveredDays", () => {
+		expect(
+			startingWeekBody("2026-12-07", "2026-12-01", EVERYTHING, {
+				includeLeave: true,
+			})
+		).toStrictEqual({
+			name: "Week of 2026-12-07",
+			periodStart: "2026-12-07",
+			includeLeave: true,
+			includedShiftIds: ["sh-1", "sh-2"],
+			includedConstraintIds: ["c-1"],
+		});
+	});
+
+	it("given_aWeekStartingToday_when_saved_then_stillTheWholeWeek", () => {
+		expect(
+			startingWeekBody("2026-12-07", "2026-12-07", ONE_SHIFT, {
+				includeLeave: false,
+			})
+		).toStrictEqual({
+			name: "Week of 2026-12-07",
+			periodStart: "2026-12-07",
+			includeLeave: false,
+			includedShiftIds: ["sh-1"],
+			includedConstraintIds: ["c-1"],
+		});
+	});
+
+	it("given_aWeekThatBeganOnMonday_when_savedOnThursday_then_coversThursdayToSunday", () => {
+		expect(
+			startingWeekBody("2026-11-09", "2026-11-12", EVERYTHING, {
+				includeLeave: true,
+			})
+		).toStrictEqual({
+			name: "Week of 2026-11-09",
+			periodStart: "2026-11-09",
+			coveredFrom: "2026-11-12",
+			coveredTo: "2026-11-15",
+			includeLeave: true,
+			includedShiftIds: ["sh-1", "sh-2"],
+			includedConstraintIds: ["c-1"],
+		});
+	});
+});
+
+describe("datesStartBody", () => {
+	const firstPart = datesPlanFixture().weeks[0]!;
+
+	it("given_noNameInSetup_when_saved_then_theWeeksNameCoveringItsNewDays", () => {
+		expect(
+			datesStartBody(firstPart, "  ", EVERYTHING, { includeLeave: true })
+		).toStrictEqual({
+			name: "Week of 2026-11-16",
+			periodStart: "2026-11-16",
+			coveredFrom: "2026-11-19",
+			coveredTo: "2026-11-22",
+			includeLeave: true,
+			includedShiftIds: ["sh-1", "sh-2"],
+			includedConstraintIds: ["c-1"],
+		});
+	});
+
+	it("given_aNameInSetup_when_saved_then_thatNameTrimmedWithThePartsChoice", () => {
+		expect(
+			datesStartBody(firstPart, " Year-end gala ", ONE_SHIFT, {
+				includeLeave: false,
+			})
+		).toStrictEqual({
+			name: "Year-end gala",
+			periodStart: "2026-11-16",
+			coveredFrom: "2026-11-19",
+			coveredTo: "2026-11-22",
+			includeLeave: false,
+			includedShiftIds: ["sh-1"],
+			includedConstraintIds: ["c-1"],
+		});
+	});
+
+	it("given_chosenPeople_when_saved_then_theirIdsAreSentAndEveryoneSendsNoField", () => {
+		const setup = { includeLeave: true };
+
+		expect(
+			datesStartBody(firstPart, "", EVERYTHING, setup, ["m-1"])
+		).toMatchObject({ memberProfileIds: ["m-1"] });
+		expect(datesStartBody(firstPart, "", EVERYTHING, setup)).not.toHaveProperty(
+			"memberProfileIds"
+		);
+	});
+
+	it("given_aPartWithoutNewDays_when_saved_then_nothingToSend", () => {
+		expect(
+			datesStartBody(
+				{ ...firstPart, newFrom: null, newTo: null },
+				"",
+				EVERYTHING,
+				{ includeLeave: true }
+			)
+		).toBeUndefined();
 	});
 });

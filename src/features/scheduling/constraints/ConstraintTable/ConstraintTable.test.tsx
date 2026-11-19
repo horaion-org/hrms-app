@@ -49,6 +49,35 @@ describe("ConstraintTable", () => {
 		);
 	});
 
+	it("given_aMustAndAnIfPossible_when_rendered_then_theirTagsWearTheirTones", () => {
+		render(<ConstraintTable constraints={rows} />);
+
+		// The row and its phone summary each carry the tag.
+		for (const tag of within(row(morningCover.name)).getAllByText("Must"))
+			expect(tag).toHaveClass("bg-neutral-400");
+		for (const tag of within(row(barCover.name)).getAllByText("If possible"))
+			expect(tag).toHaveClass("bg-warning-100");
+	});
+
+	it("given_aRuleWhoseJobTitleLeftItsShift_when_rendered_then_needsAttentionWithWhatToDo", () => {
+		const stale = {
+			...morningCover,
+			values: morningCover.values.map((value) =>
+				value.value === "front-desk-lead"
+					? { ...value, problem: "NOT_LISTED" as const }
+					: value
+			),
+		};
+		render(<ConstraintTable constraints={[stale, barCover]} />);
+
+		expect(row(stale.name)).toHaveTextContent("Needs attention");
+		expect(row(stale.name)).toHaveTextContent(
+			"Front Desk Lead isn’t on every one of the constraint’s shifts any more. Edit the constraint, or add Front Desk Lead to each of its shifts."
+		);
+		expect(row(barCover.name)).not.toHaveTextContent("Needs attention");
+		expect(row(barCover.name)).not.toHaveTextContent("any more");
+	});
+
 	it("given_noBranchOrDepartmentChosen_when_rendered_then_namesEachRowsBranchAndDepartment", () => {
 		render(<ConstraintTable showBranch showDepartment constraints={rows} />);
 

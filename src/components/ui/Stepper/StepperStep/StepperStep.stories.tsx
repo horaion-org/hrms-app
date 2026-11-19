@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ReactElement } from "react";
 import { Stepper, StepperStep } from "@/components/ui/Stepper";
+import "@/common/i18n";
 
 const meta = {
 	title: "UI/Stepper/StepperStep",

@@ -43,6 +43,21 @@ export const AlwaysIfPossible: Story = {
 		appliesTo: "Everyone rostered in Sales",
 	},
 };
+/** A banned shift pattern, read day by day, a day's shifts as alternatives. */
+export const BannedShiftPattern: Story = {
+	args: {
+		constraint: {
+			type: "BANNED_SHIFT_PATTERN",
+			requirement: "MUST",
+			values: [
+				{ field: "PATTERN_DAY_1", value: "night", name: "Night" },
+				{ field: "PATTERN_DAY_1", value: "late", name: "Late" },
+				{ field: "PATTERN_DAY_2", value: "morning", name: "Morning" },
+			],
+		},
+		appliesTo: "Everyone rostered in Front Office",
+	},
+};
 /** Being filled in: grey words where nothing is chosen yet. */
 export const WithPlaceholders: Story = {
 	args: {

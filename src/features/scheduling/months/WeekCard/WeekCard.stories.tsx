@@ -3,6 +3,7 @@ import { withMemoryRouter } from "@/components/utils/MemoryRouterHarness";
 import {
 	coverDays,
 	monthWeekFixture,
+	twoPartWeekFixture,
 } from "@/features/scheduling/months/fixtures";
 import { WeekCard } from "@/features/scheduling/months/WeekCard";
 import "@/common/i18n";
@@ -13,7 +14,13 @@ const meta = {
 	title: "Features/Scheduling/Months/WeekCard",
 	component: WeekCard,
 	decorators: [withMemoryRouter],
-	args: { week: monthWeekFixture(), departmentId: "d-1", className: "w-60" },
+	args: {
+		week: monthWeekFixture(),
+		departmentId: "d-1",
+		today: "2026-11-01",
+		mayCreate: true,
+		className: "w-60",
+	},
 } satisfies Meta<typeof WeekCard>;
 
 export default meta;
@@ -32,9 +39,6 @@ export const ToReviewWithAShortDayAndAHandChange: Story = {
 			handChangedDays: 1,
 		}),
 	},
-};
-export const Tentative: Story = {
-	args: { week: monthWeekFixture({ state: "TENTATIVE" }) },
 };
 export const Generating: Story = {
 	args: { week: monthWeekFixture({ state: "GENERATING", ...noRoster }) },
@@ -73,5 +77,57 @@ export const RefusedByTheMonthRun: Story = {
 		}),
 		refusal:
 			"This department has no employees who can be scheduled. Give at least one active member of the department a job title, then try again.",
+	},
+};
+/** A week in two parts: Monday to Wednesday published, the named rest to review. */
+export const PublishedInPart: Story = {
+	args: {
+		week: monthWeekFixture({
+			periodStart: "2026-11-23",
+			periodEnd: "2026-11-29",
+			state: "TO_REVIEW",
+			coveredFrom: "2026-11-26",
+			coveredTo: "2026-11-29",
+			name: "Year-end gala",
+			days: coverDays("2026-11-23").map((day, index) => ({
+				...day,
+				covered: index >= 3,
+			})),
+			parts: [
+				{
+					scheduleId: "s-1",
+					name: "Week of 2026-11-23",
+					named: false,
+					coveredFrom: "2026-11-23",
+					coveredTo: "2026-11-25",
+					state: "PUBLISHED",
+					redoing: false,
+				},
+				{
+					scheduleId: "s-2",
+					name: "Year-end gala",
+					named: true,
+					coveredFrom: "2026-11-26",
+					coveredTo: "2026-11-29",
+					state: "TO_REVIEW",
+					redoing: false,
+				},
+			],
+		}),
+	},
+};
+
+/** A week of two schedules: each listed by its days and state, opening its own roster. */
+export const TwoSchedules: Story = {
+	args: {
+		week: monthWeekFixture({
+			periodStart: "2027-02-15",
+			periodEnd: "2027-02-21",
+			state: "TO_REVIEW",
+			scheduleId: "s-2",
+			coveredFrom: "2027-02-20",
+			coveredTo: "2027-02-21",
+			parts: twoPartWeekFixture(),
+		}),
 	},
 };

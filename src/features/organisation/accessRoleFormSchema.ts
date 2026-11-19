@@ -4,7 +4,7 @@ import {
 	ACCESS_ROLE_KINDS,
 	type AccessRoleKind,
 } from "@/features/organisation/api";
-import { nameSchema } from "@/features/organisation/nameSchema";
+import { NAME_LIMITS, nameSchema } from "@/features/organisation/nameSchema";
 import {
 	PERMISSION_KEYS,
 	type PermissionKey,
@@ -51,7 +51,7 @@ export const accessRoleFormSchema = (
 		kind: roleKindSchema(t(`${kindKey}.required`)),
 		name: nameSchema({
 			required: t(`${key}.nameRequired`),
-			length: t(`${key}.nameLength`),
+			length: t(`${key}.nameLength`, NAME_LIMITS),
 			characters: t(`${key}.nameCharacters`),
 		}),
 		permissions: z.array(z.enum(PERMISSION_KEYS)),

@@ -1,5 +1,9 @@
 import { z } from "zod";
 import { companyMemberSchema } from "@/features/organisation/api";
+import {
+	NAME_MAX_LENGTH,
+	NAME_MIN_LENGTH,
+} from "@/features/organisation/nameSchema";
 
 /** The API's allow-list for unit names (Branch, Department, Job title, System role). */
 export const UNIT_NAME_PATTERN = /^[\p{L}\p{N} .'&-]+$/u;
@@ -17,16 +21,12 @@ export const unitNameSchema = (messages: {
 		.string()
 		.trim()
 		.min(1, messages.required)
-		.min(2, messages.length)
-		.max(100, messages.length)
+		.min(NAME_MIN_LENGTH, messages.length)
+		.max(NAME_MAX_LENGTH, messages.length)
 		.regex(UNIT_NAME_PATTERN, messages.characters);
 
-/** One to twenty chosen people, each an active company member. */
+/** Up to twenty chosen people, each an active company member; none is allowed, so a head can be chosen later. */
 export const headsSchema = (messages: {
-	required: string;
 	max: string;
 }): z.ZodArray<typeof companyMemberSchema> =>
-	z
-		.array(companyMemberSchema)
-		.min(1, messages.required)
-		.max(MAX_HEADS, messages.max);
+	z.array(companyMemberSchema).max(MAX_HEADS, messages.max);

@@ -8,16 +8,24 @@ import { ApiProblemError } from "@/common/problem";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
+import { ErrorText } from "@/components/ui/ErrorText";
 import {
 	ArrowLeftIcon,
 	ChevronLeftIcon,
 	ChevronRightIcon,
 } from "@/components/ui/Icon";
+import { openingBalancesQuery } from "@/features/scheduling/hours/api";
+import { OpeningHoursCallout } from "@/features/scheduling/hours/OpeningHoursCallout";
+import { OpeningHoursSection } from "@/features/scheduling/hours/OpeningHoursSection";
+import {
+	openingWeekOf,
+	unknownOpeningCount,
+} from "@/features/scheduling/hours/openingSummary";
 import {
 	monthGenerationCheckQuery,
 	scheduleMonthQuery,
-	scheduleMonthSummariesQuery,
 	type MonthGeneration,
+	type MonthWeek,
 	type ScheduleMonth,
 } from "@/features/scheduling/months/api";
 import {
@@ -25,13 +33,20 @@ import {
 	type PanelLink,
 } from "@/features/scheduling/months/BeforeGeneratePanel";
 import {
+	failedWeekOf,
 	handChangedCoveredWeeks,
 	isGenerating,
 	refusedWeeks,
+	retryWeeksOf,
 	showsBeforeGenerate,
+	showsRegenerate,
+	stoppedWeeksOf,
 } from "@/features/scheduling/months/monthGeneration";
+import type { DayRun } from "@/features/scheduling/dates/api";
+import { formatPeriod } from "@/features/scheduling/periods";
+import { datesRunNoticeOf } from "@/features/scheduling/months/datesRunState";
 import { refusedWeeksFrom } from "@/features/scheduling/months/refusedWeeksState";
-import { RegenerateMonthDialog } from "@/features/scheduling/RegenerateMonthDialog";
+import { RegenerateMonthDialog } from "@/features/scheduling/months/RegenerateMonthDialog";
 import {
 	type GenerateMonth,
 	useGenerateMonth,
@@ -41,15 +56,14 @@ import {
 	crossingWeekOf,
 	formatDayAndMonth,
 	formatMonth,
-	formatMonthName,
 	formatWeekDates,
 	monthOf,
 	shiftMonth,
-	summaryRange,
-	waitingWeekBefore,
 } from "@/features/scheduling/months/monthWeeks";
-import { formatPeriod, periodStartingOn } from "@/features/scheduling/periods";
-import { stateCountsLine } from "@/features/scheduling/months/monthCopy";
+import {
+	stateCountsLine,
+	weekChangedRefusal,
+} from "@/features/scheduling/months/monthCopy";
 import { WeekCard } from "@/features/scheduling/months/WeekCard";
 import { dayMarkLooks } from "@/features/scheduling/months/weekStateLooks";
 import { generationFailure } from "@/features/scheduling/roster/generationFailure";
@@ -58,6 +72,10 @@ import {
 	refusalOfCode,
 } from "@/features/scheduling/schedules/scheduleRefusal";
 import { departmentScope } from "@/features/workspace/scopes";
+import { SCHEDULE_CREATE_KEYS } from "@/features/workspace/permissionKeys";
+import { isoDateIn } from "@/features/scheduling/roster/roster";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
+import dayjs from "dayjs";
 import { type Access, useAccess } from "@/features/workspace/useAccess";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 
@@ -135,7 +153,7 @@ const MonthSteps = ({
 					month: formatMonth(previous, language),
 				})}
 			>
-				{formatMonthName(previous, language)}
+				{formatMonth(previous, language)}
 			</Button>
 			<Button
 				params={{ month: next }}
@@ -147,7 +165,7 @@ const MonthSteps = ({
 					month: formatMonth(next, language),
 				})}
 			>
-				{formatMonthName(next, language)}
+				{formatMonth(next, language)}
 			</Button>
 		</div>
 	);
@@ -181,69 +199,54 @@ const CrossingWeekLine = ({
 				]}
 				values={{
 					week: formatWeekDates(week, language),
-					month: formatMonthName(weekMonth, language),
+					month: formatMonth(weekMonth, language),
 				}}
 			/>
 		</p>
 	);
 };
 
-/**
- * Why a month's weeks are all tentative when the week holding them back is
- * in an earlier month: that week, linked to its month. Read from the
- * Department's month summaries, from this week's month to the month before.
- */
-const WaitingWeekLine = ({
+/** On arrival from a run by dates: what is being generated, and a link to the next month's page for its days there. */
+const DatesRunLine = ({
 	month,
 	department,
-	weeks,
 }: {
 	month: string;
 	department: string;
-	weeks: ScheduleMonth["weeks"];
 }): FunctionComponent => {
-	const companyId = useCurrentCompanyId();
-	const { i18n } = useTranslation();
-	// Only when nothing here can be reviewed: the waiting week is earlier.
-	const heldBack =
-		weeks.some((week) => week.state === "TENTATIVE") &&
-		!weeks.some((week) => week.state === "TO_REVIEW");
-	const [today] = useState(() => new Date());
-	const range = { from: summaryRange(today).from, to: shiftMonth(month, -1) };
-	const summaries = useQuery(
-		scheduleMonthSummariesQuery(
-			companyId,
-			{ departmentId: department },
-			range,
-			heldBack && range.from <= range.to
-		)
+	const { t, i18n } = useTranslation();
+	const notice = datesRunNoticeOf(
+		useRouterState({ select: (state) => state.location.state }),
+		month
 	);
-	const waitingWeek =
-		heldBack && summaries.data
-			? waitingWeekBefore(summaries.data, month)
-			: undefined;
-	if (!waitingWeek) return null;
+	if (!notice) return null;
+	const language = formattingLocale(i18n);
+	const datesText = ({ from, to }: DayRun): string =>
+		formatPeriod({ start: from, end: to }, language);
+	const { otherMonth } = notice;
 	return (
-		<p className="text-sm text-neutral-800">
-			<Trans
-				i18nKey={`${key}.waitingWeek`}
-				components={[
-					<Button
-						key="week"
-						params={{ month: monthOf(waitingWeek) }}
-						search={{ department }}
-						to="/scheduling/months/$month"
-						variant="textlink"
-					/>,
-				]}
-				values={{
-					week: formatPeriod(
-						periodStartingOn(waitingWeek),
-						formattingLocale(i18n)
-					),
-				}}
-			/>
-		</p>
+		<Callout>
+			{t(`${key}.datesRun.generating`, { days: datesText(notice.days) })}
+			{otherMonth && " "}
+			{otherMonth && (
+				<Trans
+					i18nKey={`${key}.datesRun.otherMonth`}
+					components={[
+						<Button
+							key="month"
+							params={{ month: otherMonth.month }}
+							search={{ department }}
+							to="/scheduling/months/$month"
+							variant="textlink"
+						/>,
+					]}
+					values={{
+						days: datesText(otherMonth.days),
+						month: formatMonth(otherMonth.month, language),
+					}}
+				/>
+			)}
+		</Callout>
 	);
 };
 
@@ -313,7 +316,11 @@ const blockedNoteOf = (
 			? t("scheduling.week.listsHiddenNote", { department })
 			: undefined;
 
-/** The month itself: its title and summary, before generating or while generating, its weeks, and the legend. */
+/**
+ * The month itself: its title and summary, Regenerate once every covered week
+ * has a roster, before generating or while generating, a failed week that
+ * stopped the weeks queued after it with "Try again", its weeks, and the legend.
+ */
 const MonthContent = ({
 	scheduleMonth,
 }: {
@@ -330,21 +337,60 @@ const MonthContent = ({
 		departmentScope(departmentId)
 	);
 	const showsPanel = mayGenerate && showsBeforeGenerate(scheduleMonth);
+	const mayCreate = access.canAll(
+		SCHEDULE_CREATE_KEYS,
+		departmentScope(departmentId)
+	);
+	// The branch's today where the month read names its time zone, as Setup reads it.
+	const today = scheduleMonth.timeZone
+		? isoDateIn(scheduleMonth.timeZone, new Date())
+		: dayjs().format(ISO_DATE_FORMAT);
 	const check = useQuery(
 		monthGenerationCheckQuery(companyId, departmentId, month, showsPanel)
 	);
 	const generation = useGenerateMonth(companyId, scheduleMonth);
+	// A failed week stopped the weeks queued after it; "Try again" generates exactly those weeks.
+	const retryWeeks = retryWeeksOf(scheduleMonth);
+	const retry = useGenerateMonth(companyId, scheduleMonth, retryWeeks);
+	// Trying again over hand changes asks first, as Regenerate does; the dialog posts those weeks itself.
+	const [confirmingRetry, setConfirmingRetry] = useState(false);
+	// Named only while it stopped weeks after it.
+	const failedWeek = failedWeekOf(scheduleMonth);
+	const stoppedWeeks = stoppedWeeksOf(scheduleMonth);
+	const datesOf = (week: MonthWeek): string =>
+		formatWeekDates({ start: week.periodStart, end: week.periodEnd }, language);
+	const failedWeekDates = failedWeek && datesOf(failedWeek);
+	// The last refused post, to say why; a retry's refusal is the newer one.
+	const refusedRun = retry.error ? retry : generation;
 	// Generating again over hand changes asks first; the dialog posts the month itself.
 	const [confirmingRegenerate, setConfirmingRegenerate] = useState(false);
+	// The hours worked this month before its first scheduled week, entered on that week.
+	const openingWeek = openingWeekOf(scheduleMonth);
+	const openingScheduleId = openingWeek?.scheduleId ?? "";
+	const unit = { branchId, departmentId };
+	const [hoursOpen, setHoursOpen] = useState(false);
+	const mayChangeHours =
+		access.can("schedule:update", departmentScope(departmentId)) &&
+		openingWeek?.state !== "PUBLISHED";
+	const openings = useQuery(
+		openingBalancesQuery(
+			companyId,
+			unit,
+			openingScheduleId,
+			openingScheduleId !== ""
+		)
+	);
+	const unknownHours =
+		openings.data?.applies === true ? unknownOpeningCount(openings.data) : 0;
 	const [regenerateAnswer, setRegenerateAnswer] = useState<MonthGeneration>();
-	const lastAnswer = generation.answer ?? regenerateAnswer;
+	const lastAnswer = generation.answer ?? retry.answer ?? regenerateAnswer;
 	const refused = {
 		...refusedWeeksFrom(
 			useRouterState({ select: (state) => state.location.state })
 		),
 		...(lastAnswer ? refusedWeeks(lastAnswer) : {}),
 	};
-	const monthName = formatMonthName(month, language);
+	const monthName = formatMonth(month, language);
 	const first = weeks[0];
 	const last = weeks[weeks.length - 1];
 	const noSchedule = weeks.every((week) => week.scheduleId === null);
@@ -374,10 +420,33 @@ const MonthContent = ({
 					</h1>
 					<p className="text-sm text-neutral-800">{summary}</p>
 				</div>
-				<MonthSteps department={departmentId} month={month} />
+				<div className="flex flex-wrap gap-2">
+					{mayGenerate && showsRegenerate(scheduleMonth) && (
+						<Button
+							variant="secondary"
+							onClick={() => {
+								setConfirmingRegenerate(true);
+							}}
+						>
+							{t("scheduling.months.regenerate.button", { month: monthName })}
+						</Button>
+					)}
+					<MonthSteps department={departmentId} month={month} />
+				</div>
 			</header>
+			<DatesRunLine department={departmentId} month={month} />
 			<CrossingWeekLine department={departmentId} month={month} />
-			<WaitingWeekLine department={departmentId} month={month} weeks={weeks} />
+			{openingWeek && openingScheduleId !== "" && (
+				<OpeningHoursSection
+					canEdit={mayChangeHours}
+					companyId={companyId}
+					generated={openingWeek.state !== "DRAFT"}
+					open={hoursOpen}
+					scheduleId={openingScheduleId}
+					unit={unit}
+					onOpenChange={setHoursOpen}
+				/>
+			)}
 			{isGenerating(scheduleMonth) && (
 				<Callout role="status">
 					<strong>
@@ -387,6 +456,28 @@ const MonthContent = ({
 					</strong>{" "}
 					{t("scheduling.months.generate.generatingDetail")}
 				</Callout>
+			)}
+			{showsPanel && check.isPending && (
+				<p className="text-sm text-neutral-800" role="status">
+					{t("scheduling.months.generate.panel.checking", { month: monthName })}
+				</p>
+			)}
+			{showsPanel && check.isError && (
+				<div className="flex flex-col items-start gap-2">
+					<ErrorText>
+						{t("scheduling.months.generate.panel.checkFailed", {
+							month: monthName,
+						})}
+					</ErrorText>
+					<Button
+						variant="textlink"
+						onClick={() => {
+							void check.refetch();
+						}}
+					>
+						{t("scheduling.rosterEdit.tryAgain")}
+					</Button>
+				</div>
 			)}
 			{showsPanel && check.data && (
 				<BeforeGeneratePanel
@@ -406,15 +497,50 @@ const MonthContent = ({
 					}}
 				/>
 			)}
-			{generation.error && (
-				<p className="text-sm text-error-700" role="alert">
-					{monthGenerationRefusal(generation.error, t)}
-				</p>
+			{refusedRun.error && (
+				<ErrorText>
+					{monthGenerationRefusal(
+						refusedRun.error,
+						t,
+						weekChangedRefusal(refusedRun.sentWeeks, scheduleMonth, language, t)
+					)}
+				</ErrorText>
 			)}
 			{noSchedule && !showsPanel && (
 				<p className="text-sm text-neutral-800">
 					{t(`${key}.noSchedule`, { month: formatMonth(month, language) })}
 				</p>
+			)}
+			{failedWeekDates && (
+				<Callout tone="error">
+					<span className="block">
+						{t("scheduling.months.generate.stoppedByFailedWeek", {
+							count: stoppedWeeks.length,
+							failed: failedWeekDates,
+							stopped: stoppedWeeks.map(datesOf),
+						})}
+					</span>
+					{mayGenerate && (
+						<Button
+							className="mt-2"
+							loading={retry.isPending}
+							size="sm"
+							variant="secondary"
+							onClick={() => {
+								if (
+									handChangedCoveredWeeks(scheduleMonth, retryWeeks).length > 0
+								) {
+									setConfirmingRetry(true);
+									return;
+								}
+								// A refusal shows from refusedRun.error above.
+								void retry.generate().catch(() => undefined);
+							}}
+						>
+							{t("scheduling.rosterEdit.tryAgain")}
+						</Button>
+					)}
+				</Callout>
 			)}
 			<div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
 				{weeks.map((week) => {
@@ -423,7 +549,10 @@ const MonthContent = ({
 						<WeekCard
 							key={week.periodStart}
 							departmentId={departmentId}
+							failedWeek={failedWeekDates}
+							mayCreate={mayCreate}
 							refusal={refusal ? refusalOfCode(refusal, t) : undefined}
+							today={today}
 							week={week}
 							failureMessage={
 								week.failure
@@ -442,9 +571,37 @@ const MonthContent = ({
 				<RegenerateMonthDialog
 					companyId={companyId}
 					month={scheduleMonth}
+					notice={
+						openings.data && unknownHours > 0 ? (
+							<OpeningHoursCallout
+								asOf={openings.data.asOf}
+								className="mb-6"
+								hours={{ kind: "read", unknownCount: unknownHours }}
+								onAdd={
+									mayChangeHours
+										? (): void => {
+												setConfirmingRegenerate(false);
+												setHoursOpen(true);
+											}
+										: undefined
+								}
+							/>
+						) : undefined
+					}
 					onStarted={setRegenerateAnswer}
 					onClose={() => {
 						setConfirmingRegenerate(false);
+					}}
+				/>
+			)}
+			{confirmingRetry && (
+				<RegenerateMonthDialog
+					companyId={companyId}
+					month={scheduleMonth}
+					weeks={retryWeeks}
+					onStarted={setRegenerateAnswer}
+					onClose={() => {
+						setConfirmingRetry(false);
 					}}
 				/>
 			)}

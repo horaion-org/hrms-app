@@ -22,6 +22,8 @@ const meta = {
 			{ day: "2026-06-03", minutes: 480 },
 			{ day: "2026-06-04", minutes: 480 },
 		],
+		// Storybook makes every on* prop an action; a set onRetry means the days could not be read.
+		onRetry: undefined,
 	},
 } satisfies Meta<typeof RosteredDaysNotice>;
 
@@ -39,4 +41,29 @@ export const Reviewer: Story = {
 /** The days could not be read, so nothing can be confirmed until they are. */
 export const CouldNotRead: Story = {
 	args: { days: [], name: "Alex Tan", onRetry: fn() },
+};
+
+const shortened = [
+	{
+		day: "2026-06-03",
+		minutes: 480,
+		shiftStart: "07:00",
+		shiftEnd: "15:00",
+		outcome: "SHORTENED" as const,
+		workedTimes: [{ start: "11:00", end: "15:00" }],
+		gap: { start: "07:00", end: "11:00" },
+	},
+];
+
+/** Pending morning leave, as the applicant reads it. */
+export const PartDayOwn: Story = { args: { days: shortened } };
+
+/** Pending morning leave, as the reviewer approving it reads it. */
+export const PartDayReviewer: Story = {
+	args: {
+		days: shortened,
+		name: "Alex Tan",
+		confirmed: false,
+		onConfirmedChange: fn(),
+	},
 };

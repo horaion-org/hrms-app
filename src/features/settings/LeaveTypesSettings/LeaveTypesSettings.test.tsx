@@ -71,9 +71,9 @@ const catalogueReads = (calls: ReturnType<typeof stubApi>): number =>
 		.length;
 
 const open = async (): Promise<HTMLElement> => {
-	app = await openApp("/settings?section=leave");
+	app = await openApp("/settings?section=leave-types");
 	renderAuthApp(app);
-	return screen.findByRole("tabpanel", { name: "Leave" });
+	return screen.findByRole("region", { name: "Leave types" });
 };
 
 describe("LeaveTypesSettings", () => {
@@ -116,6 +116,36 @@ describe("LeaveTypesSettings", () => {
 		expect(
 			within(panel).getByRole("button", { name: "Add leave type" })
 		).toBeVisible();
+	});
+
+	it("given_offInLieuEarned_when_listed_then_itsOwnGroupWithWhatItIs", async () => {
+		stubApi(
+			routes(READ_AND_UPDATE, {
+				[`GET ${LEAVE_TYPES}`]: {
+					status: 200,
+					body: envelope([
+						...LEAVE_TYPE_CATALOGUE_FIXTURE,
+						managedLeaveTypeFixture({
+							leaveTypeId: "lt-off-in-lieu",
+							code: "OFF_IN_LIEU",
+							name: "Off in lieu",
+							grantKind: "EARNED",
+						}),
+					]),
+				},
+			})
+		);
+		const panel = await open();
+
+		const earned = await within(panel).findByRole("table", {
+			name: "Time off earned",
+		});
+		expect(
+			within(earned).getByRole("row", { name: /Off in lieu/ })
+		).toBeVisible();
+		expect(panel).toHaveTextContent(
+			"Earned by extra hours on terms that give time off instead of pay, and taken back as Off in lieu."
+		);
 	});
 
 	it("offers no changes without leave_type:update", async () => {
