@@ -952,6 +952,7 @@
 			"leave": "Leave",
 			"availability": "Availability",
 			"shiftPreferences": "Shift preferences",
+			"myRoster": "My roster",
 			"people": "People",
 			"organisation": "Organisation",
 			"reports": "Reports"
@@ -4517,7 +4518,20 @@
 			"loadFailed": "This roster could not be loaded. Please try again.",
 			"changesTitle": "Your days changed since this roster was published",
 			"changeLine": "{{day}}: was {{before}}, now {{now}}.",
-			"changeRemark": "Remark:"
+			"changeRemark": "Remark:",
+			"days": {
+				"title": "My roster",
+				"subtitle": "Your shifts, days off and leave from published rosters.",
+				"loading": "Loading your days…",
+				"loadFailed": "Your days could not be loaded. Please try again.",
+				"navigatorLabel": "Days shown",
+				"previous": "Previous two weeks",
+				"next": "Next two weeks",
+				"listLabel": "Your days",
+				"noRoster": "No published roster yet",
+				"teamRoster": "See the team’s roster",
+				"teamRosterNamed": "See the team’s roster: {{department}}, {{period}}"
+			}
 		},
 		"generation": {
 			"inProgress": "This schedule is being generated. Its roster shows here once it’s ready; this page checks again every {{seconds}} seconds.",

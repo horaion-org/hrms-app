@@ -2783,6 +2783,7 @@
 			"leave": "Permisos",
 			"availability": "Disponibilidad",
 			"shiftPreferences": "Preferencias de turno",
+			"myRoster": "Mi cuadrante",
 			"people": "Personas",
 			"organisation": "Organización",
 			"reports": "Informes"
@@ -4317,7 +4318,20 @@
 			"loadFailed": "No pudimos cargar este cuadrante. Inténtalo de nuevo.",
 			"changesTitle": "Tus días cambiaron desde que se publicó este cuadrante",
 			"changeLine": "{{day}}: antes {{before}}, ahora {{now}}.",
-			"changeRemark": "Comentario:"
+			"changeRemark": "Comentario:",
+			"days": {
+				"title": "Mi cuadrante",
+				"subtitle": "Tus turnos, días libres y permisos de los cuadrantes publicados.",
+				"loading": "Cargando tus días…",
+				"loadFailed": "No pudimos cargar tus días. Inténtalo de nuevo.",
+				"navigatorLabel": "Días mostrados",
+				"previous": "Dos semanas anteriores",
+				"next": "Dos semanas siguientes",
+				"listLabel": "Tus días",
+				"noRoster": "Aún no hay un cuadrante publicado",
+				"teamRoster": "Ver el cuadrante del equipo",
+				"teamRosterNamed": "Ver el cuadrante del equipo: {{department}}, {{period}}"
+			}
 		},
 		"generation": {
 			"inProgress": "Se está generando este horario. Su cuadrante aparecerá aquí cuando esté listo; esta página vuelve a comprobarlo cada {{seconds}} segundos.",
