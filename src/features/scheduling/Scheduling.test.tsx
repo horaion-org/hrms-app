@@ -299,7 +299,7 @@ it("deletes a schedule from its history row after a danger confirm naming its de
 		name: DELETE_TITLE,
 	});
 	expect(dialog).toHaveTextContent(
-		/This removes the Front Office roster for .+\. This can’t be undone\./
+		/This removes the Front Office roster for .+ from the roster page\. A roster that was generated is kept in History, where you can open it and put it back while its days are still free\./
 	);
 	const confirm = within(dialog).getByRole("button", {
 		name: "Delete these days",
@@ -330,7 +330,7 @@ it("explains why a schedule being generated can't be deleted yet", async () => {
 		name: DELETE_TITLE,
 	});
 	expect(dialog).toHaveTextContent(
-		"This schedule is being generated. You can delete it once the run finishes."
+		"These days are being generated. You can delete them once the run finishes."
 	);
 	expect(
 		within(dialog).getByRole("button", { name: "Delete these days" })
