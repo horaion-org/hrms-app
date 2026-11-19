@@ -409,6 +409,7 @@ it("reaches the overview from the Sidebar and marks Organisation current", async
 		"Scheduling",
 		"People",
 		"Organisation",
+		"My roster",
 		"Leave",
 		"Shift preferences",
 		"Reports",
