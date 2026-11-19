@@ -8,6 +8,7 @@ import {
 	namedSpansOf,
 	partRedoOf,
 	planNotesOf,
+	withdrawnDaysOf,
 	planRowOf,
 	weekSchedulesOf,
 	previousBefore,
@@ -15,6 +16,7 @@ import {
 	weekRunsAround,
 } from "@/features/scheduling/dates/datesSetup";
 import type {
+	DatesPlan,
 	DatesPlanWeek,
 	DayRun,
 	PartDays,
@@ -611,5 +613,56 @@ describe("datesGenerationBody", () => {
 				},
 			],
 		});
+	});
+});
+
+describe("withdrawnDaysOf", () => {
+	/** One week of 16 Nov asked Thu 19 to Sun 22, with the given kept parts as [from, to, state]. */
+	const planKeeping = (
+		kept: Array<[string, string, "PUBLISHED" | "TO_REVIEW"]>
+	): DatesPlan => ({
+		...datesPlanFixture(),
+		weeks: [
+			{
+				...datesPlanFixture().weeks[0]!,
+				kept: kept.map(([coveredFrom, coveredTo, state], index) => ({
+					scheduleId: `s-${index}`,
+					coveredFrom,
+					coveredTo,
+					state,
+					handChangedDays: null,
+				})),
+			},
+		],
+	});
+
+	it.each([
+		{
+			case: "every asked day published: none",
+			kept: [["2026-11-16", "2026-11-22", "PUBLISHED"]],
+			withdrawn: [],
+		},
+		{
+			case: "every asked day withdrawn: the asked days of the part",
+			kept: [["2026-11-16", "2026-11-22", "TO_REVIEW"]],
+			withdrawn: [{ from: "2026-11-19", to: "2026-11-22" }],
+		},
+		{
+			case: "some published and some withdrawn: only the withdrawn",
+			kept: [
+				["2026-11-19", "2026-11-20", "PUBLISHED"],
+				["2026-11-21", "2026-11-22", "TO_REVIEW"],
+			],
+			withdrawn: [{ from: "2026-11-21", to: "2026-11-22" }],
+		},
+		{
+			case: "a part to review wholly before the asked days: none",
+			kept: [["2026-11-16", "2026-11-18", "TO_REVIEW"]],
+			withdrawn: [],
+		},
+	] as const)("given_$case", ({ kept, withdrawn }) => {
+		expect(withdrawnDaysOf(planKeeping(kept.map((part) => [...part])))).toEqual(
+			withdrawn
+		);
 	});
 });

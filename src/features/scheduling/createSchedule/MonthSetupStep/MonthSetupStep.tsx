@@ -21,6 +21,7 @@ import {
 	maxLastDayOf,
 	planNotesOf,
 	planRowOf,
+	withdrawnDaysOf,
 	type PlanBadge,
 	type PlanRow,
 } from "@/features/scheduling/dates/datesSetup";
@@ -146,7 +147,7 @@ const DatesPlanRows = ({
 	if (plan.refusal)
 		return (
 			<Callout tone="error">
-				{datesRefusalText(plan.refusal, t, language)}
+				{datesRefusalText(plan.refusal, t, language, withdrawnDaysOf(plan))}
 			</Callout>
 		);
 	const rows = plan.weeks.map(planRowOf);

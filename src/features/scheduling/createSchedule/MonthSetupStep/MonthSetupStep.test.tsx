@@ -379,12 +379,15 @@ describe("MonthSetupStep", () => {
 		it.each([
 			{ case: "month", defaultValues: DEFAULTS },
 			{ case: "dates", defaultValues: DATES },
-		])("given_$case_when_shown_then_noScheduleForChoice", ({ defaultValues }) => {
-			render(<Harness dates={datesProp()} defaultValues={defaultValues} />);
+		])(
+			"given_$case_when_shown_then_noScheduleForChoice",
+			({ defaultValues }) => {
+				render(<Harness dates={datesProp()} defaultValues={defaultValues} />);
 
-			expect(screen.queryByRole("tablist")).toBeNull();
-			expect(screen.queryByText("Schedule for")).toBeNull();
-		});
+				expect(screen.queryByRole("tablist")).toBeNull();
+				expect(screen.queryByText("Schedule for")).toBeNull();
+			}
+		);
 
 		it("given_datesChosen_when_shown_then_firstLastNameAndThePlanRows", () => {
 			const onDatesChange = vi.fn();
@@ -404,7 +407,9 @@ describe("MonthSetupStep", () => {
 			const table = screen.getByRole("table", { name: "What generating does" });
 			expect(within(table).getAllByRole("row")).toHaveLength(3);
 			expect(
-				within(table).getByText(/^Nov 19\s?–\s?22, 2026: empty, will be filled\.$/)
+				within(table).getByText(
+					/^Nov 19\s?–\s?22, 2026: empty, will be filled\.$/
+				)
 			).toBeInTheDocument();
 			expect(within(table).getAllByText("New")).toHaveLength(2);
 			expect(
@@ -717,6 +722,41 @@ describe("MonthSetupStep", () => {
 					"Every day from Thu, Nov 19 to Sat, Nov 28 has been published, so nothing would change. Choose a first day after Sat, Nov 28."
 				)
 			).toBeInTheDocument();
+		});
+
+		it("given_everyAskedDayWithdrawn_when_shown_then_saysWithdrawnAndHowToRedoOrKeepThem", () => {
+			const week = {
+				...datesPlanFixture().weeks[0]!,
+				newFrom: null,
+				newTo: null,
+				action: "KEEP" as const,
+				kept: [
+					{
+						scheduleId: "s-9",
+						coveredFrom: "2026-11-16",
+						coveredTo: "2026-11-22",
+						state: "TO_REVIEW" as const,
+						handChangedDays: null,
+					},
+				],
+			};
+			const plan = datesPlanFixture({
+				newDays: 0,
+				weeks: [week],
+				refusal: {
+					code: "SCHEDULE_DAYS_ALL_TAKEN",
+					days: { from: "2026-11-19", to: "2026-11-22" },
+					scheduledDays: null,
+				},
+			});
+			render(<Harness dates={datesProp(plan)} defaultValues={DATES} />);
+
+			expect(
+				screen.getByText(
+					/^Nov 19\s?–\s?22, 2026 were published and then withdrawn, so generating leaves them as they are\. To work them out again, delete them first: on the roster, press their band and choose “Delete these days”, then generate\. To keep the roster and adjust it, open it from the roster and publish it again\.$/
+				)
+			).toBeInTheDocument();
+			expect(screen.queryByText(/has been published/)).toBeNull();
 		});
 
 		it("given_aPlanRefusedBeforePublishedDays_when_shown_then_theRefusalOnlyAndNoPlanOfARunThatWontHappen", () => {

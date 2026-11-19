@@ -217,6 +217,19 @@ export const dayCountOfRuns = (runs: ReadonlyArray<DayRun>): number =>
 	runs.reduce((total, run) => total + dayCountOf(run.from, run.to), 0);
 
 /**
+ * The asked days whose roster was published and then withdrawn, a run per
+ * part: a run leaves them alone as it does published days (the API counts a
+ * roster published once as published), so a kept part among the asked days
+ * that is not published now is one of them.
+ */
+export const withdrawnDaysOf = (plan: DatesPlan): Array<DayRun> =>
+	plan.weeks.flatMap((week) =>
+		week.kept
+			.filter((part) => part.state !== "PUBLISHED")
+			.flatMap((part) => partDaysWithin(part, week.askedFrom, week.askedTo))
+	);
+
+/**
  * The notes under "What this creates". A week's kept days among its asked
  * days are published: its new days start at the first asked day that is not
  * (API ADR-0129). With `redoRefused` (people chosen over days that have a

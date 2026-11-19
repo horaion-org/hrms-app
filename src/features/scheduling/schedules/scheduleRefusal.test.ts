@@ -3,6 +3,7 @@ import { ApiProblemError } from "@/common/problem";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
 	datesGenerationRefusal,
+	datesRefusalText,
 	refusalOfCode,
 	scheduleRefusalMessage,
 } from "@/features/scheduling/schedules/scheduleRefusal";
@@ -50,4 +51,35 @@ describe("chosen people refusals (API ADR-0136)", () => {
 			"None of the people chosen for this schedule can be rostered any more. Delete this schedule and schedule its days again with people of the department."
 		);
 	});
+});
+
+describe("datesRefusalText: every asked day taken", () => {
+	const refusal = {
+		code: "SCHEDULE_DAYS_ALL_TAKEN",
+		days: { from: "2026-11-19", to: "2026-11-22" },
+		scheduledDays: null,
+	};
+
+	it.each([
+		{
+			case: "all published",
+			withdrawn: [],
+			copy: /^Every day from Thu,? Nov 19 to Sun,? Nov 22 has been published, so nothing would change\./,
+		},
+		{
+			case: "all withdrawn",
+			withdrawn: [{ from: "2026-11-19", to: "2026-11-22" }],
+			copy: /^Nov 19\s?–\s?22, 2026 were published and then withdrawn, so generating leaves them as they are\. To work them out again, delete them first/,
+		},
+		{
+			case: "some published, one day withdrawn",
+			withdrawn: [{ from: "2026-11-22", to: "2026-11-22" }],
+			copy: /^Nov 22, 2026 was published and then withdrawn, so generating leaves it as it is\. To work it out again, delete it first/,
+		},
+	])(
+		"given_$case_when_worded_then_saysWhatIsTrueOfThoseDays",
+		({ withdrawn, copy }) => {
+			expect(datesRefusalText(refusal, t, "en-US", withdrawn)).toMatch(copy);
+		}
+	);
 });
