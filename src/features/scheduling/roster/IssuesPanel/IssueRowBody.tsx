@@ -8,12 +8,9 @@ import {
 } from "@/features/scheduling/roster/issueAdvice";
 import type { IssueRow } from "@/features/scheduling/roster/issueRows";
 import type { RosterIssue } from "@/features/scheduling/roster/rosterIssueGroups";
-import {
-	IssueFixAdvice,
-	IssueFixButton,
-	IssueFixOutcomeLine,
-} from "@/features/scheduling/roster/RosterIssueGroups";
+import { IssueFixOutcomeLine } from "@/features/scheduling/roster/RosterIssueGroups";
 import { GapCover, type IssueCoverContext } from "./GapCover";
+import { RetypeFix } from "./RetypeFix";
 
 export type IssueRowBodyProps = {
 	row: IssueRow;
@@ -29,9 +26,10 @@ export type IssueRowBodyProps = {
 
 /**
  * What a row opens to: for a short shift on a roster that may be changed, its
- * options (`GapCover`); for a fix Issues knows, the fix and its button;
- * otherwise why it is listed and what to do, with Show on the grid. Never
- * empty: the issue's own sentence is there whenever there are no options.
+ * options (`GapCover`); for a fix Issues knows, the day drawn before → after
+ * with Apply (`RetypeFix`); otherwise (a rule asked "if possible" among them,
+ * which has nothing to apply) why it is listed, in the engine's sentences,
+ * and what to do. Show outlines it on the grid. Never empty.
  */
 export const IssueRowBody = ({
 	row,
@@ -50,16 +48,15 @@ export const IssueRowBody = ({
 		onShow !== undefined && issue.memberProfileId !== null && issue.day !== null;
 	return (
 		<>
-			<p className="text-neutral-800">{issue.rule}</p>
 			{retype && fixes ? (
-				<>
-					<IssueFixAdvice language={language} name={issue.who} retype={retype} />
-					<IssueFixButton fixes={fixes} retype={retype} />
-				</>
+				<RetypeFix fixes={fixes} language={language} retype={retype} />
 			) : (
-				advice && (
-					<p className="text-neutral-700">{issueAdviceLine(advice, t)}</p>
-				)
+				<>
+					<p className="text-neutral-800">{issue.rule}</p>
+					{advice && (
+						<p className="text-neutral-700">{issueAdviceLine(advice, t)}</p>
+					)}
+				</>
 			)}
 			{fixes?.outcome?.key === issue.key && (
 				<IssueFixOutcomeLine outcome={fixes.outcome} />
