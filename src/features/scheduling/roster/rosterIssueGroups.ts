@@ -22,11 +22,6 @@ export const ISSUE_GROUPS = ["mustFix", "notMet", "forInformation"] as const;
 
 export type IssueGroup = (typeof ISSUE_GROUPS)[number];
 
-/** The groups that stay closed until the person opens them: notes with nothing to fix. */
-export const GROUPS_STARTING_CLOSED: ReadonlyArray<IssueGroup> = [
-	"forInformation",
-];
-
 /** The one action an item offers: outline it on the grid, or find cover for a shift left short. */
 export type IssueAction =
 	{ kind: "show" } | { kind: "findCover"; gap: CoverGapRequest };
@@ -383,67 +378,3 @@ export const issueCounts = (
  */
 export const shortShiftCount = (issues: ReadonlyArray<RosterIssue>): number =>
 	issues.filter((issue) => issue.key.startsWith(GAP_KEY_PREFIX)).length;
-
-/** One part of the Issues summary line, drawn in its group's tone. */
-export type IssueSummaryPart = { group: IssueGroup; text: string };
-
-/** "3 to fix", "2 could not be met", "1 for information": one part per group with items, none when all are empty. */
-export const issueSummaryParts = (
-	counts: Record<IssueGroup, number>,
-	t: TFunction
-): Array<IssueSummaryPart> =>
-	ISSUE_GROUPS.filter((group) => counts[group] > 0).map((group) => ({
-		group,
-		text: t(`${key}.summary.${group}`, { count: counts[group] }),
-	}));
-
-/** How many items of each kind, in the order each kind first appears. */
-export const topicCounts = (
-	issues: ReadonlyArray<RosterIssue>
-): Array<{ topic: string; count: number }> => {
-	const counts = new Map<string, number>();
-	for (const { topic } of issues)
-		counts.set(topic, (counts.get(topic) ?? 0) + 1);
-	return [...counts].map(([topic, count]) => ({ topic, count }));
-};
-
-/** A folded group's one line: "Rest carried in from before: 2 · Days before changed: 1". */
-export const topicGist = (
-	issues: ReadonlyArray<RosterIssue>,
-	t: TFunction
-): string =>
-	topicCounts(issues)
-		.map((part) => t(`${key}.topicCount`, part))
-		.join(" · ");
-
-/** Orders items by person or by day. */
-export type IssueOrder = "byPerson" | "byDay";
-
-// An item with no day sorts after those with one.
-const dayOrder = (day: string | null): string => day ?? "9999-12-31";
-
-const compareByPerson = (first: RosterIssue, second: RosterIssue): number =>
-	first.who.localeCompare(second.who) ||
-	dayOrder(first.day).localeCompare(dayOrder(second.day));
-
-const compareByDay = (first: RosterIssue, second: RosterIssue): number =>
-	dayOrder(first.day).localeCompare(dayOrder(second.day)) ||
-	first.who.localeCompare(second.who);
-
-/** The items in the order asked, the input left as it is. */
-export const orderedIssues = (
-	issues: ReadonlyArray<RosterIssue>,
-	order: IssueOrder
-): Array<RosterIssue> =>
-	[...issues].sort(order === "byPerson" ? compareByPerson : compareByDay);
-
-/** One group's items, in the order asked. */
-export const issuesOfGroup = (
-	issues: ReadonlyArray<RosterIssue>,
-	group: IssueGroup,
-	order: IssueOrder
-): Array<RosterIssue> =>
-	orderedIssues(
-		issues.filter((issue) => issue.group === group),
-		order
-	);

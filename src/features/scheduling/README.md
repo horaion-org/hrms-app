@@ -253,23 +253,24 @@ gate, the saves and generating the draft's month.
   docs/adr/0065). Days to decide, and days marked for leave or cover, are `ISSUE_SOURCES` rows listed in the Issues
   panel; a day to decide reads "Needs attention" to a roster editor who can't see leave, with no leave detail. A
   notification about such a day opens its week with the Issues panel (`?week=…&panel=issues`).
-- `cover/` — Find cover for a short shift (`FindCoverPanel`, opened from an Issues row) shows ONE list of who covers
-  it, and asks the engine for its own repair as it opens (`engineRepairApi.ts` `…/repair-options`, kept per gap and
-  revision; `useEngineRepair.ts`, `engineRepairWords.ts`). `coverListView.ts` decides the list: on a roster not
-  published, the engine's options as cards (`EngineRepairOptions`), each reviewed through Find cover's own preview and
-  Apply when the change can be stated exactly (`engineRepairChange.ts` `repairCells`), else made by hand; the API's
-  list ranked by hours (`api.ts`, `useCoverPanel.ts`, `coverOptionWords.ts`, `CoverOptionList`) only when the engine
-  cannot answer. A published roster keeps the API's list, the engine's answer merged in (`coverWithEngine.ts`), since
-  offers to staff go out from it, with the engine's options after it. `NotAssignedList` (`notAssignedWords.ts`, closed
-  until opened) says why nobody else with the job title was put on the shift. Any open gap can be asked about: the
-  generation's, or one made since (leave, a hand change), which the engine finds in the roster as it stands; a shift
-  it counts staffed (part-day leave) is refused, and the API's list is shown instead.
+- `cover/` — what covering a short shift is made of, shown in its Issues row (`roster/IssuesPanel/GapCover`): the
+  engine's own repair, asked as the row opens (`engineRepairApi.ts` `…/repair-options`, kept per gap and revision;
+  `useEngineRepair.ts`, `engineRepairWords.ts`, `engineRepairChange.ts` `repairCells`), the API's list ranked by hours
+  (`api.ts`, `coverOptionWords.ts`), `coverListView.ts` (which of the two is the list: the engine's on a roster not
+  published, the API's when the engine cannot answer and on a published roster, whose offers go out from it),
+  `coverWithEngine.ts` (the engine's answer merged into the API's list), `useCoverPanel.ts` (state, preview, Apply and
+  offers) and `NotAssignedList` (`notAssignedWords.ts`, why nobody else was put on the shift, folded).
 - `rulesCheck/` — Validate schedule, for whoever may change the roster (`…/roster-check`, under
   `schedule:edit_shift`): `rosterRulesCheckApi.ts` (the working-time rules broken and the staffing gaps, at one
   revision, asked on demand), `useRosterRulesCheck.ts` (the ask and the last answer), `rosterRulesCheckWords.ts` (rule
   labels, refusals, the button's mark), `ValidateScheduleButton` in the week bar, and `issuesFromValidation.ts`: once
-  validated, Issues shows the validation's gaps in place of the generation's conflicts and its broken rules
-  (`ValidationNote` heads the list with where it stands).
+  validated, Issues shows the validation's gaps in place of the generation's conflicts and its broken rules;
+  `checkLine.ts` is the one line at the head of Issues ("Checked 15:42 · Check again").
+- `roster/IssuesPanel/` — the Issues panel as one list (`RosterIssuesList`, rows from `roster/issueRows.ts`): a
+  stripe per severity, what over where, one action, All / Must fix / If possible, one row open at a time, inline. A
+  short shift's row opens to its options (`GapCover`: cards from `roster/coverCards.ts`, the change drawn as tiles by
+  `roster/changeTiles.ts`, one Suggested, the review inside the row in `CoverRowReview`); a rest-day row to its fix
+  drawn with Apply (`RetypeFix`); any other to its sentence and Show. "Find cover" anywhere opens Issues on that row.
 - `roster/roster.ts` — `rosterFromAssignments` (one row per member, each day a shift, off or leave; a row whose
   member is gone keyed by its assignment), `hoursOf`/`hoursInDays` (paid minutes summed first, rounded once, via `paidShiftMinutes`), `weekDays`, `legendOf`,
   `rosterStats`, and `isoDateIn`/`dateTimeFormatIn` for the branch's time zone.

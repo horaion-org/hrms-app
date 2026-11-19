@@ -4839,35 +4839,14 @@
 		"issues": {
 			"conflict": "A clash on this day",
 			"weekBarLabel": "Issues: {{count}} to fix, {{notMet}} could not be met",
-			"groupLabel": "{{group}}, {{count}}",
 			"show": "Show",
-			"orderLabel": "Order issues",
-			"order": {
-				"byPerson": "By person",
-				"byDay": "By day"
-			},
-			"groups": {
-				"mustFix": "Must fix",
-				"notMet": "Could not be met",
-				"forInformation": "More information"
-			},
 			"unknownJob": "A job title",
 			"wholeRoster": "Whole roster",
-			"summary": {
-				"mustFix_one": "{{count}} to fix",
-				"mustFix_other": "{{count}} to fix",
-				"notMet_one": "{{count}} could not be met",
-				"notMet_other": "{{count}} could not be met",
-				"forInformation_one": "{{count}} for information",
-				"forInformation_other": "{{count}} for information",
-				"changesUnchecked": "Changes not validated"
-			},
 			"jobShort_one": "{{count}} {{job}} short",
 			"jobShort_other": "{{count}} {{job}} short",
 			"brokenMust": "A rule that must hold is broken here. Change this day by hand, then validate again. Rule: {{rule}}",
 			"notMetRule": "Asked for if possible, and this roster could not meet it. Rule: {{rule}}",
 			"leaveShort": "On leave, so {{shift}} is short.",
-			"nothingToFix": "Nothing to fix this week",
 			"startChanged": {
 				"title_one": "{{count}} person’s days before this week changed",
 				"title_other": "{{count}} people’s days before this week changed",
@@ -4881,7 +4860,6 @@
 			"ruleOnly": "Rule: {{rule}}",
 			"brokenSomewhere": "Broken, but the engine could not say who or which day.",
 			"notMetSomewhere": "Not met, but the engine could not say who or which day.",
-			"topicCount": "{{topic}}: {{count}}",
 			"topics": {
 				"shiftsShort": "Shifts short",
 				"rulesBroken": "Rules broken",
@@ -4924,8 +4902,6 @@
 				"validate": "Press Validate schedule to see which rule this is and who it names."
 			},
 			"fix": {
-				"advice": "{{day}} is a {{from}} for {{name}}. Make it the {{to}}.",
-				"make": "Make it a {{dayType}}",
 				"makeAll_one": "Give this person a {{to}} on one of their {{from}} in each of these weeks",
 				"makeAll_other": "Give each of these {{count}} people a {{to}} on one of their {{from}}",
 				"someDone": "{{done}} of {{total}} changed. The others need a look first: use each one’s own button."
@@ -5232,26 +5208,6 @@
 			}
 		},
 		"cover": {
-			"gap": "{{shift}} · {{day}} · {{time}} · {{jobTitles}}",
-			"short": {
-				"onLeave": "1 short: {{name}} is on leave",
-				"sinceGeneration_one": "{{count}} short since the roster was generated",
-				"sinceGeneration_other": "{{count}} short since the roster was generated",
-				"plain_one": "{{count}} short",
-				"plain_other": "{{count}} short"
-			},
-			"option": {
-				"FREE": "Within contracted hours",
-				"EXTRA_HOURS": "Extra hours (part-time) · {{before}} → {{after}} h this week",
-				"OVERTIME": "Works a day off · {{hours}} h overtime",
-				"UNKNOWN": "Works a day off",
-				"week": "This week {{before}} → {{after}} h of {{contract}} h",
-				"month": "Overtime this month {{before}} → {{after}} h",
-				"ROSTERED_ELSEWHERE": "Also works on another roster that day"
-			},
-			"neighbours": "{{name}} works {{shifts}}.",
-			"neighbour": "{{shift}} on {{day}} ({{time}})",
-			"noNeighbours": "{{name}} has no shift the day before or after.",
 			"reason": {
 				"MEMBER_GONE": "Has left",
 				"ON_LEAVE": "On leave",
@@ -5266,53 +5222,25 @@
 				"UNKNOWN": "Can't help"
 			},
 			"list": {
-				"whoCovers": "Who covers",
 				"suggested": "Suggested",
-				"showMore": "Show more ({{count}})",
-				"showFewer": "Show fewer",
-				"cantHelp": "Can't help ({{count}})",
 				"cantHelpLine": "{{name}} · {{reason}}"
 			},
 			"findCover": "Find cover",
 			"findCoverFor": "Find cover: {{shift}}",
 			"remark": "Covers {{name}}",
 			"panel": {
-				"title": "Find cover",
 				"loading": "Finding who can cover…",
 				"rosterMoved": "The roster changed since this list was made.",
 				"findAgain": "Find again",
 				"failed": "The list couldn't be loaded.",
 				"covered": "{{shift}} on {{day}} is covered now.",
-				"close": "Close",
-				"nobody": "Nobody on this roster can cover {{shift}} on {{day}}.",
-				"notChecked": "Working-time rules (hours a day, overtime a month, days a week, leave) aren’t checked for this change. After you apply it, press Validate schedule."
+				"nobody": "Nobody on this roster can cover {{shift}} on {{day}}."
 			},
-			"withEngine": {
-				"order": {
-					"byExtraHours": "In order of fewest extra hours. Rest between shifts and the job title that is short aren’t checked here.",
-					"engineFirst": "The engine’s choice first, then by fewest extra hours."
-				},
-				"note": {
-					"fills": "The engine: fills the gap",
-					"couldTake": "The engine: could take this shift",
-					"notConsidered": "Not checked by the engine, which only looks at people with the job title this gap is short of"
-				}
-			},
-			"gapWithoutRoles": "{{shift}} · {{day}} · {{time}}",
 			"engine": {
 				"loading": "Working out the options…",
 				"unreachable": "The engine could not be reached. These people are free by their hours and are not checked against the rules.",
 				"none": "The engine found no way to fill this.",
-				"fills": "Fills the gap",
-				"fillsPart": "Fills part of the gap",
-				"cannotFill": "Can’t fill the gap",
-				"reason": "The engine’s reason",
-				"warnings": "The engine also notes",
-				"notChecked": "Working-time rules (hours a day, overtime a month, days a week, leave) aren’t checked for this change. After you apply it, press Validate schedule.",
 				"unknownShift": "a shift",
-				"leftShort_one": "Still {{count}} short {{times}}",
-				"leftShort_other": "Still {{count}} short {{times}}",
-				"leftShortNext": "After applying it, find cover again for the hours still short.",
 				"appliedStillShort_one": "Roster changed. {{shift}} on {{day}} is still {{count}} short {{times}}: find cover again for those hours.",
 				"appliedStillShort_other": "Roster changed. {{shift}} on {{day}} is still {{count}} short {{times}}: find cover again for those hours.",
 				"move": {
@@ -5331,9 +5259,7 @@
 					"tooSlow": "The engine took too long to look for options this time.",
 					"failed": "The engine couldn’t answer."
 				},
-				"review": "Review this change",
 				"byHand": "The app can’t apply this one: make it by hand on the roster.",
-				"noneChecked": "None of these options is checked against working-time rules. After you apply one, press Validate schedule.",
 				"whyNot": {
 					"title": "Why nobody was assigned",
 					"couldTake": "Could take this shift",
@@ -5352,28 +5278,6 @@
 					"breaksRule": "Would break: {{rule}}",
 					"aWorkingTimeRule": "a working-time rule",
 					"otherReason": "Cannot take this shift."
-				},
-				"hours": {
-					"none": "No extra hours.",
-					"several": "Adds {{parts}} for {{name}} that week.",
-					"only": {
-						"overtime": "Adds {{hours}} h of overtime for {{name}} that week.",
-						"restDayWork": "Adds {{hours}} h of rest-day work for {{name}}.",
-						"timeOffEarned": "Adds {{hours}} h of time off earned for {{name}}."
-					},
-					"part": {
-						"overtime": "{{hours}} h of overtime",
-						"restDayWork": "{{hours}} h of rest-day work",
-						"timeOffEarned": "{{hours}} h of time off earned"
-					},
-					"inTotal": {
-						"several": "Adds {{parts}} in total that week.",
-						"only": {
-							"overtime": "Adds {{hours}} h of overtime in total that week.",
-							"restDayWork": "Adds {{hours}} h of rest-day work in total.",
-							"timeOffEarned": "Adds {{hours}} h of time off earned in total."
-						}
-					}
 				}
 			}
 		},
@@ -5768,7 +5672,6 @@
 				"unchecked": "The rules couldn't be checked just now. You can still publish."
 			},
 			"check": "Validate schedule",
-			"loading": "Validating the schedule…",
 			"brokenUnnamed": "This roster breaks a working-time rule.",
 			"unnamedRule": "A rule the app has no name for yet",
 			"rule": {
@@ -5800,22 +5703,13 @@
 			"problemsFound_one": "Validate schedule: {{count}} issue found",
 			"problemsFound_other": "Validate schedule: {{count}} issues found",
 			"allClear": "Validate schedule: no issues found",
-			"staffingUnchecked": "Staffing could not be checked; the shifts left short below are from before.",
 			"brokenRulesTitle": "Working-time rules broken",
-			"outOfDate": "Changed since this list was made",
-			"changesUnchecked": "Changes made by hand aren’t checked in this list yet: it shows only what was found when the roster was generated. Validate the schedule before you publish.",
-			"rulesUnchecked": "The working-time rules could not be checked; the list below is from before.",
-			"validated": "Validated: no rule broken",
-			"mayBeShort": "The check ran out of time, so this list may be incomplete.",
-			"validateAgain": "Validate again",
 			"notMet": {
 				"title_one": "If possible, not met ({{count}})",
 				"title_other": "If possible, not met ({{count}})",
 				"place": "{{person}} · {{day}}",
 				"line": "{{place}}: “{{message}}”"
-			},
-			"brokenCount_one": "Validated: {{count}} rule broken",
-			"brokenCount_other": "Validated: {{count}} rules broken"
+			}
 		},
 		"dates": {
 			"refusal": {

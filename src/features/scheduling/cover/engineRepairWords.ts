@@ -157,19 +157,6 @@ export const optionHeadingKey = (
 };
 
 /**
- * What to do about the hours an option offered still leaves short: "After
- * applying it, find cover again for the hours still short."; nothing when it
- * fills the gap or cannot be applied.
- */
-export const leftShortNextLine = (
-	option: RepairOption,
-	t: TFunction
-): string | undefined =>
-	option.feasible && option.leftShort.length > 0
-		? t(`${key}.leftShortNext`)
-		: undefined;
-
-/**
  * The toast after applying an option that leaves hours short, which closes
  * Find cover: "Roster changed. Night on Tue, 24 Nov is still 1 short 23:00 –
  * 07:00: find cover again for those hours." Nothing for an option that fills
@@ -185,18 +172,6 @@ export const stillShortAfterApplying = (
 		count: option.leftShortBy ?? 1,
 		shift: gap.shift,
 		day: gap.day,
-		times: option.leftShort.map((span) => spanText(span, t)).join(", "),
-	});
-};
-
-/** What an option still leaves short: "Still 1 short 07:00 – 09:00"; nothing when it fills the gap. */
-export const leftShortLine = (
-	option: RepairOption,
-	t: TFunction
-): string | undefined => {
-	if (option.leftShort.length === 0) return undefined;
-	return t(`${key}.leftShort`, {
-		count: option.leftShortBy ?? 1,
 		times: option.leftShort.map((span) => spanText(span, t)).join(", "),
 	});
 };

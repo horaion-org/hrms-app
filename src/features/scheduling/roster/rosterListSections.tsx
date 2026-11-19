@@ -87,7 +87,7 @@ export type RosterListInput = {
 	onShowAllIssues: () => void;
 	/** On a roster that may be changed: opens Find cover for a short shift, from its Issues row. */
 	onFindCover?: (gap: CoverGapRequest) => void;
-	/** On a roster that may be changed: what the fixes Issues makes itself need (`FixableIssueGroups`). */
+	/** On a roster that may be changed: what the fixes Issues makes itself need (`FixableRosterIssuesList`). */
 	issueFixing?: IssueFixing;
 	/** On a roster that may be changed: what covering a short shift from its Issues row needs. */
 	issueCover?: IssueCoverContext;

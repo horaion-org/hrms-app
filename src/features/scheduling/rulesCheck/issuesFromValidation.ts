@@ -3,10 +3,7 @@ import type {
 	RuleViolation,
 } from "@/features/scheduling/rulesCheck/rosterRulesCheckApi";
 import { brokenRuleCount } from "@/features/scheduling/rulesCheck/rosterRulesCheckWords";
-import type {
-	LastValidation,
-	RosterValidation,
-} from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
+import type { LastValidation } from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
 import type { RosterSchedule } from "@/features/scheduling/roster/rosterView";
 import type { GenerationFindings } from "@/features/scheduling/schedules/api";
 
@@ -49,24 +46,6 @@ export const changesUnchecked = (
 	standing: ValidationStanding,
 	last: LastValidation | undefined
 ): boolean => standing === "outOfDate" && last === undefined;
-
-/** What leads the Issues heading while its list is not the validated truth: a check running, or hand changes left unchecked. */
-export type ValidationLead = "validating" | "unchecked";
-
-/**
- * What leads the Issues heading: "validating" while a check runs; "unchecked"
- * while hand changes have no validation in this visit (none could be asked,
- * or the ask failed or was refused); nothing otherwise, and nothing for
- * someone who may not validate.
- */
-export const validationLead = (
-	standing: ValidationStanding,
-	validation: RosterValidation | undefined
-): ValidationLead | undefined => {
-	if (!validation) return undefined;
-	if (validation.status === "loading") return "validating";
-	return changesUnchecked(standing, validation.last) ? "unchecked" : undefined;
-};
 
 /**
  * Whether the page should validate the roster now, without being asked: the

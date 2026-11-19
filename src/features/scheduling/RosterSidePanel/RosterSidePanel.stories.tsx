@@ -1,11 +1,10 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
-import { Callout } from "@/components/ui/Callout";
-import { rosterIssuesFixture } from "@/features/scheduling/roster/rosterIssueFixtures";
 import {
-	IssueSummary,
-	RosterIssueGroups,
-} from "@/features/scheduling/roster/RosterIssueGroups";
+	IssuesPanelHead,
+	RosterIssuesList,
+} from "@/features/scheduling/roster/IssuesPanel";
+import { rosterIssuesFixture } from "@/features/scheduling/roster/rosterIssueFixtures";
 import { RosterSidePanel } from "@/features/scheduling/RosterSidePanel";
 import "@/common/i18n";
 
@@ -84,23 +83,28 @@ export const WithItemAction: Story = {
 	},
 };
 
-/** Issues as it opens: the counts under the title, the result card, then the groups by what to do. */
-export const IssuesByWhatToDo: Story = {
+/** Issues as it opens: "2 to fix · Checked 15:42 · Check again", the filters, then one row per issue. */
+export const IssuesAsOneList: Story = {
 	args: {
 		title: "Issues",
 		summary: (
-			<IssueSummary counts={{ mustFix: 2, notMet: 1, forInformation: 1 }} />
+			<IssuesPanelHead
+				checkLine={{
+					state: "checked",
+					checkedAt: new Date(2026, 9, 12, 15, 42).getTime(),
+					incomplete: false,
+				}}
+				mustFix={2}
+				onCheck={fn()}
+			/>
 		),
 		sections: [
 			{
 				key: "issues",
 				content: (
-					<RosterIssueGroups
+					<RosterIssuesList
 						issues={rosterIssuesFixture()}
-						validationNote={
-							<Callout tone="error">Validated: 1 rule broken</Callout>
-						}
-						onFindCover={fn()}
+						shiftName={() => "Front Desk AM"}
 						onShow={fn()}
 					/>
 				),
