@@ -52,7 +52,7 @@ const isForecastMode = (value: string): value is ForecastMode =>
  * Nothing here is sent to generate yet: staffing constraints decide how many
  * people each shift gets. Importing, exporting and reusing forecasts wait for
  * the scheduling API; the callout says so.
- * Not shown in the wizards until forecasts are sent to generation.
+ * Shown empty and optional in both wizards; the callout says its numbers are not used yet.
  */
 export const ForecastStep = ({
 	mode,

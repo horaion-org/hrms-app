@@ -1,6 +1,6 @@
 # Scheduling
 
-The Create Schedule steps at `/scheduling/new` (Setup, Generate; the Forecast step is kept but not shown until forecasts are sent to generation). Completing Setup creates the schedule on
+The Create Schedule steps at `/scheduling/new` (Setup, Forecast, Generate; the Forecast step is shown empty and optional, and its numbers are not sent anywhere until forecasts reach generation). Completing Setup creates the schedule on
 the API as a DRAFT, and from then on the URL names it with its department (`?step=…&scheduleId=…&departmentId=…`), so
 a refresh or a link reopens the same draft. Shifts and constraints belong to the department: one live set of each per
 department, changed on the Scheduling page's Shifts and Constraints tabs under their own `shift` and `constraint` keys
@@ -162,7 +162,7 @@ setup, shifts, constraints and forecast), `weekChoice.ts`, `steps.ts`, `setupRea
   and links (`readinessCopy.ts`: `gateOf`, `checklistOf`, `fixLinkOf`, `returnLinkOf`), `ReadinessCallout` (the
   tabs' first-run checklist and way back) and `ReadinessGateCallout` (the wizard's gate).
 - `schedules/schedulingNotice.ts` — the confirmation the Scheduling page shows after a generation, carried in history state.
-- `createSchedule/ForecastStep` (not shown), `createSchedule/GenerateStep`, `createSchedule/ScheduleSetupStep`, `createSchedule/StepActions` — the steps; `createSchedule/ShiftAllocationTable` and
+- `createSchedule/ForecastStep` (its props come from `createSchedule/forecastStepProps.ts`), `createSchedule/GenerateStep`, `createSchedule/ScheduleSetupStep`, `createSchedule/StepActions` — the steps; `createSchedule/ShiftAllocationTable` and
   `createSchedule/TimeBlockGrid` are the two forecast views. `createSchedule/ScheduleSetupStep` reports the department and week chosen and takes a
   `departmentExtras` slot below its fields; `createSchedule/GenerateStep` takes `notice`, `uses` and `startingPoint` slots.
 - `periods.ts` — the weeks Setup offers (`selectablePeriods`: `PAST_WEEKS` back, this week, `FUTURE_WEEKS` ahead,

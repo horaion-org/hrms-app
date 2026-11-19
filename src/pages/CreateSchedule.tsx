@@ -12,12 +12,14 @@ import {
 	ArrowRightIcon,
 	GenerateScheduleIcon,
 } from "@/components/ui/Icon";
-import { Stepper, StepperStep } from "@/components/ui/Stepper";
 import { Toast } from "@/components/ui/Toast";
 import { placeOf } from "@/features/organisation/assignmentTargets";
 import { useConstraintOptions } from "@/features/scheduling/constraints/useConstraintOptions";
 import { departmentUnitOf } from "@/features/scheduling/departmentSetup/departmentUnit";
+import { ForecastStep } from "@/features/scheduling/createSchedule/ForecastStep";
+import { forecastStepPropsOf } from "@/features/scheduling/createSchedule/forecastStepProps";
 import { GenerateStep } from "@/features/scheduling/createSchedule/GenerateStep";
+import { ScheduleStepper } from "@/features/scheduling/createSchedule/ScheduleStepper";
 import {
 	publishedRosterOtherThan,
 	publishedWeekQuery,
@@ -101,7 +103,7 @@ import { departmentScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
 
 /**
- * The Create Schedule steps: Setup and Generate. The URL names the
+ * The Create Schedule steps: Setup, Forecast and Generate. The URL names the
  * current step and, once Setup is done, the saved draft (`scheduleId` with
  * its `departmentId`, whose routes name it); a later step without a draft
  * sends the person back to Setup. A new draft uses every live shift and
@@ -375,6 +377,7 @@ export const CreateSchedule = (): FunctionComponent => {
 	};
 	const included = includedShifts({ includedShiftIds: ticked }, shiftRows);
 	const summary = summarise(included, draft.allocations);
+	const forecastProps = forecastStepPropsOf(draft, dispatch, included);
 	const next = (): void => {
 		goTo(current + 1);
 	};
@@ -399,6 +402,7 @@ export const CreateSchedule = (): FunctionComponent => {
 	const completion = stepCompletion({
 		saved: saved !== undefined,
 		frozen,
+		currentIndex: current,
 	});
 	const busy = scheduleActions.update.isPending || monthGeneration.isPending;
 	const lockedDepartment = saved && {
@@ -536,15 +540,11 @@ export const CreateSchedule = (): FunctionComponent => {
 		<>
 			{header}
 			{notice && <Callout className="mt-6">{notice}</Callout>}
-			<Stepper className="mt-12" currentStep={current} onStepClick={goTo}>
-				{SCHEDULE_STEPS.map((name) => (
-					<StepperStep
-						key={name}
-						completed={completion[name]}
-						label={t(`scheduling.create.steps.${name}`)}
-					/>
-				))}
-			</Stepper>
+			<ScheduleStepper
+				completion={completion}
+				current={current}
+				onStepClick={goTo}
+			/>
 			<div className="mt-12">
 				{step === "setup" && (
 					<ScheduleSetupStep
@@ -558,6 +558,9 @@ export const CreateSchedule = (): FunctionComponent => {
 						onPeriodChange={setSetupPeriodStart}
 						onSubmit={submitSetup}
 					/>
+				)}
+				{step === "forecast" && (
+					<ForecastStep {...forecastProps} periodLabel={weekPeriodLabel} />
 				)}
 				{step === "generate" && (
 					<GenerateStep
