@@ -43,3 +43,16 @@ export const scheduleViewLink = (schedule: ViewedSchedule): ScheduleViewLink =>
 				to: "/scheduling/$scheduleId",
 				params: { scheduleId: schedule.scheduleId },
 			});
+
+/** Where a deleted schedule opens, as a link's props. */
+export type DeletedScheduleLink = {
+	to: "/scheduling/history/$scheduleId";
+	params: { scheduleId: string };
+};
+
+/** A deleted schedule opens as a read-only record under History, never on the roster page. */
+export const deletedScheduleLink = (scheduleId: string): DeletedScheduleLink =>
+	linkOptions({
+		to: "/scheduling/history/$scheduleId",
+		params: { scheduleId },
+	});
