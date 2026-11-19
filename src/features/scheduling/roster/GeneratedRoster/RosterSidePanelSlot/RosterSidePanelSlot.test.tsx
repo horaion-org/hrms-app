@@ -86,40 +86,6 @@ describe("RosterSidePanelSlot", () => {
 		expect(onClose).toHaveBeenCalledOnce();
 	});
 
-	it("given_findCoverOnARosterThatMayBeChanged_when_rendered_then_opensFindCoverAndClosesBackToIssues", async () => {
-		const user = userEvent.setup();
-		const onCloseCover = vi.fn();
-		show({
-			roster: slotRosterFixture(
-				{ cover: "front-desk-am-copy|2026-10-17" },
-				true
-			),
-			editing: slotEditingFixture(),
-			onCloseCover,
-		});
-
-		expect(screen.getByRole("heading", { name: "Find cover" })).toBeVisible();
-		await user.keyboard("{Escape}");
-		expect(onCloseCover).toHaveBeenCalledOnce();
-	});
-
-	// The fixtures carry no generation findings: a gap made since, by leave
-	// or a hand change, which the engine finds in the roster when asked.
-	it("given_aGapTheGenerationNeverReported_when_findCoverOpens_then_theEngineIsAskedWithoutAPress", async () => {
-		show({
-			roster: slotRosterFixture(
-				{ cover: "front-desk-am-copy|2026-10-17" },
-				true
-			),
-			editing: slotEditingFixture(),
-		});
-
-		expect(
-			await screen.findByText("Working out the options…")
-		).toBeVisible();
-		expect(screen.queryByRole("button", { name: "Ask the engine" })).toBeNull();
-	});
-
 	it("given_aShiftLeftShortOnTheChosenDay_when_findCoverIsPressed_then_opensItForThatShiftDay", async () => {
 		const user = userEvent.setup();
 		const onFindCover = vi.fn();

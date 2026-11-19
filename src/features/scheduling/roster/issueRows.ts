@@ -1,6 +1,9 @@
 import type { TFunction } from "i18next";
+import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import {
 	dayListText,
+	gapIssueKey,
+	issueTopic,
 	type IssueGroup,
 	type RosterIssue,
 } from "@/features/scheduling/roster/rosterIssueGroups";
@@ -138,3 +141,35 @@ export const rowsOfFilter = (
 /** How many rows must be fixed, which the panel's header counts. */
 export const mustFixCount = (rows: ReadonlyArray<IssueRow>): number =>
 	rows.filter((row) => row.severity === "mustFix").length;
+
+/**
+ * The issues with a row for the short shift "Find cover" was pressed for,
+ * when none names it yet (a gap made since the last check): "Front Desk AM
+ * short", must fix, opening to its options. The issues as they are without.
+ */
+export const withGapIssue = (
+	issues: ReadonlyArray<RosterIssue>,
+	gap: CoverGapRequest | undefined,
+	shiftName: (shiftId: string) => string,
+	t: TFunction
+): Array<RosterIssue> => {
+	const key = gap && gapIssueKey(gap.shiftId, gap.day);
+	if (!gap || !key || issues.some((issue) => issue.key === key))
+		return [...issues];
+	return [
+		...issues,
+		{
+			key,
+			group: "mustFix",
+			topic: issueTopic("shiftsShort", t),
+			who: t("scheduling.issues.panel.shiftShort", {
+				shift: shiftName(gap.shiftId),
+			}),
+			memberProfileId: null,
+			day: gap.day,
+			time: null,
+			rule: "",
+			action: { kind: "findCover", gap },
+		},
+	];
+};

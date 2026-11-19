@@ -4758,7 +4758,8 @@
 					"ifPossible": "Si es posible",
 					"note": "Nota"
 				},
-				"nothingHere": "Nada aquí."
+				"nothingHere": "Nada aquí.",
+				"shiftShort": "{{shift}} con falta de personal"
 			},
 			"cover": {
 				"badge": {

@@ -4958,7 +4958,8 @@
 					"ifPossible": "If possible",
 					"note": "Note"
 				},
-				"nothingHere": "Nothing here."
+				"nothingHere": "Nothing here.",
+				"shiftShort": "{{shift}} short"
 			},
 			"cover": {
 				"badge": {

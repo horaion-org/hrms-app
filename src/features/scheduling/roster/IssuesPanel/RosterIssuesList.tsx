@@ -7,7 +7,9 @@ import {
 	dayTypeRetypeGroups,
 	type IssueFixes,
 } from "@/features/scheduling/roster/dayTypeFix";
-import { issueRows } from "@/features/scheduling/roster/issueRows";
+import type { CoverGapRequest } from "@/features/scheduling/cover/api";
+import { issueRows, withGapIssue } from "@/features/scheduling/roster/issueRows";
+import { gapIssueKey } from "@/features/scheduling/roster/rosterIssueGroups";
 import type { RosterIssue } from "@/features/scheduling/roster/rosterIssueGroups";
 import {
 	IssueFixAll,
@@ -26,6 +28,8 @@ export type RosterIssuesListProps = {
 	onShow?: (issue: RosterIssue) => void;
 	/** On a roster that may be changed: what covering a short shift from its row needs. */
 	cover?: IssueCoverContext;
+	/** The short shift "Find cover" opened Issues on: its row starts open, and is listed even when nothing else names it. */
+	openGap?: CoverGapRequest;
 	/** The fixes Issues can make itself, on a roster that may be changed. */
 	fixes?: IssueFixes;
 };
@@ -41,11 +45,12 @@ export const RosterIssuesList = ({
 	information,
 	onShow,
 	cover,
+	openGap,
 	fixes,
 }: RosterIssuesListProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
-	const rows = issueRows(issues, {
+	const rows = issueRows(withGapIssue(issues, openGap, shiftName, t), {
 		hasFix: (issueKey) => fixes?.retypes.has(issueKey) ?? false,
 		shiftName,
 		formatOne: (day) => formatDay(day, language),
@@ -79,6 +84,7 @@ export const RosterIssuesList = ({
 	return (
 		<IssuesPanel
 			information={information}
+			initiallyOpen={openGap && gapIssueKey(openGap.shiftId, openGap.day)}
 			lead={lead}
 			rows={rows}
 			bodyOf={(row) => (

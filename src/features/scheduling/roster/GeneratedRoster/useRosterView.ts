@@ -51,10 +51,8 @@ export type RosterViewState = RosterView & {
 	showAllIssues: () => void;
 	/** Opens a member's day: its editor, or its shift when read-only. */
 	openDay: (row: RosterRow, day: string) => void;
-	/** Opens Find cover for a short shift-day, in place of what the panel shows. */
+	/** Opens Issues on a short shift-day's row, its options shown, in place of what the panel shows. */
 	openCover: (gap: CoverGapRequest) => void;
-	/** Closes Find cover back to Issues, where it was opened from. */
-	closeCover: () => void;
 	/** Opens Issues for one row or day header. */
 	showIssuesOf: (about: IssuesAbout, from: HTMLElement) => void;
 	/** Shows another week, or this week when none is given. */
@@ -125,11 +123,7 @@ export const useRosterView = ({
 			if (cell) open({ cell });
 		},
 		openCover: (gap): void => {
-			open({ cover: coverParameter(gap) });
-		},
-		closeCover: (): void => {
-			setPreviewDays(NO_DAYS);
-			showView({ panel: "issues" });
+			open({ panel: "issues", cover: coverParameter(gap) });
 		},
 		showIssuesOf: (about, from): void => {
 			open(

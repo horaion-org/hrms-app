@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
-import { FindCoverPanel } from "@/features/scheduling/cover/FindCoverPanel";
 import type { RosterEditing } from "@/features/scheduling/roster/GeneratedRoster/rosterEditing";
 import { ROSTER_SIDE_LISTS } from "@/features/scheduling/roster/GeneratedRoster/rosterSideLists";
 import type { RosterView } from "@/features/scheduling/roster/rosterView";
@@ -23,7 +22,7 @@ import {
 const key = "scheduling.detail";
 
 export type RosterSidePanelSlotProps = {
-	/** What opens (`sidePanel`), the chosen day, its notes, the open list and the gap Find cover is for. */
+	/** What opens (`sidePanel`), the chosen day, its notes, and the open list. */
 	roster: Pick<
 		RosterView,
 		| "sidePanel"
@@ -31,7 +30,6 @@ export type RosterSidePanelSlotProps = {
 		| "chosenCell"
 		| "chosenDayNotes"
 		| "openList"
-		| "coverGap"
 	>;
 	assignments: ReadonlyArray<ScheduleAssignment>;
 	/** Lets the chosen day be changed; read-only without. */
@@ -49,15 +47,10 @@ export type RosterSidePanelSlotProps = {
 	};
 	onClose: () => void;
 	onPreviewDays: (keys: ReadonlyArray<string>) => void;
-	/**
-	 * A hand change went through: the roster says so, and the panel closes.
-	 * Find cover adds what an engine option it applied still leaves short.
-	 */
+	/** A hand change went through: the roster says so, and the panel closes. */
 	onApplied: (change: RosterChange, stillShort?: string) => void;
-	/** Opens Find cover for a short shift; given only where the roster may be changed. */
+	/** Opens Issues on a short shift's row; given only where the roster may be changed. */
 	onFindCover?: (gap: CoverGapRequest) => void;
-	/** Closes Find cover back to Issues. */
-	onCloseCover?: () => void;
 	/** The roster's shift preference outcomes by person and day; the chosen day's shows in its panel. */
 	preferenceOutcomes?: PreferenceOutcomeLookup;
 	/** The day type the chosen day's editor opens with, not working chosen, when a fix from Issues opened it. */
@@ -66,8 +59,8 @@ export type RosterSidePanelSlotProps = {
 
 /**
  * The one panel beside the roster grid: a chosen day's editor (or its shift,
- * read-only), else Find cover for a short shift, else the open list, else
- * nothing. What opens is decided by
+ * read-only), else the open list (Issues, with a short shift's row open when
+ * "Find cover" opened it), else nothing. What opens is decided by
  * `sidePanelOf`; the chosen day's notes come first in its panel.
  */
 export const RosterSidePanelSlot = ({
@@ -77,7 +70,6 @@ export const RosterSidePanelSlot = ({
 		chosenCell,
 		chosenDayNotes,
 		openList,
-		coverGap,
 	},
 	assignments,
 	editing,
@@ -88,7 +80,6 @@ export const RosterSidePanelSlot = ({
 	onPreviewDays,
 	onApplied,
 	onFindCover,
-	onCloseCover = onClose,
 	preferenceOutcomes,
 	presetDayType,
 }: RosterSidePanelSlotProps): FunctionComponent => {
@@ -141,35 +132,6 @@ export const RosterSidePanelSlot = ({
 				onCoverRecorded={onClose}
 				onLeaveChanged={onClose}
 				onPreviewDays={onPreviewDays}
-			/>
-		);
-	const coverDayRow =
-		coverGap && assignments.find((row) => row.day === coverGap.day);
-	if (sidePanel === "cover" && editing && coverGap && coverDayRow)
-		return (
-			<FindCoverPanel
-				// Each gap starts afresh, with the first option chosen.
-				key={`${coverGap.shiftId}|${coverGap.day}`}
-				assignments={assignments}
-				dayRow={coverDayRow}
-				gap={coverGap}
-				id={list.id}
-				revision={editing.revision}
-				shifts={editing.shifts}
-				target={editing.target}
-				coverOffers={
-					editing.coverOffers && {
-						offers: editing.coverOffers.offers,
-						timeZone,
-					}
-				}
-				onClose={onCloseCover}
-				onCoverRecorded={onCloseCover}
-				onPreviewDays={onPreviewDays}
-				onApplied={(change, stillShort) => {
-					onApplied(change, stillShort);
-					onCloseCover();
-				}}
 			/>
 		);
 	if (sidePanel === "shiftDetails" && chosenCell?.kind === "shift" && chosenRow)
