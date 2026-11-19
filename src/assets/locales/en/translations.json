@@ -2750,7 +2750,7 @@
 				"name": "Schedules",
 				"description": "Each department’s schedules: their week, settings and chosen shifts, generating them, changing who works which shift on a generated roster, publishing or rejecting their rosters, and deleting them.",
 				"actions": {
-					"read": "See schedules and rosters",
+					"read": "See rosters, including ones still on review",
 					"create": "Start a schedule",
 					"update": "Set up a draft: its week, settings and shifts",
 					"generate": "Generate rosters",
@@ -2759,7 +2759,7 @@
 					"edit_shift": "Change who works which shift"
 				},
 				"actionHints": {
-					"read": "Their settings; their shifts need “See shifts”",
+					"read": "Their settings; their shifts need “See shifts”. Staff see their own published shifts in My roster without it.",
 					"create": "A draft for a department",
 					"update": "Which shifts it includes",
 					"generate": "Fixes the draft’s shifts for good",

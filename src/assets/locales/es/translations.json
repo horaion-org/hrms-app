@@ -1253,7 +1253,7 @@
 				"name": "Horarios",
 				"description": "Los horarios de cada departamento: su semana, su configuración y los turnos elegidos, generarlos, cambiar quién trabaja cada turno en un cuadrante generado, publicar o rechazar sus cuadrantes y eliminarlos.",
 				"actions": {
-					"read": "Ver horarios y cuadrantes",
+					"read": "Ver cuadrantes, también los que siguen en revisión",
 					"create": "Crear un horario",
 					"update": "Configurar un borrador: su semana, ajustes y turnos",
 					"generate": "Generar cuadrantes",
@@ -1262,7 +1262,7 @@
 					"edit_shift": "Cambiar quién trabaja cada turno"
 				},
 				"actionHints": {
-					"read": "Sus ajustes; sus turnos necesitan «Ver turnos»",
+					"read": "Sus ajustes; sus turnos necesitan «Ver turnos». El personal ve sus propios turnos publicados en Mi cuadrante sin este permiso.",
 					"create": "Un borrador para un departamento",
 					"update": "Qué turnos incluye",
 					"generate": "Fija para siempre los turnos del borrador",
