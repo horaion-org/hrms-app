@@ -201,31 +201,34 @@ describe("the owner's week of 15 February 2027: Wed–Fri, then Sat–Sun", () =
 		});
 	});
 
-	// A part whose publication was taken back still holds the days before it (API WeekRedos.countsAsPublished).
-	it("given_thisPartsPublicationWithdrawn_when_shown_then_mondayTuesdaySayWhyWithoutScheduleButton", async () => {
-		vi.useFakeTimers({
-			toFake: ["Date"],
-			now: new Date("2027-02-10T09:00:00+08:00"),
-		});
-		await openPart({
-			...WEEK,
-			shown: {
-				...wednesdayToFriday,
-				publicationWithdrawnAt: "2027-02-09T10:00:00Z",
-			},
-			parts: [part({ ...wednesdayToFriday })],
-		});
+	// A part whose publication was taken back is to review again: a run by dates still reaches the days before it.
+	it.each([
+		["the schedule alone says it was withdrawn", {}],
+		["the week read says it was published once", { publishedOnce: true }],
+	])(
+		"given_thisPartsPublicationWithdrawn_and_%s_when_shown_then_mondayTuesdayAreNotHeldBack",
+		async (_, weekRead) => {
+			vi.useFakeTimers({
+				toFake: ["Date"],
+				now: new Date("2027-02-10T09:00:00+08:00"),
+			});
+			await openPart({
+				...WEEK,
+				shown: {
+					...wednesdayToFriday,
+					publicationWithdrawnAt: "2027-02-09T10:00:00Z",
+				},
+				parts: [part({ ...wednesdayToFriday, ...weekRead })],
+			});
 
-		expect(
-			await screen.findByText(
-				/^Feb 15\s?–\s?16, 2027 have no schedule\. They come before days that have been published, so they can’t be scheduled now\.$/
-			)
-		).toBeInTheDocument();
-		expect(screen.queryByRole("link", { name: /^Schedule Feb 15/ })).toBeNull();
-		expect(
-			screen.queryByRole("button", { name: /^Schedule Feb 15/ })
-		).toBeNull();
-	});
+			expect(
+				await screen.findByText(/^Feb 15\s?–\s?16, 2027 have no schedule\.$/)
+			).toBeInTheDocument();
+			expect(
+				screen.queryByText(/They come before days that have been published/)
+			).toBeNull();
+		}
+	);
 
 	// Days before published days can never be scheduled again: deleting them is said plainly, before confirming.
 	it("given_aLaterPartPublished_when_deleting_then_warnsTheDaysCantBeScheduledAgain", async () => {
@@ -287,67 +290,54 @@ describe("the owner's week of 15 February 2027: Wed–Fri, then Sat–Sun", () =
 		);
 	});
 
-	// The week read says a later part was published once (its publication withdrawn): no Schedule button.
-	it("given_aLaterPartPublishedOnce_when_shown_then_mondayTuesdaySayWhyWithoutScheduleButton", async () => {
+	/** Opens the tester's week: Mon–Tue shown, Wed–Fri empty, the weekend part as `weekend` says. */
+	const openMondayToTuesdayBefore = async (
+		weekend: Partial<WeekPart>
+	): Promise<void> => {
 		vi.useFakeTimers({
 			toFake: ["Date"],
 			now: new Date("2027-02-10T09:00:00+08:00"),
 		});
+		const mondayToTuesday = {
+			coveredFrom: "2027-02-15",
+			coveredTo: "2027-02-16",
+		};
 		await openPart({
 			...WEEK,
-			shown: wednesdayToFriday,
-			parts: [part({ ...wednesdayToFriday, publishedOnce: true })],
+			shown: mondayToTuesday,
+			parts: [
+				part({ ...mondayToTuesday }),
+				part({ scheduleId: "s-2", ...saturdayToSunday, ...weekend }),
+			],
 		});
+	};
+
+	it("given_theGapAfterThisPartBeforeAPublishedPart_when_shown_then_saysWhyWithoutScheduleLink", async () => {
+		await openMondayToTuesdayBefore({ state: "PUBLISHED" });
 
 		expect(
 			await screen.findByText(
-				/^Feb 15\s?–\s?16, 2027 have no schedule\. They come before days that have been published, so they can’t be scheduled now\.$/
+				/^Feb 17\s?–\s?19, 2027 have no schedule\. They come before days that have been published, so they can’t be scheduled now\.$/
 			)
 		).toBeInTheDocument();
-		expect(screen.queryByRole("link", { name: /^Schedule Feb 15/ })).toBeNull();
+		expect(screen.queryByText(/can be scheduled later/)).toBeNull();
+		expect(screen.queryByRole("link", { name: /^Schedule Feb 17/ })).toBeNull();
 		expect(
-			screen.queryByRole("button", { name: /^Schedule Feb 15/ })
+			screen.queryByRole("button", { name: /^Schedule Feb 17/ })
 		).toBeNull();
 	});
 
-	// The tester's week: Mon–Tue shown, Wed–Fri empty, the weekend published (or published and withdrawn).
-	it.each([
-		["published", { state: "PUBLISHED" as const }],
-		["published once", { publishedOnce: true }],
-	])(
-		"given_theGapAfterThisPartBeforeAPart_%s_when_shown_then_saysWhyWithoutScheduleLink",
-		async (_, published) => {
-			vi.useFakeTimers({
-				toFake: ["Date"],
-				now: new Date("2027-02-10T09:00:00+08:00"),
-			});
-			const mondayToTuesday = {
-				coveredFrom: "2027-02-15",
-				coveredTo: "2027-02-16",
-			};
-			await openPart({
-				...WEEK,
-				shown: mondayToTuesday,
-				parts: [
-					part({ ...mondayToTuesday }),
-					part({ scheduleId: "s-2", ...saturdayToSunday, ...published }),
-				],
-			});
+	// A weekend published and then withdrawn is to review: a run by dates works it out again after the gap's days.
+	it("given_theGapAfterThisPartBeforeAWithdrawnPart_when_shown_then_itCanBeScheduledLater", async () => {
+		await openMondayToTuesdayBefore({ publishedOnce: true });
 
-			expect(
-				await screen.findByText(
-					/^Feb 17\s?–\s?19, 2027 have no schedule\. They come before days that have been published, so they can’t be scheduled now\.$/
-				)
-			).toBeInTheDocument();
-			expect(screen.queryByText(/can be scheduled later/)).toBeNull();
-			expect(
-				screen.queryByRole("link", { name: /^Schedule Feb 17/ })
-			).toBeNull();
-			expect(
-				screen.queryByRole("button", { name: /^Schedule Feb 17/ })
-			).toBeNull();
-		}
-	);
+		expect(
+			await screen.findByText(/Feb 17\s?–\s?19, 2027 can be scheduled later\.$/)
+		).toBeInTheDocument();
+		expect(
+			screen.queryByText(/They come before days that have been published/)
+		).toBeNull();
+	});
 
 	it("given_theWeekendPart_when_shown_then_mondayTuesdayHavePassedAndWednesdayToFridayLinksItsSchedule", async () => {
 		vi.useFakeTimers({

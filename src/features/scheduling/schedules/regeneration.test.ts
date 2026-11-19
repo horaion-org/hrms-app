@@ -93,6 +93,22 @@ describe("regenerationOf", () => {
 		).toMatchObject({ path: "laterPartPublished", offered: false });
 	});
 
+	// The single Regenerate stays strict (API ADR-0134): only a run by dates works a withdrawn part out again.
+	it("offers no regeneration of a part whose later part was published and withdrawn", () => {
+		const schedule = generatedScheduleFixture({
+			status: "GENERATED",
+			...WEEK,
+			...WEDNESDAY_TO_FRIDAY,
+		});
+		const [first, shown, last] = threeParts("TO_REVIEW");
+		const parts = [first!, shown!, { ...last!, publishedOnce: true }];
+
+		expect(regenerationOf(schedule, parts, MAY_GENERATE)).toMatchObject({
+			path: "laterPartPublished",
+			offered: false,
+		});
+	});
+
 	it("takes a withdrawn part's own route, once published, for a manager who may generate it", () => {
 		const schedule = generatedScheduleFixture({
 			status: "GENERATED",

@@ -383,12 +383,9 @@ const openBeforeTheWeek = async (
 	await screen.findByRole("heading", { level: 2, name: "Needs you" });
 };
 
-/** Thursday lies before the published (or once published) weekend part: the API refuses it, so no Generate. */
-it.each([
-	["published", { state: "PUBLISHED" as const }],
-	["published once", { state: "TO_REVIEW" as const, publishedOnce: true }],
-])("offers no Generate for days before a %s part", async (_, weekend) => {
-	await openBeforeTheWeek(weekend);
+/** Thursday lies before the published weekend part: the API refuses it, so no Generate. */
+it("offers no Generate for days before a published part", async () => {
+	await openBeforeTheWeek({ state: "PUBLISHED" });
 
 	expect(
 		await screen.findByText(
@@ -401,24 +398,34 @@ it.each([
 	).not.toBeInTheDocument();
 });
 
-/** Thursday is free while nothing after it is published: Generate, in the header and on its line, opens with it filled in. */
-it("opens Generate on the first days with no roster", async () => {
-	await openBeforeTheWeek({ state: "TO_REVIEW" }, [
-		"schedule:read",
-		"schedule:create",
-	]);
+/**
+ * Thursday is free while nothing after it is published, and a weekend
+ * published and then withdrawn is to review: Generate, in the header and on
+ * its line, opens with it filled in.
+ */
+it.each([
+	["to review", {}],
+	["published and withdrawn", { publishedOnce: true }],
+])(
+	"opens Generate on the first days with no roster before a part %s",
+	async (_, weekend) => {
+		await openBeforeTheWeek({ state: "TO_REVIEW", ...weekend }, [
+			"schedule:read",
+			"schedule:create",
+		]);
 
-	expect(
-		await screen.findByText("Oct 15, 2026 has no roster.")
-	).toBeInTheDocument();
-	const links = screen.getAllByRole("link", { name: "Generate" });
-	expect(links).toHaveLength(2);
-	for (const link of links)
-		expect(link).toHaveAttribute(
-			"href",
-			expect.stringMatching(/firstDay=2026-10-15&lastDay=2026-10-15/)
-		);
-});
+		expect(
+			await screen.findByText("Oct 15, 2026 has no roster.")
+		).toBeInTheDocument();
+		const links = screen.getAllByRole("link", { name: "Generate" });
+		expect(links).toHaveLength(2);
+		for (const link of links)
+			expect(link).toHaveAttribute(
+				"href",
+				expect.stringMatching(/firstDay=2026-10-15&lastDay=2026-10-15/)
+			);
+	}
+);
 
 /** While a roster is still being read the grid says it is loading, not that no one is rostered. */
 it("says the rosters are loading while their reads are on the way", async () => {
