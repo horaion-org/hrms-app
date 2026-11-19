@@ -14,7 +14,7 @@ import { useEngineRepair } from "@/features/scheduling/cover/useEngineRepair";
 import type { RosterChangeTarget } from "@/features/scheduling/rosterChanges/useRosterChangeActions";
 
 /*
- * The engine's repair options for one gap, asked for on demand. The API is
+ * The engine's repair options for one gap, asked for at once. The API is
  * stubbed; the hook's one call is `POST …/repair-options` at the revision on
  * screen.
  */
@@ -64,7 +64,7 @@ const hook = (
 		{ wrapper, initialProps: { revision, landing } }
 	);
 
-/** Answers the ask with `options`; returns what was sent. */
+/** Answers every ask with `options`; returns what was sent. */
 const answer = (
 	options = repairOptionsFixture()
 ): ReturnType<typeof stubApi> =>
@@ -73,19 +73,13 @@ const answer = (
 	});
 
 describe("useEngineRepair", () => {
-	it("sends nothing until asked, then the gap at the revision on screen, feasible options first", async () => {
+	it("asks at once for the gap at the revision on screen, feasible options first", async () => {
 		const calls = answer(
 			repairOptionsFixture([infeasibleRepair(), feasibleRepair()])
 		);
 		const { result } = hook(4);
 
-		expect(result.current.status).toBe("idle");
-		expect(calls).toHaveLength(0);
-
-		act(() => {
-			result.current.askAgain();
-		});
-
+		expect(result.current.status).toBe("loading");
 		await waitFor(() => {
 			expect(result.current.status).toBe("ready");
 		});
@@ -98,37 +92,34 @@ describe("useEngineRepair", () => {
 		).toEqual([true, false]);
 	});
 
-	it("is unasked again once the roster moves on", async () => {
-		answer();
+	it("asks afresh once the roster moves on", async () => {
+		const calls = answer();
 		const { result, rerender } = hook(1);
-		act(() => {
-			result.current.askAgain();
-		});
 		await waitFor(() => {
 			expect(result.current.status).toBe("ready");
 		});
 
 		rerender({ revision: 2, landing: false });
 
-		expect(result.current.status).toBe("idle");
+		await waitFor(() => {
+			expect(result.current.status).toBe("ready");
+		});
+		expect(calls.map((call) => call.body)).toEqual([
+			{ ...GAP, expectedRevision: 1 },
+			{ ...GAP, expectedRevision: 2 },
+		]);
 	});
 
-	it("asks nothing while a change lands, and waits", async () => {
+	it("asks nothing while a change lands, and waits", () => {
 		const calls = answer();
 		const { result } = hook(1, true);
 
-		act(() => {
-			result.current.askAgain();
-		});
-
-		await waitFor(() => {
-			expect(result.current.status).toBe("loading");
-		});
+		expect(result.current.status).toBe("loading");
 		expect(calls).toHaveLength(0);
 	});
 
-	it("reads a refusal as what the section says", async () => {
-		stubApi({
+	it("reads a refusal as what the section says, and asks again on askAgain", async () => {
+		const calls = stubApi({
 			[`POST ${REPAIR_OPTIONS}`]: {
 				status: 422,
 				body: {
@@ -140,15 +131,18 @@ describe("useEngineRepair", () => {
 			},
 		});
 		const { result } = hook();
-		act(() => {
-			result.current.askAgain();
-		});
 
 		await waitFor(() => {
 			expect(result.current).toMatchObject({
 				status: "refused",
 				refusal: "notSeenByEngine",
 			});
+		});
+		act(() => {
+			result.current.askAgain();
+		});
+		await waitFor(() => {
+			expect(calls).toHaveLength(2);
 		});
 	});
 });

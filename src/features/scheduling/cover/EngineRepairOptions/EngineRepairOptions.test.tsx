@@ -31,8 +31,11 @@ const NONE_CHECKED =
 const NOT_CHECKED =
 	"Working-time rules (hours a day, overtime a month, days a week, leave) aren’t checked for this change. After you apply it, press Validate schedule.";
 
+const UNREACHABLE =
+	"The engine could not be reached. These people are free by their hours and are not checked against the rules.";
+
 describe("EngineRepairOptions", () => {
-	it("says it is asking while the engine works", () => {
+	it("shows one working line while the engine works", () => {
 		render(
 			<EngineRepairOptions
 				names={names}
@@ -40,7 +43,10 @@ describe("EngineRepairOptions", () => {
 			/>
 		);
 
-		expect(screen.getByText("Asking the engine…")).toBeInTheDocument();
+		expect(screen.getByRole("status")).toHaveTextContent(
+			"Working out the options…"
+		);
+		expect(screen.queryByRole("button")).toBeNull();
 	});
 
 	it("lists each option's moves, an honest no with its reason, and the working-time note on every option", () => {
@@ -69,7 +75,7 @@ describe("EngineRepairOptions", () => {
 		).toBeVisible();
 		expect(
 			within(fills!).getByText(
-				"Chen Wei stays on after Swing Shift until 15:00 (+2 h)"
+				"Chen Wei stays on after Swing Shift · +2 h overtime, until 15:00"
 			)
 		).toBeVisible();
 		expect(within(cannot!).getByText("Can’t fill the gap")).toBeVisible();
@@ -99,7 +105,7 @@ describe("EngineRepairOptions", () => {
 		).toBeVisible();
 	});
 
-	it("says why it was refused, and offers to ask again only when the engine failed", async () => {
+	it("says why it was refused in the refusal's own words, and that the engine could not be reached with a retry when it failed", async () => {
 		const ask = vi.fn();
 		const { rerender } = render(
 			<EngineRepairOptions
@@ -118,11 +124,12 @@ describe("EngineRepairOptions", () => {
 				repair={{ status: "refused", refusal: "failed", askAgain: ask }}
 			/>
 		);
+		expect(screen.getByRole("alert")).toHaveTextContent(UNREACHABLE);
 		await userEvent.click(screen.getByRole("button", { name: "Try again" }));
 		expect(ask).toHaveBeenCalledOnce();
 	});
 
-	it("says the engine took too long this time, and offers to ask again", async () => {
+	it("says the engine could not be reached when it took too long, and offers to ask again", async () => {
 		const ask = vi.fn();
 		render(
 			<EngineRepairOptions
@@ -131,9 +138,7 @@ describe("EngineRepairOptions", () => {
 			/>
 		);
 
-		expect(screen.getByRole("alert")).toHaveTextContent(
-			"The engine took too long to look for options this time."
-		);
+		expect(screen.getByRole("alert")).toHaveTextContent(UNREACHABLE);
 		await userEvent.click(screen.getByRole("button", { name: "Try again" }));
 		expect(ask).toHaveBeenCalledOnce();
 	});
@@ -261,7 +266,7 @@ describe("EngineRepairOptions", () => {
 		const byHand =
 			"The app can’t apply this one: make it by hand on the roster.";
 		expect(
-			within(stretch!).getByText("Extend Chen Wei’s Swing Shift by 2 h")
+			within(stretch!).getByText("Extend Chen Wei’s Swing Shift · +2 h overtime")
 		).toBeVisible();
 		expect(within(stretch!).getByText(byHand)).toBeVisible();
 		expect(
