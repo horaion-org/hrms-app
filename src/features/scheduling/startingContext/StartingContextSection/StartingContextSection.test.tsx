@@ -85,7 +85,7 @@ describe("StartingContextSection", () => {
 			)
 		).toBeVisible();
 		expect(
-			screen.getByRole("button", { name: "Edit last week’s shifts" })
+			screen.getByRole("button", { name: "Edit prior shifts" })
 		).toBeVisible();
 		expect(screen.getByRole("button", { name: "Add them" })).toBeVisible();
 	});
@@ -130,7 +130,7 @@ describe("StartingContextSection", () => {
 		show("days");
 
 		expect(
-			await screen.findByRole("dialog", { name: "Before this week" })
+			await screen.findByRole("dialog", { name: "Before these days" })
 		).toBeVisible();
 	});
 
@@ -139,7 +139,7 @@ describe("StartingContextSection", () => {
 		const onOpenedOnStart = vi.fn();
 		show("days", undefined, undefined, onOpenedOnStart);
 
-		await screen.findByRole("dialog", { name: "Before this week" });
+		await screen.findByRole("dialog", { name: "Before these days" });
 		await vi.waitFor(() => {
 			expect(onOpenedOnStart).toHaveBeenCalledTimes(1);
 		});
@@ -167,7 +167,7 @@ describe("StartingContextSection", () => {
 		show();
 
 		await userEvent.click(
-			await screen.findByRole("button", { name: /last week/ })
+			await screen.findByRole("button", { name: /prior shifts/ })
 		);
 		await userEvent.click(screen.getByRole("button", { name: "Save days" }));
 

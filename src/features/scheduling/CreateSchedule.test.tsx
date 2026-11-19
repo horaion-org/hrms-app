@@ -1218,11 +1218,9 @@ describe("Create Schedule: where everyone starts", () => {
 				"No roster before these days. Days are added for 1 person. For everyone else, the earlier days of this week count as worked for weekly rest days and days a week; rest between shifts and days in a row start fresh."
 			)
 		).toBeInTheDocument();
-		await user.click(
-			screen.getByRole("button", { name: "Edit last week’s shifts" })
-		);
+		await user.click(screen.getByRole("button", { name: "Edit prior shifts" }));
 		const dialog = await screen.findByRole("dialog", {
-			name: "Before this week",
+			name: "Before these days",
 		});
 		await user.click(
 			within(dialog).getByRole("button", { name: "Fill empty days" })
@@ -1264,10 +1262,10 @@ describe("Create Schedule: where everyone starts", () => {
 			});
 
 			await user.click(
-				await screen.findByRole("button", { name: "Edit last week’s shifts" })
+				await screen.findByRole("button", { name: "Edit prior shifts" })
 			);
 			const dialog = await screen.findByRole("dialog", {
-				name: "Before this week",
+				name: "Before these days",
 			});
 			await user.click(
 				within(dialog).getByRole("button", { name: "Save days" })
@@ -1287,7 +1285,7 @@ describe("Create Schedule: where everyone starts", () => {
 		expect(
 			await screen.findByText(/^No roster before these days\./)
 		).toBeInTheDocument();
-		expect(screen.queryByRole("button", { name: /last week/ })).toBeNull();
+		expect(screen.queryByRole("button", { name: /prior shifts/ })).toBeNull();
 	});
 });
 

@@ -51,7 +51,7 @@ describe("StartingDaysDialog", () => {
 		show();
 
 		const table = screen.getByRole("table", {
-			name: "The days before this week",
+			name: "The prior days",
 		});
 		const tan = within(table).getByRole("row", { name: /Tan Wei Ming/ });
 		expect(within(tan).getByText("On Leave")).toBeInTheDocument();
@@ -71,7 +71,7 @@ describe("StartingDaysDialog", () => {
 		show(vi.fn(), week);
 
 		const tan = within(
-			screen.getByRole("table", { name: "The days before this week" })
+			screen.getByRole("table", { name: "The prior days" })
 		).getByRole("row", { name: /Tan Wei Ming/ });
 		expect(within(tan).getByText("Unknown")).toBeInTheDocument();
 	});
@@ -105,7 +105,7 @@ describe("StartingDaysDialog", () => {
 		show(vi.fn(), typedDaysOffWeek(), ["OFF", "REST"]);
 
 		const table = screen.getByRole("table", {
-			name: "The days before this week",
+			name: "The prior days",
 		});
 		const tan = within(table).getByRole("row", { name: /Tan Wei Ming/ });
 		expect(within(tan).getByText("Rest day")).toBeInTheDocument();
@@ -163,7 +163,7 @@ describe("StartingDaysDialog", () => {
 		show();
 
 		const table = screen.getByRole("table", {
-			name: "The days before this week",
+			name: "The prior days",
 		});
 		expect(
 			within(table).getByRole("columnheader", { name: "Mon, Nov 2" })
@@ -185,7 +185,7 @@ describe("StartingDaysDialog", () => {
 		);
 
 		const table = screen.getByRole("table", {
-			name: "The days before this week",
+			name: "The prior days",
 		});
 		expect(
 			within(table).getByRole("columnheader", { name: "Mon, Oct 26" })
@@ -201,9 +201,10 @@ describe("StartingDaysDialog", () => {
 		show(vi.fn(), earlierDayTypedWeek());
 
 		expect(
-			within(
-				screen.getByRole("table", { name: "The days before this week" })
-			).getByRole("columnheader", { name: "Fri, Oct 30" })
+			within(screen.getByRole("table", { name: "The prior days" })).getByRole(
+				"columnheader",
+				{ name: "Fri, Oct 30" }
+			)
 		).toBeInTheDocument();
 		expect(
 			screen.getByRole("button", { name: "Hide earlier days" })
@@ -292,9 +293,10 @@ describe("StartingDaysDialog", () => {
 			screen.queryByRole("button", { name: "Show 7 earlier days" })
 		).not.toBeInTheDocument();
 		expect(
-			within(
-				screen.getByRole("table", { name: "The days before this week" })
-			).getByRole("columnheader", { name: "Sun, Nov 8" })
+			within(screen.getByRole("table", { name: "The prior days" })).getByRole(
+				"columnheader",
+				{ name: "Sun, Nov 8" }
+			)
 		).toBeInTheDocument();
 	});
 });

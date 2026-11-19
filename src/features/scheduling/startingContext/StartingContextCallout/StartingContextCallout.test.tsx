@@ -37,12 +37,12 @@ describe("StartingContextCallout", () => {
 		const note = screen.getByRole("note");
 		expect(note).toHaveClass("bg-warning-50");
 		expect(note).toHaveTextContent(
-			"Horaion doesn’t know what people worked last week." +
+			"Horaion doesn’t know what people worked before these days." +
 				"Without it, everyone is treated as rested, so someone who worked Sunday night could be given Monday morning." +
-				"Add last week’s shifts"
+				"Add prior shifts"
 		);
 		await userEvent.click(
-			screen.getByRole("button", { name: "Add last week’s shifts" })
+			screen.getByRole("button", { name: "Add prior shifts" })
 		);
 		expect(onAdd).toHaveBeenCalledOnce();
 	});
@@ -57,7 +57,7 @@ describe("StartingContextCallout", () => {
 			"No roster before these days. Days are added for 1 person. For everyone else, the earlier days of this week count as worked for weekly rest days and days a week; rest between shifts and days in a row start fresh."
 		);
 		await userEvent.click(
-			screen.getByRole("button", { name: "Edit last week’s shifts" })
+			screen.getByRole("button", { name: "Edit prior shifts" })
 		);
 		expect(onAdd).toHaveBeenCalledOnce();
 	});
@@ -70,7 +70,7 @@ describe("StartingContextCallout", () => {
 		expect(note).toHaveTextContent(
 			"Horaion doesn’t know what people worked on Mon, Nov 9 and Tue, Nov 10, or the week before." +
 				"Mark any rest days or days off already given, so the week counts them. Left unknown, they count as days worked." +
-				"Add last week’s shifts"
+				"Add prior shifts"
 		);
 	});
 
@@ -93,7 +93,7 @@ describe("StartingContextCallout", () => {
 			"Carried over from the week of Nov 2. 1 person isn’t on that roster: for them, rest between shifts and days in a row start fresh."
 		);
 		expect(
-			screen.getByRole("button", { name: "Edit last week’s shifts" })
+			screen.getByRole("button", { name: "Edit prior shifts" })
 		).toHaveClass("text-ink-blue-700");
 	});
 
@@ -123,7 +123,7 @@ describe("StartingContextCallout", () => {
 		show(firstWeek(), 0);
 
 		expect(screen.getByRole("note")).toHaveTextContent(
-			"Horaion doesn’t know what people worked last week."
+			"Horaion doesn’t know what people worked before these days."
 		);
 		expect(screen.queryByRole("button")).not.toBeInTheDocument();
 	});
