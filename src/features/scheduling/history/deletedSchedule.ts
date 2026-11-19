@@ -31,8 +31,12 @@ const deletedScheduleRecordSchema = deletedScheduleSchema.and(
 		shifts: scheduleShiftsSchema,
 		/** The roster as it was when deleted: one row per member per day. */
 		assignments: z.array(scheduleAssignmentSchema),
-		/** Every cover offer sent on it; a remark is null for a reader who may not see remarks. */
-		coverOffers: z.array(coverOfferSchema),
+		/**
+		 * Every cover offer sent on it, none as an empty list. Null for a reader
+		 * who may not read cover offers (no `schedule:edit_shift` at its
+		 * Department): the page then leaves that part out.
+		 */
+		coverOffers: z.array(coverOfferSchema).nullable(),
 	})
 );
 
