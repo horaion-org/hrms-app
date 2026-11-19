@@ -4521,16 +4521,14 @@
 			"changeRemark": "Remark:",
 			"days": {
 				"title": "My roster",
-				"subtitle": "Your shifts, days off and leave from published rosters.",
-				"loading": "Loading your days…",
-				"loadFailed": "Your days could not be loaded. Please try again.",
+				"subtitle": "Your department’s published roster. Days not yet published stay empty.",
+				"loading": "Loading your roster…",
+				"loadFailed": "Your roster could not be loaded. Please try again.",
 				"navigatorLabel": "Days shown",
 				"previous": "Previous two weeks",
 				"next": "Next two weeks",
-				"listLabel": "Your days",
-				"noRoster": "No published roster yet",
-				"teamRoster": "See the team’s roster",
-				"teamRosterNamed": "See the team’s roster: {{department}}, {{period}}"
+				"teamRoster": "Open this roster",
+				"teamRosterNamed": "Open this roster: {{department}}, {{period}}"
 			}
 		},
 		"generation": {

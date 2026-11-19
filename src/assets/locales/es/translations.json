@@ -4321,16 +4321,14 @@
 			"changeRemark": "Comentario:",
 			"days": {
 				"title": "Mi cuadrante",
-				"subtitle": "Tus turnos, días libres y permisos de los cuadrantes publicados.",
-				"loading": "Cargando tus días…",
-				"loadFailed": "No pudimos cargar tus días. Inténtalo de nuevo.",
+				"subtitle": "El cuadrante publicado de tu departamento. Los días aún no publicados quedan vacíos.",
+				"loading": "Cargando tu cuadrante…",
+				"loadFailed": "No pudimos cargar tu cuadrante. Inténtalo de nuevo.",
 				"navigatorLabel": "Días mostrados",
 				"previous": "Dos semanas anteriores",
 				"next": "Dos semanas siguientes",
-				"listLabel": "Tus días",
-				"noRoster": "Aún no hay un cuadrante publicado",
-				"teamRoster": "Ver el cuadrante del equipo",
-				"teamRosterNamed": "Ver el cuadrante del equipo: {{department}}, {{period}}"
+				"teamRoster": "Abrir este cuadrante",
+				"teamRosterNamed": "Abrir este cuadrante: {{department}}, {{period}}"
 			}
 		},
 		"generation": {
