@@ -8,7 +8,6 @@ import { FilterChips } from "@/components/ui/FilterChips";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
 import { OffersOutSection } from "@/features/scheduling/coverOffers/OffersOutSection";
-import type { IssueFixes } from "@/features/scheduling/roster/dayTypeFix";
 import { FindingList } from "@/features/scheduling/roster/FindingList";
 import { formatDay } from "@/common/formatDay";
 import { findingFamily } from "@/features/scheduling/roster/findings/finding";
@@ -27,7 +26,11 @@ import {
 	type IssueNote,
 	type RosterIssue,
 } from "@/features/scheduling/roster/rosterIssueGroups";
-import { RosterIssueGroups } from "@/features/scheduling/roster/RosterIssueGroups";
+import {
+	FixableIssueGroups,
+	RosterIssueGroups,
+	type IssueFixing,
+} from "@/features/scheduling/roster/RosterIssueGroups";
 import type { RosterPanel } from "@/features/scheduling/roster/rosterSearch";
 import type { RosterView } from "@/features/scheduling/roster/rosterView";
 import type { RosterChangeTarget } from "@/features/scheduling/rosterChanges/useRosterChangeActions";
@@ -87,8 +90,8 @@ export type RosterListInput = {
 	onShowAllIssues: () => void;
 	/** On a roster that may be changed: opens Find cover for a short shift, from its Issues row. */
 	onFindCover?: (gap: CoverGapRequest) => void;
-	/** On a roster that may be changed: the fixes Issues can make itself (`useDayTypeFixes`). */
-	issueFixes?: IssueFixes;
+	/** On a roster that may be changed: what the fixes Issues makes itself need (`FixableIssueGroups`). */
+	issueFixing?: IssueFixing;
 };
 
 /**
@@ -217,33 +220,33 @@ export const issuesSections = (
 		validationNote,
 		issues,
 		onShowIssue,
-		issueFixes,
+		issueFixing,
 	} = input;
 	if (issuesAbout) return headerIssueSections(issuesAbout, input);
+	const list = {
+		issues,
+		validationNote,
+		information: coverOffers &&
+			(coverOffers.failed || coverOffers.offers.length > 0) && (
+				<OffersOutSection
+					assignments={assignments}
+					failed={coverOffers.failed}
+					offers={coverOffers.offers}
+					target={coverOffers.target}
+					timeZone={coverOffers.timeZone}
+					onRetry={coverOffers.retry}
+				/>
+			),
+		onFindCover,
+		onShow: onShowIssue,
+	};
 	return [
 		{
 			key: "issues",
-			content: (
-				<RosterIssueGroups
-					fixes={issueFixes}
-					issues={issues}
-					validationNote={validationNote}
-					information={
-						coverOffers &&
-						(coverOffers.failed || coverOffers.offers.length > 0) && (
-							<OffersOutSection
-								assignments={assignments}
-								failed={coverOffers.failed}
-								offers={coverOffers.offers}
-								target={coverOffers.target}
-								timeZone={coverOffers.timeZone}
-								onRetry={coverOffers.retry}
-							/>
-						)
-					}
-					onFindCover={onFindCover}
-					onShow={onShowIssue}
-				/>
+			content: issueFixing ? (
+				<FixableIssueGroups {...list} fixing={issueFixing} />
+			) : (
+				<RosterIssueGroups {...list} />
 			),
 		},
 	];
