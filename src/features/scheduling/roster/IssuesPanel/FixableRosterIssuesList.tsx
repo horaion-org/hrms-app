@@ -2,7 +2,7 @@ import type { FunctionComponent } from "@/common/types";
 import {
 	useDayTypeFixes,
 	type DayTypeFixesInput,
-} from "@/features/scheduling/roster/RosterIssueGroups/useDayTypeFixes";
+} from "@/features/scheduling/roster/RosterIssueGroups";
 import {
 	RosterIssuesList,
 	type RosterIssuesListProps,

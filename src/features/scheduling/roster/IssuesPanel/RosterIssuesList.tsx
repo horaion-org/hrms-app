@@ -13,7 +13,7 @@ import type { RosterIssue } from "@/features/scheduling/roster/rosterIssueGroups
 import {
 	IssueFixAll,
 	IssueFixOutcomeLine,
-} from "@/features/scheduling/roster/RosterIssueGroups/IssueFix";
+} from "@/features/scheduling/roster/RosterIssueGroups";
 import { IssueRowBody } from "./IssueRowBody";
 import { IssuesPanel } from "./IssuesPanel";
 

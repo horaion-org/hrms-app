@@ -13,7 +13,7 @@ import {
 	IssueFixAdvice,
 	IssueFixButton,
 	IssueFixOutcomeLine,
-} from "@/features/scheduling/roster/RosterIssueGroups/IssueFix";
+} from "@/features/scheduling/roster/RosterIssueGroups";
 
 export type IssueRowBodyProps = {
 	row: IssueRow;
