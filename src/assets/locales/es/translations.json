@@ -4698,6 +4698,13 @@
 				"dayType": "Abre el día y elige qué es: un día de descanso, un día libre o un permiso.",
 				"startTimeChange": "Da a esta persona la misma hora de inicio en días seguidos, si el cuadrante lo permite.",
 				"validate": "Pulsa Validar cuadrante para ver qué regla es y a quién nombra."
+			},
+			"fix": {
+				"advice": "{{day}} es {{from}} para {{name}}. Conviértelo en el {{to}}.",
+				"make": "Convertirlo en {{dayType}}",
+				"makeAll_one": "Dar a esta persona un {{to}} en uno de sus {{from}} en cada una de estas semanas",
+				"makeAll_other": "Dar a cada una de estas {{count}} personas un {{to}} en uno de sus {{from}}",
+				"someDone": "{{done}} de {{total}} cambiados. Los demás necesitan una revisión antes: usa el botón de cada uno."
 			}
 		},
 		"rosterMarkers": {

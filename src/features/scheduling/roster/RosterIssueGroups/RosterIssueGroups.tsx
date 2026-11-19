@@ -4,6 +4,7 @@ import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
+import type { IssueFixes } from "@/features/scheduling/roster/dayTypeFix";
 import {
 	ISSUE_GROUPS,
 	issueCounts,
@@ -27,6 +28,8 @@ export type RosterIssueGroupsProps = {
 	onShow?: (issue: RosterIssue) => void;
 	/** On a roster that may be changed; no Find cover buttons without. */
 	onFindCover?: (gap: CoverGapRequest) => void;
+	/** The fixes Issues can make itself, on a roster that may be changed; none without. */
+	fixes?: IssueFixes;
 };
 
 /**
@@ -41,6 +44,7 @@ export const RosterIssueGroups = ({
 	information,
 	onShow,
 	onFindCover,
+	fixes,
 }: RosterIssueGroupsProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const [order, setOrder] = useState<IssueOrder>("byPerson");
@@ -83,6 +87,7 @@ export const RosterIssueGroups = ({
 						<IssueGroupSection
 							key={group}
 							extra={group === "forInformation" ? information : undefined}
+							fixes={fixes}
 							group={group}
 							items={issuesOfGroup(issues, group, order)}
 							language={language}

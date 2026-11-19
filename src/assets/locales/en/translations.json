@@ -4898,6 +4898,13 @@
 				"dayType": "Open the day and choose what it is: a rest day, a day off or leave.",
 				"startTimeChange": "Give this person the same start time on the days next to each other, if the roster allows.",
 				"validate": "Press Validate schedule to see which rule this is and who it names."
+			},
+			"fix": {
+				"advice": "{{day}} is a {{from}} for {{name}}. Make it the {{to}}.",
+				"make": "Make it a {{dayType}}",
+				"makeAll_one": "Give this person a {{to}} on one of their {{from}} in each of these weeks",
+				"makeAll_other": "Give each of these {{count}} people a {{to}} on one of their {{from}}",
+				"someDone": "{{done}} of {{total}} changed. The others need a look first: use each one’s own button."
 			}
 		},
 		"rosterMarkers": {

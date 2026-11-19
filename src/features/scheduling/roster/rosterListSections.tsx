@@ -8,6 +8,7 @@ import { FilterChips } from "@/components/ui/FilterChips";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
 import { OffersOutSection } from "@/features/scheduling/coverOffers/OffersOutSection";
+import type { IssueFixes } from "@/features/scheduling/roster/dayTypeFix";
 import { FindingList } from "@/features/scheduling/roster/FindingList";
 import { formatDay } from "@/common/formatDay";
 import { findingFamily } from "@/features/scheduling/roster/findings/finding";
@@ -86,6 +87,8 @@ export type RosterListInput = {
 	onShowAllIssues: () => void;
 	/** On a roster that may be changed: opens Find cover for a short shift, from its Issues row. */
 	onFindCover?: (gap: CoverGapRequest) => void;
+	/** On a roster that may be changed: the fixes Issues can make itself (`useDayTypeFixes`). */
+	issueFixes?: IssueFixes;
 };
 
 /**
@@ -214,6 +217,7 @@ export const issuesSections = (
 		validationNote,
 		issues,
 		onShowIssue,
+		issueFixes,
 	} = input;
 	if (issuesAbout) return headerIssueSections(issuesAbout, input);
 	return [
@@ -221,6 +225,7 @@ export const issuesSections = (
 			key: "issues",
 			content: (
 				<RosterIssueGroups
+					fixes={issueFixes}
 					issues={issues}
 					validationNote={validationNote}
 					information={

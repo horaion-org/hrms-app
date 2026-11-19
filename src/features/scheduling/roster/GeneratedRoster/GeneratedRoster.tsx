@@ -52,6 +52,7 @@ import type { PreferenceOutcomeLookup } from "@/features/shiftPreferences/prefer
 import type { RosterEditing } from "./rosterEditing";
 import { RosterSidePanelSlot } from "./RosterSidePanelSlot";
 import { ROSTER_SIDE_LISTS } from "./rosterSideLists";
+import { useDayTypeFixes } from "./useDayTypeFixes";
 import { useRosterView } from "./useRosterView";
 
 export type GeneratedRosterProps = {
@@ -200,6 +201,23 @@ export const GeneratedRoster = ({
 		t,
 		language,
 	});
+	const dayTypeFixes = useDayTypeFixes({
+		issues,
+		constraints,
+		assignments,
+		editing,
+		onApplied: (change) => {
+			setApplied({ change });
+		},
+		onOpenCell: (cell) => {
+			roster.open({ cell });
+		},
+	});
+	/** Closes the panel beside the grid, and forgets the day a fix from Issues opened. */
+	const closePanel = (): void => {
+		dayTypeFixes.forgetPreset();
+		roster.close();
+	};
 	const counts = issueCounts(issues);
 	const shortShifts = shortShiftCount(issues);
 	useEffect(() => {
@@ -271,6 +289,7 @@ export const GeneratedRoster = ({
 				approval,
 				validationNote,
 				issues,
+				issueFixes: dayTypeFixes.fixes,
 				onShowIssue: showIssue,
 				onShowAllIssues: roster.showAllIssues,
 				onFindCover: editing ? roster.openCover : undefined,
@@ -281,6 +300,7 @@ export const GeneratedRoster = ({
 			assignments={assignments}
 			editing={editing}
 			preferenceOutcomes={preferenceOutcomes}
+			presetDayType={dayTypeFixes.presetDayTypeOf(view.cell)}
 			roster={roster}
 			timeZone={schedule.timeZone}
 			viewerMembershipId={viewerMembershipId}
@@ -296,13 +316,13 @@ export const GeneratedRoster = ({
 				),
 				sections: listSections,
 			}}
-			onClose={roster.close}
+			onClose={closePanel}
 			onCloseCover={roster.closeCover}
 			onFindCover={editing ? roster.openCover : undefined}
 			onPreviewDays={roster.onPreviewDays}
 			onApplied={(change, stillShort) => {
 				setApplied({ change, stillShort });
-				roster.close();
+				closePanel();
 			}}
 		/>
 	);

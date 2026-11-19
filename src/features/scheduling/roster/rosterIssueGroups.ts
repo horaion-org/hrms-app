@@ -36,7 +36,13 @@ export type IssueAction =
  * engine's name for it, or a generation's error, which names no rule.
  */
 export type IssueSubject =
-	{ kind: "rule"; rule: string } | { kind: "generationError" };
+	| {
+			kind: "rule";
+			rule: string;
+			/** The schedule's frozen constraint behind a broken rule, when the check names it. */
+			constraintId?: string | null;
+	  }
+	| { kind: "generationError" };
 
 /** One row of the Issues tab: who or what and when on its first line, why and what to do on its second. */
 export type RosterIssue = {
@@ -264,7 +270,11 @@ const ruleIssues = (
 			time: null,
 			rule: ruleReason(group, ruleName, messages, t),
 			action: { kind: "show" },
-			subject: { kind: "rule", rule: rule.rule },
+			subject: {
+				kind: "rule",
+				rule: rule.rule,
+				constraintId: rule.constraintId,
+			},
 		})
 	);
 	// A violation missing its person or its day stands alone, as it can't be joined to another.
