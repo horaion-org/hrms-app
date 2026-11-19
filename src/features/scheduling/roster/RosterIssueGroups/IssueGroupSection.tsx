@@ -5,6 +5,7 @@ import type { FunctionComponent } from "@/common/types";
 import { Badge } from "@/components/ui/Badge";
 import { ChevronDownIcon } from "@/components/ui/Icon";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
+import type { IssueFixes } from "@/features/scheduling/roster/dayTypeFix";
 import {
 	GROUPS_STARTING_CLOSED,
 	topicGist,
@@ -23,6 +24,8 @@ export type IssueGroupSectionProps = {
 	extra?: ReactNode;
 	onShow?: (issue: RosterIssue) => void;
 	onFindCover?: (gap: CoverGapRequest) => void;
+	/** The fixes Issues can make itself, by row. */
+	fixes?: IssueFixes;
 };
 
 /**
@@ -37,6 +40,7 @@ export const IssueGroupSection = ({
 	extra,
 	onShow,
 	onFindCover,
+	fixes,
 }: IssueGroupSectionProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const [open, setOpen] = useState(!GROUPS_STARTING_CLOSED.includes(group));
@@ -78,6 +82,7 @@ export const IssueGroupSection = ({
 					{items.map((issue) => (
 						<IssueRow
 							key={issue.key}
+							fixes={fixes}
 							issue={issue}
 							language={language}
 							onFindCover={onFindCover}
