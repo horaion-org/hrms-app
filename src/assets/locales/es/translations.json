@@ -1373,16 +1373,18 @@
 			},
 			"leave_request": {
 				"name": "Permisos",
-				"description": "Las solicitudes de permiso de cada persona, incluido el tipo de permiso y el motivo por el que se rechazó una solicitud.",
+				"description": "Las solicitudes de permiso de cada persona y el tipo de permiso. Ver los motivos se concede por separado.",
 				"actions": {
-					"read": "Ver las solicitudes de permiso, con su motivo",
+					"read": "Ver las solicitudes de permiso",
+					"read_remarks": "Ver los motivos de las solicitudes de permiso",
 					"create": "Solicitar un permiso en nombre de otra persona",
 					"review": "Aprobar o rechazar permisos"
 				},
 				"actionHints": {
-					"read": "El tipo de permiso y por qué se rechazó una solicitud",
+					"read": "Quién está de permiso, cuándo y el tipo de permiso",
+					"read_remarks": "Las notas del solicitante, por qué se rechazó una solicitud y el comentario de una aprobación",
 					"create": "Solicitarlo para uno mismo no necesita nada",
-					"review": "Nunca los propios"
+					"review": "Nunca los propios; quien revisa siempre ve los motivos"
 				}
 			},
 			"skill": {

@@ -2597,16 +2597,18 @@
 			},
 			"leave_request": {
 				"name": "Leave",
-				"description": "Each person’s leave requests, including the kind of leave and why a request was refused.",
+				"description": "Each person’s leave requests and the kind of leave. The reasons are a separate permission.",
 				"actions": {
-					"read": "See leave requests, including the reason",
+					"read": "See leave requests",
+					"read_remarks": "See the reasons on leave requests",
 					"create": "Apply for leave for someone else",
 					"review": "Approve or reject leave"
 				},
 				"actionHints": {
-					"read": "The kind of leave and why one was rejected",
+					"read": "Who is on leave, when, and the kind of leave",
+					"read_remarks": "The applicant’s notes, why one was rejected, and the comment on an approval",
 					"create": "Applying for oneself needs nothing",
-					"review": "Never the holder’s own"
+					"review": "Never the holder’s own; reviewers always see the reasons"
 				}
 			},
 			"leave_type": {
