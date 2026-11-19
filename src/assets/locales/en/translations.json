@@ -5972,6 +5972,16 @@
 			"cardsFailed": "The departments couldn’t be loaded. Please try again.",
 			"cardsEmpty": "No department is in your reach. Ask an administrator for access to one.",
 			"cardsEmptyFiltered": "No department matches your search or filters. Clear them to see every department."
+		},
+		"history": {
+			"deleted": {
+				"badge": "Deleted",
+				"byLine": "Deleted by {{name}} on {{date}}",
+				"replacedLine": "Replaced by a new roster on {{date}}",
+				"onLine": "Deleted on {{date}}",
+				"banner": "This roster was deleted on {{date}}. It is kept as a record: nothing in it can be changed, published or generated again. Its days are on the roster page.",
+				"coverOffers": "Cover offers"
+			}
 		}
 	},
 	"colourSwatchPicker": {
