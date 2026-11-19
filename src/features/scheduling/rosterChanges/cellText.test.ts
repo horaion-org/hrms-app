@@ -41,7 +41,7 @@ describe("rosterCellText", () => {
 });
 
 describe("a stretched day in words", () => {
-	it("writes the times it is worked, and carries the stretch into a change's cell", () => {
+	it("writes the times it is worked and the overtime it adds, and carries the stretch into a change's cell", () => {
 		const plain = scheduleAssignmentsFixture()[0]!;
 		const stretched = {
 			...plain,
@@ -52,7 +52,19 @@ describe("a stretched day in words", () => {
 
 		expect(cell.stretch).toEqual({ beforeMinutes: 0, afterMinutes: 120 });
 		expect(rosterCellText(cell, t)).toBe(
-			`${plain.shift!.name} · 09:00 – 17:00`
+			`${plain.shift!.name} · 09:00 – 17:00 · +2 h overtime`
+		);
+	});
+
+	it("reads a half hour stretched before the shift as +0.5 h", () => {
+		const plain = scheduleAssignmentsFixture()[0]!;
+		const cell = assignmentCell({
+			...plain,
+			stretch: { beforeMinutes: 30, afterMinutes: 0 },
+		});
+
+		expect(rosterCellText(cell, t)).toBe(
+			`${plain.shift!.name} · 08:30 – 15:00 · +0.5 h overtime`
 		);
 	});
 });

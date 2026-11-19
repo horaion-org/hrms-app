@@ -55,7 +55,7 @@ describe("moveLine", () => {
 			"Call in Aisha Rahman for Front Desk AM Sat, Oct 17"
 		);
 		expect(moveLine(stretchMove(), names, t)).toBe(
-			"Chen Wei stays on after Swing Shift until 15:00 (+2 h)"
+			"Chen Wei stays on after Swing Shift · +2 h overtime, until 15:00"
 		);
 		expect(
 			moveLine(
@@ -66,9 +66,9 @@ describe("moveLine", () => {
 				names,
 				t
 			)
-		).toBe("Chen Wei starts Swing Shift early at 07:00 (+2 h)");
+		).toBe("Chen Wei starts Swing Shift early · +2 h overtime, from 07:00");
 		expect(moveLine(stretchMove({ side: null }), names, t)).toBe(
-			"Extend Chen Wei’s Swing Shift by 2 h"
+			"Extend Chen Wei’s Swing Shift · +2 h overtime"
 		);
 		expect(moveLine({ ...callInMove(), kind: "UNKNOWN" }, names, t)).toBe(
 			"A change the app can’t describe yet"
