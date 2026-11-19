@@ -102,10 +102,10 @@ describe("MainLayout side menu", () => {
 			.map((link) => link.textContent);
 		expect(labels).toEqual([
 			"Dashboard",
+			"My roster",
 			"Scheduling",
 			"People",
 			"Organisation",
-			"My roster",
 			"Leave",
 			"Shift preferences",
 			"Availability",

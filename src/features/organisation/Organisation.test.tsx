@@ -406,10 +406,10 @@ it("reaches the overview from the Sidebar and marks Organisation current", async
 			.map((link) => link.textContent)
 	).toEqual([
 		"Dashboard",
+		"My roster",
 		"Scheduling",
 		"People",
 		"Organisation",
-		"My roster",
 		"Leave",
 		"Shift preferences",
 		"Reports",
