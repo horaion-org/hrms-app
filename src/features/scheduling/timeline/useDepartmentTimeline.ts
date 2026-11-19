@@ -191,6 +191,7 @@ export const useDepartmentTimeline = (
 		const rosterPending = runIds[index] !== undefined && rosterRead.isPending;
 		return read.isPending || rosterPending ? "pending" : "done";
 	});
+	const rostersRead = rostersReadOf(rosterSteps);
 	// A read still under way, or one that failed, shows no entered days: they are a courtesy, never the roster.
 	const startingDaysOf = Object.fromEntries(
 		schedulesWithFreeDays.flatMap((schedule, index) => {
@@ -204,11 +205,14 @@ export const useDepartmentTimeline = (
 		branchName: firstMonth.branchName,
 		timeZone: firstMonth.timeZone,
 		schedules,
+		// Entered days join once every roster is read: only then is it known who has a row already.
 		rows: withEnteredCells(
 			timelineRowsOf(rosters),
-			enteredCellsOf(schedules, startingDaysOf, days)
+			rostersRead === "loaded"
+				? enteredCellsOf(schedules, startingDaysOf, days)
+				: []
 		),
-		rosters: rostersReadOf(rosterSteps),
+		rosters: rostersRead,
 		deleteTargets: Object.fromEntries(
 			scheduleReads.flatMap((read) =>
 				read.data && mayDeleteSchedule(read.data, access)
