@@ -4,6 +4,7 @@ import {
 	issueRows,
 	mustFixCount,
 	rowsOfFilter,
+	withGapIssue,
 	type IssueFilter,
 	type IssueRowSources,
 } from "@/features/scheduling/roster/issueRows";
@@ -118,5 +119,31 @@ describe("rowsOfFilter and mustFixCount", () => {
 
 	it("counts the rows to fix", () => {
 		expect(mustFixCount(issueRows(jumbled(), SOURCES))).toBe(3);
+	});
+});
+
+describe("withGapIssue", () => {
+	const GAP = { shiftId: "front-desk-am", day: "2026-10-17" };
+
+	it("adds a must-fix row for a gap no issue names, opening to its cover", () => {
+		const issues = withGapIssue([], GAP, SOURCES.shiftName, SOURCES.t);
+
+		expect(issues).toHaveLength(1);
+		expect(issueRows(issues, SOURCES)[0]).toMatchObject({
+			key: "gap|front-desk-am|2026-10-17",
+			severity: "mustFix",
+			what: "Front Desk AM short",
+			action: "cover",
+		});
+	});
+
+	it.each([
+		["no gap", undefined],
+		["a gap an issue names", { shiftId: "front-desk-am", day: "2026-10-17" }],
+	])("leaves the issues as they are for %s", (_case, gap) => {
+		const named = rosterIssueFixture({ key: "gap|front-desk-am|2026-10-17" });
+		expect(withGapIssue([named], gap, SOURCES.shiftName, SOURCES.t)).toEqual([
+			named,
+		]);
 	});
 });

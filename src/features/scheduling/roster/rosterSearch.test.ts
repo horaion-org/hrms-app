@@ -35,7 +35,7 @@ describe("parseRosterSearch", () => {
 		[{ day: "Wednesday" }, {}],
 		[
 			{ cover: "front-desk-am-copy|2026-10-17", panel: "issues" },
-			{ cover: "front-desk-am-copy|2026-10-17" },
+			{ panel: "issues", cover: "front-desk-am-copy|2026-10-17" },
 		],
 		[
 			{ cell: "m-1|2026-10-14", cover: "front-desk-am-copy|2026-10-17" },

@@ -945,3 +945,86 @@ describe("GeneratedRoster", () => {
 		});
 	});
 });
+
+describe("GeneratedRoster: one place for cover", () => {
+	const SCHEDULE_PATH =
+		"/api/v1/companies/c-1/branches/b-1/departments/d-1/schedules/s-1";
+	const coverEditing = {
+		target: {
+			companyId: "c-1",
+			unit: { branchId: "b-1", departmentId: "d-1" },
+			scheduleId: "s-1",
+			runId: "r-1",
+		},
+		revision: 1,
+		shifts: [],
+		nonWorkingDayTypes: [],
+		notifiesMembers: false,
+	};
+
+	/** The roster opened at `view`, its API stubbed; gives the calls. */
+	const showAt = (view: RosterSearch): ReturnType<typeof stubApi> => {
+		configureApiClient({
+			accessToken: () => Promise.resolve("test-pass"),
+			renew: () => Promise.resolve({ kind: "expired" }),
+			onUnauthenticated: () => {},
+		});
+		const calls = stubApi({
+			[`POST ${SCHEDULE_PATH}/repair-options`]: {
+				status: 200,
+				body: envelope({ conflictId: "c", options: [], notAssigned: [] }),
+			},
+		});
+		render(
+			<QueryClientProvider
+				client={
+					new QueryClient({ defaultOptions: { queries: { retry: false } } })
+				}
+			>
+				<GeneratedRoster
+					assignments={scheduleAssignmentsFixture()}
+					editing={coverEditing}
+					schedule={schedule}
+					view={view}
+					onViewChange={() => {}}
+				/>
+			</QueryClientProvider>
+		);
+		return calls;
+	};
+
+	afterEach(() => {
+		resetApiClient();
+		vi.unstubAllGlobals();
+	});
+
+	it("given_findCoverForAGap_when_opened_then_issuesOpensWithThatRowOpenAndTheEngineAsked", async () => {
+		const calls = showAt({
+			week: "2026-10-12",
+			panel: "issues",
+			cover: "front-desk-am-copy|2026-10-17",
+		});
+
+		const panel = screen.getByRole("complementary", { name: "Issues" });
+		const open = within(panel).getByRole("button", { expanded: true });
+		expect(open).toHaveTextContent(/Sat, Oct 17/);
+		expect(
+			await within(panel).findByText("The engine found no way to fill this.")
+		).toBeVisible();
+		expect(
+			calls.filter((call) => call.path.endsWith("/repair-options"))
+		).toHaveLength(1);
+	});
+
+	it("given_aRowThatIsNotAShortShift_when_opened_then_nothingIsAskedOfTheEngine", async () => {
+		const user = userEvent.setup();
+		const calls = showAt({ week: "2026-10-12", panel: "issues" });
+
+		const panel = screen.getByRole("complementary", { name: "Issues" });
+		await user.click(within(panel).getAllByRole("button", { name: /Ben Ong/ })[0]!);
+
+		expect(
+			calls.filter((call) => call.path.endsWith("/repair-options"))
+		).toHaveLength(0);
+	});
+});

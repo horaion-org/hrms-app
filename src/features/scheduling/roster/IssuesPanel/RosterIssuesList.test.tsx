@@ -98,4 +98,14 @@ describe("RosterIssuesList", () => {
 		expect(screen.queryByRole("button", { name: "Review" })).toBeNull();
 		expect(screen.getByText("Rule: Early front desk")).toBeVisible();
 	});
+
+	it("given_aRuleAskedIfPossible_when_itsRowOpens_then_theEnginesSentenceAndNothingToApply", async () => {
+		const user = userEvent.setup();
+		show();
+
+		await user.click(screen.getByRole("button", { name: /^If possibleAsked/ }));
+
+		expect(screen.getByText("Works Saturday. Rule: Weekends off")).toBeVisible();
+		expect(screen.queryByRole("button", { name: /Apply/ })).toBeNull();
+	});
 });

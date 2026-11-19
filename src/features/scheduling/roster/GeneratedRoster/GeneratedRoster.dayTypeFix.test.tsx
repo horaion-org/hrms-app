@@ -50,7 +50,8 @@ const sentenceOf = (name: string): string =>
 
 const GENERAL_ADVICE =
 	"What to do: Change one of this person’s shifts in that week to a rest day (or a day off).";
-const MAKE_IT = "Make it a rest day";
+/** A fix row's one action, under its day drawn before → after. */
+const APPLY = "Apply change";
 const MAKE_ALL =
 	"Give each of these 2 people a rest day on one of their days off";
 
@@ -190,9 +191,7 @@ const rowOf = async (
 		expanded: false,
 	});
 	await user.click(rowButton);
-	const row = rowButton.closest("li") as HTMLElement;
-	expect(row).toHaveTextContent(sentenceOf(name));
-	return row;
+	return rowButton.closest("li") as HTMLElement;
 };
 
 /** The words of the buttons a row opens to, the row's own button left out. */
@@ -239,16 +238,15 @@ const chenFriday = {
 };
 
 describe("GeneratedRoster: the fix on a weekly day-type issue", () => {
-	it("given_someoneWithDaysOffThatWeek_when_issuesOpens_then_theRowNamesTheLastOneAndOffersToMakeItTheRestDay", async () => {
+	it("given_someoneWithDaysOffThatWeek_when_theirRowOpens_then_theLastOneIsDrawnAsTheRestDayWithApply", async () => {
 		stubApi({});
 		const { user, panel } = await showIssues();
 
 		const row = await rowOf(user, panel, "Aisha Rahman");
-		expect(row).toHaveTextContent(
-			/What to do: Sun.*18.* is a day off for Aisha Rahman\. Make it the rest day\./
-		);
+		// The last day off of the week, drawn as it is and as the fix makes it.
+		expect(row).toHaveTextContent(/Sun.*18.* · Day off→Sun.*18.* · Rest day/);
 		expect(row).not.toHaveTextContent(GENERAL_ADVICE);
-		expect(bodyButtons(row)).toEqual([MAKE_IT, "Show"]);
+		expect(bodyButtons(row)).toEqual([APPLY, "Show"]);
 	});
 
 	it("given_someoneWhoseOnlyDayNotWorkedIsLeave_when_issuesOpens_then_theRowReadsAsBeforeWithShowOnly", async () => {
@@ -260,6 +258,7 @@ describe("GeneratedRoster: the fix on a weekly day-type issue", () => {
 		});
 
 		const row = await rowOf(user, panel, "Chen Wei");
+		expect(row).toHaveTextContent(sentenceOf("Chen Wei"));
 		expect(row).toHaveTextContent(GENERAL_ADVICE);
 		expect(bodyButtons(row)).toEqual(["Show"]);
 	});
@@ -271,7 +270,7 @@ describe("GeneratedRoster: the fix on a weekly day-type issue", () => {
 		expect(await rowOf(user, panel, "Aisha Rahman")).toHaveTextContent(
 			GENERAL_ADVICE
 		);
-		expect(within(panel).queryByRole("button", { name: MAKE_IT })).toBeNull();
+		expect(within(panel).queryByRole("button", { name: APPLY })).toBeNull();
 		expect(within(panel).queryByRole("button", { name: MAKE_ALL })).toBeNull();
 	});
 
@@ -283,7 +282,7 @@ describe("GeneratedRoster: the fix on a weekly day-type issue", () => {
 		const { user, panel } = await showIssues();
 
 		const row = await rowOf(user, panel, "Aisha Rahman");
-		await user.click(within(row).getByRole("button", { name: MAKE_IT }));
+		await user.click(within(row).getByRole("button", { name: APPLY }));
 
 		expect(await screen.findByText("Roster changed.")).toBeVisible();
 		expect(bodiesTo(calls, PREVIEW)).toEqual([
@@ -308,7 +307,7 @@ describe("GeneratedRoster: the fix on a weekly day-type issue", () => {
 		const { user, panel } = await showIssues();
 
 		const row = await rowOf(user, panel, "Aisha Rahman");
-		await user.click(within(row).getByRole("button", { name: MAKE_IT }));
+		await user.click(within(row).getByRole("button", { name: APPLY }));
 
 		expect(await within(row).findByRole("alert")).toHaveTextContent(en.scheduling.rosterEdit.error.revision);
 		expect(screen.queryByText("Roster changed.")).toBeNull();
@@ -334,7 +333,7 @@ describe("GeneratedRoster: the fix on a weekly day-type issue", () => {
 		const { user, panel } = await showIssues();
 
 		const row = await rowOf(user, panel, "Aisha Rahman");
-		await user.click(within(row).getByRole("button", { name: MAKE_IT }));
+		await user.click(within(row).getByRole("button", { name: APPLY }));
 
 		expect(
 			await screen.findByRole("radio", { name: "Another day type" })
@@ -348,7 +347,7 @@ describe("GeneratedRoster: the fix on a weekly day-type issue", () => {
 
 		expect(within(panel).queryByRole("button", { name: MAKE_ALL })).toBeNull();
 		const row = await rowOf(user, panel, "Aisha Rahman");
-		await user.click(within(row).getByRole("button", { name: MAKE_IT }));
+		await user.click(within(row).getByRole("button", { name: APPLY }));
 
 		expect(
 			await screen.findByRole("radio", { name: "Another day type" })
