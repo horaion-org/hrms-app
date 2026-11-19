@@ -18,6 +18,11 @@ import {
 	type Schedule,
 } from "@/features/scheduling/schedules/api";
 import {
+	deletedSchedulesInUnitsKey,
+	type DeletedSchedule,
+} from "@/features/scheduling/schedules/deletedSchedules";
+import {
+	deletedScheduleFixture,
 	generatedScheduleFixture,
 	SCHEDULING_BRANCHES,
 	scheduleFixture,
@@ -63,7 +68,9 @@ const show = (
 	kitchenStatus: Schedule["status"] = "GENERATION_REQUESTED",
 	/** Still loading when null. */
 	summaries: Array<ScheduleMonthSummary> | null = SUMMARIES,
-	kitchen: Partial<Schedule> = {}
+	kitchen: Partial<Schedule> = {},
+	/** The deleted schedules kept as a record; none unless given. */
+	deleted: Array<DeletedSchedule> = []
 ): { onDepartmentChange: typeof onDepartmentChange } => {
 	// The router scrolls to the top on load, which jsdom does not implement.
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
@@ -79,6 +86,10 @@ const show = (
 			...kitchen,
 		}),
 	]);
+	client.setQueryData(
+		deletedSchedulesInUnitsKey("c-1", selectedUnits(UNITS)),
+		deleted
+	);
 	const monthsKey = scheduleMonthSummariesKey(
 		"c-1",
 		selectedUnits(UNITS),
@@ -145,6 +156,68 @@ describe("SchedulesTab", () => {
 		expect(
 			within(history).getByRole("row", { name: /Kitchen - Week 41/ })
 		).toBeVisible();
+	});
+
+	it("given_aDeletedSchedule_when_listed_then_itsRowSaysDeletedByWhomAndWhenAndOpensItsRecord", async () => {
+		show(vi.fn(), ["schedule:read"], "GENERATED", SUMMARIES, {}, [
+			deletedScheduleFixture({ scheduleId: "s-9", name: "Bar - Week 40" }),
+		]);
+
+		const history = await screen.findByRole("table", { name: "History" });
+		const row = within(history).getByRole("row", { name: /Bar - Week 40/ });
+		// The table writes a cell twice (once for a phone's one-line row), so each text is found more than once.
+		expect(within(row).getAllByText("Deleted")[0]).toBeInTheDocument();
+		expect(
+			within(row).getAllByText("Deleted by Lina Tan on Oct 15, 2026")[0]
+		).toBeInTheDocument();
+		// The status it had is not said in the list: it is no longer a roster to review.
+		expect(within(row).queryByText("To review")).toBeNull();
+		expect(within(row).getByRole("link")).toHaveAttribute(
+			"href",
+			"/scheduling/history/s-9"
+		);
+	});
+
+	it("given_aDeletedSchedule_when_listed_then_itHasNoMenuWhileALiveOneKeepsIts", async () => {
+		show(
+			vi.fn(),
+			["schedule:read", "schedule:delete"],
+			"GENERATED",
+			SUMMARIES,
+			{},
+			[deletedScheduleFixture({ scheduleId: "s-9", name: "Bar - Week 40" })]
+		);
+
+		const history = await screen.findByRole("table", { name: "History" });
+		const live = within(history).getByRole("row", {
+			name: /Kitchen - Week 41/,
+		});
+		const deleted = within(history).getByRole("row", { name: /Bar - Week 40/ });
+		expect(
+			within(live).getByRole("button", { name: /^More actions/ })
+		).toBeVisible();
+		expect(within(deleted).queryByRole("button")).toBeNull();
+	});
+
+	it("given_aReplacedSchedule_when_listed_then_itsRowSaysANewRosterReplacedIt", async () => {
+		show(vi.fn(), ["schedule:read"], "GENERATED", SUMMARIES, {}, [
+			deletedScheduleFixture({
+				scheduleId: "s-9",
+				name: "Bar - Week 40",
+				deletion: {
+					deletedAt: "2026-10-15T03:00:00Z",
+					deletedByName: "Lina Tan",
+					cause: "REPLACED",
+				},
+			}),
+		]);
+
+		const history = await screen.findByRole("table", { name: "History" });
+		expect(
+			within(history).getAllByText(
+				"Replaced by a new roster on Oct 15, 2026"
+			)[0]
+		).toBeInTheDocument();
 	});
 
 	it("given_aGeneratedSchedule_when_listed_then_itsHistoryStatusReadsToReview", async () => {
