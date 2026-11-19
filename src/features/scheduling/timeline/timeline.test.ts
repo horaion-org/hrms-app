@@ -321,10 +321,14 @@ describe("needsOf: days before a published part", () => {
 		publishedOnce: true,
 	};
 
-	/** Thursday lies before Friday's published (or once-published) part of the same week: not schedulable. */
+	/** Thursday lies before Friday's part of the same week: not schedulable only while that part is published. */
 	it.each([
 		["a published part after it", [toReviewEarly, late], false],
-		["a part published once after it", [toReviewEarly, withdrawn], false],
+		[
+			"a part published and withdrawn after it",
+			[toReviewEarly, withdrawn],
+			true,
+		],
 		[
 			"only a part to review after it",
 			[

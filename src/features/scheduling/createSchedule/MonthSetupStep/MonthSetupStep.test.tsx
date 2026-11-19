@@ -530,7 +530,7 @@ describe("MonthSetupStep", () => {
 			expect(screen.getByText("Kept")).toBeInTheDocument();
 			expect(
 				screen.getByText(
-					/^Nov 23\s?–\s?28, 2026 have been published and stay as they are\.$/
+					/^Nov 23\s?–\s?28, 2026 are published and stay as they are\.$/
 				)
 			).toBeInTheDocument();
 		});

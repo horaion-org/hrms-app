@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { authTestI18n } from "@/features/auth/testingI18n";
-import { datesPlanFixture } from "@/features/scheduling/dates/fixtures";
+import {
+	datesPlanFixture,
+	datesPlanRedoingFixture,
+} from "@/features/scheduling/dates/fixtures";
 import {
 	datesRunHint,
 	generateStepWordsOf,
@@ -371,5 +374,41 @@ describe("generateStepWordsOf", () => {
 		if (days === undefined) expect(words.days).toBeUndefined();
 		else expect(words.days).toMatch(days);
 		expect(words.hint).toMatch(hint);
+	});
+
+	it.each([
+		{
+			case: "a dates run over a roster to review says what it replaces",
+			byDates: true,
+			plan: datesPlanRedoingFixture(),
+			// Wed 18 – Thu 19 redone, then Fri 20 – Sun 22 after them: one run of days.
+			expected: {
+				days: [{ from: "2026-11-18", to: "2026-11-22" }],
+				seenByStaff: [],
+				handChanges: 0,
+			},
+		},
+		{
+			case: "a dates run over empty days replaces nothing",
+			byDates: true,
+			plan: datesPlanFixture(),
+			expected: undefined,
+		},
+		{
+			case: "a month run asks nothing",
+			byDates: false,
+			plan: datesPlanRedoingFixture(),
+			expected: undefined,
+		},
+		{
+			case: "a dates run with no plan yet replaces nothing",
+			byDates: true,
+			plan: undefined,
+			expected: undefined,
+		},
+	])("$case", ({ byDates, plan, expected }) => {
+		expect(generateStepWordsOf(byDates, plan, [], "en", t).replaces).toEqual(
+			expected
+		);
 	});
 });

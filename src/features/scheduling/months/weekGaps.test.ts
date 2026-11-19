@@ -93,19 +93,15 @@ describe("weekGapsOf", () => {
 			],
 		],
 		[
-			"aGapBeforeAPartWithdrawnKnownThroughPublishedOnce",
+			// A withdrawn part is to review: a run by dates works it out again after the gap's days.
+			"aGapBeforeAPartPublishedAndWithdrawn",
 			((): Parameters<typeof weekGapsOf>[0] => {
 				const week = weekWithParts(["TO_REVIEW", "TO_REVIEW"]);
 				const [first, last] = week.parts;
 				return { ...week, parts: [first!, { ...last!, publishedOnce: true }] };
 			})(),
 			"2027-02-01",
-			[
-				{
-					days: { from: "2027-02-10", to: "2027-02-12" },
-					kind: "beforePublished",
-				},
-			],
+			[{ days: { from: "2027-02-10", to: "2027-02-12" }, kind: "open" }],
 		],
 		[
 			"aGapBetweenAnEarlierAndALaterPublishedPart",
