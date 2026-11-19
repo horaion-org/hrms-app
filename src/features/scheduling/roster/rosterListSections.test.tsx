@@ -181,7 +181,7 @@ describe("issueNoteLines", () => {
 			},
 		]);
 		expect(
-			issueNoteLines(withFindings({ validationNote: <p>Validated</p> }))
+			issueNoteLines(withFindings({ validating: true }))
 		).toEqual([]);
 	});
 });

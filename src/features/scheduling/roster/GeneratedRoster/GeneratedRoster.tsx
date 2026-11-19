@@ -15,10 +15,8 @@ import {
 	shortShiftCount,
 	type RosterIssue,
 } from "@/features/scheduling/roster/rosterIssueGroups";
-import {
-	IssueSummary,
-	type IssueFixing,
-} from "@/features/scheduling/roster/RosterIssueGroups";
+import { IssuesPanelHead } from "@/features/scheduling/roster/IssuesPanel";
+import type { IssueFixing } from "@/features/scheduling/roster/RosterIssueGroups";
 import { issuesOfRoster } from "@/features/scheduling/roster/rosterIssueSources";
 import {
 	issueNoteLines,
@@ -44,11 +42,10 @@ import {
 import {
 	brokenRuleIssueCount,
 	scheduleWithFindingsShown,
-	validationLead,
 	validationStanding,
 } from "@/features/scheduling/rulesCheck/issuesFromValidation";
 import type { RosterValidation } from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
-import { ValidationNote } from "@/features/scheduling/rulesCheck/ValidationNote";
+import { checkLineOf } from "@/features/scheduling/rulesCheck/checkLine";
 import { ValidateScheduleButton } from "@/features/scheduling/rulesCheck/ValidateScheduleButton";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 import type { PreferenceOutcomeLookup } from "@/features/shiftPreferences/preferenceOutcome";
@@ -192,9 +189,6 @@ export const GeneratedRoster = ({
 	const panelFollowsGridHeight =
 		roster.sidePanel === "list" || roster.sidePanel === "cover";
 
-	const validationNote = validating && (
-		<ValidationNote standing={standing} validation={validation} />
-	);
 	const issues = issuesOfRoster({
 		roster,
 		check: last?.check,
@@ -202,7 +196,7 @@ export const GeneratedRoster = ({
 		noteLines: issueNoteLines({
 			roster,
 			membersWithChangedStart,
-			validationNote,
+			validating,
 			t,
 		}),
 		t,
@@ -298,7 +292,7 @@ export const GeneratedRoster = ({
 				latestChange,
 				details,
 				approval,
-				validationNote,
+				validating,
 				issues,
 				issueFixing,
 				onShowIssue: showIssue,
@@ -320,9 +314,12 @@ export const GeneratedRoster = ({
 				resetKey: `${openList ?? ""}|${view.member ?? view.date ?? ""}`,
 				// A header's narrowed list counts only its own, so the whole week's counts stay off it.
 				summary: openList === "issues" && !roster.issuesAbout && (
-					<IssueSummary
-						counts={counts}
-						lead={validationLead(standing, validation)}
+					<IssuesPanelHead
+						checkLine={checkLineOf(standing, validation)}
+						mustFix={counts.mustFix}
+						onCheck={() => {
+							validation?.ask();
+						}}
 					/>
 				),
 				sections: listSections,
