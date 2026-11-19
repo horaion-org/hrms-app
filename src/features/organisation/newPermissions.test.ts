@@ -9,6 +9,7 @@ describe("permissions new to a role since it was last saved", () => {
 			"shift_preference:read",
 			"shift_preference:update",
 			"member_event:read",
+			"leave_request:read_remarks",
 			"report:read",
 		]);
 		expect(
@@ -17,11 +18,15 @@ describe("permissions new to a role since it was last saved", () => {
 				"2026-11-15T23:00:00Z",
 				"LOCAL"
 			)
-		).toEqual(["shift_preference:update", "member_event:read"]);
+		).toEqual([
+			"shift_preference:update",
+			"member_event:read",
+			"leave_request:read_remarks",
+		]);
 	});
 
 	it("leave out a key that arrived on the day of the save", () => {
-		expect(newSinceReview([], "2026-11-17T00:30:00Z", "COMPANY")).toEqual([]);
+		expect(newSinceReview([], "2026-11-19T00:30:00Z", "COMPANY")).toEqual([]);
 	});
 
 	it("leave out keys a local role may not hold", () => {

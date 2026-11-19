@@ -69,7 +69,11 @@ describe("choosing an area's level", () => {
 	it("skips keys that can't be given", () => {
 		expect(
 			withAreaLevel([], LEAVE, "MANAGE", ["leave_request:review"]).sort()
-		).toEqual(["leave_request:create", "leave_request:read"]);
+		).toEqual([
+			"leave_request:create",
+			"leave_request:read",
+			"leave_request:read_remarks",
+		]);
 	});
 });
 
