@@ -19,6 +19,8 @@ export const issueRowsText = async (
 		.filter((button) => button.parentElement?.tagName === "LI");
 	const texts: Array<string> = [];
 	for (const button of rowButtons) {
+		// One row opens at a time, so each is opened and read before the next.
+		// eslint-disable-next-line no-await-in-loop
 		await user.click(button);
 		texts.push(button.parentElement?.textContent ?? "");
 	}
