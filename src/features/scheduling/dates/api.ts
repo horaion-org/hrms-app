@@ -42,6 +42,11 @@ const partDaysSchema = z.object({
 	 * roster; left out by an older API, which reads as none.
 	 */
 	handChangedDays: z.number().nullable().optional(),
+	/**
+	 * Published, or published and then withdrawn, so staff saw its roster.
+	 * Left out by an older API, which reads as false.
+	 */
+	publishedOnce: z.boolean().nullable().optional(),
 });
 
 /** A scheduled part's days that one list of a plan week names. */
