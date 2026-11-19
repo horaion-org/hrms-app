@@ -8,7 +8,6 @@ import type { FunctionComponent } from "@/common/types";
 import { Avatar } from "@/components/ui/Avatar";
 import {
 	dayWithoutShiftPlainText,
-	type RosterCell,
 	shiftTimeText,
 } from "@/features/scheduling/roster/roster";
 import {
@@ -27,9 +26,11 @@ import {
 	staffCellClasses,
 	staffColumnClasses,
 	tableMinWidthOf,
+	type TileCell,
 	ZOOM_LOOKS,
 } from "@/features/scheduling/timeline/timelineLooks";
 import {
+	type EnteredTimelineCell,
 	hoursOfRow,
 	type RostersRead,
 	type TimelineRow,
@@ -50,6 +51,7 @@ export type TimelineGridProps = {
 };
 
 const key = "scheduling.timeline.grid";
+const enteredKey = "scheduling.startingContext.shown";
 
 // `relative`, as the roster grid's tiles: each tile's screen-reader label (`sr-only`, absolutely positioned) is
 // placed in its tile. Without it the label's box is placed against the app shell, outside the scrolling
@@ -58,14 +60,88 @@ const tileClasses =
 	"relative flex min-h-12 w-full min-w-0 flex-col items-center justify-center overflow-hidden rounded border px-1 py-1 text-center text-xs leading-4 font-medium whitespace-nowrap";
 
 /** A day's full words, as its label names it: a shift with its time, any other day in plain words. */
-const dayWords = (cell: RosterCell, t: TFunction): string =>
+const dayWords = (cell: TileCell, t: TFunction): string =>
 	cell.kind === "shift"
 		? `${cell.name} ${shiftTimeText(cell, t)}`
 		: dayWithoutShiftPlainText(cell, t);
 
+/** A tile's lines: a shift's time may break onto two lines so it is never cut, any other line is cut short. */
+const TileLines = ({
+	cell,
+	view,
+}: {
+	cell: TileCell;
+	view: TimelineGridProps["view"];
+}): FunctionComponent => {
+	const { t } = useTranslation();
+	return (
+		<>
+			{cellLinesOf(cell, view, t).map((line) => (
+				<span
+					key={line.text}
+					aria-hidden="true"
+					className={
+						line.isTime
+							? "block max-w-full font-semibold text-balance whitespace-normal tabular-nums"
+							: "max-w-full truncate"
+					}
+				>
+					{line.text}
+				</span>
+			))}
+		</>
+	);
+};
+
 /**
- * One person's day: their tile, an empty day of a schedule, or the empty-day
- * mark where no roster covers it. Its full words are its `title` and label.
+ * A day entered by hand before a run, on a day no schedule covers: what was
+ * entered, muted and dotted, with the word "Entered" where the column has
+ * room. It is shown, not rostered; its label and `title` say so.
+ */
+const EnteredDayCell = ({
+	entered,
+	name,
+	dayName,
+	view,
+}: {
+	entered: EnteredTimelineCell;
+	name: string;
+	dayName: string;
+	view: TimelineGridProps["view"];
+}): FunctionComponent => {
+	const { t } = useTranslation();
+	const label = t(`${enteredKey}.cellLabel`, {
+		name,
+		day: dayName,
+		shift: dayWords(entered.what, t),
+	});
+	return (
+		<span
+			data-entered-for={entered.scheduleId}
+			title={label}
+			className={joinClassNames(
+				tileClasses,
+				"border-dotted border-neutral-400 text-neutral-600"
+			)}
+		>
+			<TileLines cell={entered.what} view={view} />
+			{ZOOM_LOOKS[view].enteredWord && (
+				<span
+					aria-hidden="true"
+					className="max-w-full truncate text-[0.625rem] leading-3 font-normal"
+				>
+					{t(`${enteredKey}.mark`)}
+				</span>
+			)}
+			<span className="sr-only">{label}</span>
+		</span>
+	);
+};
+
+/**
+ * One person's day: their tile, an empty day of a schedule, or, where no
+ * roster covers it, a day entered by hand before a run, else the empty-day
+ * mark. Its full words are its `title` and label.
  */
 const DayCell = ({
 	row,
@@ -86,6 +162,16 @@ const DayCell = ({
 	const owner = timelineCell
 		? schedules.find((schedule) => schedule.id === timelineCell.scheduleId)
 		: scheduleOfDay(schedules, day);
+	const entered = row.entered?.[day];
+	if (!owner && entered)
+		return (
+			<EnteredDayCell
+				dayName={dayName}
+				entered={entered}
+				name={name}
+				view={view}
+			/>
+		);
 	if (!owner) {
 		const label = t(`${key}.noScheduleLabel`, { name, day: dayName });
 		return (
@@ -136,19 +222,7 @@ const DayCell = ({
 				dimmed && "opacity-40"
 			)}
 		>
-			{cellLinesOf(cell, view, t).map((line) => (
-				<span
-					key={line.text}
-					aria-hidden="true"
-					className={
-						line.isTime
-							? "block max-w-full font-semibold text-balance whitespace-normal tabular-nums"
-							: "max-w-full truncate"
-					}
-				>
-					{line.text}
-				</span>
-			))}
+			<TileLines cell={cell} view={view} />
 			<span className="sr-only">{label}</span>
 		</span>
 	);

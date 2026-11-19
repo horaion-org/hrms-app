@@ -3,6 +3,8 @@ import type { BadgeTone } from "@/components/ui/Badge";
 import {
 	dayWithoutShiftTileText,
 	type RosterCell,
+	type RosterDayWithoutShift,
+	type RosterShiftCell,
 	shiftTimeText,
 } from "@/features/scheduling/roster/roster";
 import { weekStateTones } from "@/features/scheduling/months/weekStateLooks";
@@ -69,6 +71,8 @@ export type ZoomLooks = {
 	stripWordFromDays: number;
 	/** Whether the Staff cell shows the avatar and the hours, as the roster grid does. */
 	staffDetails: boolean;
+	/** Whether a day entered by hand wears the word "Entered"; narrower columns leave it to the dotted border and the label. */
+	enteredWord: boolean;
 	/** The narrowest a day column gets, in pixels; below it the table scrolls sideways. */
 	minDayColumnPixels: number;
 };
@@ -84,6 +88,7 @@ export const ZOOM_LOOKS: Record<TimelineView, ZoomLooks> = {
 		barBadgeFromDays: 3,
 		stripWordFromDays: 1,
 		staffDetails: true,
+		enteredWord: true,
 		minDayColumnPixels: 92,
 	},
 	two: {
@@ -95,6 +100,7 @@ export const ZOOM_LOOKS: Record<TimelineView, ZoomLooks> = {
 		barBadgeFromDays: 5,
 		stripWordFromDays: 2,
 		staffDetails: true,
+		enteredWord: false,
 		minDayColumnPixels: 44,
 	},
 	four: {
@@ -106,6 +112,7 @@ export const ZOOM_LOOKS: Record<TimelineView, ZoomLooks> = {
 		barBadgeFromDays: null,
 		stripWordFromDays: 3,
 		staffDetails: false,
+		enteredWord: false,
 		minDayColumnPixels: 26,
 	},
 };
@@ -149,6 +156,11 @@ const dayWordOf = (
 		: dayWithoutShiftTileText(cell, t);
 };
 
+/** What a tile shows of a day: a shift's name and times, or a day without a shift. A roster's cell, or a day entered by hand. */
+export type TileCell =
+	| Pick<RosterShiftCell, "kind" | "name" | "start" | "end" | "workedTimes">
+	| RosterDayWithoutShift;
+
 /**
  * One line of a tile. A shift's time may break onto two lines, as the roster
  * page's tile does on a phone, so it is never cut; any other line is cut short.
@@ -161,7 +173,7 @@ export type TileLine = { text: string; isTime: boolean };
  * weeks), or its initial.
  */
 export const cellLinesOf = (
-	cell: RosterCell,
+	cell: TileCell,
 	view: TimelineView,
 	t: TFunction
 ): Array<TileLine> => {
