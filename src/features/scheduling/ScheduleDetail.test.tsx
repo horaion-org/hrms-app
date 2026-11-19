@@ -43,6 +43,7 @@ import {
 	rosterCheckFixture,
 } from "@/features/scheduling/rosterChanges/fixtures";
 import { rulesCheckFixture } from "@/features/scheduling/rulesCheck/fixtures";
+import { issueRowsText } from "@/features/scheduling/roster/testing";
 import { confirmOnceChecked } from "@/features/scheduling/rulesCheck/testing";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 import {
@@ -1325,28 +1326,16 @@ it("counts what the engine found on one Issues button and lists it in the side p
 	expect(issues).toHaveAttribute("aria-expanded", "true");
 	expect(issues).toHaveAttribute("aria-controls", panel.id);
 
-	const information = within(panel)
-		.getByRole("button", { name: /^More information, / })
-		.closest("section");
-	expect(information).toHaveTextContent(
-		"No one in this schedule can take Breakfast Prep."
-	);
+	expect(panel).toHaveTextContent("2 to fix");
+	const rows = await issueRowsText(user, panel);
+	expect(rows).toContain("No one in this schedule can take Breakfast Prep.");
 	// The app's own sentence stands alone; the engine's is not repeated under it.
-	expect(information).not.toHaveTextContent(
+	expect(rows).not.toContain(
 		"Shift Breakfast Prep: no employee holds an eligible role."
 	);
-	expect(information).toHaveTextContent(
-		"Chen Wei · Sun, Oct 18Chen Wei covers the Sunday swing alone."
-	);
-	const mustFix = within(panel)
-		.getByRole("button", { name: "Must fix, 2" })
-		.closest("section");
-	expect(mustFix).toHaveTextContent(
-		"1 Front Desk Staff short · Sat, Oct 17 · 09:00–15:00Rule: Morning cover"
-	);
-	expect(mustFix).toHaveTextContent(
-		"Ben OngBen Ong works more than five days in a row."
-	);
+	expect(rows).toMatch(/Chen Wei · Sun, Oct 18.*Chen Wei covers the Sunday/);
+	expect(rows).toMatch(/^Must fix1 Front Desk Staff short.*Rule: Morning cover/m);
+	expect(rows).toMatch(/^Must fix.*Ben Ong.*Ben Ong works more than five days/m);
 	expect(screen.queryByRole("dialog")).toBeNull();
 	await waitFor(() => {
 		expect(readsOf(calls, `${SCHEDULE}/constraints`)).toHaveLength(1);
@@ -1408,11 +1397,12 @@ it("names findings without reading the setup it can't see", async () => {
 
 	await user.click(await screen.findByRole("button", { name: /^Issues: / }));
 
-	const panel = screen.getByRole("complementary", { name: "Issues" });
-	expect(panel).toHaveTextContent("Rule: People on a shift");
-	expect(panel).toHaveTextContent(
-		"No one in this schedule can take one of its shifts."
+	const rows = await issueRowsText(
+		user,
+		screen.getByRole("complementary", { name: "Issues" })
 	);
+	expect(rows).toContain("Rule: People on a shift");
+	expect(rows).toContain("No one in this schedule can take one of its shifts.");
 	expect(readsOf(calls, `${SCHEDULE}/shifts`)).toHaveLength(0);
 	expect(readsOf(calls, `${SCHEDULE}/constraints`)).toHaveLength(0);
 });
@@ -1514,27 +1504,22 @@ it("lists where members started the week, and that it changed since, under Issue
 	});
 
 	const roster = await screen.findByRole("table", { name: "Roster" });
-	await userEvent.click(
-		await screen.findByRole("button", { name: /^Issues: / })
-	);
+	const user = userEvent.setup();
+	await user.click(await screen.findByRole("button", { name: /^Issues: / }));
 
 	const panel = screen.getByRole("complementary", { name: "Issues" });
-	// Three days worked before Monday make Monday the fourth day of the run.
-	expect(panel).toHaveTextContent(
-		"Aisha Rahman has worked 3 days in a row before this week."
-	);
-	expect(within(panel).getAllByText(/in a row before this week/)).toHaveLength(
+	const rows = await issueRowsText(user, panel);
+	// Three days worked before Monday make Monday the fourth day of the run, said once.
+	expect(rows.match(/Aisha Rahman has worked 3 days in a row before/g)).toHaveLength(
 		1
 	);
 	// The week before having changed is one row: a title, then what it means and what to do.
 	expect(
 		within(panel).getByText("1 person’s days before this week changed")
 	).toBeInTheDocument();
-	expect(
-		within(panel).getByText(
-			"This roster was generated from what was known then. To plan from the days as they are now, regenerate the month from its page."
-		)
-	).toBeInTheDocument();
+	expect(rows).toContain(
+		"This roster was generated from what was known then. To plan from the days as they are now, regenerate the month from its page."
+	);
 	expect(within(roster).queryByText(/in a row before this week/)).toBeNull();
 	// Only the note that the roster isn't published; findings stay in the Issues panel.
 	expect(screen.getByRole("note")).toHaveTextContent("Not published.");

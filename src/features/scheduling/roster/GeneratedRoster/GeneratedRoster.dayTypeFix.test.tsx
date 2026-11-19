@@ -179,11 +179,28 @@ const showIssues = async ({
 	};
 };
 
-/** The Issues row about `name`. */
-const rowOf = (panel: HTMLElement, name: string): HTMLElement => {
-	const row = within(panel).getByText(sentenceOf(name), { exact: false });
-	return row.closest("li") as HTMLElement;
+/** The Issues row about `name`, opened (each row opens inline, under itself). */
+const rowOf = async (
+	user: ReturnType<typeof userEvent.setup>,
+	panel: HTMLElement,
+	name: string
+): Promise<HTMLElement> => {
+	const rowButton = within(panel).getByRole("button", {
+		name: new RegExp(`${WEEKLY_RULE_FIXTURE.name}.*${name}`),
+		expanded: false,
+	});
+	await user.click(rowButton);
+	const row = rowButton.closest("li") as HTMLElement;
+	expect(row).toHaveTextContent(sentenceOf(name));
+	return row;
 };
+
+/** The words of the buttons a row opens to, the row's own button left out. */
+const bodyButtons = (row: HTMLElement): Array<string | null> =>
+	within(row)
+		.getAllByRole("button")
+		.slice(1)
+		.map((button) => button.textContent);
 
 /** A preview with nothing standing against the change. */
 const cleanPreview: StubReply = {
@@ -224,42 +241,36 @@ const chenFriday = {
 describe("GeneratedRoster: the fix on a weekly day-type issue", () => {
 	it("given_someoneWithDaysOffThatWeek_when_issuesOpens_then_theRowNamesTheLastOneAndOffersToMakeItTheRestDay", async () => {
 		stubApi({});
-		const { panel } = await showIssues();
+		const { user, panel } = await showIssues();
 
-		const row = rowOf(panel, "Aisha Rahman");
+		const row = await rowOf(user, panel, "Aisha Rahman");
 		expect(row).toHaveTextContent(
 			/What to do: Sun.*18.* is a day off for Aisha Rahman\. Make it the rest day\./
 		);
 		expect(row).not.toHaveTextContent(GENERAL_ADVICE);
-		expect(
-			within(row)
-				.getAllByRole("button")
-				.map((button) => button.textContent)
-		).toEqual(["Show", MAKE_IT]);
+		expect(bodyButtons(row)).toEqual([MAKE_IT, "Show"]);
 	});
 
 	it("given_someoneWhoseOnlyDayNotWorkedIsLeave_when_issuesOpens_then_theRowReadsAsBeforeWithShowOnly", async () => {
 		stubApi({});
-		const { panel } = await showIssues({
+		const { user, panel } = await showIssues({
 			assignments: weekWithoutRestDays({
 				[`a-mp-3-${FRIDAY}`]: { offReason: "LEAVE" },
 			}),
 		});
 
-		const row = rowOf(panel, "Chen Wei");
+		const row = await rowOf(user, panel, "Chen Wei");
 		expect(row).toHaveTextContent(GENERAL_ADVICE);
-		expect(
-			within(row)
-				.getAllByRole("button")
-				.map((button) => button.textContent)
-		).toEqual(["Show"]);
+		expect(bodyButtons(row)).toEqual(["Show"]);
 	});
 
 	it("given_someoneWhoMayNotChangeTheRoster_when_issuesOpens_then_noFixIsOffered", async () => {
 		stubApi({});
-		const { panel } = await showIssues({ mayEdit: false });
+		const { user, panel } = await showIssues({ mayEdit: false });
 
-		expect(rowOf(panel, "Aisha Rahman")).toHaveTextContent(GENERAL_ADVICE);
+		expect(await rowOf(user, panel, "Aisha Rahman")).toHaveTextContent(
+			GENERAL_ADVICE
+		);
 		expect(within(panel).queryByRole("button", { name: MAKE_IT })).toBeNull();
 		expect(within(panel).queryByRole("button", { name: MAKE_ALL })).toBeNull();
 	});
@@ -271,11 +282,8 @@ describe("GeneratedRoster: the fix on a weekly day-type issue", () => {
 		});
 		const { user, panel } = await showIssues();
 
-		await user.click(
-			within(rowOf(panel, "Aisha Rahman")).getByRole("button", {
-				name: MAKE_IT,
-			})
-		);
+		const row = await rowOf(user, panel, "Aisha Rahman");
+		await user.click(within(row).getByRole("button", { name: MAKE_IT }));
 
 		expect(await screen.findByText("Roster changed.")).toBeVisible();
 		expect(bodiesTo(calls, PREVIEW)).toEqual([
@@ -299,15 +307,10 @@ describe("GeneratedRoster: the fix on a weekly day-type issue", () => {
 		});
 		const { user, panel } = await showIssues();
 
-		await user.click(
-			within(rowOf(panel, "Aisha Rahman")).getByRole("button", {
-				name: MAKE_IT,
-			})
-		);
+		const row = await rowOf(user, panel, "Aisha Rahman");
+		await user.click(within(row).getByRole("button", { name: MAKE_IT }));
 
-		expect(
-			await within(rowOf(panel, "Aisha Rahman")).findByRole("alert")
-		).toHaveTextContent(en.scheduling.rosterEdit.error.revision);
+		expect(await within(row).findByRole("alert")).toHaveTextContent(en.scheduling.rosterEdit.error.revision);
 		expect(screen.queryByText("Roster changed.")).toBeNull();
 	});
 
@@ -330,11 +333,8 @@ describe("GeneratedRoster: the fix on a weekly day-type issue", () => {
 		});
 		const { user, panel } = await showIssues();
 
-		await user.click(
-			within(rowOf(panel, "Aisha Rahman")).getByRole("button", {
-				name: MAKE_IT,
-			})
-		);
+		const row = await rowOf(user, panel, "Aisha Rahman");
+		await user.click(within(row).getByRole("button", { name: MAKE_IT }));
 
 		expect(
 			await screen.findByRole("radio", { name: "Another day type" })
@@ -347,11 +347,8 @@ describe("GeneratedRoster: the fix on a weekly day-type issue", () => {
 		const { user, panel } = await showIssues({ published: true });
 
 		expect(within(panel).queryByRole("button", { name: MAKE_ALL })).toBeNull();
-		await user.click(
-			within(rowOf(panel, "Aisha Rahman")).getByRole("button", {
-				name: MAKE_IT,
-			})
-		);
+		const row = await rowOf(user, panel, "Aisha Rahman");
+		await user.click(within(row).getByRole("button", { name: MAKE_IT }));
 
 		expect(
 			await screen.findByRole("radio", { name: "Another day type" })

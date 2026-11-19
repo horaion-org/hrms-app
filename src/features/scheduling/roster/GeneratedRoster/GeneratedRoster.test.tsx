@@ -236,7 +236,7 @@ describe("GeneratedRoster", () => {
 		).toBeInTheDocument();
 	});
 
-	it("given_aDayMarkedForLeave_when_issuesOpen_then_itIsListedUnderLeaveAndCover", async () => {
+	it("given_aDayMarkedForLeave_when_itsLeaveAndCoverRowOpens_then_saysTheLeaveRequested", async () => {
 		const [first, ...rest] = scheduleAssignmentsFixture();
 		if (!first) throw new Error("fixture has a day");
 		render(
@@ -254,7 +254,7 @@ describe("GeneratedRoster", () => {
 
 		const panel = screen.getByRole("complementary", { name: "Issues" });
 		await user.click(
-			within(panel).getByRole("button", { name: /^More information/ })
+			within(panel).getByRole("button", { name: /Leave and cover/ })
 		);
 		expect(
 			within(panel).getByText("Leave requested: Annual leave")
@@ -284,9 +284,11 @@ describe("GeneratedRoster", () => {
 
 		await user.click(screen.getByRole("button", { name: /^Issues/ }));
 
-		const toDecide = screen
-			.getByRole("button", { name: /^Must fix/ })
-			.closest("section");
+		const row = within(
+			screen.getByRole("complementary", { name: "Issues" })
+		).getByRole("button", { name: /Days to decide/ });
+		await user.click(row);
+		const toDecide = row.closest("li");
 		expect(toDecide).not.toBeNull();
 		expect(
 			within(toDecide!).getByText(
@@ -307,7 +309,7 @@ describe("GeneratedRoster", () => {
 		await user.click(issues);
 		const panel = screen.getByRole("complementary", { name: "Issues" });
 		expect(
-			within(panel).getByRole("button", { name: /^Must fix, / })
+			within(panel).getByRole("group", { name: "Show" })
 		).toBeInTheDocument();
 		expect(
 			within(panel).getByRole("heading", { level: 2, name: "Issues" })
@@ -362,10 +364,16 @@ describe("GeneratedRoster", () => {
 		await user.click(screen.getByRole("button", { name: /^Issues: / }));
 		const panel = screen.getByRole("complementary", { name: "Issues" });
 		expect(panel).toHaveTextContent("2 people’s days before this week changed");
+		expect(panel).toHaveTextContent("These notes are from generation");
+		await user.click(
+			within(panel).getByRole("button", { name: /Days before changed/ })
+		);
 		expect(panel).toHaveTextContent(
 			"This roster was generated from what was known then."
 		);
-		expect(panel).toHaveTextContent("These notes are from generation");
+		await user.click(
+			within(panel).getByRole("button", { name: /Notes from generation/ })
+		);
 		expect(panel).toHaveTextContent(
 			"Changes made by hand since aren’t reflected."
 		);
@@ -414,7 +422,7 @@ describe("GeneratedRoster", () => {
 		// The whole list opens afresh, its heading taking focus.
 		const all = screen.getByRole("complementary", { name: "Issues" });
 		expect(
-			within(all).getByRole("button", { name: /^Must fix, / })
+			within(all).getByRole("group", { name: "Show" })
 		).toBeInTheDocument();
 		expect(
 			within(all).getByRole("heading", { level: 2, name: "Issues" })
@@ -530,9 +538,6 @@ describe("GeneratedRoster", () => {
 			await user.click(screen.getByRole("button", { name: /^Issues: / }));
 
 			const panel = screen.getByRole("complementary", { name: "Issues" });
-			await user.click(
-				within(panel).getByRole("button", { name: /^More information/ })
-			);
 			expect(
 				within(panel).getByRole("heading", { name: "Offers out" })
 			).toBeVisible();
@@ -641,12 +646,10 @@ describe("GeneratedRoster", () => {
 			expect(panel).not.toHaveTextContent(GENERATED_GAP);
 			expect(panel).toHaveTextContent(NEW_GAP);
 			expect(
-				within(panel).getByRole("button", { name: /^Must fix/ })
-			).toBeVisible();
-			expect(within(panel).getByText("Twelve hours a day")).toBeVisible();
-			expect(within(panel).getByRole("note")).toHaveTextContent(
-				"Validated: 1 rule broken"
-			);
+				within(panel).getByRole("button", { name: /Twelve hours a day/ })
+			).toHaveTextContent("Must fix");
+			expect(panel).toHaveTextContent("Checked");
+			expect(panel).toHaveTextContent(/\d+ to fix/);
 		});
 
 		it("given_aValidationThatSaysWho_when_issuesOpens_then_mustsByPersonAndDayAndIfPossibleApartAndUncounted", async () => {
@@ -717,16 +720,17 @@ describe("GeneratedRoster", () => {
 			expect(panel).not.toHaveTextContent(
 				"Ben Ong works more than five days in a row."
 			);
-			const mustFix = within(panel)
-				.getByRole("button", { name: /^Must fix/ })
-				.closest("section");
-			expect(mustFix).toHaveTextContent(/Aisha Rahman/);
-			const notMet = within(panel)
-				.getByRole("button", { name: "Could not be met, 2" })
-				.closest("section");
-			expect(notMet).not.toBeNull();
-			expect(notMet).toHaveTextContent("Five days in a row");
-			expect(notMet).toHaveTextContent(/Ben Ong/);
+			// One row per day, as the engine's two sentences differ.
+			expect(
+				within(panel).getAllByRole("button", { name: /^Must fix.*Aisha Rahman/ })
+			).toHaveLength(2);
+			await user.click(within(panel).getByRole("button", { name: "If possible" }));
+			const ifPossible = within(panel).getAllByRole("listitem");
+			expect(ifPossible).toHaveLength(2);
+			for (const row of ifPossible) {
+				expect(row).toHaveTextContent("Five days in a row");
+				expect(row).toHaveTextContent(/Ben Ong/);
+			}
 		});
 
 		it("given_issuesToFixAndNotMet_when_shown_then_theIssuesButtonCountsToFixThenNotMetInAmber", () => {
@@ -773,7 +777,7 @@ describe("GeneratedRoster", () => {
 			expect(counts[counts.length - 1]).toHaveClass("bg-warning-100");
 		});
 
-		it("given_aValidationOfAnEarlierRevision_when_issuesOpens_then_itValidatesAndSaysTheListIsOutOfDateWithTheAction", async () => {
+		it("given_aValidationOfAnEarlierRevision_when_issuesOpens_then_itValidatesAndItsCheckLineOffersCheckNow", async () => {
 			const ask = vi.fn();
 			const user = userEvent.setup();
 			const check = rulesCheckFixture({ staffingGaps: [staffingGapFixture()] });
@@ -787,16 +791,12 @@ describe("GeneratedRoster", () => {
 
 			expect(ask).toHaveBeenCalledOnce();
 			const panel = screen.getByRole("complementary", { name: "Issues" });
-			expect(within(panel).getByRole("note")).toHaveTextContent(
-				"Changed since this list was made"
-			);
-			await user.click(
-				within(panel).getByRole("button", { name: "Validate schedule" })
-			);
+			expect(panel).toHaveTextContent("Not checked since your changes");
+			await user.click(within(panel).getByRole("button", { name: "Check now" }));
 			expect(ask).toHaveBeenCalledTimes(2);
 		});
 
-		it("given_handChangesNotValidatedInThisVisit_when_issuesOpens_then_itsHeadingAndNoteWarnTheChangesAreUnchecked", async () => {
+		it("given_handChangesNotValidatedInThisVisit_when_issuesOpens_then_itsCheckLineSaysTheChangesAreUncheckedWithCheckNow", async () => {
 			const user = userEvent.setup();
 			const [first, ...rest] = scheduleAssignmentsFixture();
 			const handChanged = {
@@ -823,12 +823,10 @@ describe("GeneratedRoster", () => {
 			await user.click(screen.getByRole("button", { name: /^Issues: / }));
 
 			const panel = screen.getByRole("complementary", { name: "Issues" });
-			expect(within(panel).getByText("Changes not validated")).toHaveClass(
-				"text-warning-800"
-			);
-			expect(within(panel).getByRole("note")).toHaveTextContent(
-				en.scheduling.rulesCheck.changesUnchecked
-			);
+			expect(panel).toHaveTextContent(en.scheduling.issues.panel.unchecked);
+			expect(
+				within(panel).getByRole("button", { name: "Check now" })
+			).toBeVisible();
 		});
 
 		it("given_aReloadOfAHandChangedRosterWithIssuesOpen_when_shown_then_itValidatesByItselfAndListsTheCheckedIssues", async () => {
@@ -887,17 +885,17 @@ describe("GeneratedRoster", () => {
 			// The grid is there at once, and the list says it is being validated.
 			expect(screen.getByRole("table", { name: "Roster" })).toBeVisible();
 			const panel = screen.getByRole("complementary", { name: "Issues" });
-			expect(panel).toHaveTextContent(en.scheduling.rulesCheck.loading);
+			expect(panel).toHaveTextContent(en.scheduling.issues.panel.checking);
 
 			expect(await within(panel).findByText(/14:00–22:00/)).toBeVisible();
 			expect(panel).not.toHaveTextContent(GENERATED_GAP);
-			expect(panel).not.toHaveTextContent("Changes not validated");
+			expect(panel).not.toHaveTextContent(en.scheduling.issues.panel.unchecked);
 			expect(calls).toHaveLength(1);
 			resetApiClient();
 			vi.unstubAllGlobals();
 		});
 
-		it("given_staffingTheEngineCouldNotWorkOut_when_issuesOpens_then_saysSoAndKeepsTheGenerationsList", async () => {
+		it("given_staffingTheEngineCouldNotWorkOut_when_issuesOpens_then_itsCheckLineSaysIncompleteAndKeepsTheGenerationsList", async () => {
 			const user = userEvent.setup();
 			const check = rulesCheckFixture({
 				status: "UNCHECKED",
@@ -914,12 +912,7 @@ describe("GeneratedRoster", () => {
 
 			const panel = screen.getByRole("complementary", { name: "Issues" });
 			expect(panel).toHaveTextContent(GENERATED_GAP);
-			expect(panel).toHaveTextContent(
-				"The working-time rules could not be checked; the list below is from before."
-			);
-			expect(panel).toHaveTextContent(
-				"Staffing could not be checked; the shifts left short below are from before."
-			);
+			expect(panel).toHaveTextContent(/Checked .*may be incomplete/);
 		});
 
 		it("given_theValidateButton_when_pressed_then_itValidatesAndOpensIssues", async () => {
@@ -933,7 +926,7 @@ describe("GeneratedRoster", () => {
 
 			expect(ask).toHaveBeenCalledOnce();
 			const panel = screen.getByRole("complementary", { name: "Issues" });
-			expect(panel).toHaveTextContent("Validating the schedule…");
+			expect(panel).toHaveTextContent("Checking the rules…");
 		});
 
 		it("given_noValidation_when_rendered_then_noValidateButton", () => {
