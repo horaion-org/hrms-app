@@ -12,7 +12,14 @@ import {
 } from "@/features/scheduling/months/api";
 import { monthSummaryFixture } from "@/features/scheduling/months/fixtures";
 import { summaryRange } from "@/features/scheduling/months/monthWeeks";
-import { SchedulesTab } from "@/features/scheduling/schedules/SchedulesTab";
+import {
+	PutBackAction,
+	type PutBackActionProps,
+} from "@/features/scheduling/history/PutBackAction";
+import {
+	SchedulesTab,
+	type SchedulesTabProps,
+} from "@/features/scheduling/schedules/SchedulesTab";
 import {
 	schedulesInUnitsKey,
 	type Schedule,
@@ -48,6 +55,11 @@ afterEach(() => {
 	vi.restoreAllMocks();
 });
 
+/** The deleted row's action as the Scheduling page hands it to the tab. */
+const PutBackRowAction = (
+	props: Omit<PutBackActionProps, "shownAs">
+): ReactElement => <PutBackAction {...props} shownAs="menu" />;
+
 /** Kitchen's November and Front Office's December, as the API answers them. */
 const SUMMARIES = [
 	monthSummaryFixture({
@@ -70,7 +82,9 @@ const show = (
 	summaries: Array<ScheduleMonthSummary> | null = SUMMARIES,
 	kitchen: Partial<Schedule> = {},
 	/** The deleted schedules kept as a record; none unless given. */
-	deleted: Array<DeletedSchedule> = []
+	deleted: Array<DeletedSchedule> = [],
+	/** What a deleted row offers, as the Scheduling page gives it; nothing unless given. */
+	DeletedRowAction?: SchedulesTabProps["DeletedRowAction"]
 ): { onDepartmentChange: typeof onDepartmentChange } => {
 	// The router scrolls to the top on load, which jsdom does not implement.
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
@@ -104,6 +118,7 @@ const show = (
 		});
 	const Story = (): ReactElement => (
 		<SchedulesTab
+			DeletedRowAction={DeletedRowAction}
 			companyId="c-1"
 			units={UNITS}
 			onDepartmentChange={onDepartmentChange}
@@ -198,6 +213,62 @@ describe("SchedulesTab", () => {
 		).toBeVisible();
 		expect(within(deleted).queryByRole("button")).toBeNull();
 	});
+
+	it.each([
+		[
+			"a manager's delete and the delete key",
+			["schedule:read", "schedule:delete"],
+			"MANAGER",
+			true,
+		],
+		["no delete key", ["schedule:read"], "MANAGER", false],
+		[
+			"a roster a run replaced",
+			["schedule:read", "schedule:delete"],
+			"REPLACED",
+			false,
+		],
+	] as const)(
+		"given_%s_when_aDeletedRowIsListed_then_putBackIsOffered_%s",
+		async (_, permissions, cause, offered) => {
+			show(
+				vi.fn(),
+				[...permissions],
+				"GENERATED",
+				SUMMARIES,
+				{},
+				[
+					deletedScheduleFixture({
+						scheduleId: "s-9",
+						name: "Bar - Week 40",
+						deletion: {
+							deletedAt: "2026-10-15T03:00:00Z",
+							deletedByName: "Lina Tan",
+							cause,
+						},
+					}),
+				],
+				PutBackRowAction
+			);
+
+			const history = await screen.findByRole("table", { name: "History" });
+			const row = within(history).getByRole("row", { name: /Bar - Week 40/ });
+			const menu = within(row).queryByRole("button", {
+				name: "More actions for Bar - Week 40",
+			});
+			if (!offered) {
+				expect(menu).toBeNull();
+				return;
+			}
+			await userEvent.click(menu!);
+			await userEvent.click(
+				await screen.findByRole("menuitem", { name: "Put back on the roster" })
+			);
+			expect(
+				await screen.findByRole("dialog", { name: "Put this roster back?" })
+			).toBeVisible();
+		}
+	);
 
 	it("given_aReplacedSchedule_when_listed_then_itsRowSaysANewRosterReplacedIt", async () => {
 		show(vi.fn(), ["schedule:read"], "GENERATED", SUMMARIES, {}, [
