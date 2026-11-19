@@ -1,4 +1,3 @@
-import { useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
@@ -6,14 +5,14 @@ import type { FunctionComponent } from "@/common/types";
 import { mondayOf } from "@/common/weeks";
 import { Button } from "@/components/ui/Button";
 import { ChevronLeftIcon, ChevronRightIcon } from "@/components/ui/Icon";
-import { myRosterDaysQuery } from "@/features/scheduling/myRoster/api";
-import { MyRosterDayList } from "@/features/scheduling/myRoster/MyRosterDayList";
 import {
-	myRosterDaysFrom,
 	stepWindow,
 	windowFrom,
 } from "@/features/scheduling/myRoster/myRosterDays";
 import { formatPeriod } from "@/features/scheduling/periods";
+import { windowDays } from "@/features/scheduling/timeline/timeline";
+import { TimelineGrid } from "@/features/scheduling/timeline/TimelineGrid";
+import { useMemberTimeline } from "@/features/scheduling/timeline/useMemberTimeline";
 import { useCurrentCompanyId } from "@/features/workspace/useCurrentCompany";
 
 const route = getRouteApi("/_authenticated/_app/me/schedules/");
@@ -43,12 +42,14 @@ export const MyRosterDaysProblem = (): FunctionComponent => {
 };
 
 /**
- * The person's own days at `/me/schedules`, two weeks at a time from a Monday
- * (`?from=`, this week's when left out): one row per day with its tile from a
- * published roster, or a line saying no published roster covers it. Each
- * roster the days come from links to its whole team's roster. Needs no
- * scheduling permission: the API answers only published rosters the person
- * is on, and only their own rows.
+ * The person's department's published roster at `/me/schedules`, two weeks at
+ * a time from a Monday (`?from=`, this week's when left out): the manager's
+ * timeline grid, read-only, every member's row with the person's own first;
+ * one grid per department when they are on rosters of more than one. A day no
+ * published roster covers shows the grid's empty day. Each roster links to its
+ * own page (its changes since publication and cover offers). Needs no
+ * scheduling permission: the API answers only published rosters the person is
+ * on.
  */
 export const MyRosterDaysPage = (): FunctionComponent => {
 	const { t, i18n } = useTranslation();
@@ -59,9 +60,8 @@ export const MyRosterDaysPage = (): FunctionComponent => {
 	const thisWeek = mondayOf(new Date());
 	const monday = from ?? thisWeek;
 	const shown = windowFrom(monday);
-	const answer = useQuery(
-		myRosterDaysQuery(companyId, shown.start, shown.end)
-	);
+	const timeline = useMemberTimeline(companyId, shown);
+	const days = windowDays(shown.start, "two");
 	/** Shows the two weeks from `nextMonday`, leaving this week's out of the URL. */
 	const show = (nextMonday: string): void => {
 		void navigate({
@@ -69,15 +69,16 @@ export const MyRosterDaysPage = (): FunctionComponent => {
 		});
 	};
 	const content = (): FunctionComponent => {
-		if (answer.isPending)
+		if (timeline.status === "pending")
 			return <Problem alert={false}>{t(`${key}.loading`)}</Problem>;
-		if (answer.isError)
+		if (timeline.status === "error")
 			return <Problem alert>{t(`${key}.loadFailed`)}</Problem>;
+		const { groups, rostersRead } = timeline;
 		return (
 			<>
-				{answer.data.rosters.length > 0 && (
+				{timeline.rosters.length > 0 && (
 					<ul className="mt-6 flex flex-col gap-2 text-sm text-neutral-800">
-						{answer.data.rosters.map((roster) => {
+						{timeline.rosters.map((roster) => {
 							const period = formatPeriod(
 								{ start: roster.coveredFrom, end: roster.coveredTo },
 								language
@@ -110,10 +111,42 @@ export const MyRosterDaysPage = (): FunctionComponent => {
 						})}
 					</ul>
 				)}
-				<MyRosterDayList
-					className="mt-6"
-					days={myRosterDaysFrom(monday, answer.data)}
-				/>
+				{/* With no published roster in these days, one empty grid says no one is rostered. */}
+				{groups.length === 0 && (
+					<div className="mt-6">
+						<TimelineGrid
+							days={days}
+							rosters={rostersRead}
+							rows={[]}
+							schedules={[]}
+							statusRow={null}
+							view="two"
+						/>
+					</div>
+				)}
+				{groups.map((group) => (
+					<section
+						key={`${group.branchName} ${group.departmentName}`}
+						className="mt-6"
+					>
+						{groups.length > 1 && (
+							<h2 className="mb-3 text-xl font-medium text-neutral-900">
+								{group.departmentName}
+								{" · "}
+								{group.branchName}
+							</h2>
+						)}
+						{/* Read-only: no status strip, so the head row is the dates alone. */}
+						<TimelineGrid
+							days={days}
+							rosters={rostersRead}
+							rows={group.rows}
+							schedules={group.schedules}
+							statusRow={null}
+							view="two"
+						/>
+					</section>
+				))}
 			</>
 		);
 	};
