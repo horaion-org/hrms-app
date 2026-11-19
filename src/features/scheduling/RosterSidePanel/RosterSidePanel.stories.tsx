@@ -89,12 +89,12 @@ export const IssuesAsOneList: Story = {
 		title: "Issues",
 		summary: (
 			<IssuesPanelHead
+				mustFix={2}
 				checkLine={{
 					state: "checked",
 					checkedAt: new Date(2026, 9, 12, 15, 42).getTime(),
 					incomplete: false,
 				}}
-				mustFix={2}
 				onCheck={fn()}
 			/>
 		),

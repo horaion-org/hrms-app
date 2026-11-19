@@ -140,8 +140,8 @@ const GapCoverBody = ({
 	const shiftDay = { shift: shiftName, day: formatDay(gap.day, language) };
 	const names = {
 		member: panel.review.names.member,
-		day: (date: string) => formatDay(date, language),
-		hours: (minutes: number) => hours.format(minutes / 60),
+		day: (date: string): string => formatDay(date, language),
+		hours: (minutes: number): string => hours.format(minutes / 60),
 	};
 	const { engineRepair, withEngine } = panel;
 	const cards = coverCards({
@@ -200,7 +200,7 @@ const GapCoverBody = ({
 							shiftName={shiftName}
 							onReview={
 								reviewable(card)
-									? () => {
+									? (): void => {
 											review(card);
 										}
 									: undefined

@@ -9,8 +9,10 @@ import {
 } from "@/features/scheduling/roster/dayTypeFix";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import { issueRows, withGapIssue } from "@/features/scheduling/roster/issueRows";
-import { gapIssueKey } from "@/features/scheduling/roster/rosterIssueGroups";
-import type { RosterIssue } from "@/features/scheduling/roster/rosterIssueGroups";
+import {
+	gapIssueKey,
+	type RosterIssue,
+} from "@/features/scheduling/roster/rosterIssueGroups";
 import {
 	IssueFixAll,
 	IssueFixOutcomeLine,
@@ -89,9 +91,9 @@ export const RosterIssuesList = ({
 			rows={rows}
 			bodyOf={(row) => (
 				<IssueRowBody
+					cover={cover}
 					fixes={fixes}
 					language={language}
-					cover={cover}
 					row={row}
 					onShow={onShow}
 				/>
