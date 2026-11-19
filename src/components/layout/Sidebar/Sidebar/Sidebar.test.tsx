@@ -156,6 +156,38 @@ describe("Sidebar", () => {
 		);
 	});
 
+	/** A child that renders nothing (a `Can` the person fails) must not leave a visible item and its gap. */
+	it("hides the item of a child that renders nothing and shows the item of a link", async () => {
+		const RendersNothing = (): null => null;
+		render(
+			<MemoryRouterHarness>
+				<Sidebar menuLabel="Menu">
+					<RendersNothing />
+					<SidebarItem
+						activeIcon={DashboardFilledIcon}
+						icon={DashboardIcon}
+						label="Dashboard"
+						to="/"
+					/>
+				</Sidebar>
+			</MemoryRouterHarness>
+		);
+		const navigation = await screen.findByRole("navigation", {
+			name: "Main navigation",
+		});
+		const items = within(navigation).getAllByRole("listitem");
+		expect(items).toHaveLength(2);
+		const [nothingItem, linkItem] = items;
+		// jsdom does not lay out: `empty:hidden` hides the first item, which has no content.
+		expect(nothingItem).toHaveClass("empty:hidden");
+		expect(nothingItem).toBeEmptyDOMElement();
+		expect(linkItem).toHaveClass("empty:hidden");
+		expect(linkItem).not.toBeEmptyDOMElement();
+		expect(linkItem).toContainElement(
+			screen.getByRole("link", { name: "Dashboard" })
+		);
+	});
+
 	it("narrows to the icon rail from lg when collapsed and shows the collapse control there only", async () => {
 		render(
 			<MemoryRouterHarness>
