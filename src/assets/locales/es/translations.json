@@ -5795,6 +5795,23 @@
 				"onLine": "Eliminado el {{date}}",
 				"banner": "Este cuadrante se eliminó el {{date}}. Se conserva como registro: no se puede cambiar, publicar ni generar de nuevo. Sus días están en la página del cuadrante.",
 				"coverOffers": "Ofertas de cobertura"
+			},
+			"putBack": {
+				"action": "Devolver al cuadrante",
+				"title": "¿Devolver este cuadrante?",
+				"body": "{{days}} vuelven a la página del cuadrante como cuadrante por revisar, tal como estaba cuando se eliminó. No queda publicado: el personal no ve nada hasta que lo publiques.",
+				"seen": "El personal vio este cuadrante antes de que se retirara.",
+				"approval": "Si estaba pendiente de aprobación, envíalo a aprobación de nuevo.",
+				"confirm": "Devolver",
+				"cancel": "Cancelar",
+				"done": "El cuadrante vuelve a estar en la página del cuadrante, por revisar.",
+				"daysTaken": "Este cuadrante no se puede devolver: {{days}} ya tienen un cuadrante o uno en preparación. Elimina ese primero y después devuelve este, o quédate con el más reciente.",
+				"daysTakenUnnamed": "Este cuadrante no se puede devolver: sus días, o días posteriores de la misma semana, ya tienen un cuadrante o uno en preparación. Elimina ese primero y después devuelve este, o quédate con el más reciente.",
+				"laterDays": "Este cuadrante no se puede devolver: {{days}}, más adelante en la misma semana, se calcularon sin él. Elimina ese cuadrante primero, o quédate con él y genera estos días de nuevo.",
+				"notRestorable": "Este cuadrante no se puede devolver: lo reemplazó un cuadrante más reciente. Genera sus días de nuevo desde la página Generar.",
+				"gone": "Este cuadrante ya no está en el Historial. Recarga la página.",
+				"forbidden": "No tienes permiso para devolver cuadrantes en este departamento.",
+				"failed": "No pudimos devolver el cuadrante. Inténtalo de nuevo."
 			}
 		}
 	},
