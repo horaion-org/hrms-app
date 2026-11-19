@@ -182,7 +182,7 @@ it("offers a rejected withdrawn roster its regeneration and says why the API ref
 
 	expect(
 		await within(dialog).findByText(
-			"Staff were told of changes to this roster while it was published, so it can’t be generated again. Correct it with roster changes, or delete it and schedule its days again."
+			"Staff were told of changes to this roster while it was published, so it can’t be generated again here. Correct it with roster changes, or choose its days on the Generate page: a new roster is worked out and this one is kept."
 		)
 	).toBeInTheDocument();
 	expect(postsOf(calls, REGENERATION)).toHaveLength(1);
@@ -272,7 +272,7 @@ it("offers no regeneration of a part whose later part is published, and says why
 
 	expect(
 		await screen.findByText(
-			"A later schedule of this week has been published, and it was worked out from these days, so this one can’t be generated again. Change its roster by hand instead."
+			"A later schedule of this week is published, or was published and withdrawn, and it was worked out from these days, so this one can’t be generated again. Change its roster by hand, or choose these days on the Generate page."
 		)
 	).toBeInTheDocument();
 	await user.click(await screen.findByRole("button", { name: PART_MENU }));

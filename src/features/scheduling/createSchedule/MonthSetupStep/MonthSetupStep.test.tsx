@@ -379,12 +379,15 @@ describe("MonthSetupStep", () => {
 		it.each([
 			{ case: "month", defaultValues: DEFAULTS },
 			{ case: "dates", defaultValues: DATES },
-		])("given_$case_when_shown_then_noScheduleForChoice", ({ defaultValues }) => {
-			render(<Harness dates={datesProp()} defaultValues={defaultValues} />);
+		])(
+			"given_$case_when_shown_then_noScheduleForChoice",
+			({ defaultValues }) => {
+				render(<Harness dates={datesProp()} defaultValues={defaultValues} />);
 
-			expect(screen.queryByRole("tablist")).toBeNull();
-			expect(screen.queryByText("Schedule for")).toBeNull();
-		});
+				expect(screen.queryByRole("tablist")).toBeNull();
+				expect(screen.queryByText("Schedule for")).toBeNull();
+			}
+		);
 
 		it("given_datesChosen_when_shown_then_firstLastNameAndThePlanRows", () => {
 			const onDatesChange = vi.fn();
@@ -404,7 +407,9 @@ describe("MonthSetupStep", () => {
 			const table = screen.getByRole("table", { name: "What generating does" });
 			expect(within(table).getAllByRole("row")).toHaveLength(3);
 			expect(
-				within(table).getByText(/^Nov 19\s?–\s?22, 2026: empty, will be filled\.$/)
+				within(table).getByText(
+					/^Nov 19\s?–\s?22, 2026: empty, will be filled\.$/
+				)
 			).toBeInTheDocument();
 			expect(within(table).getAllByText("New")).toHaveLength(2);
 			expect(
@@ -525,7 +530,7 @@ describe("MonthSetupStep", () => {
 			expect(screen.getByText("Kept")).toBeInTheDocument();
 			expect(
 				screen.getByText(
-					/^Nov 23\s?–\s?28, 2026 have been published and stay as they are\.$/
+					/^Nov 23\s?–\s?28, 2026 are published and stay as they are\.$/
 				)
 			).toBeInTheDocument();
 		});
