@@ -9,7 +9,7 @@ import {
 } from "@/features/scheduling/roster/roster";
 import { weekStateTones } from "@/features/scheduling/months/weekStateLooks";
 import type { StripState } from "@/features/scheduling/timeline/rosterStrip";
-import { stretchHoursMark } from "@/features/scheduling/roster/stretchWords";
+import { stretchHoursMark } from "@/features/scheduling/shifts/stretchWords";
 import type { TimelineView } from "@/features/scheduling/timeline/timeline";
 
 /*

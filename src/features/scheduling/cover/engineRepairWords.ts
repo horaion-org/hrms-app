@@ -1,6 +1,6 @@
 import type { TFunction } from "i18next";
 import { ApiProblemError } from "@/common/problem";
-import { stretchOvertimeText } from "@/features/scheduling/roster/stretchWords";
+import { stretchOvertimeText } from "@/features/scheduling/shifts/stretchWords";
 import type {
 	RepairMove,
 	RepairOption,

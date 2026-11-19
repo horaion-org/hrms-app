@@ -12,7 +12,7 @@ import {
 	cellMarkLooks,
 	shiftTileStyle,
 } from "@/features/scheduling/roster/rosterLooks";
-import { stretchHoursMark } from "@/features/scheduling/roster/stretchWords";
+import { stretchHoursMark } from "@/features/scheduling/shifts/stretchWords";
 
 export type RosterShiftProps = {
 	/** A worked day: its frozen shift and the role it is worked as. */

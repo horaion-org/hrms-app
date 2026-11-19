@@ -5,7 +5,7 @@ import {
 	stretchedTimes,
 	stretchMinutes,
 } from "@/features/scheduling/roster/shiftStretch";
-import { stretchOvertimeText } from "@/features/scheduling/roster/stretchWords";
+import { stretchOvertimeText } from "@/features/scheduling/shifts/stretchWords";
 import type {
 	RosterCellValue,
 	ScheduleAssignment,

@@ -3,7 +3,7 @@ import { authTestI18n } from "@/features/auth/testingI18n";
 import {
 	stretchHoursMark,
 	stretchOvertimeText,
-} from "@/features/scheduling/roster/stretchWords";
+} from "@/features/scheduling/shifts/stretchWords";
 
 const t = authTestI18n.t;
 
