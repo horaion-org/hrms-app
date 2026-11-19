@@ -4942,7 +4942,9 @@
 			"partGapNeedsCover": "{{time}} needs cover",
 			"partGap": "Short {{time}}: {{name}} is on leave",
 			"stretched": "Stretched {{hours}} h into overtime",
-			"overtimePill": "+OT {{time}}"
+			"overtimePill": "+OT {{time}}",
+			"stretchHours": "+{{hours}} h",
+			"stretchOvertime": "+{{hours}} h overtime"
 		},
 		"rosterEdit": {
 			"title": "{{name}} · {{date}}",
@@ -5265,9 +5267,9 @@
 				"move": {
 					"REASSIGN": "Move {{name}} from {{fromShift}} {{fromDay}} to {{shift}} {{day}}",
 					"CALL_IN": "Call in {{name}} for {{shift}} {{day}}",
-					"OVERTIME_EXTENSION": "Extend {{name}}’s {{shift}} by {{hours}} h",
-					"OVERTIME_EXTENSION_AFTER": "{{name}} stays on after {{shift}} until {{time}} (+{{hours}} h)",
-					"OVERTIME_EXTENSION_BEFORE": "{{name}} starts {{shift}} early at {{time}} (+{{hours}} h)",
+					"OVERTIME_EXTENSION": "Extend {{name}}’s {{shift}} · {{overtime}}",
+					"OVERTIME_EXTENSION_AFTER": "{{name}} stays on after {{shift}} · {{overtime}}, until {{time}}",
+					"OVERTIME_EXTENSION_BEFORE": "{{name}} starts {{shift}} early · {{overtime}}, from {{time}}",
 					"UNKNOWN": "A change the app can’t describe yet"
 				},
 				"refusal": {
