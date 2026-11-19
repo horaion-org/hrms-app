@@ -190,7 +190,7 @@ export const GeneratedRoster = ({
 	const { rows, days, period, openList } = roster;
 	// A list or Find cover keeps to the grid's height and scrolls inside, so it never makes the row taller.
 	const panelFollowsGridHeight =
-		roster.sidePanel === "list" || roster.sidePanel === "cover";
+		roster.sidePanel === "list";
 
 	const issues = issuesOfRoster({
 		roster,
@@ -314,6 +314,7 @@ export const GeneratedRoster = ({
 				issues,
 				issueFixing,
 				issueCover,
+				issueCoverGap: roster.coverGap,
 				onShowIssue: showIssue,
 				onShowAllIssues: roster.showAllIssues,
 				onFindCover: editing ? roster.openCover : undefined,
@@ -330,7 +331,7 @@ export const GeneratedRoster = ({
 			viewerMembershipId={viewerMembershipId}
 			list={{
 				id: sidePanelId,
-				resetKey: `${openList ?? ""}|${view.member ?? view.date ?? ""}`,
+				resetKey: `${openList ?? ""}|${view.member ?? view.date ?? ""}|${view.cover ?? ""}`,
 				// A header's narrowed list counts only its own, so the whole week's counts stay off it.
 				summary: openList === "issues" && !roster.issuesAbout && (
 					<IssuesPanelHead
@@ -344,7 +345,6 @@ export const GeneratedRoster = ({
 				sections: listSections,
 			}}
 			onClose={closePanel}
-			onCloseCover={roster.closeCover}
 			onFindCover={editing ? roster.openCover : undefined}
 			onPreviewDays={roster.onPreviewDays}
 			onApplied={(change, stillShort) => {

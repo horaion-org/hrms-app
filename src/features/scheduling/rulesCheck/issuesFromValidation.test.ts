@@ -10,7 +10,6 @@ import {
 	findingsShown,
 	scheduleWithFindingsShown,
 	validatesOnOpen,
-	validationLead,
 	validationStanding,
 } from "@/features/scheduling/rulesCheck/issuesFromValidation";
 import {
@@ -66,47 +65,6 @@ describe("changesUnchecked", () => {
 		["current", "current", last, false],
 	] as const)("reads %s", (_case, standing, lastValidation, expected) => {
 		expect(changesUnchecked(standing, lastValidation)).toBe(expected);
-	});
-});
-
-describe("validationLead", () => {
-	const last = { revision: 1, check: rulesCheckFixture() };
-	const ask = (): void => {};
-
-	it.each([
-		["no validation for this viewer", "outOfDate", undefined, undefined],
-		[
-			"a check running",
-			"outOfDate",
-			{ status: "loading", ask, revision: 1 },
-			"validating",
-		],
-		[
-			"hand changes nothing validated",
-			"outOfDate",
-			{ status: "idle", ask, revision: 1 },
-			"unchecked",
-		],
-		[
-			"an ask that was refused",
-			"outOfDate",
-			{ status: "refused", refusal: "failed", ask, revision: 1 },
-			"unchecked",
-		],
-		[
-			"validated at an earlier revision",
-			"outOfDate",
-			{ status: "idle", ask, last, revision: 2 },
-			undefined,
-		],
-		[
-			"validated at the revision on screen",
-			"current",
-			{ status: "ready", check: last.check, ask, last, revision: 1 },
-			undefined,
-		],
-	] as const)("%s", (_case, standing, validation, expected) => {
-		expect(validationLead(standing, validation)).toBe(expected);
 	});
 });
 

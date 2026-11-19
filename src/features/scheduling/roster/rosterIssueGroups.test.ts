@@ -6,11 +6,7 @@ import {
 } from "@/features/scheduling/rulesCheck/fixtures";
 import {
 	dayListText,
-	topicCounts,
 	issueCounts,
-	issueSummaryParts,
-	issuesOfGroup,
-	orderedIssues,
 	rosterIssues,
 	shortShiftCount,
 	type RosterIssueInput,
@@ -278,35 +274,6 @@ describe("rosterIssues", () => {
 	});
 });
 
-describe("issueSummaryParts", () => {
-	it("counts every group in order when each has items", () => {
-		expect(
-			issueSummaryParts({ mustFix: 6, notMet: 1, forInformation: 3 }, t)
-		).toEqual([
-			{ group: "mustFix", text: "scheduling.issues.summary.mustFix(6)" },
-			{ group: "notMet", text: "scheduling.issues.summary.notMet(1)" },
-			{
-				group: "forInformation",
-				text: "scheduling.issues.summary.forInformation(3)",
-			},
-		]);
-	});
-
-	it("leaves out a group with nothing in it", () => {
-		expect(
-			issueSummaryParts({ mustFix: 3, notMet: 0, forInformation: 1 }, t).map(
-				(part) => part.group
-			)
-		).toEqual(["mustFix", "forInformation"]);
-	});
-
-	it("has no part when nothing is wrong", () => {
-		expect(
-			issueSummaryParts({ mustFix: 0, notMet: 0, forInformation: 0 }, t)
-		).toEqual([]);
-	});
-});
-
 describe("one broken rule for one person", () => {
 	const WEEK = [
 		"2026-02-01",
@@ -457,61 +424,6 @@ describe("dayListText", () => {
 	it("writes one day as itself, and nothing for none", () => {
 		expect(dayListText(["2026-02-01"], formatOne, t)).toBe("day 2026-02-01");
 		expect(dayListText([], formatOne, t)).toBe("");
-	});
-});
-
-describe("topicCounts", () => {
-	it("counts every kind in the order it first appears, none left out", () => {
-		const issues = rosterIssues(
-			input({
-				gaps: [
-					staffingGapFixture(),
-					staffingGapFixture({ conflictId: "c-2", date: "2026-10-18" }),
-				],
-				brokenMusts: [brokenMust],
-				notes: [
-					{ title: "Note", detail: "Detail", topic: "Days before changed" },
-				],
-			})
-		);
-
-		expect(topicCounts(issues)).toEqual([
-			{ topic: "scheduling.issues.topics.shiftsShort", count: 2 },
-			{ topic: "scheduling.issues.topics.rulesBroken", count: 2 },
-			{ topic: "Days before changed", count: 1 },
-		]);
-	});
-
-	it("has nothing to count in an empty group", () => {
-		expect(topicCounts([])).toEqual([]);
-	});
-});
-
-describe("orderedIssues", () => {
-	const issues = rosterIssues(
-		input({ brokenMusts: [brokenMust], gaps: [staffingGapFixture()] })
-	);
-
-	it("orders by person, then day", () => {
-		expect(orderedIssues(issues, "byPerson").map((issue) => issue.who)).toEqual(
-			[
-				"Aisha Rahman",
-				"Ben Ortiz",
-				"scheduling.issues.jobShort(1|Front Desk Staff)",
-			]
-		);
-	});
-
-	it("orders by day, then person", () => {
-		expect(orderedIssues(issues, "byDay").map((issue) => issue.day)).toEqual([
-			"2026-10-14",
-			"2026-10-15",
-			"2026-10-17",
-		]);
-	});
-
-	it("keeps one group's items only", () => {
-		expect(issuesOfGroup(issues, "notMet", "byDay")).toEqual([]);
 	});
 });
 

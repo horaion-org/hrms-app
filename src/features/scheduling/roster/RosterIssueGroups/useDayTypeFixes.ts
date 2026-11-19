@@ -50,6 +50,9 @@ export type DayTypeFixesInput = {
 	onOpenDay: (retype: DayTypeRetype) => void;
 };
 
+/** What making a fix from Issues needs, besides the items listed: the roster, its frozen rules and how to change it. */
+export type IssueFixing = Omit<DayTypeFixesInput, "issues">;
+
 /**
  * The fixes Issues offers for weekly day-type rules (`dayTypeFix`), and how
  * each is made. On a roster not published, a fix is a hand change like any

@@ -66,7 +66,8 @@ export const parseRosterSearch = (
 	const { week, day, cell, cover, ...list } = searchSchema.parse(search);
 	const shown = (): RosterSearch => {
 		if (cell !== undefined) return { cell };
-		if (cover !== undefined) return { cover };
+		// A short shift "Find cover" names opens Issues on its row.
+		if (cover !== undefined) return { panel: "issues", cover };
 		return listOf(list);
 	};
 	return {

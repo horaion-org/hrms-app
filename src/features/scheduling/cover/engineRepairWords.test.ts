@@ -12,8 +12,6 @@ import {
 } from "@/features/scheduling/cover/engineRepairFixtures";
 import {
 	clockTime,
-	leftShortLine,
-	leftShortNextLine,
 	moveLine,
 	optionHeadingKey,
 	stillShortAfterApplying,
@@ -82,30 +80,11 @@ describe("moveLine", () => {
 	});
 });
 
-describe("leftShortLine", () => {
-	it("says what an option still leaves short, and nothing when it fills the gap", () => {
-		expect(leftShortLine(infeasibleRepair(), t)).toBe(
-			"Still 1 short 09:00 – 15:00"
-		);
-		expect(leftShortLine(feasibleRepair(), t)).toBeUndefined();
-	});
-});
-
 describe("optionHeadingKey", () => {
 	it("heads a full fill, a part fill and the engine's honest no apart", () => {
 		expect(optionHeadingKey(feasibleRepair())).toBe("fills");
 		expect(optionHeadingKey(partStretchRepair())).toBe("fillsPart");
 		expect(optionHeadingKey(infeasibleRepair())).toBe("cannotFill");
-	});
-});
-
-describe("leftShortNextLine", () => {
-	it("says to find cover again only for an option that leaves hours short", () => {
-		expect(leftShortNextLine(partStretchRepair(), t)).toBe(
-			"After applying it, find cover again for the hours still short."
-		);
-		expect(leftShortNextLine(feasibleRepair(), t)).toBeUndefined();
-		expect(leftShortNextLine(infeasibleRepair(), t)).toBeUndefined();
 	});
 });
 

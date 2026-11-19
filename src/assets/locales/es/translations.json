@@ -4639,35 +4639,14 @@
 		"issues": {
 			"conflict": "Un conflicto en este día",
 			"weekBarLabel": "Incidencias: {{count}} por corregir, {{notMet}} no se pudieron cumplir",
-			"groupLabel": "{{group}}, {{count}}",
 			"show": "Mostrar",
-			"orderLabel": "Ordenar incidencias",
-			"order": {
-				"byPerson": "Por persona",
-				"byDay": "Por día"
-			},
-			"groups": {
-				"mustFix": "Por corregir",
-				"notMet": "No se pudo cumplir",
-				"forInformation": "Más información"
-			},
 			"unknownJob": "un puesto",
 			"wholeRoster": "Todo el cuadrante",
-			"summary": {
-				"mustFix_one": "{{count}} por corregir",
-				"mustFix_other": "{{count}} por corregir",
-				"notMet_one": "{{count}} no se pudo cumplir",
-				"notMet_other": "{{count}} no se pudieron cumplir",
-				"forInformation_one": "{{count}} a título informativo",
-				"forInformation_other": "{{count}} a título informativo",
-				"changesUnchecked": "Cambios sin validar"
-			},
 			"jobShort_one": "Falta {{count}} {{job}}",
 			"jobShort_other": "Faltan {{count}} {{job}}",
 			"brokenMust": "Aquí se incumple una regla obligatoria. Cambia este día a mano y vuelve a validar. Regla: {{rule}}",
 			"notMetRule": "Se pidió si es posible, y este cuadrante no pudo cumplirla. Regla: {{rule}}",
 			"leaveShort": "De permiso, así que falta gente en {{shift}}.",
-			"nothingToFix": "Nada que corregir esta semana",
 			"startChanged": {
 				"title_one": "Los días antes de esta semana de {{count}} persona cambiaron",
 				"title_other": "Los días antes de esta semana de {{count}} personas cambiaron",
@@ -4681,7 +4660,6 @@
 			"ruleOnly": "Regla: {{rule}}",
 			"brokenSomewhere": "Se incumple, pero el motor no pudo indicar a quién ni qué día.",
 			"notMetSomewhere": "No se cumplió, pero el motor no pudo indicar a quién ni qué día.",
-			"topicCount": "{{topic}}: {{count}}",
 			"topics": {
 				"shiftsShort": "Turnos sin cubrir",
 				"rulesBroken": "Reglas incumplidas",
@@ -4724,8 +4702,6 @@
 				"validate": "Pulsa Validar cuadrante para ver qué regla es y a quién nombra."
 			},
 			"fix": {
-				"advice": "{{day}} es {{from}} para {{name}}. Conviértelo en el {{to}}.",
-				"make": "Convertirlo en {{dayType}}",
 				"makeAll_one": "Dar a esta persona un {{to}} en uno de sus {{from}} en cada una de estas semanas",
 				"makeAll_other": "Dar a cada una de estas {{count}} personas un {{to}} en uno de sus {{from}}",
 				"someDone": "{{done}} de {{total}} cambiados. Los demás necesitan una revisión antes: usa el botón de cada uno."
@@ -4758,7 +4734,8 @@
 					"ifPossible": "Si es posible",
 					"note": "Nota"
 				},
-				"nothingHere": "Nada aquí."
+				"nothingHere": "Nada aquí.",
+				"shiftShort": "{{shift}} con falta de personal"
 			},
 			"cover": {
 				"badge": {
@@ -5031,26 +5008,6 @@
 			}
 		},
 		"cover": {
-			"gap": "{{shift}} · {{day}} · {{time}} · {{jobTitles}}",
-			"short": {
-				"onLeave": "Falta 1: {{name}} está de permiso",
-				"sinceGeneration_one": "Falta {{count}} desde que se generó el cuadrante",
-				"sinceGeneration_other": "Faltan {{count}} desde que se generó el cuadrante",
-				"plain_one": "Falta {{count}}",
-				"plain_other": "Faltan {{count}}"
-			},
-			"option": {
-				"FREE": "Dentro de las horas del contrato",
-				"EXTRA_HOURS": "Horas complementarias (tiempo parcial) · {{before}} → {{after}} h esta semana",
-				"OVERTIME": "Trabaja un día libre · {{hours}} h extra",
-				"UNKNOWN": "Trabaja un día libre",
-				"week": "Esta semana {{before}} → {{after}} h de {{contract}} h",
-				"month": "Horas extra este mes {{before}} → {{after}} h",
-				"ROSTERED_ELSEWHERE": "Ese día también trabaja en otro cuadrante"
-			},
-			"neighbours": "{{name}} trabaja {{shifts}}.",
-			"neighbour": "{{shift}} el {{day}} ({{time}})",
-			"noNeighbours": "{{name}} no tiene turno el día anterior ni el siguiente.",
 			"reason": {
 				"MEMBER_GONE": "Ya no está en la empresa",
 				"ON_LEAVE": "De permiso",
@@ -5065,53 +5022,25 @@
 				"UNKNOWN": "No puede cubrirlo"
 			},
 			"list": {
-				"whoCovers": "Quién cubre",
 				"suggested": "Sugerido",
-				"showMore": "Mostrar más ({{count}})",
-				"showFewer": "Mostrar menos",
-				"cantHelp": "No pueden cubrirlo ({{count}})",
 				"cantHelpLine": "{{name}} · {{reason}}"
 			},
 			"findCover": "Buscar cobertura",
 			"findCoverFor": "Buscar cobertura: {{shift}}",
 			"remark": "Cubre a {{name}}",
 			"panel": {
-				"title": "Buscar cobertura",
 				"loading": "Buscando quién puede cubrirlo…",
 				"rosterMoved": "El cuadrante cambió desde que se hizo esta lista.",
 				"findAgain": "Buscar de nuevo",
 				"failed": "No se pudo cargar la lista.",
 				"covered": "{{shift}} el {{day}} ya está cubierto.",
-				"close": "Cerrar",
-				"nobody": "Nadie de este cuadrante puede cubrir {{shift}} el {{day}}.",
-				"notChecked": "Las reglas de tiempo de trabajo (horas al día, horas extra al mes, días a la semana, permisos) no se comprueban en este cambio. Después de aplicarlo, pulsa Validar cuadrante."
+				"nobody": "Nadie de este cuadrante puede cubrir {{shift}} el {{day}}."
 			},
-			"withEngine": {
-				"order": {
-					"byExtraHours": "Por orden de menos horas extra. Aquí no se comprueba el descanso entre turnos ni el puesto que falta.",
-					"engineFirst": "Primero la elección del motor; después, por menos horas extra."
-				},
-				"note": {
-					"fills": "El motor: cubre el hueco",
-					"couldTake": "El motor: podría cubrir este turno",
-					"notConsidered": "Sin comprobar por el motor, que solo mira a quienes tienen el puesto que falta en este hueco"
-				}
-			},
-			"gapWithoutRoles": "{{shift}} · {{day}} · {{time}}",
 			"engine": {
 				"loading": "Buscando las opciones…",
 				"unreachable": "No se pudo contactar con el motor. Estas personas están libres según sus horas y no se comprueban con las reglas.",
 				"none": "El motor no encontró forma de cubrirlo.",
-				"fills": "Cubre el hueco",
-				"fillsPart": "Cubre parte del hueco",
-				"cannotFill": "No puede cubrir el hueco",
-				"reason": "El motivo del motor",
-				"warnings": "El motor también indica",
-				"notChecked": "Las reglas de tiempo de trabajo (horas al día, horas extra al mes, días a la semana, permisos) no se comprueban en este cambio. Después de aplicarlo, pulsa Validar cuadrante.",
 				"unknownShift": "un turno",
-				"leftShort_one": "Aún falta {{count}} {{times}}",
-				"leftShort_other": "Aún faltan {{count}} {{times}}",
-				"leftShortNext": "Después de aplicarlo, vuelve a buscar cobertura para las horas que aún faltan.",
 				"appliedStillShort_one": "Cuadrante cambiado. A {{shift}} del {{day}} aún le falta {{count}} {{times}}: vuelve a buscar cobertura para esas horas.",
 				"appliedStillShort_other": "Cuadrante cambiado. A {{shift}} del {{day}} aún le faltan {{count}} {{times}}: vuelve a buscar cobertura para esas horas.",
 				"move": {
@@ -5130,9 +5059,7 @@
 					"tooSlow": "El motor tardó demasiado en buscar opciones esta vez.",
 					"failed": "El motor no pudo responder."
 				},
-				"review": "Revisar este cambio",
 				"byHand": "La aplicación no puede aplicar esta: hazla a mano en el cuadrante.",
-				"noneChecked": "Ninguna de estas opciones se ha comprobado con las reglas de tiempo de trabajo. Después de aplicar una, pulsa Validar cuadrante.",
 				"whyNot": {
 					"title": "Por qué no se asignó a nadie",
 					"couldTake": "Podría cubrir este turno",
@@ -5151,28 +5078,6 @@
 					"breaksRule": "Incumpliría: {{rule}}",
 					"aWorkingTimeRule": "una norma de tiempo de trabajo",
 					"otherReason": "No puede cubrir este turno."
-				},
-				"hours": {
-					"none": "Sin horas extra.",
-					"several": "Suma {{parts}} a {{name}} esa semana.",
-					"only": {
-						"overtime": "Suma {{hours}} h de horas extra a {{name}} esa semana.",
-						"restDayWork": "Suma {{hours}} h de trabajo en día de descanso a {{name}}.",
-						"timeOffEarned": "Suma {{hours}} h de descanso compensatorio a {{name}}."
-					},
-					"part": {
-						"overtime": "{{hours}} h de horas extra",
-						"restDayWork": "{{hours}} h de trabajo en día de descanso",
-						"timeOffEarned": "{{hours}} h de descanso compensatorio"
-					},
-					"inTotal": {
-						"several": "Suma {{parts}} en total esa semana.",
-						"only": {
-							"overtime": "Suma {{hours}} h de horas extra en total esa semana.",
-							"restDayWork": "Suma {{hours}} h de trabajo en día de descanso en total.",
-							"timeOffEarned": "Suma {{hours}} h de descanso compensatorio en total."
-						}
-					}
 				}
 			}
 		},
@@ -5567,7 +5472,6 @@
 				"unchecked": "No se pudieron comprobar las reglas ahora. Aun así puedes publicar."
 			},
 			"check": "Validar cuadrante",
-			"loading": "Validando el cuadrante…",
 			"brokenUnnamed": "Este cuadrante incumple una regla de tiempo de trabajo.",
 			"unnamedRule": "Una regla que la app aún no sabe nombrar",
 			"rule": {
@@ -5599,22 +5503,13 @@
 			"problemsFound_one": "Validar cuadrante: {{count}} aviso encontrado",
 			"problemsFound_other": "Validar cuadrante: {{count}} avisos encontrados",
 			"allClear": "Validar cuadrante: sin avisos",
-			"staffingUnchecked": "No se pudo comprobar el personal; los turnos con falta de personal de abajo son los anteriores.",
 			"brokenRulesTitle": "Reglas de tiempo de trabajo incumplidas",
-			"outOfDate": "Ha cambiado desde que se hizo esta lista",
-			"changesUnchecked": "Los cambios hechos a mano aún no se comprueban en esta lista: solo muestra lo encontrado al generar el cuadrante. Valida el cuadrante antes de publicarlo.",
-			"rulesUnchecked": "No se pudieron comprobar las reglas de tiempo de trabajo; la lista de abajo es la anterior.",
-			"validated": "Validado: no se incumple ninguna regla",
-			"mayBeShort": "La comprobación se quedó sin tiempo, así que esta lista puede estar incompleta.",
-			"validateAgain": "Validar de nuevo",
 			"notMet": {
 				"title_one": "Si es posible, no cumplida ({{count}})",
 				"title_other": "Si es posible, no cumplidas ({{count}})",
 				"place": "{{person}} · {{day}}",
 				"line": "{{place}}: «{{message}}»"
-			},
-			"brokenCount_one": "Validado: se incumple {{count}} regla",
-			"brokenCount_other": "Validado: se incumplen {{count}} reglas"
+			}
 		},
 		"dates": {
 			"refusal": {

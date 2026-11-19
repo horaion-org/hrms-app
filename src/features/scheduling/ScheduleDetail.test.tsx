@@ -2001,7 +2001,8 @@ it("keeps the grid, its week and the open editor while a stale roster reloads", 
 	).toBeInTheDocument();
 	expect(
 		await screen.findByRole("button", {
-			name: "Aisha Rahman, Mon: Day off, changed",
+			// The editor's "Not working" is still chosen, so the day is still under review.
+			name: "Aisha Rahman, Mon: Day off, changed, will change",
 		})
 	).toBeVisible();
 	expect(screen.getByRole("table", { name: "Roster" })).toBeInTheDocument();

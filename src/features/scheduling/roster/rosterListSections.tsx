@@ -87,10 +87,12 @@ export type RosterListInput = {
 	onShowAllIssues: () => void;
 	/** On a roster that may be changed: opens Find cover for a short shift, from its Issues row. */
 	onFindCover?: (gap: CoverGapRequest) => void;
-	/** On a roster that may be changed: what the fixes Issues makes itself need (`FixableIssueGroups`). */
+	/** On a roster that may be changed: what the fixes Issues makes itself need (`FixableRosterIssuesList`). */
 	issueFixing?: IssueFixing;
 	/** On a roster that may be changed: what covering a short shift from its Issues row needs. */
 	issueCover?: IssueCoverContext;
+	/** The short shift "Find cover" opened Issues on: its row starts open. */
+	issueCoverGap?: CoverGapRequest;
 };
 
 /**
@@ -219,6 +221,7 @@ export const issuesSections = (
 		onShowIssue,
 		issueFixing,
 		issueCover,
+		issueCoverGap,
 	} = input;
 	if (issuesAbout) return headerIssueSections(issuesAbout, input);
 	/** A shift's name by its id, as the roster's own days name it. */
@@ -240,6 +243,7 @@ export const issuesSections = (
 				/>
 			),
 		cover: issueCover,
+		openGap: issueCoverGap,
 		onShow: onShowIssue,
 	};
 	return [

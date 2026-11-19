@@ -55,8 +55,7 @@ export type RosterSchedule = Pick<
 	Partial<Pick<Schedule, "generation">>;
 
 /** What opens in the one panel beside the grid. */
-export type RosterSidePanelKind =
-	"dayEditor" | "shiftDetails" | "cover" | "list";
+export type RosterSidePanelKind = "dayEditor" | "shiftDetails" | "list";
 
 /** What the roster view is worked out from. */
 export type RosterViewInput = {
@@ -121,7 +120,7 @@ export type RosterView = {
 	openList: RosterPanel | undefined;
 	/** The header the Issues list was opened from, if any: it lists only what that header counted. */
 	issuesAbout: IssuesAbout | undefined;
-	/** The short shift-day Find cover lists people for, on a roster that may be changed. */
+	/** The short shift-day "Find cover" opened Issues on, its row open; on a roster that may be changed. */
 	coverGap: CoverGapRequest | undefined;
 	/** What the panel beside the grid shows; nothing, and a full-width grid, without. */
 	sidePanel: RosterSidePanelKind | undefined;
@@ -131,25 +130,23 @@ export type RosterView = {
 
 /**
  * The panel beside the grid: a chosen day first (its editor, else its
- * shift), then Find cover for a short shift, else the open list.
+ * shift), else the open list (Issues, with a short shift's row open when
+ * "Find cover" opened it).
  */
 export const sidePanelOf = ({
 	editable,
 	chosenRow,
 	chosenCell,
-	coverGap,
 	openList,
 }: {
 	editable: boolean;
 	chosenRow: ScheduleAssignment | undefined;
 	chosenCell: RosterCell | undefined;
-	coverGap: CoverGapRequest | undefined;
 	openList: RosterPanel | undefined;
 }): RosterSidePanelKind | undefined => {
 	if (editable && chosenRow) return "dayEditor";
 	if (!editable && chosenCell?.kind === "shift" && chosenRow)
 		return "shiftDetails";
-	if (editable && coverGap) return "cover";
 	if (openList) return "list";
 	return undefined;
 };
@@ -252,15 +249,17 @@ export const rosterViewOf = ({
 		(day) => day >= period.start && day <= period.end
 	);
 	const shownDay = shownDayOf(periodDays, chosenRow?.day ?? view.day, today);
+	const coverGap = editable && !chosenRow ? coverGapOf(view.cover) : undefined;
+	// Issues opens for a short shift "Find cover" names even when nothing else is listed.
 	const openable = (panel: RosterPanel): boolean =>
-		listCounts[panel] > 0 || (panel === "issues" && hasValidation);
+		listCounts[panel] > 0 ||
+		(panel === "issues" && (hasValidation || coverGap !== undefined));
 	const openList =
 		view.panel && !chosenRow && openable(view.panel) ? view.panel : undefined;
 	const chosenMemberRow = rows.find(
 		(row) => row.membershipId === chosenRow?.member?.membershipId
 	);
 	const chosenCell = chosenMemberRow?.days[chosenRow?.day ?? ""];
-	const coverGap = editable && !chosenRow ? coverGapOf(view.cover) : undefined;
 	const placed = findings && names ? placeFindings(findings, days) : undefined;
 	return {
 		period,
@@ -287,7 +286,6 @@ export const rosterViewOf = ({
 			editable,
 			chosenRow,
 			chosenCell,
-			coverGap,
 			openList,
 		}),
 		chosenDayNotes: chosenDayNotesOf({
