@@ -1,7 +1,11 @@
 import type { TFunction } from "i18next";
 import { dayTypeLabel } from "@/features/scheduling/dayTypes";
 import { formatTimeRange } from "@/features/scheduling/shifts/formatShift";
-import { stretchedTimes } from "@/features/scheduling/roster/shiftStretch";
+import {
+	stretchedTimes,
+	stretchMinutes,
+} from "@/features/scheduling/roster/shiftStretch";
+import { stretchOvertimeText } from "@/features/scheduling/roster/stretchWords";
 import type {
 	RosterCellValue,
 	ScheduleAssignment,
@@ -30,8 +34,9 @@ export const assignmentCell = (assignment: CellSource): RosterCellValue => ({
 
 /**
  * A roster day in words, as the editor, the undo question and "Was:" show
- * it: "Front Desk AM · 09:00 – 15:00" (the times worked, so a stretched day
- * reads "09:00 – 17:00"), the day's type ("Rest day"), "Day off" without one,
+ * it: "Front Desk AM · 09:00 – 15:00" (the times worked, so a day stretched
+ * into overtime reads "09:00 – 17:00 · +2 h overtime"), the day's type
+ * ("Rest day"), "Day off" without one,
  * "Absent" or "On leave". Pure.
  */
 export const rosterCellText = (cell: RosterCellValue, t: TFunction): string => {
@@ -49,5 +54,8 @@ export const rosterCellText = (cell: RosterCellValue, t: TFunction): string => {
 		{ startTime: times.start, endTime: times.end },
 		t
 	);
-	return `${cell.shift.name} · ${time}`;
+	const stretched = stretchMinutes(cell.stretch);
+	return stretched > 0
+		? `${cell.shift.name} · ${time} · ${stretchOvertimeText(stretched, t)}`
+		: `${cell.shift.name} · ${time}`;
 };
