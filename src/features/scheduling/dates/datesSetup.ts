@@ -84,7 +84,7 @@ export type PlanRow = {
 };
 
 /** The day after `date`. */
-const dayAfter = (date: string): string =>
+export const dayAfter = (date: string): string =>
 	dayjs(date).add(1, "day").format(ISO_DATE_FORMAT);
 
 /** A schedule's days and state: a month read's part, or a dates plan's kept part. */

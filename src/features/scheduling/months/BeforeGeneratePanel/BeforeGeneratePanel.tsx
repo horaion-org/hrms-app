@@ -1,10 +1,12 @@
-import { useId, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { AlertFilledIcon, TickFilledIcon } from "@/components/ui/Icon";
+import type { ReplacedDays } from "@/features/scheduling/dates/replacedDays";
+import { ReplaceRosterDialog } from "@/features/scheduling/dates/ReplaceRosterDialog";
 import type { MonthGenerationCheck } from "@/features/scheduling/months/api";
 import { formatMonth } from "@/features/scheduling/months/monthWeeks";
 
@@ -22,6 +24,8 @@ export type BeforeGeneratePanelProps = {
 	hint?: string;
 	/** A dates run's days, named in the title and on Generate in place of the month. */
 	days?: string;
+	/** The rosters to review a dates run replaces: Generate asks before it runs. */
+	replaces?: ReplacedDays;
 	/** Generate waits without a note: the lists it needs are still loading. */
 	waiting?: boolean;
 	/** The fix links, each only where the person may follow it. */
@@ -79,7 +83,8 @@ const Line = ({
  * warns, when no leave is approved in the month, and says how many requests
  * still wait. Generate is disabled, with the reason under it, while anything
  * blocks; `blockedNote` adds a reason the page knows (no schedule:create, or
- * lists it can't read).
+ * lists it can't read). With `replaces`, Generate first asks whether to
+ * replace the roster to review, and runs only once confirmed.
  */
 export const BeforeGeneratePanel = ({
 	check,
@@ -87,6 +92,7 @@ export const BeforeGeneratePanel = ({
 	blockedNote,
 	hint,
 	days,
+	replaces,
 	waiting = false,
 	links = {},
 	generating,
@@ -96,6 +102,7 @@ export const BeforeGeneratePanel = ({
 	const { t, i18n } = useTranslation();
 	const titleId = useId();
 	const noteId = useId();
+	const [askingToReplace, setAskingToReplace] = useState(false);
 	const language = formattingLocale(i18n);
 	const monthName = formatMonth(month, language);
 	const department = check.departmentName;
@@ -182,7 +189,13 @@ export const BeforeGeneratePanel = ({
 						className="max-sm:w-full"
 						disabled={note !== undefined || waiting}
 						loading={generating}
-						onClick={onGenerate}
+						onClick={
+							replaces
+								? (): void => {
+										setAskingToReplace(true);
+									}
+								: onGenerate
+						}
 					>
 						{days === undefined
 							? t(`${key}.generate`, { month: monthName })
@@ -195,6 +208,18 @@ export const BeforeGeneratePanel = ({
 					)}
 				</div>
 			</div>
+			{replaces && askingToReplace && (
+				<ReplaceRosterDialog
+					replaces={replaces}
+					onClose={() => {
+						setAskingToReplace(false);
+					}}
+					onConfirm={() => {
+						setAskingToReplace(false);
+						onGenerate();
+					}}
+				/>
+			)}
 		</section>
 	);
 };

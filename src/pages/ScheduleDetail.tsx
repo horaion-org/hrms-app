@@ -511,10 +511,7 @@ const ApiSchedule = ({
 				: [],
 			// A redo part in the week (API ADR-0129): this schedule is one, or one redoes some of its days.
 			redo: partRedoOf(schedule, weekParts),
-			lastPublishedPartStart: lastPublishedPartStartOf(
-				weekParts,
-				schedule.publicationWithdrawnAt ? [schedule.scheduleId] : []
-			),
+			lastPublishedPartStart: lastPublishedPartStartOf(weekParts),
 		},
 		(days) =>
 			formatPeriod({ start: days.from, end: days.to }, formattingLocale(i18n)),

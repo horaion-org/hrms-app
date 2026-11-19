@@ -16,6 +16,10 @@ import {
 	type TickableWeek,
 } from "@/features/scheduling/months/weekTicks";
 import { dayCountOfRuns } from "@/features/scheduling/dates/datesSetup";
+import {
+	replacedDaysOf,
+	type ReplacedDays,
+} from "@/features/scheduling/dates/replacedDays";
 import { formatPeriod } from "@/features/scheduling/periods";
 import type { Gate } from "@/features/scheduling/readiness/readinessCopy";
 import type { WeekChoiceIds } from "@/features/scheduling/weekChoice";
@@ -282,13 +286,19 @@ export const datesRunHint = (
 	return t("scheduling.dates.generate.hint", { count: plan.newDays, range });
 };
 
-/** What the Generate step says: the line of what it works out, and the days it names in place of the month. */
-export type GenerateStepWords = { hint: string; days: string | undefined };
+/** What the Generate step says: the line of what it works out, the days it names in place of the month, and what it asks about before replacing. */
+export type GenerateStepWords = {
+	hint: string;
+	days: string | undefined;
+	/** The rosters to review a dates run replaces (`replacedDaysOf`); undefined when it replaces none, and for a month run. */
+	replaces: ReplacedDays | undefined;
+};
 
 /**
  * The Generate step's words: a dates run names its days in the title and
- * button and says how many it generates; a month run keeps its month's
- * name (days undefined) and names the ticked weeks.
+ * button, says how many it generates and what it replaces; a month run keeps
+ * its month's name (days undefined), names the ticked weeks and replaces
+ * nothing it must ask about.
  */
 export const generateStepWordsOf = (
 	byDates: boolean,
@@ -301,5 +311,10 @@ export const generateStepWordsOf = (
 		? {
 				hint: datesRunHint(plan, language, t),
 				days: datesRunRange(plan, language),
+				replaces: plan ? replacedDaysOf(plan) : undefined,
 			}
-		: { hint: tickedWeeksHint(ticked, language, t), days: undefined };
+		: {
+				hint: tickedWeeksHint(ticked, language, t),
+				days: undefined,
+				replaces: undefined,
+			};

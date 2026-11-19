@@ -11,6 +11,7 @@ import {
 	partLinesOf,
 	type PartLine,
 	type PartLinesSource,
+	wasEverPublished,
 } from "@/features/scheduling/schedules/partLines";
 
 /** Echoes the key and its values, so the lines can be read without copy. */
@@ -203,7 +204,6 @@ describe("lastPublishedPartStartOf", () => {
 			parts: [
 				{ scheduleId: "s-1", state: "TO_REVIEW", coveredFrom: "2027-02-15" },
 			],
-			withdrawn: [],
 			expected: undefined,
 		},
 		{
@@ -214,20 +214,11 @@ describe("lastPublishedPartStartOf", () => {
 				{ scheduleId: "s-1", state: "TO_REVIEW", coveredFrom: "2027-02-15" },
 				{ scheduleId: "s-2", state: "PUBLISHED", coveredFrom: "2027-02-17" },
 			],
-			withdrawn: [],
 			expected: "2027-02-19",
 		},
-		// Taken back, it reads as to review again, but the API still counts it as published.
 		{
+			// Taken back, it is a roster to review: a run by dates works it out again, so it holds no day back.
 			case: "a part whose publication was withdrawn",
-			parts: [
-				{ scheduleId: "s-1", state: "TO_REVIEW", coveredFrom: "2027-02-17" },
-			],
-			withdrawn: ["s-1"],
-			expected: "2027-02-17",
-		},
-		{
-			case: "a part the week read says was published once",
 			parts: [
 				{
 					scheduleId: "s-2",
@@ -236,13 +227,57 @@ describe("lastPublishedPartStartOf", () => {
 					publishedOnce: true,
 				},
 			],
+			expected: undefined,
+		},
+		{
+			case: "a published part before a withdrawn one",
+			parts: [
+				{ scheduleId: "s-1", state: "PUBLISHED", coveredFrom: "2027-02-15" },
+				{
+					scheduleId: "s-2",
+					state: "TO_REVIEW",
+					coveredFrom: "2027-02-19",
+					publishedOnce: true,
+				},
+			],
+			expected: "2027-02-15",
+		},
+	] as const)("given_$case_when_read_then_$expected", ({ parts, expected }) => {
+		expect(lastPublishedPartStartOf(parts)).toBe(expected);
+	});
+});
+
+describe("wasEverPublished", () => {
+	it.each([
+		{
+			case: "a part to review, never published",
+			part: { scheduleId: "s-1", state: "TO_REVIEW" },
 			withdrawn: [],
-			expected: "2027-02-19",
+			expected: false,
+		},
+		{
+			case: "a published part",
+			part: { scheduleId: "s-1", state: "PUBLISHED" },
+			withdrawn: [],
+			expected: true,
+		},
+		{
+			case: "a part the week read says was published once",
+			part: { scheduleId: "s-1", state: "TO_REVIEW", publishedOnce: true },
+			withdrawn: [],
+			expected: true,
+		},
+		{
+			// Against an older API the week read does not say it, so the caller names the schedule.
+			case: "a withdrawn part the caller knows of",
+			part: { scheduleId: "s-1", state: "TO_REVIEW" },
+			withdrawn: ["s-1"],
+			expected: true,
 		},
 	] as const)(
-		"given_$case_when_read_then_$expected",
-		({ parts, withdrawn, expected }) => {
-			expect(lastPublishedPartStartOf(parts, withdrawn)).toBe(expected);
+		"given_$case_when_asked_then_$expected",
+		({ part, withdrawn, expected }) => {
+			expect(wasEverPublished(part, withdrawn)).toBe(expected);
 		}
 	);
 });
@@ -371,17 +406,6 @@ describe("deleteLeavesOf", () => {
 			},
 		},
 		{
-			// Taken back, it reads as to review; only a caller that knows it was withdrawn can say so.
-			case: "a middle part before a withdrawn part the caller knows of",
-			shown: WEDNESDAY_TO_FRIDAY,
-			parts: [WEDNESDAY_TO_FRIDAY, SATURDAY],
-			withdrawn: [SATURDAY.scheduleId],
-			expected: {
-				daysWithoutRoster: daysOf(WEDNESDAY_TO_FRIDAY),
-				publishedLater: daysOf(SATURDAY),
-			},
-		},
-		{
 			case: "a middle part before two published parts, naming the nearest",
 			shown: WEDNESDAY_TO_FRIDAY,
 			parts: [
@@ -395,18 +419,10 @@ describe("deleteLeavesOf", () => {
 			},
 		},
 		{
-			case: "a middle part before a withdrawn part, known through publishedOnce",
+			// A withdrawn part is to review: a run by dates still reaches the days before it, so they are not lost.
+			case: "a middle part before a withdrawn part",
 			shown: WEDNESDAY_TO_FRIDAY,
 			parts: [WEDNESDAY_TO_FRIDAY, { ...SATURDAY, publishedOnce: true }],
-			expected: {
-				daysWithoutRoster: daysOf(WEDNESDAY_TO_FRIDAY),
-				publishedLater: daysOf(SATURDAY),
-			},
-		},
-		{
-			case: "a middle part before a withdrawn part the caller doesn't know of",
-			shown: WEDNESDAY_TO_FRIDAY,
-			parts: [WEDNESDAY_TO_FRIDAY, SATURDAY],
 			expected: {
 				daysWithoutRoster: daysOf(WEDNESDAY_TO_FRIDAY),
 				laterDays: daysOf(SATURDAY),
@@ -416,14 +432,13 @@ describe("deleteLeavesOf", () => {
 		case: string;
 		shown: typeof WEDNESDAY_TO_FRIDAY;
 		parts: Array<typeof WEDNESDAY_TO_FRIDAY & { publishedOnce?: boolean }>;
-		withdrawn?: Array<string>;
 		expected: object;
 	}>)(
 		"given_$case_when_deleted_then_saysWhatItLeaves",
-		({ shown, parts, withdrawn, expected }) => {
-			expect(
-				deleteLeavesOf(shown.scheduleId, daysOf(shown), parts, withdrawn)
-			).toEqual(expected);
+		({ shown, parts, expected }) => {
+			expect(deleteLeavesOf(shown.scheduleId, daysOf(shown), parts)).toEqual(
+				expected
+			);
 		}
 	);
 });

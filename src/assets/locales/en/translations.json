@@ -4506,7 +4506,7 @@
 			"leaveWithTime": "{{leave}} {{time}}",
 			"regenerateWeek": "Regenerate this week",
 			"regenerateDays": "Regenerate these days",
-			"laterPartPublished": "A later schedule of this week has been published, and it was worked out from these days, so this one can’t be generated again. Change its roster by hand instead."
+			"laterPartPublished": "A later schedule of this week is published, or was published and withdrawn, and it was worked out from these days, so this one can’t be generated again. Change its roster by hand, or choose these days on the Generate page."
 		},
 		"myRoster": {
 			"title": "My roster · {{department}} · {{period}}",
@@ -4675,8 +4675,8 @@
 			"cancel": "Cancel",
 			"inProgress": "This schedule is being generated. Try again once the run finishes.",
 			"published": "This roster is published, so it can’t be regenerated or deleted. Change its days on the roster instead.",
-			"oncePublished": "Staff were told of changes to this roster while it was published, so it can’t be generated again. Correct it with roster changes, or delete it and schedule its days again.",
-			"laterPartPublished": "A later schedule of this week has been published, and it was worked out from these days, so this one can’t be generated again. Change its roster by hand instead.",
+			"oncePublished": "Staff were told of changes to this roster while it was published, so it can’t be generated again here. Correct it with roster changes, or choose its days on the Generate page: a new roster is worked out and this one is kept.",
+			"laterPartPublished": "A later schedule of this week is published, or was published and withdrawn, and it was worked out from these days, so this one can’t be generated again. Change its roster by hand, or choose these days on the Generate page.",
 			"oncePublishedTitle": "Generate this published roster again?",
 			"oncePublishedSeen": "Staff saw this roster while it was published.",
 			"oncePublishedReplaced": "Every shift may change, and every change made by hand since is replaced.",
@@ -5777,8 +5777,8 @@
 				"summary_other": "{{count}} days to generate, {{range}}",
 				"restSummary_one": "{{count}} more day after them, scheduled again with its week’s own shifts and rules",
 				"restSummary_other": "{{count}} more days after them, scheduled again with their week’s own shifts and rules",
-				"keptNote_one": "{{days}} has been published and stays as it is.",
-				"keptNote_other": "{{days}} have been published and stay as they are.",
+				"keptNote_one": "{{days}} is published and stays as it is.",
+				"keptNote_other": "{{days}} are published and stay as they are.",
 				"redoNote_one": "{{days}} is to review. Its roster stays until the new one is ready, then it is replaced and the rest of its week is worked out again. Published days are never touched.",
 				"redoNote_other": "{{days}} are to review. Their roster stays until the new one is ready, then it is replaced and the rest of their week is worked out again. Published days are never touched.",
 				"restNote_one": "{{days}} is scheduled again after the new days are ready.",
@@ -5802,6 +5802,18 @@
 			"generate": {
 				"hint_one": "Generating works out {{count}} day, {{range}}. Nothing is published by generating: staff see nothing new until you publish this day.",
 				"hint_other": "Generating works out {{count}} days, {{range}}. Nothing is published by generating: staff see nothing new until you publish these days."
+			},
+			"replace": {
+				"title": "Replace the roster to review?",
+				"body_one": "There is a roster to review on {{days}}. Generating works this day out again and replaces it.",
+				"body_other": "There is a roster to review on {{days}}. Generating works these days out again and replaces it.",
+				"seen": "Staff saw the roster for {{days}} while it was published.",
+				"publishAgain": "Publish the new roster for staff to see it.",
+				"handChanges_one": "{{count}} change made by hand will be replaced.",
+				"handChanges_other": "{{count}} changes made by hand will be replaced.",
+				"publishedStay": "Published days stay as they are.",
+				"confirm": "Generate and replace",
+				"cancel": "Cancel"
 			},
 			"create": {
 				"title": "Generate",

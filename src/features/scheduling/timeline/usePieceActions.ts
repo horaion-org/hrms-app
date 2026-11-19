@@ -111,10 +111,7 @@ export const usePieceActions = (
 					)
 				: [],
 			redo: partRedoOf(schedule, weekParts),
-			lastPublishedPartStart: lastPublishedPartStartOf(
-				weekParts,
-				schedule.publicationWithdrawnAt ? [schedule.scheduleId] : []
-			),
+			lastPublishedPartStart: lastPublishedPartStartOf(weekParts),
 		},
 		(days) => formatPeriod({ start: days.from, end: days.to }, language),
 		t

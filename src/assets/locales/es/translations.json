@@ -4306,7 +4306,7 @@
 			"leaveWithTime": "{{leave}} {{time}}",
 			"regenerateWeek": "Regenerar esta semana",
 			"regenerateDays": "Regenerar estos días",
-			"laterPartPublished": "Un horario posterior de esta semana ya se ha publicado y se calculó a partir de estos días, así que este no se puede generar de nuevo. Cambia su cuadrante a mano."
+			"laterPartPublished": "Un horario posterior de esta semana está publicado, o se publicó y se retiró, y se calculó a partir de estos días, así que este no se puede generar de nuevo. Cambia su cuadrante a mano, o elige estos días en la página Generar."
 		},
 		"myRoster": {
 			"title": "Mi cuadrante · {{department}} · {{period}}",
@@ -4475,8 +4475,8 @@
 			"cancel": "Cancelar",
 			"inProgress": "Este horario se está generando. Inténtalo de nuevo cuando termine la ejecución.",
 			"published": "Este cuadrante está publicado, así que no se puede regenerar ni eliminar. Cambia sus días en el cuadrante.",
-			"oncePublished": "Se avisó al personal de cambios en este cuadrante mientras estaba publicado, así que no se puede generar de nuevo. Corrígelo con cambios en el cuadrante, o elimínalo y vuelve a programar sus días.",
-			"laterPartPublished": "Un horario posterior de esta semana ya se ha publicado y se calculó a partir de estos días, así que este no se puede generar de nuevo. Cambia su cuadrante a mano.",
+			"oncePublished": "Se avisó al personal de cambios en este cuadrante mientras estuvo publicado, así que no se puede generar de nuevo aquí. Corrígelo con cambios en el cuadrante, o elige sus días en la página Generar: se calcula un cuadrante nuevo y este se conserva.",
+			"laterPartPublished": "Un horario posterior de esta semana está publicado, o se publicó y se retiró, y se calculó a partir de estos días, así que este no se puede generar de nuevo. Cambia su cuadrante a mano, o elige estos días en la página Generar.",
 			"oncePublishedTitle": "¿Generar de nuevo este cuadrante publicado?",
 			"oncePublishedSeen": "El personal vio este cuadrante mientras estaba publicado.",
 			"oncePublishedReplaced": "Cualquier turno puede cambiar, y se reemplaza cada cambio hecho a mano desde entonces.",
@@ -5577,8 +5577,8 @@
 				"summary_other": "{{count}} días por generar, {{range}}",
 				"restSummary_one": "{{count}} día más después, que se vuelve a programar con los turnos y reglas de su semana",
 				"restSummary_other": "{{count}} días más después, que se vuelven a programar con los turnos y reglas de su semana",
-				"keptNote_one": "{{days}} ya se ha publicado y se queda como está.",
-				"keptNote_other": "{{days}} ya se han publicado y se quedan como están.",
+				"keptNote_one": "{{days}} está publicado y se queda como está.",
+				"keptNote_other": "{{days}} están publicados y se quedan como están.",
 				"redoNote_one": "{{days}} está por revisar. Su cuadrante se mantiene hasta que el nuevo esté listo; entonces se reemplaza y el resto de su semana se calcula de nuevo. Los días publicados nunca se tocan.",
 				"redoNote_other": "{{days}} están por revisar. Su cuadrante se mantiene hasta que el nuevo esté listo; entonces se reemplaza y el resto de su semana se calcula de nuevo. Los días publicados nunca se tocan.",
 				"restNote_one": "{{days}} se vuelve a programar cuando los nuevos días estén listos.",
@@ -5602,6 +5602,18 @@
 			"generate": {
 				"hint_one": "Generar calcula {{count}} día, {{range}}. Generar no publica nada: el personal no ve nada nuevo hasta que publiques este día.",
 				"hint_other": "Generar calcula {{count}} días, {{range}}. Generar no publica nada: el personal no ve nada nuevo hasta que publiques estos días."
+			},
+			"replace": {
+				"title": "¿Reemplazar el cuadrante por revisar?",
+				"body_one": "Hay un cuadrante por revisar en {{days}}. Al generar, este día se calcula de nuevo y el cuadrante se reemplaza.",
+				"body_other": "Hay un cuadrante por revisar en {{days}}. Al generar, estos días se calculan de nuevo y el cuadrante se reemplaza.",
+				"seen": "El personal vio el cuadrante de {{days}} mientras estuvo publicado.",
+				"publishAgain": "Publica el nuevo cuadrante para que el personal lo vea.",
+				"handChanges_one": "Se reemplazará {{count}} cambio hecho a mano.",
+				"handChanges_other": "Se reemplazarán {{count}} cambios hechos a mano.",
+				"publishedStay": "Los días publicados se quedan como están.",
+				"confirm": "Generar y reemplazar",
+				"cancel": "Cancelar"
 			},
 			"create": {
 				"title": "Generar",
