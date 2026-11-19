@@ -17,7 +17,8 @@ const ChangeTile = ({ face }: { face: ChangeTileFace }): FunctionComponent => {
 	if (face.kind === "day")
 		return (
 			<span
-				className={`rounded border border-dashed px-1.5 py-0.5 text-xs whitespace-nowrap ${rosterLooks.off}`}
+				className={`max-w-full truncate rounded border border-dashed px-1.5 py-0.5 text-xs whitespace-nowrap ${rosterLooks.off}`}
+				title={face.label}
 			>
 				{face.label}
 			</span>
@@ -26,19 +27,22 @@ const ChangeTile = ({ face }: { face: ChangeTileFace }): FunctionComponent => {
 		{ startTime: face.times.start, endTime: face.times.end },
 		t
 	);
+	const text = `${face.name} ${time}`;
 	return (
 		<span
-			className="rounded border px-1.5 py-0.5 text-xs font-medium whitespace-nowrap text-neutral-900 tabular-nums"
+			className="max-w-full truncate rounded border px-1.5 py-0.5 text-xs font-medium whitespace-nowrap text-neutral-900 tabular-nums"
 			style={shiftTileStyle(face.colour)}
+			title={text}
 		>
-			{`${face.name} ${time}`}
+			{text}
 		</span>
 	);
 };
 
 /**
  * A change drawn as the roster's own tiles, one before → after pair per day,
- * a stretch's "+2 h" after the tile it widens.
+ * a stretch's "+2 h" after the tile it widens. A tile never grows past its
+ * column: it is cut short, its title holding the whole of it.
  */
 export const ChangeTilePairs = ({
 	pairs,
