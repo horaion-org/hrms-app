@@ -31,7 +31,7 @@ const deletionSchema = z.object({
 	deletedAt: z.string(),
 	/** Who deleted it; null for a schedule deleted before the API recorded who. */
 	deletedByName: z.string().nullable(),
-	/** A manager deleted it, or a later run replaced it; null when not recorded. */
+	/** A manager deleted it, or a later run replaced it; null when not recorded, which reads "Deleted on …". */
 	cause: deletionCauseSchema,
 });
 

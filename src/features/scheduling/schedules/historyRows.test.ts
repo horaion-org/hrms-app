@@ -65,7 +65,8 @@ describe("deletionLineOf", () => {
 		["REPLACED", null, "replacedLine", undefined],
 		// Deleted before the API recorded who and why.
 		[null, null, "onLine", undefined],
-		[null, "Lina Tan", "byLine", "Lina Tan"],
+		// No cause recorded: no one is named, even when the API holds a name.
+		[null, "Lina Tan", "onLine", undefined],
 	] as const)(
 		"given cause %s and the name %s, words it with %s",
 		(cause, deletedByName, line, name) => {
@@ -100,6 +101,7 @@ describe("deletionSentence", () => {
 	it.each([
 		["MANAGER", "Lina Tan", "Deleted by Lina Tan on 15 Oct 2026"],
 		["REPLACED", "Lina Tan", "Replaced by a new roster on 15 Oct 2026"],
+		["MANAGER", null, "Deleted on 15 Oct 2026"],
 		[null, null, "Deleted on 15 Oct 2026"],
 	] as const)(
 		"given cause %s and the name %s, says so in words",

@@ -243,15 +243,48 @@ describe("a deleted schedule's record", () => {
 		expect(within(offers).queryByRole("button")).toBeNull();
 	});
 
-	it("leaves the cover offers out when none was sent", async () => {
+	it.each([
+		["none was sent", []],
+		// The API sends null to a reader without schedule:edit_shift at the Department.
+		["the reader may not read them", null],
+	] as const)("leaves the cover offers out when %s", async (_, coverOffers) => {
 		await openRecord({
 			...signedIn(),
-			[`GET ${RECORD}`]: ok(recordFixture({ coverOffers: [] })),
+			[`GET ${RECORD}`]: ok(
+				recordFixture({ coverOffers: coverOffers && [...coverOffers] })
+			),
 		});
 
+		// The record still opens: its roster shows, without the Cover offers part.
 		await screen.findByRole("button", { name: "Ben Ong, Fri 11:00 – 13:00" });
 		expect(screen.queryByRole("region", { name: "Cover offers" })).toBeNull();
+		expect(screen.queryByRole("alert")).toBeNull();
 	});
+
+	it.each([
+		["no name", "MANAGER", null],
+		["no cause", null, "Lina Tan"],
+		["neither who nor why", null, null],
+	] as const)(
+		"says only when it was deleted, given %s",
+		async (_, cause, deletedByName) => {
+			await openRecord({
+				...signedIn(),
+				[`GET ${RECORD}`]: ok(
+					recordFixture({
+						deletion: {
+							deletedAt: "2026-10-15T03:00:00Z",
+							deletedByName,
+							cause,
+						},
+					})
+				),
+			});
+
+			expect(await screen.findByText("Deleted on Oct 15, 2026")).toBeVisible();
+			expect(screen.queryByText(/Deleted by/)).toBeNull();
+		}
+	);
 
 	it.each([
 		["without schedule:read anywhere", [], undefined],

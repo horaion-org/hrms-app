@@ -42,14 +42,15 @@ export type DeletionLine = {
 
 /**
  * Which line says how a schedule was deleted: replaced by a later run, deleted
- * by a named manager, or only when (the API recorded neither who nor why).
+ * by a named manager, or only when. A cause the API did not record names no
+ * one, whoever it holds as the deleter: only a manager's delete is said to be theirs.
  */
 export const deletionLineOf = ({
 	cause,
 	deletedByName,
 }: ScheduleDeletion): DeletionLine => {
 	if (cause === "REPLACED") return { labelKey: `${key}.replacedLine` };
-	if (deletedByName !== null)
+	if (cause === "MANAGER" && deletedByName !== null)
 		return { labelKey: `${key}.byLine`, name: deletedByName };
 	return { labelKey: `${key}.onLine` };
 };

@@ -36,16 +36,30 @@ describe("deletedScheduleSchema", () => {
 		expect(deletedScheduleSchema.parse(deleted)).toEqual(deleted);
 	});
 
-	it("reads a schedule deleted before who and why were recorded", () => {
-		const deletion = {
-			deletedAt: "2026-10-15T03:00:00Z",
-			deletedByName: null,
-			cause: null,
-		};
+	it.each([
+		["no name", { deletedByName: null, cause: "MANAGER" }],
+		["no cause", { deletedByName: "Lina Tan", cause: null }],
+		["neither who nor why", { deletedByName: null, cause: null }],
+	] as const)("reads a deletion with %s as the API sends it", (_, recorded) => {
+		const deletion = { deletedAt: "2026-10-15T03:00:00Z", ...recorded };
 
 		expect(
 			deletedScheduleSchema.parse(deletedScheduleFixture({ deletion })).deletion
 		).toEqual(deletion);
+	});
+
+	it("reads a row as the API builds it: once published, with a field this build does not know", () => {
+		const row = deletedScheduleFixture({
+			wasPublished: true,
+			publicationWithdrawnAt: "2026-10-14T02:00:00Z",
+		});
+
+		const parsed = deletedScheduleSchema.parse({
+			...row,
+			publication: { ...row.publication, waitingForWeek: null },
+		});
+
+		expect(parsed).toEqual(row);
 	});
 
 	it("reads a cause this build does not know as none, so the row still shows", () => {

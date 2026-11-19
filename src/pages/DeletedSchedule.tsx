@@ -176,7 +176,8 @@ const DeletedScheduleRecord = ({
 					}}
 				/>
 			)}
-			{schedule.coverOffers.length > 0 && (
+			{/* Null where the reader may not read cover offers; empty where none was sent. */}
+			{schedule.coverOffers !== null && schedule.coverOffers.length > 0 && (
 				<CoverOfferRecords offers={schedule.coverOffers} />
 			)}
 		</>
