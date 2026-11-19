@@ -172,4 +172,45 @@ describe("BeforeGeneratePanel", () => {
 			screen.queryByRole("link", { name: "Open leave requests" })
 		).toBeNull();
 	});
+
+	it("given_aRunReplacingARosterToReview_when_generateIsClicked_then_asksFirstAndRunsOnlyOnceConfirmed", async () => {
+		const user = userEvent.setup();
+		const { onGenerate } = renderPanel(undefined, {
+			replaces: {
+				days: [{ from: "2026-11-19", to: "2026-11-22" }],
+				seenByStaff: [],
+				handChanges: 0,
+			},
+		});
+
+		await user.click(generate());
+		const dialog = screen.getByRole("dialog", {
+			name: "Replace the roster to review?",
+		});
+		expect(dialog).toHaveTextContent(
+			/There is a roster to review on Nov 19\s?–\s?22, 2026\./
+		);
+		expect(onGenerate).not.toHaveBeenCalled();
+
+		// Cancel closes the question and generates nothing.
+		await user.click(screen.getByRole("button", { name: "Cancel" }));
+		expect(screen.queryByRole("dialog")).toBeNull();
+		expect(onGenerate).not.toHaveBeenCalled();
+
+		await user.click(generate());
+		await user.click(
+			screen.getByRole("button", { name: "Generate and replace" })
+		);
+		expect(screen.queryByRole("dialog")).toBeNull();
+		expect(onGenerate).toHaveBeenCalledTimes(1);
+	});
+
+	it("given_aRunFillingOnlyEmptyDays_when_generateIsClicked_then_runsAtOnceWithoutAsking", async () => {
+		const { onGenerate } = renderPanel(undefined, { replaces: undefined });
+
+		await userEvent.click(generate());
+
+		expect(screen.queryByRole("dialog")).toBeNull();
+		expect(onGenerate).toHaveBeenCalledTimes(1);
+	});
 });
