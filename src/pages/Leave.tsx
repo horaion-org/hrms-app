@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { ISO_DATE_FORMAT } from "@/common/isoDate";
-import type { TFunction } from "i18next";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Refusal } from "@/common/refusal";
@@ -21,6 +20,7 @@ import { LeaveRangeNavigator } from "@/features/leave/LeaveRangeNavigator";
 import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
 import { LinkedLeaveRequest } from "@/features/leave/LinkedLeaveRequest";
 import { LeaveRequests } from "@/features/leave/LeaveRequests";
+import { leaveListProblemOf } from "@/features/leave/leaveListProblem";
 import { applyRefusal, type ApplyField } from "@/features/leave/leaveRefusal";
 import {
 	leaveQueryOf,
@@ -41,7 +41,6 @@ import {
 	useLeaveRequests,
 	useMyLeaveRequests,
 	usePendingLeaveCount,
-	type LeaveList,
 } from "@/features/leave/useLeaveRequests";
 import { workspaceQuery } from "@/features/workspace/api";
 import { LEAVE_READ_KEYS } from "@/features/workspace/permissionKeys";
@@ -72,19 +71,6 @@ type LeaveDialogState = {
 type View = "mine" | "requests" | "timeline";
 
 const VIEWS: ReadonlyArray<View> = ["mine", "requests", "timeline"];
-
-/** The copy a list that is not ready is explained with, if any. */
-const problemOf = (
-	list: LeaveList,
-	t: TFunction,
-	own: boolean
-): { message: string; alert: boolean } | undefined => {
-	if (list.status === "hidden")
-		return { message: t("leave.hidden"), alert: false };
-	if (list.status === "error")
-		return { message: t(own ? "leave.myFailed" : "leave.failed"), alert: true };
-	return undefined;
-};
 
 /**
  * Leave, in three tabs. "My leave" is every member's own requests and their
@@ -180,7 +166,7 @@ export const Leave = (): FunctionComponent => {
 		applyActions.record.isPending;
 	const current =
 		view === "mine" ? mine : view === "requests" ? list : timeline;
-	const listProblem = problemOf(current, t, view === "mine");
+	const listProblem = leaveListProblemOf(current, view === "mine");
 	// The timeline has no status filter; My leave has no Department. The Branch is the header's scope.
 	const showsStatus = view !== "timeline";
 	const showsDepartment = team && offersDepartmentChoice(units);
@@ -389,7 +375,7 @@ export const Leave = (): FunctionComponent => {
 						data-alert={listProblem.alert || undefined}
 						role={listProblem.alert ? "alert" : undefined}
 					>
-						{listProblem.message}
+						{t(listProblem.key)}
 					</p>
 				) : (
 					<TabPanels>
