@@ -35,6 +35,7 @@ import { AccountMenu } from "@/features/auth/AccountMenu";
 import { usableCompanies } from "@/features/auth/currentCompany";
 import { logOut } from "@/features/auth/session";
 import { useAvailabilityViews } from "@/features/availability/useAvailability";
+import { useLeaveViews } from "@/features/leave/useLeaveRequests";
 import { SCHEDULING_KEYS } from "@/features/scheduling/schedulingSearch";
 import {
 	ORGANISATION_READ_KEYS,
@@ -64,6 +65,7 @@ export const MainLayout = (): FunctionComponent => {
 		? t("shell.expandMenu")
 		: t("shell.collapseMenu");
 	const availability = useAvailabilityViews();
+	const leave = useLeaveViews();
 	// The Branch the page lists, where it lists by Branch: the one scope shared by every list.
 	const branchScope = useHeaderBranchScope();
 	// The greeting belongs to the dashboard; other pages keep the header for their scope or nothing.
@@ -238,14 +240,16 @@ export const MainLayout = (): FunctionComponent => {
 							to="/organisation"
 						/>
 					</Can>
-					{/* Leave is for everyone: a member's own leave needs nothing granted. */}
-					<SidebarItem
-						activeIcon={LeaveFilledIcon}
-						collapsed={collapsed}
-						icon={LeaveIcon}
-						label={t("shell.navigation.leave")}
-						to="/leave"
-					/>
+					{/* Leave is offered to everyone but a part-timer, for their own, and to anyone who may read others'. */}
+					{(leave.mine || leave.team) && (
+						<SidebarItem
+							activeIcon={LeaveFilledIcon}
+							collapsed={collapsed}
+							icon={LeaveIcon}
+							label={t("shell.navigation.leave")}
+							to="/leave"
+						/>
+					)}
 					{/* Shift preferences are for everyone: a member's own need nothing granted. */}
 					<SidebarItem
 						activeIcon={FillShiftsIcon}
