@@ -34,8 +34,17 @@ afterEach(() => {
 });
 
 const MY_ROSTER_DAYS = "/api/v1/companies/c-1/me/roster-days";
+const MY_ROSTER = "/api/v1/companies/c-1/me/schedules/s-1";
 
 type Routes = Parameters<typeof stubApi>[0];
+
+const FRONT_OFFICE = {
+	scheduleId: "s-1",
+	name: "Front Office - Week 42",
+	branchName: "North",
+	departmentName: "Front Office",
+	timeZone: "Asia/Singapore",
+};
 
 /** Signed in to company c-1 as a member holding no scheduling permission. */
 const signedInAsWorker = (): Routes => ({
@@ -47,30 +56,7 @@ const signedInAsWorker = (): Routes => ({
 	},
 });
 
-/** Aisha's own week on s-1, Monday to Sunday: four shifts, leave on Friday, a day off and a rest day. */
-const aishaWeekWithLeave = (): Array<{
-	scheduleId: string;
-	assignment: unknown;
-}> =>
-	scheduleAssignmentsFixture()
-		.filter((row) => row.member?.membershipId === "m-1")
-		.map((row) => ({
-			scheduleId: "s-1",
-			assignment:
-				row.day === "2026-10-16"
-					? {
-							...row,
-							off: true,
-							offReason: "LEAVE",
-							dayType: null,
-							shift: null,
-							jobTitle: null,
-							leaveTypeName: "Annual leave",
-						}
-					: row,
-		}));
-
-/** Her days from 12 October; any other two weeks answer with nothing found. */
+/** The rosters Aisha is on from 12 October, with her own rows; any other two weeks answer with nothing found. */
 const myRosterDaysReply = ({ search }: { search: string }): StubReply => {
 	const [from, to] = [...new URLSearchParams(search).values()];
 	const found = from === "2026-10-12";
@@ -80,106 +66,169 @@ const myRosterDaysReply = ({ search }: { search: string }): StubReply => {
 			from,
 			to,
 			rosters: found
-				? [
-						{
-							scheduleId: "s-1",
-							name: "Front Office - Week 42",
-							branchName: "North",
-							departmentName: "Front Office",
-							timeZone: "Asia/Singapore",
-							coveredFrom: "2026-10-12",
-							coveredTo: "2026-10-18",
-						},
-					]
+				? [{ ...FRONT_OFFICE, coveredFrom: "2026-10-12", coveredTo: "2026-10-18" }]
 				: [],
-			days: found ? aishaWeekWithLeave() : [],
+			days: found
+				? scheduleAssignmentsFixture()
+						.filter((row) => row.member?.membershipId === "m-1")
+						.map((assignment) => ({ scheduleId: "s-1", assignment }))
+				: [],
 		}),
 	};
 };
 
+/** The whole published roster s-1, every member's row, as the member's own read gives it. */
+const myRosterReply = (): StubReply => ({
+	status: 200,
+	body: envelope({
+		...FRONT_OFFICE,
+		periodStart: "2026-10-12",
+		periodEnd: "2026-10-18",
+		assignments: scheduleAssignmentsFixture(),
+	}),
+});
+
+/** Aisha's two weeks: the roster-days read and the whole roster both answer. */
+const aishasRoutes = (): Routes => ({
+	...signedInAsWorker(),
+	[`GET ${MY_ROSTER_DAYS}`]: myRosterDaysReply,
+	[`GET ${MY_ROSTER}`]: myRosterReply(),
+});
+
 const openMyRosterDays = async (
-	routes: Routes,
-	entry = "/me/schedules?from=2026-10-12"
+	routes: Routes
 ): Promise<ReturnType<typeof stubApi>> => {
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
 	const calls = stubApi(routes);
-	app = await openApp(entry);
+	app = await openApp("/me/schedules?from=2026-10-12");
 	renderAuthApp(app);
 	return calls;
 };
 
-it("shows two weeks of the member's own days: shifts, leave, a day off and days with no published roster", async () => {
-	await openMyRosterDays({
-		...signedInAsWorker(),
-		[`GET ${MY_ROSTER_DAYS}`]: myRosterDaysReply,
-	});
+/** The grid's row of the person named, once the whole roster is read. */
+const rowOf = (name: string): Promise<HTMLElement> =>
+	screen.findByRole("row", { name: new RegExp(name) });
 
-	const list = await screen.findByRole("list", { name: "Your days" });
-	const days = within(list).getAllByRole("listitem");
+it("shows every member of the published roster, the member's own row first", async () => {
+	await openMyRosterDays(aishasRoutes());
+
+	await rowOf("Ben Ong");
+	const grid = screen.getByRole("table", { name: "Staff by day" });
+	const names = within(grid)
+		.getAllByRole("rowheader")
+		.map((header) => header.textContent);
+	expect(names).toEqual([
+		expect.stringContaining("Aisha Rahman"),
+		expect.stringContaining("Ben Ong"),
+		expect.stringContaining("Chen Wei"),
+	]);
 	expect(screen.getByRole("heading", { level: 1 })).toHaveTextContent(
 		"My roster"
 	);
-	expect(days).toHaveLength(14);
-	expect(days[0]).toHaveTextContent("Mon, Oct 12");
-	expect(days[0]).toHaveTextContent("Front Office");
-	expect(days[0]).toHaveTextContent("Front Desk Lead");
-	expect(days[4]).toHaveTextContent("Annual leave");
-	expect(days[5]).toHaveTextContent("Day off");
-	for (const day of days.slice(7))
-		expect(day).toHaveTextContent("No published roster yet");
-	expect(days[6]).not.toHaveTextContent("No published roster yet");
+	expect(
+		screen.getByText(
+			"Your department’s published roster. Days not yet published stay empty."
+		)
+	).toBeInTheDocument();
 });
 
-it("links each roster the days come from to its whole team's roster", async () => {
-	await openMyRosterDays({
-		...signedInAsWorker(),
-		[`GET ${MY_ROSTER_DAYS}`]: myRosterDaysReply,
-	});
+it("shows another member's leave as the roster gives it, and a day with no published roster as empty", async () => {
+	await openMyRosterDays(aishasRoutes());
+
+	const ben = await rowOf("Ben Ong");
+	expect(
+		within(ben).getByTitle("Ben Ong, Wed, Oct 14: On leave, Published")
+	).toBeInTheDocument();
+	const aisha = await rowOf("Aisha Rahman");
+	expect(
+		within(aisha).getByTitle("Aisha Rahman, Mon, Oct 19: No roster")
+	).toBeInTheDocument();
+});
+
+it("links the roster to its own page", async () => {
+	await openMyRosterDays(aishasRoutes());
 
 	const link = await screen.findByRole("link", {
 		// formatRange puts thin spaces around the dash.
-		name: /^See the team’s roster: Front Office, Oct 12\s–\s18, 2026$/,
+		name: /^Open this roster: Front Office, Oct 12\s–\s18, 2026$/,
 	});
-	expect(link).toHaveTextContent("See the team’s roster");
+	expect(link).toHaveTextContent("Open this roster");
 	expect(link).toHaveAttribute("href", "/me/schedules/s-1");
+});
+
+/** A staff member has no scheduling key: every company read must be one of their own `/me` routes. */
+it("reads only the member's own routes, never a manager's schedule route", async () => {
+	const calls = await openMyRosterDays(aishasRoutes());
+
+	await rowOf("Ben Ong");
+	const companyPaths = calls
+		.map((call) => call.path)
+		.filter((path) => path.startsWith("/api/v1/companies/"));
+	expect(companyPaths).toContain(MY_ROSTER_DAYS);
+	expect(companyPaths).toContain(MY_ROSTER);
+	for (const path of companyPaths)
+		expect(path).toMatch(/^\/api\/v1\/companies\/c-1\/me\//);
 });
 
 it("moves two weeks forward and back, reading each two weeks shown", async () => {
 	const user = userEvent.setup();
-	const calls = await openMyRosterDays({
-		...signedInAsWorker(),
-		[`GET ${MY_ROSTER_DAYS}`]: myRosterDaysReply,
-	});
-	await screen.findByRole("list", { name: "Your days" });
+	const calls = await openMyRosterDays(aishasRoutes());
+	await rowOf("Ben Ong");
 
 	await user.click(screen.getByRole("button", { name: "Next two weeks" }));
 
 	expect(app?.router.state.location.search).toEqual({ from: "2026-10-26" });
-	const list = await screen.findByRole("list", { name: "Your days" });
-	expect(await within(list).findByText("Mon, Oct 26")).toBeInTheDocument();
 	expect(
-		within(list).getAllByText("No published roster yet")
-	).toHaveLength(14);
+		await screen.findByText("No one is rostered in these days yet.")
+	).toBeInTheDocument();
 	expect(
-		calls.filter((call) => call.path === MY_ROSTER_DAYS).map((call) => call.search)
+		calls
+			.filter((call) => call.path === MY_ROSTER_DAYS)
+			.map((call) => call.search)
 	).toContain("from=2026-10-26&to=2026-11-08");
 
 	await user.click(screen.getByRole("button", { name: "Previous two weeks" }));
 
 	expect(app?.router.state.location.search).toEqual({ from: "2026-10-12" });
-	const back = await screen.findByRole("list", { name: "Your days" });
-	expect(await within(back).findByText("Mon, Oct 12")).toBeInTheDocument();
+	expect(await rowOf("Chen Wei")).toBeInTheDocument();
+});
+
+it("says the rosters are loading while the whole roster is read", async () => {
+	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
+	stubApi(aishasRoutes());
+	// The whole roster's read never answers.
+	const answered = globalThis.fetch;
+	vi.stubGlobal("fetch", (url: string, init?: RequestInit) =>
+		url.includes("/me/schedules/") ? new Promise(() => {}) : answered(url, init)
+	);
+	app = await openApp("/me/schedules?from=2026-10-12");
+	renderAuthApp(app);
+
+	expect(await screen.findByText("Loading the rosters…")).toBeInTheDocument();
+	expect(screen.queryByRole("row", { name: /Ben Ong/ })).toBeNull();
 });
 
 /** A refused read is not retried, so its failure line shows at once. */
-it("says the days could not be loaded when the read is refused", async () => {
+it("says the roster could not be loaded when the read is refused", async () => {
 	await openMyRosterDays({
 		...signedInAsWorker(),
 		[`GET ${MY_ROSTER_DAYS}`]: problemReply(400, "VALIDATION_FAILED"),
 	});
 
 	expect(await screen.findByRole("alert")).toHaveTextContent(
-		"Your days could not be loaded. Please try again."
+		"Your roster could not be loaded. Please try again."
 	);
-	expect(screen.queryByRole("list", { name: "Your days" })).toBeNull();
+	expect(screen.queryByRole("table", { name: "Staff by day" })).toBeNull();
+});
+
+it("says the rosters could not be loaded when a whole roster is refused", async () => {
+	await openMyRosterDays({
+		...signedInAsWorker(),
+		[`GET ${MY_ROSTER_DAYS}`]: myRosterDaysReply,
+		[`GET ${MY_ROSTER}`]: problemReply(404, "SCHEDULE_NOT_FOUND"),
+	});
+
+	expect(await screen.findByRole("alert")).toHaveTextContent(
+		"The rosters couldn't be loaded. Reload the page to try again."
+	);
 });
