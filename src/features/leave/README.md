@@ -2,7 +2,7 @@
 
 The authenticated `/leave` route, in three tabs. **My leave** is a member's own requests and their own
 applications (`/companies/{c}/me/leave-requests`), with nothing to grant, for anyone but a part-timer (a part-timer
-has My availability instead; someone whose employment type is not known yet keeps My leave). **Team requests** and **Team
+has My availability instead; someone not known to be part-time keeps My leave). **Team requests** and **Team
 timeline** are the company's requests one Branch at a time, read through the person's grants, with applying
 on a member's behalf, recording approved leave, approving, rejecting, changing and cancelling. Everything comes from the API (`features/leave/api.ts`); nothing
 is sampled or kept in page state beyond the timeline's window.

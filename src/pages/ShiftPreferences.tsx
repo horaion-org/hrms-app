@@ -16,7 +16,7 @@ import { PlusIcon } from "@/components/ui/Icon";
 import { PageToolbar } from "@/components/ui/PageToolbar";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
 import { WeekNavigator } from "@/components/ui/WeekNavigator";
-import { isPartTime } from "@/features/availability/availabilityModel";
+import { isPartTimeMember } from "@/features/availability/availabilityModel";
 import { useMyAvailability } from "@/features/availability/useAvailability";
 import { myProfileQuery } from "@/features/people/api";
 import {
@@ -70,7 +70,7 @@ const useAvailableWeekdays = (
 	weekStartMonday: string
 ): ReadonlyArray<Weekday> | undefined => {
 	const profile = useQuery(myProfileQuery(companyId));
-	const partTime = isPartTime(profile.data?.employmentType);
+	const partTime = isPartTimeMember(profile.data);
 	const availability = useMyAvailability(companyId, weekStartMonday, partTime);
 	if (!partTime || availability.status !== "ready") return undefined;
 	return availability.week.map((window) => window.day);

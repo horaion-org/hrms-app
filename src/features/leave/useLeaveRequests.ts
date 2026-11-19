@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { ApiProblemError } from "@/common/problem";
 import type { ListPage } from "@/common/schemas";
 import { myPendingApprovalsQuery } from "@/features/approvals/api";
-import { isPartTime } from "@/features/availability/availabilityModel";
+import { isPartTimeMember } from "@/features/availability/availabilityModel";
 import {
 	leaveRequestsQuery,
 	myLeaveRequestsQuery,
@@ -32,8 +32,8 @@ import {
 
 /**
  * Which tabs of the Leave page the person has, from data, never roles: My
- * leave for anyone but a part-timer (someone whose employment type is not
- * known yet included), the team views for anyone holding a leave read key
+ * leave for anyone but a part-timer (`isPartTimeMember`; someone not
+ * known to be part-time included), the team views for anyone holding a leave read key
  * somewhere. `pending` until both are known. The mirror of
  * `useAvailabilityViews`.
  */
@@ -54,7 +54,7 @@ export const useLeaveViews = (): LeaveViews => {
 	return {
 		status:
 			profile.isPending || access.status === "pending" ? "pending" : "ready",
-		mine: !isPartTime(profile.data?.employmentType),
+		mine: !isPartTimeMember(profile.data),
 		team: access.canAny(LEAVE_READ_KEYS, "anywhere"),
 	};
 };

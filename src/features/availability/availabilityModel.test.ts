@@ -9,7 +9,7 @@ import {
 	formatWindow,
 	hasOverride,
 	isMonday,
-	isPartTime,
+	isPartTimeMember,
 	isPastWeek,
 	toReplaceRequest,
 	validateWindows,
@@ -25,13 +25,29 @@ const row = (
 	endTime: string
 ): WindowDraft => ({ days, startTime, endTime });
 
-describe("isPartTime", () => {
-	it("given_eachEmploymentType_when_asked_then_onlyPartTimeIs", () => {
-		expect(isPartTime("PART_TIME")).toBe(true);
-		expect(isPartTime("FULL_TIME")).toBe(false);
-		expect(isPartTime("CONTRACT")).toBe(false);
-		expect(isPartTime(null)).toBe(false);
-		expect(isPartTime("")).toBe(false);
+describe("isPartTimeMember", () => {
+	/** The terms' flag decides; the stored label counts only where the flag is missing (rows from before the rule). */
+	it.each([
+		{ partTime: true, employmentType: null, partTimeMember: true },
+		{ partTime: false, employmentType: null, partTimeMember: false },
+		{ partTime: undefined, employmentType: null, partTimeMember: false },
+		{ partTime: null, employmentType: null, partTimeMember: false },
+		{ partTime: undefined, employmentType: "PART_TIME", partTimeMember: true },
+		{ partTime: null, employmentType: "PART_TIME", partTimeMember: true },
+		{ partTime: false, employmentType: "PART_TIME", partTimeMember: false },
+		{ partTime: true, employmentType: "CONTRACT", partTimeMember: true },
+		{ partTime: undefined, employmentType: "FULL_TIME", partTimeMember: false },
+	] as const)(
+		"given_flag_$partTime_and_label_$employmentType_when_asked_then_$partTimeMember",
+		({ partTime, employmentType, partTimeMember }) => {
+			expect(isPartTimeMember({ partTime, employmentType })).toBe(
+				partTimeMember
+			);
+		}
+	);
+
+	it("given_noProfileYet_when_asked_then_isNotPartTime", () => {
+		expect(isPartTimeMember(undefined)).toBe(false);
 	});
 });
 

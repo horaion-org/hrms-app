@@ -2,6 +2,7 @@ import dayjs from "dayjs";
 import { MINUTES_PER_DAY, minutesOfDay } from "@/common/timeOfDay";
 import { WEEKDAYS, weekdayOf, type Weekday } from "@/common/weekdays";
 import { mondayOf } from "@/common/weeks";
+import type { MemberProfileDetail } from "@/features/people/api";
 
 /*
  * A part-time member's work availability: a weekly pattern of windows, each
@@ -83,10 +84,16 @@ const MAX_WINDOWS_PER_DAY = 4;
 
 const MINUTES_PER_WEEK = 7 * MINUTES_PER_DAY;
 
-/** Only part-time members have a pattern; it is never shown or asked for anyone else. */
-export const isPartTime = (
-	employmentType: string | null | undefined
-): boolean => employmentType === "PART_TIME";
+/**
+ * Whether a member is part-time, from their profile: the API's `partTime`,
+ * worked out from their employment terms, else the stored label for rows
+ * written before the label stopped saying it. False while unknown. Only
+ * part-time members have a pattern; it is never shown or asked for anyone
+ * else.
+ */
+export const isPartTimeMember = (
+	profile: Pick<MemberProfileDetail, "partTime" | "employmentType"> | undefined
+): boolean => profile?.partTime ?? profile?.employmentType === "PART_TIME";
 
 /** Every window of an API answer, a pattern or a week's, Monday first. */
 export const windowsOf = (
