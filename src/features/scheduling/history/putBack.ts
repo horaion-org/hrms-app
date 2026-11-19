@@ -52,22 +52,34 @@ export const mayPutBack = (
 
 /**
  * Puts a deleted schedule back at its Department. It answers the schedule,
- * live again in the status it had; the API refuses with 409 when a run
- * replaced it or its days hold another roster, and 404 when it is not in
- * History (any more).
+ * live again in the status it had. The API refuses with 409 when a run
+ * replaced it, when its days hold a roster that can't be replaced, or when
+ * they hold one that can and `replaceRostersInTheWay` was not sent: with it,
+ * those rosters are deleted into History and this one takes their days. It
+ * answers 404 when the schedule is not in History (any more).
  */
 export const putBackSchedule = (
 	companyId: string,
 	unit: DepartmentPath,
-	scheduleId: string
+	scheduleId: string,
+	replaceRostersInTheWay = false
 ): Promise<Schedule> =>
 	apiRequest(
 		`${schedulePath(companyId, unit, scheduleId)}/restoration`,
 		scheduleSchema,
-		{ method: "POST" }
+		{
+			method: "POST",
+			// The flag is sent only once the person was warned and confirmed.
+			...(replaceRostersInTheWay && { body: { replaceRostersInTheWay: true } }),
+		}
 	);
 
-type PutBack = { unit: DepartmentPath; scheduleId: string };
+/** What a put-back sends; `replaceRostersInTheWay` only after the dialog's warning was confirmed. */
+export type PutBack = {
+	unit: DepartmentPath;
+	scheduleId: string;
+	replaceRostersInTheWay?: boolean;
+};
 
 /**
  * Putting a deleted schedule back. The schedule is cached at once from the
@@ -83,8 +95,8 @@ export const usePutBack = (
 	const reload = useReloadScheduling(companyId);
 	return useMutation({
 		meta: { successMessage: "scheduling.history.putBack.done" },
-		mutationFn: ({ unit, scheduleId }: PutBack) =>
-			putBackSchedule(companyId, unit, scheduleId),
+		mutationFn: ({ unit, scheduleId, replaceRostersInTheWay }: PutBack) =>
+			putBackSchedule(companyId, unit, scheduleId, replaceRostersInTheWay),
 		onSuccess: async (schedule) => {
 			client.setQueryData(
 				scheduleKey(companyId, schedule.scheduleId),
