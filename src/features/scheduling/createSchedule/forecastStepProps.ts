@@ -29,16 +29,16 @@ export const forecastStepPropsOf = (
 	demand: draft.demand,
 	mode: draft.forecastMode,
 	shifts,
-	onAllocationChange: (shiftId, jobTitleId, allocated) => {
+	onAllocationChange: (shiftId, jobTitleId, allocated): void => {
 		dispatch({ type: "allocationChanged", shiftId, jobTitleId, allocated });
 	},
-	onAutoFill: () => {
+	onAutoFill: (): void => {
 		dispatch({ type: "demandAutoFilled", shifts });
 	},
-	onDemandChange: (slotStart, jobTitleId, staff) => {
+	onDemandChange: (slotStart, jobTitleId, staff): void => {
 		dispatch({ type: "demandChanged", slotStart, jobTitleId, staff });
 	},
-	onModeChange: (mode) => {
+	onModeChange: (mode): void => {
 		dispatch({ type: "forecastModeChosen", mode });
 	},
 });
