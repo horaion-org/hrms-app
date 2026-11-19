@@ -9,7 +9,12 @@ import {
 	signedInShellRoutes,
 	type OpenedApp,
 } from "@/common/testing/openApp";
-import { accessPassReply, envelope, stubApi } from "@/common/testing/stubApi";
+import {
+	accessPassReply,
+	envelope,
+	stubApi,
+	type StubReply,
+} from "@/common/testing/stubApi";
 import { endSession } from "@/features/auth/session";
 import { renderAuthApp } from "@/features/auth/testing";
 import { PERMISSION_KEYS } from "@/features/workspace/permissionKeys";
@@ -34,6 +39,17 @@ afterEach(() => {
 	vi.restoreAllMocks();
 	localStorage.clear();
 });
+
+/** The shell's own profile reply, with another employment type. */
+const profileReplyOf = (employmentType: string): StubReply => {
+	const shellProfile = signedInShellRoutes()[
+		"GET /api/v1/companies/c-1/me/profile"
+	] as { status: number; body: { data: object } };
+	return {
+		status: 200,
+		body: envelope({ ...shellProfile.body.data, employmentType }),
+	};
+};
 
 /** Opens the signed-in Dashboard and returns its main navigation. */
 const openDashboard = async (): Promise<HTMLElement> => {
@@ -134,6 +150,52 @@ describe("MainLayout side menu", () => {
 			.filter((item) => item.childElementCount === 0);
 		expect(emptyItems.length).toBeGreaterThan(0);
 		for (const item of emptyItems) expect(item).toHaveClass("empty:hidden");
+	});
+
+	/** Leave is for full-timers and whoever reads others' leave; Availability for part-timers and whoever reads theirs. */
+	it.each([
+		{
+			who: "a part-timer with no key",
+			type: "PART_TIME",
+			keys: [],
+			offered: ["Dashboard", "My roster", "Shift preferences", "Availability"],
+		},
+		{
+			who: "a full-timer with no key",
+			type: "FULL_TIME",
+			keys: [],
+			offered: ["Dashboard", "My roster", "Leave", "Shift preferences"],
+		},
+		{
+			who: "a part-timer who may read the team's leave",
+			type: "PART_TIME",
+			keys: ["leave_request:read"],
+			offered: [
+				"Dashboard",
+				"My roster",
+				"Leave",
+				"Shift preferences",
+				"Availability",
+			],
+		},
+	])("offers $who the entries $offered", async ({ type, keys, offered }) => {
+		stubApi({
+			"POST /api/v1/public/sessions/refreshes": accessPassReply(),
+			"GET /api/v1/me": currentUserReply(),
+			...signedInShellRoutes(),
+			"GET /api/v1/me/workspace": {
+				status: 200,
+				body: envelope(companyWideWorkspace(keys)),
+			},
+			"GET /api/v1/companies/c-1/me/profile": profileReplyOf(type),
+		});
+		const navigation = await openDashboard();
+		await within(navigation).findByRole("link", { name: "Shift preferences" });
+
+		const labels = within(navigation)
+			.getAllByRole("link")
+			.map((link) => link.textContent);
+		expect(labels).toEqual(offered);
 	});
 
 	it("opens collapsed when this browser collapsed it before", async () => {
