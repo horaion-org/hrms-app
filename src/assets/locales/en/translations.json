@@ -4926,6 +4926,36 @@
 				"makeAll_one": "Give this person a {{to}} on one of their {{from}} in each of these weeks",
 				"makeAll_other": "Give each of these {{count}} people a {{to}} on one of their {{from}}",
 				"someDone": "{{done}} of {{total}} changed. The others need a look first: use each one’s own button."
+			},
+			"panel": {
+				"toFix_one": "{{count}} to fix",
+				"toFix_other": "{{count}} to fix",
+				"checking": "Checking the rules…",
+				"checked": "Checked {{time}}",
+				"checkedIncomplete": "Checked {{time}} · may be incomplete",
+				"checkAgain": "Check again",
+				"unchecked": "Not checked since your changes",
+				"checkNow": "Check now",
+				"asGenerated": "As generated",
+				"check": "Check",
+				"filtersLabel": "Show",
+				"filters": {
+					"all": "All",
+					"mustFix": "Must fix",
+					"ifPossible": "If possible"
+				},
+				"actions": {
+					"cover": "Cover",
+					"fix": "Fix",
+					"details": "Details",
+					"close": "Close"
+				},
+				"severity": {
+					"mustFix": "Must fix",
+					"ifPossible": "If possible",
+					"note": "Note"
+				},
+				"nothingHere": "Nothing here."
 			}
 		},
 		"rosterMarkers": {

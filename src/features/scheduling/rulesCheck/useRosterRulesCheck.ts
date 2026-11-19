@@ -25,8 +25,12 @@ export type RosterValidation = RosterRulesCheckState & {
 	revision: number;
 };
 
-/** The last answer this visit got, and the revision it was for. */
-export type LastValidation = { revision: number; check: RosterRulesCheck };
+/** The last answer this visit got, the revision it was for, and when it came (epoch milliseconds). */
+export type LastValidation = {
+	revision: number;
+	check: RosterRulesCheck;
+	checkedAt?: number;
+};
 
 /** A target that asks nothing: no roster may be validated here. */
 const NO_TARGET: RosterChangeTarget = {
@@ -69,7 +73,7 @@ export const useRosterRulesCheck = (
 	);
 	// The latest answer is remembered for the button once the query moves on to a new revision.
 	if (asked && query.data && last?.check !== query.data)
-		setLast({ revision, check: query.data });
+		setLast({ revision, check: query.data, checkedAt: query.dataUpdatedAt });
 	const ask = (): void => {
 		// An ask already in flight is the answer to wait for, never a second request.
 		if (query.isFetching) return;
