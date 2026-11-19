@@ -1127,4 +1127,188 @@ describe("Leave", () => {
 			});
 		});
 	});
+
+	describe("for a part-timer, who has My availability instead of My leave", () => {
+		const MY_PROFILE = "GET /api/v1/companies/c-1/me/profile";
+		const OWN_REQUEST = `${MY_LEAVE_PATH}/lr-own`;
+
+		/** The caller's own profile as the API sends it: no stored label, part-time by the terms' flag. */
+		const profileReply = (partTime: boolean): StubReply => ({
+			status: 200,
+			body: envelope({
+				membershipId: "m-c-1",
+				employeeCode: "EMP-1",
+				displayName: "José",
+				email: "jose@acme.test",
+				phone: null,
+				branchId: "b-1",
+				branchName: "Main branch",
+				departmentId: "d-1",
+				departmentName: "Sales",
+				jobTitleId: null,
+				jobTitleName: null,
+				status: "ACTIVE",
+				dateOfBirth: null,
+				employmentType: null,
+				partTime,
+				hireDate: "2026-01-05",
+				probationEndDate: null,
+				endDate: null,
+				reportsTo: null,
+				invitationPending: false,
+			}),
+		});
+
+		/** José's own request, filed for him before the rule or by a manager on his behalf. */
+		const ownRequest = (status: "PENDING" | "APPROVED"): StubReply => ({
+			status: 200,
+			body: envelope(
+				leaveFixture({
+					leaveRequestId: "lr-own",
+					membershipId: "m-c-1",
+					displayName: "José",
+					status,
+				})
+			),
+		});
+
+		it("lands a part-timer who may read the team's leave on Team requests, with no My leave tab", async () => {
+			const calls = stubApi({
+				...routes(),
+				[MY_PROFILE]: profileReply(true),
+			});
+			const { router } = await open("/leave");
+
+			expect(
+				await screen.findByRole("tab", { name: "Team requests" })
+			).toHaveAttribute("aria-selected", "true");
+			expect(screen.getAllByRole("tab")).toEqual([
+				screen.getByRole("tab", { name: "Team requests" }),
+				screen.getByRole("tab", { name: "Team timeline" }),
+			]);
+			await screen.findByText("Cheryl Ng");
+			// Named in the URL, so the header lists the view by Branch.
+			await waitFor(() => {
+				expect(router.state.location.search).toEqual({ view: "requests" });
+			});
+			expect(
+				screen.queryByRole("button", { name: "Apply for leave" })
+			).not.toBeInTheDocument();
+			expect(searchesOf(calls, MY_LEAVE_PATH)).toEqual([]);
+		});
+
+		/** A link naming a view they lack falls back the same way; it never errors. */
+		it.each(["/leave", "/leave?view=mine", "/leave?view=timeline"])(
+			"tells a part-timer with no key that Leave holds nothing for them at %s",
+			async (entry) => {
+				const calls = stubApi({
+					...routes(workspaceReply([])),
+					[MY_PROFILE]: profileReply(true),
+				});
+				await open(entry);
+
+				expect(
+					await screen.findByText(
+						"Leave is for full-time members and the people who manage it, so there’s nothing here for you in this company."
+					)
+				).toBeVisible();
+				expect(screen.queryByRole("tab")).not.toBeInTheDocument();
+				expect(screen.queryByRole("alert")).not.toBeInTheDocument();
+				expect(
+					screen.queryByRole("button", { name: "Apply for leave" })
+				).not.toBeInTheDocument();
+				expect(
+					screen.queryByRole("link", { name: "Leave" })
+				).not.toBeInTheDocument();
+				expect(
+					screen.getByRole("link", { name: "Availability" })
+				).toBeInTheDocument();
+				expect(searchesOf(calls, MY_LEAVE_PATH)).toEqual([]);
+				expect(listSearchesOf(calls)).toEqual([]);
+			}
+		);
+
+		it("opens a full-timer on My leave, as before", async () => {
+			stubApi({ ...routes(), [MY_PROFILE]: profileReply(false) });
+			await open("/leave");
+
+			expect(
+				await screen.findByRole("tab", { name: "My leave" })
+			).toHaveAttribute("aria-selected", "true");
+			expect(screen.getAllByRole("tab")).toHaveLength(3);
+			expect(
+				screen.queryByRole("link", { name: "Availability" })
+			).not.toBeInTheDocument();
+			expect(
+				screen.getByRole("button", { name: "Apply for leave" })
+			).toBeInTheDocument();
+		});
+
+		/** Withdrawing clears a request they are not meant to have; nothing applies or changes leave. */
+		it("shows a part-timer their own pending request from a link, offering only Withdraw", async () => {
+			stubApi({
+				...routes(workspaceReply([])),
+				[MY_PROFILE]: profileReply(true),
+				[`GET ${OWN_REQUEST}`]: ownRequest("PENDING"),
+				[`GET ${OWN_REQUEST}/changes`]: { status: 200, body: envelope([]) },
+			});
+			await open("/leave?requestId=lr-own");
+
+			// The loading dialog gives way to the request's own once it is read.
+			await screen.findByRole("button", { name: "Withdraw request" });
+			const dialog = screen.getByRole("dialog");
+			expect(within(dialog).getByText("Annual leave")).toBeVisible();
+			for (const action of [
+				"Apply for leave",
+				"Change leave…",
+				"Cancel leave…",
+				"Approve",
+				"Reject",
+			])
+				expect(
+					within(dialog).queryByRole("button", { name: action })
+				).not.toBeInTheDocument();
+		});
+
+		it("shows a part-timer their own approved request and its history from a link, with no action", async () => {
+			stubApi({
+				...routes(workspaceReply([])),
+				[MY_PROFILE]: profileReply(true),
+				[`GET ${OWN_REQUEST}`]: ownRequest("APPROVED"),
+				[`GET ${OWN_REQUEST}/changes`]: {
+					status: 200,
+					body: envelope([
+						{
+							kind: "RECORDED",
+							affectedDay: null,
+							beforeLeaveTypeName: null,
+							afterLeaveTypeName: null,
+							beforeStartDate: null,
+							beforeEndDate: null,
+							afterStartDate: null,
+							afterEndDate: null,
+							remark: null,
+							changedByMembershipId: "m-cheryl",
+							changedByName: "Cheryl Ng",
+							changedAt: "2026-05-02T08:00:00Z",
+						},
+					]),
+				},
+			});
+			await open("/leave?requestId=lr-own");
+
+			await screen.findByText(/^Recorded by Cheryl Ng · /);
+			const dialog = screen.getByRole("dialog");
+			expect(within(dialog).getByText("Annual leave")).toBeVisible();
+			for (const action of [
+				"Withdraw request",
+				"Apply for leave",
+				"Change leave…",
+				"Cancel leave…",
+			])
+				expect(
+					within(dialog).queryByRole("button", { name: action })
+				).not.toBeInTheDocument();
+		});
+	});
 });

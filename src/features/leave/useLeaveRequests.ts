@@ -1,7 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { ApiProblemError } from "@/common/problem";
 import type { ListPage } from "@/common/schemas";
 import { myPendingApprovalsQuery } from "@/features/approvals/api";
+import { isPartTimeMember } from "@/features/availability/availabilityModel";
 import {
 	leaveRequestsQuery,
 	myLeaveRequestsQuery,
@@ -13,10 +15,74 @@ import {
 	canDecideLeave,
 	leaveApprovalsWaitingOn,
 } from "@/features/leave/leaveApproval";
+import {
+	leaveViewOf,
+	leaveViewsOf,
+	type LeaveSearch,
+	type LeaveView,
+} from "@/features/leave/leaveSearch";
+import { myProfileQuery } from "@/features/people/api";
 import { LEAVE_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { recordScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
-import { useCurrentMembershipId } from "@/features/workspace/useCurrentCompany";
+import {
+	useCurrentCompanyId,
+	useCurrentMembershipId,
+} from "@/features/workspace/useCurrentCompany";
+
+/**
+ * Which tabs of the Leave page the person has, from data, never roles: My
+ * leave for anyone but a part-timer (`isPartTimeMember`; someone not
+ * known to be part-time included), the team views for anyone holding a leave read key
+ * somewhere. `pending` until both are known. The mirror of
+ * `useAvailabilityViews`.
+ */
+export type LeaveViews = {
+	status: "pending" | "ready";
+	mine: boolean;
+	team: boolean;
+};
+
+/** The person's Leave tabs, from their own profile and the workspace. */
+export const useLeaveViews = (): LeaveViews => {
+	const companyId = useCurrentCompanyId();
+	const access = useAccess();
+	const profile = useQuery({
+		...myProfileQuery(companyId),
+		enabled: companyId !== "",
+	});
+	return {
+		status:
+			profile.isPending || access.status === "pending" ? "pending" : "ready",
+		mine: !isPartTimeMember(profile.data),
+		team: access.canAny(LEAVE_READ_KEYS, "anywhere"),
+	};
+};
+
+/** The Leave page's tabs, and the one shown (`leaveViewOf`); none when the person has neither kind. */
+export type ShownLeaveView = {
+	offered: LeaveViews;
+	views: Array<LeaveView>;
+	view: LeaveView | undefined;
+};
+
+/**
+ * The person's Leave tabs and the one shown for the URL's `requested`. A
+ * team view shown by default, as for a part-timer who may read others'
+ * leave, is handed to `nameInUrl`, so the header lists by Branch.
+ */
+export const useShownLeaveView = (
+	requested: LeaveSearch["view"],
+	nameInUrl: (view: Exclude<LeaveView, "mine">) => void
+): ShownLeaveView => {
+	const offered = useLeaveViews();
+	const views = leaveViewsOf(offered);
+	const view = leaveViewOf(requested, views);
+	useEffect(() => {
+		if (view && view !== "mine" && view !== requested) nameInUrl(view);
+	}, [view, requested, nameInUrl]);
+	return { offered, views, view };
+};
 
 /**
  * One page of leave requests. `hidden` when the person's grants don't reach

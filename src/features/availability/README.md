@@ -50,7 +50,7 @@ Schedule wizard's warning about part-timers without availability is `scheduling/
 ## Permissions
 
 The sidebar offers the Module to every member, since everyone states their own shift preferences there. Mine is a
-part-timer's (from their own profile's employment type) and needs nothing granted. Team appears with the read key
+part-timer's (from their own profile's `partTime`, by their terms; `isPartTimeMember`) and needs nothing granted. Team appears with the read key
 held anywhere and offers the Branches where it is held at the Branch or a Department beneath it; the API lists only
 the part-timers of the units where it is held, so a Department-only grant lists that Department. Editing a row needs
 `work_availability:update` at that member's Department (or the company, for a member filed at none). The API

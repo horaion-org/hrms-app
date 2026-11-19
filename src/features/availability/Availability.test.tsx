@@ -61,7 +61,11 @@ const open = async (entry: string): Promise<OpenedApp> => {
 	return app;
 };
 
-const profileReply = (employmentType: string): StubReply => ({
+/** Part-time or full-time as the API says it: by the terms' `partTime` flag, with no stored label. */
+type Hours = "PART_TIME" | "FULL_TIME";
+
+/** The caller's own profile, as the API sends it for a member of these hours. */
+const profileReply = (hours: Hours): StubReply => ({
 	status: 200,
 	body: envelope({
 		membershipId: "m-c-1",
@@ -77,7 +81,8 @@ const profileReply = (employmentType: string): StubReply => ({
 		jobTitleName: "Sales associate",
 		status: "ACTIVE",
 		dateOfBirth: "1990-05-01",
-		employmentType,
+		employmentType: null,
+		partTime: hours === "PART_TIME",
 		hireDate: "2026-01-05",
 		probationEndDate: null,
 		endDate: null,
@@ -129,13 +134,13 @@ const workspaceReply = (
 });
 
 const routes = (
-	employmentType: string,
+	hours: Hours,
 	workspace: StubReply
 ): Record<string, StubReply> => ({
 	[REFRESH]: accessPassReply(),
 	[ME]: currentUserReply(),
 	[WORKSPACE]: workspace,
-	[MY_PROFILE]: profileReply(employmentType),
+	[MY_PROFILE]: profileReply(hours),
 	[`GET ${MINE_PATH}`]: {
 		status: 200,
 		body: envelope(weeklyAvailabilityFixture(WEEKDAY_MORNINGS)),

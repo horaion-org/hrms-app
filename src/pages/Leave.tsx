@@ -2,7 +2,6 @@ import { useQuery } from "@tanstack/react-query";
 import { getRouteApi } from "@tanstack/react-router";
 import dayjs from "dayjs";
 import { ISO_DATE_FORMAT } from "@/common/isoDate";
-import type { TFunction } from "i18next";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Refusal } from "@/common/refusal";
@@ -21,6 +20,7 @@ import { LeaveRangeNavigator } from "@/features/leave/LeaveRangeNavigator";
 import { LeaveRequestDialog } from "@/features/leave/LeaveRequestDialog";
 import { LinkedLeaveRequest } from "@/features/leave/LinkedLeaveRequest";
 import { LeaveRequests } from "@/features/leave/LeaveRequests";
+import { leaveListProblemOf } from "@/features/leave/leaveListProblem";
 import { applyRefusal, type ApplyField } from "@/features/leave/leaveRefusal";
 import {
 	leaveQueryOf,
@@ -41,7 +41,7 @@ import {
 	useLeaveRequests,
 	useMyLeaveRequests,
 	usePendingLeaveCount,
-	type LeaveList,
+	useShownLeaveView,
 } from "@/features/leave/useLeaveRequests";
 import { workspaceQuery } from "@/features/workspace/api";
 import { LEAVE_READ_KEYS } from "@/features/workspace/permissionKeys";
@@ -68,27 +68,9 @@ type LeaveDialogState = {
 	mode: "view" | "reject" | "approve" | "apply" | "applyOwn" | "record";
 };
 
-/** The three views, in tab order; the team views exist only with the read key held somewhere. */
-type View = "mine" | "requests" | "timeline";
-
-const VIEWS: ReadonlyArray<View> = ["mine", "requests", "timeline"];
-
-/** The copy a list that is not ready is explained with, if any. */
-const problemOf = (
-	list: LeaveList,
-	t: TFunction,
-	own: boolean
-): { message: string; alert: boolean } | undefined => {
-	if (list.status === "hidden")
-		return { message: t("leave.hidden"), alert: false };
-	if (list.status === "error")
-		return { message: t(own ? "leave.myFailed" : "leave.failed"), alert: true };
-	return undefined;
-};
-
 /**
- * Leave, in three tabs. "My leave" is every member's own requests and their
- * own applications, with nothing to grant. "Team requests" and "Team
+ * Leave, in three tabs. "My leave" is a member's own requests and their own
+ * applications, for anyone but a part-timer. "Team requests" and "Team
  * timeline" show the requests of the header's Branch (every Branch in
  * reach under "All branches"), optionally narrowed to one Department. Both
  * are read through the person's grants, with applying on behalf, approving
@@ -104,12 +86,16 @@ export const Leave = (): FunctionComponent => {
 	const navigate = route.useNavigate();
 	const ownMembershipId = useCurrentMembershipId();
 	const access = useAccess();
-	// "My leave" asks nothing of the workspace: it stays usable when the workspace is empty or failing.
-	const canRead = access.canAny(LEAVE_READ_KEYS, "anywhere");
+	// My leave asks nothing of the workspace; the team views need the read key somewhere.
+	const { offered, views, view } = useShownLeaveView(search.view, (shown) => {
+		void navigate({
+			search: (previous) => ({ ...previous, view: shown }),
+			replace: true,
+		});
+	});
 	const canApply = access.canAnywhere("leave_request:create");
 	const canRecord = access.canAnywhere("leave_request:review");
-	const view: View = canRead && search.view ? search.view : "mine";
-	const team = view !== "mine";
+	const team = view === "requests" || view === "timeline";
 	const workspace = useQuery({ ...workspaceQuery, retry });
 	const requested = unitSelectionOf(search);
 	// Resolved as the header resolves them, so the lists ask for the default Branch before the URL names one.
@@ -180,7 +166,7 @@ export const Leave = (): FunctionComponent => {
 		applyActions.record.isPending;
 	const current =
 		view === "mine" ? mine : view === "requests" ? list : timeline;
-	const listProblem = problemOf(current, t, view === "mine");
+	const listProblem = leaveListProblemOf(current, view === "mine");
 	// The timeline has no status filter; My leave has no Department. The Branch is the header's scope.
 	const showsStatus = view !== "timeline";
 	const showsDepartment = team && offersDepartmentChoice(units);
@@ -318,147 +304,157 @@ export const Leave = (): FunctionComponent => {
 			{team && noBranches && (
 				<p className="mt-8 text-sm text-neutral-700">{t("leave.noBranches")}</p>
 			)}
-			<Tabs
-				className="mt-10"
-				selectedIndex={VIEWS.indexOf(view)}
-				onChange={(index) => {
-					const next = VIEWS[index] ?? "mine";
-					show({ view: next === "mine" ? undefined : next });
-				}}
-			>
-				<TabList aria-label={t("leave.views")} className="-ml-1">
-					<Tab>{t("leave.myLeave")}</Tab>
-					{canRead && (
-						<Tab
-							count={pendingCount}
-							countLabel={t("leave.pendingCount", { count: pendingCount })}
-						>
-							{t("leave.teamRequests")}
-						</Tab>
-					)}
-					{canRead && <Tab>{t("leave.teamTimeline")}</Tab>}
-				</TabList>
-				<PageToolbar
-					actions={applyAction}
-					className="mt-6 mb-8"
-					label={t("leave.controls")}
-					chips={
-						chips.length > 0 && (
-							<FilterChips chips={chips} onClearAll={clearFilters} />
-						)
-					}
-					filters={
-						<>
-							{(showsDepartment || showsStatus) && (
-								<FiltersPopover count={chips.length}>
-									{showsDepartment && (
-										<DepartmentFilter
-											selection={units}
-											onChange={(department) => {
-												show({ department });
-											}}
-										/>
-									)}
-									{showsStatus && (
-										<LeaveStatusFilter
-											status={search.status}
-											onChange={(status) => {
-												show({ status });
-											}}
-										/>
-									)}
-								</FiltersPopover>
-							)}
-							{view === "timeline" && (
-								<LeaveRangeNavigator
-									range={range}
-									onRangeChange={(next) => {
-										setRange(next);
-										void navigate({
-											search: (previous) => ({ ...previous, day: undefined }),
-										});
-									}}
-								/>
-							)}
-						</>
-					}
-				/>
-				{listProblem ? (
-					<p
-						className="text-sm text-neutral-700 data-alert:text-error-700"
-						data-alert={listProblem.alert || undefined}
-						role={listProblem.alert ? "alert" : undefined}
-					>
-						{listProblem.message}
-					</p>
-				) : (
-					<TabPanels>
-						<TabPanel>
-							<LeaveRequests
-								own
-								canReview={() => false}
-								emptyState={t("leave.myEmpty")}
-								page={search.page ?? 1}
-								rows={mine.status === "ready" ? mine.items : []}
-								sort={myLeaveQueryOf(search).sort}
-								total={mine.status === "ready" ? mine.total : 0}
-								onPageChange={paging}
-								onOpen={(request) => {
-									setDialog({ request, mode: "view" });
-								}}
-								onSortChange={(sort) => {
-									show({ sort: sortParameter(sort) });
-								}}
-							/>
-						</TabPanel>
-						{canRead && (
-							<TabPanel>
-								<LeaveRequests
-									canReview={decision.canDecide}
-									page={search.page ?? 1}
-									rows={list.status === "ready" ? list.items : []}
-									sort={leaveQueryOf(search).sort}
-									total={list.status === "ready" ? list.total : 0}
-									onPageChange={paging}
-									onOpen={(request, decision) => {
-										setDialog({ request, mode: decision ?? "view" });
-									}}
-									onSortChange={(sort) => {
-										show({ sort: sortParameter(sort) });
-									}}
-								/>
-							</TabPanel>
+			{view ? (
+				<Tabs
+					className="mt-10"
+					selectedIndex={views.indexOf(view)}
+					onChange={(index) => {
+						const next = views[index] ?? "mine";
+						show({ view: next === "mine" ? undefined : next });
+					}}
+				>
+					<TabList aria-label={t("leave.views")} className="-ml-1">
+						{offered.mine && <Tab>{t("leave.myLeave")}</Tab>}
+						{offered.team && (
+							<Tab
+								count={pendingCount}
+								countLabel={t("leave.pendingCount", { count: pendingCount })}
+							>
+								{t("leave.teamRequests")}
+							</Tab>
 						)}
-						{canRead && (
-							<TabPanel>
-								{shownDay && (
-									<DaySwitcher
-										className="mb-6"
-										day={shownDay}
-										days={timelineDays}
-										onDayChange={(day) => {
+						{offered.team && <Tab>{t("leave.teamTimeline")}</Tab>}
+					</TabList>
+					<PageToolbar
+						actions={applyAction}
+						className="mt-6 mb-8"
+						label={t("leave.controls")}
+						chips={
+							chips.length > 0 && (
+								<FilterChips chips={chips} onClearAll={clearFilters} />
+							)
+						}
+						filters={
+							<>
+								{(showsDepartment || showsStatus) && (
+									<FiltersPopover count={chips.length}>
+										{showsDepartment && (
+											<DepartmentFilter
+												selection={units}
+												onChange={(department) => {
+													show({ department });
+												}}
+											/>
+										)}
+										{showsStatus && (
+											<LeaveStatusFilter
+												status={search.status}
+												onChange={(status) => {
+													show({ status });
+												}}
+											/>
+										)}
+									</FiltersPopover>
+								)}
+								{view === "timeline" && (
+									<LeaveRangeNavigator
+										range={range}
+										onRangeChange={(next) => {
+											setRange(next);
 											void navigate({
-												search: (previous) => ({
-													...previous,
-													day: dayParameter(timelineDays, day, today),
-												}),
+												search: (previous) => ({ ...previous, day: undefined }),
 											});
 										}}
 									/>
 								)}
-								<LeaveTimeline
-									range={range}
-									requests={timeline.status === "ready" ? timeline.items : []}
-									shownDay={shownDay}
-									onOpen={(request) => {
-										setDialog({ request, mode: "view" });
-									}}
-								/>
-							</TabPanel>
-						)}
-					</TabPanels>
-				)}
-			</Tabs>
+							</>
+						}
+					/>
+					{listProblem ? (
+						<p
+							className="text-sm text-neutral-700 data-alert:text-error-700"
+							data-alert={listProblem.alert || undefined}
+							role={listProblem.alert ? "alert" : undefined}
+						>
+							{t(listProblem.key)}
+						</p>
+					) : (
+						<TabPanels>
+							{offered.mine && (
+								<TabPanel>
+									<LeaveRequests
+										own
+										canReview={() => false}
+										emptyState={t("leave.myEmpty")}
+										page={search.page ?? 1}
+										rows={mine.status === "ready" ? mine.items : []}
+										sort={myLeaveQueryOf(search).sort}
+										total={mine.status === "ready" ? mine.total : 0}
+										onPageChange={paging}
+										onOpen={(request) => {
+											setDialog({ request, mode: "view" });
+										}}
+										onSortChange={(sort) => {
+											show({ sort: sortParameter(sort) });
+										}}
+									/>
+								</TabPanel>
+							)}
+							{offered.team && (
+								<TabPanel>
+									<LeaveRequests
+										canReview={decision.canDecide}
+										page={search.page ?? 1}
+										rows={list.status === "ready" ? list.items : []}
+										sort={leaveQueryOf(search).sort}
+										total={list.status === "ready" ? list.total : 0}
+										onPageChange={paging}
+										onOpen={(request, decision) => {
+											setDialog({ request, mode: decision ?? "view" });
+										}}
+										onSortChange={(sort) => {
+											show({ sort: sortParameter(sort) });
+										}}
+									/>
+								</TabPanel>
+							)}
+							{offered.team && (
+								<TabPanel>
+									{shownDay && (
+										<DaySwitcher
+											className="mb-6"
+											day={shownDay}
+											days={timelineDays}
+											onDayChange={(day) => {
+												void navigate({
+													search: (previous) => ({
+														...previous,
+														day: dayParameter(timelineDays, day, today),
+													}),
+												});
+											}}
+										/>
+									)}
+									<LeaveTimeline
+										range={range}
+										requests={timeline.status === "ready" ? timeline.items : []}
+										shownDay={shownDay}
+										onOpen={(request) => {
+											setDialog({ request, mode: "view" });
+										}}
+									/>
+								</TabPanel>
+							)}
+						</TabPanels>
+					)}
+				</Tabs>
+			) : (
+				offered.status === "ready" && (
+					<p className="mt-8 text-sm text-neutral-700">
+						{t("leave.unavailable")}
+					</p>
+				)
+			)}
 			<p
 				aria-live="polite"
 				className="mt-4 text-sm text-success-800"

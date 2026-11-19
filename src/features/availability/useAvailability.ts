@@ -23,7 +23,7 @@ import {
 import {
 	effectiveWindows,
 	hasOverride,
-	isPartTime,
+	isPartTimeMember,
 	windowsOf,
 	type AvailabilityScope,
 	type ReplaceAvailabilityRequest,
@@ -61,7 +61,7 @@ export const useAvailabilityViews = (): AvailabilityViews => {
 	return {
 		status:
 			profile.isPending || access.status === "pending" ? "pending" : "ready",
-		mine: isPartTime(profile.data?.employmentType),
+		mine: isPartTimeMember(profile.data),
 		team: access.canAny(AVAILABILITY_READ_KEYS, "anywhere"),
 	};
 };
