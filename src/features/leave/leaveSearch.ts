@@ -98,6 +98,28 @@ export const sortParameter = ({
 export const pageParameter = (page: number): number | undefined =>
 	page > 1 ? page : undefined;
 
+/** A tab of the Leave page: the caller's own leave, or one of the two team views. */
+export type LeaveView = "mine" | "requests" | "timeline";
+
+/** The tabs the person has, in order: My leave when their own is offered, the team views with the read key. */
+export const leaveViewsOf = ({
+	mine,
+	team,
+}: {
+	mine: boolean;
+	team: boolean;
+}): Array<LeaveView> => [
+	...(mine ? (["mine"] as const) : []),
+	...(team ? (["requests", "timeline"] as const) : []),
+];
+
+/** The tab shown: the URL's when the person has it, else their first; none when they have neither. */
+export const leaveViewOf = (
+	requested: LeaveSearch["view"],
+	views: ReadonlyArray<LeaveView>
+): LeaveView | undefined =>
+	requested && views.includes(requested) ? requested : views[0];
+
 /** The team views list by Branch, and by Department within it. */
 export const LEAVE_TEAM_UNIT_RULES: UnitSelectionRules = {
 	withDepartment: true,

@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ApiProblemError } from "@/common/problem";
 import type { ListPage } from "@/common/schemas";
 import { myPendingApprovalsQuery } from "@/features/approvals/api";
+import { isPartTime } from "@/features/availability/availabilityModel";
 import {
 	leaveRequestsQuery,
 	myLeaveRequestsQuery,
@@ -13,10 +14,43 @@ import {
 	canDecideLeave,
 	leaveApprovalsWaitingOn,
 } from "@/features/leave/leaveApproval";
+import { myProfileQuery } from "@/features/people/api";
 import { LEAVE_READ_KEYS } from "@/features/workspace/permissionKeys";
 import { recordScope } from "@/features/workspace/scopes";
 import { useAccess } from "@/features/workspace/useAccess";
-import { useCurrentMembershipId } from "@/features/workspace/useCurrentCompany";
+import {
+	useCurrentCompanyId,
+	useCurrentMembershipId,
+} from "@/features/workspace/useCurrentCompany";
+
+/**
+ * Which tabs of the Leave page the person has, from data, never roles: My
+ * leave for anyone but a part-timer (someone whose employment type is not
+ * known yet included), the team views for anyone holding a leave read key
+ * somewhere. `pending` until both are known. The mirror of
+ * `useAvailabilityViews`.
+ */
+export type LeaveViews = {
+	status: "pending" | "ready";
+	mine: boolean;
+	team: boolean;
+};
+
+/** The person's Leave tabs, from their own profile and the workspace. */
+export const useLeaveViews = (): LeaveViews => {
+	const companyId = useCurrentCompanyId();
+	const access = useAccess();
+	const profile = useQuery({
+		...myProfileQuery(companyId),
+		enabled: companyId !== "",
+	});
+	return {
+		status:
+			profile.isPending || access.status === "pending" ? "pending" : "ready",
+		mine: !isPartTime(profile.data?.employmentType),
+		team: access.canAny(LEAVE_READ_KEYS, "anywhere"),
+	};
+};
 
 /**
  * One page of leave requests. `hidden` when the person's grants don't reach
