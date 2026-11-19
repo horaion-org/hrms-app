@@ -9,6 +9,7 @@ import { Callout } from "@/components/ui/Callout";
 import { ArrowLeftIcon } from "@/components/ui/Icon";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
 import { useDeletedSchedule } from "@/features/scheduling/history/deletedSchedule";
+import { PutBackAction } from "@/features/scheduling/history/PutBackAction";
 import { GeneratedRoster } from "@/features/scheduling/roster/GeneratedRoster";
 import { RosterHeader } from "@/features/scheduling/roster/RosterHeader";
 import type { RosterSearch } from "@/features/scheduling/roster/rosterSearch";
@@ -124,8 +125,9 @@ const CoverOfferRecords = ({
  * saying when it was deleted, by whom or why, the header with the status it
  * had, its roster as it was (the grid the roster page shows someone who may
  * not change it, with its Issues and Changed lists) and the cover offers
- * sent on it. It offers no action: nothing here is changed, published,
- * generated again, deleted or put back.
+ * sent on it. Nothing here is changed, published, generated again or
+ * deleted; its one action is "Put back on the roster", for a roster a
+ * manager deleted and someone who may delete at its Department.
  */
 const DeletedScheduleRecord = ({
 	companyId,
@@ -157,6 +159,13 @@ const DeletedScheduleRecord = ({
 				className="mt-4"
 				meta={<Badge>{t(`${key}.badge`)}</Badge>}
 				schedule={schedule}
+				actions={
+					<PutBackAction
+						companyId={companyId}
+						schedule={schedule}
+						shownAs="button"
+					/>
+				}
 			/>
 			<Callout className="mt-6" tone="neutral">
 				<strong className="block font-semibold">

@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRouterState } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ComponentType } from "react";
 import { useTranslation } from "react-i18next";
 import dayjs from "dayjs";
 import { formattingLocale } from "@/common/formattingLocale";
@@ -18,7 +18,10 @@ import { summaryRange } from "@/features/scheduling/months/monthWeeks";
 import { formatPeriod } from "@/features/scheduling/periods";
 import { ScheduleMenu } from "@/features/scheduling/schedules/ScheduleMenu";
 import type { Schedule } from "@/features/scheduling/schedules/api";
-import { useDeletedSchedules } from "@/features/scheduling/schedules/deletedSchedules";
+import {
+	useDeletedSchedules,
+	type DeletedSchedule,
+} from "@/features/scheduling/schedules/deletedSchedules";
 import {
 	deletionSentence,
 	historyRowsOf,
@@ -65,6 +68,15 @@ export type SchedulesTabProps = {
 	units: ResolvedUnitSelection;
 	/** Writes the chosen Department to the URL; undefined for every Department. */
 	onDepartmentChange: (department: string | undefined) => void;
+	/**
+	 * What a deleted row offers where a live row has its menu (putting it
+	 * back), given by the page: this area may not import the history area.
+	 * Nothing is offered without.
+	 */
+	DeletedRowAction?: ComponentType<{
+		companyId: string;
+		schedule: DeletedSchedule;
+	}>;
 };
 
 /**
@@ -72,13 +84,15 @@ export type SchedulesTabProps = {
  * ahead, then the history of every accessible schedule; both in the
  * header's Branch, narrowed to a Department from the Filters. The search
  * stays on the tab. History also lists the deleted schedules kept as a
- * record: each says "Deleted", when and by whom, opens read-only and has no
- * menu. They are read on their own, so a failed read leaves the live rows.
+ * record: each says "Deleted", when and by whom, opens read-only and offers
+ * only what the page gives it (`DeletedRowAction`). They are read on their
+ * own, so a failed read leaves the live rows.
  */
 export const SchedulesTab = ({
 	companyId,
 	units,
 	onDepartmentChange,
+	DeletedRowAction,
 }: SchedulesTabProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const notice = schedulingNoticeFrom(
@@ -206,7 +220,7 @@ export const SchedulesTab = ({
 				header: t(`${key}.history.actions`),
 				headerClassName: "w-30",
 				pin: "end",
-				// A deleted schedule opens as a read-only record and has no menu: nothing can be done to it.
+				// A deleted schedule opens as a read-only record, with the page's own action in place of a live row's menu.
 				cell: (row) => (
 					<div className="flex justify-center">
 						<Button
@@ -221,14 +235,21 @@ export const SchedulesTab = ({
 						>
 							<ViewIcon />
 						</Button>
-						{!row.deleted && (
+						{row.deleted ? (
+							DeletedRowAction && (
+								<DeletedRowAction
+									companyId={companyId}
+									schedule={row.schedule}
+								/>
+							)
+						) : (
 							<ScheduleMenu companyId={companyId} schedule={row.schedule} />
 						)}
 					</div>
 				),
 			},
 		];
-	}, [t, language, companyId]);
+	}, [t, language, companyId, DeletedRowAction]);
 	const today = dayjs().format(ISO_DATE_FORMAT);
 	// The Department chosen in the Filters, or every Department offered.
 	const departments = (
