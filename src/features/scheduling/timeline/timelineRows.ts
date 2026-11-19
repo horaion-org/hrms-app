@@ -16,6 +16,7 @@ import {
 	rosterRunId,
 	type Schedule,
 } from "@/features/scheduling/schedules/api";
+import type { EnteredWhat } from "@/features/scheduling/startingContext/enteredDays";
 import type { TimelineSchedule } from "@/features/scheduling/timeline/timeline";
 
 /*
@@ -29,14 +30,21 @@ const MONTH_FORMAT = "YYYY-MM";
 /** One person's day on the timeline: their cell and the schedule it belongs to. */
 export type TimelineCell = { cell: RosterCell; scheduleId: string };
 
+/** One person's day entered by hand before a run: what was entered and the schedule whose run it was entered for. */
+export type EnteredTimelineCell = { what: EnteredWhat; scheduleId: string };
+
 /** One person across every schedule shown. */
 export type TimelineRow = {
 	key: string;
+	/** The person's profile, which the days entered by hand are keyed by; absent once they no longer resolve. */
+	memberProfileId?: string;
 	name: string | null;
 	jobTitle: string | null;
 	employeeCode: string | null;
 	/** Each day a schedule gives the person, by ISO date. */
 	days: Record<string, TimelineCell>;
+	/** Each day entered by hand for the person on a day no schedule covers, by ISO date; absent when there is none. */
+	entered?: Record<string, EnteredTimelineCell>;
 };
 
 /** One schedule's roster rows, as `rosterFromAssignments` builds them. */
@@ -95,6 +103,7 @@ export const timelineRowsOf = (
 		for (const rosterRow of rosterRows) {
 			const row = rows.get(rosterRow.key) ?? {
 				key: rosterRow.key,
+				memberProfileId: rosterRow.memberProfileId,
 				name: rosterRow.name,
 				jobTitle: rosterRow.jobTitle,
 				employeeCode: rosterRow.employeeCode,

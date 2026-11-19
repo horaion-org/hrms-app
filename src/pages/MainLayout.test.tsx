@@ -102,6 +102,7 @@ describe("MainLayout side menu", () => {
 			.map((link) => link.textContent);
 		expect(labels).toEqual([
 			"Dashboard",
+			"My roster",
 			"Scheduling",
 			"People",
 			"Organisation",
@@ -110,6 +111,29 @@ describe("MainLayout side menu", () => {
 			"Availability",
 			"Reports",
 		]);
+	});
+
+	/** Entries behind a key the member lacks leave no visible item, so no gap (`empty:hidden`). */
+	it("offers My roster, and no hidden entry, to a member who holds no key", async () => {
+		const navigation = await openDashboard();
+
+		const labels = within(navigation)
+			.getAllByRole("link")
+			.map((link) => link.textContent);
+		expect(labels).toEqual([
+			"Dashboard",
+			"My roster",
+			"Leave",
+			"Shift preferences",
+		]);
+		expect(
+			within(navigation).getByRole("link", { name: "My roster" })
+		).toHaveAttribute("href", "/me/schedules");
+		const emptyItems = within(navigation)
+			.getAllByRole("listitem")
+			.filter((item) => item.childElementCount === 0);
+		expect(emptyItems.length).toBeGreaterThan(0);
+		for (const item of emptyItems) expect(item).toHaveClass("empty:hidden");
 	});
 
 	it("opens collapsed when this browser collapsed it before", async () => {

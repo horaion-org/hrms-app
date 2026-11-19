@@ -59,7 +59,7 @@ export const Sidebar = ({
 					className="flex items-center justify-center rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
 					to="/"
 				>
-					<HoraionLogo />
+					<HoraionLogo collapsed={collapsed} />
 				</Link>
 				<Button
 					aria-controls={panelId}
@@ -86,7 +86,11 @@ export const Sidebar = ({
 			>
 				<nav aria-label={t("shell.mainNavigation")}>
 					<ul className="flex flex-col gap-4">
-						{Children.map(children, (child) => child && <li>{child}</li>)}
+						{/* A child that renders nothing (a `Can` the person fails) leaves an empty item; it is hidden so it adds no gap. */}
+						{Children.map(
+							children,
+							(child) => child && <li className="empty:hidden">{child}</li>
+						)}
 					</ul>
 				</nav>
 				{footer && <div className="mt-auto w-full">{footer}</div>}

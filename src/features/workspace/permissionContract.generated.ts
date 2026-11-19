@@ -3,7 +3,7 @@
 
 /** SHA-256 of the contract file this module was generated from. */
 export const PERMISSION_CONTRACT_SHA256 =
-	"89cc4f0e62f48c8479a6f6ff2e9d449774cd6bdd2ca694e621ecd4353bd1e826";
+	"cc09b1615bee15eadf02c1babfa566d0a1b7e2ae1f798a735760a782730eed38";
 
 /** The places a permission can be assigned at, widest first. */
 export const ASSIGNABLE_SCOPES = ["COMPANY", "BRANCH", "DEPARTMENT"] as const;
@@ -515,6 +515,17 @@ export const PERMISSION_DEFINITIONS = [
 		systemRolesOnly: false,
 	},
 	{
+		key: "leave_request:read_remarks",
+		resource: "leave_request",
+		action: "read_remarks",
+		module: "leave",
+		assignableScopes: ["COMPANY", "BRANCH", "DEPARTMENT"],
+		prerequisites: ["leave_request:read"],
+		since: "2026-11-19",
+		worksWith: [],
+		systemRolesOnly: false,
+	},
+	{
 		key: "leave_type:read",
 		resource: "leave_type",
 		action: "read",
@@ -958,6 +969,7 @@ export const PERMISSION_KEYS = [
 	"leave_request:read",
 	"leave_request:create",
 	"leave_request:review",
+	"leave_request:read_remarks",
 	"leave_type:read",
 	"leave_type:update",
 	"leave_duration:read",
@@ -1041,6 +1053,7 @@ export const ROLE_TEMPLATES = [
 			"leave_request:read",
 			"leave_request:create",
 			"leave_request:review",
+			"leave_request:read_remarks",
 			"leave_type:read",
 			"leave_type:update",
 			"leave_duration:read",

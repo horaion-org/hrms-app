@@ -175,7 +175,7 @@ const frontOffice = (
 const EVERY_WEEK_LINE =
 	"Every week uses all 4 shifts and 5 constraints of Front Office.";
 const LAST_WEEKS_DAYS_UNKNOWN =
-	"Horaion doesn’t know what people worked last week.";
+	"Horaion doesn’t know what people worked before these days.";
 
 /** A published part of a week, covering `coveredFrom` to `coveredTo`. */
 const publishedPart = (
@@ -755,7 +755,7 @@ describe("Create schedules for a month: ticking weeks", () => {
 
 		expect(
 			await screen.findByText(
-				"Horaion doesn’t know what people worked last week."
+				"Horaion doesn’t know what people worked before these days."
 			)
 		).toBeVisible();
 		expect(
@@ -785,7 +785,7 @@ describe("Create schedules for a month: ticking weeks", () => {
 		);
 		expect(
 			within(notice as HTMLElement).getByRole("button", {
-				name: "Add last week’s shifts",
+				name: "Add prior shifts",
 			})
 		).toBeVisible();
 		// Asked once: no second warning names the same days.
@@ -817,11 +817,11 @@ describe("Create schedules for a month: ticking weeks", () => {
 			await screen.findByRole("checkbox", { name: STARTED_WEEK })
 		);
 		await user.click(
-			await screen.findByRole("button", { name: "Add last week’s shifts" })
+			await screen.findByRole("button", { name: "Add prior shifts" })
 		);
 
 		expect(
-			await screen.findByRole("dialog", { name: "Before this week" })
+			await screen.findByRole("dialog", { name: "Before these days" })
 		).toBeVisible();
 		expect(
 			calls
@@ -870,7 +870,7 @@ describe("Create schedules for a month: ticking weeks", () => {
 			)
 		).toBeVisible();
 		expect(
-			screen.getByRole("button", { name: "Add last week’s shifts" })
+			screen.getByRole("button", { name: "Add prior shifts" })
 		).toBeVisible();
 	});
 
@@ -1146,7 +1146,7 @@ describe("Create schedules for a month: where everyone starts", () => {
 		});
 	};
 	const addLastWeek = (): HTMLElement | null =>
-		screen.queryByRole("button", { name: "Add last week’s shifts" });
+		screen.queryByRole("button", { name: "Add prior shifts" });
 
 	it("given_noRosterBefore_when_lastWeekAdded_then_savesTheWeekOpensTheGridAndGenerateLeavesItOut", async () => {
 		const user = userEvent.setup();
@@ -1166,11 +1166,11 @@ describe("Create schedules for a month: where everyone starts", () => {
 
 		expect(
 			await screen.findByText(
-				"Horaion doesn’t know what people worked last week."
+				"Horaion doesn’t know what people worked before these days."
 			)
 		).toBeVisible();
 		await user.click(
-			await screen.findByRole("button", { name: "Add last week’s shifts" })
+			await screen.findByRole("button", { name: "Add prior shifts" })
 		);
 
 		expect(await screen.findByRole("dialog")).toBeVisible();
@@ -1294,7 +1294,7 @@ describe("Create schedules for a month: where everyone starts", () => {
 
 		expect(
 			await screen.findByText(
-				"Horaion doesn’t know what people worked last week."
+				"Horaion doesn’t know what people worked before these days."
 			)
 		).toBeVisible();
 		expect(addLastWeek()).toBeNull();
@@ -1307,7 +1307,7 @@ describe("Create schedules for a month: where everyone starts", () => {
 
 		const warning = (
 			await screen.findByText(
-				"Horaion doesn’t know what people worked last week."
+				"Horaion doesn’t know what people worked before these days."
 			)
 		).closest("[role='note']");
 		expect(warning).toHaveClass("bg-warning-50");
@@ -1349,7 +1349,9 @@ describe("Create schedules for a month: where everyone starts", () => {
 		);
 		expect(line.closest("[role='note']")).not.toHaveClass("bg-warning-50");
 		expect(
-			screen.queryByText("Horaion doesn’t know what people worked last week.")
+			screen.queryByText(
+				"Horaion doesn’t know what people worked before these days."
+			)
 		).toBeNull();
 	});
 
@@ -1381,7 +1383,7 @@ describe("Create schedules for a month: where everyone starts", () => {
 		const gapWeek = await vi.waitFor(() => weekBlock(/^Dec 21\s?–\s?27$/));
 		expect(within(gapWeek).getByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeVisible();
 		expect(
-			within(gapWeek).getByRole("button", { name: "Add last week’s shifts" })
+			within(gapWeek).getByRole("button", { name: "Add prior shifts" })
 		).toBeVisible();
 		expect(within(gapWeek).queryByText(/hours people worked/)).toBeNull();
 		expect(screen.getByText(/^Dec 7\s?–\s?13$/)).toBeVisible();
@@ -1420,11 +1422,11 @@ describe("Create schedules for a month: where everyone starts", () => {
 		await untick(user, "Mon, Dec 14 to Sun, Dec 20");
 		const gapWeek = await vi.waitFor(() => weekBlock(/^Dec 21\s?–\s?27$/));
 		await user.click(
-			within(gapWeek).getByRole("button", { name: "Add last week’s shifts" })
+			within(gapWeek).getByRole("button", { name: "Add prior shifts" })
 		);
 
 		expect(
-			await screen.findByRole("dialog", { name: "Before this week" })
+			await screen.findByRole("dialog", { name: "Before these days" })
 		).toBeVisible();
 		expect(
 			calls
@@ -1483,7 +1485,7 @@ describe("Create schedules for a month: where everyone starts", () => {
 		const gapWeek = await vi.waitFor(() => weekBlock(/^Dec 21\s?–\s?27$/));
 		expect(within(gapWeek).getByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeVisible();
 		expect(
-			within(gapWeek).getByRole("button", { name: "Add last week’s shifts" })
+			within(gapWeek).getByRole("button", { name: "Add prior shifts" })
 		).toBeVisible();
 	});
 
@@ -1503,7 +1505,7 @@ describe("Create schedules for a month: where everyone starts", () => {
 		});
 
 		await user.click(
-			await screen.findByRole("button", { name: "Add last week’s shifts" })
+			await screen.findByRole("button", { name: "Add prior shifts" })
 		);
 
 		expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -1524,9 +1526,7 @@ describe("Create schedules for a month: where everyone starts", () => {
 		await untick(user, "Mon, Dec 7 to Sun, Dec 13");
 		await untick(user, "Mon, Dec 14 to Sun, Dec 20");
 		expect(await screen.findByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeVisible();
-		await user.click(
-			screen.getByRole("button", { name: "Add last week’s shifts" })
-		);
+		await user.click(screen.getByRole("button", { name: "Add prior shifts" }));
 
 		await vi.waitFor(() => {
 			expect(
@@ -1608,7 +1608,7 @@ describe("Create schedules for a month: by dates", () => {
 			.filter((call) => call.method === "POST" && call.path === SCHEDULES)
 			.map((call) => call.body);
 	const addLastWeek = (): HTMLElement | null =>
-		screen.queryByRole("button", { name: "Add last week’s shifts" });
+		screen.queryByRole("button", { name: "Add prior shifts" });
 
 	it("given_datesFromThursdayWithNothingBefore_when_daysBeforeAdded_then_savesTheFirstPartFromThursdayAndOpensItsGrid", async () => {
 		const user = userEvent.setup();
@@ -1648,11 +1648,11 @@ describe("Create schedules for a month: by dates", () => {
 			)
 		).toBeVisible();
 		await user.click(
-			await screen.findByRole("button", { name: "Add last week’s shifts" })
+			await screen.findByRole("button", { name: "Add prior shifts" })
 		);
 
 		expect(
-			await screen.findByRole("dialog", { name: "Before this week" })
+			await screen.findByRole("dialog", { name: "Before these days" })
 		).toBeVisible();
 		expect(savedDrafts(calls)).toEqual([
 			{
@@ -1687,7 +1687,7 @@ describe("Create schedules for a month: by dates", () => {
 
 		expect(await screen.findByText(LAST_WEEKS_DAYS_UNKNOWN)).toBeVisible();
 		await user.click(
-			await screen.findByRole("button", { name: "Add last week’s shifts" })
+			await screen.findByRole("button", { name: "Add prior shifts" })
 		);
 
 		await vi.waitFor(() => {

@@ -1253,7 +1253,7 @@
 				"name": "Horarios",
 				"description": "Los horarios de cada departamento: su semana, su configuración y los turnos elegidos, generarlos, cambiar quién trabaja cada turno en un cuadrante generado, publicar o rechazar sus cuadrantes y eliminarlos.",
 				"actions": {
-					"read": "Ver horarios y cuadrantes",
+					"read": "Ver cuadrantes, también los que siguen en revisión",
 					"create": "Crear un horario",
 					"update": "Configurar un borrador: su semana, ajustes y turnos",
 					"generate": "Generar cuadrantes",
@@ -1262,7 +1262,7 @@
 					"edit_shift": "Cambiar quién trabaja cada turno"
 				},
 				"actionHints": {
-					"read": "Sus ajustes; sus turnos necesitan «Ver turnos»",
+					"read": "Sus ajustes; sus turnos necesitan «Ver turnos». El personal ve sus propios turnos publicados en Mi cuadrante sin este permiso.",
 					"create": "Un borrador para un departamento",
 					"update": "Qué turnos incluye",
 					"generate": "Fija para siempre los turnos del borrador",
@@ -1373,16 +1373,18 @@
 			},
 			"leave_request": {
 				"name": "Permisos",
-				"description": "Las solicitudes de permiso de cada persona, incluido el tipo de permiso y el motivo por el que se rechazó una solicitud.",
+				"description": "Las solicitudes de permiso de cada persona y el tipo de permiso. Ver los motivos se concede por separado.",
 				"actions": {
-					"read": "Ver las solicitudes de permiso, con su motivo",
+					"read": "Ver las solicitudes de permiso",
+					"read_remarks": "Ver los motivos de las solicitudes de permiso",
 					"create": "Solicitar un permiso en nombre de otra persona",
 					"review": "Aprobar o rechazar permisos"
 				},
 				"actionHints": {
-					"read": "El tipo de permiso y por qué se rechazó una solicitud",
+					"read": "Quién está de permiso, cuándo y el tipo de permiso",
+					"read_remarks": "Las notas del solicitante, por qué se rechazó una solicitud y el comentario de una aprobación",
 					"create": "Solicitarlo para uno mismo no necesita nada",
-					"review": "Nunca los propios"
+					"review": "Nunca los propios; quien revisa siempre ve los motivos"
 				}
 			},
 			"skill": {
@@ -2781,6 +2783,7 @@
 			"leave": "Permisos",
 			"availability": "Disponibilidad",
 			"shiftPreferences": "Preferencias de turno",
+			"myRoster": "Mi cuadrante",
 			"people": "Personas",
 			"organisation": "Organización",
 			"reports": "Informes"
@@ -4315,7 +4318,18 @@
 			"loadFailed": "No pudimos cargar este cuadrante. Inténtalo de nuevo.",
 			"changesTitle": "Tus días cambiaron desde que se publicó este cuadrante",
 			"changeLine": "{{day}}: antes {{before}}, ahora {{now}}.",
-			"changeRemark": "Comentario:"
+			"changeRemark": "Comentario:",
+			"days": {
+				"title": "Mi cuadrante",
+				"subtitle": "El cuadrante publicado de tu departamento. Los días aún no publicados quedan vacíos.",
+				"loading": "Cargando tu cuadrante…",
+				"loadFailed": "No pudimos cargar tu cuadrante. Inténtalo de nuevo.",
+				"navigatorLabel": "Días mostrados",
+				"previous": "Dos semanas anteriores",
+				"next": "Dos semanas siguientes",
+				"teamRoster": "Abrir este cuadrante",
+				"teamRosterNamed": "Abrir este cuadrante: {{department}}, {{period}}"
+			}
 		},
 		"generation": {
 			"inProgress": "Se está generando este horario. Su cuadrante aparecerá aquí cuando esté listo; esta página vuelve a comprobarlo cada {{seconds}} segundos.",
@@ -4543,22 +4557,22 @@
 			"daysLeftBefore_other": "{{days}} no tienen horario, y una vez publicado este cuadrante no se podrán programar. Programa {{days}} primero, o publícalo tal como está."
 		},
 		"startingContext": {
-			"title": "Antes de esta semana",
+			"title": "Antes de estos días",
 			"explain": "Horaion usa estos días para respetar el descanso entre turnos y dar un día libre a quien ya está en su límite. Los días vacíos de esta semana cuentan como trabajados para los días de descanso semanales y los días a la semana. Marca un día de descanso o un día libre si se dio alguno.",
-			"hint": "Empieza por el domingo. Los días anteriores solo importan para quien trabajó casi todos los días.",
+			"hint": "Empieza por el día justo antes. Los días anteriores solo importan para quien trabajó casi todos los días.",
 			"noneWithEntries_one": "No hay cuadrante antes de estos días. Hay días añadidos para {{count}} persona. Para las demás, los días anteriores de esta semana cuentan como trabajados para los días de descanso semanales y los días a la semana; el descanso entre turnos y los días seguidos empiezan de cero.",
 			"noneWithEntries_other": "No hay cuadrante antes de estos días. Hay días añadidos para {{count}} personas. Para las demás, los días anteriores de esta semana cuentan como trabajados para los días de descanso semanales y los días a la semana; el descanso entre turnos y los días seguidos empiezan de cero.",
 			"carried": "Continúa desde la semana del {{week}}.",
 			"carriedFromDays": "Continúa desde el cuadrante del {{days}}.",
 			"carriedWithNew_one": "Continúa desde la semana del {{week}}. {{count}} persona no figura en ese cuadrante: para ella, el descanso entre turnos y los días seguidos empiezan de cero.",
 			"carriedWithNew_other": "Continúa desde la semana del {{week}}. {{count}} personas no figuran en ese cuadrante: para ellas, el descanso entre turnos y los días seguidos empiezan de cero.",
-			"unknownLastWeek": "Horaion no sabe qué trabajó cada persona la semana pasada.",
+			"unknownLastWeek": "Horaion no sabe qué trabajó cada persona antes de estos días.",
 			"unknownLastWeekRisk": "Sin esto, todos se tratan como descansados, así que a quien trabajó el domingo por la noche se le podría asignar el lunes por la mañana.",
 			"unknownDaysAndLastWeek": "Horaion no sabe qué trabajó cada persona el {{days}} ni la semana anterior.",
 			"unknownDaysRisk": "Marca los días de descanso o libres ya dados, para que la semana los cuente. Si quedan sin saberse, cuentan como días trabajados.",
 			"unknownDaysLeft": "Aún sin saberse para algunas personas: {{days}}. Si quedan así, cuentan como días trabajados.",
-			"addShifts": "Añadir los turnos de la semana pasada",
-			"editShifts": "Editar los turnos de la semana pasada",
+			"addShifts": "Añadir turnos anteriores",
+			"editShifts": "Editar turnos anteriores",
 			"notKnown": "Desconocido",
 			"worked": "Trabajó",
 			"cellLabel": "{{name}}, {{day}}",
@@ -4567,15 +4581,21 @@
 			"fillEmpty": "Rellenar días vacíos",
 			"showEarlier": "Mostrar 7 días anteriores",
 			"hideEarlier": "Ocultar los días anteriores",
-			"tableLabel": "Los días antes de esta semana",
+			"tableLabel": "Los días anteriores",
 			"cancel": "Cancelar",
 			"save": "Guardar días",
 			"invalid": "No se pudo guardar un día. Comprueba que su turno sigue en uso e inténtalo de nuevo.",
 			"notDraft": "Este horario ya se generó, así que su punto de partida ya no puede cambiar.",
 			"failed": "No se pudieron guardar los días. Inténtalo de nuevo.",
 			"unknownDays": "Horaion no sabe qué trabajó cada persona el {{days}}.",
-			"saved": "Días anteriores a esta semana guardados.",
-			"fittedAroundAfter": "Los turnos ya asignados en los 7 días después de este horario se mantienen; aquí no se da a nadie un turno que deje poco descanso antes de ellos."
+			"saved": "Días anteriores guardados.",
+			"fittedAroundAfter": "Los turnos ya asignados en los 7 días después de este horario se mantienen; aquí no se da a nadie un turno que deje poco descanso antes de ellos.",
+			"shown": {
+				"mark": "Introducido",
+				"cellLabel": "{{name}}, {{day}}: {{shift}} – introducido a mano, fuera del cuadrante",
+				"note_one": "{{count}} persona tiene turnos introducidos para los días anteriores a estos días. Consúltalos en la configuración.",
+				"note_other": "{{count}} personas tienen turnos introducidos para los días anteriores a estos días. Consúltalos en la configuración."
+			}
 		},
 		"openingHours": {
 			"title": "Horas ya trabajadas este mes (del {{from}} al {{to}})",

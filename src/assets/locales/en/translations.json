@@ -952,6 +952,7 @@
 			"leave": "Leave",
 			"availability": "Availability",
 			"shiftPreferences": "Shift preferences",
+			"myRoster": "My roster",
 			"people": "People",
 			"organisation": "Organisation",
 			"reports": "Reports"
@@ -2597,16 +2598,18 @@
 			},
 			"leave_request": {
 				"name": "Leave",
-				"description": "Each person’s leave requests, including the kind of leave and why a request was refused.",
+				"description": "Each person’s leave requests and the kind of leave. The reasons are a separate permission.",
 				"actions": {
-					"read": "See leave requests, including the reason",
+					"read": "See leave requests",
+					"read_remarks": "See the reasons on leave requests",
 					"create": "Apply for leave for someone else",
 					"review": "Approve or reject leave"
 				},
 				"actionHints": {
-					"read": "The kind of leave and why one was rejected",
+					"read": "Who is on leave, when, and the kind of leave",
+					"read_remarks": "The applicant’s notes, why one was rejected, and the comment on an approval",
 					"create": "Applying for oneself needs nothing",
-					"review": "Never the holder’s own"
+					"review": "Never the holder’s own; reviewers always see the reasons"
 				}
 			},
 			"leave_type": {
@@ -2747,7 +2750,7 @@
 				"name": "Schedules",
 				"description": "Each department’s schedules: their week, settings and chosen shifts, generating them, changing who works which shift on a generated roster, publishing or rejecting their rosters, and deleting them.",
 				"actions": {
-					"read": "See schedules and rosters",
+					"read": "See rosters, including ones still on review",
 					"create": "Start a schedule",
 					"update": "Set up a draft: its week, settings and shifts",
 					"generate": "Generate rosters",
@@ -2756,7 +2759,7 @@
 					"edit_shift": "Change who works which shift"
 				},
 				"actionHints": {
-					"read": "Their settings; their shifts need “See shifts”",
+					"read": "Their settings; their shifts need “See shifts”. Staff see their own published shifts in My roster without it.",
 					"create": "A draft for a department",
 					"update": "Which shifts it includes",
 					"generate": "Fixes the draft’s shifts for good",
@@ -4515,7 +4518,18 @@
 			"loadFailed": "This roster could not be loaded. Please try again.",
 			"changesTitle": "Your days changed since this roster was published",
 			"changeLine": "{{day}}: was {{before}}, now {{now}}.",
-			"changeRemark": "Remark:"
+			"changeRemark": "Remark:",
+			"days": {
+				"title": "My roster",
+				"subtitle": "Your department’s published roster. Days not yet published stay empty.",
+				"loading": "Loading your roster…",
+				"loadFailed": "Your roster could not be loaded. Please try again.",
+				"navigatorLabel": "Days shown",
+				"previous": "Previous two weeks",
+				"next": "Next two weeks",
+				"teamRoster": "Open this roster",
+				"teamRosterNamed": "Open this roster: {{department}}, {{period}}"
+			}
 		},
 		"generation": {
 			"inProgress": "This schedule is being generated. Its roster shows here once it’s ready; this page checks again every {{seconds}} seconds.",
@@ -4743,22 +4757,22 @@
 			"daysLeftBefore_other": "{{days}} have no schedule, and once this roster is published they can’t be scheduled. Schedule {{days}} first, or publish as it is."
 		},
 		"startingContext": {
-			"title": "Before this week",
+			"title": "Before these days",
 			"explain": "Horaion uses these days to keep rest between shifts and to give a day off to anyone already at their limit. Empty days of this week count as worked for weekly rest days and days a week. Mark a rest day or a day off if one was given.",
-			"hint": "Start with Sunday. Earlier days only matter for people who worked most days.",
+			"hint": "Start with the day just before. Earlier days only matter for people who worked most days.",
 			"noneWithEntries_one": "No roster before these days. Days are added for {{count}} person. For everyone else, the earlier days of this week count as worked for weekly rest days and days a week; rest between shifts and days in a row start fresh.",
 			"noneWithEntries_other": "No roster before these days. Days are added for {{count}} people. For everyone else, the earlier days of this week count as worked for weekly rest days and days a week; rest between shifts and days in a row start fresh.",
 			"carried": "Carried over from the week of {{week}}.",
 			"carriedFromDays": "Carried over from the roster of {{days}}.",
 			"carriedWithNew_one": "Carried over from the week of {{week}}. {{count}} person isn’t on that roster: for them, rest between shifts and days in a row start fresh.",
 			"carriedWithNew_other": "Carried over from the week of {{week}}. {{count}} people aren’t on that roster: for them, rest between shifts and days in a row start fresh.",
-			"unknownLastWeek": "Horaion doesn’t know what people worked last week.",
+			"unknownLastWeek": "Horaion doesn’t know what people worked before these days.",
 			"unknownLastWeekRisk": "Without it, everyone is treated as rested, so someone who worked Sunday night could be given Monday morning.",
 			"unknownDaysAndLastWeek": "Horaion doesn’t know what people worked on {{days}}, or the week before.",
 			"unknownDaysRisk": "Mark any rest days or days off already given, so the week counts them. Left unknown, they count as days worked.",
 			"unknownDaysLeft": "Still unknown for some people: {{days}}. Left unknown, they count as days worked.",
-			"addShifts": "Add last week’s shifts",
-			"editShifts": "Edit last week’s shifts",
+			"addShifts": "Add prior shifts",
+			"editShifts": "Edit prior shifts",
 			"notKnown": "Not known",
 			"worked": "Worked",
 			"cellLabel": "{{name}}, {{day}}",
@@ -4767,15 +4781,21 @@
 			"fillEmpty": "Fill empty days",
 			"showEarlier": "Show 7 earlier days",
 			"hideEarlier": "Hide earlier days",
-			"tableLabel": "The days before this week",
+			"tableLabel": "The prior days",
 			"cancel": "Cancel",
 			"save": "Save days",
 			"invalid": "A day couldn’t be saved. Check that its shift is still in use, then try again.",
 			"notDraft": "This schedule has already been generated, so its starting point can no longer change.",
 			"failed": "The days couldn’t be saved. Try again.",
 			"unknownDays": "Horaion doesn’t know what people worked on {{days}}.",
-			"saved": "Days before this week saved.",
-			"fittedAroundAfter": "Shifts already rostered in the 7 days after this schedule stay as they are; nobody is given a shift here that leaves too little rest before them."
+			"saved": "Prior days saved.",
+			"fittedAroundAfter": "Shifts already rostered in the 7 days after this schedule stay as they are; nobody is given a shift here that leaves too little rest before them.",
+			"shown": {
+				"mark": "Entered",
+				"cellLabel": "{{name}}, {{day}}: {{shift}} – entered by hand, not rostered",
+				"note_one": "{{count}} person has shifts entered for the days before these days. View them in the setup.",
+				"note_other": "{{count}} people have shifts entered for the days before these days. View them in the setup."
+			}
 		},
 		"openingHours": {
 			"title": "Hours already worked this month ({{from}} to {{to}})",

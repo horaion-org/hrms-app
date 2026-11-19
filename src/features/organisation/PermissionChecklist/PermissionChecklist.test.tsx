@@ -267,6 +267,24 @@ describe("PermissionChecklist", () => {
 		expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
 	});
 
+	// The reasons on leave requests are their own permission, and never held without the requests.
+	it("lists the reasons on leave requests under Leave, ticked only with the requests", async () => {
+		const user = userEvent.setup();
+		render(<Harness initial={[]} kind="LOCAL" />);
+		await openDetails(user, "Leave");
+
+		await user.click(box("Leave", "See the reasons on leave requests"));
+
+		expect(latest).toEqual([
+			"leave_request:read",
+			"leave_request:read_remarks",
+		]);
+		expect(box("Leave", "See leave requests")).toBeChecked();
+		expect(box("Leave", "See leave requests")).toHaveAccessibleDescription(
+			"Who is on leave, when, and the kind of leave. Needed by “See the reasons on leave requests”"
+		);
+	});
+
 	it("never gives what can't be given, by its box or a level", async () => {
 		const user = userEvent.setup();
 		render(

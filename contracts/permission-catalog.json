@@ -784,6 +784,25 @@
       ]
     },
     {
+      "action": "read_remarks",
+      "actionName": "Read Remarks",
+      "assignableScopes": [
+        "COMPANY",
+        "BRANCH",
+        "DEPARTMENT"
+      ],
+      "key": "leave_request:read_remarks",
+      "module": "leave",
+      "prerequisites": [
+        "leave_request:read"
+      ],
+      "resource": "leave_request",
+      "resourceName": "Leave Request",
+      "since": "2026-11-19",
+      "systemRolesOnly": false,
+      "worksWith": []
+    },
+    {
       "action": "read",
       "actionName": "Read",
       "assignableScopes": [
@@ -1446,6 +1465,7 @@
         "leave_request:read",
         "leave_request:create",
         "leave_request:review",
+        "leave_request:read_remarks",
         "leave_type:read",
         "leave_type:update",
         "leave_duration:read",

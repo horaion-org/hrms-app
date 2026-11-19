@@ -205,9 +205,9 @@ describe("Schedule a month: going back from Generate", () => {
 			[`GET ${SCHEDULES}/s-start/opening-balances`]: reply(midMonthOpenings()),
 		});
 		await user.click(
-			await screen.findByRole("button", { name: "Add last week’s shifts" })
+			await screen.findByRole("button", { name: "Add prior shifts" })
 		);
-		await screen.findByRole("dialog", { name: "Before this week" });
+		await screen.findByRole("dialog", { name: "Before these days" });
 		await user.keyboard("{Escape}");
 		await vi.waitFor(() => {
 			expect(screen.queryByRole("dialog")).toBeNull();
@@ -215,7 +215,7 @@ describe("Schedule a month: going back from Generate", () => {
 
 		await toGenerateAndBack(user);
 
-		await screen.findByRole("button", { name: /last week/ });
+		await screen.findByRole("button", { name: /prior shifts/ });
 		expect(screen.queryByRole("dialog")).toBeNull();
 	});
 });

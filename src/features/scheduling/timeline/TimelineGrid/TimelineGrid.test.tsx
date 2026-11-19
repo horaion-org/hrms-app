@@ -11,6 +11,7 @@ import {
 } from "@/features/scheduling/timeline/fixtures";
 import type { TimelineView } from "@/features/scheduling/timeline/timeline";
 import { TimelineGrid } from "@/features/scheduling/timeline/TimelineGrid";
+import type { TimelineRow } from "@/features/scheduling/timeline/timelineRows";
 
 beforeAll(async () => {
 	await createInstance()
@@ -22,17 +23,18 @@ beforeAll(async () => {
 		});
 });
 
-/** Renders Aisha's week in the given view, with `shownScheduleId` alone in full. */
+/** Renders Aisha's week (or `row`) in the given view, with `shownScheduleId` alone in full. */
 const renderGrid = (
 	view: TimelineView,
-	shownScheduleId?: string
+	shownScheduleId?: string,
+	row: TimelineRow = timelineRowFixture()
 ): Promise<HTMLElement> => {
 	render(
 		<MemoryRouterHarness>
 			<TimelineGrid
 				days={FIXTURE_WEEK}
 				rosters="loaded"
-				rows={[timelineRowFixture()]}
+				rows={[row]}
 				schedules={twoTimelineSchedules()}
 				shownScheduleId={shownScheduleId}
 				view={view}
@@ -117,6 +119,55 @@ describe("TimelineGrid", () => {
 			minWidth: "calc(var(--staff-column) + 308px)",
 		});
 		expect(within(row).getByRole("rowheader")).toHaveClass("sticky", "left-0");
+	});
+
+	/** Aisha with a Night shift entered by hand before the weekend run, on Thursday (which no schedule covers) unless `day` says. */
+	const renderEnteredDay = (
+		view: TimelineView,
+		day = "2027-02-11"
+	): Promise<HTMLElement> =>
+		renderGrid(view, undefined, {
+			...timelineRowFixture(),
+			entered: {
+				[day]: {
+					what: { kind: "shift", name: "Night", start: "22:00", end: "06:00" },
+					scheduleId: "s-late",
+				},
+			},
+		});
+
+	/** An entered day takes the "No roster" cell's place, dotted and marked "Entered" where the column has room. */
+	it.each([
+		["week", ["22:00 – 06:00", "Night", "Entered"]],
+		["two", ["Night"]],
+		["four", ["N"]],
+	] as const)(
+		"shows a day entered by hand in the %s view",
+		async (view, lines) => {
+			const row = await renderEnteredDay(view);
+			const tile = within(row).getByTitle(
+				"Aisha Rahman, Thu, Feb 11: Night 22:00 – 06:00 – entered by hand, not rostered"
+			);
+			expect(
+				[...tile.querySelectorAll("[aria-hidden]")].map(
+					(line) => line.textContent
+				)
+			).toEqual(lines);
+			expect(tile).toHaveClass("border-dotted");
+			expect(tile).toHaveAttribute("data-entered-for", "s-late");
+			expect(within(row).queryByTitle(/No roster$/)).toBeNull();
+		}
+	);
+
+	/** Tuesday belongs to the early schedule: a day entered there is not shown over it. */
+	it("never shows an entered day on a day a schedule covers", async () => {
+		const row = await renderEnteredDay("week", "2027-02-09");
+		expect(within(row).queryByTitle(/entered by hand/)).toBeNull();
+		expect(
+			within(row).getByTitle(
+				"Aisha Rahman, Tue, Feb 9: not rostered, Published"
+			)
+		).toBeInTheDocument();
 	});
 
 	/** A tile's screen-reader label stays inside its tile, so the table scrolls in its container and never widens the page. */

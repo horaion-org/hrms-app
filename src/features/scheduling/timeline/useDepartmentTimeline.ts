@@ -16,6 +16,13 @@ import {
 	scheduleKey,
 	scheduleQuery,
 } from "@/features/scheduling/schedules/api";
+import { startingDaysQuery } from "@/features/scheduling/startingContext/api";
+import {
+	enteredCellsOf,
+	schedulesWithFreeDaysBefore,
+	withEnteredCells,
+} from "@/features/scheduling/timeline/enteredCells";
+import { daysOfRun } from "@/features/scheduling/timeline/rosterStrip";
 import {
 	lanesOf,
 	type TimelineSchedule,
@@ -74,7 +81,9 @@ const isRefused = (error: unknown): boolean =>
  * schedule touching those days and its roster, through the month, schedule
  * and assignments reads the other scheduling pages use. While a part is being
  * generated the month and that schedule are read again, as on the month and
- * schedule pages.
+ * schedule pages. Where the window has days no schedule covers, the days
+ * entered by hand before each run that reaches them are read too, to show
+ * there; a window with a schedule on every day reads none.
  */
 export const useDepartmentTimeline = (
 	companyId: string,
@@ -155,6 +164,13 @@ export const useDepartmentTimeline = (
 			);
 		}),
 	});
+	const days = daysOfRun({ firstDay, lastDay });
+	const schedulesWithFreeDays = schedulesWithFreeDaysBefore(schedules, days);
+	const startingDaysReads = useQueries({
+		queries: schedulesWithFreeDays.map((schedule) =>
+			startingDaysQuery(companyId, unit, schedule.id, allowed)
+		),
+	});
 
 	if (access.status !== "ready") return { status: access.status };
 	if (!allowed || months.some((month) => isRefused(month.error)))
@@ -175,14 +191,28 @@ export const useDepartmentTimeline = (
 		const rosterPending = runIds[index] !== undefined && rosterRead.isPending;
 		return read.isPending || rosterPending ? "pending" : "done";
 	});
+	const rostersRead = rostersReadOf(rosterSteps);
+	// A read still under way, or one that failed, shows no entered days: they are a courtesy, never the roster.
+	const startingDaysOf = Object.fromEntries(
+		schedulesWithFreeDays.flatMap((schedule, index) => {
+			const read = startingDaysReads[index]?.data;
+			return read ? [[schedule.id, read]] : [];
+		})
+	);
 	return {
 		status: "ready",
 		departmentName: firstMonth.departmentName,
 		branchName: firstMonth.branchName,
 		timeZone: firstMonth.timeZone,
 		schedules,
-		rows: timelineRowsOf(rosters),
-		rosters: rostersReadOf(rosterSteps),
+		// Entered days join once every roster is read: only then is it known who has a row already.
+		rows: withEnteredCells(
+			timelineRowsOf(rosters),
+			rostersRead === "loaded"
+				? enteredCellsOf(schedules, startingDaysOf, days)
+				: []
+		),
+		rosters: rostersRead,
 		deleteTargets: Object.fromEntries(
 			scheduleReads.flatMap((read) =>
 				read.data && mayDeleteSchedule(read.data, access)

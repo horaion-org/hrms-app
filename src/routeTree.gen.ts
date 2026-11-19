@@ -47,6 +47,7 @@ import { Route as AuthenticatedAppSchedulingScheduleIdRouteImport } from './rout
 import { Route as AuthenticatedAppSchedulingDepartmentRouteImport } from './routes/_authenticated._app.scheduling_.department'
 import { Route as AuthenticatedAppSchedulingNewRouteImport } from './routes/_authenticated._app.scheduling_.new'
 import { Route as AuthenticatedAppSettingsAccessRolesRouteImport } from './routes/_authenticated._app.settings_.access-roles'
+import { Route as AuthenticatedAppMeSchedulesIndexRouteImport } from './routes/_authenticated._app.me.schedules.index'
 import { Route as AuthenticatedAppMeSchedulesScheduleIdRouteImport } from './routes/_authenticated._app.me.schedules.$scheduleId'
 import { Route as AuthenticatedAppOrganisationSystemRolesAccessRoleIdRouteImport } from './routes/_authenticated._app.organisation.system-roles_.$accessRoleId'
 import { Route as AuthenticatedAppOrganisationSystemRolesNewRouteImport } from './routes/_authenticated._app.organisation.system-roles_.new'
@@ -268,6 +269,12 @@ const AuthenticatedAppSettingsAccessRolesRoute =
     path: '/settings/access-roles',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppMeSchedulesIndexRoute =
+  AuthenticatedAppMeSchedulesIndexRouteImport.update({
+    id: '/me/schedules/',
+    path: '/me/schedules/',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppMeSchedulesScheduleIdRoute =
   AuthenticatedAppMeSchedulesScheduleIdRouteImport.update({
     id: '/me/schedules/$scheduleId',
@@ -369,6 +376,7 @@ export interface FileRoutesByFullPath {
   '/settings/access-roles/new': typeof AuthenticatedAppSettingsAccessRolesNewRoute
   '/settings/data/import-organisation': typeof AuthenticatedAppSettingsDataImportOrganisationRoute
   '/settings/data/import-people': typeof AuthenticatedAppSettingsDataImportPeopleRoute
+  '/me/schedules/': typeof AuthenticatedAppMeSchedulesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AuthenticatedAppIndexRoute
@@ -416,6 +424,7 @@ export interface FileRoutesByTo {
   '/settings/access-roles/new': typeof AuthenticatedAppSettingsAccessRolesNewRoute
   '/settings/data/import-organisation': typeof AuthenticatedAppSettingsDataImportOrganisationRoute
   '/settings/data/import-people': typeof AuthenticatedAppSettingsDataImportPeopleRoute
+  '/me/schedules': typeof AuthenticatedAppMeSchedulesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -466,6 +475,7 @@ export interface FileRoutesById {
   '/_authenticated/_app/settings_/access-roles_/new': typeof AuthenticatedAppSettingsAccessRolesNewRoute
   '/_authenticated/_app/settings_/data/import-organisation': typeof AuthenticatedAppSettingsDataImportOrganisationRoute
   '/_authenticated/_app/settings_/data/import-people': typeof AuthenticatedAppSettingsDataImportPeopleRoute
+  '/_authenticated/_app/me/schedules/': typeof AuthenticatedAppMeSchedulesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -515,6 +525,7 @@ export interface FileRouteTypes {
     | '/settings/access-roles/new'
     | '/settings/data/import-organisation'
     | '/settings/data/import-people'
+    | '/me/schedules/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -562,6 +573,7 @@ export interface FileRouteTypes {
     | '/settings/access-roles/new'
     | '/settings/data/import-organisation'
     | '/settings/data/import-people'
+    | '/me/schedules'
   id:
     | '__root__'
     | '/_authenticated'
@@ -611,6 +623,7 @@ export interface FileRouteTypes {
     | '/_authenticated/_app/settings_/access-roles_/new'
     | '/_authenticated/_app/settings_/data/import-organisation'
     | '/_authenticated/_app/settings_/data/import-people'
+    | '/_authenticated/_app/me/schedules/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -893,6 +906,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppSettingsAccessRolesRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/_app/me/schedules/': {
+      id: '/_authenticated/_app/me/schedules/'
+      path: '/me/schedules'
+      fullPath: '/me/schedules/'
+      preLoaderRoute: typeof AuthenticatedAppMeSchedulesIndexRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/_app/me/schedules/$scheduleId': {
       id: '/_authenticated/_app/me/schedules/$scheduleId'
       path: '/me/schedules/$scheduleId'
@@ -997,6 +1017,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppSettingsAccessRolesNewRoute: typeof AuthenticatedAppSettingsAccessRolesNewRoute
   AuthenticatedAppSettingsDataImportOrganisationRoute: typeof AuthenticatedAppSettingsDataImportOrganisationRoute
   AuthenticatedAppSettingsDataImportPeopleRoute: typeof AuthenticatedAppSettingsDataImportPeopleRoute
+  AuthenticatedAppMeSchedulesIndexRoute: typeof AuthenticatedAppMeSchedulesIndexRoute
 }
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
@@ -1056,6 +1077,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
     AuthenticatedAppSettingsDataImportOrganisationRoute,
   AuthenticatedAppSettingsDataImportPeopleRoute:
     AuthenticatedAppSettingsDataImportPeopleRoute,
+  AuthenticatedAppMeSchedulesIndexRoute: AuthenticatedAppMeSchedulesIndexRoute,
 }
 
 const AuthenticatedAppRouteWithChildren =
