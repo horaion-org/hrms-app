@@ -15,7 +15,10 @@ import {
 	shortShiftCount,
 	type RosterIssue,
 } from "@/features/scheduling/roster/rosterIssueGroups";
-import { IssueSummary } from "@/features/scheduling/roster/RosterIssueGroups";
+import {
+	IssueSummary,
+	type IssueFixing,
+} from "@/features/scheduling/roster/RosterIssueGroups";
 import { issuesOfRoster } from "@/features/scheduling/roster/rosterIssueSources";
 import {
 	issueNoteLines,
@@ -52,7 +55,6 @@ import type { PreferenceOutcomeLookup } from "@/features/shiftPreferences/prefer
 import type { RosterEditing } from "./rosterEditing";
 import { RosterSidePanelSlot } from "./RosterSidePanelSlot";
 import { ROSTER_SIDE_LISTS } from "./rosterSideLists";
-import { useDayTypeFixes } from "./useDayTypeFixes";
 import { useRosterView } from "./useRosterView";
 
 export type GeneratedRosterProps = {
@@ -155,6 +157,11 @@ export const GeneratedRoster = ({
 		change: RosterChange;
 		stillShort?: string;
 	}>();
+	// The day a fix from Issues opened in the editor, and the day type it asks for.
+	const [fixPreset, setFixPreset] = useState<{
+		cell: string;
+		dayType: string;
+	}>();
 	const sidePanelId = useId();
 	// Issues says what is true now: the last validation's gaps and broken rules over the generation's.
 	const validating = validation !== undefined;
@@ -201,23 +208,27 @@ export const GeneratedRoster = ({
 		t,
 		language,
 	});
-	const dayTypeFixes = useDayTypeFixes({
-		issues,
+	// The fixes Issues makes itself: applied as hand changes, or opened in the day's editor with the day type chosen.
+	const issueFixing: IssueFixing | undefined = editing && {
 		constraints,
 		assignments,
 		editing,
-		onApplied: (change) => {
+		onApplied: (change): void => {
 			setApplied({ change });
 		},
-		onOpenCell: (cell) => {
+		onOpenDay: (retype): void => {
+			const cell = rosterCellKey(retype.membershipId, retype.day);
+			setFixPreset({ cell, dayType: retype.to });
 			roster.open({ cell });
 		},
-	});
+	};
 	/** Closes the panel beside the grid, and forgets the day a fix from Issues opened. */
 	const closePanel = (): void => {
-		dayTypeFixes.forgetPreset();
+		setFixPreset(undefined);
 		roster.close();
 	};
+	const presetDayType =
+		fixPreset && fixPreset.cell === view.cell ? fixPreset.dayType : undefined;
 	const counts = issueCounts(issues);
 	const shortShifts = shortShiftCount(issues);
 	useEffect(() => {
@@ -289,7 +300,7 @@ export const GeneratedRoster = ({
 				approval,
 				validationNote,
 				issues,
-				issueFixes: dayTypeFixes.fixes,
+				issueFixing,
 				onShowIssue: showIssue,
 				onShowAllIssues: roster.showAllIssues,
 				onFindCover: editing ? roster.openCover : undefined,
@@ -300,7 +311,7 @@ export const GeneratedRoster = ({
 			assignments={assignments}
 			editing={editing}
 			preferenceOutcomes={preferenceOutcomes}
-			presetDayType={dayTypeFixes.presetDayTypeOf(view.cell)}
+			presetDayType={presetDayType}
 			roster={roster}
 			timeZone={schedule.timeZone}
 			viewerMembershipId={viewerMembershipId}

@@ -12,6 +12,7 @@ import {
 	type IssueOrder,
 	type RosterIssue,
 } from "@/features/scheduling/roster/rosterIssueGroups";
+import { IssueFixOutcomeLine } from "./IssueFix";
 import { IssueGroupSection } from "./IssueGroupSection";
 
 const key = "scheduling.issues";
@@ -57,6 +58,10 @@ export const RosterIssueGroups = ({
 	return (
 		<div className="flex flex-col gap-3">
 			{validationNote}
+			{/* Said here, not on its rows: once the roster validates again the rows changed are gone. */}
+			{fixes?.outcome?.done === undefined ? null : (
+				<IssueFixOutcomeLine outcome={fixes.outcome} />
+			)}
 			{groups.length === 0 ? null : (
 				<>
 					<div

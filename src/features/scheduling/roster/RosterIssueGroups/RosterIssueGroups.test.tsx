@@ -4,6 +4,10 @@ import { createInstance } from "i18next";
 import { initReactI18next } from "react-i18next";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import en from "@/assets/locales/en/translations.json";
+import type {
+	DayTypeRetype,
+	IssueFixes,
+} from "@/features/scheduling/roster/dayTypeFix";
 import {
 	rosterIssueFixture,
 	rosterIssuesFixture,
@@ -308,5 +312,178 @@ describe("IssueSummary", () => {
 			"text-neutral-700"
 		);
 		expect(screen.queryByText(copy.nothingToFix)).not.toBeInTheDocument();
+	});
+});
+
+/** A retype of Aisha's Saturday from a day off to a rest day, for the item `issueKey`. */
+const retypeOf = (
+	issueKey: string,
+	overrides: Partial<DayTypeRetype> = {}
+): DayTypeRetype => ({
+	issueKey,
+	constraintId: "rest-copy",
+	membershipId: "m-1",
+	memberProfileId: "mp-1",
+	day: "2026-10-17",
+	from: "OFF",
+	to: "REST",
+	...overrides,
+});
+
+/** Two rows of the weekly rest rule, Aisha's and Chen's, each with a retype. */
+const weeklyRestRows = (): {
+	issues: Array<ReturnType<typeof rosterIssueFixture>>;
+	fixes: IssueFixes;
+} => {
+	const issues = [
+		rosterIssueFixture({ key: "rest|mp-1", day: "2026-10-12" }),
+		rosterIssueFixture({
+			key: "rest|mp-3",
+			who: "Chen Wei",
+			memberProfileId: "mp-3",
+			day: "2026-10-12",
+		}),
+	];
+	return {
+		issues,
+		fixes: {
+			retypes: new Map([
+				["rest|mp-1", retypeOf("rest|mp-1")],
+				[
+					"rest|mp-3",
+					retypeOf("rest|mp-3", {
+						membershipId: "m-3",
+						memberProfileId: "mp-3",
+						day: "2026-10-16",
+					}),
+				],
+			]),
+			onFix: vi.fn(),
+			onFixAll: vi.fn(),
+			busy: false,
+		},
+	};
+};
+
+describe("RosterIssueGroups with fixes", () => {
+	it("names the day to retype on a row with a fix, and makes it from the row's second action", async () => {
+		const { issues, fixes } = weeklyRestRows();
+		render(
+			<RosterIssueGroups fixes={fixes} issues={issues} onShow={vi.fn()} />
+		);
+
+		const row = screen.getByText(/^Aisha Rahman · /).closest("li")!;
+		expect(row).toHaveTextContent(
+			/What to do: Sat.*17.* is a day off for Aisha Rahman\. Make it the rest day\./
+		);
+		await userEvent.click(
+			within(row).getByRole("button", { name: "Make it a rest day" })
+		);
+
+		expect(fixes.onFix).toHaveBeenCalledExactlyOnceWith(
+			fixes.retypes.get("rest|mp-1")
+		);
+		expect(within(row).getByRole("button", { name: copy.show })).toBeVisible();
+	});
+
+	it("words the fix from the day type the rule needs: a rest day made a day off", () => {
+		const { issues, fixes } = weeklyRestRows();
+		const mirrored: IssueFixes = {
+			...fixes,
+			retypes: new Map([
+				["rest|mp-1", retypeOf("rest|mp-1", { from: "REST", to: "OFF" })],
+			]),
+		};
+		render(<RosterIssueGroups fixes={mirrored} issues={issues} />);
+
+		const row = screen.getByText(/^Aisha Rahman · /).closest("li")!;
+		expect(row).toHaveTextContent(
+			/is a rest day for Aisha Rahman\. Make it the day off\./
+		);
+		expect(
+			within(row).getByRole("button", { name: "Make it a day off" })
+		).toBeVisible();
+		// Chen's row has no fix: it reads as it always did.
+		expect(
+			within(screen.getByText(/^Chen Wei · /).closest("li")!).queryByRole(
+				"button"
+			)
+		).toBeNull();
+	});
+
+	it("offers every row's fix of a rule at once, above the rows, counting the people", async () => {
+		const { issues, fixes } = weeklyRestRows();
+		render(<RosterIssueGroups fixes={fixes} issues={issues} />);
+
+		await userEvent.click(
+			screen.getByRole("button", {
+				name: "Give each of these 2 people a rest day on one of their days off",
+			})
+		);
+
+		expect(fixes.onFixAll).toHaveBeenCalledExactlyOnceWith(
+			expect.objectContaining({
+				key: "rest-copy|OFF|REST",
+				people: 2,
+				retypes: [...fixes.retypes.values()],
+			})
+		);
+	});
+
+	it("offers no fix for all on a published roster, which gives no way to make one", () => {
+		const { issues, fixes } = weeklyRestRows();
+		render(
+			<RosterIssueGroups
+				fixes={{ ...fixes, onFixAll: undefined }}
+				issues={issues}
+			/>
+		);
+
+		expect(screen.queryByRole("button", { name: /^Give each/ })).toBeNull();
+		expect(
+			screen.getAllByRole("button", { name: "Make it a rest day" })
+		).toHaveLength(2);
+	});
+
+	it("holds every fix while one is being made, and says why one was refused on its own row", () => {
+		const { issues, fixes } = weeklyRestRows();
+		render(
+			<RosterIssueGroups
+				issues={issues}
+				fixes={{
+					...fixes,
+					busy: true,
+					outcome: { key: "rest|mp-3", refusal: "revision" },
+				}}
+			/>
+		);
+
+		for (const button of screen.getAllByRole("button", {
+			name: /^(Make|Give)/,
+		}))
+			expect(button).toBeDisabled();
+		expect(screen.getByRole("alert")).toHaveTextContent(
+			en.scheduling.rosterEdit.error.revision
+		);
+		expect(screen.getByRole("alert").closest("li")).toHaveTextContent(
+			/^Chen Wei/
+		);
+	});
+
+	it("says how many days a fix for all changed, above the groups, where it stays once the rows go", () => {
+		const { fixes } = weeklyRestRows();
+		render(
+			<RosterIssueGroups
+				issues={[]}
+				fixes={{
+					...fixes,
+					outcome: { key: "rest-copy|OFF|REST", done: 3, total: 5 },
+				}}
+			/>
+		);
+
+		expect(screen.getByRole("alert")).toHaveTextContent(
+			"3 of 5 changed. The others need a look first: use each one’s own button."
+		);
 	});
 });
