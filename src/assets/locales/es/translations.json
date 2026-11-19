@@ -5601,6 +5601,18 @@
 				"hint_one": "Generar calcula {{count}} día, {{range}}. Generar no publica nada: el personal no ve nada nuevo hasta que publiques este día.",
 				"hint_other": "Generar calcula {{count}} días, {{range}}. Generar no publica nada: el personal no ve nada nuevo hasta que publiques estos días."
 			},
+			"replace": {
+				"title": "¿Reemplazar el cuadrante por revisar?",
+				"body_one": "Hay un cuadrante por revisar en {{days}}. Al generar, este día se calcula de nuevo y el cuadrante se reemplaza.",
+				"body_other": "Hay un cuadrante por revisar en {{days}}. Al generar, estos días se calculan de nuevo y el cuadrante se reemplaza.",
+				"seen": "El personal vio el cuadrante de {{days}} mientras estuvo publicado.",
+				"publishAgain": "Publica el nuevo cuadrante para que el personal lo vea.",
+				"handChanges_one": "Se reemplazará {{count}} cambio hecho a mano.",
+				"handChanges_other": "Se reemplazarán {{count}} cambios hechos a mano.",
+				"publishedStay": "Los días publicados se quedan como están.",
+				"confirm": "Generar y reemplazar",
+				"cancel": "Cancelar"
+			},
 			"create": {
 				"title": "Generar",
 				"subtitle": "Elige los días. Los días vacíos se rellenan, los días por revisar se calculan de nuevo y los publicados se quedan como están."

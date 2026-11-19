@@ -868,8 +868,7 @@ export const CreateMonthSchedule = (): FunctionComponent => {
 							{check.data && (
 								<BeforeGeneratePanel
 									check={check.data}
-									days={generateWords.days}
-									hint={generateWords.hint}
+									{...generateWords}
 									month={checkMonth}
 									blockedNote={
 										!byDates && ticked.length === 0

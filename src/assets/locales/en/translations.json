@@ -5801,6 +5801,18 @@
 				"hint_one": "Generating works out {{count}} day, {{range}}. Nothing is published by generating: staff see nothing new until you publish this day.",
 				"hint_other": "Generating works out {{count}} days, {{range}}. Nothing is published by generating: staff see nothing new until you publish these days."
 			},
+			"replace": {
+				"title": "Replace the roster to review?",
+				"body_one": "There is a roster to review on {{days}}. Generating works this day out again and replaces it.",
+				"body_other": "There is a roster to review on {{days}}. Generating works these days out again and replaces it.",
+				"seen": "Staff saw the roster for {{days}} while it was published.",
+				"publishAgain": "Publish the new roster for staff to see it.",
+				"handChanges_one": "{{count}} change made by hand will be replaced.",
+				"handChanges_other": "{{count}} changes made by hand will be replaced.",
+				"publishedStay": "Published days stay as they are.",
+				"confirm": "Generate and replace",
+				"cancel": "Cancel"
+			},
 			"create": {
 				"title": "Generate",
 				"subtitle": "Choose the days. Empty days are filled, days to review are worked out again, published days stay as they are."
