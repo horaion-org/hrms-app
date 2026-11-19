@@ -4860,6 +4860,7 @@
 			"summarySwap": "{{first}} ⇄ {{second}}, {{date}}",
 			"edited": "{{label}}, cambiado",
 			"editedCell": "Cambiado",
+			"willChange": "{{label}}, cambiará",
 			"previewing_one": "Vista previa: cambia {{count}} día",
 			"previewing_other": "Vista previa: cambian {{count}} días",
 			"severity": {
