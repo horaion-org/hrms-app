@@ -115,6 +115,7 @@ describe("leave type catalogue client", () => {
 			name: "Annual leave",
 			grantKind: "ALLOWANCE",
 			paid: true,
+			countsTowardsWorkHours: false,
 			requiresReason: false,
 			allowsPartDays: true,
 			appliesToBranchIds: [],

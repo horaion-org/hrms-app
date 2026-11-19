@@ -74,6 +74,7 @@ it("reloads the apply form's catalogue and the leave lists after a write, this c
 				name: "Holiday",
 				grantKind: "ALLOWANCE",
 				paid: true,
+				countsTowardsWorkHours: true,
 				requiresReason: false,
 				allowsPartDays: true,
 				appliesToBranchIds: [],
