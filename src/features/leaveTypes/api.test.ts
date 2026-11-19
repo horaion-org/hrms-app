@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, stubApi } from "@/common/testing/stubApi";
 import {
+	countsTowardsWorkHoursOf,
 	createLeaveType,
 	fetchLeaveTypeCatalogue,
 	type LeaveTypeBody,
@@ -96,6 +97,37 @@ describe("leave type catalogue client", () => {
 		});
 	});
 
+	it("reads whether a day of a type counts towards work hours, apart from paid", async () => {
+		stubApi({
+			"GET /api/v1/companies/c-1/leave-types": {
+				status: 200,
+				body: envelope([
+					managedLeaveTypeFixture({ paid: true, countsTowardsWorkHours: false }),
+				]),
+			},
+		});
+		const types = await fetchLeaveTypeCatalogue("c-1");
+		expect(countsTowardsWorkHoursOf(types[0]!)).toBe(false);
+	});
+
+	it.each([true, false])(
+		"reads an older answer without the work-hours setting as its paid value (%s)",
+		async (paid) => {
+			const older: Record<string, unknown> = {
+				...managedLeaveTypeFixture({ paid }),
+			};
+			delete older["countsTowardsWorkHours"];
+			stubApi({
+				"GET /api/v1/companies/c-1/leave-types": {
+					status: 200,
+					body: envelope([older]),
+				},
+			});
+			const types = await fetchLeaveTypeCatalogue("c-1");
+			expect(countsTowardsWorkHoursOf(types[0]!)).toBe(paid);
+		}
+	);
+
 	it("adds, replaces and reorders with the bodies the API takes", async () => {
 		const calls = stubApi({
 			"POST /api/v1/companies/c-1/leave-types": {
@@ -115,6 +147,7 @@ describe("leave type catalogue client", () => {
 			name: "Annual leave",
 			grantKind: "ALLOWANCE",
 			paid: true,
+			countsTowardsWorkHours: false,
 			requiresReason: false,
 			allowsPartDays: true,
 			appliesToBranchIds: [],

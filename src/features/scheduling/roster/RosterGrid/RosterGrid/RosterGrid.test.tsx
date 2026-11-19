@@ -474,4 +474,103 @@ describe("RosterGrid", () => {
 			)
 		).toHaveClass("sr-only");
 	});
+
+	/** A change under review: Aisha's Monday shift and Saturday off. */
+	const previewed = new Set(["m-1|2026-10-12", "m-1|2026-10-17"]);
+
+	it("given_aChangeUnderReview_when_rendered_then_itsDaysAreRingedTintedAndSaidToChange", () => {
+		render(<RosterGrid days={week} previewDays={previewed} rows={rows} />);
+
+		const aisha = screen.getByRole("row", { name: /Aisha Rahman/ });
+		const shift = within(aisha).getByRole("button", {
+			name: "Aisha Rahman, Mon 09:00 – 15:00, will change",
+		});
+		const dayOff = within(aisha).getByText(
+			"Aisha Rahman, Sat: Day off, will change"
+		);
+		expect(dayOff).toHaveClass("sr-only");
+		for (const touched of [shift, dayOff]) {
+			const cell = touched.closest("td");
+			expect(cell).toHaveClass(
+				"bg-ink-blue-50",
+				"outline-solid",
+				"outline-ink-blue-700"
+			);
+			expect(cell).not.toHaveClass("opacity-40", "outline-dashed");
+		}
+	});
+
+	it("given_aChangeUnderReview_when_rendered_then_onlyTheOtherDayCellsDimUntilItEnds", () => {
+		const { container, rerender } = render(
+			<RosterGrid days={week} previewDays={previewed} rows={rows} />
+		);
+
+		const dayCells = Array.from(container.querySelectorAll("td"));
+		const dimmed = dayCells.filter((cell) =>
+			cell.classList.contains("opacity-40")
+		);
+		expect(dimmed).toHaveLength(dayCells.length - previewed.size);
+		for (const header of [
+			...screen.getAllByRole("rowheader"),
+			...screen.getAllByRole("columnheader"),
+		])
+			expect(header).not.toHaveClass("opacity-40");
+
+		rerender(<RosterGrid days={week} previewDays={new Set()} rows={rows} />);
+
+		expect(container.querySelectorAll("td.opacity-40")).toHaveLength(0);
+	});
+
+	it("given_aChangeUnderReview_when_itStartsOrItsDaysChange_then_scrollsItsFirstCellIntoViewOnce", () => {
+		const scrollIntoView = vi.fn();
+		Element.prototype.scrollIntoView = scrollIntoView;
+		try {
+			const { container, rerender } = render(
+				<RosterGrid days={week} rows={rows} />
+			);
+			expect(scrollIntoView).not.toHaveBeenCalled();
+
+			// Chen's Sunday is listed first, but Aisha's row comes first in the grid.
+			rerender(
+				<RosterGrid
+					days={week}
+					previewDays={new Set(["m-3|2026-10-18", "m-1|2026-10-17"])}
+					rows={rows}
+				/>
+			);
+			expect(scrollIntoView).toHaveBeenCalledTimes(1);
+			expect(scrollIntoView).toHaveBeenCalledWith({
+				block: "nearest",
+				inline: "nearest",
+			});
+			expect(scrollIntoView.mock.contexts[0]).toBe(
+				container.querySelector('[data-cell="m-1|2026-10-17"]')
+			);
+
+			// The same days in a new set do not scroll again.
+			rerender(
+				<RosterGrid
+					days={week}
+					previewDays={new Set(["m-1|2026-10-17", "m-3|2026-10-18"])}
+					rows={rows}
+				/>
+			);
+			expect(scrollIntoView).toHaveBeenCalledTimes(1);
+
+			rerender(
+				<RosterGrid
+					days={week}
+					previewDays={new Set(["m-3|2026-10-18"])}
+					rows={rows}
+				/>
+			);
+			expect(scrollIntoView).toHaveBeenCalledTimes(2);
+			expect(scrollIntoView.mock.contexts[1]).toBe(
+				container.querySelector('[data-cell="m-3|2026-10-18"]')
+			);
+		} finally {
+			// jsdom has no scrollIntoView of its own to put back.
+			delete (Element.prototype as Partial<Element>).scrollIntoView;
+		}
+	});
 });

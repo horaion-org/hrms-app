@@ -1,4 +1,5 @@
 import {
+	countsTowardsWorkHoursOf,
 	LISTED_GRANT_KINDS,
 	type LeaveGrantKind,
 	type LeaveTypeOrderBody,
@@ -80,8 +81,8 @@ export const movedOrder = (
 
 /**
  * The full replacement that only flips a type between active and inactive. It
- * sends the type's reach and part-day switch back as they are, since the API
- * replaces both.
+ * sends the type's reach, part-day switch and work-hours setting back as they
+ * are, since the API replaces them.
  */
 export const statusToggleBody = (
 	type: ManagedLeaveType & { grantKind: LeaveGrantKind }
@@ -89,6 +90,7 @@ export const statusToggleBody = (
 	name: type.name,
 	grantKind: type.grantKind,
 	paid: type.paid,
+	countsTowardsWorkHours: countsTowardsWorkHoursOf(type),
 	requiresReason: type.requiresReason,
 	allowsPartDays: type.allowsPartDays,
 	...unitReachBody(reachValueOf(type)),

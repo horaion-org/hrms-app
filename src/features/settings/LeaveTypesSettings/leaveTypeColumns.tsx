@@ -5,7 +5,10 @@ import type { DataTableColumn } from "@/components/ui/DataTable";
 import { ArrowDownIcon, ArrowUpIcon } from "@/components/ui/Icon";
 import { LockIcon } from "@/components/ui/LockIcon";
 import { OverflowMenuItem } from "@/components/ui/OverflowMenu";
-import type { ManagedLeaveType } from "@/features/leaveTypes/api";
+import {
+	countsTowardsWorkHoursOf,
+	type ManagedLeaveType,
+} from "@/features/leaveTypes/api";
 import { actionsColumn } from "@/features/organisation/listColumns";
 import { reachLabel } from "@/features/workspace/unitReach";
 
@@ -32,10 +35,11 @@ export type LeaveTypeColumnsOptions = {
 	onToggleStatus: (type: ManagedLeaveType) => void;
 };
 
-/** "Paid · Reason required": what a type is, in the words of its two flags. */
+/** "Paid · Counts as hours · Reason required": what a type is, in the words of its flags. */
 const detailsOf = (type: ManagedLeaveType, t: TFunction): string =>
 	[
 		t(type.paid ? `${key}.paid` : `${key}.unpaid`),
+		...(countsTowardsWorkHoursOf(type) ? [t(`${key}.countsAsHours`)] : []),
 		...(type.requiresReason ? [t(`${key}.reasonRequired`)] : []),
 	].join(" · ");
 

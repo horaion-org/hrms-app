@@ -946,6 +946,7 @@
 				"order": "Orden",
 				"paid": "Remunerado",
 				"unpaid": "No remunerado",
+				"countsAsHours": "Cuenta como horas",
 				"reasonRequired": "Motivo obligatorio",
 				"requestCount_one": "{{count}} solicitud",
 				"requestCount_other": "{{count}} solicitudes",
@@ -1008,6 +1009,8 @@
 				"kindFixed_other": "Lo usan {{count}} solicitudes, así que no se puede cambiar cómo se cuenta. Añade un tipo nuevo y desactiva este.",
 				"paid": "Remunerado",
 				"paidDescription": "Para tus registros. Todavía no se calcula nada con este dato.",
+				"countsTowardsWorkHours": "Cuenta para las horas de trabajo",
+				"countsTowardsWorkHoursDescription": "Un día de este permiso cuenta como un día normal en las horas de la semana, así que las horas extra se calculan con él.",
 				"requiresReason": "Pedir un motivo",
 				"requiresReasonDescription": "Al solicitarlo hay que indicar para qué es el permiso. Quien revise la solicitud puede leerlo.",
 				"allowsPartDays": "Se puede tomar por partes del día",
@@ -4726,6 +4729,36 @@
 				"makeAll_one": "Dar a esta persona un {{to}} en uno de sus {{from}} en cada una de estas semanas",
 				"makeAll_other": "Dar a cada una de estas {{count}} personas un {{to}} en uno de sus {{from}}",
 				"someDone": "{{done}} de {{total}} cambiados. Los demás necesitan una revisión antes: usa el botón de cada uno."
+			},
+			"panel": {
+				"toFix_one": "{{count}} por corregir",
+				"toFix_other": "{{count}} por corregir",
+				"checking": "Comprobando las reglas…",
+				"checked": "Comprobado {{time}}",
+				"checkedIncomplete": "Comprobado {{time}} · puede estar incompleto",
+				"checkAgain": "Comprobar de nuevo",
+				"unchecked": "Sin comprobar desde tus cambios",
+				"checkNow": "Comprobar ahora",
+				"asGenerated": "Tal como se generó",
+				"check": "Comprobar",
+				"filtersLabel": "Mostrar",
+				"filters": {
+					"all": "Todo",
+					"mustFix": "Por corregir",
+					"ifPossible": "Si es posible"
+				},
+				"actions": {
+					"cover": "Cubrir",
+					"fix": "Corregir",
+					"details": "Detalles",
+					"close": "Cerrar"
+				},
+				"severity": {
+					"mustFix": "Por corregir",
+					"ifPossible": "Si es posible",
+					"note": "Nota"
+				},
+				"nothingHere": "Nada aquí."
 			}
 		},
 		"rosterMarkers": {
@@ -4742,7 +4775,9 @@
 			"partGapNeedsCover": "{{time}} necesita cobertura",
 			"partGap": "Falta {{time}}: {{name}} está de permiso",
 			"stretched": "Ampliado {{hours}} h con horas extra",
-			"overtimePill": "+HE {{time}}"
+			"overtimePill": "+HE {{time}}",
+			"stretchHours": "+{{hours}} h",
+			"stretchOvertime": "+{{hours}} h extra"
 		},
 		"rosterEdit": {
 			"title": "{{name}} · {{date}}",
@@ -4828,6 +4863,7 @@
 			"summarySwap": "{{first}} ⇄ {{second}}, {{date}}",
 			"edited": "{{label}}, cambiado",
 			"editedCell": "Cambiado",
+			"willChange": "{{label}}, cambiará",
 			"previewing_one": "Vista previa: cambia {{count}} día",
 			"previewing_other": "Vista previa: cambian {{count}} días",
 			"severity": {
@@ -5036,7 +5072,7 @@
 			},
 			"withEngine": {
 				"order": {
-					"byExtraHours": "Por orden de menos horas extra. Aquí no se comprueba el descanso entre turnos ni el puesto que falta: pregunta al motor más abajo.",
+					"byExtraHours": "Por orden de menos horas extra. Aquí no se comprueba el descanso entre turnos ni el puesto que falta.",
 					"engineFirst": "Primero la elección del motor; después, por menos horas extra."
 				},
 				"note": {
@@ -5047,10 +5083,8 @@
 			},
 			"gapWithoutRoles": "{{shift}} · {{day}} · {{time}}",
 			"engine": {
-				"title": "Del motor de planificación",
-				"intro": "El motor puede buscar su propia forma de cubrir este hueco. Tarda unos segundos.",
-				"ask": "Preguntar al motor",
-				"loading": "Preguntando al motor…",
+				"loading": "Buscando las opciones…",
+				"unreachable": "No se pudo contactar con el motor. Estas personas están libres según sus horas y no se comprueban con las reglas.",
 				"none": "El motor no encontró forma de cubrirlo.",
 				"fills": "Cubre el hueco",
 				"fillsPart": "Cubre parte del hueco",
@@ -5067,9 +5101,9 @@
 				"move": {
 					"REASSIGN": "Mover a {{name}} de {{fromShift}} {{fromDay}} a {{shift}} {{day}}",
 					"CALL_IN": "Llamar a {{name}} para {{shift}} {{day}}",
-					"OVERTIME_EXTENSION": "Alargar {{shift}} de {{name}} {{hours}} h",
-					"OVERTIME_EXTENSION_AFTER": "{{name}} se queda después de {{shift}} hasta las {{time}} (+{{hours}} h)",
-					"OVERTIME_EXTENSION_BEFORE": "{{name}} empieza {{shift}} antes, a las {{time}} (+{{hours}} h)",
+					"OVERTIME_EXTENSION": "Alargar {{shift}} de {{name}} · {{overtime}}",
+					"OVERTIME_EXTENSION_AFTER": "{{name}} se queda después de {{shift}} · {{overtime}}, hasta las {{time}}",
+					"OVERTIME_EXTENSION_BEFORE": "{{name}} empieza {{shift}} antes · {{overtime}}, desde las {{time}}",
 					"UNKNOWN": "Un cambio que la aplicación aún no sabe describir"
 				},
 				"refusal": {

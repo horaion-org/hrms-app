@@ -74,10 +74,16 @@ const managedLeaveTypeSchema = z.object({
 	/** Where it applies; both empty is the whole company. */
 	appliesToBranches: z.array(reachedBranchSchema).catch([]),
 	appliesToDepartments: z.array(reachedDepartmentSchema).catch([]),
+	/** Whether a day of it counts as a normal day in the week's hours; an older API leaves it out. Read through `countsTowardsWorkHoursOf`. */
+	countsTowardsWorkHours: z.boolean().nullish(),
 });
 
 /** One leave type as its admins see it, with how many requests use it. */
 export type ManagedLeaveType = z.infer<typeof managedLeaveTypeSchema>;
+
+/** Whether a day of the type counts towards the week's work hours; an older API's answer means its `paid` value, as the API starts it. */
+export const countsTowardsWorkHoursOf = (type: ManagedLeaveType): boolean =>
+	type.countsTowardsWorkHours ?? type.paid;
 
 const catalogueSchema = z.array(managedLeaveTypeSchema);
 
@@ -86,6 +92,7 @@ export type LeaveTypeBody = {
 	name: string;
 	grantKind: LeaveGrantKind;
 	paid: boolean;
+	countsTowardsWorkHours: boolean;
 	requiresReason: boolean;
 	allowsPartDays: boolean;
 	appliesToBranchIds: Array<string>;

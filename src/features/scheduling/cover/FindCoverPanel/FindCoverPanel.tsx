@@ -47,19 +47,21 @@ const SKELETON_ROWS = ["first", "second", "third"];
 
 /**
  * Find cover beside the roster grid, in the side panel's slot and frame:
- * the short shift in two lines, then who could cover it (`CoverOptionList`)
- * under a line saying what the list's order means, the first one chosen and
- * previewed on the grid, the line that the rules aren't checked yet with the
- * person's shifts beside it as facts, and the same review and actions a hand
- * change gets: Apply on a draft, Send offer or They agreed on a published
- * roster. Under them, "From the scheduling engine" asks the engine for its
- * own repair on demand (`EngineRepairOptions`), while the shift is still
- * short: for any gap, the generation's or one made since, which the engine
- * finds in the roster. Once the engine has answered, "Who covers" follows it
- * (`coverWithEngine`): its choice comes first, badged Suggested and chosen,
- * each card says what the engine made of the person, and the people it
- * refuses sit under "Can't help" with its reason. `useCoverPanel` holds the
- * state and calls; this component only lays the parts out.
+ * the short shift in two lines, then ONE list of who covers it, for which the
+ * engine is asked as the panel opens (`coverListView` decides which list):
+ * - a roster not published: the engine's options as cards
+ *   (`EngineRepairOptions`), one line while it works, each reviewed in the
+ *   same review a hand change gets; the backend's people ranked by hours
+ *   (`CoverOptionList`) only when the engine cannot answer, under the line
+ *   saying why;
+ * - a published roster: the backend's people, the engine's answer merged in
+ *   (`coverWithEngine`: its choice first, badged Suggested and chosen, the
+ *   people it refuses under "Can't help"), since offers to staff go out from
+ *   that list, then the engine's options as cards.
+ * A chosen person of the backend's list is previewed on the grid with the
+ * line that the rules aren't checked yet, and gets Apply on a draft, Send
+ * offer or They agreed on a published roster. `useCoverPanel` holds the state
+ * and calls; this component only lays the parts out.
  */
 export const FindCoverPanel = ({
 	id,
@@ -70,8 +72,16 @@ export const FindCoverPanel = ({
 	const language = formattingLocale(i18n);
 	const radioName = useId();
 	const panel = useCoverPanel(input);
-	const { status, options, withEngine, engineRepair, selected, review, offer } =
-		panel;
+	const {
+		status,
+		options,
+		withEngine,
+		engineRepair,
+		view,
+		selected,
+		review,
+		offer,
+	} = panel;
 	// Opening repair for a gap warms the engine's worker, so its first options come fast.
 	useRepairWarmUp(input.target, input.revision, true);
 	// The roster's own days name a shift when the frozen shifts can't be read.
@@ -179,6 +189,39 @@ export const FindCoverPanel = ({
 		options: () => optionList(false),
 	};
 
+	const engineOptions = (
+		<EngineRepairOptions
+			names={names}
+			repair={repair}
+			// A published roster's changes go out as offers, one person at a time: made by hand there.
+			onReview={input.coverOffers ? undefined : panel.chooseRepair}
+		/>
+	);
+	/** The one list, as `coverListView` decides. */
+	const listContent: Record<typeof view, () => ReactNode> = {
+		gapStatus: () => statusContent[status](),
+		engine: () => (
+			<>
+				<h3 className="text-sm font-medium text-neutral-800">
+					{t("scheduling.cover.list.whoCovers")}
+				</h3>
+				{engineOptions}
+			</>
+		),
+		backendFallback: () => (
+			<>
+				{engineOptions}
+				{statusContent[status]()}
+			</>
+		),
+		backendWithEngine: () => (
+			<>
+				{statusContent[status]()}
+				{engineOptions}
+			</>
+		),
+	};
+
 	const reviewContent = (): ReactNode => {
 		if (!selected && !panel.repairChosen) return null;
 		if (offer && offerOut)
@@ -247,7 +290,12 @@ export const FindCoverPanel = ({
 				},
 			],
 		},
-		{ key: "status", content: statusContent[status]() },
+		{
+			key: "list",
+			content: (
+				<div className="flex flex-col gap-3">{listContent[view]()}</div>
+			),
+		},
 		{
 			key: "notChecked",
 			content: selected && !panel.repairChosen && (
@@ -257,18 +305,6 @@ export const FindCoverPanel = ({
 						{neighbourLine(selected, names, t)}
 					</span>
 				</Callout>
-			),
-		},
-		{
-			key: "engine",
-			title: t("scheduling.cover.engine.title"),
-			content: status !== "closed" && (
-				<EngineRepairOptions
-					names={names}
-					repair={repair}
-					// A published roster's changes go out as offers, one person at a time: made by hand there.
-					onReview={input.coverOffers ? undefined : panel.chooseRepair}
-				/>
 			),
 		},
 		{ key: "review", content: reviewContent() },

@@ -1,5 +1,6 @@
 import type { TFunction } from "i18next";
 import { ApiProblemError } from "@/common/problem";
+import { stretchOvertimeText } from "@/features/scheduling/shifts/stretchWords";
 import type {
 	RepairMove,
 	RepairOption,
@@ -81,35 +82,34 @@ const personOf = (move: RepairMove, names: RepairNames, t: TFunction): string =>
 
 /**
  * A stretch in plain words, by its side: "Chen Wei stays on after Swing Shift
- * until 15:00 (+2 h)", "… starts Swing Shift early at 11:00 (+2 h)"; without
- * a side, "Extend Chen Wei's Swing Shift by 2 h".
+ * · +2 h overtime, until 15:00", "… starts Swing Shift early · +2 h overtime,
+ * from 11:00"; without a side, "Extend Chen Wei's Swing Shift · +2 h overtime".
  */
 const stretchLine = (
 	move: RepairMove,
 	values: { name: string; shift: string; day: string },
-	names: RepairNames,
 	t: TFunction
 ): string => {
-	const hours = names.hours(move.extensionMinutes ?? 0);
+	const overtime = stretchOvertimeText(move.extensionMinutes ?? 0, t);
 	if (move.side === "AFTER_SHIFT")
 		return t(`${key}.move.OVERTIME_EXTENSION_AFTER`, {
 			...values,
-			hours,
+			overtime,
 			time: clockTime(move.period.end),
 		});
 	if (move.side === "BEFORE_SHIFT")
 		return t(`${key}.move.OVERTIME_EXTENSION_BEFORE`, {
 			...values,
-			hours,
+			overtime,
 			time: clockTime(move.period.start),
 		});
-	return t(`${key}.move.OVERTIME_EXTENSION`, { ...values, hours });
+	return t(`${key}.move.OVERTIME_EXTENSION`, { ...values, overtime });
 };
 
 /**
  * One move in plain words: "Move Lina Tan from Evening Tue, 10 Nov to Morning
  * Tue, 10 Nov", "Call in Ari Lim for Morning Tue, 10 Nov", "Extend Omar
- * Aziz's Night by 2 h".
+ * Aziz's Night · +2 h overtime".
  */
 export const moveLine = (
 	move: RepairMove,
@@ -131,7 +131,7 @@ export const moveLine = (
 		case "CALL_IN":
 			return t(`${key}.move.CALL_IN`, values);
 		case "OVERTIME_EXTENSION":
-			return stretchLine(move, values, names, t);
+			return stretchLine(move, values, t);
 		default:
 			return t(`${key}.move.UNKNOWN`);
 	}

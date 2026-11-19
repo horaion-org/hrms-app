@@ -3,8 +3,8 @@ import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Callout";
 import { Quote } from "@/components/ui/Quote";
-import { Skeleton } from "@/components/ui/Skeleton";
 import type { RepairOption } from "@/features/scheduling/cover/engineRepairApi";
+import { refusalLineKey } from "@/features/scheduling/cover/coverListView";
 import { repairCells } from "@/features/scheduling/cover/engineRepairChange";
 import { extraHoursLine } from "@/features/scheduling/cover/engineRepairHours";
 import { NotAssignedList } from "@/features/scheduling/cover/NotAssignedList";
@@ -20,8 +20,8 @@ import type { EngineRepairState } from "@/features/scheduling/cover/useEngineRep
 import type { RosterChangeCell } from "@/features/scheduling/rosterChanges/api";
 
 export type EngineRepairOptionsProps = {
-	/** Where the ask stands, and how to ask (again). */
-	repair: EngineRepairState & { ask: () => void };
+	/** Where the engine's answer stands, and how to ask again after a refusal. */
+	repair: EngineRepairState & { askAgain: () => void };
 	names: RepairNames;
 	/**
 	 * Reviews an option's change in Find cover's own review, before anything
@@ -33,9 +33,8 @@ export type EngineRepairOptionsProps = {
 };
 
 const key = "scheduling.cover.engine";
-const SKELETON_ROWS = ["first", "second"];
 
-/** One option: its moves or the engine's honest no, what it leaves short, and the visible working-time note. */
+/** One option's card: its moves or the engine's honest no, its hours, what it leaves short, the working-time note and the review action. */
 const OptionItem = ({
 	option,
 	names,
@@ -53,7 +52,7 @@ const OptionItem = ({
 	const leftShortNext = leftShortNextLine(option, t);
 	const cells = repairCells(option);
 	return (
-		<li className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0">
+		<li className="flex flex-col gap-2 rounded-lg border border-neutral-400 bg-white p-3">
 			<p className="font-semibold text-neutral-900">
 				{t(`${key}.${optionHeadingKey(option)}`)}
 			</p>
@@ -102,16 +101,16 @@ const OptionItem = ({
 };
 
 /**
- * The scheduling engine's options in Find cover's panel, under the backend's
- * own suggestions: asked for with a button (the engine runs a solver, which
- * takes a moment), then each option feasible first, in plain words, an
- * infeasible one with the engine's reason quoted, and the note that
- * working-time rules were not checked: once above the list when it holds for
- * every option, otherwise on each option it holds for. A feasible option whose
- * change Find cover's Apply states exactly (`repairCells`) offers to review
- * it there; any other says it has to be made by hand. Under them, why nobody
- * else was assigned (`NotAssignedList`). A refusal says why, and a failure
- * offers to ask again.
+ * The scheduling engine's options in Find cover's one list, asked for as the
+ * panel opens: one line while the engine works, then one card per option,
+ * feasible first, in plain words, an infeasible one with the engine's reason
+ * quoted, and the note that working-time rules were not checked: once above
+ * the cards when it holds for every option, otherwise on each option it holds
+ * for. A feasible option whose change Find cover's Apply states exactly
+ * (`repairCells`) offers to review it there; any other says it has to be made
+ * by hand. Under them, why nobody else was assigned (`NotAssignedList`),
+ * closed. A refusal says why (`refusalLineKey`), and a failure offers to ask
+ * again.
  */
 export const EngineRepairOptions = ({
 	repair,
@@ -120,32 +119,20 @@ export const EngineRepairOptions = ({
 }: EngineRepairOptionsProps): FunctionComponent => {
 	const { t } = useTranslation();
 	switch (repair.status) {
-		case "idle":
-			return (
-				<div className="flex flex-col items-start gap-2">
-					<p className="text-neutral-700">{t(`${key}.intro`)}</p>
-					<Button size="sm" variant="secondary" onClick={repair.ask}>
-						{t(`${key}.ask`)}
-					</Button>
-				</div>
-			);
 		case "loading":
 			return (
-				<div aria-busy="true" className="flex flex-col gap-3">
-					<span className="sr-only">{t(`${key}.loading`)}</span>
-					{SKELETON_ROWS.map((row) => (
-						<Skeleton key={row} className="h-16 w-full rounded-xl" />
-					))}
-				</div>
+				<p aria-busy="true" className="text-neutral-700" role="status">
+					{t(`${key}.loading`)}
+				</p>
 			);
 		case "refused":
 			return (
 				<div className="flex flex-col items-start gap-2" role="alert">
 					<p className="text-neutral-800">
-						{t(`${key}.refusal.${repair.refusal}`)}
+						{t(refusalLineKey(repair.refusal))}
 					</p>
 					{RETRYABLE_REPAIR_REFUSALS.includes(repair.refusal) && (
-						<Button variant="textlink" onClick={repair.ask}>
+						<Button variant="textlink" onClick={repair.askAgain}>
 							{t("scheduling.rosterEdit.tryAgain")}
 						</Button>
 					)}
@@ -168,7 +155,7 @@ export const EngineRepairOptions = ({
 					{noneChecked && (
 						<Callout tone="warning">{t(`${key}.noneChecked`)}</Callout>
 					)}
-					<ul className="flex flex-col divide-y divide-neutral-300">
+					<ul className="flex flex-col gap-2">
 						{repair.options.map((option, rank) => (
 							// An option has no id of its own; its place in the engine's ranking is stable.
 							<OptionItem

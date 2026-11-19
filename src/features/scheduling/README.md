@@ -253,15 +253,17 @@ gate, the saves and generating the draft's month.
   docs/adr/0065). Days to decide, and days marked for leave or cover, are `ISSUE_SOURCES` rows listed in the Issues
   panel; a day to decide reads "Needs attention" to a roster editor who can't see leave, with no leave detail. A
   notification about such a day opens its week with the Issues panel (`?week=…&panel=issues`).
-- `cover/` — Find cover for a short shift (`FindCoverPanel`, opened from an Issues row): the API's ranked list
-  (`api.ts`, `useCoverPanel.ts`, `coverOptionWords.ts`, `CoverOptionList`) previewed and applied as a roster change, or
-  sent as an offer on a published roster. Under it, "From the scheduling engine" (`EngineRepairOptions`) asks the
-  engine on demand for its own repair (`engineRepairApi.ts` `…/repair-options`, `useEngineRepair.ts`,
-  `engineRepairWords.ts`); a feasible option the change can state exactly (`engineRepairChange.ts` `repairCells`) is
-  reviewed through Find cover's own preview and Apply, any other is made by hand. `NotAssignedList`
-  (`notAssignedWords.ts`) says why nobody else with the job title was put on the shift. Any open gap can be asked
-  about: the generation's, or one made since (leave, a hand change), which the engine finds in the roster as it
-  stands; a shift it counts staffed (part-day leave) is refused with a pointer to Find cover's list.
+- `cover/` — Find cover for a short shift (`FindCoverPanel`, opened from an Issues row) shows ONE list of who covers
+  it, and asks the engine for its own repair as it opens (`engineRepairApi.ts` `…/repair-options`, kept per gap and
+  revision; `useEngineRepair.ts`, `engineRepairWords.ts`). `coverListView.ts` decides the list: on a roster not
+  published, the engine's options as cards (`EngineRepairOptions`), each reviewed through Find cover's own preview and
+  Apply when the change can be stated exactly (`engineRepairChange.ts` `repairCells`), else made by hand; the API's
+  list ranked by hours (`api.ts`, `useCoverPanel.ts`, `coverOptionWords.ts`, `CoverOptionList`) only when the engine
+  cannot answer. A published roster keeps the API's list, the engine's answer merged in (`coverWithEngine.ts`), since
+  offers to staff go out from it, with the engine's options after it. `NotAssignedList` (`notAssignedWords.ts`, closed
+  until opened) says why nobody else with the job title was put on the shift. Any open gap can be asked about: the
+  generation's, or one made since (leave, a hand change), which the engine finds in the roster as it stands; a shift
+  it counts staffed (part-day leave) is refused, and the API's list is shown instead.
 - `rulesCheck/` — Validate schedule, for whoever may change the roster (`…/roster-check`, under
   `schedule:edit_shift`): `rosterRulesCheckApi.ts` (the working-time rules broken and the staffing gaps, at one
   revision, asked on demand), `useRosterRulesCheck.ts` (the ask and the last answer), `rosterRulesCheckWords.ts` (rule

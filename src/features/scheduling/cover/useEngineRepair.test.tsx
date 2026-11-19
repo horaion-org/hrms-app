@@ -83,7 +83,7 @@ describe("useEngineRepair", () => {
 		expect(calls).toHaveLength(0);
 
 		act(() => {
-			result.current.ask();
+			result.current.askAgain();
 		});
 
 		await waitFor(() => {
@@ -102,7 +102,7 @@ describe("useEngineRepair", () => {
 		answer();
 		const { result, rerender } = hook(1);
 		act(() => {
-			result.current.ask();
+			result.current.askAgain();
 		});
 		await waitFor(() => {
 			expect(result.current.status).toBe("ready");
@@ -118,7 +118,7 @@ describe("useEngineRepair", () => {
 		const { result } = hook(1, true);
 
 		act(() => {
-			result.current.ask();
+			result.current.askAgain();
 		});
 
 		await waitFor(() => {
@@ -141,7 +141,7 @@ describe("useEngineRepair", () => {
 		});
 		const { result } = hook();
 		act(() => {
-			result.current.ask();
+			result.current.askAgain();
 		});
 
 		await waitFor(() => {

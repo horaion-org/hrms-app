@@ -1757,6 +1757,7 @@
 				"order": "Order",
 				"paid": "Paid",
 				"unpaid": "Unpaid",
+				"countsAsHours": "Counts as hours",
 				"reasonRequired": "Reason required",
 				"requestCount_one": "{{count}} request",
 				"requestCount_other": "{{count}} requests",
@@ -1819,6 +1820,8 @@
 				"kindFixed_other": "Used by {{count}} requests, so how it is counted can’t change. Add a new type and deactivate this one instead.",
 				"paid": "Paid",
 				"paidDescription": "For your records. Nothing is worked out from it yet.",
+				"countsTowardsWorkHours": "Counts towards work hours",
+				"countsTowardsWorkHoursDescription": "A day of this leave counts as a normal day in the week’s hours, so overtime is judged with it.",
 				"requiresReason": "Ask for a reason",
 				"requiresReasonDescription": "People must say what the leave is for when they apply. Reviewers of the request can read it.",
 				"allowsPartDays": "Can be taken in part days",
@@ -4926,6 +4929,36 @@
 				"makeAll_one": "Give this person a {{to}} on one of their {{from}} in each of these weeks",
 				"makeAll_other": "Give each of these {{count}} people a {{to}} on one of their {{from}}",
 				"someDone": "{{done}} of {{total}} changed. The others need a look first: use each one’s own button."
+			},
+			"panel": {
+				"toFix_one": "{{count}} to fix",
+				"toFix_other": "{{count}} to fix",
+				"checking": "Checking the rules…",
+				"checked": "Checked {{time}}",
+				"checkedIncomplete": "Checked {{time}} · may be incomplete",
+				"checkAgain": "Check again",
+				"unchecked": "Not checked since your changes",
+				"checkNow": "Check now",
+				"asGenerated": "As generated",
+				"check": "Check",
+				"filtersLabel": "Show",
+				"filters": {
+					"all": "All",
+					"mustFix": "Must fix",
+					"ifPossible": "If possible"
+				},
+				"actions": {
+					"cover": "Cover",
+					"fix": "Fix",
+					"details": "Details",
+					"close": "Close"
+				},
+				"severity": {
+					"mustFix": "Must fix",
+					"ifPossible": "If possible",
+					"note": "Note"
+				},
+				"nothingHere": "Nothing here."
 			}
 		},
 		"rosterMarkers": {
@@ -4942,7 +4975,9 @@
 			"partGapNeedsCover": "{{time}} needs cover",
 			"partGap": "Short {{time}}: {{name}} is on leave",
 			"stretched": "Stretched {{hours}} h into overtime",
-			"overtimePill": "+OT {{time}}"
+			"overtimePill": "+OT {{time}}",
+			"stretchHours": "+{{hours}} h",
+			"stretchOvertime": "+{{hours}} h overtime"
 		},
 		"rosterEdit": {
 			"title": "{{name}} · {{date}}",
@@ -5028,6 +5063,7 @@
 			"summarySwap": "{{first}} ⇄ {{second}}, {{date}}",
 			"edited": "{{label}}, changed",
 			"editedCell": "Changed",
+			"willChange": "{{label}}, will change",
 			"previewing_one": "Previewing: {{count}} day changes",
 			"previewing_other": "Previewing: {{count}} days change",
 			"severity": {
@@ -5236,7 +5272,7 @@
 			},
 			"withEngine": {
 				"order": {
-					"byExtraHours": "In order of fewest extra hours. Rest between shifts and the job title that is short aren’t checked here: ask the engine below.",
+					"byExtraHours": "In order of fewest extra hours. Rest between shifts and the job title that is short aren’t checked here.",
 					"engineFirst": "The engine’s choice first, then by fewest extra hours."
 				},
 				"note": {
@@ -5247,10 +5283,8 @@
 			},
 			"gapWithoutRoles": "{{shift}} · {{day}} · {{time}}",
 			"engine": {
-				"title": "From the scheduling engine",
-				"intro": "The engine can look for its own way to fill this gap. It takes a few seconds.",
-				"ask": "Ask the engine",
-				"loading": "Asking the engine…",
+				"loading": "Working out the options…",
+				"unreachable": "The engine could not be reached. These people are free by their hours and are not checked against the rules.",
 				"none": "The engine found no way to fill this.",
 				"fills": "Fills the gap",
 				"fillsPart": "Fills part of the gap",
@@ -5267,9 +5301,9 @@
 				"move": {
 					"REASSIGN": "Move {{name}} from {{fromShift}} {{fromDay}} to {{shift}} {{day}}",
 					"CALL_IN": "Call in {{name}} for {{shift}} {{day}}",
-					"OVERTIME_EXTENSION": "Extend {{name}}’s {{shift}} by {{hours}} h",
-					"OVERTIME_EXTENSION_AFTER": "{{name}} stays on after {{shift}} until {{time}} (+{{hours}} h)",
-					"OVERTIME_EXTENSION_BEFORE": "{{name}} starts {{shift}} early at {{time}} (+{{hours}} h)",
+					"OVERTIME_EXTENSION": "Extend {{name}}’s {{shift}} · {{overtime}}",
+					"OVERTIME_EXTENSION_AFTER": "{{name}} stays on after {{shift}} · {{overtime}}, until {{time}}",
+					"OVERTIME_EXTENSION_BEFORE": "{{name}} starts {{shift}} early · {{overtime}}, from {{time}}",
 					"UNKNOWN": "A change the app can’t describe yet"
 				},
 				"refusal": {

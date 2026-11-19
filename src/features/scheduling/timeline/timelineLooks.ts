@@ -9,6 +9,7 @@ import {
 } from "@/features/scheduling/roster/roster";
 import { weekStateTones } from "@/features/scheduling/months/weekStateLooks";
 import type { StripState } from "@/features/scheduling/timeline/rosterStrip";
+import { stretchHoursMark } from "@/features/scheduling/shifts/stretchWords";
 import type { TimelineView } from "@/features/scheduling/timeline/timeline";
 
 /*
@@ -158,7 +159,10 @@ const dayWordOf = (
 
 /** What a tile shows of a day: a shift's name and times, or a day without a shift. A roster's cell, or a day entered by hand. */
 export type TileCell =
-	| Pick<RosterShiftCell, "kind" | "name" | "start" | "end" | "workedTimes">
+	| Pick<
+			RosterShiftCell,
+			"kind" | "name" | "start" | "end" | "workedTimes" | "stretchMinutes"
+	  >
 	| RosterDayWithoutShift;
 
 /**
@@ -168,9 +172,10 @@ export type TileCell =
 export type TileLine = { text: string; isTime: boolean };
 
 /**
- * The lines a cell's tile shows in `view`: a shift's time over its name, its
- * name, or its initial; any other day in the roster's own word (short in two
- * weeks), or its initial.
+ * The lines a cell's tile shows in `view`: a shift's time over its name (a
+ * day stretched into overtime with "+2 h" after its time), its name, or its
+ * initial; any other day in the roster's own word (short in two weeks), or
+ * its initial.
  */
 export const cellLinesOf = (
 	cell: TileCell,
@@ -182,7 +187,12 @@ export const cellLinesOf = (
 	if (shown === "initial") return [{ text: word.charAt(0), isTime: false }];
 	if (shown === "timeOverName" && cell.kind === "shift")
 		return [
-			{ text: shiftTimeText(cell, t), isTime: true },
+			{
+				text: [shiftTimeText(cell, t), stretchHoursMark(cell.stretchMinutes, t)]
+					.filter(Boolean)
+					.join(" "),
+				isTime: true,
+			},
 			{ text: cell.name, isTime: false },
 		];
 	return [{ text: word, isTime: false }];

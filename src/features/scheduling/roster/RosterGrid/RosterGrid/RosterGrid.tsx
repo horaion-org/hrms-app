@@ -1,5 +1,5 @@
 import dayjs from "dayjs";
-import type { ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { dayColumnClasses } from "@/common/dayView";
 import { formattingLocale } from "@/common/formattingLocale";
@@ -32,6 +32,7 @@ import {
 } from "@/features/scheduling/roster/rosterMarks";
 import { rosterCellKey } from "@/features/scheduling/rosterChanges/rosterEdit";
 import { cellMarkLooks, rosterLooks } from "@/features/scheduling/roster/rosterLooks";
+import { usePreviewedCellInView } from "@/features/scheduling/roster/RosterGrid/RosterGrid/usePreviewedCellInView";
 
 export type RosterGridProps = {
 	/** The seven ISO dates shown, Monday first. */
@@ -68,7 +69,10 @@ export type RosterGridProps = {
 	selectedDayKey?: string;
 	/** Days changed by hand since generation, as `rosterCellKey` names them: marked with a ring unless an issue's dot wins. */
 	editedDays?: ReadonlySet<string>;
-	/** Days a change being previewed would touch: outlined, dashed. */
+	/**
+	 * Days a change being previewed would touch: ringed and tinted, said as
+	 * "will change", the first scrolled into view; every other day dims.
+	 */
 	previewDays?: ReadonlySet<string>;
 	/**
 	 * Days the member is offered a shift on, as `rosterCellKey` names them,
@@ -142,6 +146,12 @@ export const RosterGrid = ({
 	});
 	const dayName = (date: string): string =>
 		fullDay.format(dayjs(date).toDate());
+	const gridRef = useRef<HTMLDivElement>(null);
+	usePreviewedCellInView(gridRef, previewDays);
+	const previewing = previewDays !== undefined && previewDays.size > 0;
+	/** Whether the change being previewed touches this day. */
+	const isPreviewed = (key: string | undefined): boolean =>
+		key !== undefined && previewDays?.has(key) === true;
 	/** A header's count, or nothing when there is nothing to count or nowhere to show it. */
 	const headerCount = (
 		count: HeaderCount | undefined,
@@ -159,7 +169,7 @@ export const RosterGrid = ({
 				}}
 			/>
 		);
-	/** A day's one mark and what its tile's label adds for it: "…, changed, needs a look: 2". */
+	/** A day's one mark and what its tile's label adds for it: "…, changed, will change, needs a look: 2". */
 	const cellMarking = (
 		row: RosterRow,
 		date: string,
@@ -172,13 +182,16 @@ export const RosterGrid = ({
 		const edited = changed
 			? t("scheduling.rosterEdit.edited", { label })
 			: label;
-		const named =
+		const offered =
 			offeredBy === undefined
 				? edited
 				: t("scheduling.coverOffers.tileOffered", {
 						label: edited,
 						time: offeredBy,
 					});
+		const named = isPreviewed(key)
+			? t("scheduling.rosterEdit.willChange", { label: offered })
+			: offered;
 		return {
 			mark: cellMark({ issues, changed, showsIssues }),
 			label:
@@ -310,6 +323,7 @@ export const RosterGrid = ({
 
 	return (
 		<div
+			ref={gridRef}
 			className={joinClassNames(
 				"min-w-0 overflow-x-auto rounded-lg border border-neutral-400",
 				className
@@ -419,12 +433,13 @@ export const RosterGrid = ({
 											key={date}
 											data-cell={key}
 											className={joinClassNames(
-												"align-middle",
+												"align-middle transition-opacity motion-reduce:transition-none",
 												compact ? "p-1" : "p-3",
 												dayColumnClasses(date, shownDay),
-												key !== undefined &&
-													previewDays?.has(key) &&
-													"outline-2 -outline-offset-4 outline-dashed outline-ink-blue-500"
+												// While a change is previewed, its days stand out and the rest step back.
+												isPreviewed(key)
+													? "bg-ink-blue-50 outline-2 -outline-offset-4 outline-solid outline-ink-blue-700"
+													: previewing && "opacity-40"
 											)}
 										>
 											{cellContent(row, name, date)}

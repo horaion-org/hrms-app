@@ -60,6 +60,8 @@ export type RosterIssue = {
 	time: string | null;
 	/** Why it is listed and, where there is something to do, what to do, the rule's name last. */
 	rule: string;
+	/** The rule's name alone, for a rule's row ("Most days a week"); left out for any other row. */
+	ruleName?: string;
 	/** What kind of fact it is, in a few plain words ("Shifts short"), which a folded group counts by. */
 	topic: string;
 	action: IssueAction;
@@ -199,6 +201,7 @@ const placelessRuleIssue = (
 	group,
 	topic: issueTopic(RULE_TOPICS[group], t),
 	who: ruleName,
+	ruleName,
 	memberProfileId: null,
 	day: null,
 	time: null,
@@ -269,6 +272,7 @@ const ruleIssues = (
 			days,
 			time: null,
 			rule: ruleReason(group, ruleName, messages, t),
+			ruleName,
 			action: { kind: "show" },
 			subject: {
 				kind: "rule",
@@ -297,6 +301,7 @@ const ruleIssues = (
 				day: violation.date,
 				time: null,
 				rule: ruleReason(group, ruleName, violation.messages, t),
+				ruleName,
 				action: { kind: "show" },
 				subject: { kind: "rule", rule: rule.rule },
 			};

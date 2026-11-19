@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useId, useMemo } from "react";
+import { useId, useMemo, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
@@ -13,6 +13,7 @@ import {
 } from "@/features/leaveTypes/api";
 import { refusalFor } from "@/features/leaveTypes/LeaveTypeDialog/refusalFor";
 import {
+	countsTowardsWorkHoursAfterPaidChange,
 	initialLeaveTypeValues,
 	leaveTypeBodyOf,
 	leaveTypeSchema,
@@ -43,9 +44,10 @@ const key = "settings.leave.dialog";
 
 /**
  * Adds a leave type to the company's catalogue, or edits one: its name, how
- * it is counted, whether it is paid, whether applying asks for a reason,
- * whether it can be taken in part days and where it applies: the whole
- * company, chosen Branches or chosen Departments.
+ * it is counted, whether it is paid, whether a day of it counts towards the
+ * week's work hours (a new type's follows Paid until set by hand), whether
+ * applying asks for a reason, whether it can be taken in part days and where
+ * it applies: the whole company, chosen Branches or chosen Departments.
  * Once any request uses the type, how it is counted is fixed, as the API
  * keeps it. Mount when opened and unmount when closed so every attempt starts
  * fresh.
@@ -71,10 +73,14 @@ export const LeaveTypeDialog = ({
 		register,
 		control,
 		handleSubmit,
+		getValues,
+		setValue,
 		formState: { errors, isSubmitting },
 	} = form;
 	const name = useWatch({ control, name: "name" });
 	const submit = useCreateFormSubmit(form, FIELDS, onClose);
+	// Once the person sets the work-hours box themselves, Paid no longer moves it.
+	const [countsSetByPerson, setCountsSetByPerson] = useState(false);
 	// The API refuses a new kind once any request uses the type, so it is not offered.
 	// An earned type (Off in lieu) keeps its kind: it draws on time off earned, and is the only kind shown.
 	const earned = editing?.grantKind === "EARNED";
@@ -173,6 +179,33 @@ export const LeaveTypeDialog = ({
 						onBlur={field.onBlur}
 						onChange={(event) => {
 							field.onChange(event.target.checked);
+							setValue(
+								"countsTowardsWorkHours",
+								countsTowardsWorkHoursAfterPaidChange({
+									adding: editing === undefined,
+									setByPerson: countsSetByPerson,
+									paid: event.target.checked,
+									countsTowardsWorkHours: getValues("countsTowardsWorkHours"),
+								})
+							);
+						}}
+					/>
+				)}
+			/>
+			<Controller
+				control={control}
+				name="countsTowardsWorkHours"
+				render={({ field }) => (
+					<Checkbox
+						checked={field.value}
+						description={t(`${key}.countsTowardsWorkHoursDescription`)}
+						disabled={isSubmitting}
+						label={t(`${key}.countsTowardsWorkHours`)}
+						name={field.name}
+						onBlur={field.onBlur}
+						onChange={(event) => {
+							field.onChange(event.target.checked);
+							setCountsSetByPerson(true);
 						}}
 					/>
 				)}

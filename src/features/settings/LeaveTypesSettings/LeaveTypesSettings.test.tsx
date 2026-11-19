@@ -100,7 +100,7 @@ describe("LeaveTypesSettings", () => {
 			expect.stringContaining("Annual leave"),
 			expect.stringContaining("Sick leave"),
 		]);
-		expect(rows[0]).toHaveTextContent("Paid");
+		expect(rows[0]).toHaveTextContent("Paid · Counts as hours");
 		expect(rows[0]).toHaveTextContent("12 requests");
 		// Where each type applies: the whole company, or the Departments it names.
 		expect(rows[0]).toHaveTextContent("All departments");
@@ -260,6 +260,7 @@ describe("LeaveTypesSettings", () => {
 				name: "Annual leave",
 				grantKind: "ALLOWANCE",
 				paid: true,
+				countsTowardsWorkHours: true,
 				requiresReason: false,
 				allowsPartDays: true,
 				appliesToBranchIds: [],
@@ -407,6 +408,7 @@ describe("LeaveTypesSettings", () => {
 				name: "Study leave",
 				grantKind: "UNTRACKED",
 				paid: true,
+				countsTowardsWorkHours: false,
 				requiresReason: true,
 				allowsPartDays: true,
 				appliesToBranchIds: [],

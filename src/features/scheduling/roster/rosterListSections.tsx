@@ -26,11 +26,11 @@ import {
 	type IssueNote,
 	type RosterIssue,
 } from "@/features/scheduling/roster/rosterIssueGroups";
+import type { IssueFixing } from "@/features/scheduling/roster/RosterIssueGroups";
 import {
-	FixableIssueGroups,
-	RosterIssueGroups,
-	type IssueFixing,
-} from "@/features/scheduling/roster/RosterIssueGroups";
+	FixableRosterIssuesList,
+	RosterIssuesList,
+} from "@/features/scheduling/roster/IssuesPanel";
 import type { RosterPanel } from "@/features/scheduling/roster/rosterSearch";
 import type { RosterView } from "@/features/scheduling/roster/rosterView";
 import type { RosterChangeTarget } from "@/features/scheduling/rosterChanges/useRosterChangeActions";
@@ -76,12 +76,8 @@ export type RosterListInput = {
 	details?: ReadonlyArray<DescriptionListItem>;
 	/** The roster's approval trail for Approval. */
 	approval?: ReactNode;
-	/**
-	 * What Validate schedule says of the list, first in Issues: that the
-	 * schedule changed since the list was made (with the action), that it is
-	 * being validated, refused, could not be checked, or holds clean.
-	 */
-	validationNote?: ReactNode;
+	/** Whether the rules check is offered here; its line then says how the list stands. */
+	validating?: boolean;
 	/** Every Issues item by what to do (`issuesOfRoster`). */
 	issues: ReadonlyArray<RosterIssue>;
 	/** Scrolls an item's cell into view and outlines it. */
@@ -103,11 +99,11 @@ export type RosterListInput = {
 export const issueNoteLines = ({
 	roster: { findings, editedDays },
 	membersWithChangedStart,
-	validationNote,
+	validating,
 	t,
 }: Pick<
 	RosterListInput,
-	"roster" | "membersWithChangedStart" | "validationNote" | "t"
+	"roster" | "membersWithChangedStart" | "validating" | "t"
 >): Array<IssueNote> => [
 	...(membersWithChangedStart > 0
 		? [
@@ -120,7 +116,7 @@ export const issueNoteLines = ({
 				},
 			]
 		: []),
-	...(findings && editedDays.size > 0 && !validationNote
+	...(findings && editedDays.size > 0 && !validating
 		? [
 				{
 					title: t("scheduling.issues.fromGeneration.title"),
@@ -205,9 +201,9 @@ export const headerIssueSections = (
 };
 
 /**
- * The whole Issues list by what to do, the validation result at its head and
- * the cover offers out under More information; or one header's part of
- * it when it was opened from a header.
+ * The whole Issues list, one row per issue (`RosterIssuesList`), the cover
+ * offers out under it; or one header's part of it when it was opened from a
+ * header. The rules check's line is the panel's summary, not a section.
  */
 export const issuesSections = (
 	input: RosterListInput
@@ -217,15 +213,18 @@ export const issuesSections = (
 		assignments,
 		coverOffers,
 		onFindCover,
-		validationNote,
 		issues,
 		onShowIssue,
 		issueFixing,
 	} = input;
 	if (issuesAbout) return headerIssueSections(issuesAbout, input);
+	/** A shift's name by its id, as the roster's own days name it. */
+	const shiftName = (shiftId: string): string =>
+		assignments.find((row) => row.shift?.shiftId === shiftId)?.shift?.name ??
+		"";
 	const list = {
 		issues,
-		validationNote,
+		shiftName,
 		information: coverOffers &&
 			(coverOffers.failed || coverOffers.offers.length > 0) && (
 				<OffersOutSection
@@ -244,9 +243,9 @@ export const issuesSections = (
 		{
 			key: "issues",
 			content: issueFixing ? (
-				<FixableIssueGroups {...list} fixing={issueFixing} />
+				<FixableRosterIssuesList {...list} fixing={issueFixing} />
 			) : (
-				<RosterIssueGroups {...list} />
+				<RosterIssuesList {...list} />
 			),
 		},
 	];
