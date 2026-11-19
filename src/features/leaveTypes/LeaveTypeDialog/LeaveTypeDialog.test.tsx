@@ -23,6 +23,7 @@ import {
 	managedLeaveTypeFixture,
 } from "@/features/leaveTypes/fixtures";
 import {
+	countsTowardsWorkHoursAfterPaidChange,
 	initialLeaveTypeValues,
 	leaveTypeBodyOf,
 	leaveTypeSchema,
@@ -113,6 +114,7 @@ describe("LeaveTypeDialog", () => {
 				name: "Study leave",
 				grantKind: "PER_OCCASION",
 				paid: true,
+				countsTowardsWorkHours: true,
 				requiresReason: true,
 				allowsPartDays: true,
 				appliesToBranchIds: [],
@@ -213,6 +215,7 @@ describe("LeaveTypeDialog", () => {
 				name: "Holiday",
 				grantKind: "ALLOWANCE",
 				paid: true,
+				countsTowardsWorkHours: true,
 				requiresReason: false,
 				allowsPartDays: true,
 				appliesToBranchIds: [],
@@ -307,6 +310,84 @@ describe("LeaveTypeDialog", () => {
 	});
 });
 
+describe("LeaveTypeDialog counts towards work hours", () => {
+	const countsBox = (dialog: HTMLElement): HTMLElement =>
+		within(dialog).getByRole("checkbox", { name: /Counts towards work hours/ });
+	const paidBox = (dialog: HTMLElement): HTMLElement =>
+		within(dialog).getByRole("checkbox", { name: /Paid/ });
+
+	it("on a new type follows Paid until the person sets it, then sends their choice", async () => {
+		const calls = stubApi(
+			routes({
+				[`POST ${LEAVE_TYPES}`]: {
+					status: 201,
+					body: envelope(managedLeaveTypeFixture()),
+				},
+			})
+		);
+		const user = userEvent.setup();
+		const dialog = await openAdd();
+
+		expect(countsBox(dialog)).toBeChecked();
+		await user.click(paidBox(dialog));
+		expect(countsBox(dialog)).not.toBeChecked();
+		await user.click(countsBox(dialog));
+		await user.click(paidBox(dialog));
+		await user.click(paidBox(dialog));
+		expect(countsBox(dialog)).toBeChecked();
+		expect(paidBox(dialog)).not.toBeChecked();
+		await user.type(within(dialog).getByLabelText("Name"), "Study leave");
+		await user.click(
+			within(dialog).getByRole("button", { name: "Add leave type" })
+		);
+
+		await waitFor(() => {
+			expect(
+				calls.find(
+					(call) => call.method === "POST" && call.path === LEAVE_TYPES
+				)?.body
+			).toMatchObject({ paid: false, countsTowardsWorkHours: true });
+		});
+	});
+
+	it("on an edit shows the stored value, which Paid does not move, and sends it", async () => {
+		const annual = managedLeaveTypeFixture({ countsTowardsWorkHours: false });
+		const calls = stubApi(
+			routes({
+				[`GET ${LEAVE_TYPES}`]: { status: 200, body: envelope([annual]) },
+				[`PUT ${LEAVE_TYPES}/lt-annual`]: {
+					status: 200,
+					body: envelope(annual),
+				},
+			})
+		);
+		const user = userEvent.setup();
+		const panel = await openPanel();
+
+		await user.click(
+			await within(panel).findByRole("button", { name: "Edit Annual leave" })
+		);
+		const dialog = await screen.findByRole("dialog", {
+			name: "Edit leave type",
+		});
+		expect(paidBox(dialog)).toBeChecked();
+		expect(countsBox(dialog)).not.toBeChecked();
+		await user.click(paidBox(dialog));
+		await user.click(paidBox(dialog));
+		expect(countsBox(dialog)).not.toBeChecked();
+		await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+		await waitFor(() => {
+			expect(
+				calls.find(
+					(call) =>
+						call.method === "PUT" && call.path === `${LEAVE_TYPES}/lt-annual`
+				)?.body
+			).toMatchObject({ paid: true, countsTowardsWorkHours: false });
+		});
+	});
+});
+
 describe("LeaveTypeDialog applies to", () => {
 	it("adds a type for chosen departments", async () => {
 		const calls = stubApi(
@@ -375,19 +456,25 @@ describe("leave type form rules", () => {
 			name: "",
 			grantKind: "ALLOWANCE",
 			paid: true,
+			countsTowardsWorkHours: true,
 			requiresReason: false,
 			allowsPartDays: true,
 			reach: { appliesTo: "COMPANY", branchIds: [], departmentIds: [] },
 		});
 		expect(
 			initialLeaveTypeValues({
-				...managedLeaveTypeFixture({ paid: false, requiresReason: true }),
+				...managedLeaveTypeFixture({
+					paid: false,
+					countsTowardsWorkHours: false,
+					requiresReason: true,
+				}),
 				grantKind: "UNTRACKED",
 			})
 		).toEqual({
 			name: "Annual leave",
 			grantKind: "UNTRACKED",
 			paid: false,
+			countsTowardsWorkHours: false,
 			requiresReason: true,
 			allowsPartDays: true,
 			reach: { appliesTo: "COMPANY", branchIds: [], departmentIds: [] },
@@ -400,6 +487,7 @@ describe("leave type form rules", () => {
 				name: "Study <leave>",
 				grantKind: "ALLOWANCE",
 				paid: true,
+				countsTowardsWorkHours: true,
 				requiresReason: false,
 				allowsPartDays: true,
 				reach: { appliesTo: "COMPANY", branchIds: [], departmentIds: [] },
@@ -409,6 +497,7 @@ describe("leave type form rules", () => {
 			name: "Study leave",
 			grantKind: "UNTRACKED",
 			paid: false,
+			countsTowardsWorkHours: true,
 			requiresReason: true,
 			allowsPartDays: false,
 			reach: {
@@ -421,10 +510,30 @@ describe("leave type form rules", () => {
 			name: "Study leave",
 			grantKind: "UNTRACKED",
 			paid: false,
+			countsTowardsWorkHours: true,
 			requiresReason: true,
 			allowsPartDays: false,
 			appliesToBranchIds: [],
 			appliesToDepartmentIds: ["d-kitchen"],
 		});
 	});
+
+	it.each([
+		{ adding: true, setByPerson: false, paid: false, counts: true, after: false },
+		{ adding: true, setByPerson: false, paid: true, counts: false, after: true },
+		{ adding: true, setByPerson: true, paid: false, counts: true, after: true },
+		{ adding: false, setByPerson: false, paid: false, counts: true, after: true },
+	])(
+		"after Paid changes the work-hours box is $after (adding $adding, set by the person $setByPerson)",
+		({ adding, setByPerson, paid, counts, after }) => {
+			expect(
+				countsTowardsWorkHoursAfterPaidChange({
+					adding,
+					setByPerson,
+					paid,
+					countsTowardsWorkHours: counts,
+				})
+			).toBe(after);
+		}
+	);
 });

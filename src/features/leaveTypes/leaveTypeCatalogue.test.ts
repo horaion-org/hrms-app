@@ -112,6 +112,7 @@ describe("statusToggleBody", () => {
 			name: "Study leave",
 			grantKind: "UNTRACKED",
 			paid: false,
+			countsTowardsWorkHours: false,
 			requiresReason: true,
 			allowsPartDays: true,
 			appliesToBranchIds: [],
@@ -132,5 +133,19 @@ describe("statusToggleBody", () => {
 			appliesToDepartmentIds: ["d-kitchen"],
 			status: "INACTIVE",
 		});
+	});
+
+	/** An older API leaves the setting out; the toggle must still send it, as the type's paid value. */
+	it("sends the work-hours setting back, an older answer's as its paid value", () => {
+		const annual = LEAVE_TYPE_CATALOGUE_FIXTURE[0]!;
+		if (!hasKnownKind(annual)) throw new Error("fixture kind");
+		expect(
+			statusToggleBody({ ...annual, countsTowardsWorkHours: false })
+				.countsTowardsWorkHours
+		).toBe(false);
+		expect(
+			statusToggleBody({ ...annual, countsTowardsWorkHours: undefined })
+				.countsTowardsWorkHours
+		).toBe(true);
 	});
 });
