@@ -5036,7 +5036,7 @@
 			},
 			"withEngine": {
 				"order": {
-					"byExtraHours": "Por orden de menos horas extra. Aquí no se comprueba el descanso entre turnos ni el puesto que falta: pregunta al motor más abajo.",
+					"byExtraHours": "Por orden de menos horas extra. Aquí no se comprueba el descanso entre turnos ni el puesto que falta.",
 					"engineFirst": "Primero la elección del motor; después, por menos horas extra."
 				},
 				"note": {
@@ -5047,10 +5047,8 @@
 			},
 			"gapWithoutRoles": "{{shift}} · {{day}} · {{time}}",
 			"engine": {
-				"title": "Del motor de planificación",
-				"intro": "El motor puede buscar su propia forma de cubrir este hueco. Tarda unos segundos.",
-				"ask": "Preguntar al motor",
-				"loading": "Preguntando al motor…",
+				"loading": "Buscando las opciones…",
+				"unreachable": "No se pudo contactar con el motor. Estas personas están libres según sus horas y no se comprueban con las reglas.",
 				"none": "El motor no encontró forma de cubrirlo.",
 				"fills": "Cubre el hueco",
 				"fillsPart": "Cubre parte del hueco",

@@ -9,6 +9,11 @@ import {
 	type CoverOptions,
 } from "@/features/scheduling/cover/api";
 import {
+	coverListView,
+	showsBackendList,
+	type CoverListView,
+} from "@/features/scheduling/cover/coverListView";
+import {
 	coverWithEngine,
 	type CoverWithEngine,
 } from "@/features/scheduling/cover/coverWithEngine";
@@ -99,12 +104,15 @@ export type CoverPanel = {
 	options: CoverOptions | undefined;
 	/** The list with the engine's answer merged into it; the backend's own until the engine has answered. */
 	withEngine: CoverWithEngine | undefined;
-	/** The engine's own options for the gap, asked for on demand. */
-	engineRepair: EngineRepairState & { ask: () => void };
+	/** The engine's own options for the gap, asked for as the panel opens. */
+	engineRepair: EngineRepairState & { askAgain: () => void };
+	/** Which list the panel shows: the engine's options, or the backend's people (`coverListView`). */
+	view: CoverListView;
 	/**
-	 * The chosen option; until one is chosen, the one the engine suggests, or
-	 * the first while the engine has not answered. Nobody once the engine has
-	 * answered without a suggestion, or refuses the one chosen.
+	 * The chosen person of the backend's list, only while that list is shown;
+	 * until one is chosen, the one the engine suggests, or the first while the
+	 * engine has not answered. Nobody once the engine has answered without a
+	 * suggestion, or refuses the one chosen.
 	 */
 	selected: CoverOption | undefined;
 	select: (membershipId: string) => void;
@@ -150,9 +158,11 @@ const statusOf = (
 
 /**
  * Find cover's state and calls, no words on screen: the ranked list for the
- * gap, the engine's own answer once asked for (`useEngineRepair`) merged into
- * that list (`coverWithEngine`), the chosen option (the engine's suggestion,
- * or the first while the engine has not answered), its preview
+ * gap, the engine's own answer asked for at once (`useEngineRepair`), which of
+ * the two the panel lists (`coverListView`), the engine's answer merged into
+ * the ranked list where that list shows (`coverWithEngine`), the chosen person
+ * (the engine's suggestion, or the first while the engine has not answered;
+ * nobody while the engine's options are the list), its preview
  * through the roster-change preview (the grid outlines what it touches),
  * and Apply on a draft or the offer actions on a published roster, exactly
  * as the day editor does it (`useRosterCellPanel`, `useCellCoverOffer`). An
@@ -213,7 +223,12 @@ export const useCoverPanel = ({
 			engineRepair.status === "ready" ? engineRepair : undefined,
 			profileIdOf
 		);
-	const shown = status === "options" ? (withEngine?.options ?? []) : [];
+	const view = coverListView(status, engineRepair.status, Boolean(coverOffers));
+	// While the engine's options are the list, nobody of the backend's list is chosen or previewed.
+	const shown =
+		status === "options" && showsBackendList(view)
+			? (withEngine?.options ?? [])
+			: [];
 	// The first row is the default only while the list is the backend's own: once the engine has answered,
 	// the default is the person it suggests, and nobody when it suggests no one.
 	const defaultChoice =
@@ -321,6 +336,7 @@ export const useCoverPanel = ({
 		options,
 		withEngine,
 		engineRepair,
+		view,
 		selected,
 		select: (membershipId): void => {
 			setChosen(membershipId);

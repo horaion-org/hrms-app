@@ -1,6 +1,6 @@
-import { useId } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
+import { Disclosure } from "@/components/ui/Disclosure";
 import type { NotAssignedPerson } from "@/features/scheduling/cover/engineRepairApi";
 import {
 	couldTakeTheShift,
@@ -16,22 +16,18 @@ export type NotAssignedListProps = {
 const key = "scheduling.cover.engine.whyNot";
 
 /**
- * Under the engine's repair options: why nobody was assigned, one person a
- * line with their reasons in plain words, those who could take the shift
- * first. Nothing when the engine could not work it out; a plain line when
- * nobody else holds the job title.
+ * Under the engine's repair options, closed until opened: why nobody was
+ * assigned, one person a line with their reasons in plain words, those who
+ * could take the shift first. Nothing when the engine could not work it out;
+ * a plain line when nobody else holds the job title.
  */
 export const NotAssignedList = ({
 	people,
 }: NotAssignedListProps): FunctionComponent => {
 	const { t } = useTranslation();
-	const headingId = useId();
 	if (people === null || people === undefined) return null;
 	return (
-		<section aria-labelledby={headingId} className="flex flex-col gap-2">
-			<h3 className="text-sm font-medium text-neutral-800" id={headingId}>
-				{t(`${key}.title`)}
-			</h3>
+		<Disclosure title={t(`${key}.title`)} variant="inline">
 			{people.length === 0 ? (
 				<p className="text-neutral-800">{t(`${key}.nobodyElse`)}</p>
 			) : (
@@ -50,6 +46,6 @@ export const NotAssignedList = ({
 					))}
 				</ul>
 			)}
-		</section>
+		</Disclosure>
 	);
 };

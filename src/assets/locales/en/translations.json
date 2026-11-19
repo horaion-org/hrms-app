@@ -5236,7 +5236,7 @@
 			},
 			"withEngine": {
 				"order": {
-					"byExtraHours": "In order of fewest extra hours. Rest between shifts and the job title that is short aren’t checked here: ask the engine below.",
+					"byExtraHours": "In order of fewest extra hours. Rest between shifts and the job title that is short aren’t checked here.",
 					"engineFirst": "The engine’s choice first, then by fewest extra hours."
 				},
 				"note": {
@@ -5247,10 +5247,8 @@
 			},
 			"gapWithoutRoles": "{{shift}} · {{day}} · {{time}}",
 			"engine": {
-				"title": "From the scheduling engine",
-				"intro": "The engine can look for its own way to fill this gap. It takes a few seconds.",
-				"ask": "Ask the engine",
-				"loading": "Asking the engine…",
+				"loading": "Working out the options…",
+				"unreachable": "The engine could not be reached. These people are free by their hours and are not checked against the rules.",
 				"none": "The engine found no way to fill this.",
 				"fills": "Fills the gap",
 				"fillsPart": "Fills part of the gap",

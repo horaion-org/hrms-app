@@ -32,24 +32,11 @@ const NOT_CHECKED =
 	"Working-time rules (hours a day, overtime a month, days a week, leave) aren’t checked for this change. After you apply it, press Validate schedule.";
 
 describe("EngineRepairOptions", () => {
-	it("asks the engine only when the button is pressed", async () => {
-		const ask = vi.fn();
-		render(
-			<EngineRepairOptions names={names} repair={{ status: "idle", ask }} />
-		);
-
-		await userEvent.click(
-			screen.getByRole("button", { name: "Ask the engine" })
-		);
-
-		expect(ask).toHaveBeenCalledOnce();
-	});
-
 	it("says it is asking while the engine works", () => {
 		render(
 			<EngineRepairOptions
 				names={names}
-				repair={{ status: "loading", ask: vi.fn() }}
+				repair={{ status: "loading", askAgain: vi.fn() }}
 			/>
 		);
 
@@ -66,7 +53,7 @@ describe("EngineRepairOptions", () => {
 						feasibleRepair([callInMove(), stretchMove()]),
 						infeasibleRepair(),
 					],
-					ask: vi.fn(),
+					askAgain: vi.fn(),
 				}}
 			/>
 		);
@@ -103,7 +90,7 @@ describe("EngineRepairOptions", () => {
 		render(
 			<EngineRepairOptions
 				names={names}
-				repair={{ status: "ready", options: [], ask: vi.fn() }}
+				repair={{ status: "ready", options: [], askAgain: vi.fn() }}
 			/>
 		);
 
@@ -117,7 +104,7 @@ describe("EngineRepairOptions", () => {
 		const { rerender } = render(
 			<EngineRepairOptions
 				names={names}
-				repair={{ status: "refused", refusal: "notSeenByEngine", ask }}
+				repair={{ status: "refused", refusal: "notSeenByEngine", askAgain: ask }}
 			/>
 		);
 		expect(screen.getByRole("alert")).toHaveTextContent(
@@ -128,7 +115,7 @@ describe("EngineRepairOptions", () => {
 		rerender(
 			<EngineRepairOptions
 				names={names}
-				repair={{ status: "refused", refusal: "failed", ask }}
+				repair={{ status: "refused", refusal: "failed", askAgain: ask }}
 			/>
 		);
 		await userEvent.click(screen.getByRole("button", { name: "Try again" }));
@@ -140,7 +127,7 @@ describe("EngineRepairOptions", () => {
 		render(
 			<EngineRepairOptions
 				names={names}
-				repair={{ status: "refused", refusal: "tooSlow", ask }}
+				repair={{ status: "refused", refusal: "tooSlow", askAgain: ask }}
 			/>
 		);
 
@@ -159,7 +146,7 @@ describe("EngineRepairOptions", () => {
 				feasibleRepair([callInMove()]),
 				feasibleRepair([stretchMove({ side: null })]),
 			],
-			ask: vi.fn(),
+			askAgain: vi.fn(),
 		};
 		const { rerender } = render(
 			<EngineRepairOptions names={names} repair={repair} onReview={onReview} />
@@ -202,7 +189,7 @@ describe("EngineRepairOptions", () => {
 							workingTimeRulesChecked: true,
 						}),
 					],
-					ask: vi.fn(),
+					askAgain: vi.fn(),
 				}}
 				onReview={onReview}
 			/>
@@ -236,7 +223,7 @@ describe("EngineRepairOptions", () => {
 				repair={{
 					status: "ready",
 					options: [partStretchRepair()],
-					ask: vi.fn(),
+					askAgain: vi.fn(),
 				}}
 			/>
 		);
@@ -262,7 +249,7 @@ describe("EngineRepairOptions", () => {
 						feasibleRepair([reassignMove({ fromDate: "2026-10-16" })]),
 						infeasibleRepair(),
 					],
-					ask: vi.fn(),
+					askAgain: vi.fn(),
 				}}
 				onReview={vi.fn()}
 			/>
@@ -302,7 +289,7 @@ describe("EngineRepairOptions", () => {
 						feasibleRepair([callInMove()], { workingTimeRulesChecked: true }),
 						feasibleRepair([stretchMove()]),
 					],
-					ask: vi.fn(),
+					askAgain: vi.fn(),
 				}}
 			/>
 		);
@@ -328,7 +315,7 @@ describe("EngineRepairOptions", () => {
 						}),
 						feasibleRepair([callInMove()]),
 					],
-					ask: vi.fn(),
+					askAgain: vi.fn(),
 				}}
 			/>
 		);

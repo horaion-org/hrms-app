@@ -171,10 +171,13 @@ export const repairOptionsKey = (
 		revision,
 	] as const;
 
+/** How long one gap's engine options are kept: reopening the same gap at the same revision shows them again. */
+const REPAIR_OPTIONS_KEPT_MS = 5 * 60 * 1000;
+
 /**
- * The engine's options for `gap`, asked for only once `asked` (the engine
- * takes a moment, so a button asks); never cached past its use, as Find
- * cover's own list.
+ * The engine's options for `gap` at `revision`, asked for only while `asked`
+ * (Find cover asks as it opens, but not while a change lands). Kept for a
+ * while under the gap and revision, so reopening the gap does not solve again.
  */
 export const repairOptionsQuery = (
 	target: RosterChangeTarget,
@@ -198,7 +201,7 @@ export const repairOptionsQuery = (
 					)
 			: skipToken,
 		meta: administrativeMeta(target.companyId),
-		staleTime: 0,
-		gcTime: 0,
+		staleTime: REPAIR_OPTIONS_KEPT_MS,
+		gcTime: REPAIR_OPTIONS_KEPT_MS,
 		retry: false,
 	});

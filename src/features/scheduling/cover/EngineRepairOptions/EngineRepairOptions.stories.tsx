@@ -21,7 +21,7 @@ const meta = {
 			day: (): string => "Sat, Oct 17",
 			hours: (minutes: number): string => String(minutes / 60),
 		},
-		repair: { status: "idle", ask: fn() },
+		repair: { status: "loading", askAgain: fn() },
 	},
 } satisfies Meta<typeof EngineRepairOptions>;
 
@@ -29,13 +29,8 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** Before the engine is asked. */
-export const NotAskedYet: Story = {};
-
 /** While the engine works. */
-export const Asking: Story = {
-	args: { repair: { status: "loading", ask: fn() } },
-};
+export const Asking: Story = {};
 
 /** A call-in, a move and a stretch that fill it, then the engine's honest no. */
 export const Options: Story = {
@@ -47,7 +42,7 @@ export const Options: Story = {
 				feasibleRepair([reassignMove(), stretchMove()]),
 				infeasibleRepair(),
 			],
-			ask: fn(),
+			askAgain: fn(),
 		},
 	},
 };
@@ -64,7 +59,7 @@ export const OvertimeStretch: Story = {
 					extraMinutes: { overtime: 120, restDayWork: 0, timeOffEarned: 0 },
 				}),
 			],
-			ask: fn(),
+			askAgain: fn(),
 		},
 	},
 };
@@ -72,16 +67,16 @@ export const OvertimeStretch: Story = {
 /** Chen's stretch fills the gap's last two hours; the rest is still short, and the panel says what to do. */
 export const PartialStretch: Story = {
 	args: {
-		repair: { status: "ready", options: [partStretchRepair()], ask: fn() },
+		repair: { status: "ready", options: [partStretchRepair()], askAgain: fn() },
 	},
 };
 
 /** The engine found nothing. */
 export const Nothing: Story = {
-	args: { repair: { status: "ready", options: [], ask: fn() } },
+	args: { repair: { status: "ready", options: [], askAgain: fn() } },
 };
 
 /** The engine couldn't answer. */
 export const Failed: Story = {
-	args: { repair: { status: "refused", refusal: "failed", ask: fn() } },
+	args: { repair: { status: "refused", refusal: "failed", askAgain: fn() } },
 };

@@ -165,7 +165,7 @@ describe("useCoverPanel", () => {
 		expect(result.current.withEngine?.suggested).toBeUndefined();
 
 		act(() => {
-			result.current.engineRepair.ask();
+			result.current.engineRepair.askAgain();
 		});
 
 		await waitFor(() => {
@@ -215,7 +215,7 @@ describe("useCoverPanel", () => {
 		expect(result.current.selected?.membershipId).toBe("m-3");
 
 		act(() => {
-			result.current.engineRepair.ask();
+			result.current.engineRepair.askAgain();
 		});
 
 		await waitFor(() => {
