@@ -82,7 +82,11 @@ describe("useRosterRulesCheck", () => {
 			expect(result.current.status).toBe("ready");
 		});
 		expect(calls.map((call) => call.body)).toEqual([{ expectedRevision: 3 }]);
-		expect(result.current.last).toEqual({ revision: 3, check: CHECK });
+		expect(result.current.last).toEqual({
+			revision: 3,
+			check: CHECK,
+			checkedAt: expect.any(Number),
+		});
 	});
 
 	it("is unasked again once the roster moves on, and keeps the last answer with its revision", async () => {
@@ -100,7 +104,11 @@ describe("useRosterRulesCheck", () => {
 		rerender({ revision: 2, hasChanges: false });
 
 		expect(result.current.status).toBe("idle");
-		expect(result.current.last).toEqual({ revision: 1, check: CHECK });
+		expect(result.current.last).toEqual({
+			revision: 1,
+			check: CHECK,
+			checkedAt: expect.any(Number),
+		});
 	});
 
 	it("reads a refusal as what the note says", async () => {
@@ -142,7 +150,11 @@ describe("useRosterRulesCheck", () => {
 		rerender({ revision: 4, hasChanges: true });
 
 		expect(calls.map((call) => call.body)).toEqual([{ expectedRevision: 4 }]);
-		expect(result.current.last).toEqual({ revision: 4, check: CHECK });
+		expect(result.current.last).toEqual({
+			revision: 4,
+			check: CHECK,
+			checkedAt: expect.any(Number),
+		});
 	});
 
 	it("asks by itself again once the revision changes while nothing was validated", async () => {
