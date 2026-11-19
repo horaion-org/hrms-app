@@ -5786,6 +5786,16 @@
 			"cardsFailed": "No se pudieron cargar los departamentos. Inténtalo de nuevo.",
 			"cardsEmpty": "No tienes ningún departamento a tu alcance. Pide acceso a un administrador.",
 			"cardsEmptyFiltered": "Ningún departamento coincide con tu búsqueda o filtros. Bórralos para ver todos los departamentos."
+		},
+		"history": {
+			"deleted": {
+				"badge": "Eliminado",
+				"byLine": "Eliminado por {{name}} el {{date}}",
+				"replacedLine": "Reemplazado por un cuadrante nuevo el {{date}}",
+				"onLine": "Eliminado el {{date}}",
+				"banner": "Este cuadrante se eliminó el {{date}}. Se conserva como registro: no se puede cambiar, publicar ni generar de nuevo. Sus días están en la página del cuadrante.",
+				"coverOffers": "Ofertas de cobertura"
+			}
 		}
 	},
 	"workspace": {

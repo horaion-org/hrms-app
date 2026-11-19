@@ -74,6 +74,7 @@ const SCHEDULING_TOP_LEVEL = [
 	"createSchedule",
 	"dates",
 	"departmentSetup",
+	"history",
 	"hours",
 	"months",
 	"myRoster",

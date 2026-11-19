@@ -3,7 +3,10 @@ import {
 	generatedScheduleFixture,
 	scheduleFixture,
 } from "@/features/scheduling/schedules/fixtures";
-import { scheduleViewLink } from "@/features/scheduling/schedules/scheduleViewLink";
+import {
+	deletedScheduleLink,
+	scheduleViewLink,
+} from "@/features/scheduling/schedules/scheduleViewLink";
 
 describe("scheduleViewLink", () => {
 	it("reopens a draft at the wizard's Setup", () => {
@@ -22,4 +25,13 @@ describe("scheduleViewLink", () => {
 			});
 		}
 	);
+});
+
+describe("deletedScheduleLink", () => {
+	it("opens a deleted schedule under History, never on the roster page", () => {
+		expect(deletedScheduleLink("s-9")).toEqual({
+			to: "/scheduling/history/$scheduleId",
+			params: { scheduleId: "s-9" },
+		});
+	});
 });

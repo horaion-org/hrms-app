@@ -12,6 +12,7 @@ import {
 	type ScheduleStatus,
 	withCoveredDays,
 } from "@/features/scheduling/schedules/api";
+import type { DeletedSchedule } from "@/features/scheduling/schedules/deletedSchedules";
 import {
 	INCLUDED_SHIFT_IDS,
 	frozenShiftsFixture,
@@ -423,6 +424,23 @@ const ROSTER_WEEKS: Array<Array<WorkedDay | DayNotWorked>> = [
 		dutyManager,
 	],
 ];
+
+/**
+ * Schedule s-1 generated, then deleted by Lina Tan on 15 October 2026 (in its
+ * Singapore branch) without ever being published; `overrides` set it apart.
+ */
+export const deletedScheduleFixture = (
+	overrides: Partial<DeletedSchedule> = {}
+): DeletedSchedule => ({
+	...generatedScheduleFixture({ status: "GENERATED" }),
+	deletion: {
+		deletedAt: "2026-10-15T03:00:00Z",
+		deletedByName: "Lina Tan",
+		cause: "MANAGER",
+	},
+	wasPublished: false,
+	...overrides,
+});
 
 /**
  * Schedule s-1's roster as `GET …/assignments` answers it: 21 rows, one per

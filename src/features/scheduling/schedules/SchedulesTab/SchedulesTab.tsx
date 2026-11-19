@@ -18,10 +18,19 @@ import { summaryRange } from "@/features/scheduling/months/monthWeeks";
 import { formatPeriod } from "@/features/scheduling/periods";
 import { ScheduleMenu } from "@/features/scheduling/schedules/ScheduleMenu";
 import type { Schedule } from "@/features/scheduling/schedules/api";
+import { useDeletedSchedules } from "@/features/scheduling/schedules/deletedSchedules";
+import {
+	deletionSentence,
+	historyRowsOf,
+	type HistoryRow,
+} from "@/features/scheduling/schedules/historyRows";
 import { coversPartOfWeek } from "@/features/scheduling/schedules/partLines";
 import { statusLabelKey } from "@/features/scheduling/schedules/rosterStatus";
 import { scheduleStatusTones } from "@/features/scheduling/schedules/scheduleStatusTones";
-import { scheduleViewLink } from "@/features/scheduling/schedules/scheduleViewLink";
+import {
+	deletedScheduleLink,
+	scheduleViewLink,
+} from "@/features/scheduling/schedules/scheduleViewLink";
 import { useSchedules } from "@/features/scheduling/schedules/useSchedules";
 import { schedulingNoticeFrom } from "@/features/scheduling/schedules/schedulingNotice";
 import {
@@ -62,7 +71,9 @@ export type SchedulesTabProps = {
  * A card per Department in reach, read from this week's month to 12 months
  * ahead, then the history of every accessible schedule; both in the
  * header's Branch, narrowed to a Department from the Filters. The search
- * stays on the tab.
+ * stays on the tab. History also lists the deleted schedules kept as a
+ * record: each says "Deleted", when and by whom, opens read-only and has no
+ * menu. They are read on their own, so a failed read leaves the live rows.
  */
 export const SchedulesTab = ({
 	companyId,
@@ -77,6 +88,7 @@ export const SchedulesTab = ({
 	const language = formattingLocale(i18n);
 	const access = useAccess();
 	const list = useSchedules(companyId, selectedUnits(units));
+	const deletedList = useDeletedSchedules(companyId, selectedUnits(units));
 	const months = useQuery(
 		scheduleMonthSummariesQuery(
 			companyId,
@@ -94,11 +106,15 @@ export const SchedulesTab = ({
 		},
 		t
 	);
+	const deleted = deletedList.status === "ready" ? deletedList.schedules : [];
 	const history =
 		list.status === "ready"
-			? list.schedules.filter((schedule) => matches(schedule, search))
+			? historyRowsOf(
+					list.schedules.filter((schedule) => matches(schedule, search)),
+					deleted.filter((schedule) => matches(schedule, search))
+				)
 			: [];
-	const columns = useMemo((): Array<DataTableColumn<Schedule>> => {
+	const columns = useMemo((): Array<DataTableColumn<HistoryRow>> => {
 		// The days the schedule covers: its week, or a run of it (API ADR-0113).
 		const periodOf = (schedule: Schedule): string =>
 			formatPeriod(
@@ -118,7 +134,7 @@ export const SchedulesTab = ({
 				// A schedule is named by its week, in the reader's language; the stored name is the API's.
 				id: "date",
 				header: t(`${key}.history.date`),
-				cell: (schedule) => (
+				cell: ({ schedule }) => (
 					<>
 						{periodOf(schedule)}
 						{/* A part of a week says so, so a split week's rows tell apart. */}
@@ -135,42 +151,54 @@ export const SchedulesTab = ({
 					</>
 				),
 				cellClassName: "font-semibold",
-				sortValue: (schedule) => schedule.coveredFrom,
+				sortValue: ({ schedule }) => schedule.coveredFrom,
 				pin: "start",
 			},
 			{
 				id: "name",
 				header: t(`${key}.history.name`),
-				cell: (schedule) => schedule.name,
+				cell: ({ schedule }) => schedule.name,
 				// A phone keeps the week and the actions as columns; the rest reads on the week's line, as Job titles does.
 				hideBelow: "md",
 			},
 			{
 				id: "createdAt",
 				header: t(`${key}.history.createdAt`),
-				cell: (schedule) => (
+				cell: ({ schedule }) => (
 					<time dateTime={schedule.createdAt}>
 						{createdAt.format(new Date(schedule.createdAt))}
 					</time>
 				),
-				sortValue: (schedule) => schedule.createdAt,
+				sortValue: ({ schedule }) => schedule.createdAt,
 				hideBelow: "md",
 			},
 			{
 				id: "status",
 				header: t(`${key}.history.status`),
-				cell: (schedule) => (
-					<Badge tone={scheduleStatusTones[schedule.status]}>
-						{t(statusLabelKey(schedule.status))}
-					</Badge>
-				),
-				sortValue: (schedule) => t(statusLabelKey(schedule.status)),
+				// A deleted schedule says so in place of the status it had, with when and by whom.
+				cell: (row) =>
+					row.deleted ? (
+						<>
+							<Badge>{t("scheduling.history.deleted.badge")}</Badge>
+							<span className="mt-1 block text-xs text-neutral-700">
+								{deletionSentence(row.schedule, t, language)}
+							</span>
+						</>
+					) : (
+						<Badge tone={scheduleStatusTones[row.schedule.status]}>
+							{t(statusLabelKey(row.schedule.status))}
+						</Badge>
+					),
+				sortValue: (row) =>
+					row.deleted
+						? t("scheduling.history.deleted.badge")
+						: t(statusLabelKey(row.schedule.status)),
 				hideBelow: "md",
 			},
 			{
 				id: "department",
 				header: t(`${key}.history.department`),
-				cell: (schedule) => schedule.departmentName,
+				cell: ({ schedule }) => schedule.departmentName,
 				hideBelow: "md",
 			},
 			{
@@ -178,19 +206,24 @@ export const SchedulesTab = ({
 				header: t(`${key}.history.actions`),
 				headerClassName: "w-30",
 				pin: "end",
-				cell: (schedule) => (
+				// A deleted schedule opens as a read-only record and has no menu: nothing can be done to it.
+				cell: (row) => (
 					<div className="flex justify-center">
 						<Button
-							{...scheduleViewLink(schedule)}
+							{...(row.deleted
+								? deletedScheduleLink(row.schedule.scheduleId)
+								: scheduleViewLink(row.schedule))}
 							variant="icon"
 							aria-label={t(`${key}.viewNamed`, {
-								department: schedule.departmentName,
-								period: periodOf(schedule),
+								department: row.schedule.departmentName,
+								period: periodOf(row.schedule),
 							})}
 						>
 							<ViewIcon />
 						</Button>
-						<ScheduleMenu companyId={companyId} schedule={schedule} />
+						{!row.deleted && (
+							<ScheduleMenu companyId={companyId} schedule={row.schedule} />
+						)}
 					</div>
 				),
 			},
@@ -306,7 +339,7 @@ export const SchedulesTab = ({
 						className="mt-8"
 						columns={columns}
 						data={history}
-						getRowId={(schedule) => schedule.scheduleId}
+						getRowId={({ schedule }) => schedule.scheduleId}
 						label={t(`${key}.history.title`)}
 						emptyState={t(
 							`${key}.${search.trim() || chips.length > 0 ? "noMatch" : "empty"}`
