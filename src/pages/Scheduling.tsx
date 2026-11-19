@@ -4,6 +4,10 @@ import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from "@/components/ui/Tabs";
 import { ConstraintsTab } from "@/features/scheduling/constraints/ConstraintsTab";
+import {
+	PutBackAction,
+	type PutBackActionProps,
+} from "@/features/scheduling/history/PutBackAction";
 import { SchedulesTab } from "@/features/scheduling/schedules/SchedulesTab";
 import { SCHEDULING_UNIT_RULES } from "@/features/scheduling/schedules/schedulesUnitRules";
 import { returnLinkOf } from "@/features/scheduling/readiness/readinessCopy";
@@ -22,6 +26,11 @@ import { useUnitSelection } from "@/features/workspace/useUnitSelection";
 const key = "scheduling.overview";
 
 const route = getRouteApi("/_authenticated/_app/scheduling");
+
+/** What a deleted row of History offers where a live row has its menu: putting the roster back. */
+const PutBackRowAction = (
+	props: Omit<PutBackActionProps, "shownAs">
+): FunctionComponent => <PutBackAction {...props} shownAs="menu" />;
 
 /**
  * Scheduling: a tab per view the person may read (Schedules, Shifts,
@@ -75,7 +84,7 @@ export const Scheduling = (): FunctionComponent => {
 	// Set while the wizard waits for a department to be set up here.
 	const returnTo = returnLinkOf(search);
 	const panels: Record<SchedulingView, ReactNode> = {
-		schedules: <SchedulesTab {...tab} />,
+		schedules: <SchedulesTab {...tab} DeletedRowAction={PutBackRowAction} />,
 		shifts: <ShiftsTab {...tab} returnTo={returnTo} />,
 		constraints: <ConstraintsTab {...tab} returnTo={returnTo} />,
 	};

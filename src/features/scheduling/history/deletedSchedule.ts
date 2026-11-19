@@ -55,12 +55,20 @@ export const fetchDeletedSchedule = (
 		{ signal }
 	);
 
+/** What names the deleted schedules' own reads among a company's scheduling keys. */
+export const DELETED_SCHEDULES_KEY_PART = "deletedSchedules";
+
 /** The key one deleted schedule is cached under; apart from a live schedule's, which no read of this one shares. */
 export const deletedScheduleKey = (
 	companyId: string,
 	scheduleId: string
-): readonly ["scheduling", string, "deletedSchedules", string] =>
-	[SCHEDULING_QUERY_ROOT, companyId, "deletedSchedules", scheduleId] as const;
+): readonly ["scheduling", string, typeof DELETED_SCHEDULES_KEY_PART, string] =>
+	[
+		SCHEDULING_QUERY_ROOT,
+		companyId,
+		DELETED_SCHEDULES_KEY_PART,
+		scheduleId,
+	] as const;
 
 /** One deleted schedule; `allowed` false asks for nothing. */
 export const deletedScheduleQuery = (

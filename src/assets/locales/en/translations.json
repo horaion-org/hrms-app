@@ -5995,6 +5995,27 @@
 				"onLine": "Deleted on {{date}}",
 				"banner": "This roster was deleted on {{date}}. It is kept as a record: nothing in it can be changed, published or generated again. Its days are on the roster page.",
 				"coverOffers": "Cover offers"
+			},
+			"putBack": {
+				"action": "Put back on the roster",
+				"title": "Put this roster back?",
+				"body": "{{days}} go back on the roster page as a roster to review, as it was when it was deleted. It is not published: staff see nothing until you publish it.",
+				"seen": "Staff saw this roster before it was withdrawn.",
+				"approval": "If it was waiting for approval, send it for approval again.",
+				"confirm": "Put back",
+				"cancel": "Cancel",
+				"done": "The roster is back on the roster page, to review.",
+				"replaceTitle": "Replace the roster to review?",
+				"replaceBody": "If you put this roster back, the roster to review on {{days}} will be deleted. It goes to History, where you can put it back later.",
+				"replaceExtraDays": "{{extraDays}} will then have no roster.",
+				"replaceConfirm": "Put back and replace",
+				"daysTaken": "This roster can’t be put back: {{days}} hold a published roster or one being generated. Withdraw the published roster or wait for the generation to end, then put it back.",
+				"daysTakenUnnamed": "This roster can’t be put back: its days hold a published roster or one being generated, or later days in the same week were worked out without it. Withdraw the published roster or wait for the generation to end, then put it back.",
+				"laterDays": "This roster can’t be put back: {{days}}, later in the same week, were worked out without it. Delete that roster first, or keep it and generate these days again.",
+				"notRestorable": "This roster can’t be put back: a newer roster replaced it. Generate its days again from the Generate page instead.",
+				"gone": "This roster is no longer in History. Reload the page.",
+				"forbidden": "You don’t have permission to put back rosters at this department.",
+				"failed": "We couldn’t put the roster back. Try again."
 			}
 		}
 	},
