@@ -7,7 +7,6 @@ import type { FunctionComponent } from "@/common/types";
 import { useLeaveViews } from "@/features/leave/useLeaveRequests";
 import {
 	myProfileQuery,
-	type EmploymentType,
 	type MemberProfileDetail,
 } from "@/features/people/api";
 import { workspaceQuery } from "@/features/workspace/api";
@@ -18,10 +17,14 @@ vi.mock("@/features/workspace/useCurrentCompany", () => ({
 	useCurrentMembershipId: (): string => "m-c-1",
 }));
 
-/** The caller's own profile, with only the employment type varied. */
-const profileOf = (
-	employmentType: EmploymentType | null
-): MemberProfileDetail => ({
+/** The caller's own profile, with only how part-time is said varied. */
+const profileOf = ({
+	partTime,
+	employmentType,
+}: Pick<
+	MemberProfileDetail,
+	"partTime" | "employmentType"
+>): MemberProfileDetail => ({
 	membershipId: "m-c-1",
 	employeeCode: "EMP-1",
 	displayName: "José",
@@ -36,6 +39,7 @@ const profileOf = (
 	status: "ACTIVE",
 	dateOfBirth: null,
 	employmentType,
+	partTime,
 	hireDate: "2026-01-05",
 	probationEndDate: null,
 	endDate: null,
@@ -45,15 +49,12 @@ const profileOf = (
 
 /** The hook's answer for a profile and workspace already read. */
 const viewsFor = (
-	employmentType: EmploymentType | null,
+	profile: Pick<MemberProfileDetail, "partTime" | "employmentType">,
 	keys: Array<string>
 ): ReturnType<typeof useLeaveViews> => {
 	const client = new QueryClient();
 	client.setQueryData(workspaceQuery.queryKey, companyWideWorkspace(keys));
-	client.setQueryData(
-		myProfileQuery("c-1").queryKey,
-		profileOf(employmentType)
-	);
+	client.setQueryData(myProfileQuery("c-1").queryKey, profileOf(profile));
 	const wrapper = ({
 		children,
 	}: {
@@ -65,23 +66,55 @@ const viewsFor = (
 };
 
 describe("useLeaveViews", () => {
-	/** Own leave for anyone but a part-timer (unknown counts as not); the team views with a read key. */
+	/** Own leave for anyone not known to be part-time (the terms' flag, else an old label); team views with a read key. */
 	it.each([
-		{ type: "FULL_TIME", keys: [], mine: true, team: false },
-		{ type: "FULL_TIME", keys: ["leave_request:read"], mine: true, team: true },
-		{ type: "PART_TIME", keys: [], mine: false, team: false },
 		{
-			type: "PART_TIME",
+			partTime: false,
+			employmentType: null,
+			keys: [],
+			mine: true,
+			team: false,
+		},
+		{
+			partTime: false,
+			employmentType: null,
+			keys: ["leave_request:read"],
+			mine: true,
+			team: true,
+		},
+		{
+			partTime: true,
+			employmentType: null,
+			keys: [],
+			mine: false,
+			team: false,
+		},
+		{
+			partTime: true,
+			employmentType: null,
 			keys: ["leave_request:read"],
 			mine: false,
 			team: true,
 		},
-		{ type: null, keys: [], mine: true, team: false },
-		{ type: null, keys: ["leave_request:read"], mine: true, team: true },
+		{ partTime: null, employmentType: null, keys: [], mine: true, team: false },
+		{
+			partTime: undefined,
+			employmentType: null,
+			keys: ["leave_request:read"],
+			mine: true,
+			team: true,
+		},
+		{
+			partTime: undefined,
+			employmentType: "PART_TIME",
+			keys: [],
+			mine: false,
+			team: false,
+		},
 	] as const)(
-		"given_a_$type_member_holding_$keys_when_asked_then_mine_$mine_team_$team",
-		({ type, keys, mine, team }) => {
-			expect(viewsFor(type, [...keys])).toEqual({
+		"given_flag_$partTime_label_$employmentType_holding_$keys_when_asked_then_mine_$mine_team_$team",
+		({ partTime, employmentType, keys, mine, team }) => {
+			expect(viewsFor({ partTime, employmentType }, [...keys])).toEqual({
 				status: "ready",
 				mine,
 				team,

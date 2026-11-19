@@ -1132,8 +1132,8 @@ describe("Leave", () => {
 		const MY_PROFILE = "GET /api/v1/companies/c-1/me/profile";
 		const OWN_REQUEST = `${MY_LEAVE_PATH}/lr-own`;
 
-		/** The caller's own profile with the given employment type. */
-		const profileReply = (employmentType: string): StubReply => ({
+		/** The caller's own profile as the API sends it: no stored label, part-time by the terms' flag. */
+		const profileReply = (partTime: boolean): StubReply => ({
 			status: 200,
 			body: envelope({
 				membershipId: "m-c-1",
@@ -1149,7 +1149,8 @@ describe("Leave", () => {
 				jobTitleName: null,
 				status: "ACTIVE",
 				dateOfBirth: null,
-				employmentType,
+				employmentType: null,
+				partTime,
 				hireDate: "2026-01-05",
 				probationEndDate: null,
 				endDate: null,
@@ -1174,7 +1175,7 @@ describe("Leave", () => {
 		it("lands a part-timer who may read the team's leave on Team requests, with no My leave tab", async () => {
 			const calls = stubApi({
 				...routes(),
-				[MY_PROFILE]: profileReply("PART_TIME"),
+				[MY_PROFILE]: profileReply(true),
 			});
 			const { router } = await open("/leave");
 
@@ -1202,7 +1203,7 @@ describe("Leave", () => {
 			async (entry) => {
 				const calls = stubApi({
 					...routes(workspaceReply([])),
-					[MY_PROFILE]: profileReply("PART_TIME"),
+					[MY_PROFILE]: profileReply(true),
 				});
 				await open(entry);
 
@@ -1219,19 +1220,25 @@ describe("Leave", () => {
 				expect(
 					screen.queryByRole("link", { name: "Leave" })
 				).not.toBeInTheDocument();
+				expect(
+					screen.getByRole("link", { name: "Availability" })
+				).toBeInTheDocument();
 				expect(searchesOf(calls, MY_LEAVE_PATH)).toEqual([]);
 				expect(listSearchesOf(calls)).toEqual([]);
 			}
 		);
 
 		it("opens a full-timer on My leave, as before", async () => {
-			stubApi({ ...routes(), [MY_PROFILE]: profileReply("FULL_TIME") });
+			stubApi({ ...routes(), [MY_PROFILE]: profileReply(false) });
 			await open("/leave");
 
 			expect(
 				await screen.findByRole("tab", { name: "My leave" })
 			).toHaveAttribute("aria-selected", "true");
 			expect(screen.getAllByRole("tab")).toHaveLength(3);
+			expect(
+				screen.queryByRole("link", { name: "Availability" })
+			).not.toBeInTheDocument();
 			expect(
 				screen.getByRole("button", { name: "Apply for leave" })
 			).toBeInTheDocument();
@@ -1241,7 +1248,7 @@ describe("Leave", () => {
 		it("shows a part-timer their own pending request from a link, offering only Withdraw", async () => {
 			stubApi({
 				...routes(workspaceReply([])),
-				[MY_PROFILE]: profileReply("PART_TIME"),
+				[MY_PROFILE]: profileReply(true),
 				[`GET ${OWN_REQUEST}`]: ownRequest("PENDING"),
 				[`GET ${OWN_REQUEST}/changes`]: { status: 200, body: envelope([]) },
 			});
@@ -1266,7 +1273,7 @@ describe("Leave", () => {
 		it("shows a part-timer their own approved request and its history from a link, with no action", async () => {
 			stubApi({
 				...routes(workspaceReply([])),
-				[MY_PROFILE]: profileReply("PART_TIME"),
+				[MY_PROFILE]: profileReply(true),
 				[`GET ${OWN_REQUEST}`]: ownRequest("APPROVED"),
 				[`GET ${OWN_REQUEST}/changes`]: {
 					status: 200,
