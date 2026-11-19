@@ -12,6 +12,7 @@ import {
 	cellMarkLooks,
 	shiftTileStyle,
 } from "@/features/scheduling/roster/rosterLooks";
+import { stretchHoursMark } from "@/features/scheduling/roster/stretchWords";
 
 export type RosterShiftProps = {
 	/** A worked day: its frozen shift and the role it is worked as. */
@@ -39,8 +40,9 @@ export type RosterShiftProps = {
  * cut short in a narrow cell (the label names the day in full, and the
  * status shows whole on hover). A shift stretched into overtime shows a
  * warning pill per side under them, "+OT 21:00 – 23:00", as v1 marked an
- * applied stretch; the status already says it for assistive tech. Beside an
- * open panel it shows its time only. Its one mark sits in its top-right
+ * applied stretch, and "+2 h" beside its time, also beside an open panel; the
+ * status already says it for assistive tech. Beside an open panel it shows
+ * its time only. Its one mark sits in its top-right
  * corner. Choosing it shows its details.
  */
 export const RosterShift = ({
@@ -56,6 +58,7 @@ export const RosterShift = ({
 }: RosterShiftProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const pills = overtimePills(shift, t);
+	const stretchMark = stretchHoursMark(shift.stretchMinutes, t);
 	return (
 		<button
 			aria-label={label}
@@ -80,6 +83,11 @@ export const RosterShift = ({
 			)}
 			<span className="block font-semibold text-balance tabular-nums">
 				{timeRange}
+				{stretchMark && (
+					<span aria-hidden="true" className="ml-1 text-warning-900">
+						{stretchMark}
+					</span>
+				)}
 			</span>
 			{!compact && (
 				<>
