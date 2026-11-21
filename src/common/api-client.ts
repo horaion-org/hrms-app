@@ -24,7 +24,12 @@ type RequestOptions = {
 	anonymous?: boolean;
 	/** Aborts the request; an abort is rethrown as itself, never as an outage. */
 	signal?: AbortSignal;
+	/** How long to wait for the answer before reading it as an outage; `DEFAULT_TIMEOUT_MILLISECONDS` when left out. */
+	timeoutMilliseconds?: number;
 };
+
+/** How long a request waits for the answer when its caller names no other wait. */
+export const DEFAULT_TIMEOUT_MILLISECONDS = 20_000;
 const emptySession: ApiAuthentication = {
 	accessToken: () => Promise.resolve(null),
 	renew: () => Promise.resolve({ kind: "expired" }),
@@ -77,7 +82,9 @@ async function send(
 	if (!multipart && (sessionRoute || options.body !== undefined))
 		headers.set("Content-Type", "application/json");
 	if (token !== null) headers.set("Authorization", `Bearer ${token}`);
-	const timeout = AbortSignal.timeout(20_000);
+	const timeout = AbortSignal.timeout(
+		options.timeoutMilliseconds ?? DEFAULT_TIMEOUT_MILLISECONDS
+	);
 	try {
 		return await fetch(
 			`${(import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/+$/, "")}${path}`,

@@ -3,7 +3,10 @@ import type {
 	RuleViolation,
 } from "@/features/scheduling/rulesCheck/rosterRulesCheckApi";
 import { brokenRuleCount } from "@/features/scheduling/rulesCheck/rosterRulesCheckWords";
-import type { LastValidation } from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
+import type {
+	LastValidation,
+	RosterValidation,
+} from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
 import type { RosterSchedule } from "@/features/scheduling/roster/rosterView";
 import type { GenerationFindings } from "@/features/scheduling/schedules/api";
 
@@ -70,6 +73,23 @@ export const validatesOnOpen = ({
 	mayValidate &&
 	askedAt !== revision &&
 	changesUnchecked(validationStanding({ revision, last, hasChanges }), last);
+
+/**
+ * Whether a check is due at the revision on screen: one was answered in this
+ * visit at an earlier revision, and nothing is asked at this one yet (an ask
+ * in flight, answered or refused is never repeated).
+ */
+export const checkDue = (
+	validation: Pick<RosterValidation, "status" | "last" | "revision">
+): boolean =>
+	validation.status === "idle" &&
+	validation.last !== undefined &&
+	validation.last.revision !== validation.revision;
+
+/** Whether the check for the revision on screen is on its way: under way, or due. */
+export const checkPending = (
+	validation: Pick<RosterValidation, "status" | "last" | "revision">
+): boolean => validation.status === "loading" || checkDue(validation);
 
 /** Findings with nothing in them, for a run that stored none, so validated gaps still have a list to join. */
 const NO_FINDINGS: GenerationFindings = {

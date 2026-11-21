@@ -14,6 +14,7 @@ const validationOf = (
 ): RosterValidation =>
 	({
 		ask: vi.fn(),
+		askAt: vi.fn(),
 		revision: 1,
 		last:
 			lastRevision === undefined

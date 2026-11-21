@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, stubApi } from "@/common/testing/stubApi";
+import { ENGINE_ANSWER_WAIT_MILLISECONDS } from "@/features/scheduling/engineWait";
 import { staffingGapFixture } from "@/features/scheduling/rulesCheck/fixtures";
 import { fetchRosterRulesCheck } from "@/features/scheduling/rulesCheck/rosterRulesCheckApi";
 
@@ -30,6 +31,18 @@ const answer = (data: unknown): ReturnType<typeof stubApi> =>
 	stubApi({ [`POST ${ROSTER_CHECK}`]: { status: 200, body: envelope(data) } });
 
 describe("roster rules check client", () => {
+	it("waits for the engine as long as the API does, past the default", async () => {
+		const timeout = vi.spyOn(AbortSignal, "timeout");
+		stubApi({ [`POST ${ROSTER_CHECK}`]: { status: 503 } });
+
+		await fetchRosterRulesCheck(TARGET, { expectedRevision: 3 }).catch(
+			() => undefined
+		);
+
+		expect(timeout).toHaveBeenCalledWith(ENGINE_ANSWER_WAIT_MILLISECONDS);
+		timeout.mockRestore();
+	});
+
 	it("posts the revision and reads the broken rules", async () => {
 		const calls = answer({
 			status: "BROKEN",

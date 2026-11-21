@@ -167,6 +167,7 @@ const showIssues = async ({
 					status: "ready",
 					check,
 					ask: vi.fn(),
+					askAt: vi.fn(),
 					last: { revision: 1, check },
 					revision: 1,
 				}}
@@ -244,7 +245,7 @@ describe("GeneratedRoster: the fix on a weekly day-type issue", () => {
 
 		const row = await rowOf(user, panel, "Aisha Rahman");
 		// The last day off of the week, drawn as it is and as the fix makes it.
-		expect(row).toHaveTextContent(/Sun.*18.* · Day off→Sun.*18.* · Rest day/);
+		expect(row).toHaveTextContent(/Sun.*18.*Day off→becomesRest day/);
 		expect(row).not.toHaveTextContent(GENERAL_ADVICE);
 		expect(bodyButtons(row)).toEqual([APPLY, "Show"]);
 	});
@@ -309,7 +310,9 @@ describe("GeneratedRoster: the fix on a weekly day-type issue", () => {
 		const row = await rowOf(user, panel, "Aisha Rahman");
 		await user.click(within(row).getByRole("button", { name: APPLY }));
 
-		expect(await within(row).findByRole("alert")).toHaveTextContent(en.scheduling.rosterEdit.error.revision);
+		expect(await within(row).findByRole("alert")).toHaveTextContent(
+			en.scheduling.rosterEdit.error.revision
+		);
 		expect(screen.queryByText("Roster changed.")).toBeNull();
 	});
 

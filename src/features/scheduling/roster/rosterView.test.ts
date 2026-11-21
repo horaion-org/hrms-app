@@ -268,3 +268,36 @@ describe("rosterViewOf: Find cover", () => {
 		expect(view.sidePanel).toBeUndefined();
 	});
 });
+
+describe("rosterViewOf: the findings' names", () => {
+	it("given_findingsWithOnlyAnInformationNote_when_derived_then_itsPersonIsNamed", () => {
+		const view = viewOf({
+			schedule: generatedScheduleFixture({
+				status: "GENERATED",
+				generation: generationFixture({
+					findings: {
+						...emptyFindingsFixture(),
+						members: [
+							{
+								memberProfileId: "mp-3",
+								membershipId: "m-3",
+								displayName: "Chen Wei",
+							},
+						],
+						diagnostics: [
+							{
+								code: "PRIOR_REST_BLOCKS_SHIFTS",
+								severity: "info",
+								audience: "roster",
+								message: "Chen Wei: rest carried in.",
+								entities: { employeeId: "mp-3", date: "2026-10-12" },
+							},
+						],
+					},
+				}),
+			}),
+		});
+
+		expect(view.names?.members.get("mp-3")).toBe("Chen Wei");
+	});
+});

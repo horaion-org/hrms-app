@@ -125,22 +125,43 @@ export const gapIssueKey = (
 /** "09:00" from "2026-10-17T09:00". */
 const clockOf = (dateTime: string): string => dateTime.slice(11, 16);
 
+/** The key a gap is listed under: its shift and day, else its own id. */
+const gapKeyOf = (gap: StaffingGap): string =>
+	gapIssueKey(gap.shiftUuids[0], gap.date) ??
+	`${GAP_KEY_PREFIX}${gap.conflictId}`;
+
+/** The keys of the gaps a rules check found, by shift and day; none when it did not work them out. */
+export const checkedGapKeys = (
+	staffingGaps: ReadonlyArray<StaffingGap> | null
+): ReadonlySet<string> | undefined =>
+	staffingGaps === null ? undefined : new Set(staffingGaps.map(gapKeyOf));
+
+/** One shift's gaps that day: the first, which names the item, and every run. */
+type GapRuns = { gap: StaffingGap; runs: Array<StaffingGap> };
+
+/**
+ * One shift's gaps that day, as one item: every run still short in its time
+ * ("14:00–15:00 and 17:00–22:00", as after a change that filled part of it),
+ * and the most people any run is short.
+ */
 const gapIssue = (
-	gap: StaffingGap,
+	{ gap, runs }: GapRuns,
 	{ roleNames, ruleNames, t }: RosterIssueInput
 ): RosterIssue => {
 	const shiftId = gap.shiftUuids[0];
 	return {
-		key: gapIssueKey(shiftId, gap.date) ?? `${GAP_KEY_PREFIX}${gap.conflictId}`,
+		key: gapKeyOf(gap),
 		group: "mustFix",
 		topic: issueTopic("shiftsShort", t),
 		who: t(`${key}.jobShort`, {
-			count: gap.missing,
+			count: Math.max(...runs.map((run) => run.missing)),
 			job: roleNames.get(gap.roleUuid) ?? t(`${key}.unknownJob`),
 		}),
 		memberProfileId: null,
 		day: gap.date,
-		time: `${clockOf(gap.start)}–${clockOf(gap.end)}`,
+		time: t("scheduling.constraints.list", {
+			items: runs.map((run) => `${clockOf(run.start)}–${clockOf(run.end)}`),
+		}),
 		rule: t(`${key}.ruleOnly`, {
 			rule: ruleLabel(
 				{ name: gap.sourceRule, constraintId: gap.sourceRuleId },
@@ -342,6 +363,23 @@ export const dayListText = (
 	return t("scheduling.constraints.list", { items: days.map(formatOne) });
 };
 
+/** The gaps grouped by shift and day, in the order each first appears, so a shift short in two runs is one item. */
+const gapsByShiftAndDay = (
+	gaps: ReadonlyArray<StaffingGap>
+): Array<GapRuns> => {
+	const groups = new Map<string, GapRuns>();
+	for (const gap of gaps) {
+		const group = groups.get(gapKeyOf(gap));
+		groups.set(
+			gapKeyOf(gap),
+			group
+				? { gap: group.gap, runs: [...group.runs, gap] }
+				: { gap, runs: [gap] }
+		);
+	}
+	return [...groups.values()];
+};
+
 /** Keeps the first item of each key, so nothing is listed twice. */
 const onceEach = (issues: ReadonlyArray<RosterIssue>): Array<RosterIssue> => {
 	const seen = new Set<string>();
@@ -356,7 +394,7 @@ const onceEach = (issues: ReadonlyArray<RosterIssue>): Array<RosterIssue> => {
 export const rosterIssues = (input: RosterIssueInput): Array<RosterIssue> =>
 	onceEach([
 		...(input.extras ?? []),
-		...input.gaps.map((gap) => gapIssue(gap, input)),
+		...gapsByShiftAndDay(input.gaps).map((runs) => gapIssue(runs, input)),
 		...input.brokenMusts.flatMap((rule) => ruleIssues(rule, "mustFix", input)),
 		...input.notMet.flatMap((rule) => ruleIssues(rule, "notMet", input)),
 		...input.notes.map(noteIssue),

@@ -8,8 +8,7 @@ import type {
 	RepairOptions,
 } from "@/features/scheduling/cover/engineRepairApi";
 import {
-	callInMove,
-	feasibleRepair,
+	callInOption,
 	repairOptionsFixture,
 } from "@/features/scheduling/cover/engineRepairFixtures";
 import {
@@ -19,8 +18,9 @@ import {
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 
 /*
- * The two recorded cases where "Who covers" and the engine contradicted each
- * other, for stories and tests; never sent anywhere. The people and both
+ * The two recorded cases where the hours-based list and the engine
+ * contradicted each other on who was on leave, for tests; never sent
+ * anywhere. The people and both
  * answers are as recorded; the gap is the fixtures' own Front Desk AM on
  * Saturday 17 October, so the panel can name the shift.
  */
@@ -29,7 +29,7 @@ import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 type RosterMember = NonNullable<ScheduleAssignment["member"]>;
 
 /** One case: the roster's people, the backend's list and the engine's answer. */
-export type CoverWithEngineCase = {
+export type NotAssignedLeaveCase = {
 	members: Array<RosterMember>;
 	cover: CoverOptions;
 	engine: RepairOptions;
@@ -86,21 +86,6 @@ const cantHelp = (
 	reason: why,
 });
 
-/** The members' rows on the gap's day, each a day off: enough for the panel to name them. */
-export const rosterRowsOf = (
-	members: ReadonlyArray<RosterMember>
-): Array<ScheduleAssignment> =>
-	members.map((person) => ({
-		assignmentId: `a-${person.memberProfileId}`,
-		member: person,
-		day: GAP_DAY,
-		off: true,
-		offReason: "OFF",
-		dayType: "OFF",
-		shift: null,
-		jobTitle: null,
-	}));
-
 const ORLA = member("Orla Vance", "Supervisor");
 const PIET = member("Piet Hollis", "Supervisor");
 const TAMSIN = member("Tamsin Okafor", "Assistant");
@@ -113,7 +98,7 @@ const VIKTOR = member("Viktor Nakamura", "Assistant", true);
  * two Supervisors first (by name), then Tamsin; the engine calls in Tamsin
  * and explains only the Assistants.
  */
-export const ruleLabCase = (): CoverWithEngineCase => ({
+export const ruleLabCase = (): NotAssignedLeaveCase => ({
 	members: [ORLA, PIET, TAMSIN, QUINN, SOREN, VIKTOR],
 	cover: coverOptionsFixture({
 		options: [ORLA, PIET, TAMSIN].map((person) =>
@@ -127,12 +112,24 @@ export const ruleLabCase = (): CoverWithEngineCase => ({
 	}),
 	engine: repairOptionsFixture(
 		[
-			feasibleRepair([
-				callInMove({
-					membershipId: TAMSIN.membershipId,
-					displayName: TAMSIN.displayName,
-				}),
-			]),
+			callInOption({
+				cells: [
+					{
+						membershipId: TAMSIN.membershipId,
+						day: GAP_DAY,
+						kind: "WORK",
+						shiftId: coverOptionsFixture().gap.shiftId,
+					},
+				],
+				people: [
+					{
+						membershipId: TAMSIN.membershipId,
+						displayName: TAMSIN.displayName,
+						weekMinutes: null,
+						takenOffThisShift: false,
+					},
+				],
+			}),
 		],
 		[
 			notAssigned(TAMSIN),
@@ -159,7 +156,7 @@ const FIKRI = member("Fikri Jamal", "Concierge");
  * no way to fill it, refuses Calvin for the rest between shifts, and calls
  * Elaine "on leave".
  */
-export const frontDeskSundayLateCase = (): CoverWithEngineCase => ({
+export const frontDeskSundayLateCase = (): NotAssignedLeaveCase => ({
 	members: [BERNICE, CALVIN, DEWI, ELAINE, FIKRI],
 	cover: coverOptionsFixture({
 		options: [CALVIN, ELAINE, FIKRI].map((person) =>

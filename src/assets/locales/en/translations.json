@@ -4843,7 +4843,7 @@
 			"unknownJob": "A job title",
 			"wholeRoster": "Whole roster",
 			"jobShort_one": "{{count}} {{job}} short",
-			"jobShort_other": "{{count}} {{job}} short",
+			"jobShort_other": "{{count}} × {{job}} short",
 			"brokenMust": "A rule that must hold is broken here. Change this day by hand, then validate again. Rule: {{rule}}",
 			"notMetRule": "Asked for if possible, and this roster could not meet it. Rule: {{rule}}",
 			"leaveShort": "On leave, so {{shift}} is short.",
@@ -4876,7 +4876,6 @@
 			"advice": {
 				"lead": "What to do: {{advice}}",
 				"withNeighbouringDays": "{{advice}} You can also change the neighbouring days, in the schedule before or after this one.",
-				"findCover": "Press Find cover to see who can take it, or ask the engine for options.",
 				"staffByHand": "Give this shift to someone who can work it that day.",
 				"daysOff": "Change one of this person’s shifts in that period to a day off.",
 				"requiredDays": "Change one of this person’s shifts in that week to a rest day (or a day off).",
@@ -4938,21 +4937,24 @@
 				"shiftShort": "{{shift}} short"
 			},
 			"cover": {
-				"badge": {
-					"withinHours": "Within hours",
-					"extraHours": "Extra hours",
-					"overtime": "Overtime",
-					"leavesShort": "Leaves {{shift}} {{count}} short",
-					"notRuleChecked": "Not rule-checked"
-				},
 				"review": "Review",
-				"whatChanges": "What changes for {{name}}",
+				"whatChanges": "What changes",
 				"back": "Back",
-				"week": "This week {{before}} → {{after}} h of {{contract}} h",
-				"weekOvertime": "This week {{before}} → {{after}} h of {{contract}} h · {{overtime}} h overtime",
 				"weekBar": "This week’s hours against the contract",
-				"whyNot": "Why not others ({{count}})"
-			}
+				"whyNot": "Why not others ({{count}})",
+				"becomes": "becomes",
+				"offerSent": "Offer sent · answer by {{time}}",
+				"declined": "Declined",
+				"reviewFor": "Review {{name}}’s change",
+				"stillShortAfter": "Still short afterwards: {{times}}",
+				"bothMustAgree": "The roster is published, so both must agree.",
+				"bothAgreed": "They both agreed",
+				"bothAgreedHint": "Say how each person agreed.",
+				"working": "Working it: {{names, list(type: conjunction)}}",
+				"nobodyWorks": "Nobody works it yet.",
+				"withCost": "{{line}} · {{cost}}"
+			},
+			"leaveShortNamed": "{{name}} is on leave, so {{shift}} is short."
 		},
 		"rosterMarkers": {
 			"leaveRequested": "Leave requested",
@@ -5100,7 +5102,8 @@
 			"partDayKeptFree": "Approved before this roster was made. The scheduler can’t plan part days yet, so {{name}}’s whole day was kept free.",
 			"works": "Works {{time}} · {{shift}}",
 			"shortenedForLeave": "Shortened for leave",
-			"openInLeave": "Open in Leave"
+			"openInLeave": "Open in Leave",
+			"addRemark": "Add a remark"
 		},
 		"publishedWeek": {
 			"setup": "This week already has a published roster for this department. Only one roster can be published per week, so pick another week to make a new one.",
@@ -5150,7 +5153,8 @@
 				"extraHours": "Extra hours (part-time) · {{hours}} h",
 				"overtime": "Overtime · {{hours}} h",
 				"restDay": "Rest day work, at the company’s request",
-				"unknown": "As set by the company"
+				"unknown": "As set by the company",
+				"daySwap": "Work {{day}} instead of {{dayGivenUp}}, same hours"
 			},
 			"tileOffered": "{{label}}, shift offered, answer by {{time}}",
 			"actions": {
@@ -5233,52 +5237,78 @@
 				"rosterMoved": "The roster changed since this list was made.",
 				"findAgain": "Find again",
 				"failed": "The list couldn't be loaded.",
-				"covered": "{{shift}} on {{day}} is covered now.",
-				"nobody": "Nobody on this roster can cover {{shift}} on {{day}}."
+				"covered": "{{shift}} on {{day}} is covered now."
 			},
 			"engine": {
 				"loading": "Working out the options…",
-				"unreachable": "The engine could not be reached. These people are free by their hours and are not checked against the rules.",
-				"none": "The engine found no way to fill this.",
 				"unknownShift": "a shift",
-				"appliedStillShort_one": "Roster changed. {{shift}} on {{day}} is still {{count}} short {{times}}: find cover again for those hours.",
-				"appliedStillShort_other": "Roster changed. {{shift}} on {{day}} is still {{count}} short {{times}}: find cover again for those hours.",
-				"move": {
-					"REASSIGN": "Move {{name}} from {{fromShift}} {{fromDay}} to {{shift}} {{day}}",
-					"CALL_IN": "Call in {{name}} for {{shift}} {{day}}",
-					"OVERTIME_EXTENSION": "Extend {{name}}’s {{shift}} · {{overtime}}",
-					"OVERTIME_EXTENSION_AFTER": "{{name}} stays on after {{shift}} · {{overtime}}, until {{time}}",
-					"OVERTIME_EXTENSION_BEFORE": "{{name}} starts {{shift}} early · {{overtime}}, from {{time}}",
-					"UNKNOWN": "A change the app can’t describe yet"
-				},
 				"refusal": {
-					"notSeenByEngine": "The engine sees this shift as fully staffed as the roster stands, so it has nothing to repair. Leave that takes only part of a shift isn’t sent to the engine yet: choose someone from the people Find cover lists.",
-					"expired": "The engine no longer holds this week’s generation, so it can’t suggest a change. Choose someone under Who covers instead.",
-					"notConnected": "The scheduling engine isn’t connected here.",
-					"rosterMoved": "The roster changed since you opened this. Find cover again to ask the engine.",
-					"tooSlow": "The engine took too long to look for options this time.",
-					"failed": "The engine couldn’t answer."
+					"notSeenByEngine": "The engine counts this shift as staffed.",
+					"expired": "This roster’s engine run is no longer kept. Generate the week again to get checked options.",
+					"notConnected": "The engine could not be reached.",
+					"rosterMoved": "The roster changed.",
+					"tooSlow": "The engine took too long.",
+					"failed": "The options could not be loaded."
 				},
-				"byHand": "The app can’t apply this one: make it by hand on the roster.",
 				"whyNot": {
 					"title": "Why nobody was assigned",
-					"couldTake": "Could take this shift",
+					"couldTake": "Could take this shift.",
 					"nobodyElse": "Nobody else holds this shift’s job title.",
 					"reason": {
-						"fixed_day_no_call_back": "Has a fixed rest or off day that day, and may not be called back.",
+						"fixed_day_no_call_back": "Has a fixed day off that day and may not be called back.",
 						"on_leave": "On leave that day.",
-						"outside_availability": "Not available for this shift’s hours.",
-						"too_little_shift_left": "Leave that day leaves too little of the shift to work.",
-						"works_another_shift": "Already on another shift that day.",
+						"outside_availability": "Not available for these hours.",
+						"works_another_shift": "On another shift that day, which would be left short.",
 						"breaks_unnamed_rule": "Would break a working-time rule.",
 						"not_checked": "Not checked in time.",
-						"no_shift_part_time": "Part-time with no shift that day. The engine doesn’t call in part-timers: choose them under Who covers.",
-						"needs_overtime": "Only as overtime, which isn’t assigned when a roster is generated."
+						"no_shift_part_time": "Part-time, with no shift that day.",
+						"needs_overtime": "Could take it with extra hours.",
+						"role_not_on_shift": "Does not hold this shift’s job title."
 					},
 					"breaksRule": "Would break: {{rule}}",
-					"aWorkingTimeRule": "a working-time rule",
 					"otherReason": "Cannot take this shift."
-				}
+				},
+				"kindLine": {
+					"callIn": "Comes in on a {{dayType}}",
+					"move": "Moves from {{shift}}",
+					"stretchAfter": "Stays on {{hours}} h",
+					"stretchBefore": "Starts {{hours}} h early",
+					"stretchPair": "Cover it between them",
+					"daySwap": "Works {{day}} instead of {{dayGivenUp}}",
+					"other_one": "{{count}} change",
+					"other_other": "{{count}} changes"
+				},
+				"cost": {
+					"withinHours": "Within hours",
+					"pastContract": "+{{hours}} h extra hours",
+					"overtime": "+{{hours}} h overtime",
+					"restDayWork": "{{hours}} h on a rest day",
+					"timeOffEarned": "+{{hours}} h time off earned",
+					"notRuleChecked": "Not rule-checked"
+				},
+				"leaves": {
+					"onePerson": "Fills 1 of {{count}}",
+					"stillShort": "Still short {{times}}"
+				},
+				"weekLine": "{{before}} → {{after}} h of {{contract}} h this week",
+				"peopleAnd": "{{items, list(type: conjunction)}}",
+				"stillWorking": "Still working. This can take up to {{seconds}} seconds.",
+				"nobodyCan": "Nobody can cover this within the rules.",
+				"noFullFill": "Nothing covers the whole shift.",
+				"incomplete": "Ran out of time. These are the options found so far.",
+				"optionsFound_one": "{{count}} option found",
+				"optionsFound_other": "{{count}} options found",
+				"findAgain": "Find options again",
+				"fallbackCaption": "Free by their hours",
+				"partCaption": "Cover part of it",
+				"bestOf": "The best {{shown}} of {{found}}.",
+				"stillShortToast": "Roster changed. {{shift}} is still {{runs}}.",
+				"shortRun_one": "{{count}} short {{times}}",
+				"shortRun_other": "{{count}} short {{times}}",
+				"spanSeparator": ", ",
+				"appliedRosterMoved": "The roster changed, so that change was not made. These are the options now.",
+				"takenOffEarlier": "Taken off this shift earlier",
+				"fallbackNobody": "Nobody is free by their hours."
 			}
 		},
 		"reach": {
@@ -6722,7 +6752,8 @@
 				"LEAVE_RECORDED": "Leave recorded",
 				"LEAVE_MOVE": "Leave moved",
 				"COVER_OPTION": "Cover",
-				"OTHER": "Other"
+				"OTHER": "Other",
+				"REPAIR_OPTION": "Repair option"
 			},
 			"empty": "No published rosters in these dates.",
 			"question": "Are published rosters stable?",

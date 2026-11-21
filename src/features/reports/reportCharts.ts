@@ -161,6 +161,7 @@ const REASON_COLOURS: ReadonlyArray<[string, ChartColour]> = [
 	["LEAVE_RECORDED", "inkBlue200"],
 	["LEAVE_MOVE", "porcelain300"],
 	["COVER_OPTION", "success600"],
+	["REPAIR_OPTION", "porcelain500"],
 ];
 
 /** The id and colour of every reason the app does not know by name. */

@@ -137,4 +137,61 @@ describe("RosterChangeReview", () => {
 			expect(within(alert).queryByRole("button")).toBeNull();
 		}
 	);
+
+	describe("as the Issues panel keeps it", () => {
+		/** The review with no empty checks and the remark folded, `remark` and `remarkRequired` as given. */
+		const showQuiet = (
+			preview: RosterChangePreview,
+			{ remark = "", remarkRequired = false } = {}
+		): void => {
+			render(
+				<I18nextProvider i18n={authTestI18n}>
+					<RosterChangeReview
+						remarkFolded
+						names={names}
+						preview={preview}
+						remark={remark}
+						remarkRequired={remarkRequired}
+						showsEmptyChecks={false}
+						showsRulesNote={false}
+						ticked={false}
+						onRemarkChange={vi.fn()}
+						onTickedChange={vi.fn()}
+					/>
+				</I18nextProvider>
+			);
+		};
+
+		it("given_noChecks_when_shown_then_noChecksHeadingAndTheRemarkBehindAddARemark", async () => {
+			showQuiet(rosterChangePreviewFixture({ checks: [] }));
+
+			expect(screen.queryByRole("heading", { name: "Checks" })).toBeNull();
+			expect(screen.queryByRole("textbox")).toBeNull();
+			await userEvent.click(
+				screen.getByRole("button", { name: "Add a remark" })
+			);
+
+			expect(screen.getByRole("textbox")).toHaveFocus();
+		});
+
+		it("given_checks_when_shown_then_theyAreListed", () => {
+			showQuiet(rosterChangePreviewFixture());
+
+			expect(screen.getByRole("heading", { name: "Checks" })).toBeVisible();
+		});
+
+		it("given_aRemarkRequiredOrAlreadyWritten_when_shown_then_theBoxIsOpen", () => {
+			showQuiet(rosterChangePreviewFixture({ checks: [] }), {
+				remarkRequired: true,
+			});
+			expect(screen.getByRole("textbox")).toBeVisible();
+		});
+
+		it("given_aRemarkAlreadyWritten_when_shown_then_theBoxIsOpenSoNothingIsSentUnseen", () => {
+			showQuiet(rosterChangePreviewFixture({ checks: [] }), {
+				remark: "Covers Ben Ong",
+			});
+			expect(screen.getByRole("textbox")).toHaveValue("Covers Ben Ong");
+		});
+	});
 });

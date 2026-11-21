@@ -214,8 +214,11 @@ export const rosterViewOf = ({
 	const rows = rosterFromAssignments(assignments, period);
 	const findings = schedule.generation?.findings ?? null;
 	const counts = findings ? findingCounts(findings) : null;
+	// Names whenever there is a finding to show, information notes ("Rest carried in from before") included.
 	const names =
-		findings && counts && hasFindings(counts)
+		findings &&
+		counts &&
+		(hasFindings(counts) || findings.diagnostics.length > 0)
 			? findingNames(findings, { assignments, shifts, constraints })
 			: null;
 	const changed = changedDays(assignments);

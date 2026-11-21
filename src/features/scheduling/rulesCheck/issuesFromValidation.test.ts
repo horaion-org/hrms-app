@@ -6,6 +6,8 @@ import {
 } from "@/features/scheduling/rulesCheck/fixtures";
 import {
 	brokenRuleIssueCount,
+	checkDue,
+	checkPending,
 	changesUnchecked,
 	findingsShown,
 	scheduleWithFindingsShown,
@@ -65,6 +67,44 @@ describe("changesUnchecked", () => {
 		["current", "current", last, false],
 	] as const)("reads %s", (_case, standing, lastValidation, expected) => {
 		expect(changesUnchecked(standing, lastValidation)).toBe(expected);
+	});
+});
+
+describe("checkDue and checkPending", () => {
+	const last = { revision: 1, check: rulesCheckFixture() };
+	it.each<
+		[string, Parameters<typeof checkDue>[0], { due: boolean; pending: boolean }]
+	>([
+		[
+			"the roster moved past the last check, nothing asked",
+			{ status: "idle", last, revision: 2 },
+			{ due: true, pending: true },
+		],
+		[
+			"asked at the new revision",
+			{ status: "loading", last, revision: 2 },
+			{ due: false, pending: true },
+		],
+		[
+			"refused at the new revision",
+			{ status: "refused", last, revision: 2 },
+			{ due: false, pending: false },
+		],
+		[
+			"the last check is the roster's",
+			{ status: "idle", last, revision: 1 },
+			{ due: false, pending: false },
+		],
+		[
+			"nothing checked in this visit",
+			{ status: "idle", last: undefined, revision: 2 },
+			{ due: false, pending: false },
+		],
+	])("%s", (_case, validation, expected) => {
+		expect({
+			due: checkDue(validation),
+			pending: checkPending(validation),
+		}).toEqual(expected);
 	});
 });
 

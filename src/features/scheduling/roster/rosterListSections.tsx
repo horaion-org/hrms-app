@@ -36,7 +36,10 @@ import type { RosterPanel } from "@/features/scheduling/roster/rosterSearch";
 import type { RosterView } from "@/features/scheduling/roster/rosterView";
 import type { RosterChangeTarget } from "@/features/scheduling/rosterChanges/useRosterChangeActions";
 import type { RosterSidePanelSection } from "@/features/scheduling/RosterSidePanel";
-import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
+import type {
+	ScheduleAssignment,
+	ScheduleShift,
+} from "@/features/scheduling/schedules/api";
 
 const key = "scheduling.detail";
 
@@ -93,6 +96,8 @@ export type RosterListInput = {
 	issueCover?: IssueCoverContext;
 	/** The short shift "Find cover" opened Issues on: its row starts open. */
 	issueCoverGap?: CoverGapRequest;
+	/** The schedule's frozen shifts, which name a short shift nobody on the roster works; none when not readable. */
+	shifts?: ReadonlyArray<Pick<ScheduleShift, "shiftId" | "name">>;
 };
 
 /**
@@ -222,15 +227,25 @@ export const issuesSections = (
 		issueFixing,
 		issueCover,
 		issueCoverGap,
+		shifts,
 	} = input;
 	if (issuesAbout) return headerIssueSections(issuesAbout, input);
-	/** A shift's name by its id, as the roster's own days name it. */
+	/** A shift's name by its id, as the roster's own days name it, else as the frozen shifts do. */
 	const shiftName = (shiftId: string): string =>
 		assignments.find((row) => row.shift?.shiftId === shiftId)?.shift?.name ??
+		shifts?.find((shift) => shift.shiftId === shiftId)?.name ??
 		"";
+	/** Who works a shift that day, as the roster's own days name them. */
+	const whoWorks = (gap: CoverGapRequest): Array<string> =>
+		assignments
+			.filter(
+				(row) => row.shift?.shiftId === gap.shiftId && row.day === gap.day
+			)
+			.flatMap((row) => row.member?.displayName ?? []);
 	const list = {
 		issues,
 		shiftName,
+		whoWorks,
 		information: coverOffers &&
 			(coverOffers.failed || coverOffers.offers.length > 0) && (
 				<OffersOutSection

@@ -38,9 +38,11 @@ export type ChangeTileFace =
 	  }
 	| { kind: "day"; label: string };
 
-/** One day of a change: what it holds now, and after. */
+/** One day of a change: the day, what it holds now, and after. */
 export type ChangeTilePair = {
 	key: string;
+	/** The day changed, as an ISO date. */
+	day: string;
 	before: ChangeTileFace;
 	after: ChangeTileFace;
 };
@@ -116,6 +118,7 @@ export const changeTilePairs = (
 		);
 		return {
 			key: `${cell.membershipId}|${cell.day}`,
+			day: cell.day,
 			before: row ? tileFaceOfCell(assignmentCell(row), t) : DAY_OFF(t),
 			after: tileFaceOfChange(cell, shiftOf, t),
 		};
@@ -128,6 +131,70 @@ export const previewTilePairs = (
 ): Array<ChangeTilePair> =>
 	preview.cells.map((cell) => ({
 		key: `${cell.membershipId ?? ""}|${cell.day}`,
+		day: cell.day,
 		before: tileFaceOfCell(cell.before, t),
 		after: tileFaceOfCell(cell.after, t),
 	}));
+
+/** One person's changed days, under their name. */
+export type ChangeTileGroup = {
+	membershipId: string;
+	name: string;
+	days: Array<ChangeTilePair>;
+};
+
+/** The days of a change grouped by person, in the order each person first appears. */
+const groupedByPerson = (
+	days: ReadonlyArray<{
+		membershipId: string;
+		name: string;
+		day: ChangeTilePair;
+	}>
+): Array<ChangeTileGroup> =>
+	days.reduce<Array<ChangeTileGroup>>((groups, { membershipId, name, day }) => {
+		const group = groups.find(
+			(candidate) => candidate.membershipId === membershipId
+		);
+		if (group) group.days.push(day);
+		else groups.push({ membershipId, name, days: [day] });
+		return groups;
+	}, []);
+
+/**
+ * A change's cells as groups, one per person named by `memberName`, each day
+ * a before → after pair read against the roster as it stands now.
+ */
+export const changeTileGroups = (
+	cells: ReadonlyArray<RosterChangeCell>,
+	assignments: ReadonlyArray<ScheduleAssignment>,
+	shiftOf: (shiftId: string) => TileShift | undefined,
+	memberName: (membershipId: string) => string,
+	t: TFunction
+): Array<ChangeTileGroup> => {
+	const pairs = changeTilePairs(cells, assignments, shiftOf, t);
+	return groupedByPerson(
+		cells.map((cell, place) => ({
+			membershipId: cell.membershipId,
+			name: memberName(cell.membershipId),
+			day: pairs[place]!,
+		}))
+	);
+};
+
+/** A preview's days as groups, one per person, as the API worked them out and named them. */
+export const previewTileGroups = (
+	preview: RosterChangePreview,
+	memberName: (membershipId: string) => string,
+	t: TFunction
+): Array<ChangeTileGroup> => {
+	const pairs = previewTilePairs(preview, t);
+	return groupedByPerson(
+		preview.cells.map((cell, place) => ({
+			membershipId: cell.membershipId ?? "",
+			name:
+				cell.displayName ??
+				(cell.membershipId === null ? "" : memberName(cell.membershipId)),
+			day: pairs[place]!,
+		}))
+	);
+};

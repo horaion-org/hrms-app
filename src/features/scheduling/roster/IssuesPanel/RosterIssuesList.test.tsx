@@ -4,7 +4,11 @@ import { I18nextProvider } from "react-i18next";
 import { describe, expect, it, vi } from "vitest";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { rosterIssuesFixture } from "@/features/scheduling/roster/rosterIssueFixtures";
-import { RosterIssuesList, type RosterIssuesListProps } from "./RosterIssuesList";
+import { FocusSidePanelHeading } from "@/features/scheduling/RosterSidePanel";
+import {
+	RosterIssuesList,
+	type RosterIssuesListProps,
+} from "./RosterIssuesList";
 
 /*
  * The fixture's four issues: a shift short, a must broken, a rule not met
@@ -81,7 +85,9 @@ describe("RosterIssuesList", () => {
 		await user.click(screen.getByRole("button", { name: "Show" }));
 		expect(onShow).toHaveBeenCalledWith(rosterIssuesFixture()[1]);
 
-		const gap = screen.getByRole("button", { name: /1 Front Desk Staff short/ });
+		const gap = screen.getByRole("button", {
+			name: /1 Front Desk Staff short/,
+		});
 		await user.click(gap);
 		expect(must).toHaveAttribute("aria-expanded", "false");
 		expect(gap).toHaveAttribute("aria-expanded", "true");
@@ -105,7 +111,59 @@ describe("RosterIssuesList", () => {
 
 		await user.click(screen.getByRole("button", { name: /^If possibleAsked/ }));
 
-		expect(screen.getByText("Works Saturday. Rule: Weekends off")).toBeVisible();
+		expect(
+			screen.getByText("Works Saturday. Rule: Weekends off")
+		).toBeVisible();
 		expect(screen.queryByRole("button", { name: /Apply/ })).toBeNull();
+	});
+
+	it("given_theOpenRowCheckedAway_when_focusWasOnIt_then_thePanelIsAskedToFocusItsHeading", async () => {
+		const issues = rosterIssuesFixture();
+		const focusHeading = vi.fn();
+		/** The list inside a side panel, which hands it the way to its heading. */
+		const inPanel = (shown: typeof issues): React.JSX.Element => (
+			<I18nextProvider i18n={authTestI18n}>
+				<FocusSidePanelHeading value={focusHeading}>
+					<RosterIssuesList issues={shown} shiftName={() => "Front Desk AM"} />
+				</FocusSidePanelHeading>
+			</I18nextProvider>
+		);
+		const { rerender } = render(inPanel(issues));
+		const row = screen.getByRole("button", { name: /Rules broken/ });
+		await userEvent.click(row);
+		row.blur();
+
+		rerender(
+			inPanel(
+				issues.filter(
+					(issue) =>
+						issue.group !== "mustFix" || issue.action.kind === "findCover"
+				)
+			)
+		);
+
+		expect(focusHeading).toHaveBeenCalledOnce();
+	});
+
+	it("given_aRosterThatMayNotBeChanged_when_aShortShiftsRowOpens_then_saysWhoWorksItAndNamesNoButton", async () => {
+		show({ whoWorks: () => ["Aisha Rahman", "Ben Ong"] });
+
+		await userEvent.click(
+			screen.getByRole("button", { name: /Front Desk Staff short/ })
+		);
+
+		const row = screen.getByRole("button", { expanded: true }).closest("li")!;
+		expect(row).toHaveTextContent("Working it: Aisha Rahman and Ben Ong");
+		expect(row).not.toHaveTextContent(/Find cover|ask the engine/);
+	});
+
+	it("given_nobodyOnTheShort_shift_when_itsRowOpens_then_saysNobodyWorksIt", async () => {
+		show({ whoWorks: () => [] });
+
+		await userEvent.click(
+			screen.getByRole("button", { name: /Front Desk Staff short/ })
+		);
+
+		expect(screen.getByText("Nobody works it yet.")).toBeVisible();
 	});
 });

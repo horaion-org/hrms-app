@@ -18,6 +18,15 @@ describe("Toast", () => {
 		);
 	});
 
+	it("given_aLongMessage_when_rendered_then_theWholeMessageIsInTheToast", () => {
+		const message =
+			"Roster changed. Swing Shift is still 1 short 14:00 – 15:00, 17:00 – 22:00.";
+		render(<Toast onDismiss={vi.fn()}>{message}</Toast>);
+
+		// How it wraps is shown by the LongMessage story and the before-and-after shots.
+		expect(screen.getByRole("status")).toHaveTextContent(message);
+	});
+
 	it("given_theDuration_when_itPasses_then_dismissesOnce", () => {
 		const onDismiss = vi.fn();
 		render(

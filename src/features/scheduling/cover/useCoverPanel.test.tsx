@@ -7,10 +7,13 @@ import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
-	callInMove,
-	feasibleRepair,
+	callInOption,
+	daySwapOption,
 	repairOptionsFixture,
+	stretchAfterOption,
+	stretchPairOption,
 } from "@/features/scheduling/cover/engineRepairFixtures";
+import type { RepairOption } from "@/features/scheduling/cover/engineRepairApi";
 import {
 	coverOptionFixture,
 	coverOptionsFixture,
@@ -111,7 +114,7 @@ describe("useCoverPanel", () => {
 			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
 			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
 			[`POST ${REPAIR_OPTIONS}`]: answer(
-				repairOptionsFixture([feasibleRepair([callInMove()])], [])
+				repairOptionsFixture([callInOption()], [])
 			),
 		});
 		const { result, input } = hook();
@@ -189,77 +192,6 @@ describe("useCoverPanel", () => {
 		expect(result.current.selected?.membershipId).toBe("m-3");
 	});
 
-	it("given_aPublishedRosterAndTheEngineCallingSomeoneIn_when_itAnswers_then_theyAreChosenInPlaceOfTheFirstAndPreviewed", async () => {
-		const calls = stubApi({
-			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
-			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
-			[`POST ${REPAIR_OPTIONS}`]: answer(
-				repairOptionsFixture(
-					[feasibleRepair([callInMove({ membershipId: "m-3" })])],
-					[]
-				)
-			),
-		});
-		const { result } = hook({
-			coverOffers: { offers: [], timeZone: "Asia/Singapore" },
-		});
-
-		expect(result.current.view).toBe("backendWithEngine");
-		await waitFor(() => {
-			expect(result.current.selected?.membershipId).toBe("m-3");
-		});
-		expect(result.current.withEngine?.suggested).toBe("m-3");
-		await waitFor(() => {
-			expect(lastPreview(calls)?.body).toEqual({
-				expectedRevision: 1,
-				cells: coverOptionsFixture().options[1]!.cells,
-			});
-		});
-	});
-
-	it("given_aPublishedRoster_when_theEngineRefusesSomeone_then_theyAreUnderCantHelpAndNobodyIsChosen", async () => {
-		stubApi({
-			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
-			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
-			[`POST ${REPAIR_OPTIONS}`]: answer(
-				repairOptionsFixture(
-					[],
-					[
-						{
-							memberProfileId: "mp-3",
-							name: "Chen Wei",
-							couldTake: false,
-							reasons: [
-								{
-									code: "breaks_rule",
-									rule: "minimum_rest_between_shifts",
-									constraintId: null,
-									constraintName: null,
-								},
-							],
-						},
-					]
-				)
-			),
-		});
-		const { result, input } = hook({
-			coverOffers: { offers: [], timeZone: "Asia/Singapore" },
-		});
-
-		await waitFor(() => {
-			expect(result.current.engineRepair.status).toBe("ready");
-		});
-		await waitFor(() => {
-			expect(result.current.status).toBe("options");
-		});
-		// Chen is under "Can't help" now; Aisha was never looked at, so the engine suggests nobody.
-		expect(result.current.selected).toBeUndefined();
-		expect(result.current.withEngine?.unavailable[0]).toMatchObject({
-			membershipId: "m-3",
-		});
-		expect(input.onPreviewDays).toHaveBeenLastCalledWith([]);
-	});
-
 	it("given_theRosterMovedSinceTheRevision_when_listed_then_rosterMoved", async () => {
 		stubApi({
 			[`POST ${COVER_OPTIONS}`]: {
@@ -316,6 +248,62 @@ describe("useCoverPanel", () => {
 		expect(result.current.selected).toBeUndefined();
 	});
 
+	it("given_theListCountingNobodyShortButTheEngineStillShort_when_bothAnswer_then_theEnginesOptionsAreTheList", async () => {
+		stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(
+				coverOptionsFixture({
+					gap: { ...GAP, shortBy: 0, shortSinceGeneration: 0 },
+					options: [],
+					unavailable: [],
+				})
+			),
+			[`POST ${REPAIR_OPTIONS}`]: answer(
+				repairOptionsFixture([callInOption()], [])
+			),
+		});
+		const { result } = hook();
+
+		await waitFor(() => {
+			expect(result.current.engineRepair.status).toBe("ready");
+		});
+		await waitFor(() => {
+			expect(result.current.options).toBeDefined();
+		});
+		expect(result.current.status).not.toBe("closed");
+		expect(result.current.view).toBe("engine");
+	});
+
+	it("given_theEngineFindingNothingShort_when_theListStillCountsOne_then_closed", async () => {
+		stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${REPAIR_OPTIONS}`]: answer(
+				repairOptionsFixture([], [], { shortNow: [] })
+			),
+		});
+		const { result } = hook();
+
+		await waitFor(() => {
+			expect(result.current.status).toBe("closed");
+		});
+		expect(result.current.view).toBe("gapStatus");
+	});
+
+	it("given_theRulesCheckUnderWay_when_opened_then_theHoursBasedListWaitsForIt", async () => {
+		const calls = stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${REPAIR_OPTIONS}`]: answer(
+				repairOptionsFixture([callInOption()], [])
+			),
+		});
+		const { result } = hook({ listWaitsForCheck: true });
+
+		await waitFor(() => {
+			expect(result.current.engineRepair.status).toBe("ready");
+		});
+		expect(calls.some((call) => call.path === COVER_OPTIONS)).toBe(false);
+		expect(result.current.view).toBe("engine");
+	});
+
 	it("given_nobodyCanCover_when_listed_then_nobody", async () => {
 		stubApi({
 			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture({ options: [] })),
@@ -351,6 +339,64 @@ describe("useCoverPanel", () => {
 			cells: coverOptionFixture().cells,
 		});
 		expect(result.current.offer).toBeUndefined();
+		// The list's gap is short by one: the person fills it.
+		expect(input.onApplied).toHaveBeenCalledWith(expect.anything(), {
+			filled: true,
+			stillShort: undefined,
+		});
+	});
+
+	it("given_aChangeInFlight_when_appliedAgain_then_oneChangeIsSent", async () => {
+		const calls = stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+			[`POST ${CHANGES}`]: {
+				status: 201,
+				body: envelope(rosterChangeFixture()),
+			},
+		});
+		const { result, input } = hook();
+		await waitFor(() => {
+			expect(result.current.review.applyBlocked).toBe(false);
+		});
+
+		act(() => {
+			result.current.review.apply();
+			result.current.review.apply();
+		});
+
+		await waitFor(() => {
+			expect(input.onApplied).toHaveBeenCalled();
+		});
+		expect(calls.filter((call) => call.path === CHANGES)).toHaveLength(1);
+	});
+
+	it("given_onePersonOfTheListOnAGapShortByTwo_when_applied_then_theGapIsNotFilled", async () => {
+		stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(
+				coverOptionsFixture({ gap: { ...GAP, shortBy: 2 } })
+			),
+			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+			[`POST ${CHANGES}`]: {
+				status: 201,
+				body: envelope(rosterChangeFixture()),
+			},
+		});
+		const { result, input } = hook();
+		await waitFor(() => {
+			expect(result.current.review.applyBlocked).toBe(false);
+		});
+
+		act(() => {
+			result.current.review.apply();
+		});
+
+		await waitFor(() => {
+			expect(input.onApplied).toHaveBeenCalledWith(expect.anything(), {
+				filled: false,
+				stillShort: undefined,
+			});
+		});
 	});
 
 	it("given_aPublishedRoster_when_theOfferIsSent_then_aDayOffShiftOfferWithTheCells", async () => {
@@ -381,5 +427,448 @@ describe("useCoverPanel", () => {
 			cells: coverOptionFixture().cells,
 			send: true,
 		});
+	});
+
+	describe("an engine option", () => {
+		/** The panel with the engine answering `option` at revision 5, chosen once the answer is in. */
+		const chooseOption = async (
+			option: RepairOption,
+			routes: Parameters<typeof stubApi>[0] = {},
+			props: Partial<CoverPanelInput> = {}
+		): Promise<{
+			result: { current: ReturnType<typeof useCoverPanel> };
+			calls: ReturnType<typeof stubApi>;
+			input: CoverPanelInput;
+		}> => {
+			const calls = stubApi({
+				[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+				[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+				[`POST ${REPAIR_OPTIONS}`]: answer(
+					repairOptionsFixture([option], [], { revision: 5 })
+				),
+				...routes,
+			});
+			const { result, input } = hook(props);
+			await waitFor(() => {
+				expect(result.current.engineRepair.status).toBe("ready");
+			});
+			act(() => {
+				result.current.chooseRepair(option);
+			});
+			await waitFor(() => {
+				expect(lastPreview(calls)).toBeDefined();
+			});
+			return { result, calls, input };
+		};
+
+		it("given_anOptionChosen_when_previewedAndApplied_then_itsCellsAsSentAtTheAnswersRevisionAndItsKindOnApplyOnly", async () => {
+			const option = daySwapOption();
+			const { result, calls, input } = await chooseOption(option, {
+				[`POST ${CHANGES}`]: {
+					status: 201,
+					body: envelope(rosterChangeFixture()),
+				},
+			});
+
+			expect(lastPreview(calls)?.body).toEqual({
+				expectedRevision: 5,
+				cells: option.cells,
+			});
+			await waitFor(() => {
+				expect(result.current.review.applyBlocked).toBe(false);
+			});
+			act(() => {
+				result.current.review.apply();
+			});
+			await waitFor(() => {
+				expect(input.onApplied).toHaveBeenCalled();
+			});
+			expect(calls.find((call) => call.path === CHANGES)?.body).toEqual({
+				expectedRevision: 5,
+				cells: option.cells,
+				repairOptionKind: "DAY_SWAP",
+			});
+		});
+
+		it("given_aPartFillApplied_when_itLands_then_theToastSaysWhatIsStillShort", async () => {
+			const { result, input } = await chooseOption(stretchAfterOption(), {
+				[`POST ${CHANGES}`]: {
+					status: 201,
+					body: envelope(rosterChangeFixture()),
+				},
+			});
+			await waitFor(() => {
+				expect(result.current.review.applyBlocked).toBe(false);
+			});
+
+			act(() => {
+				result.current.review.apply();
+			});
+
+			await waitFor(() => {
+				expect(input.onApplied).toHaveBeenCalledWith(expect.anything(), {
+					filled: false,
+					stillShort:
+						"Roster changed. Front Desk AM is still 1 short 09:00 – 11:00.",
+				});
+			});
+		});
+
+		it("given_theRosterMovedUnderTheOption_when_applied_then_itSaysSoUntilTheNextChoice", async () => {
+			const { result } = await chooseOption(stretchAfterOption(), {
+				[`POST ${CHANGES}`]: {
+					status: 409,
+					body: { errorCode: "ROSTER_REVISION_CONFLICT" },
+				},
+			});
+			await waitFor(() => {
+				expect(result.current.review.applyBlocked).toBe(false);
+			});
+
+			act(() => {
+				result.current.review.apply();
+			});
+
+			await waitFor(() => {
+				expect(result.current.rosterMovedUnderApply).toBe(true);
+			});
+			act(() => {
+				result.current.chooseRepair(stretchAfterOption());
+			});
+			expect(result.current.rosterMovedUnderApply).toBe(false);
+		});
+
+		it("given_aPublishedRoster_when_onePersonsOptionIsSent_then_anOfferOfItsKindForTheDayItAddsWork", async () => {
+			const option = stretchAfterOption();
+			const { result, calls } = await chooseOption(
+				option,
+				{
+					[`POST ${OFFERS}`]: {
+						status: 201,
+						body: envelope(coverOfferFixture()),
+					},
+				},
+				{ coverOffers: { offers: [], timeZone: "Asia/Singapore" } }
+			);
+			await waitFor(() => {
+				expect(result.current.offer?.ready).toBe(true);
+			});
+
+			expect(result.current.offer?.consentKind).toBe("STRETCH");
+			expect(result.current.review.bothMustAgree).toBe(false);
+			act(() => {
+				result.current.offer?.send();
+			});
+
+			await waitFor(() => {
+				expect(calls.find((call) => call.path === OFFERS)?.body).toMatchObject({
+					optionKind: "STRETCH",
+					rosterDate: GAP.day,
+					expectedRevision: 5,
+					cells: option.cells,
+					send: true,
+				});
+			});
+		});
+
+		it("given_aPublishedRosterAndAnAbsentMember_when_aTwoPersonOptionIsReviewed_then_noRemarkIsFilledInAndApplyWaitsForOneWritten", async () => {
+			const { result } = await chooseOption(
+				stretchPairOption(),
+				{
+					[`POST ${COVER_OPTIONS}`]: answer(
+						coverOptionsFixture({
+							gap: { ...GAP, absentMembershipIds: ["m-4"] },
+						})
+					),
+				},
+				{ coverOffers: { offers: [], timeZone: "Asia/Singapore" } }
+			);
+			await waitFor(() => {
+				expect(result.current.review.preview).toBeDefined();
+			});
+
+			expect(result.current.review.remark).toBe("");
+			expect(result.current.review.applyBlocked).toBe(true);
+			act(() => {
+				result.current.review.setRemark("Both said yes in person.");
+			});
+			expect(result.current.review.applyBlocked).toBe(false);
+		});
+
+		it("given_aPublishedRoster_when_aOnePersonOptionHasNoDayToAskAbout_then_itFailsClosedAndWaitsForARemark", async () => {
+			const { result } = await chooseOption(
+				callInOption({
+					cells: [
+						{
+							membershipId: "m-9",
+							day: GAP.day,
+							kind: "WORK",
+							shiftId: GAP.shiftId,
+						},
+					],
+					people: [
+						{
+							membershipId: "m-9",
+							displayName: "Gone Person",
+							weekMinutes: null,
+							takenOffThisShift: false,
+						},
+					],
+				}),
+				{},
+				{ coverOffers: { offers: [], timeZone: "Asia/Singapore" } }
+			);
+			await waitFor(() => {
+				expect(result.current.review.preview).toBeDefined();
+			});
+
+			expect(result.current.offer?.consentKind).toBeUndefined();
+			expect(result.current.review).toMatchObject({
+				remarkRequired: true,
+				bothMustAgree: false,
+				applyBlocked: true,
+			});
+		});
+
+		it("given_aPublishedRoster_when_aStretchIsOffered_then_itsRivalsAreTheOffersOutForTheShortShift", async () => {
+			const rival = coverOfferFixture({
+				offerId: "o-chen",
+				expiresAt: "2099-01-01T00:00:00Z",
+				member: {
+					...coverOfferFixture().member!,
+					membershipId: "m-3",
+					displayName: "Chen Wei",
+				},
+			});
+			const { result } = await chooseOption(
+				stretchAfterOption(),
+				{},
+				{
+					coverOffers: { offers: [rival], timeZone: "Asia/Singapore" },
+				}
+			);
+
+			// Ben stays on his own Lunch Rush; the race is for Front Desk AM, Chen's offer.
+			await waitFor(() => {
+				expect(result.current.offer?.consentKind).toBe("STRETCH");
+			});
+			expect(
+				result.current.offer?.rivals.map((offer) => offer.offerId)
+			).toEqual(["o-chen"]);
+		});
+
+		it("given_aPublishedRoster_when_aTwoPersonOptionIsReviewed_then_noOfferAndApplyWaitsForARemark", async () => {
+			const { result } = await chooseOption(
+				stretchPairOption(),
+				{},
+				{
+					coverOffers: { offers: [], timeZone: "Asia/Singapore" },
+				}
+			);
+			await waitFor(() => {
+				expect(result.current.review.preview).toBeDefined();
+			});
+
+			expect(result.current.offer?.consentKind).toBeUndefined();
+			expect(result.current.review.bothMustAgree).toBe(true);
+			expect(result.current.review.applyBlocked).toBe(true);
+			act(() => {
+				result.current.review.setRemark("Both said yes by phone.");
+			});
+			expect(result.current.review.applyBlocked).toBe(false);
+		});
+	});
+});
+
+describe("useCoverPanel: the engine asked once per revision", () => {
+	it("given_aRefusedApply_when_theRosterMovesOn_then_oneAskAtTheOldRevisionAndOneAtTheNew", async () => {
+		const option = stretchAfterOption();
+		const calls = stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+			[`POST ${CHANGES}`]: {
+				status: 409,
+				body: { errorCode: "ROSTER_REVISION_CONFLICT" },
+			},
+			[`POST ${REPAIR_OPTIONS}`]: answer(repairOptionsFixture([option], [])),
+		});
+		const input: CoverPanelInput = {
+			target: {
+				companyId: "c-1",
+				unit: { branchId: "b-1", departmentId: "d-1" },
+				scheduleId: "s-1",
+				runId: "r-1",
+			},
+			revision: 1,
+			gap: { shiftId: GAP.shiftId, day: GAP.day },
+			assignments: roster,
+			dayRow: roster.find((row) => row.day === GAP.day)!,
+			shifts: frozenShiftsFixture(),
+			onPreviewDays: vi.fn(),
+			onApplied: vi.fn(),
+		};
+		const { result, rerender } = renderHook(
+			({ revision }) => useCoverPanel({ ...input, revision }),
+			{ wrapper, initialProps: { revision: 1 } }
+		);
+		await waitFor(() => {
+			expect(result.current.engineRepair.status).toBe("ready");
+		});
+		act(() => {
+			result.current.chooseRepair(option);
+		});
+		await waitFor(() => {
+			expect(result.current.review.applyBlocked).toBe(false);
+		});
+		act(() => {
+			result.current.review.apply();
+		});
+		await waitFor(() => {
+			expect(result.current.rosterMovedUnderApply).toBe(true);
+		});
+
+		// The refusal reads the roster again by itself, which then shows the new revision.
+		rerender({ revision: 2 });
+
+		await waitFor(() => {
+			expect(
+				calls
+					.filter((call) => call.path === REPAIR_OPTIONS)
+					.map(
+						(call) =>
+							(call.body as { expectedRevision: number }).expectedRevision
+					)
+			).toEqual([1, 2]);
+		});
+		expect(result.current.engineRepair.status).toBe("ready");
+	});
+});
+
+describe("useCoverPanel: a gap just filled", () => {
+	it("given_anOptionThatFillsTheGapApplied_when_theRosterShowsItsRevision_then_nothingMoreIsAskedAndTheGapReadsCovered", async () => {
+		const option = callInOption();
+		const calls = stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+			[`POST ${CHANGES}`]: {
+				status: 201,
+				body: envelope(rosterChangeFixture({ fromRevision: 1, toRevision: 2 })),
+			},
+			[`POST ${REPAIR_OPTIONS}`]: answer(repairOptionsFixture([option], [])),
+		});
+		const input: CoverPanelInput = {
+			target: {
+				companyId: "c-1",
+				unit: { branchId: "b-1", departmentId: "d-1" },
+				scheduleId: "s-1",
+				runId: "r-1",
+			},
+			revision: 1,
+			gap: { shiftId: GAP.shiftId, day: GAP.day },
+			assignments: roster,
+			dayRow: roster.find((row) => row.day === GAP.day)!,
+			shifts: frozenShiftsFixture(),
+			onPreviewDays: vi.fn(),
+			onApplied: vi.fn(),
+		};
+		const { result, rerender } = renderHook(
+			({ revision }) => useCoverPanel({ ...input, revision }),
+			{ wrapper, initialProps: { revision: 1 } }
+		);
+		await waitFor(() => {
+			expect(result.current.engineRepair.status).toBe("ready");
+		});
+		act(() => {
+			result.current.chooseRepair(option);
+		});
+		await waitFor(() => {
+			expect(result.current.review.applyBlocked).toBe(false);
+		});
+		act(() => {
+			result.current.review.apply();
+		});
+		await waitFor(() => {
+			expect(input.onApplied).toHaveBeenCalled();
+		});
+
+		rerender({ revision: 2 });
+
+		await waitFor(() => {
+			expect(result.current.status).toBe("closed");
+		});
+		// Nothing is asked at the revision the fill landed at: the gap is covered.
+		expect(
+			calls.filter(
+				(call) =>
+					(call.body as { expectedRevision?: number } | undefined)
+						?.expectedRevision === 2
+			)
+		).toEqual([]);
+	});
+});
+
+describe("useCoverPanel: a yes recorded for an option that fills the gap", () => {
+	it("given_aYesRecorded_when_itLandsAndTheRosterShowsItsRevision_then_nothingMoreIsAskedForTheShift", async () => {
+		const option = callInOption();
+		const calls = stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+			[`POST ${REPAIR_OPTIONS}`]: answer(repairOptionsFixture([option], [])),
+			[`POST ${OFFERS}`]: {
+				status: 201,
+				body: envelope(
+					coverOfferFixture({ status: "ACCEPTED", channel: "RECORDED" })
+				),
+			},
+		});
+		const onCoverRecorded = vi.fn();
+		const input: CoverPanelInput = {
+			target: {
+				companyId: "c-1",
+				unit: { branchId: "b-1", departmentId: "d-1" },
+				scheduleId: "s-1",
+				runId: "r-1",
+			},
+			revision: 1,
+			gap: { shiftId: GAP.shiftId, day: GAP.day },
+			assignments: roster,
+			dayRow: roster.find((row) => row.day === GAP.day)!,
+			shifts: frozenShiftsFixture(),
+			coverOffers: { offers: [], timeZone: "Asia/Singapore" },
+			onPreviewDays: vi.fn(),
+			onApplied: vi.fn(),
+			onCoverRecorded,
+		};
+		const { result, rerender } = renderHook(
+			({ revision }) => useCoverPanel({ ...input, revision }),
+			{ wrapper, initialProps: { revision: 1 } }
+		);
+		await waitFor(() => {
+			expect(result.current.engineRepair.status).toBe("ready");
+		});
+		act(() => {
+			result.current.chooseRepair(option);
+		});
+		await waitFor(() => {
+			expect(result.current.offer?.ready).toBe(true);
+		});
+		const before = calls.length;
+
+		act(() => {
+			result.current.offer?.record({
+				how: "PHONE",
+				when: "2026-10-16T05:10:00Z",
+			});
+		});
+		await waitFor(() => {
+			expect(onCoverRecorded).toHaveBeenCalledOnce();
+		});
+		rerender({ revision: 2 });
+
+		await waitFor(() => {
+			expect(result.current.status).toBe("closed");
+		});
+		// The yes went out, and nothing else: no read at the old revision, none for the shift at the new one.
+		expect(calls.slice(before).map((call) => call.path)).toEqual([OFFERS]);
 	});
 });

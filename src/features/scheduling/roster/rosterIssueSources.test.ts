@@ -77,7 +77,47 @@ describe("issuesOfRoster", () => {
 			day: "2026-10-12",
 			action: { kind: "findCover", gap: { shiftId, day: "2026-10-12" } },
 		});
-		expect(issues[0]?.rule).toMatch(/^scheduling\.issues\.leaveShort\(/);
+		expect(issues[0]?.rule).toMatch(/^scheduling\.issues\.leaveShortNamed\(/);
+	});
+
+	it("names the one person whose leave left the shift short, and nobody when several did", () => {
+		const row = leaveGapRow();
+		const ruleOf = (leaveAndCover: Array<ScheduleAssignment>): unknown =>
+			issuesOfRoster(input({}, { leaveAndCover }))[0]?.rule;
+		const other = {
+			...row,
+			assignmentId: "other-leave",
+			member: row.member && {
+				...row.member,
+				membershipId: "m-2",
+				displayName: "Ben Ong",
+			},
+		};
+
+		expect(ruleOf([row])).toMatch(
+			/^scheduling\.issues\.leaveShortNamed\(Aisha Rahman\|/
+		);
+		expect(ruleOf([row, other])).toMatch(/^scheduling\.issues\.leaveShort\(/);
+	});
+
+	it("lists a shift short by leave as information once the current check finds that shift staffed", () => {
+		const row = leaveGapRow();
+		const shiftId = row.uncoveredShift?.shiftId ?? "";
+		const listed = (checkedGaps: ReadonlySet<string>): Array<unknown> =>
+			issuesOfRoster(input({ checkedGaps }, { leaveAndCover: [row] }));
+
+		expect(listed(new Set())).toEqual([
+			expect.objectContaining({
+				group: "forInformation",
+				action: { kind: "show" },
+			}),
+		]);
+		expect(listed(new Set([`gap|${shiftId}|${row.day}`]))).toEqual([
+			expect.objectContaining({
+				group: "mustFix",
+				action: { kind: "findCover", gap: { shiftId, day: row.day } },
+			}),
+		]);
 	});
 
 	it("lists a setup note first by who it is about and its day, in the engine's words without names", () => {

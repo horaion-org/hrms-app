@@ -3,98 +3,95 @@ import { z } from "zod";
 import { apiRequest } from "@/common/api-client";
 import type { QueryOptionsFor } from "@/common/query-client";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
-import { schedulePath } from "@/features/scheduling/paths";
+import { ENGINE_ANSWER_WAIT_MILLISECONDS } from "@/features/scheduling/engineWait";
+import {
+	SCHEDULING_QUERY_ROOT,
+	schedulePath,
+} from "@/features/scheduling/paths";
+import {
+	REPAIR_OPTION_KINDS,
+	rosterChangeCellSchema,
+} from "@/features/scheduling/rosterChanges/api";
 import type { RosterChangeTarget } from "@/features/scheduling/rosterChanges/useRosterChangeActions";
-import { scheduleKey } from "@/features/scheduling/schedules/api";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 
 /*
  * The scheduling engine's repair options for one short shift (the API's
  * `…/repair-options`, engine ADR-0018), under `schedule:edit_shift`: the
- * engine's own ways to fill the gap the generation left, against the roster
- * as it stands now. Nothing is stored, and the engine checks no
- * working-time rule, so every option says so.
+ * engine's own ways to fill the gap, against the roster as it stands now,
+ * each ready to show and apply (its kind, how much it fills, its cost, its
+ * cells and each person's week). Nothing is stored.
  */
 
-// A kind a newer API adds still reads, as a change the app can't describe yet.
-const moveKindSchema = z
-	.enum(["REASSIGN", "CALL_IN", "OVERTIME_EXTENSION", "UNKNOWN"])
-	.catch("UNKNOWN");
+/** A span of local time, `yyyy-MM-ddTHH:mm:ss`. */
+export type RepairSpan = { start: string | null; end: string | null };
 
-/** What one move does: a move between shifts, a call-in on a day off, or a shift stretched into overtime. */
-export type RepairMoveKind = z.infer<typeof moveKindSchema>;
+/** What an option does; OTHER for the older repair's options and a kind this app does not know. */
+const repairOptionKindSchema = z.enum(REPAIR_OPTION_KINDS).catch("OTHER");
 
-/** A span of local time, `yyyy-MM-ddTHH:mm:ss`; an end the engine wrote unreadably is null. */
-const spanSchema = z.object({
-	start: z.string().nullable(),
-	end: z.string().nullable(),
+/**
+ * How much of the gap an option fills: all of it, one person of several for
+ * all its hours, or only some hours. Null from the engine's older model,
+ * which does not say.
+ */
+const repairFillsSchema = z
+	.enum(["GAP", "ONE_PERSON", "PART"])
+	.nullable()
+	.catch(null);
+
+/** A span of local time and how many people it is short. */
+const shortSpanSchema = z.object({
+	start: z.string(),
+	end: z.string(),
+	shortBy: z.number(),
 });
 
-/** A span of local time; an unreadable end is null. */
-export type RepairSpan = z.infer<typeof spanSchema>;
+/** A span of local time, `yyyy-MM-ddTHH:mm:ss`, and how many people it is short. */
+export type RepairShortSpan = z.infer<typeof shortSpanSchema>;
 
-const moveSchema = z.object({
-	kind: moveKindSchema,
-	/** Null for someone the roster no longer names. */
-	membershipId: z.string().nullable(),
+/** Someone an option changes, with their week's minutes before and after it, from the hours ledger. */
+const repairPersonSchema = z.object({
+	membershipId: z.string(),
 	displayName: z.string().nullable(),
-	/** Where a move between shifts leaves (a frozen shift's id and name); null for the other kinds. */
-	fromShiftId: z.string().nullable(),
-	fromShiftName: z.string().nullable(),
-	fromDate: z.string().nullable(),
-	/** The frozen shift worked after the move, its name, and its day. */
-	shiftId: z.string().nullable(),
-	shiftName: z.string().nullable(),
-	date: z.string().nullable(),
-	period: spanSchema,
-	/** How long a stretch is; null for the other kinds. */
-	extensionMinutes: z.number().nullable(),
-	/**
-	 * Which edge of the shift a stretch hangs off (the API's ADR-0110): the
-	 * person starts early, or stays on after it. Null for the other kinds, for
-	 * a side the API does not know, and absent from an older API.
-	 */
-	side: z.enum(["BEFORE_SHIFT", "AFTER_SHIFT"]).nullish().catch(null),
+	/** Null when the ledger could not price the change. */
+	weekMinutes: z
+		.object({ before: z.number(), after: z.number(), contract: z.number() })
+		.nullable(),
+	/** Taken off this shift by hand earlier: the engine ranks such options last, and the app never suggests one. */
+	takenOffThisShift: z.boolean(),
 });
 
-/** One move of an engine option: who, from where, to which shift and day. */
-export type RepairMove = z.infer<typeof moveSchema>;
+/** Someone an option changes, and their week's minutes. */
+export type RepairPerson = z.infer<typeof repairPersonSchema>;
 
 const optionSchema = z.object({
-	feasible: z.boolean(),
-	/** Always false tonight: the engine checks no working-time rule. */
+	/** Whether the option was checked against the working-time rules; false shows "Not rule-checked". */
 	workingTimeRulesChecked: z.boolean(),
-	moves: z.array(moveSchema),
-	/** The engine's own sentences, quoted, never the app's copy. */
-	summary: z.string().nullable(),
-	infeasibleReason: z.string().nullable(),
-	/** The gap's spans this option still leaves short. */
-	leftShort: z.array(spanSchema),
-	leftShortBy: z.number().nullable(),
-	warnings: z.array(z.string()),
-	/**
-	 * What the option does, as the engine names it ("call_in", "move", or one
-	 * added later); absent from the older repair.
-	 */
-	kind: z.string().nullish(),
+	kind: repairOptionKindSchema,
+	fills: repairFillsSchema,
+	/** The gap's hours still short with the option applied, each run with its count; empty when it fills the gap. */
+	stillShort: z.array(shortSpanSchema),
 	/**
 	 * How the person's minutes of each kind change that week if the option is
-	 * applied, all 0 when it costs no extra hours; absent from the older repair.
+	 * applied, all 0 when it costs no extra hours; `pastContract` is a
+	 * part-timer's hours past their own contract. Null when the engine gave none.
 	 */
 	extraMinutes: z
 		.object({
 			overtime: z.number(),
 			restDayWork: z.number(),
 			timeOffEarned: z.number(),
+			pastContract: z.number(),
 		})
-		.nullish(),
+		.nullable(),
+	/** The change, exactly as the roster-change preview, the apply and a cover offer take it. */
+	cells: z.array(rosterChangeCellSchema),
+	/** Each person the option changes, in the order of `cells`. */
+	people: z.array(repairPersonSchema),
 });
 
-/** One of the engine's ways to fill the gap, or its honest no. */
+/** One of the engine's ways to fill the gap, ready to show and apply. */
 export type RepairOption = z.infer<typeof optionSchema>;
-
-/** An option's extra minutes that week, by kind. */
-export type RepairExtraMinutes = NonNullable<RepairOption["extraMinutes"]>;
 
 /** One reason the engine gives for not putting someone on the short shift; `code` is open, so a new one still reads. */
 const notAssignedReasonSchema = z.object({
@@ -113,8 +110,8 @@ export type NotAssignedReason = z.infer<typeof notAssignedReasonSchema>;
 const notAssignedPersonSchema = z.object({
 	memberProfileId: z.string(),
 	name: z.string(),
-	/** Whether they could take the shift after all. */
-	couldTake: z.boolean(),
+	/** Whether they could take the shift after all; null when the engine did not say. */
+	couldTake: z.boolean().nullable(),
 	reasons: z.array(notAssignedReasonSchema),
 });
 
@@ -122,14 +119,24 @@ const notAssignedPersonSchema = z.object({
 export type NotAssignedPerson = z.infer<typeof notAssignedPersonSchema>;
 
 const repairOptionsSchema = z.object({
+	/** The roster revision the options were worked out at; applying one sends it back. */
+	revision: z.number(),
 	conflictId: z.string(),
+	/**
+	 * Whether the engine tried everything it set out to before its deadline,
+	 * and how many options it found before it kept the best; null when not said.
+	 */
+	search: z
+		.object({ complete: z.boolean(), optionsFound: z.number() })
+		.nullable(),
+	/** What the roster has short on this gap now; null when the engine could not read it. */
+	shortNow: z.array(shortSpanSchema).nullable(),
 	options: z.array(optionSchema),
 	/**
 	 * Why each person with the gap's job title was not assigned; null when the
-	 * engine could not work it out, and from an older API. Empty: nobody else
-	 * holds the job title.
+	 * engine could not work it out. Empty: nobody else holds the job title.
 	 */
-	notAssigned: z.array(notAssignedPersonSchema).nullable().default(null),
+	notAssigned: z.array(notAssignedPersonSchema).nullable(),
 });
 
 /** The engine's answer for one gap: its options, and why nobody else was assigned. */
@@ -144,10 +151,20 @@ export const fetchRepairOptions = (
 	apiRequest(
 		`${schedulePath(companyId, unit, scheduleId)}/repair-options`,
 		repairOptionsSchema,
-		{ method: "POST", body, signal }
+		{
+			method: "POST",
+			body,
+			signal,
+			timeoutMilliseconds: ENGINE_ANSWER_WAIT_MILLISECONDS,
+		}
 	);
 
-/** The key one gap's engine options at `revision` are cached under, below the schedule's own. */
+/**
+ * The key one gap's engine options at `revision` are cached under. Not below
+ * the schedule's own key, which every refresh of the schedule invalidates:
+ * that would ask the engine again at a revision already known to be stale;
+ * the next revision is asked afresh under its own key.
+ */
 export const repairOptionsKey = (
 	companyId: string,
 	scheduleId: string,
@@ -156,16 +173,17 @@ export const repairOptionsKey = (
 ): readonly [
 	"scheduling",
 	string,
-	"schedules",
-	string,
 	"repairOptions",
+	string,
 	string,
 	string,
 	number,
 ] =>
 	[
-		...scheduleKey(companyId, scheduleId),
+		SCHEDULING_QUERY_ROOT,
+		companyId,
 		"repairOptions",
+		scheduleId,
 		gap.shiftId,
 		gap.day,
 		revision,
@@ -177,7 +195,9 @@ const REPAIR_OPTIONS_KEPT_MS = 5 * 60 * 1000;
 /**
  * The engine's options for `gap` at `revision`, asked for only while `asked`
  * (Find cover asks as it opens, but not while a change lands). Kept for a
- * while under the gap and revision, so reopening the gap does not solve again.
+ * while under the gap and revision, so reopening the gap does not solve
+ * again; never asked again by itself when the window regains focus or the
+ * network returns.
  */
 export const repairOptionsQuery = (
 	target: RosterChangeTarget,
@@ -204,4 +224,7 @@ export const repairOptionsQuery = (
 		staleTime: REPAIR_OPTIONS_KEPT_MS,
 		gcTime: REPAIR_OPTIONS_KEPT_MS,
 		retry: false,
+		// A solve takes seconds and the answer belongs to its revision: never asked again by itself.
+		refetchOnWindowFocus: false,
+		refetchOnReconnect: false,
 	});

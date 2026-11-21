@@ -13,24 +13,32 @@ export type NotAssignedListProps = {
 	people?: Array<NotAssignedPerson> | null;
 	/** The fold's words; "Why nobody was assigned" without. */
 	title?: string;
+	/** Starts open, as when no option can be shown and this is all there is to read. */
+	defaultOpen?: boolean;
 };
 
 const key = "scheduling.cover.engine.whyNot";
 
 /**
- * Under the engine's repair options, closed until opened: why nobody was
- * assigned, one person a line with their reasons in plain words, those who
- * could take the shift first. Nothing when the engine could not work it out;
+ * Under the engine's repair options, closed until opened (or open from the
+ * start when asked): why nobody was assigned, one person a line with their
+ * reasons in plain words, those who could take the shift first; "Could take
+ * this shift." only for someone the engine gives no reason for. Nothing when the engine could not work it out;
  * a plain line when nobody else holds the job title.
  */
 export const NotAssignedList = ({
 	people,
 	title,
+	defaultOpen = false,
 }: NotAssignedListProps): FunctionComponent => {
 	const { t } = useTranslation();
 	if (people === null || people === undefined) return null;
 	return (
-		<Disclosure title={title ?? t(`${key}.title`)} variant="inline">
+		<Disclosure
+			defaultOpen={defaultOpen}
+			title={title ?? t(`${key}.title`)}
+			variant="inline"
+		>
 			{people.length === 0 ? (
 				<p className="text-neutral-800">{t(`${key}.nobodyElse`)}</p>
 			) : (
@@ -39,7 +47,9 @@ export const NotAssignedList = ({
 						<li key={person.memberProfileId}>
 							<p className="font-semibold text-neutral-900">{person.name}</p>
 							<ul className="text-neutral-800">
-								{couldTakeTheShift(person) && <li>{t(`${key}.couldTake`)}</li>}
+								{person.reasons.length === 0 && couldTakeTheShift(person) && (
+									<li>{t(`${key}.couldTake`)}</li>
+								)}
 								{person.reasons.map((reason, place) => (
 									// A reason has no id of its own; its place in the engine's list is stable.
 									<li key={place}>{notAssignedReasonLine(reason, t)}</li>

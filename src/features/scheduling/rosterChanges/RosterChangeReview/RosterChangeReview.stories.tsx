@@ -51,3 +51,13 @@ export const NeedsARemark: Story = {
 
 /** Still checking. */
 export const Checking: Story = { args: { preview: undefined } };
+
+/** As the Issues panel keeps it: no checks heading when there are none, the remark behind "Add a remark". */
+export const Quiet: Story = {
+	args: {
+		preview: rosterChangePreviewFixture({ checks: [] }),
+		showsEmptyChecks: false,
+		showsRulesNote: false,
+		remarkFolded: true,
+	},
+};

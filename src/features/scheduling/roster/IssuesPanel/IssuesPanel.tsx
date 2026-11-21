@@ -1,4 +1,11 @@
-import { useState, type ReactNode } from "react";
+import {
+	useCallback,
+	useContext,
+	useEffect,
+	useRef,
+	useState,
+	type ReactNode,
+} from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
@@ -8,6 +15,8 @@ import {
 	type IssueFilter,
 	type IssueRow,
 } from "@/features/scheduling/roster/issueRows";
+import { FocusSidePanelHeading } from "@/features/scheduling/RosterSidePanel";
+import { FocusIssueRow } from "./focusIssueRow";
 import { IssueListRow } from "./IssueListRow";
 
 export type IssuesPanelProps = {
@@ -40,54 +49,71 @@ export const IssuesPanel = ({
 	const [filter, setFilter] = useState<IssueFilter>("all");
 	const [openKey, setOpenKey] = useState(initiallyOpen);
 	const shown = rowsOfFilter(rows, filter);
+	const focusHeading = useContext(FocusSidePanelHeading);
+	const rowButtons = useRef(new Map<string, HTMLButtonElement>());
+	const focusRow = useCallback((rowKey: string): void => {
+		rowButtons.current.get(rowKey)?.focus();
+	}, []);
+	// A row fixed and checked away takes focus with it: it goes to the panel's heading instead of being lost.
+	const openRowGone =
+		openKey !== undefined && !rows.some((row) => row.key === openKey);
+	useEffect(() => {
+		if (openRowGone && document.activeElement === document.body) focusHeading();
+	}, [openRowGone, focusHeading]);
 	return (
-		<div className="flex flex-col gap-3">
-			<div
-				aria-label={t(`${key}.filtersLabel`)}
-				className="flex gap-4"
-				role="group"
-			>
-				{/* As Issues' order switch was: text links, the choice marked by weight and underline, not colour alone. */}
-				{ISSUE_FILTERS.map((option) => (
-					<Button
-						key={option}
-						aria-pressed={filter === option}
-						variant="textlink"
-						className={
-							filter === option
-								? "font-medium underline underline-offset-4"
-								: undefined
-						}
-						onClick={(): void => {
-							setFilter(option);
-						}}
-					>
-						{t(`${key}.filters.${option}`)}
-					</Button>
-				))}
-			</div>
-			{lead}
-			{shown.length === 0 ? (
-				<p className="py-4 text-center text-sm text-neutral-700">
-					{t(`${key}.nothingHere`)}
-				</p>
-			) : (
-				<ul className="flex flex-col">
-					{shown.map((row) => (
-						<IssueListRow
-							key={row.key}
-							open={openKey === row.key}
-							row={row}
-							onToggle={(): void => {
-								setOpenKey(openKey === row.key ? undefined : row.key);
+		<FocusIssueRow value={focusRow}>
+			<div className="flex flex-col gap-3">
+				<div
+					aria-label={t(`${key}.filtersLabel`)}
+					className="flex gap-4"
+					role="group"
+				>
+					{/* As Issues' order switch was: text links, the choice marked by weight and underline, not colour alone. */}
+					{ISSUE_FILTERS.map((option) => (
+						<Button
+							key={option}
+							aria-pressed={filter === option}
+							variant="textlink"
+							className={
+								filter === option
+									? "font-medium underline underline-offset-4"
+									: undefined
+							}
+							onClick={(): void => {
+								setFilter(option);
 							}}
 						>
-							{bodyOf(row)}
-						</IssueListRow>
+							{t(`${key}.filters.${option}`)}
+						</Button>
 					))}
-				</ul>
-			)}
-			{information}
-		</div>
+				</div>
+				{lead}
+				{shown.length === 0 ? (
+					<p className="py-4 text-center text-sm text-neutral-700">
+						{t(`${key}.nothingHere`)}
+					</p>
+				) : (
+					<ul className="flex flex-col">
+						{shown.map((row) => (
+							<IssueListRow
+								key={row.key}
+								open={openKey === row.key}
+								row={row}
+								buttonRef={(button) => {
+									if (button) rowButtons.current.set(row.key, button);
+									else rowButtons.current.delete(row.key);
+								}}
+								onToggle={(): void => {
+									setOpenKey(openKey === row.key ? undefined : row.key);
+								}}
+							>
+								{bodyOf(row)}
+							</IssueListRow>
+						))}
+					</ul>
+				)}
+				{information}
+			</div>
+		</FocusIssueRow>
 	);
 };

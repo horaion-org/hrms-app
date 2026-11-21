@@ -4643,7 +4643,7 @@
 			"unknownJob": "un puesto",
 			"wholeRoster": "Todo el cuadrante",
 			"jobShort_one": "Falta {{count}} {{job}}",
-			"jobShort_other": "Faltan {{count}} {{job}}",
+			"jobShort_other": "Faltan {{count}} × {{job}}",
 			"brokenMust": "Aquí se incumple una regla obligatoria. Cambia este día a mano y vuelve a validar. Regla: {{rule}}",
 			"notMetRule": "Se pidió si es posible, y este cuadrante no pudo cumplirla. Regla: {{rule}}",
 			"leaveShort": "De permiso, así que falta gente en {{shift}}.",
@@ -4676,7 +4676,6 @@
 			"advice": {
 				"lead": "Qué hacer: {{advice}}",
 				"withNeighbouringDays": "{{advice}} También puedes cambiar los días vecinos, en el horario anterior o en el siguiente.",
-				"findCover": "Pulsa Buscar cobertura para ver quién puede hacerlo, o pregunta al motor por opciones.",
 				"staffByHand": "Da este turno a alguien que pueda trabajarlo ese día.",
 				"daysOff": "Cambia uno de los turnos de esta persona en ese periodo por un día libre.",
 				"requiredDays": "Cambia uno de los turnos de esta persona en esa semana por un día de descanso (o un día libre).",
@@ -4738,21 +4737,24 @@
 				"shiftShort": "{{shift}} con falta de personal"
 			},
 			"cover": {
-				"badge": {
-					"withinHours": "Dentro de horas",
-					"extraHours": "Horas extra de contrato",
-					"overtime": "Horas extra",
-					"leavesShort": "Deja {{shift}} con {{count}} menos",
-					"notRuleChecked": "Sin comprobar reglas"
-				},
 				"review": "Revisar",
-				"whatChanges": "Qué cambia para {{name}}",
+				"whatChanges": "Qué cambia",
 				"back": "Volver",
-				"week": "Esta semana {{before}} → {{after}} h de {{contract}} h",
-				"weekOvertime": "Esta semana {{before}} → {{after}} h de {{contract}} h · {{overtime}} h extra",
 				"weekBar": "Horas de esta semana frente al contrato",
-				"whyNot": "Por qué no otros ({{count}})"
-			}
+				"whyNot": "Por qué no otros ({{count}})",
+				"becomes": "pasa a",
+				"offerSent": "Oferta enviada · respuesta antes de {{time}}",
+				"declined": "Rechazada",
+				"reviewFor": "Revisar el cambio de {{name}}",
+				"stillShortAfter": "Seguirá faltando: {{times}}",
+				"bothMustAgree": "El cuadrante está publicado, así que ambos deben aceptar.",
+				"bothAgreed": "Ambos aceptaron",
+				"bothAgreedHint": "Indica cómo aceptó cada persona.",
+				"working": "Lo trabajan: {{names, list(type: conjunction)}}",
+				"nobodyWorks": "Nadie lo trabaja todavía.",
+				"withCost": "{{line}} · {{cost}}"
+			},
+			"leaveShortNamed": "{{name}} está de permiso, así que falta gente en {{shift}}."
 		},
 		"rosterMarkers": {
 			"leaveRequested": "Permiso solicitado",
@@ -4900,7 +4902,8 @@
 			"partDayKeptFree": "Aprobado antes de crear este turno. El planificador aún no puede planificar partes del día, así que se dejó libre el día entero de {{name}}.",
 			"works": "Trabaja {{time}} · {{shift}}",
 			"shortenedForLeave": "Acortado por permiso",
-			"openInLeave": "Abrir en Permisos"
+			"openInLeave": "Abrir en Permisos",
+			"addRemark": "Añadir una observación"
 		},
 		"publishedWeek": {
 			"setup": "Esta semana ya tiene un cuadrante publicado para este departamento. Solo se puede publicar un cuadrante por semana, así que elige otra semana para crear uno nuevo.",
@@ -4950,7 +4953,8 @@
 				"extraHours": "Horas complementarias (tiempo parcial) · {{hours}} h",
 				"overtime": "Horas extra · {{hours}} h",
 				"restDay": "Trabajo en día de descanso, a petición de la empresa",
-				"unknown": "Según lo fije la empresa"
+				"unknown": "Según lo fije la empresa",
+				"daySwap": "Trabaja el {{day}} en lugar del {{dayGivenUp}}, mismas horas"
 			},
 			"tileOffered": "{{label}}, turno ofrecido, responde antes de las {{time}}",
 			"actions": {
@@ -5033,52 +5037,78 @@
 				"rosterMoved": "El cuadrante cambió desde que se hizo esta lista.",
 				"findAgain": "Buscar de nuevo",
 				"failed": "No se pudo cargar la lista.",
-				"covered": "{{shift}} el {{day}} ya está cubierto.",
-				"nobody": "Nadie de este cuadrante puede cubrir {{shift}} el {{day}}."
+				"covered": "{{shift}} el {{day}} ya está cubierto."
 			},
 			"engine": {
 				"loading": "Buscando las opciones…",
-				"unreachable": "No se pudo contactar con el motor. Estas personas están libres según sus horas y no se comprueban con las reglas.",
-				"none": "El motor no encontró forma de cubrirlo.",
 				"unknownShift": "un turno",
-				"appliedStillShort_one": "Cuadrante cambiado. A {{shift}} del {{day}} aún le falta {{count}} {{times}}: vuelve a buscar cobertura para esas horas.",
-				"appliedStillShort_other": "Cuadrante cambiado. A {{shift}} del {{day}} aún le faltan {{count}} {{times}}: vuelve a buscar cobertura para esas horas.",
-				"move": {
-					"REASSIGN": "Mover a {{name}} de {{fromShift}} {{fromDay}} a {{shift}} {{day}}",
-					"CALL_IN": "Llamar a {{name}} para {{shift}} {{day}}",
-					"OVERTIME_EXTENSION": "Alargar {{shift}} de {{name}} · {{overtime}}",
-					"OVERTIME_EXTENSION_AFTER": "{{name}} se queda después de {{shift}} · {{overtime}}, hasta las {{time}}",
-					"OVERTIME_EXTENSION_BEFORE": "{{name}} empieza {{shift}} antes · {{overtime}}, desde las {{time}}",
-					"UNKNOWN": "Un cambio que la aplicación aún no sabe describir"
-				},
 				"refusal": {
-					"notSeenByEngine": "El motor ve este turno completo tal como está el cuadrante, así que no tiene nada que reparar. Los permisos de parte de un turno aún no se le envían: elige a alguien de las personas que muestra Buscar cobertura.",
-					"expired": "El motor ya no guarda la generación de esta semana, así que no puede sugerir un cambio. Elige a alguien en Quién cubre.",
-					"notConnected": "El motor de planificación no está conectado aquí.",
-					"rosterMoved": "El cuadrante cambió desde que abriste esto. Busca cobertura de nuevo para preguntar al motor.",
-					"tooSlow": "El motor tardó demasiado en buscar opciones esta vez.",
-					"failed": "El motor no pudo responder."
+					"notSeenByEngine": "El motor cuenta este turno como cubierto.",
+					"expired": "Ya no se guarda la ejecución del motor de este cuadrante. Genera la semana de nuevo para tener opciones comprobadas.",
+					"notConnected": "No se pudo contactar con el motor.",
+					"rosterMoved": "El cuadrante cambió.",
+					"tooSlow": "El motor tardó demasiado.",
+					"failed": "No se pudieron cargar las opciones."
 				},
-				"byHand": "La aplicación no puede aplicar esta: hazla a mano en el cuadrante.",
 				"whyNot": {
 					"title": "Por qué no se asignó a nadie",
-					"couldTake": "Podría cubrir este turno",
+					"couldTake": "Podría cubrir este turno.",
 					"nobodyElse": "Nadie más tiene el puesto de este turno.",
 					"reason": {
-						"fixed_day_no_call_back": "Tiene ese día un descanso o día libre fijo y no se le puede volver a llamar.",
+						"fixed_day_no_call_back": "Tiene ese día un día libre fijo y no se le puede volver a llamar.",
 						"on_leave": "Tiene permiso ese día.",
-						"outside_availability": "No está disponible en el horario de este turno.",
-						"too_little_shift_left": "El permiso de ese día deja muy poco turno por trabajar.",
-						"works_another_shift": "Ya tiene otro turno ese día.",
+						"outside_availability": "No está disponible en ese horario.",
+						"works_another_shift": "Tiene otro turno ese día, que quedaría sin cubrir.",
 						"breaks_unnamed_rule": "Incumpliría una norma de tiempo de trabajo.",
 						"not_checked": "No se comprobó a tiempo.",
-						"no_shift_part_time": "A tiempo parcial y sin turno ese día. El motor no llama a personal a tiempo parcial: elígelo en Quién cubre.",
-						"needs_overtime": "Solo como horas extra, que no se asignan al generar un cuadrante."
+						"no_shift_part_time": "A tiempo parcial, sin turno ese día.",
+						"needs_overtime": "Podría cubrirlo con horas adicionales.",
+						"role_not_on_shift": "No tiene el puesto de este turno."
 					},
 					"breaksRule": "Incumpliría: {{rule}}",
-					"aWorkingTimeRule": "una norma de tiempo de trabajo",
 					"otherReason": "No puede cubrir este turno."
-				}
+				},
+				"kindLine": {
+					"callIn": "Viene en su {{dayType}}",
+					"move": "Pasa desde {{shift}}",
+					"stretchAfter": "Se queda {{hours}} h más",
+					"stretchBefore": "Empieza {{hours}} h antes",
+					"stretchPair": "Lo cubren entre los dos",
+					"daySwap": "Trabaja el {{day}} en lugar del {{dayGivenUp}}",
+					"other_one": "{{count}} cambio",
+					"other_other": "{{count}} cambios"
+				},
+				"cost": {
+					"withinHours": "Dentro de horas",
+					"pastContract": "+{{hours}} h sobre su contrato",
+					"overtime": "+{{hours}} h extra",
+					"restDayWork": "{{hours}} h en día de descanso",
+					"timeOffEarned": "+{{hours}} h de descanso compensatorio",
+					"notRuleChecked": "Sin comprobar reglas"
+				},
+				"leaves": {
+					"onePerson": "Cubre 1 de {{count}}",
+					"stillShort": "Aún falta {{times}}"
+				},
+				"weekLine": "{{before}} → {{after}} h de {{contract}} h esta semana",
+				"peopleAnd": "{{items, list(type: conjunction)}}",
+				"stillWorking": "Sigue trabajando. Puede tardar hasta {{seconds}} segundos.",
+				"nobodyCan": "Nadie puede cubrirlo dentro de las reglas.",
+				"noFullFill": "Nada cubre el turno completo.",
+				"incomplete": "Se acabó el tiempo. Estas son las opciones encontradas hasta ahora.",
+				"optionsFound_one": "{{count}} opción encontrada",
+				"optionsFound_other": "{{count}} opciones encontradas",
+				"findAgain": "Buscar opciones de nuevo",
+				"fallbackCaption": "Libres según sus horas",
+				"partCaption": "Cubrir una parte",
+				"bestOf": "Las {{shown}} mejores de {{found}}.",
+				"stillShortToast": "Cuadrante cambiado. A {{shift}} aún le falta {{runs}}.",
+				"shortRun_one": "{{count}} {{times}}",
+				"shortRun_other": "{{count}} {{times}}",
+				"spanSeparator": ", ",
+				"appliedRosterMoved": "El cuadrante cambió, así que ese cambio no se hizo. Estas son las opciones ahora.",
+				"takenOffEarlier": "Quitado de este turno antes",
+				"fallbackNobody": "Nadie está libre según sus horas."
 			}
 		},
 		"reach": {
@@ -6722,7 +6752,8 @@
 				"LEAVE_RECORDED": "Ausencia registrada",
 				"LEAVE_MOVE": "Ausencia movida",
 				"COVER_OPTION": "Cobertura",
-				"OTHER": "Otro"
+				"OTHER": "Otro",
+				"REPAIR_OPTION": "Opción de reparación"
 			},
 			"empty": "No hay horarios publicados en estas fechas.",
 			"question": "¿Son estables los cuadrantes publicados?",

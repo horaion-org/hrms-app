@@ -54,7 +54,8 @@ export const Toast = ({
 			aria-live="polite"
 			role="status"
 			className={joinClassNames(
-				"fixed bottom-11 left-1/2 z-50 flex h-12 max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-3 rounded-full border border-success-200 bg-success-50 px-5 text-base font-medium text-success-900 shadow-sm",
+				// One line is the 48 px pill it always was (24 px rounding is half its height); a longer message wraps.
+				"fixed bottom-11 left-1/2 z-50 flex min-h-12 w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 items-center gap-3 rounded-3xl border border-success-200 bg-success-50 px-5 py-2 text-base font-medium text-success-900 shadow-sm",
 				className
 			)}
 			onBlur={() => {
@@ -66,7 +67,7 @@ export const Toast = ({
 			{...rest}
 		>
 			<TickFilledIcon className="size-5 shrink-0 text-success-500" />
-			<span className="truncate">{children}</span>
+			<span className="min-w-0 break-words">{children}</span>
 			{action && (
 				<Button
 					className="shrink-0"

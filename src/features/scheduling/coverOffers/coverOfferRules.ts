@@ -109,6 +109,8 @@ export type PayWords =
 	| { key: "extraHours"; hours: number }
 	| { key: "overtime"; hours: number }
 	| { key: "restDay" }
+	/** Working the offer's day in place of another day of the same week: the same hours. */
+	| { key: "daySwap"; day: string; dayGivenUp: string }
 	| { key: "unknown" };
 
 /**
@@ -136,7 +138,10 @@ const dayOffPayWords = (offer: Pick<CoverOffer, "shift" | "pay">): PayWords => {
 };
 
 export const payWordsOf = (
-	offer: Pick<CoverOffer, "optionKind" | "shift" | "pay">
+	offer: Pick<
+		CoverOffer,
+		"optionKind" | "shift" | "pay" | "rosterDate" | "dayGivenUp"
+	>
 ): PayWords => {
 	switch (offer.optionKind) {
 		case "MOVE":
@@ -147,6 +152,14 @@ export const payWordsOf = (
 			return dayOffPayWords(offer);
 		case "REST_DAY_SHIFT":
 			return { key: "restDay" };
+		case "DAY_SWAP":
+			return offer.dayGivenUp
+				? {
+						key: "daySwap",
+						day: offer.rosterDate,
+						dayGivenUp: offer.dayGivenUp,
+					}
+				: { key: "sameHours" };
 		default:
 			return { key: "unknown" };
 	}

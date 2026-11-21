@@ -15,10 +15,7 @@ import {
 	shortShiftCount,
 	type RosterIssue,
 } from "@/features/scheduling/roster/rosterIssueGroups";
-import {
-	IssuesPanelHead,
-	type IssueCoverContext,
-} from "@/features/scheduling/roster/IssuesPanel";
+import { IssuesPanelHead } from "@/features/scheduling/roster/IssuesPanel";
 import type { IssueFixing } from "@/features/scheduling/roster/RosterIssueGroups";
 import { issuesOfRoster } from "@/features/scheduling/roster/rosterIssueSources";
 import {
@@ -44,6 +41,7 @@ import {
 } from "@/features/scheduling/roster/RosterWeekBar";
 import {
 	brokenRuleIssueCount,
+	checkPending,
 	scheduleWithFindingsShown,
 	validationStanding,
 } from "@/features/scheduling/rulesCheck/issuesFromValidation";
@@ -54,7 +52,10 @@ import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 import type { PreferenceOutcomeLookup } from "@/features/shiftPreferences/preferenceOutcome";
 import type { RosterEditing } from "./rosterEditing";
 import { RosterSidePanelSlot } from "./RosterSidePanelSlot";
+import { issueCoverOf } from "./issueCoverOf";
 import { ROSTER_SIDE_LISTS } from "./rosterSideLists";
+import { useCheckedGaps } from "./useCheckedGaps";
+import { useCheckKeptCurrent } from "./useCheckKeptCurrent";
 import { useRosterView } from "./useRosterView";
 
 export type GeneratedRosterProps = {
@@ -189,12 +190,25 @@ export const GeneratedRoster = ({
 	});
 	const { rows, days, period, openList } = roster;
 	// A list or Find cover keeps to the grid's height and scrolls inside, so it never makes the row taller.
-	const panelFollowsGridHeight =
-		roster.sidePanel === "list";
+	const panelFollowsGridHeight = roster.sidePanel === "list";
 
+	// While Issues is open on a roster that may be changed, the check follows every move of the roster.
+	useCheckKeptCurrent(
+		validation,
+		openList === "issues" && editing !== undefined
+	);
+	const checkedGaps = useCheckedGaps({
+		standing,
+		last,
+		checkPending: validation !== undefined && checkPending(validation),
+		coverGap: roster.coverGap,
+		view,
+		onViewChange,
+	});
 	const issues = issuesOfRoster({
 		roster,
 		check: last?.check,
+		checkedGaps,
 		startingRuns,
 		noteLines: issueNoteLines({
 			roster,
@@ -220,20 +234,18 @@ export const GeneratedRoster = ({
 		},
 	};
 	// Covering a short shift from its Issues row: applied as a hand change, the list staying open.
-	const issueCover: IssueCoverContext | undefined = editing && {
-		target: editing.target,
-		revision: editing.revision,
-		assignments,
-		shifts: editing.shifts,
-		coverOffers: editing.coverOffers && {
-			offers: editing.coverOffers.offers,
+	const issueCover =
+		editing &&
+		issueCoverOf({
+			editing,
 			timeZone: schedule.timeZone,
-		},
-		onPreviewDays: roster.onPreviewDays,
-		onApplied: (change, stillShort): void => {
-			setApplied({ change, stillShort });
-		},
-	};
+			assignments,
+			validation,
+			view,
+			onViewChange,
+			onPreviewDays: roster.onPreviewDays,
+			onLanded: setApplied,
+		});
 	/** Closes the panel beside the grid, and forgets the day a fix from Issues opened. */
 	const closePanel = (): void => {
 		setFixPreset(undefined);
@@ -281,6 +293,7 @@ export const GeneratedRoster = ({
 			hours: hours === undefined ? undefined : numbers.format(hours),
 		});
 	};
+	// An undo is a change too: checked again once the roster shows it, as after Apply.
 	const latestChange = editing && (
 		<LastRosterChange
 			applied={applied?.change}
@@ -289,6 +302,7 @@ export const GeneratedRoster = ({
 			revision={editing.revision}
 			showsLatest={openList === "changes"}
 			target={editing.target}
+			onUndone={(undone) => validation?.askAt(undone.toRevision)}
 			onAppliedDismissed={() => {
 				setApplied(undefined);
 			}}
@@ -315,6 +329,7 @@ export const GeneratedRoster = ({
 				issueFixing,
 				issueCover,
 				issueCoverGap: roster.coverGap,
+				shifts,
 				onShowIssue: showIssue,
 				onShowAllIssues: roster.showAllIssues,
 				onFindCover: editing ? roster.openCover : undefined,

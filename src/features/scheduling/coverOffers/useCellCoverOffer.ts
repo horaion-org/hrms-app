@@ -1,3 +1,4 @@
+import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import type {
 	CoverOffer,
 	CoverOfferBody,
@@ -29,6 +30,17 @@ export type CellCoverOfferInput = {
 	assignment: ScheduleAssignment;
 	choice: RosterEditChoice | undefined;
 	leaveMove: boolean;
+	/**
+	 * The kind an engine repair option goes out as (`offerKindOfOption`); the
+	 * cell panel leaves it out, and the kind follows from the chosen change.
+	 */
+	offerKind?: SentOptionKind;
+	/**
+	 * The short shift and day the offer covers, which other members' open
+	 * offers race for: an engine stretch is offered on the member's own shift,
+	 * not the short one. The cell panel leaves it out: its choice is the shift.
+	 */
+	gap?: CoverGapRequest;
 	/** The change previewed, as the panel sends it to the preview. */
 	body: RosterChangeBody | undefined;
 	/** The preview's fingerprint; null until previewed or when no check asks for a tick. */
@@ -74,6 +86,8 @@ export const useCellCoverOffer = ({
 	assignment,
 	choice,
 	leaveMove,
+	offerKind,
+	gap,
 	body,
 	checksFingerprint,
 	remark,
@@ -82,17 +96,15 @@ export const useCellCoverOffer = ({
 }: CellCoverOfferInput): CellCoverOffer => {
 	const { create, withdraw } = useCoverOfferActions(target);
 	const membershipId = assignment.member?.membershipId ?? null;
-	const consentKind = consentKindOf({
-		published,
-		assignment,
-		choice,
-		leaveMove,
-	});
+	const consentKind =
+		published && offerKind
+			? offerKind
+			: consentKindOf({ published, assignment, choice, leaveMove });
 	const rivals =
 		consentKind && choice?.kind === "shift"
 			? rivalOffers(offers, {
-					day: assignment.day,
-					shiftId: choice.shiftId,
+					day: gap?.day ?? assignment.day,
+					shiftId: gap?.shiftId ?? choice.shiftId,
 					membershipId,
 				})
 			: [];

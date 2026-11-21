@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type * as Router from "@tanstack/react-router";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import { useState, type ReactElement } from "react";
 import userEvent from "@testing-library/user-event";
 import { createInstance } from "i18next";
@@ -9,6 +9,16 @@ import en from "@/assets/locales/en/translations.json";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, stubApi } from "@/common/testing/stubApi";
+import {
+	callInOption,
+	repairOptionsFixture,
+	stretchAfterOption,
+} from "@/features/scheduling/cover/engineRepairFixtures";
+import {
+	rosterChangeFixture,
+	rosterChangePreviewFixture,
+} from "@/features/scheduling/rosterChanges/fixtures";
+import { coverOptionsFixture } from "@/features/scheduling/cover/fixtures";
 import { coverOfferFixture } from "@/features/scheduling/coverOffers/fixtures";
 import {
 	GeneratedRoster,
@@ -578,7 +588,7 @@ describe("GeneratedRoster", () => {
 						assignments={scheduleAssignmentsFixture()}
 						editing={mayEdit ? editing : undefined}
 						schedule={schedule}
-						validation={{ ...validation, revision: 1 }}
+						validation={{ askAt: vi.fn(), ...validation, revision: 1 }}
 					/>
 				</QueryClientProvider>
 			);
@@ -722,9 +732,13 @@ describe("GeneratedRoster", () => {
 			);
 			// One row per day, as the engine's two sentences differ.
 			expect(
-				within(panel).getAllByRole("button", { name: /^Must fix.*Aisha Rahman/ })
+				within(panel).getAllByRole("button", {
+					name: /^Must fix.*Aisha Rahman/,
+				})
 			).toHaveLength(2);
-			await user.click(within(panel).getByRole("button", { name: "If possible" }));
+			await user.click(
+				within(panel).getByRole("button", { name: "If possible" })
+			);
 			const ifPossible = within(panel).getAllByRole("listitem");
 			expect(ifPossible).toHaveLength(2);
 			for (const row of ifPossible) {
@@ -792,7 +806,9 @@ describe("GeneratedRoster", () => {
 			expect(ask).toHaveBeenCalledOnce();
 			const panel = screen.getByRole("complementary", { name: "Issues" });
 			expect(panel).toHaveTextContent("Not checked since your changes");
-			await user.click(within(panel).getByRole("button", { name: "Check now" }));
+			await user.click(
+				within(panel).getByRole("button", { name: "Check now" })
+			);
 			expect(ask).toHaveBeenCalledTimes(2);
 		});
 
@@ -815,7 +831,12 @@ describe("GeneratedRoster", () => {
 						assignments={[handChanged, ...rest]}
 						editing={editing}
 						schedule={schedule}
-						validation={{ status: "idle", ask: vi.fn(), revision: 1 }}
+						validation={{
+							status: "idle",
+							ask: vi.fn(),
+							askAt: vi.fn(),
+							revision: 1,
+						}}
 					/>
 				</QueryClientProvider>
 			);
@@ -972,7 +993,7 @@ describe("GeneratedRoster: one place for cover", () => {
 		const calls = stubApi({
 			[`POST ${SCHEDULE_PATH}/repair-options`]: {
 				status: 200,
-				body: envelope({ conflictId: "c", options: [], notAssigned: [] }),
+				body: envelope(repairOptionsFixture([], [])),
 			},
 		});
 		render(
@@ -1009,7 +1030,7 @@ describe("GeneratedRoster: one place for cover", () => {
 		const open = within(panel).getByRole("button", { expanded: true });
 		expect(open).toHaveTextContent(/Sat, Oct 17/);
 		expect(
-			await within(panel).findByText("The engine found no way to fill this.")
+			await within(panel).findByText("Nobody can cover this within the rules.")
 		).toBeVisible();
 		expect(
 			calls.filter((call) => call.path.endsWith("/repair-options"))
@@ -1021,10 +1042,323 @@ describe("GeneratedRoster: one place for cover", () => {
 		const calls = showAt({ week: "2026-10-12", panel: "issues" });
 
 		const panel = screen.getByRole("complementary", { name: "Issues" });
-		await user.click(within(panel).getAllByRole("button", { name: /Ben Ong/ })[0]!);
+		await user.click(
+			within(panel).getAllByRole("button", { name: /Ben Ong/ })[0]!
+		);
 
 		expect(
 			calls.filter((call) => call.path.endsWith("/repair-options"))
 		).toHaveLength(0);
+	});
+
+	it("given_anOptionThatFillsTheGapApplied_when_itLandsThenIsUndone_then_theRosterIsCheckedAtEachNewRevision", async () => {
+		configureApiClient({
+			accessToken: () => Promise.resolve("test-pass"),
+			renew: () => Promise.resolve({ kind: "expired" }),
+			onUnauthenticated: () => {},
+		});
+		stubApi({
+			[`POST ${SCHEDULE_PATH}/repair-options`]: {
+				status: 200,
+				body: envelope(repairOptionsFixture([callInOption()], [])),
+			},
+			[`POST ${SCHEDULE_PATH}/roster-changes/preview`]: {
+				status: 200,
+				body: envelope(rosterChangePreviewFixture({ checks: [] })),
+			},
+			[`POST ${SCHEDULE_PATH}/roster-changes`]: {
+				status: 201,
+				body: envelope(rosterChangeFixture({ fromRevision: 1, toRevision: 2 })),
+			},
+			[`POST ${SCHEDULE_PATH}/roster-changes/rc-1/undo/preview`]: {
+				status: 200,
+				body: envelope(
+					rosterChangePreviewFixture({ expectedRevision: 2, checks: [] })
+				),
+			},
+			[`POST ${SCHEDULE_PATH}/roster-changes/rc-1/undo`]: {
+				status: 201,
+				body: envelope(
+					rosterChangeFixture({
+						kind: "UNDO",
+						fromRevision: 2,
+						toRevision: 3,
+						undoable: false,
+					})
+				),
+			},
+		});
+		const askAt = vi.fn();
+		const views: Array<RosterSearch> = [];
+		/** The roster with its view kept in state, as its page keeps it in the URL. */
+		const WithView = (): ReactElement => {
+			const [view, setView] = useState<RosterSearch>({
+				week: "2026-10-12",
+				panel: "issues",
+				cover: "front-desk-am-copy|2026-10-17",
+			});
+			return (
+				<GeneratedRoster
+					assignments={scheduleAssignmentsFixture()}
+					editing={coverEditing}
+					schedule={schedule}
+					validation={{ status: "idle", ask: vi.fn(), askAt, revision: 1 }}
+					view={view}
+					onViewChange={(next) => {
+						views.push(next);
+						setView(next);
+					}}
+				/>
+			);
+		};
+		const user = userEvent.setup();
+		render(
+			<QueryClientProvider
+				client={
+					new QueryClient({ defaultOptions: { queries: { retry: false } } })
+				}
+			>
+				<WithView />
+			</QueryClientProvider>
+		);
+
+		await user.click(
+			await screen.findByRole("button", {
+				name: "Review Aisha Rahman’s change",
+			})
+		);
+		const apply = await screen.findByRole("button", { name: "Apply change" });
+		await waitFor(() => {
+			expect(apply).toBeEnabled();
+		});
+		await user.click(apply);
+
+		await waitFor(() => {
+			expect(askAt).toHaveBeenCalledWith(2);
+		});
+		// The filled gap's link goes: the list is drawn afresh and its panel's heading takes focus.
+		expect(views).toContainEqual({
+			week: "2026-10-12",
+			panel: "issues",
+			cover: undefined,
+		});
+		await waitFor(() => {
+			expect(screen.getByRole("heading", { name: "Issues" })).toHaveFocus();
+		});
+
+		// Undo from the toast is a change too: the roster is checked again at its revision.
+		await user.click(screen.getByRole("button", { name: "Undo" }));
+		await waitFor(() => {
+			expect(askAt).toHaveBeenCalledWith(3);
+		});
+	});
+
+	it("given_aPartFillApplied_when_theRosterShowsItsRevision_then_theCheckIsAskedBeforeTheHoursBasedList", async () => {
+		configureApiClient({
+			accessToken: () => Promise.resolve("test-pass"),
+			renew: () => Promise.resolve({ kind: "expired" }),
+			onUnauthenticated: () => {},
+		});
+		const option = stretchAfterOption();
+		const calls = stubApi({
+			[`POST ${SCHEDULE_PATH}/repair-options`]: {
+				status: 200,
+				body: envelope(repairOptionsFixture([option], [])),
+			},
+			[`POST ${SCHEDULE_PATH}/cover-options`]: {
+				status: 200,
+				body: envelope(coverOptionsFixture()),
+			},
+			[`POST ${SCHEDULE_PATH}/roster-changes/preview`]: {
+				status: 200,
+				body: envelope(rosterChangePreviewFixture({ checks: [] })),
+			},
+			[`POST ${SCHEDULE_PATH}/roster-changes`]: {
+				status: 201,
+				body: envelope(rosterChangeFixture({ fromRevision: 1, toRevision: 2 })),
+			},
+			[`POST ${SCHEDULE_PATH}/roster-check`]: {
+				status: 200,
+				body: envelope(
+					rulesCheckFixture({ staffingGaps: [staffingGapFixture()] })
+				),
+			},
+		});
+		/** The roster at the revision its page shows, checked by the real rules check. */
+		const AtRevision = (): ReactElement => {
+			const [revision, setRevision] = useState(1);
+			const [view, setView] = useState<RosterSearch>({
+				week: "2026-10-12",
+				panel: "issues",
+				cover: "front-desk-am-copy|2026-10-17",
+			});
+			const validation = useRosterRulesCheck(coverEditing.target, revision);
+			return (
+				<>
+					{/* The page reads the roster at the change's revision a moment after it lands. */}
+					<button
+						type="button"
+						onClick={() => {
+							setRevision(2);
+						}}
+					>
+						Read revision 2
+					</button>
+					<GeneratedRoster
+						assignments={scheduleAssignmentsFixture()}
+						editing={{ ...coverEditing, revision }}
+						schedule={schedule}
+						validation={validation}
+						view={view}
+						onViewChange={setView}
+					/>
+				</>
+			);
+		};
+		const user = userEvent.setup();
+		render(
+			<QueryClientProvider
+				client={
+					new QueryClient({ defaultOptions: { queries: { retry: false } } })
+				}
+			>
+				<AtRevision />
+			</QueryClientProvider>
+		);
+		await user.click(
+			await screen.findByRole("button", { name: /^Review .*change$/ })
+		);
+		const apply = await screen.findByRole("button", { name: "Apply change" });
+		await waitFor(() => {
+			expect(apply).toBeEnabled();
+		});
+		await user.click(apply);
+		await screen.findByText(/still 1 short/);
+
+		await user.click(screen.getByRole("button", { name: "Read revision 2" }));
+
+		/** Where the first request to `path` at revision 2 came, among all requests. */
+		const firstAtTwo = (path: string): number =>
+			calls.findIndex(
+				(call) =>
+					call.path.endsWith(path) &&
+					(call.body as { expectedRevision?: number } | undefined)
+						?.expectedRevision === 2
+			);
+		await waitFor(() => {
+			expect(firstAtTwo("/cover-options")).toBeGreaterThan(-1);
+		});
+		expect(firstAtTwo("/roster-check")).toBeGreaterThan(-1);
+		expect(firstAtTwo("/roster-check")).toBeLessThan(
+			firstAtTwo("/cover-options")
+		);
+	});
+
+	it("given_anOpenGapRow_when_theCurrentCheckListsNoGapForIt_then_itClosesAsAFilledOneDoes", () => {
+		configureApiClient({
+			accessToken: () => Promise.resolve("test-pass"),
+			renew: () => Promise.resolve({ kind: "expired" }),
+			onUnauthenticated: () => {},
+		});
+		stubApi({});
+		const check = rulesCheckFixture({ staffingGaps: [] });
+		const onViewChange = vi.fn();
+		render(
+			<QueryClientProvider
+				client={
+					new QueryClient({ defaultOptions: { queries: { retry: false } } })
+				}
+			>
+				<GeneratedRoster
+					assignments={scheduleAssignmentsFixture()}
+					editing={coverEditing}
+					schedule={schedule}
+					validation={{
+						status: "ready",
+						check,
+						ask: vi.fn(),
+						askAt: vi.fn(),
+						last: { revision: 1, check },
+						revision: 1,
+					}}
+					view={{
+						week: "2026-10-12",
+						panel: "issues",
+						cover: "front-desk-am-copy|2026-10-17",
+					}}
+					onViewChange={onViewChange}
+				/>
+			</QueryClientProvider>
+		);
+
+		expect(onViewChange).toHaveBeenCalledWith({
+			week: "2026-10-12",
+			panel: "issues",
+			cover: undefined,
+		});
+	});
+
+	it("given_aPublishedRosterAndAYesRecordedForAnOption_when_itApplies_then_theRosterIsCheckedAtTheNextRevision", async () => {
+		configureApiClient({
+			accessToken: () => Promise.resolve("test-pass"),
+			renew: () => Promise.resolve({ kind: "expired" }),
+			onUnauthenticated: () => {},
+		});
+		stubApi({
+			[`POST ${SCHEDULE_PATH}/repair-options`]: {
+				status: 200,
+				body: envelope(repairOptionsFixture([callInOption()], [])),
+			},
+			[`POST ${SCHEDULE_PATH}/roster-changes/preview`]: {
+				status: 200,
+				body: envelope(rosterChangePreviewFixture({ checks: [] })),
+			},
+			[`POST ${SCHEDULE_PATH}/cover-offers`]: {
+				status: 201,
+				body: envelope(coverOfferFixture({ status: "APPLIED" })),
+			},
+		});
+		const askAt = vi.fn();
+		const user = userEvent.setup();
+		render(
+			<QueryClientProvider
+				client={
+					new QueryClient({ defaultOptions: { queries: { retry: false } } })
+				}
+			>
+				<GeneratedRoster
+					assignments={scheduleAssignmentsFixture()}
+					schedule={schedule}
+					validation={{ status: "idle", ask: vi.fn(), askAt, revision: 1 }}
+					editing={{
+						...coverEditing,
+						notifiesMembers: true,
+						coverOffers: { offers: [], failed: false, retry: vi.fn() },
+					}}
+					view={{
+						week: "2026-10-12",
+						panel: "issues",
+						cover: "front-desk-am-copy|2026-10-17",
+					}}
+					onViewChange={vi.fn()}
+				/>
+			</QueryClientProvider>
+		);
+
+		await user.click(
+			await screen.findByRole("button", {
+				name: "Review Aisha Rahman’s change",
+			})
+		);
+		await user.click(
+			await screen.findByRole("button", { name: "They agreed" })
+		);
+		await user.click(screen.getByRole("button", { name: "How" }));
+		await user.click(screen.getByRole("option", { name: "Phone call" }));
+		await user.click(screen.getByRole("button", { name: "Record and apply" }));
+
+		await waitFor(() => {
+			expect(askAt).toHaveBeenCalledWith(2);
+		});
 	});
 });

@@ -62,6 +62,7 @@ export const coverOfferFixture = (
 		appliedChangeId: null,
 		createdBy: { membershipId: "manager-1", displayName: "Lina Tan" },
 		createdAt: "2026-10-16T05:30:00Z",
+		dayGivenUp: null,
 		...overrides,
 	};
 };

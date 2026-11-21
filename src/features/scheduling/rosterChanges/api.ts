@@ -43,6 +43,55 @@ export type RosterChangeCell =
 	  }
 	| { membershipId: string; day: string; kind: "OFF"; dayType?: string };
 
+/**
+ * One day to change as the API hands it out ready to apply (a repair option's
+ * cells): read as `RosterChangeCell`, its nulls as left out, so it goes back
+ * to the preview and the apply exactly as it came.
+ */
+export const rosterChangeCellSchema: z.ZodType<RosterChangeCell> =
+	z.discriminatedUnion("kind", [
+		z.object({
+			membershipId: z.string(),
+			day: z.string(),
+			kind: z.literal("WORK"),
+			shiftId: z.string(),
+			stretchBeforeMinutes: z
+				.number()
+				.nullish()
+				.transform((minutes) => minutes ?? undefined),
+			stretchAfterMinutes: z
+				.number()
+				.nullish()
+				.transform((minutes) => minutes ?? undefined),
+		}),
+		z.object({
+			membershipId: z.string(),
+			day: z.string(),
+			kind: z.literal("OFF"),
+			dayType: z
+				.string()
+				.nullish()
+				.transform((dayType) => dayType ?? undefined),
+		}),
+	]);
+
+/**
+ * What a repair option does, as the API names it (`…/repair-options`): call
+ * someone in, move them, stretch one or two shifts, swap a day, or another
+ * change (the older repair's, or a kind this app does not know). An apply
+ * names it when the change is one of those options.
+ */
+export const REPAIR_OPTION_KINDS = [
+	"CALL_IN",
+	"MOVE",
+	"OVERTIME_STRETCH",
+	"STRETCH_PAIR",
+	"DAY_SWAP",
+	"OTHER",
+] as const;
+
+export type RepairOptionKind = (typeof REPAIR_OPTION_KINDS)[number];
+
 /** What a preview and an apply send. */
 export type RosterChangeBody = {
 	/** The roster revision the change was chosen at. */
@@ -56,6 +105,8 @@ export type RosterChangeBody = {
 	assumeLeaveCancelledOn?: Array<string>;
 	/** Apply only: this edit is the roster half of a leave move, so the API never undoes it alone. */
 	leaveMove?: boolean;
+	/** Apply only: this edit is one of the scheduling engine's repair options, of this kind; the API records it as the change's source. */
+	repairOptionKind?: RepairOptionKind;
 };
 
 // A code or severity a newer API adds still shows, as a plain note.

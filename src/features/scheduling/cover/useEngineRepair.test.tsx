@@ -6,8 +6,8 @@ import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, stubApi } from "@/common/testing/stubApi";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import {
-	feasibleRepair,
-	infeasibleRepair,
+	callInOption,
+	moveOption,
 	repairOptionsFixture,
 } from "@/features/scheduling/cover/engineRepairFixtures";
 import { useEngineRepair } from "@/features/scheduling/cover/useEngineRepair";
@@ -65,17 +65,17 @@ const hook = (
 	);
 
 /** Answers every ask with `options`; returns what was sent. */
-const answer = (
-	options = repairOptionsFixture()
-): ReturnType<typeof stubApi> =>
+const answer = (options = repairOptionsFixture()): ReturnType<typeof stubApi> =>
 	stubApi({
 		[`POST ${REPAIR_OPTIONS}`]: { status: 200, body: envelope(options) },
 	});
 
 describe("useEngineRepair", () => {
-	it("asks at once for the gap at the revision on screen, feasible options first", async () => {
+	it("asks at once for the gap at the revision on screen, and keeps the engine's order and revision", async () => {
 		const calls = answer(
-			repairOptionsFixture([infeasibleRepair(), feasibleRepair()])
+			repairOptionsFixture([moveOption(), callInOption()], null, {
+				revision: 4,
+			})
 		);
 		const { result } = hook(4);
 
@@ -86,10 +86,14 @@ describe("useEngineRepair", () => {
 		expect(calls.map((call) => call.body)).toEqual([
 			{ ...GAP, expectedRevision: 4 },
 		]);
+		expect(result.current).toMatchObject({
+			revision: 4,
+			search: { complete: true, optionsFound: 2 },
+		});
 		expect(
 			result.current.status === "ready" &&
-				result.current.options.map((option) => option.feasible)
-		).toEqual([true, false]);
+				result.current.options.map((option) => option.kind)
+		).toEqual(["MOVE", "CALL_IN"]);
 	});
 
 	it("asks afresh once the roster moves on", async () => {
@@ -144,5 +148,134 @@ describe("useEngineRepair", () => {
 		await waitFor(() => {
 			expect(calls).toHaveLength(2);
 		});
+	});
+
+	it("keeps a refusal on screen while it asks again, then reads the answer", async () => {
+		let release: (response: Response) => void = () => {};
+		const replies = [
+			Promise.resolve(
+				new Response(JSON.stringify({ errorCode: "REPAIR_ENGINE_TOO_SLOW" }), {
+					status: 504,
+				})
+			),
+			new Promise<Response>((resolve) => {
+				release = resolve;
+			}),
+		];
+		vi.stubGlobal("fetch", (): Promise<Response> => replies.shift()!);
+		const { result } = hook();
+		await waitFor(() => {
+			expect(result.current).toMatchObject({
+				status: "refused",
+				refusal: "tooSlow",
+				retrying: false,
+			});
+		});
+
+		act(() => {
+			result.current.askAgain();
+		});
+
+		await waitFor(() => {
+			expect(result.current).toMatchObject({
+				status: "refused",
+				refusal: "tooSlow",
+				retrying: true,
+			});
+		});
+		release(
+			new Response(JSON.stringify(envelope(repairOptionsFixture())), {
+				status: 200,
+			})
+		);
+		await waitFor(() => {
+			expect(result.current.status).toBe("ready");
+		});
+	});
+
+	it("says when Try again brings an answer back, and not when it is refused again", async () => {
+		stubApi({
+			[`POST ${REPAIR_OPTIONS}`]: [
+				{ status: 504, body: { errorCode: "REPAIR_ENGINE_TOO_SLOW" } },
+				{ status: 504, body: { errorCode: "REPAIR_ENGINE_TOO_SLOW" } },
+				{ status: 200, body: envelope(repairOptionsFixture()) },
+			],
+		});
+		const onAnsweredAgain = vi.fn();
+		const { result } = renderHook(
+			() => useEngineRepair(TARGET, GAP, 1, false, onAnsweredAgain),
+			{ wrapper }
+		);
+		await waitFor(() => {
+			expect(result.current.status).toBe("refused");
+		});
+
+		act(() => {
+			result.current.askAgain();
+		});
+		await waitFor(() => {
+			expect(result.current).toMatchObject({ retrying: false });
+		});
+		expect(onAnsweredAgain).not.toHaveBeenCalled();
+		act(() => {
+			result.current.askAgain();
+		});
+
+		await waitFor(() => {
+			expect(result.current.status).toBe("ready");
+		});
+		expect(onAnsweredAgain).toHaveBeenCalledOnce();
+	});
+
+	it("keeps an answer on screen while it is asked again, and says a refused retry above it", async () => {
+		let reply: (response: Response) => void = () => {};
+		const replies = [
+			Promise.resolve(
+				new Response(
+					JSON.stringify(
+						envelope(
+							repairOptionsFixture([callInOption()], null, {
+								search: { complete: false, optionsFound: 4 },
+							})
+						)
+					),
+					{ status: 200 }
+				)
+			),
+			new Promise<Response>((resolve) => {
+				reply = resolve;
+			}),
+		];
+		vi.stubGlobal("fetch", (): Promise<Response> => replies.shift()!);
+		const { result } = hook();
+		await waitFor(() => {
+			expect(result.current.status).toBe("ready");
+		});
+
+		act(() => {
+			result.current.askAgain();
+		});
+
+		await waitFor(() => {
+			expect(result.current).toMatchObject({ status: "ready", asking: true });
+		});
+		expect(
+			result.current.status === "ready" && result.current.options
+		).toHaveLength(1);
+		reply(
+			new Response(JSON.stringify({ errorCode: "REPAIR_ENGINE_TOO_SLOW" }), {
+				status: 504,
+			})
+		);
+		await waitFor(() => {
+			expect(result.current).toMatchObject({
+				status: "ready",
+				asking: false,
+				refusal: "tooSlow",
+			});
+		});
+		expect(
+			result.current.status === "ready" && result.current.options
+		).toHaveLength(1);
 	});
 });

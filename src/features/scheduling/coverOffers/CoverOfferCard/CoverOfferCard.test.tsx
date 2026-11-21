@@ -52,6 +52,33 @@ describe("CoverOfferCard", () => {
 		expect(card).not.toHaveTextContent("Overtime");
 	});
 
+	it("given_aDaySwap_when_shown_then_saysTheDayWorkedInPlaceOfTheDayGivenUp", () => {
+		show({
+			offer: coverOfferFixture({
+				optionKind: "DAY_SWAP",
+				dayGivenUp: "2026-10-16",
+				cells: [
+					{
+						membershipId: "m-1",
+						day: "2026-10-17",
+						kind: "WORK",
+						shiftId: "front-desk-am-copy",
+					},
+					{
+						membershipId: "m-1",
+						day: "2026-10-16",
+						kind: "OFF",
+						shiftId: null,
+					},
+				],
+			}),
+		});
+
+		expect(
+			screen.getByRole("region", { name: "Shift offered" })
+		).toHaveTextContent("Work Sat, Oct 17 instead of Fri, Oct 16, same hours");
+	});
+
 	it("given_anOpenOffer_when_shown_then_saysWhenWhatChangesThePayWhoAskedAndByWhen", () => {
 		show();
 

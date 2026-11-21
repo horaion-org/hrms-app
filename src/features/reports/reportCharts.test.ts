@@ -139,6 +139,7 @@ describe("changeSegments", () => {
 			["LEAVE_RECORDED", 0],
 			["LEAVE_MOVE", 0],
 			["COVER_OPTION", 0],
+			["REPAIR_OPTION", 0],
 		]);
 		expect(segments[0]).toMatchObject({
 			label: "manual",

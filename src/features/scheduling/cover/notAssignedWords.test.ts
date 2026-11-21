@@ -7,6 +7,7 @@ import {
 	couldTakeTheShift,
 	notAssignedInOrder,
 	notAssignedReasonLine,
+	whyNotWithoutCards,
 } from "@/features/scheduling/cover/notAssignedWords";
 
 let t: TFunction;
@@ -31,23 +32,21 @@ const reason = (
 
 describe("notAssignedReasonLine", () => {
 	it.each([
+		["role_not_on_shift", "Does not hold this shift’s job title."],
 		[
 			"fixed_day_no_call_back",
-			"Has a fixed rest or off day that day, and may not be called back.",
+			"Has a fixed day off that day and may not be called back.",
 		],
 		["on_leave", "On leave that day."],
-		["outside_availability", "Not available for this shift’s hours."],
+		["outside_availability", "Not available for these hours."],
 		[
-			"too_little_shift_left",
-			"Leave that day leaves too little of the shift to work.",
+			"works_another_shift",
+			"On another shift that day, which would be left short.",
 		],
-		["works_another_shift", "Already on another shift that day."],
 		["breaks_unnamed_rule", "Would break a working-time rule."],
 		["not_checked", "Not checked in time."],
-		[
-			"no_shift_part_time",
-			"Part-time with no shift that day. The engine doesn’t call in part-timers: choose them under Who covers.",
-		],
+		["no_shift_part_time", "Part-time, with no shift that day."],
+		["too_little_shift_left", "Cannot take this shift."],
 		["on_training", "Cannot take this shift."],
 	])("words %s", (code, line) => {
 		expect(notAssignedReasonLine(reason(code), t)).toBe(line);
@@ -72,17 +71,17 @@ describe("notAssignedReasonLine", () => {
 		).toBe("Would break: Most hours a day");
 		expect(
 			notAssignedReasonLine(reason("breaks_rule", { rule: "a_new_rule" }), t)
-		).toBe("Would break: a working-time rule");
+		).toBe("Would break a working-time rule.");
 		expect(notAssignedReasonLine(reason("breaks_rule"), t)).toBe(
-			"Would break: a working-time rule"
+			"Would break a working-time rule."
 		);
 	});
 });
 
 describe("needs_overtime", () => {
-	it("words someone who could take the shift only as overtime, which a generated roster never assigns", () => {
+	it("words someone who could take the shift only with extra hours", () => {
 		expect(notAssignedReasonLine(reason("needs_overtime"), t)).toBe(
-			"Only as overtime, which isn’t assigned when a roster is generated."
+			"Could take it with extra hours."
 		);
 	});
 
@@ -113,5 +112,15 @@ describe("notAssignedInOrder", () => {
 		expect(
 			notAssignedInOrder(NOT_ASSIGNED_FIXTURE).map((person) => person.name)
 		).toEqual(["Farid Aziz", "Dana Lim", "Ella Tan"]);
+	});
+});
+
+describe("whyNotWithoutCards", () => {
+	it("leaves out everyone an option already changes, keeping the engine's order", () => {
+		expect(
+			whyNotWithoutCards(NOT_ASSIGNED_FIXTURE, new Set(["m-5"])).map(
+				(person) => person.name
+			)
+		).toEqual(["Dana Lim", "Farid Aziz"]);
 	});
 });

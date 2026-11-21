@@ -20,6 +20,12 @@ export type RosterRulesCheckState =
 /** Validate schedule's state as the roster reads it: where it stands, how to ask, and the last answer. */
 export type RosterValidation = RosterRulesCheckState & {
 	ask: () => void;
+	/**
+	 * Asks for the check once the roster shows `revision`, as after a change
+	 * applied whose revision the page has not read yet; until then the check
+	 * reads as under way.
+	 */
+	askAt: (revision: number) => void;
 	last?: LastValidation;
 	/** The roster's revision now, which an answer is compared with to say whether it is out of date. */
 	revision: number;
@@ -45,7 +51,9 @@ const NO_TARGET: RosterChangeTarget = {
  * roster whose hand changes (`hasChanges`) nothing has validated in this
  * visit (`validatesOnOpen`), once per revision; nothing at all without a
  * `target` (someone who may not read the roster). An ask holds for the
- * revision it was made at, so a roster changed since is unasked again; `last`
+ * revision it was made at, so a roster changed since is unasked again;
+ * `askAt` asks at a revision the roster has yet to reach (a change just
+ * applied), and the check reads as under way until it gets there. `last`
  * keeps the latest answer and its revision, which the week bar's button
  * compares with the roster's revision to light up.
  */
@@ -56,8 +64,11 @@ export const useRosterRulesCheck = (
 ): RosterValidation => {
 	const [askedAt, setAskedAt] = useState<number>();
 	const [last, setLast] = useState<LastValidation>();
+	// An ask for a revision the roster has yet to reach waits for it, and is never moved back.
+	const askedAhead = askedAt !== undefined && askedAt > revision;
 	// Set while rendering, as `last` is: the ask starts with this render, and a re-render finds it asked.
 	if (
+		!askedAhead &&
 		validatesOnOpen({
 			mayValidate: target !== undefined,
 			revision,
@@ -80,17 +91,22 @@ export const useRosterRulesCheck = (
 		if (asked) void query.refetch();
 		else setAskedAt(revision);
 	};
+	const askAt = (nextRevision: number): void => {
+		setAskedAt(nextRevision);
+	};
 
-	if (!asked) return { status: "idle", ask, last, revision };
+	if (askedAhead) return { status: "loading", ask, askAt, last, revision };
+	if (!asked) return { status: "idle", ask, askAt, last, revision };
 	if (query.isError)
 		return {
 			status: "refused",
 			refusal: rulesCheckRefusalOf(query.error),
 			ask,
+			askAt,
 			last,
 			revision,
 		};
 	if (query.data === undefined || query.isFetching)
-		return { status: "loading", ask, last, revision };
-	return { status: "ready", check: query.data, ask, last, revision };
+		return { status: "loading", ask, askAt, last, revision };
+	return { status: "ready", check: query.data, ask, askAt, last, revision };
 };
