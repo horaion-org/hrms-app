@@ -12,11 +12,13 @@ import { envelope, stubApi } from "@/common/testing/stubApi";
 import {
 	callInOption,
 	repairOptionsFixture,
+	stretchAfterOption,
 } from "@/features/scheduling/cover/engineRepairFixtures";
 import {
 	rosterChangeFixture,
 	rosterChangePreviewFixture,
 } from "@/features/scheduling/rosterChanges/fixtures";
+import { coverOptionsFixture } from "@/features/scheduling/cover/fixtures";
 import { coverOfferFixture } from "@/features/scheduling/coverOffers/fixtures";
 import {
 	GeneratedRoster,
@@ -1149,6 +1151,107 @@ describe("GeneratedRoster: one place for cover", () => {
 		await waitFor(() => {
 			expect(askAt).toHaveBeenCalledWith(3);
 		});
+	});
+
+	it("given_aPartFillApplied_when_theRosterShowsItsRevision_then_theCheckIsAskedBeforeTheHoursBasedList", async () => {
+		configureApiClient({
+			accessToken: () => Promise.resolve("test-pass"),
+			renew: () => Promise.resolve({ kind: "expired" }),
+			onUnauthenticated: () => {},
+		});
+		const option = stretchAfterOption();
+		const calls = stubApi({
+			[`POST ${SCHEDULE_PATH}/repair-options`]: {
+				status: 200,
+				body: envelope(repairOptionsFixture([option], [])),
+			},
+			[`POST ${SCHEDULE_PATH}/cover-options`]: {
+				status: 200,
+				body: envelope(coverOptionsFixture()),
+			},
+			[`POST ${SCHEDULE_PATH}/roster-changes/preview`]: {
+				status: 200,
+				body: envelope(rosterChangePreviewFixture({ checks: [] })),
+			},
+			[`POST ${SCHEDULE_PATH}/roster-changes`]: {
+				status: 201,
+				body: envelope(rosterChangeFixture({ fromRevision: 1, toRevision: 2 })),
+			},
+			[`POST ${SCHEDULE_PATH}/roster-check`]: {
+				status: 200,
+				body: envelope(
+					rulesCheckFixture({ staffingGaps: [staffingGapFixture()] })
+				),
+			},
+		});
+		/** The roster at the revision its page shows, checked by the real rules check. */
+		const AtRevision = (): ReactElement => {
+			const [revision, setRevision] = useState(1);
+			const [view, setView] = useState<RosterSearch>({
+				week: "2026-10-12",
+				panel: "issues",
+				cover: "front-desk-am-copy|2026-10-17",
+			});
+			const validation = useRosterRulesCheck(coverEditing.target, revision);
+			return (
+				<>
+					{/* The page reads the roster at the change's revision a moment after it lands. */}
+					<button
+						type="button"
+						onClick={() => {
+							setRevision(2);
+						}}
+					>
+						Read revision 2
+					</button>
+					<GeneratedRoster
+						assignments={scheduleAssignmentsFixture()}
+						editing={{ ...coverEditing, revision }}
+						schedule={schedule}
+						validation={validation}
+						view={view}
+						onViewChange={setView}
+					/>
+				</>
+			);
+		};
+		const user = userEvent.setup();
+		render(
+			<QueryClientProvider
+				client={
+					new QueryClient({ defaultOptions: { queries: { retry: false } } })
+				}
+			>
+				<AtRevision />
+			</QueryClientProvider>
+		);
+		await user.click(
+			await screen.findByRole("button", { name: /^Review .*change$/ })
+		);
+		const apply = await screen.findByRole("button", { name: "Apply change" });
+		await waitFor(() => {
+			expect(apply).toBeEnabled();
+		});
+		await user.click(apply);
+		await screen.findByText(/still 1 short/);
+
+		await user.click(screen.getByRole("button", { name: "Read revision 2" }));
+
+		/** Where the first request to `path` at revision 2 came, among all requests. */
+		const firstAtTwo = (path: string): number =>
+			calls.findIndex(
+				(call) =>
+					call.path.endsWith(path) &&
+					(call.body as { expectedRevision?: number } | undefined)
+						?.expectedRevision === 2
+			);
+		await waitFor(() => {
+			expect(firstAtTwo("/cover-options")).toBeGreaterThan(-1);
+		});
+		expect(firstAtTwo("/roster-check")).toBeGreaterThan(-1);
+		expect(firstAtTwo("/roster-check")).toBeLessThan(
+			firstAtTwo("/cover-options")
+		);
 	});
 
 	it("given_anOpenGapRow_when_theCurrentCheckListsNoGapForIt_then_itClosesAsAFilledOneDoes", () => {

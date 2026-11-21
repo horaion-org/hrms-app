@@ -43,6 +43,8 @@ export const issueCoverOf = ({
 		timeZone,
 	},
 	onPreviewDays,
+	// After a change the check is asked first: the hours-based list for the new revision waits for its answer.
+	listWaitsForCheck: validation?.status === "loading",
 	onApplied: (change, { filled, stillShort }): void => {
 		onLanded({ change, stillShort });
 		validation?.askAt(change.toRevision);

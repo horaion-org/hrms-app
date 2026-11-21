@@ -288,6 +288,22 @@ describe("useCoverPanel", () => {
 		expect(result.current.view).toBe("gapStatus");
 	});
 
+	it("given_theRulesCheckUnderWay_when_opened_then_theHoursBasedListWaitsForIt", async () => {
+		const calls = stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${REPAIR_OPTIONS}`]: answer(
+				repairOptionsFixture([callInOption()], [])
+			),
+		});
+		const { result } = hook({ listWaitsForCheck: true });
+
+		await waitFor(() => {
+			expect(result.current.engineRepair.status).toBe("ready");
+		});
+		expect(calls.some((call) => call.path === COVER_OPTIONS)).toBe(false);
+		expect(result.current.view).toBe("engine");
+	});
+
 	it("given_nobodyCanCover_when_listed_then_nobody", async () => {
 		stubApi({
 			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture({ options: [] })),

@@ -84,6 +84,12 @@ export type CoverPanelInput = {
 	onApplied: (change: RosterChange, leaves: CoverApplied) => void;
 	/** A recorded yes applied the change; the roster refreshes by itself. */
 	onCoverRecorded?: () => void;
+	/**
+	 * The rules check for the roster's revision is under way: the hours-based
+	 * list waits for it, as the backend counts what is short from the check
+	 * it keeps (and, without one yet, from a count that misses stretches).
+	 */
+	listWaitsForCheck?: boolean;
 };
 
 /** What a landed cover change leaves: whether the gap is filled, and the toast's words when hours stay short. */
@@ -185,6 +191,7 @@ export const useCoverPanel = ({
 	onPreviewDays,
 	onApplied,
 	onCoverRecorded,
+	listWaitsForCheck = false,
 }: CoverPanelInput): CoverPanel => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
@@ -220,7 +227,7 @@ export const useCoverPanel = ({
 	const engineRepair = useEngineRepair(target, gap, revision, asksNothing);
 	const list = useQuery({
 		...coverOptionsQuery(target, gap, revision),
-		enabled: !asksNothing,
+		enabled: !asksNothing && !listWaitsForCheck,
 	});
 	const options = list.data;
 	const status = filledByApply
