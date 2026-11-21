@@ -4953,7 +4953,8 @@
 				"working": "Working it: {{names, list(type: conjunction)}}",
 				"nobodyWorks": "Nobody works it yet.",
 				"withCost": "{{line}} · {{cost}}"
-			}
+			},
+			"leaveShortNamed": "{{name}} is on leave, so {{shift}} is short."
 		},
 		"rosterMarkers": {
 			"leaveRequested": "Leave requested",

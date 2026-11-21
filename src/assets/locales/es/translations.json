@@ -4753,7 +4753,8 @@
 				"working": "Lo trabajan: {{names, list(type: conjunction)}}",
 				"nobodyWorks": "Nadie lo trabaja todavía.",
 				"withCost": "{{line}} · {{cost}}"
-			}
+			},
+			"leaveShortNamed": "{{name}} está de permiso, así que falta gente en {{shift}}."
 		},
 		"rosterMarkers": {
 			"leaveRequested": "Permiso solicitado",

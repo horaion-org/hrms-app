@@ -101,10 +101,12 @@ const toDecideIssue = (row: ScheduleAssignment, t: TFunction): RosterIssue => {
 /**
  * A day on leave or covered: to fix with Find cover while its shift is short,
  * else for information. The current rules check, when it has one, says
- * whether the shift is still short.
+ * whether the shift is still short. The sentence names the person when they
+ * are the only one whose leave left that shift short that day.
  */
 const leaveAndCoverIssue = (
 	row: ScheduleAssignment,
+	onLeaveFromShift: number,
 	checkedGaps: ReadonlySet<string> | undefined,
 	t: TFunction
 ): RosterIssue => {
@@ -145,7 +147,13 @@ const leaveAndCoverIssue = (
 			row.uncoveredFrom && row.uncoveredTo
 				? timeRangeText(row.uncoveredFrom, row.uncoveredTo, t)
 				: null,
-		rule: t("scheduling.issues.leaveShort", { shift: shift.name }),
+		rule:
+			onLeaveFromShift === 1
+				? t("scheduling.issues.leaveShortNamed", {
+						name: base.who,
+						shift: shift.name,
+					})
+				: t("scheduling.issues.leaveShort", { shift: shift.name }),
 		action: {
 			kind: "findCover",
 			gap: { shiftId: shift.shiftId, day: row.day },
@@ -161,7 +169,18 @@ const listIssues = ({
 	t,
 }: RosterIssueSourceInput): Array<RosterIssue> => [
 	...toDecide.map((row) => toDecideIssue(row, t)),
-	...leaveAndCover.map((row) => leaveAndCoverIssue(row, checkedGaps, t)),
+	...leaveAndCover.map((row) =>
+		leaveAndCoverIssue(
+			row,
+			leaveAndCover.filter(
+				(other) =>
+					other.uncoveredShift?.shiftId === row.uncoveredShift?.shiftId &&
+					other.day === row.day
+			).length,
+			checkedGaps,
+			t
+		)
+	),
 	...rows.flatMap((row): Array<RosterIssue> => {
 		const run =
 			row.memberProfileId === undefined

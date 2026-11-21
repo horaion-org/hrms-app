@@ -77,7 +77,27 @@ describe("issuesOfRoster", () => {
 			day: "2026-10-12",
 			action: { kind: "findCover", gap: { shiftId, day: "2026-10-12" } },
 		});
-		expect(issues[0]?.rule).toMatch(/^scheduling\.issues\.leaveShort\(/);
+		expect(issues[0]?.rule).toMatch(/^scheduling\.issues\.leaveShortNamed\(/);
+	});
+
+	it("names the one person whose leave left the shift short, and nobody when several did", () => {
+		const row = leaveGapRow();
+		const ruleOf = (leaveAndCover: Array<ScheduleAssignment>): unknown =>
+			issuesOfRoster(input({}, { leaveAndCover }))[0]?.rule;
+		const other = {
+			...row,
+			assignmentId: "other-leave",
+			member: row.member && {
+				...row.member,
+				membershipId: "m-2",
+				displayName: "Ben Ong",
+			},
+		};
+
+		expect(ruleOf([row])).toMatch(
+			/^scheduling\.issues\.leaveShortNamed\(Aisha Rahman\|/
+		);
+		expect(ruleOf([row, other])).toMatch(/^scheduling\.issues\.leaveShort\(/);
 	});
 
 	it("lists a shift short by leave as information once the current check finds that shift staffed", () => {
