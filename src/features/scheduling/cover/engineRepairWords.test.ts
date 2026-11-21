@@ -217,7 +217,14 @@ describe("optionKindLine: edges", () => {
 			optionKindLine(
 				{
 					...stretch,
-					cells: [{ ...stretch.cells[0]!, stretchAfterMinutes: undefined }],
+					cells: [
+						{
+							membershipId: "m-2",
+							day: "2026-10-17",
+							kind: "WORK",
+							shiftId: "lunch-rush-copy",
+						},
+					],
 				},
 				sources,
 				t
