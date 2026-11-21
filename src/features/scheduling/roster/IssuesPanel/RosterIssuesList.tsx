@@ -25,6 +25,8 @@ export type RosterIssuesListProps = {
 	issues: ReadonlyArray<RosterIssue>;
 	/** A shift's name by its id, for a short shift's row. */
 	shiftName: (shiftId: string) => string;
+	/** Who works a short shift that day, which its row says where it may not be changed; nobody without. */
+	whoWorks?: (gap: CoverGapRequest) => Array<string>;
 	/** Under the list, such as the cover offers out. */
 	information?: ReactNode;
 	onShow?: (issue: RosterIssue) => void;
@@ -44,6 +46,7 @@ export type RosterIssuesListProps = {
 export const RosterIssuesList = ({
 	issues,
 	shiftName,
+	whoWorks,
 	information,
 	onShow,
 	cover,
@@ -92,6 +95,7 @@ export const RosterIssuesList = ({
 			bodyOf={(row) => (
 				<IssueRowBody
 					cover={cover}
+					whoWorks={whoWorks}
 					fixes={fixes}
 					row={row}
 					onShow={onShow}

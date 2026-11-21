@@ -4876,7 +4876,6 @@
 			"advice": {
 				"lead": "What to do: {{advice}}",
 				"withNeighbouringDays": "{{advice}} You can also change the neighbouring days, in the schedule before or after this one.",
-				"findCover": "Press Find cover to see who can take it, or ask the engine for options.",
 				"staffByHand": "Give this shift to someone who can work it that day.",
 				"daysOff": "Change one of this person’s shifts in that period to a day off.",
 				"requiredDays": "Change one of this person’s shifts in that week to a rest day (or a day off).",
@@ -4950,7 +4949,9 @@
 				"stillShortAfter": "Still short afterwards: {{times}}",
 				"bothMustAgree": "The roster is published, so both must agree.",
 				"bothAgreed": "They both agreed",
-				"bothAgreedHint": "Say how each person agreed."
+				"bothAgreedHint": "Say how each person agreed.",
+				"working": "Working it: {{names, list(type: conjunction)}}",
+				"nobodyWorks": "Nobody works it yet."
 			}
 		},
 		"rosterMarkers": {

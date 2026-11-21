@@ -143,4 +143,26 @@ describe("RosterIssuesList", () => {
 
 		expect(screen.getByRole("heading", { name: "Issues" })).toHaveFocus();
 	});
+
+	it("given_aRosterThatMayNotBeChanged_when_aShortShiftsRowOpens_then_saysWhoWorksItAndNamesNoButton", async () => {
+		show({ whoWorks: () => ["Aisha Rahman", "Ben Ong"] });
+
+		await userEvent.click(
+			screen.getByRole("button", { name: /Front Desk Staff short/ })
+		);
+
+		const row = screen.getByRole("button", { expanded: true }).closest("li")!;
+		expect(row).toHaveTextContent("Working it: Aisha Rahman and Ben Ong");
+		expect(row).not.toHaveTextContent(/Find cover|ask the engine/);
+	});
+
+	it("given_nobodyOnTheShort_shift_when_itsRowOpens_then_saysNobodyWorksIt", async () => {
+		show({ whoWorks: () => [] });
+
+		await userEvent.click(
+			screen.getByRole("button", { name: /Front Desk Staff short/ })
+		);
+
+		expect(screen.getByText("Nobody works it yet.")).toBeVisible();
+	});
 });

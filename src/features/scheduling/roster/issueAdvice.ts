@@ -8,7 +8,7 @@ import type { RosterIssue } from "@/features/scheduling/roster/rosterIssueGroups
 
 /*
  * What a manager can do about an Issues item, pure: one line chosen by the
- * item's one action (Find cover) or by the type of the rule behind it. The
+ * type of the rule behind the item. The
  * words live under `scheduling.issues.advice`; an item with nothing honest
  * to advise gets none.
  */
@@ -17,7 +17,6 @@ const key = "scheduling.issues.advice";
 
 /** Every line of advice, by its key under `scheduling.issues.advice`. */
 export const ISSUE_ADVICE_KEYS = [
-	"findCover",
 	"staffByHand",
 	"daysOff",
 	"requiredDays",
@@ -160,14 +159,14 @@ const restAdviceOf = (
 
 /**
  * What the manager can do about an Issues item, or undefined when there is
- * nothing honest to advise. A row that offers Find cover says so; a note for
+ * nothing honest to advise. A short shift's row gets none (its row covers it); a note for
  * information has nothing to fix; a rule is advised by its type; an engine
  * sentence naming no rule is sent to Validate schedule, which names it.
  */
 export const issueAdviceOf = (issue: RosterIssue): IssueAdvice | undefined => {
 	if (issue.group === "forInformation") return undefined;
-	if (issue.action.kind === "findCover")
-		return { key: "findCover", neighbouringDays: false };
+	// A short shift's row is covered from the row itself; on a roster that may not be changed there is no button to name.
+	if (issue.action.kind === "findCover") return undefined;
 	if (issue.subject === undefined) return undefined;
 	if (issue.subject.kind === "generationError")
 		return { key: "validate", neighbouringDays: false };

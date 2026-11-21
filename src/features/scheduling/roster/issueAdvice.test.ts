@@ -134,7 +134,7 @@ describe("issue advice: no rule type is left out", () => {
 			...ADVICE_BY_ENGINE_RULE.values(),
 		].filter((advice) => typeof advice === "string");
 		// Chosen by the row or its sentence, not by a rule type alone.
-		const fromTheItem = ["findCover", "restBetweenShiftsHours", "validate"];
+		const fromTheItem = ["restBetweenShiftsHours", "validate"];
 		expect([...new Set([...fromRules, ...fromTheItem])].sort()).toEqual(
 			[...ISSUE_ADVICE_KEYS].sort()
 		);
@@ -142,7 +142,7 @@ describe("issue advice: no rule type is left out", () => {
 });
 
 describe("issueAdviceOf: by the item itself", () => {
-	it("says Find cover for a row that offers it, whatever rule names the gap", () => {
+	it("advises nothing for a short shift's row, which is covered from the row itself", () => {
 		const gap = rosterIssueFixture({
 			action: { kind: "findCover", gap: { shiftId: "s-1", day: "2026-10-17" } },
 			subject: { kind: "rule", rule: "shift_demand_requirement" },
@@ -151,11 +151,8 @@ describe("issueAdviceOf: by the item itself", () => {
 			action: { kind: "findCover", gap: { shiftId: "s-1", day: "2026-10-17" } },
 		});
 
-		expect(issueAdviceOf(gap)).toEqual({
-			key: "findCover",
-			neighbouringDays: false,
-		});
-		expect(issueAdviceOf(leaveShort)?.key).toBe("findCover");
+		expect(issueAdviceOf(gap)).toBeUndefined();
+		expect(issueAdviceOf(leaveShort)).toBeUndefined();
 	});
 
 	it.each([

@@ -228,9 +228,17 @@ export const issuesSections = (
 	const shiftName = (shiftId: string): string =>
 		assignments.find((row) => row.shift?.shiftId === shiftId)?.shift?.name ??
 		"";
+	/** Who works a shift that day, as the roster's own days name them. */
+	const whoWorks = (gap: CoverGapRequest): Array<string> =>
+		assignments
+			.filter(
+				(row) => row.shift?.shiftId === gap.shiftId && row.day === gap.day
+			)
+			.flatMap((row) => row.member?.displayName ?? []);
 	const list = {
 		issues,
 		shiftName,
+		whoWorks,
 		information: coverOffers &&
 			(coverOffers.failed || coverOffers.offers.length > 0) && (
 				<OffersOutSection

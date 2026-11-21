@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
+import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import type { IssueFixes } from "@/features/scheduling/roster/dayTypeFix";
 import {
 	issueAdviceLine,
@@ -18,6 +19,8 @@ export type IssueRowBodyProps = {
 	onShow?: (issue: RosterIssue) => void;
 	/** On a roster that may be changed: what covering a short shift needs. */
 	cover?: IssueCoverContext;
+	/** Who works a short shift that day, said on a roster that may not be changed. */
+	whoWorks?: (gap: CoverGapRequest) => Array<string>;
 	/** The fixes Issues can make itself. */
 	fixes?: IssueFixes;
 };
@@ -33,12 +36,17 @@ export const IssueRowBody = ({
 	row,
 	onShow,
 	cover,
+	whoWorks,
 	fixes,
 }: IssueRowBodyProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const { issue } = row;
 	if (issue.action.kind === "findCover" && cover)
 		return <GapCover cover={cover} gap={issue.action.gap} />;
+	const working =
+		issue.action.kind === "findCover" && whoWorks
+			? whoWorks(issue.action.gap)
+			: undefined;
 	const retype = fixes?.retypes.get(issue.key);
 	const advice = issueAdviceOf(issue);
 	const canShow =
@@ -50,6 +58,13 @@ export const IssueRowBody = ({
 			) : (
 				<>
 					<p className="text-neutral-800">{issue.rule}</p>
+					{working && (
+						<p className="text-neutral-700">
+							{working.length > 0
+								? t("scheduling.issues.cover.working", { names: working })
+								: t("scheduling.issues.cover.nobodyWorks")}
+						</p>
+					)}
 					{advice && (
 						<p className="text-neutral-700">{issueAdviceLine(advice, t)}</p>
 					)}

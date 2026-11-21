@@ -4676,7 +4676,6 @@
 			"advice": {
 				"lead": "Qué hacer: {{advice}}",
 				"withNeighbouringDays": "{{advice}} También puedes cambiar los días vecinos, en el horario anterior o en el siguiente.",
-				"findCover": "Pulsa Buscar cobertura para ver quién puede hacerlo, o pregunta al motor por opciones.",
 				"staffByHand": "Da este turno a alguien que pueda trabajarlo ese día.",
 				"daysOff": "Cambia uno de los turnos de esta persona en ese periodo por un día libre.",
 				"requiredDays": "Cambia uno de los turnos de esta persona en esa semana por un día de descanso (o un día libre).",
@@ -4750,7 +4749,9 @@
 				"stillShortAfter": "Seguirá faltando: {{times}}",
 				"bothMustAgree": "El cuadrante está publicado, así que ambos deben aceptar.",
 				"bothAgreed": "Ambos aceptaron",
-				"bothAgreedHint": "Indica cómo aceptó cada persona."
+				"bothAgreedHint": "Indica cómo aceptó cada persona.",
+				"working": "Lo trabajan: {{names, list(type: conjunction)}}",
+				"nobodyWorks": "Nadie lo trabaja todavía."
 			}
 		},
 		"rosterMarkers": {
