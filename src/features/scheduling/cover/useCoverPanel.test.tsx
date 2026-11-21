@@ -491,6 +491,64 @@ describe("useCoverPanel", () => {
 			});
 		});
 
+		it("given_aPublishedRosterAndAnAbsentMember_when_aTwoPersonOptionIsReviewed_then_noRemarkIsFilledInAndApplyWaitsForOneWritten", async () => {
+			const { result } = await chooseOption(
+				stretchPairOption(),
+				{
+					[`POST ${COVER_OPTIONS}`]: answer(
+						coverOptionsFixture({
+							gap: { ...GAP, absentMembershipIds: ["m-4"] },
+						})
+					),
+				},
+				{ coverOffers: { offers: [], timeZone: "Asia/Singapore" } }
+			);
+			await waitFor(() => {
+				expect(result.current.review.preview).toBeDefined();
+			});
+
+			expect(result.current.review.remark).toBe("");
+			expect(result.current.review.applyBlocked).toBe(true);
+			act(() => {
+				result.current.review.setRemark("Both said yes in person.");
+			});
+			expect(result.current.review.applyBlocked).toBe(false);
+		});
+
+		it("given_aPublishedRoster_when_aOnePersonOptionHasNoDayToAskAbout_then_itFailsClosedAndWaitsForARemark", async () => {
+			const { result } = await chooseOption(
+				callInOption({
+					cells: [
+						{
+							membershipId: "m-9",
+							day: GAP.day,
+							kind: "WORK",
+							shiftId: GAP.shiftId,
+						},
+					],
+					people: [
+						{
+							membershipId: "m-9",
+							displayName: "Gone Person",
+							weekMinutes: null,
+						},
+					],
+				}),
+				{},
+				{ coverOffers: { offers: [], timeZone: "Asia/Singapore" } }
+			);
+			await waitFor(() => {
+				expect(result.current.review.preview).toBeDefined();
+			});
+
+			expect(result.current.offer?.consentKind).toBeUndefined();
+			expect(result.current.review).toMatchObject({
+				remarkRequired: true,
+				bothMustAgree: false,
+				applyBlocked: true,
+			});
+		});
+
 		it("given_aPublishedRoster_when_aTwoPersonOptionIsReviewed_then_noOfferAndApplyWaitsForARemark", async () => {
 			const { result } = await chooseOption(
 				stretchPairOption(),

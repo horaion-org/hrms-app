@@ -136,6 +136,12 @@ export type CoverPanel = {
 		 * is required.
 		 */
 		bothMustAgree: boolean;
+		/**
+		 * On a published roster, an engine option no offer can ask (two people,
+		 * or no member's day to ask about): Apply waits for a remark the manager
+		 * wrote; no remark is filled in for it.
+		 */
+		remarkRequired: boolean;
 		/** Apply was refused because the roster moved: Apply waits, and this finds the options again at the new revision. */
 		findOptionsAgain: () => void;
 		preview: RosterChangePreview | undefined;
@@ -271,10 +277,21 @@ export const useCoverPanel = ({
 	const memberName = (membershipId: string | null): string =>
 		assignments.find((row) => row.member?.membershipId === membershipId)?.member
 			?.displayName ?? t("scheduling.detail.formerMember");
+	// One person's engine option is offered to them; one that changes two people is offered to nobody.
+	const engineOffer =
+		repairOption && engineOfferTargetOf(repairOption, assignments);
+	// On a published roster an engine option no offer can ask (two people, or no member's day to ask about)
+	// fails closed: it applies only with a remark the manager wrote, saying how they agreed.
+	const remarkRequired =
+		coverOffers !== undefined &&
+		repairOption !== undefined &&
+		engineOffer === undefined;
 	const [absent] = options?.gap.absentMembershipIds ?? [];
 	const remark =
 		editedRemark ??
-		(options?.gap.absentMembershipIds.length === 1 && absent !== undefined
+		(!remarkRequired &&
+		options?.gap.absentMembershipIds.length === 1 &&
+		absent !== undefined
 			? t("scheduling.cover.remark", { name: memberName(absent) })
 			: "");
 
@@ -285,9 +302,6 @@ export const useCoverPanel = ({
 				row.member?.membershipId === selected.membershipId &&
 				row.day === gap.day
 		);
-	// One person's engine option is offered to them; one that changes two people is offered to nobody.
-	const engineOffer =
-		repairOption && engineOfferTargetOf(repairOption, assignments);
 	const personChoice =
 		candidateRow && selected && !repairOption
 			? { kind: "shift" as const, shiftId: gap.shiftId }
@@ -340,7 +354,7 @@ export const useCoverPanel = ({
 			? rosterChangeRefusal(apply.error)
 			: undefined;
 	const bothMustAgree =
-		coverOffers !== undefined &&
+		remarkRequired &&
 		repairOption !== undefined &&
 		repairOption.people.length > 1;
 
@@ -407,7 +421,7 @@ export const useCoverPanel = ({
 			applyBlocked:
 				!preview.data ||
 				!canApply(gate, ticked, remark) ||
-				(bothMustAgree && remark.trim() === "") ||
+				(remarkRequired && remark.trim() === "") ||
 				applyRefusal === "revision",
 			apply: (): void => {
 				if (!body || !preview.data) return;
@@ -438,6 +452,7 @@ export const useCoverPanel = ({
 			applyRefusal,
 			busy: apply.isPending,
 			bothMustAgree,
+			remarkRequired,
 			findOptionsAgain: (): void => {
 				setChosen(undefined);
 				setRepairChoice(undefined);
