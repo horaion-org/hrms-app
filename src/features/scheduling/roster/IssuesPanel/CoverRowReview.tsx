@@ -1,15 +1,25 @@
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { ErrorText } from "@/components/ui/ErrorText";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import {
+	spansText,
+	weekLine,
+} from "@/features/scheduling/cover/engineRepairWords";
 import type { CoverPanel } from "@/features/scheduling/cover/useCoverPanel";
 import { CoverOfferSent } from "@/features/scheduling/coverOffers/CoverOfferActions/CoverOfferSent";
 import { offerActionsOf } from "@/features/scheduling/coverOffers/coverOfferRules";
-import { previewTileGroups } from "@/features/scheduling/roster/changeTiles";
 import {
+	previewTileGroups,
+	type ChangeTileGroup,
+} from "@/features/scheduling/roster/changeTiles";
+import {
+	reviewPeopleOf,
 	weekHoursOf,
 	type OptionCard,
+	type ReviewPerson,
 } from "@/features/scheduling/roster/coverCards";
 import { CellPanelFooter } from "@/features/scheduling/RosterCellPanel/CellPanelFooter";
 import { RosterChangeReview } from "@/features/scheduling/rosterChanges/RosterChangeReview";
@@ -24,41 +34,54 @@ export type CoverRowReviewProps = {
 
 const key = "scheduling.issues.cover";
 
-/** What the change does to the person's week: hours before → after of the contract, with a bar; or the overtime an engine option adds. */
-const WeekLine = ({ card }: { card: OptionCard }): FunctionComponent => {
+/**
+ * One person's part of the change: their name, each day drawn, and their
+ * week before → after of the contract with a bar, the overtime past it named.
+ */
+const PersonBlock = ({
+	person,
+	group,
+}: {
+	person: ReviewPerson;
+	group: ChangeTileGroup | undefined;
+}): FunctionComponent => {
 	const { t } = useTranslation();
-	const { choice } = card;
-	if (choice.kind === "engine")
-		return card.weekLine ? (
-			<p className="text-neutral-800">{card.weekLine}</p>
-		) : null;
-	const week = weekHoursOf(choice.option);
-	const values = {
-		before: hoursFromMinutes(week.beforeMinutes),
-		after: hoursFromMinutes(week.afterMinutes),
-		contract: hoursFromMinutes(week.contractMinutes),
-		overtime: hoursFromMinutes(week.overtimeMinutes),
-	};
+	const week = person.weekMinutes && weekHoursOf(person.weekMinutes);
 	return (
 		<div className="flex flex-col gap-1">
-			<p className="font-medium text-neutral-900">
-				{t(week.overtimeMinutes > 0 ? `${key}.weekOvertime` : `${key}.week`, values)}
-			</p>
-			<ProgressBar
-				label={t(`${key}.weekBar`)}
-				tone={week.overtimeMinutes > 0 ? "warning" : "success"}
-				track="white"
-				value={week.percent}
-			/>
+			<p className="font-semibold text-neutral-900">{person.name}</p>
+			{group && <ChangeTilePairs groups={[{ ...group, name: "" }]} />}
+			{person.weekMinutes && week && (
+				<>
+					<p className="text-neutral-800">
+						{weekLine(person.weekMinutes, t)}
+						{week.overtimeMinutes > 0 &&
+							` · ${t("scheduling.cover.engine.cost.overtime", {
+								hours: hoursFromMinutes(week.overtimeMinutes),
+							})}`}
+					</p>
+					<ProgressBar
+						label={t(`${key}.weekBar`)}
+						tone={week.overtimeMinutes > 0 ? "warning" : "success"}
+						track="white"
+						value={week.percent}
+					/>
+				</>
+			)}
 		</div>
 	);
 };
 
 /**
- * A card's review inside its row: "What changes for <name>" with the change
- * drawn (as the preview works it out once it has), the person's week, then
- * the existing checks, remark and tick, and Back and Apply; on a published
- * roster the offer's actions in Apply's place, and the offer once it is out.
+ * A card's review inside its row (UX note 4): "What changes", then one block
+ * per person (their days drawn as the preview works them out once it has,
+ * their week), what is still short afterwards for an option that leaves
+ * some, the checks only when there are any, the remark behind "Add a remark"
+ * unless asked for, and Back and Apply. A roster that moved under the option
+ * disables Apply and offers "Find options again". On a published roster one
+ * person's change goes out through the offer's actions, and the offer shows
+ * once out; a two-person change applies once both agreed, with a remark.
+ * Focus moves to the review as it opens.
  */
 export const CoverRowReview = ({
 	card,
@@ -66,6 +89,10 @@ export const CoverRowReview = ({
 	onBack,
 }: CoverRowReviewProps): FunctionComponent => {
 	const { t } = useTranslation();
+	const region = useRef<HTMLDivElement>(null);
+	useEffect(() => {
+		region.current?.focus();
+	}, []);
 	const offerOut = offer && (offer.justSent ?? offer.openOffer);
 	if (offer && offerOut)
 		return (
@@ -81,22 +108,53 @@ export const CoverRowReview = ({
 	const groups = review.preview
 		? previewTileGroups(review.preview, review.names.member, t)
 		: card.groups;
+	const people = reviewPeopleOf(card.choice, review.names.member);
+	const stillShort =
+		card.choice.kind === "engine" ? card.choice.option.stillShort : [];
+	const offerActions = offerActionsOf(offer, card.people);
+	const title = t(`${key}.whatChanges`);
 	return (
-		<div className="flex flex-col gap-3 rounded-lg border border-ink-blue-500 bg-ink-blue-50 p-3">
+		<div
+			ref={region}
+			aria-label={title}
+			className="flex flex-col gap-3 rounded-lg border border-ink-blue-500 bg-ink-blue-50 p-3 focus-visible:outline-2 focus-visible:outline-ink-blue-500"
+			role="group"
+			tabIndex={-1}
+		>
 			<RosterChangeReview
+				remarkFolded
 				names={review.names}
 				notifiesMembers={offer !== undefined}
 				preview={review.preview}
 				previewRefusal={review.previewRefusal}
 				remark={review.remark}
+				remarkHint={
+					review.bothMustAgree ? t(`${key}.bothAgreedHint`) : undefined
+				}
+				remarkRequired={review.bothMustAgree}
+				showsEmptyChecks={false}
 				showsRulesNote={false}
 				ticked={review.ticked}
 				beforeAfter={{
-					title: t(`${key}.whatChanges`, { name: card.people }),
+					title,
 					content: (
 						<>
-							<ChangeTilePairs groups={groups} />
-							<WeekLine card={card} />
+							{people.map((person) => (
+								<PersonBlock
+									key={person.membershipId}
+									group={groups.find(
+										(group) => group.membershipId === person.membershipId
+									)}
+									person={person}
+								/>
+							))}
+							{stillShort.length > 0 && (
+								<p className="text-error-700">
+									{t(`${key}.stillShortAfter`, {
+										times: spansText(stillShort, t),
+									})}
+								</p>
+							)}
 						</>
 					),
 				}}
@@ -105,12 +163,22 @@ export const CoverRowReview = ({
 				onTickedChange={review.setTicked}
 			/>
 			{review.applyRefusal && (
-				<ErrorText>
-					{t(`scheduling.rosterEdit.error.${review.applyRefusal}`)}
-				</ErrorText>
+				<div className="flex flex-col items-start gap-1">
+					<ErrorText>
+						{t(`scheduling.rosterEdit.error.${review.applyRefusal}`)}
+					</ErrorText>
+					{review.applyRefusal === "revision" && (
+						<Button variant="textlink" onClick={review.findOptionsAgain}>
+							{t("scheduling.cover.engine.findAgain")}
+						</Button>
+					)}
+				</div>
+			)}
+			{review.bothMustAgree && (
+				<p className="text-neutral-800">{t(`${key}.bothMustAgree`)}</p>
 			)}
 			{/* The offer's actions take Back's place in the footer, so Back stands on its own there. */}
-			{offer && (
+			{offerActions && (
 				<Button className="self-start" variant="textlink" onClick={onBack}>
 					{t(`${key}.back`)}
 				</Button>
@@ -119,11 +187,13 @@ export const CoverRowReview = ({
 				applyDisabled={review.applyBlocked}
 				busy={review.busy}
 				cancelLabel={t(`${key}.back`)}
-				offerActions={offerActionsOf(offer, card.people)}
+				offerActions={offerActions}
 				applyLabel={t(
-					review.applyAnyway
-						? "scheduling.rosterEdit.applyAnyway"
-						: "scheduling.rosterEdit.apply"
+					review.bothMustAgree
+						? `${key}.bothAgreed`
+						: review.applyAnyway
+							? "scheduling.rosterEdit.applyAnyway"
+							: "scheduling.rosterEdit.apply"
 				)}
 				onApply={review.apply}
 				onCancel={onBack}

@@ -4739,16 +4739,18 @@
 			},
 			"cover": {
 				"review": "Revisar",
-				"whatChanges": "Qué cambia para {{name}}",
+				"whatChanges": "Qué cambia",
 				"back": "Volver",
-				"week": "Esta semana {{before}} → {{after}} h de {{contract}} h",
-				"weekOvertime": "Esta semana {{before}} → {{after}} h de {{contract}} h · {{overtime}} h extra",
 				"weekBar": "Horas de esta semana frente al contrato",
 				"whyNot": "Por qué no otros ({{count}})",
 				"becomes": "pasa a",
 				"offerSent": "Oferta enviada · respuesta antes de {{time}}",
 				"declined": "Rechazada",
-				"reviewFor": "Revisar el cambio de {{name}}"
+				"reviewFor": "Revisar el cambio de {{name}}",
+				"stillShortAfter": "Seguirá faltando: {{times}}",
+				"bothMustAgree": "El cuadrante está publicado, así que ambos deben aceptar.",
+				"bothAgreed": "Ambos aceptaron",
+				"bothAgreedHint": "Indica cómo aceptó cada persona."
 			}
 		},
 		"rosterMarkers": {

@@ -4939,16 +4939,18 @@
 			},
 			"cover": {
 				"review": "Review",
-				"whatChanges": "What changes for {{name}}",
+				"whatChanges": "What changes",
 				"back": "Back",
-				"week": "This week {{before}} → {{after}} h of {{contract}} h",
-				"weekOvertime": "This week {{before}} → {{after}} h of {{contract}} h · {{overtime}} h overtime",
 				"weekBar": "This week’s hours against the contract",
 				"whyNot": "Why not others ({{count}})",
 				"becomes": "becomes",
 				"offerSent": "Offer sent · answer by {{time}}",
 				"declined": "Declined",
-				"reviewFor": "Review {{name}}’s change"
+				"reviewFor": "Review {{name}}’s change",
+				"stillShortAfter": "Still short afterwards: {{times}}",
+				"bothMustAgree": "The roster is published, so both must agree.",
+				"bothAgreed": "They both agreed",
+				"bothAgreedHint": "Say how each person agreed."
 			}
 		},
 		"rosterMarkers": {

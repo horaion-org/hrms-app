@@ -15,6 +15,7 @@ import {
 	repairOptionsFixture,
 	stretchAfterOption,
 	stretchBeforeOption,
+	stretchPairOption,
 } from "@/features/scheduling/cover/engineRepairFixtures";
 import { coverOptionsFixture } from "@/features/scheduling/cover/fixtures";
 import {
@@ -135,9 +136,7 @@ describe("GapCover", () => {
 			})
 		);
 
-		expect(
-			screen.getByRole("heading", { name: "What changes for Aisha Rahman" })
-		).toBeVisible();
+		expect(screen.getByRole("group", { name: "What changes" })).toHaveFocus();
 		const apply = screen.getByRole("button", { name: "Apply change" });
 		await waitFor(() => {
 			expect(apply).toBeEnabled();
@@ -172,7 +171,7 @@ describe("GapCover", () => {
 			within(cards[0]!).getByRole("button", { name: /^Review/ })
 		);
 
-		expect(screen.getByText("This week 24 → 30 h of 44 h")).toBeVisible();
+		expect(screen.getByText("24 → 30 h of 44 h this week")).toBeVisible();
 		expect(screen.getByRole("progressbar")).toBeVisible();
 		await user.click(screen.getByRole("button", { name: "Back" }));
 		expect(screen.getAllByRole("button", { name: /^Review/ })).toHaveLength(2);
@@ -355,6 +354,119 @@ describe("GapCover", () => {
 		expect(
 			screen.getByRole("button", { name: "Review Ben Ong’s change" })
 		).toHaveFocus();
+	});
+});
+
+describe("GapCover: the review inside the row", () => {
+	/** The open row, the engine answering `option`, its Review pressed; gives the calls. */
+	const reviewOption = async (
+		option: RepairOption,
+		{
+			published = false,
+			apply = { status: 201, body: envelope(rosterChangeFixture()) },
+		}: { published?: boolean; apply?: { status: number; body?: unknown } } = {}
+	): Promise<ReturnType<typeof stubApi>> => {
+		const calls = stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${PREVIEW}`]: answer(
+				rosterChangePreviewFixture({ cells: [], checks: [] })
+			),
+			[`POST ${CHANGES}`]: apply,
+			[`POST ${REPAIR_OPTIONS}`]: answer(repairOptionsFixture([option])),
+		});
+		show(published);
+		await userEvent.click(
+			await screen.findByRole("button", { name: /^Review .*change$/ })
+		);
+		return calls;
+	};
+
+	it("given_onePersonsOption_when_reviewed_then_theirWeekAndNoChecksOrRemarkBoxUntilAsked", async () => {
+		await reviewOption(callInOption());
+
+		const review = screen.getByRole("group", { name: "What changes" });
+		expect(review).toHaveFocus();
+		expect(review).toHaveTextContent(
+			/Aisha Rahman.*30 → 36 h of 44 h this week/
+		);
+		await waitFor(() => {
+			expect(
+				screen.getByRole("button", { name: "Add a remark" })
+			).toBeVisible();
+		});
+		expect(screen.queryByRole("heading", { name: "Checks" })).toBeNull();
+		expect(screen.queryByText(/Still short afterwards/)).toBeNull();
+	});
+
+	it("given_aTwoPersonOption_when_reviewed_then_aBlockEachWithTheirWeekAndOvertime", async () => {
+		await reviewOption(stretchPairOption());
+
+		expect(
+			screen.getByRole("group", { name: "What changes" })
+		).toHaveTextContent(
+			/Ben Ong.*20 → 22 h of 22 h this week.*Chen Wei.*48 → 50 h of 44 h this week · \+6 h overtime/
+		);
+		expect(screen.getAllByRole("progressbar")).toHaveLength(2);
+	});
+
+	it("given_aPartFill_when_reviewed_then_whatIsStillShortAfterwards", async () => {
+		await reviewOption(stretchAfterOption());
+
+		expect(
+			screen.getByText("Still short afterwards: 09:00 – 11:00")
+		).toBeVisible();
+	});
+
+	it("given_theRosterMovedUnderTheOption_when_applied_then_applyIsDisabledWithFindOptionsAgain", async () => {
+		const user = userEvent.setup();
+		await reviewOption(callInOption(), {
+			apply: { status: 409, body: { errorCode: "ROSTER_REVISION_CONFLICT" } },
+		});
+		const apply = screen.getByRole("button", { name: "Apply change" });
+		await waitFor(() => {
+			expect(apply).toBeEnabled();
+		});
+
+		await user.click(apply);
+
+		expect(
+			await screen.findByRole("button", { name: "Find options again" })
+		).toBeVisible();
+		expect(screen.getByRole("button", { name: "Apply change" })).toBeDisabled();
+	});
+
+	it("given_aPublishedRoster_when_onePersonsOptionIsReviewed_then_theOffersActionsInApplysPlace", async () => {
+		await reviewOption(stretchAfterOption(), { published: true });
+
+		expect(
+			await screen.findByRole("button", { name: "Send offer" })
+		).toBeVisible();
+		expect(screen.queryByRole("button", { name: "Apply change" })).toBeNull();
+		expect(screen.getByRole("button", { name: "Back" })).toBeVisible();
+	});
+
+	it("given_aPublishedRoster_when_aTwoPersonOptionIsReviewed_then_theyBothAgreedWaitsForARemark", async () => {
+		const user = userEvent.setup();
+		const calls = await reviewOption(stretchPairOption(), { published: true });
+
+		expect(
+			screen.getByText("The roster is published, so both must agree.")
+		).toBeVisible();
+		expect(screen.queryByRole("button", { name: "Send offer" })).toBeNull();
+		const agreed = await screen.findByRole("button", {
+			name: "They both agreed",
+		});
+		expect(agreed).toBeDisabled();
+		expect(screen.getByText("Say how each person agreed.")).toBeVisible();
+		await user.type(screen.getByRole("textbox"), "Both said yes by phone.");
+		await user.click(agreed);
+
+		await waitFor(() => {
+			expect(calls.find((call) => call.path === CHANGES)?.body).toMatchObject({
+				remark: "Both said yes by phone.",
+				repairOptionKind: "STRETCH_PAIR",
+			});
+		});
 	});
 });
 

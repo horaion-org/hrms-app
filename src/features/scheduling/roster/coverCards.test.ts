@@ -19,6 +19,7 @@ import { coverOfferFixture } from "@/features/scheduling/coverOffers/fixtures";
 import {
 	fallbackCards,
 	optionCardList,
+	reviewPeopleOf,
 	weekHoursOf,
 	type OptionCardSources,
 } from "@/features/scheduling/roster/coverCards";
@@ -38,7 +39,7 @@ describe("weekHoursOf", () => {
 	])(
 		"reads the week %o as %s minutes over, %s percent full",
 		(week, overtime, percent) => {
-			const hours = weekHoursOf(coverOptionFixture({ weekMinutes: week }));
+			const hours = weekHoursOf(week);
 			expect(hours.overtimeMinutes).toBe(overtime);
 			expect(hours.percent).toBeCloseTo(percent);
 		}
@@ -269,5 +270,36 @@ describe("optionCardList", () => {
 			],
 		]);
 		expect(cards[0]?.weekLine).toBe("24 → 30 h of 44 h this week");
+	});
+});
+
+describe("reviewPeopleOf", () => {
+	it("gives each person an option changes, with their week, and the hours-based person with theirs", () => {
+		expect(
+			reviewPeopleOf({ kind: "engine", option: stretchPairOption() }, () => "")
+		).toEqual([
+			{
+				membershipId: "m-2",
+				name: "Ben Ong",
+				weekMinutes: { before: 1200, after: 1320, contract: 1320 },
+			},
+			{
+				membershipId: "m-3",
+				name: "Chen Wei",
+				weekMinutes: { before: 2880, after: 3000, contract: 2640 },
+			},
+		]);
+		expect(
+			reviewPeopleOf(
+				{ kind: "backend", option: coverOptionFixture() },
+				(membershipId) => NAMES[membershipId] ?? ""
+			)
+		).toEqual([
+			{
+				membershipId: "m-1",
+				name: "Aisha Rahman",
+				weekMinutes: { before: 1440, after: 1800, contract: 2640 },
+			},
+		]);
 	});
 });

@@ -36,17 +36,47 @@ export type WeekHours = {
 	percent: number;
 };
 
-/** The person's week if a backend option is applied, as its own figures say. */
-export const weekHoursOf = (option: CoverOption): WeekHours => {
-	const { before, after, contract } = option.weekMinutes;
-	return {
-		beforeMinutes: before,
-		afterMinutes: after,
-		contractMinutes: contract,
-		overtimeMinutes: Math.max(0, after - contract),
-		percent: contract > 0 ? Math.min(100, (after / contract) * 100) : 100,
-	};
+/** A person's week before and after a change, in minutes, against their contract. */
+export type WeekMinutes = { before: number; after: number; contract: number };
+
+/** A week as the review draws it: its minutes, the overtime past the contract, and how full it is. */
+export const weekHoursOf = ({
+	before,
+	after,
+	contract,
+}: WeekMinutes): WeekHours => ({
+	beforeMinutes: before,
+	afterMinutes: after,
+	contractMinutes: contract,
+	overtimeMinutes: Math.max(0, after - contract),
+	percent: contract > 0 ? Math.min(100, (after / contract) * 100) : 100,
+});
+
+/** One person a card's change is for, as the review shows them: their name and their week, when priced. */
+export type ReviewPerson = {
+	membershipId: string;
+	name: string;
+	weekMinutes: WeekMinutes | null;
 };
+
+/** The people a card's review shows a block for, in the order of its cells. */
+export const reviewPeopleOf = (
+	choice: OptionCardChoice,
+	memberName: (membershipId: string) => string
+): Array<ReviewPerson> =>
+	choice.kind === "engine"
+		? choice.option.people.map((person) => ({
+				membershipId: person.membershipId,
+				name: person.displayName ?? memberName(person.membershipId),
+				weekMinutes: person.weekMinutes,
+			}))
+		: [
+				{
+					membershipId: choice.option.membershipId,
+					name: memberName(choice.option.membershipId),
+					weekMinutes: choice.option.weekMinutes,
+				},
+			];
 
 /** Where an offer to the card's one person stands: none, sent and waiting, or declined. */
 export type CardOffer =
