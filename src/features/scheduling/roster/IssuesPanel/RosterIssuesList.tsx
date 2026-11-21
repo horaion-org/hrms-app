@@ -95,9 +95,9 @@ export const RosterIssuesList = ({
 			bodyOf={(row) => (
 				<IssueRowBody
 					cover={cover}
-					whoWorks={whoWorks}
 					fixes={fixes}
 					row={row}
+					whoWorks={whoWorks}
 					onShow={onShow}
 				/>
 			)}

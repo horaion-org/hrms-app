@@ -159,9 +159,9 @@ export const RosterChangeReview = ({
 				>
 					<Textarea
 						// Opened by "Add a remark": the box takes focus, as the decline reason does.
-						autoFocus={remarkOpened}
 						aria-describedby={remarkIds.hintId}
 						aria-required={needsRemark}
+						autoFocus={remarkOpened}
 						className="w-full"
 						id={remarkId}
 						maxLength={ROSTER_CHANGE_REMARK_MAX_LENGTH}

@@ -128,9 +128,6 @@ export const CoverRowReview = ({
 				preview={review.preview}
 				previewRefusal={review.previewRefusal}
 				remark={review.remark}
-				remarkHint={
-					review.bothMustAgree ? t(`${key}.bothAgreedHint`) : undefined
-				}
 				remarkRequired={review.bothMustAgree}
 				showsEmptyChecks={false}
 				showsRulesNote={false}
@@ -142,10 +139,10 @@ export const CoverRowReview = ({
 							{people.map((person) => (
 								<PersonBlock
 									key={person.membershipId}
+									person={person}
 									group={groups.find(
 										(group) => group.membershipId === person.membershipId
 									)}
-									person={person}
 								/>
 							))}
 							{stillShort.length > 0 && (
@@ -158,6 +155,9 @@ export const CoverRowReview = ({
 						</>
 					),
 				}}
+				remarkHint={
+					review.bothMustAgree ? t(`${key}.bothAgreedHint`) : undefined
+				}
 				onRemarkChange={review.setRemark}
 				onRetryPreview={review.retryPreview}
 				onTickedChange={review.setTicked}

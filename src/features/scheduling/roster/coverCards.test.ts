@@ -24,6 +24,7 @@ import {
 	type OptionCardSources,
 } from "@/features/scheduling/roster/coverCards";
 import { assignmentCell } from "@/features/scheduling/rosterChanges/cellText";
+import type { RosterCellValue } from "@/features/scheduling/schedules/api";
 import { scheduleAssignmentsFixture } from "@/features/scheduling/schedules/fixtures";
 
 const NAMES: Record<string, string> = {
@@ -54,7 +55,7 @@ describe("optionCardList", () => {
 	const sources = (
 		overrides: Partial<OptionCardSources> = {}
 	): OptionCardSources => ({
-		dayBefore: (cell) => {
+		dayBefore: (cell): RosterCellValue | undefined => {
 			const row = roster.find(
 				(candidate) =>
 					candidate.member?.membershipId === cell.membershipId &&

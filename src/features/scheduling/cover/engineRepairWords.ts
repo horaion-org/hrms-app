@@ -58,6 +58,12 @@ const spanText = (span: RepairSpan, t: TFunction): string =>
 		end: clockTime(span.end),
 	});
 
+/** Spans as clock times, joined: "09:00 – 11:00, 14:00 – 15:00". */
+export const spansText = (
+	spans: ReadonlyArray<RepairSpan>,
+	t: TFunction
+): string => spans.map((span) => spanText(span, t)).join(", ");
+
 /** What the words of an option read from the roster: a day as it stands now, and a day's weekday. */
 export type OptionWordSources = {
 	/** What a changed day holds on the roster now; undefined for a day the roster does not hold. */
@@ -204,12 +210,6 @@ export const whatItLeaves = (
 		};
 	return undefined;
 };
-
-/** Spans as clock times, joined: "09:00 – 11:00, 14:00 – 15:00". */
-export const spansText = (
-	spans: ReadonlyArray<RepairSpan>,
-	t: TFunction
-): string => spans.map((span) => spanText(span, t)).join(", ");
 
 /** A person's week before and after an option, in hours: "30 → 36 h of 44 h this week". */
 export const weekLine = (

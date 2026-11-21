@@ -89,10 +89,13 @@ describe("engine repair options client", () => {
 			await notAssignedOf(repairOptionsFixture([], NOT_ASSIGNED_FIXTURE))
 		).toEqual(NOT_ASSIGNED_FIXTURE);
 		expect(await notAssignedOf(repairOptionsFixture([], []))).toEqual([]);
-		const { notAssigned: _left, ...withoutNotAssigned } = repairOptionsFixture(
-			[]
-		);
-		expect(await notAssignedOf(withoutNotAssigned)).toBeNull();
+		// Left out of the JSON, as an older API sends it.
+		expect(
+			await notAssignedOf({
+				...repairOptionsFixture([]),
+				notAssigned: undefined,
+			})
+		).toBeNull();
 	});
 
 	it("reads a reason code the app has never seen as it is", async () => {

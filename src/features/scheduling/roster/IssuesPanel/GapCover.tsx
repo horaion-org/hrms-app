@@ -99,11 +99,11 @@ const useStatusLines = (
 		lines.push(
 			<Line
 				key="moved"
+				text={t(`${key}.panel.rosterMoved`)}
 				action={{
 					label: t(`${key}.panel.findAgain`),
 					onClick: panel.findAgain,
 				}}
-				text={t(`${key}.panel.rosterMoved`)}
 			/>
 		);
 	if (status === "notEditable")
@@ -340,8 +340,8 @@ const GapCoverBody = ({
 			{cards.length > 0 && (
 				<ExpandableList
 					collapsedCount={showAll ? cards.length : CARDS_BEFORE_FOLD}
-					items={cards}
 					itemClassName="flex flex-col gap-2"
+					items={cards}
 					keyOf={(card) => card.key}
 					listClassName="flex flex-col gap-2"
 					renderItem={(card) => (
