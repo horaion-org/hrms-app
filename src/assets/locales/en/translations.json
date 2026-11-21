@@ -5302,7 +5302,8 @@
 				},
 				"weekLine": "{{before}} → {{after}} h of {{contract}} h this week",
 				"stillShortToast_one": "Roster changed. {{shift}} is still {{count}} short {{times}}.",
-				"stillShortToast_other": "Roster changed. {{shift}} is still {{count}} short {{times}}."
+				"stillShortToast_other": "Roster changed. {{shift}} is still {{count}} short {{times}}.",
+				"peopleAnd": "{{items, list(type: conjunction)}}"
 			}
 		},
 		"reach": {
