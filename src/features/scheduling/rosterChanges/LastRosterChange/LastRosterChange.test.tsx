@@ -31,7 +31,8 @@ afterEach(() => {
 const show = (
 	applied?: RosterChange,
 	onAppliedDismissed = vi.fn(),
-	appliedStillShort?: string
+	appliedStillShort?: string,
+	onUndone = vi.fn()
 ): void => {
 	render(
 		<I18nextProvider i18n={authTestI18n}>
@@ -51,6 +52,7 @@ const show = (
 						runId: "r-1",
 					}}
 					onAppliedDismissed={onAppliedDismissed}
+					onUndone={onUndone}
 				/>
 			</QueryClientProvider>
 		</I18nextProvider>
@@ -91,6 +93,38 @@ describe("LastRosterChange", () => {
 			).toEqual({
 				expectedRevision: 2,
 			});
+		});
+	});
+
+	it("given_anUndo_when_itLands_then_thePageIsToldItsRevision", async () => {
+		stubApi({
+			[`GET ${CHANGES}/latest`]: {
+				status: 200,
+				body: envelope({ change: rosterChangeFixture() }),
+			},
+			[`POST ${CHANGES}/rc-1/undo/preview`]: {
+				status: 200,
+				body: envelope(
+					rosterChangePreviewFixture({ expectedRevision: 2, checks: [] })
+				),
+			},
+			[`POST ${CHANGES}/rc-1/undo`]: {
+				status: 201,
+				body: envelope(
+					rosterChangeFixture({ kind: "UNDO", toRevision: 3, undoable: false })
+				),
+			},
+		});
+		const onUndone = vi.fn();
+		show(undefined, vi.fn(), undefined, onUndone);
+		const user = userEvent.setup();
+
+		await user.click(await screen.findByRole("button", { name: "Undo" }));
+
+		await waitFor(() => {
+			expect(onUndone).toHaveBeenCalledWith(
+				expect.objectContaining({ kind: "UNDO", toRevision: 3 })
+			);
 		});
 	});
 

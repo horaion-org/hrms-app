@@ -1049,7 +1049,7 @@ describe("GeneratedRoster: one place for cover", () => {
 		).toHaveLength(0);
 	});
 
-	it("given_anOptionThatFillsTheGapApplied_when_itLands_then_theRosterIsCheckedAtTheNewRevisionAndTheRowIsTheChecksOwn", async () => {
+	it("given_anOptionThatFillsTheGapApplied_when_itLandsThenIsUndone_then_theRosterIsCheckedAtEachNewRevision", async () => {
 		configureApiClient({
 			accessToken: () => Promise.resolve("test-pass"),
 			renew: () => Promise.resolve({ kind: "expired" }),
@@ -1067,6 +1067,23 @@ describe("GeneratedRoster: one place for cover", () => {
 			[`POST ${SCHEDULE_PATH}/roster-changes`]: {
 				status: 201,
 				body: envelope(rosterChangeFixture({ fromRevision: 1, toRevision: 2 })),
+			},
+			[`POST ${SCHEDULE_PATH}/roster-changes/rc-1/undo/preview`]: {
+				status: 200,
+				body: envelope(
+					rosterChangePreviewFixture({ expectedRevision: 2, checks: [] })
+				),
+			},
+			[`POST ${SCHEDULE_PATH}/roster-changes/rc-1/undo`]: {
+				status: 201,
+				body: envelope(
+					rosterChangeFixture({
+						kind: "UNDO",
+						fromRevision: 2,
+						toRevision: 3,
+						undoable: false,
+					})
+				),
 			},
 		});
 		const askAt = vi.fn();
@@ -1125,6 +1142,12 @@ describe("GeneratedRoster: one place for cover", () => {
 		});
 		await waitFor(() => {
 			expect(screen.getByRole("heading", { name: "Issues" })).toHaveFocus();
+		});
+
+		// Undo from the toast is a change too: the roster is checked again at its revision.
+		await user.click(screen.getByRole("button", { name: "Undo" }));
+		await waitFor(() => {
+			expect(askAt).toHaveBeenCalledWith(3);
 		});
 	});
 

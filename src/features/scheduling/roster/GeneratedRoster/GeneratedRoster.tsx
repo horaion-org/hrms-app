@@ -297,6 +297,7 @@ export const GeneratedRoster = ({
 			hours: hours === undefined ? undefined : numbers.format(hours),
 		});
 	};
+	// An undo is a change too: checked again once the roster shows it, as after Apply.
 	const latestChange = editing && (
 		<LastRosterChange
 			applied={applied?.change}
@@ -305,6 +306,7 @@ export const GeneratedRoster = ({
 			revision={editing.revision}
 			showsLatest={openList === "changes"}
 			target={editing.target}
+			onUndone={(undone) => validation?.askAt(undone.toRevision)}
 			onAppliedDismissed={() => {
 				setApplied(undefined);
 			}}

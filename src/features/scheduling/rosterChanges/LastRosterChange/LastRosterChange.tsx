@@ -36,6 +36,8 @@ export type LastRosterChangeProps = {
 	appliedStillShort?: string;
 	/** The toast went away, by itself or after Undo. */
 	onAppliedDismissed: () => void;
+	/** An undo landed, at the revision the change it made gives; the page checks the roster there, as after any change. */
+	onUndone?: (change: RosterChange) => void;
 	/** The roster is published: an undo tells the people whose days it changes back, so it always asks first. */
 	notifiesMembers?: boolean;
 	/** Shows the "Last change … Undo" line; the roster shows it only in its Changed panel. The toast always shows. */
@@ -63,6 +65,7 @@ export const LastRosterChange = ({
 	applied,
 	appliedStillShort,
 	onAppliedDismissed,
+	onUndone,
 	notifiesMembers = false,
 	showsLatest = true,
 	className,
@@ -88,9 +91,10 @@ export const LastRosterChange = ({
 		undo.mutate(
 			{ changeId: change.changeId, body },
 			{
-				onSuccess: () => {
+				onSuccess: (undone) => {
 					setAsking(undefined);
 					onAppliedDismissed();
+					onUndone?.(undone);
 				},
 			}
 		);
