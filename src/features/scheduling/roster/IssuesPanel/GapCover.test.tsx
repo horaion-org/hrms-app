@@ -92,7 +92,10 @@ describe("GapCover", () => {
 			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
 			[`POST ${REPAIR_OPTIONS}`]: answer(
 				repairOptionsFixture(
-					[feasibleRepair([callInMove()]), feasibleRepair([stretchMove()])],
+					[
+						feasibleRepair([callInMove()]),
+						feasibleRepair([stretchMove()], { extraMinutes: null }),
+					],
 					NOT_ASSIGNED_FIXTURE
 				)
 			),

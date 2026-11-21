@@ -8,10 +8,18 @@ import {
 } from "@/features/scheduling/cover/engineRepairApi";
 import {
 	callInMove,
+	callInOption,
+	daySwapOption,
 	feasibleRepair,
+	moveOption,
 	NOT_ASSIGNED_FIXTURE,
+	oneOfTwoOption,
+	otherTwoPeopleOption,
 	repairOptionsFixture,
+	restDayCallInOption,
+	stretchAfterOption,
 	stretchMove,
+	stretchPairOption,
 } from "@/features/scheduling/cover/engineRepairFixtures";
 import { scheduleKey } from "@/features/scheduling/schedules/api";
 
@@ -102,9 +110,10 @@ describe("engine repair options client", () => {
 			await notAssignedOf(repairOptionsFixture([], NOT_ASSIGNED_FIXTURE))
 		).toEqual(NOT_ASSIGNED_FIXTURE);
 		expect(await notAssignedOf(repairOptionsFixture([], []))).toEqual([]);
-		expect(
-			await notAssignedOf({ conflictId: "conflict-1", options: [] })
-		).toBeNull();
+		const { notAssigned: _left, ...withoutNotAssigned } = repairOptionsFixture(
+			[]
+		);
+		expect(await notAssignedOf(withoutNotAssigned)).toBeNull();
 	});
 
 	it("reads a reason code the app has never seen as it is", async () => {
@@ -152,17 +161,49 @@ describe("engine repair options client", () => {
 		]);
 	});
 
-	it("reads an option's kind, any kind a newer engine names, and its extra minutes; neither from the older repair", async () => {
+	it("reads the answer's revision, search and what is short now, and each option's kind, fill, cost, cells and people", async () => {
+		const options = [
+			callInOption(),
+			restDayCallInOption(),
+			moveOption(),
+			stretchAfterOption(),
+			stretchPairOption(),
+			daySwapOption(),
+			otherTwoPeopleOption(),
+			oneOfTwoOption(),
+		];
+		stubApi({
+			[`POST ${REPAIR_OPTIONS}`]: {
+				status: 200,
+				body: envelope(
+					repairOptionsFixture(options, null, {
+						revision: 4,
+						search: { complete: false, optionsFound: 12 },
+					})
+				),
+			},
+		});
+
+		const parsed = await fetchRepairOptions(TARGET, {
+			...GAP,
+			expectedRevision: 4,
+		});
+
+		expect(parsed.revision).toBe(4);
+		expect(parsed.search).toEqual({ complete: false, optionsFound: 12 });
+		expect(parsed.shortNow).toEqual([
+			{ start: "2026-10-17T09:00:00", end: "2026-10-17T15:00:00", shortBy: 1 },
+		]);
+		expect(parsed.options).toEqual(options);
+	});
+
+	it("reads an option kind or fill this app does not know as OTHER and as not said", async () => {
 		stubApi({
 			[`POST ${REPAIR_OPTIONS}`]: {
 				status: 200,
 				body: envelope(
 					repairOptionsFixture([
-						feasibleRepair([callInMove()], {
-							kind: "swap_shifts",
-							extraMinutes: { overtime: 90, restDayWork: 0, timeOffEarned: 0 },
-						}),
-						feasibleRepair(),
+						{ ...callInOption(), kind: "SPLIT_SHIFT" as never, fills: "HALF" as never },
 					])
 				),
 			},
@@ -173,10 +214,58 @@ describe("engine repair options client", () => {
 			expectedRevision: 1,
 		});
 
-		expect(parsed.options[0]?.kind).toBe("swap_shifts");
-		expect(parsed.options[0]?.extraMinutes?.overtime).toBe(90);
-		expect(parsed.options[1]?.kind).toBeUndefined();
-		expect(parsed.options[1]?.extraMinutes).toBeUndefined();
+		expect(parsed.options[0]?.kind).toBe("OTHER");
+		expect(parsed.options[0]?.fills).toBeNull();
+	});
+
+	it("reads a cell's nulls as left out, so it goes back as the app's own cells do", async () => {
+		stubApi({
+			[`POST ${REPAIR_OPTIONS}`]: {
+				status: 200,
+				body: envelope(
+					repairOptionsFixture([
+						{
+							...daySwapOption(),
+							cells: [
+								{
+									membershipId: "m-1",
+									day: "2026-10-17",
+									kind: "WORK",
+									shiftId: "front-desk-am-copy",
+									dayType: null,
+									stretchBeforeMinutes: null,
+									stretchAfterMinutes: null,
+								},
+								{
+									membershipId: "m-1",
+									day: "2026-10-16",
+									kind: "OFF",
+									shiftId: null,
+									dayType: "OFF",
+									stretchBeforeMinutes: null,
+									stretchAfterMinutes: null,
+								},
+							] as never,
+						},
+					])
+				),
+			},
+		});
+
+		const parsed = await fetchRepairOptions(TARGET, {
+			...GAP,
+			expectedRevision: 1,
+		});
+
+		expect(JSON.parse(JSON.stringify(parsed.options[0]?.cells))).toEqual([
+			{
+				membershipId: "m-1",
+				day: "2026-10-17",
+				kind: "WORK",
+				shiftId: "front-desk-am-copy",
+			},
+			{ membershipId: "m-1", day: "2026-10-16", kind: "OFF", dayType: "OFF" },
+		]);
 	});
 
 	it("reads a stretch move's side, and a side it does not know as none", async () => {

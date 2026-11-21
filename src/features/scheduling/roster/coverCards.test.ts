@@ -35,7 +35,7 @@ const cardsOf = (
 		engineOptions: [
 			infeasibleRepair(),
 			feasibleRepair([callInMove()]),
-			feasibleRepair([stretchMove()]),
+			feasibleRepair([stretchMove()], { extraMinutes: null }),
 			partStretchRepair(),
 		],
 		backend: coverWithEngine(coverOptionsFixture(), undefined, () => undefined),
@@ -109,11 +109,18 @@ describe("weekHoursOf and engineOvertimeMinutes", () => {
 	});
 
 	it("counts an option's own overtime, else its stretches", () => {
-		expect(engineOvertimeMinutes(feasibleRepair([stretchMove()]))).toBe(120);
+		expect(
+			engineOvertimeMinutes(feasibleRepair([stretchMove()], { extraMinutes: null }))
+		).toBe(120);
 		expect(
 			engineOvertimeMinutes(
 				feasibleRepair([stretchMove()], {
-					extraMinutes: { overtime: 90, restDayWork: 0, timeOffEarned: 0 },
+					extraMinutes: {
+						overtime: 90,
+						restDayWork: 0,
+						timeOffEarned: 0,
+						pastContract: 0,
+					},
 				})
 			)
 		).toBe(90);

@@ -9,6 +9,7 @@ import en from "@/assets/locales/en/translations.json";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, stubApi } from "@/common/testing/stubApi";
+import { repairOptionsFixture } from "@/features/scheduling/cover/engineRepairFixtures";
 import { coverOfferFixture } from "@/features/scheduling/coverOffers/fixtures";
 import {
 	GeneratedRoster,
@@ -972,7 +973,7 @@ describe("GeneratedRoster: one place for cover", () => {
 		const calls = stubApi({
 			[`POST ${SCHEDULE_PATH}/repair-options`]: {
 				status: 200,
-				body: envelope({ conflictId: "c", options: [], notAssigned: [] }),
+				body: envelope(repairOptionsFixture([], [])),
 			},
 		});
 		render(

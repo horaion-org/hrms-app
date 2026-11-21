@@ -43,6 +43,38 @@ export type RosterChangeCell =
 	  }
 	| { membershipId: string; day: string; kind: "OFF"; dayType?: string };
 
+/**
+ * One day to change as the API hands it out ready to apply (a repair option's
+ * cells): read as `RosterChangeCell`, its nulls as left out, so it goes back
+ * to the preview and the apply exactly as it came.
+ */
+export const rosterChangeCellSchema: z.ZodType<RosterChangeCell> =
+	z.discriminatedUnion("kind", [
+		z.object({
+			membershipId: z.string(),
+			day: z.string(),
+			kind: z.literal("WORK"),
+			shiftId: z.string(),
+			stretchBeforeMinutes: z
+				.number()
+				.nullish()
+				.transform((minutes) => minutes ?? undefined),
+			stretchAfterMinutes: z
+				.number()
+				.nullish()
+				.transform((minutes) => minutes ?? undefined),
+		}),
+		z.object({
+			membershipId: z.string(),
+			day: z.string(),
+			kind: z.literal("OFF"),
+			dayType: z
+				.string()
+				.nullish()
+				.transform((dayType) => dayType ?? undefined),
+		}),
+	]);
+
 /** What a preview and an apply send. */
 export type RosterChangeBody = {
 	/** The roster revision the change was chosen at. */
