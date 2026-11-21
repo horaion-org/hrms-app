@@ -193,6 +193,40 @@ describe("useEngineRepair", () => {
 		});
 	});
 
+	it("says when Try again brings an answer back, and not when it is refused again", async () => {
+		stubApi({
+			[`POST ${REPAIR_OPTIONS}`]: [
+				{ status: 504, body: { errorCode: "REPAIR_ENGINE_TOO_SLOW" } },
+				{ status: 504, body: { errorCode: "REPAIR_ENGINE_TOO_SLOW" } },
+				{ status: 200, body: envelope(repairOptionsFixture()) },
+			],
+		});
+		const onAnsweredAgain = vi.fn();
+		const { result } = renderHook(
+			() => useEngineRepair(TARGET, GAP, 1, false, onAnsweredAgain),
+			{ wrapper }
+		);
+		await waitFor(() => {
+			expect(result.current.status).toBe("refused");
+		});
+
+		act(() => {
+			result.current.askAgain();
+		});
+		await waitFor(() => {
+			expect(result.current).toMatchObject({ retrying: false });
+		});
+		expect(onAnsweredAgain).not.toHaveBeenCalled();
+		act(() => {
+			result.current.askAgain();
+		});
+
+		await waitFor(() => {
+			expect(result.current.status).toBe("ready");
+		});
+		expect(onAnsweredAgain).toHaveBeenCalledOnce();
+	});
+
 	it("keeps an answer on screen while it is asked again, and says a refused retry above it", async () => {
 		let reply: (response: Response) => void = () => {};
 		const replies = [

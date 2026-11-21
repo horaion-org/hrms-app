@@ -42,14 +42,16 @@ export type EngineRepairState =
  * asked. `askAgain` sends again: an answer already in stays on screen while
  * it asks, and a refusal of the second ask is said above it; before any
  * answer, the last refusal is kept, marked `retrying`, because a query with
- * no answer yet forgets its error as it asks again. The options come in the
- * engine's order.
+ * no answer yet forgets its error as it asks again; `onAnsweredAgain` hears
+ * when an ask again is answered. The options come in the engine's order.
  */
 export const useEngineRepair = (
 	target: RosterChangeTarget,
 	gap: CoverGapRequest,
 	revision: number,
-	landing: boolean
+	landing: boolean,
+	/** Asked again, and this time answered. */
+	onAnsweredAgain?: () => void
 ): EngineRepairState & { askAgain: () => void } => {
 	// Not asked while a change lands: the revision it would be asked at is passing.
 	const query = useQuery(repairOptionsQuery(target, gap, revision, !landing));
@@ -60,7 +62,9 @@ export const useEngineRepair = (
 	const askAgain = (): void => {
 		// An ask already in flight is the answer to wait for, never a second solve.
 		if (query.isFetching) return;
-		void query.refetch();
+		void query.refetch().then((result) => {
+			if (result.isSuccess) onAnsweredAgain?.();
+		});
 	};
 
 	if (query.data !== undefined)

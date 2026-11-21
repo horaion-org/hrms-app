@@ -51,6 +51,10 @@ export const issueCoverOf = ({
 		// A filled gap keeps no row of its own: the list is the new check's; one still short stays open.
 		if (filled && view.cover) onViewChange({ ...view, cover: undefined });
 	},
+	// One Try again brings both back: the row's options, and a rules check that had failed beside them.
+	onOptionsBack: (): void => {
+		if (validation?.status === "refused") validation.ask();
+	},
 	// A recorded yes applies one change too.
 	onCoverRecorded: (): void => {
 		validation?.askAt(editing.revision + 1);

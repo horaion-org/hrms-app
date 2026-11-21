@@ -90,6 +90,8 @@ export type CoverPanelInput = {
 	 * it keeps (and, without one yet, from a count that misses stretches).
 	 */
 	listWaitsForCheck?: boolean;
+	/** Try again on the row brought the engine's options back. */
+	onOptionsBack?: () => void;
 };
 
 /** What a landed cover change leaves: whether the gap is filled, and the toast's words when hours stay short. */
@@ -192,6 +194,7 @@ export const useCoverPanel = ({
 	onApplied,
 	onCoverRecorded,
 	listWaitsForCheck = false,
+	onOptionsBack,
 }: CoverPanelInput): CoverPanel => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
@@ -224,7 +227,13 @@ export const useCoverPanel = ({
 		apply.isPending ||
 		(landedRevision !== undefined && landedRevision > revision);
 	const asksNothing = landing || filledByApply;
-	const engineRepair = useEngineRepair(target, gap, revision, asksNothing);
+	const engineRepair = useEngineRepair(
+		target,
+		gap,
+		revision,
+		asksNothing,
+		onOptionsBack
+	);
 	const list = useQuery({
 		...coverOptionsQuery(target, gap, revision),
 		enabled: !asksNothing && !listWaitsForCheck,
