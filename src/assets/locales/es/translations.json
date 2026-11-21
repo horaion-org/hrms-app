@@ -5101,7 +5101,17 @@
 				"weekLine": "{{before}} → {{after}} h de {{contract}} h esta semana",
 				"stillShortToast_one": "Cuadrante cambiado. A {{shift}} aún le falta {{count}} {{times}}.",
 				"stillShortToast_other": "Cuadrante cambiado. A {{shift}} aún le faltan {{count}} {{times}}.",
-				"peopleAnd": "{{items, list(type: conjunction)}}"
+				"peopleAnd": "{{items, list(type: conjunction)}}",
+				"stillWorking": "Sigue trabajando. Puede tardar hasta medio minuto.",
+				"nobodyCan": "Nadie puede cubrirlo dentro de las reglas.",
+				"noFullFill": "Nada cubre el turno completo.",
+				"incomplete": "Se acabó el tiempo. Estas son las opciones encontradas hasta ahora.",
+				"optionsFound_one": "{{count}} opción encontrada",
+				"optionsFound_other": "{{count}} opciones encontradas",
+				"findAgain": "Buscar opciones de nuevo",
+				"fallbackCaption": "Libres según sus horas, sin comprobar con las reglas",
+				"partCaption": "Cubrir una parte",
+				"bestOf": "Las {{shown}} mejores de {{found}}."
 			}
 		},
 		"reach": {

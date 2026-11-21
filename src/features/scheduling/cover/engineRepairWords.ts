@@ -45,12 +45,6 @@ export type RepairRefusal =
 	| "tooSlow"
 	| "failed";
 
-/** The refusals a second ask may mend: the engine failed, or took too long this time. */
-export const RETRYABLE_REPAIR_REFUSALS: ReadonlyArray<RepairRefusal> = [
-	"tooSlow",
-	"failed",
-];
-
 /** The API's refusal codes, by what the section says. */
 const REFUSALS: Record<string, RepairRefusal> = {
 	REPAIR_GAP_NOT_SEEN_BY_ENGINE: "notSeenByEngine",

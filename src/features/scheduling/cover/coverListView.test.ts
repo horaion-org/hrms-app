@@ -1,11 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
 	coverListView,
-	refusalLineKey,
 	showsBackendList,
 	type CoverListView,
 } from "@/features/scheduling/cover/coverListView";
-import type { RepairRefusal } from "@/features/scheduling/cover/engineRepairWords";
 import type { EngineRepairState } from "@/features/scheduling/cover/useEngineRepair";
 import type { CoverPanelStatus } from "@/features/scheduling/cover/useCoverPanel";
 
@@ -35,18 +33,5 @@ describe("showsBackendList", () => {
 		["backendFallback", true],
 	])("for %s is %s", (view, shown) => {
 		expect(showsBackendList(view)).toBe(shown);
-	});
-});
-
-describe("refusalLineKey", () => {
-	it.each<[RepairRefusal, string]>([
-		["notConnected", "scheduling.cover.engine.unreachable"],
-		["tooSlow", "scheduling.cover.engine.unreachable"],
-		["failed", "scheduling.cover.engine.unreachable"],
-		["notSeenByEngine", "scheduling.cover.engine.refusal.notSeenByEngine"],
-		["expired", "scheduling.cover.engine.refusal.expired"],
-		["rosterMoved", "scheduling.cover.engine.refusal.rosterMoved"],
-	])("words %s with %s", (refusal, key) => {
-		expect(refusalLineKey(refusal)).toBe(key);
 	});
 });

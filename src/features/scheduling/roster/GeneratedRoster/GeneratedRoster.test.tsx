@@ -1021,7 +1021,7 @@ describe("GeneratedRoster: one place for cover", () => {
 		const open = within(panel).getByRole("button", { expanded: true });
 		expect(open).toHaveTextContent(/Sat, Oct 17/);
 		expect(
-			await within(panel).findByText("The engine found no way to fill this.")
+			await within(panel).findByText("Nobody can cover this within the rules.")
 		).toBeVisible();
 		expect(
 			calls.filter((call) => call.path.endsWith("/repair-options"))

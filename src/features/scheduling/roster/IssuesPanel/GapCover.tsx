@@ -1,28 +1,35 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { formatDay } from "@/common/formatDay";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
+import { ExpandableList } from "@/components/ui/ExpandableList";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
-import { refusalLineKey } from "@/features/scheduling/cover/coverListView";
-import { RETRYABLE_REPAIR_REFUSALS } from "@/features/scheduling/cover/engineRepairWords";
+import type { CoverShift } from "@/features/scheduling/cover/coverOptionWords";
+import { REFUSAL_ACTIONS } from "@/features/scheduling/cover/engineRepairWords";
 import { NotAssignedList } from "@/features/scheduling/cover/NotAssignedList";
+import { whyNotWithoutCards } from "@/features/scheduling/cover/notAssignedWords";
 import {
 	useCoverPanel,
 	type CoverPanel,
 	type CoverPanelInput,
 } from "@/features/scheduling/cover/useCoverPanel";
 import { useRepairWarmUp } from "@/features/scheduling/cover/useRepairWarmUp";
-import type { CoverShift } from "@/features/scheduling/cover/coverOptionWords";
+import {
+	STILL_WORKING_AFTER_MILLISECONDS,
+	useWaitedLong,
+} from "@/features/scheduling/cover/useWaitedLong";
 import {
 	changeTileGroups,
 	type TileShift,
 } from "@/features/scheduling/roster/changeTiles";
 import {
+	CARDS_BEFORE_FOLD,
 	fallbackCards,
 	optionCardList,
 	type OptionCard,
+	type OptionCardList,
 	type OptionCardSources,
 } from "@/features/scheduling/roster/coverCards";
 import { assignmentCell } from "@/features/scheduling/rosterChanges/cellText";
@@ -39,6 +46,7 @@ export type GapCoverProps = {
 };
 
 const key = "scheduling.cover";
+const engineKey = "scheduling.cover.engine";
 
 /** A plain line, and its one action when it has one. */
 const Line = ({
@@ -50,7 +58,10 @@ const Line = ({
 	action?: { label: string; onClick: () => void };
 	alert?: boolean;
 }): FunctionComponent => (
-	<div className="flex flex-col items-start gap-1" role={alert ? "alert" : undefined}>
+	<div
+		className="flex flex-col items-start gap-1"
+		role={alert ? "alert" : undefined}
+	>
 		<p className="text-neutral-800">{text}</p>
 		{action && (
 			<Button variant="textlink" onClick={action.onClick}>
@@ -60,53 +71,109 @@ const Line = ({
 	</div>
 );
 
-/** The lines above the cards: the gap's own state, the engine at work or refusing, the backend's list state. */
+/**
+ * The lines above the cards (UX note 6), in one polite live region: the
+ * gap's own state; the engine at work, and still at work after a while; what
+ * its answer lacks (nothing at all, nothing that covers the whole shift, a
+ * search cut short); a refusal with its one action, over the hours-based
+ * people; the hours-based list's own state.
+ */
 const useStatusLines = (
 	panel: CoverPanel,
+	list: OptionCardList,
 	shiftDay: { shift: string; day: string }
 ): ReactNode => {
 	const { t } = useTranslation();
 	const { status, view, engineRepair } = panel;
+	const engineWorking =
+		engineRepair.status === "loading" ||
+		(engineRepair.status === "refused" && engineRepair.retrying);
+	const waitedLong = useWaitedLong(
+		engineWorking,
+		STILL_WORKING_AFTER_MILLISECONDS
+	);
 	const tryAgain = t("scheduling.rosterEdit.tryAgain");
 	const lines: Array<ReactNode> = [];
 	if (status === "rosterMoved")
 		lines.push(
 			<Line
 				key="moved"
-				action={{ label: t(`${key}.panel.findAgain`), onClick: panel.findAgain }}
+				action={{
+					label: t(`${key}.panel.findAgain`),
+					onClick: panel.findAgain,
+				}}
 				text={t(`${key}.panel.rosterMoved`)}
 			/>
 		);
 	if (status === "notEditable")
 		lines.push(
-			<Line key="locked" alert text={t("scheduling.rosterEdit.error.notEditable")} />
+			<Line
+				key="locked"
+				alert
+				text={t("scheduling.rosterEdit.error.notEditable")}
+			/>
 		);
 	if (status === "closed")
-		lines.push(<Line key="closed" text={t(`${key}.panel.covered`, shiftDay)} />);
+		lines.push(
+			<Line key="closed" text={t(`${key}.panel.covered`, shiftDay)} />
+		);
 	if (view === "gapStatus") return lines;
-	if (engineRepair.status === "loading" && view !== "backendFallback")
-		lines.push(<Line key="working" text={t(`${key}.engine.loading`)} />);
-	if (engineRepair.status === "refused" && view === "backendFallback")
+	if (engineWorking)
+		lines.push(<Line key="working" text={t(`${engineKey}.loading`)} />);
+	if (waitedLong)
+		lines.push(
+			<Line key="stillWorking" text={t(`${engineKey}.stillWorking`)} />
+		);
+	if (engineRepair.status === "ready") {
+		const { options, search } = engineRepair;
+		if (options.length === 0)
+			lines.push(<Line key="nobody" text={t(`${engineKey}.nobodyCan`)} />);
+		else if (list.noFullFill)
+			lines.push(<Line key="noFullFill" text={t(`${engineKey}.noFullFill`)} />);
+		if (search && !search.complete)
+			lines.push(
+				<Line
+					key="incomplete"
+					action={{ label: tryAgain, onClick: engineRepair.askAgain }}
+					text={t(`${engineKey}.incomplete`)}
+				/>
+			);
+		if (options.length > 0)
+			lines.push(
+				<span key="found" className="sr-only">
+					{t(`${engineKey}.optionsFound`, { count: options.length })}
+				</span>
+			);
+	}
+	if (engineRepair.status === "refused") {
+		const action = engineRepair.retrying
+			? undefined
+			: REFUSAL_ACTIONS[engineRepair.refusal];
 		lines.push(
 			<Line
 				key="refused"
 				alert
-				text={t(refusalLineKey(engineRepair.refusal))}
+				text={t(`${engineKey}.refusal.${engineRepair.refusal}`)}
 				action={
-					RETRYABLE_REPAIR_REFUSALS.includes(engineRepair.refusal)
+					action === "tryAgain"
 						? { label: tryAgain, onClick: engineRepair.askAgain }
-						: undefined
+						: action === "findAgain"
+							? {
+									label: t(`${engineKey}.findAgain`),
+									onClick: panel.review.findOptionsAgain,
+								}
+							: undefined
 				}
 			/>
 		);
-	if (view === "engine") {
-		const noneFeasible =
-			engineRepair.status === "ready" &&
-			!engineRepair.options.some((option) => option.feasible);
-		if (noneFeasible)
-			lines.push(<Line key="none" text={t(`${key}.engine.none`)} />);
-		return lines;
 	}
+	if (view !== "backendFallback") return lines;
+	if (status === "options")
+		lines.push(
+			<p key="fallback" className="text-xs font-semibold text-neutral-700">
+				{t(`${engineKey}.fallbackCaption`)}
+			</p>
+		);
 	if (status === "loading")
 		lines.push(<Line key="loading" text={t(`${key}.panel.loading`)} />);
 	if (status === "failed")
@@ -128,22 +195,38 @@ const GapCoverBody = ({
 	gap,
 	cover,
 	dayRow,
-}: GapCoverProps & { dayRow: CoverPanelInput["dayRow"] }): FunctionComponent => {
+}: GapCoverProps & {
+	dayRow: CoverPanelInput["dayRow"];
+}): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
 	const panel = useCoverPanel({ ...cover, gap, dayRow });
 	// Opening a gap warms the engine's worker, so its first options come fast.
 	useRepairWarmUp(cover.target, cover.revision, true);
 	const [reviewKey, setReviewKey] = useState<string>();
+	// Once a card past the fold was reviewed, the list stays open, so Back returns to it.
+	const [showAll, setShowAll] = useState(false);
+	const reviewButtons = useRef(new Map<string, HTMLButtonElement>());
+	const focusAfterBack = useRef<string>(undefined);
+	// Back returns focus to the Review of the card it came from, once the list is drawn again.
+	useEffect(() => {
+		const cardKey = focusAfterBack.current;
+		if (cardKey === undefined || reviewKey !== undefined) return;
+		focusAfterBack.current = undefined;
+		reviewButtons.current.get(cardKey)?.focus();
+	});
+
 	// The roster's own days name a shift when the frozen shifts can't be read.
 	const shiftOf = (shiftId: string): (TileShift & CoverShift) | undefined =>
 		cover.shifts.find((shift) => shift.shiftId === shiftId) ??
 		cover.assignments.find((row) => row.shift?.shiftId === shiftId)?.shift ??
 		undefined;
 	const shift = shiftOf(gap.shiftId);
-	const shiftName = shift?.name ?? "";
-	const shiftDay = { shift: shiftName, day: formatDay(gap.day, language) };
-	const { engineRepair } = panel;
+	const shiftDay = {
+		shift: shift?.name ?? "",
+		day: formatDay(gap.day, language),
+	};
+	const { engineRepair, withEngine } = panel;
 	const memberName = panel.review.names.member;
 	const weekdayName = new Intl.DateTimeFormat(language, { weekday: "long" });
 	const now = new Date();
@@ -165,16 +248,21 @@ const GapCoverBody = ({
 		now,
 		t,
 	};
+	const engineList = optionCardList(
+		panel.view === "engine" && engineRepair.status === "ready"
+			? engineRepair.options
+			: [],
+		sources
+	);
 	const cards =
-		panel.view === "engine"
-			? optionCardList(
-					engineRepair.status === "ready" ? engineRepair.options : [],
-					sources
-				).cards
-			: panel.view === "backendFallback"
-				? fallbackCards(panel.options?.options ?? [], sources)
-				: [];
-	const statusLines = useStatusLines(panel, shiftDay);
+		panel.view === "backendFallback"
+			? fallbackCards(panel.options?.options ?? [], sources)
+			: engineList.cards;
+	const partCaptionKey =
+		engineList.partCaptionAt === undefined
+			? undefined
+			: engineList.cards[engineList.partCaptionAt]?.key;
+	const statusLines = useStatusLines(panel, engineList, shiftDay);
 
 	/** Whether the card under review is the one chosen now: a person of the list, or the engine's change. */
 	const isChosen = (card: OptionCard): boolean =>
@@ -189,6 +277,7 @@ const GapCoverBody = ({
 				panel={panel}
 				onBack={() => {
 					panel.unchoose();
+					focusAfterBack.current = reviewed.key;
 					setReviewKey(undefined);
 				}}
 			/>
@@ -199,58 +288,116 @@ const GapCoverBody = ({
 		const { choice } = card;
 		if (choice.kind === "backend") panel.select(choice.option.membershipId);
 		else panel.chooseRepair(choice.option);
+		if (cards.indexOf(card) >= CARDS_BEFORE_FOLD) setShowAll(true);
 		setReviewKey(card.key);
 	};
-	const { withEngine } = panel;
-	const notAssigned = withEngine?.notAssigned ??
+	/** A roster member's profile id, which is how the engine names people. */
+	const profileIdOf = (membershipId: string): string | undefined =>
+		cover.assignments.find((row) => row.member?.membershipId === membershipId)
+			?.member?.memberProfileId;
+	// The why-not list leaves out everyone who already has a card.
+	const profileIdsWithCards = new Set(
+		cards
+			.flatMap((card) =>
+				card.choice.kind === "engine"
+					? card.choice.option.people.map((person) => person.membershipId)
+					: [card.choice.option.membershipId]
+			)
+			.flatMap((membershipId) => profileIdOf(membershipId) ?? [])
+	);
+	const engineNotAssigned =
+		withEngine?.notAssigned ??
 		(engineRepair.status === "ready" ? engineRepair.notAssigned : undefined);
+	const notAssigned =
+		engineNotAssigned &&
+		whyNotWithoutCards(engineNotAssigned, profileIdsWithCards);
+	const noOptions =
+		engineRepair.status === "ready" && engineRepair.options.length === 0;
+	const optionsFound =
+		engineRepair.status === "ready"
+			? engineRepair.search?.optionsFound
+			: undefined;
+	const showsNotAssigned =
+		panel.view === "engine" &&
+		notAssigned !== undefined &&
+		notAssigned !== null &&
+		(notAssigned.length > 0 || noOptions);
 	return (
 		<div className="flex flex-col gap-2">
-			{statusLines}
+			<div aria-live="polite" className="flex flex-col gap-2">
+				{statusLines}
+			</div>
 			{cards.length > 0 && (
-				<ul className="flex flex-col gap-2">
-					{cards.map((card) => (
-						<li key={card.key}>
+				<ExpandableList
+					collapsedCount={showAll ? cards.length : CARDS_BEFORE_FOLD}
+					items={cards}
+					itemClassName="flex flex-col gap-2"
+					keyOf={(card) => card.key}
+					listClassName="flex flex-col gap-2"
+					renderItem={(card) => (
+						<>
+							{/* The part fills' caption sits with the first of them, so it folds with it. */}
+							{card.key === partCaptionKey && (
+								<p className="text-xs font-semibold text-neutral-700">
+									{t(`${engineKey}.partCaption`)}
+								</p>
+							)}
 							<CoverCardItem
 								card={card}
 								now={now}
 								timeZone={cover.coverOffers?.timeZone ?? ""}
+								reviewRef={(button) => {
+									if (button) reviewButtons.current.set(card.key, button);
+									else reviewButtons.current.delete(card.key);
+								}}
 								onReview={(): void => {
 									review(card);
 								}}
 							/>
-						</li>
-					))}
-				</ul>
+						</>
+					)}
+				/>
 			)}
-			{panel.view === "engine" && notAssigned && notAssigned.length > 0 ? (
+			{optionsFound !== undefined && optionsFound > engineList.cards.length && (
+				<p className="text-xs text-neutral-700">
+					{t(`${engineKey}.bestOf`, {
+						shown: engineList.cards.length,
+						found: optionsFound,
+					})}
+				</p>
+			)}
+			{showsNotAssigned && (
 				<NotAssignedList
+					defaultOpen={noOptions}
 					people={notAssigned}
 					title={t("scheduling.issues.cover.whyNot", {
 						count: notAssigned.length,
 					})}
 				/>
-			) : (
-				panel.view !== "engine" && (
-					<WhyNotOthers
-						memberName={panel.review.names.member}
-						people={withEngine?.unavailable ?? []}
-						shift={shift}
-					/>
-				)
+			)}
+			{panel.view === "backendFallback" && (
+				<WhyNotOthers
+					memberName={memberName}
+					people={withEngine?.unavailable ?? []}
+					shift={shift}
+				/>
 			)}
 		</div>
 	);
 };
 
 /**
- * A short shift's row, open: its options as cards (`coverCards`), asked of
- * the engine as it opens, with the one suggested; "Review" opens the change
- * inside the row (`CoverRowReview`), and why others were not chosen is folded
- * under the cards. `useCoverPanel` holds the state and calls. Nothing for a
- * day the roster does not hold.
+ * A short shift's row, open: its options as cards (`optionCardList`), asked
+ * of the engine as it opens, best first, the first suggested only when it
+ * fills more than part, part fills under their caption, three cards before
+ * the fold; "Review" opens the change inside the row (`CoverRowReview`), and why
+ * others have no card is folded under them. Under a refusal the hours-based
+ * people stand in, each not rule-checked. `useCoverPanel` holds the state and
+ * calls. Nothing for a day the roster does not hold.
  */
 export const GapCover = ({ gap, cover }: GapCoverProps): FunctionComponent => {
 	const dayRow = cover.assignments.find((row) => row.day === gap.day);
-	return dayRow ? <GapCoverBody cover={cover} dayRow={dayRow} gap={gap} /> : null;
+	return dayRow ? (
+		<GapCoverBody cover={cover} dayRow={dayRow} gap={gap} />
+	) : null;
 };

@@ -5301,7 +5301,17 @@
 				"weekLine": "{{before}} → {{after}} h of {{contract}} h this week",
 				"stillShortToast_one": "Roster changed. {{shift}} is still {{count}} short {{times}}.",
 				"stillShortToast_other": "Roster changed. {{shift}} is still {{count}} short {{times}}.",
-				"peopleAnd": "{{items, list(type: conjunction)}}"
+				"peopleAnd": "{{items, list(type: conjunction)}}",
+				"stillWorking": "Still working. This can take up to half a minute.",
+				"nobodyCan": "Nobody can cover this within the rules.",
+				"noFullFill": "Nothing covers the whole shift.",
+				"incomplete": "Ran out of time. These are the options found so far.",
+				"optionsFound_one": "{{count}} option found",
+				"optionsFound_other": "{{count}} options found",
+				"findAgain": "Find options again",
+				"fallbackCaption": "Free by their hours, not checked against the rules",
+				"partCaption": "Cover part of it",
+				"bestOf": "The best {{shown}} of {{found}}."
 			}
 		},
 		"reach": {

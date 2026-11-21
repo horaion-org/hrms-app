@@ -193,20 +193,16 @@ describe("optionCardList", () => {
 			false,
 			false,
 		]);
-		expect(list).toMatchObject({
-			partCaptionAt: 2,
-			noFullFill: false,
-			collapsedCount: 4,
-		});
+		expect(list).toMatchObject({ partCaptionAt: 2, noFullFill: false });
 	});
 
-	it("folds after three cards when the caption falls past them", () => {
+	it("puts the caption before the first part fill wherever it falls", () => {
 		const list = optionCardList(
 			[callInOption(), moveOption(), daySwapOption(), stretchAfterOption()],
 			sources()
 		);
 
-		expect(list).toMatchObject({ partCaptionAt: 3, collapsedCount: 3 });
+		expect(list.partCaptionAt).toBe(3);
 	});
 
 	it("suggests nothing and needs no caption when every option fills only part", () => {

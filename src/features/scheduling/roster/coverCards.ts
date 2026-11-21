@@ -97,8 +97,6 @@ export type OptionCardList = {
 	partCaptionAt: number | undefined;
 	/** Every card fills only part: the list opens with "Nothing covers the whole shift." */
 	noFullFill: boolean;
-	/** How many list items show before "Show all": three cards, and the caption when it falls among them. */
-	collapsedCount: number;
 };
 
 /** How many cards show before the rest are folded away. */
@@ -169,9 +167,8 @@ const optionCardOf = (
 /**
  * The engine's options as cards, in its order (UX note 3): the first is
  * Suggested when it fills more than part of the gap and its person has not
- * declined; the caption "Cover part of it" sits before the first part fill;
- * three cards show before the fold, the caption counted when it falls among
- * them. Pure.
+ * declined; the caption "Cover part of it" sits before the first part
+ * fill. Pure.
  */
 export const optionCardList = (
 	options: ReadonlyArray<RepairOption>,
@@ -189,15 +186,7 @@ export const optionCardList = (
 		...card,
 		suggested: place === 0 && !isPart(card) && card.offer.kind !== "declined",
 	}));
-	return {
-		cards,
-		partCaptionAt,
-		noFullFill,
-		collapsedCount:
-			partCaptionAt !== undefined && partCaptionAt < CARDS_BEFORE_FOLD
-				? CARDS_BEFORE_FOLD + 1
-				: CARDS_BEFORE_FOLD,
-	};
+	return { cards, partCaptionAt, noFullFill };
 };
 
 /**
