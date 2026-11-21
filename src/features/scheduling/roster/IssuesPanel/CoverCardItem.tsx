@@ -58,7 +58,11 @@ export const CoverCardItem = ({
 				card.suggested ? "border-ink-blue-500" : "border-neutral-400"
 			)}
 		>
-			<Avatar className="size-8! text-xs!" name={card.people} />
+			{/* One face per card: the first person's, whose change comes first. */}
+			<Avatar
+				className="size-8! text-xs!"
+				name={card.groups[0]?.name || card.people}
+			/>
 			<div className="flex min-w-0 flex-col gap-1">
 				<span className="flex flex-wrap items-center gap-1.5">
 					<span className="font-semibold text-neutral-900">{card.people}</span>

@@ -7,6 +7,7 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import {
 	spansText,
 	weekLine,
+	type CostChipKind,
 } from "@/features/scheduling/cover/engineRepairWords";
 import type { CoverPanel } from "@/features/scheduling/cover/useCoverPanel";
 import { CoverOfferSent } from "@/features/scheduling/coverOffers/CoverOfferActions/CoverOfferSent";
@@ -34,6 +35,14 @@ export type CoverRowReviewProps = {
 
 const key = "scheduling.issues.cover";
 
+/** The cost chips that are a cost in hours, which the review says beside the week. */
+const EXTRA_COSTS: ReadonlyArray<CostChipKind> = [
+	"pastContract",
+	"overtime",
+	"restDayWork",
+	"timeOffEarned",
+];
+
 /**
  * One person's part of the change: their name, each day drawn, and their
  * week before → after of the contract with a bar, the overtime past it named.
@@ -41,12 +50,22 @@ const key = "scheduling.issues.cover";
 const PersonBlock = ({
 	person,
 	group,
+	cost,
 }: {
 	person: ReviewPerson;
 	group: ChangeTileGroup | undefined;
+	/** What the change costs this person in words; their overtime past the contract without. */
+	cost: string | undefined;
 }): FunctionComponent => {
 	const { t } = useTranslation();
 	const week = person.weekMinutes && weekHoursOf(person.weekMinutes);
+	const overtime =
+		week && week.overtimeMinutes > 0
+			? t("scheduling.cover.engine.cost.overtime", {
+					hours: hoursFromMinutes(week.overtimeMinutes),
+				})
+			: undefined;
+	const costWords = cost ?? overtime;
 	return (
 		<div className="flex flex-col gap-1">
 			<p className="font-semibold text-neutral-900">{person.name}</p>
@@ -55,10 +74,7 @@ const PersonBlock = ({
 				<>
 					<p className="text-neutral-800">
 						{weekLine(person.weekMinutes, t)}
-						{week.overtimeMinutes > 0 &&
-							` · ${t("scheduling.cover.engine.cost.overtime", {
-								hours: hoursFromMinutes(week.overtimeMinutes),
-							})}`}
+						{costWords && ` · ${costWords}`}
 					</p>
 					<ProgressBar
 						label={t(`${key}.weekBar`)}
@@ -109,6 +125,14 @@ export const CoverRowReview = ({
 		? previewTileGroups(review.preview, review.names.member, t)
 		: card.groups;
 	const people = reviewPeopleOf(card.choice, review.names.member);
+	// One person's change says its whole cost (rest-day hours, time off, extra hours); with two, each says their overtime.
+	const extraCost = card.costChips.filter((chip) =>
+		EXTRA_COSTS.includes(chip.kind)
+	);
+	const onePersonCost =
+		people.length === 1 && extraCost.length > 0
+			? extraCost.map((chip) => chip.text).join(" · ")
+			: undefined;
 	const stillShort =
 		card.choice.kind === "engine" ? card.choice.option.stillShort : [];
 	const offerActions = offerActionsOf(offer, card.people);
@@ -139,6 +163,7 @@ export const CoverRowReview = ({
 							{people.map((person) => (
 								<PersonBlock
 									key={person.membershipId}
+									cost={onePersonCost}
 									person={person}
 									group={groups.find(
 										(group) => group.membershipId === person.membershipId

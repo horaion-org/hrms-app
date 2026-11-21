@@ -328,10 +328,9 @@ const GapCoverBody = ({
 		engineRepair.status === "ready"
 			? engineRepair.search?.optionsFound
 			: undefined;
+	// The why-not list shows only when it names someone: an empty one would only say "(0)".
 	const showsNotAssigned =
-		panel.view === "engine" &&
-		notAssigned !== null &&
-		(notAssigned.length > 0 || noOptions);
+		panel.view === "engine" && notAssigned !== null && notAssigned.length > 0;
 	return (
 		<div className="flex flex-col gap-2">
 			<div aria-live="polite" className="flex flex-col gap-2">

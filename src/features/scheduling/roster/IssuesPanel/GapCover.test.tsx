@@ -12,6 +12,7 @@ import {
 	daySwapOption,
 	moveOption,
 	NOT_ASSIGNED_FIXTURE,
+	restDayCallInOption,
 	repairOptionsFixture,
 	stretchAfterOption,
 	stretchBeforeOption,
@@ -407,6 +408,16 @@ describe("GapCover: the review inside the row", () => {
 			/Ben Ong.*20 → 22 h of 22 h this week.*Chen Wei.*48 → 50 h of 44 h this week · \+6 h overtime/
 		);
 		expect(screen.getAllByRole("progressbar")).toHaveLength(2);
+	});
+
+	it("given_aRestDayCallIn_when_reviewed_then_itsWeekSaysWhatItCosts", async () => {
+		await reviewOption(restDayCallInOption());
+
+		expect(
+			screen.getByText(
+				"30 → 36 h of 44 h this week · 6 h on a rest day · +6 h time off earned"
+			)
+		).toBeVisible();
 	});
 
 	it("given_aPartFill_when_reviewed_then_whatIsStillShortAfterwards", async () => {
