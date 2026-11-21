@@ -161,8 +161,15 @@ describe("GapCover", () => {
 		show();
 		const user = userEvent.setup();
 
-		expect(await screen.findByText(NOT_LOADED)).toBeVisible();
-		expect(screen.getByText("Free by their hours")).toBeVisible();
+		const refusal = await screen.findByText(NOT_LOADED);
+		expect(refusal).toBeVisible();
+		const caption = screen.getByText("Free by their hours");
+		expect(caption).toBeVisible();
+		// The refusal comes first; the caption sits over the cards it names.
+		expect(
+			refusal.compareDocumentPosition(caption) &
+				Node.DOCUMENT_POSITION_FOLLOWING
+		).toBeTruthy();
 		const cards = await screen.findAllByRole("listitem");
 		expect(cards[0]).toHaveTextContent(
 			/Aisha Rahman.*Suggested.*Not rule-checked/

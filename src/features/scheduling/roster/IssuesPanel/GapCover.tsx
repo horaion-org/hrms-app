@@ -212,12 +212,6 @@ const useStatusLines = (
 			);
 	}
 	if (view !== "backendFallback") return { quiet, alerts };
-	if (status === "options")
-		quiet.push(
-			<p key="fallback" className="text-xs font-semibold text-neutral-700">
-				{t(`${engineKey}.fallbackCaption`)}
-			</p>
-		);
 	if (status === "loading")
 		quiet.push(<Line key="loading" text={t(`${key}.panel.loading`)} />);
 	if (status === "failed")
@@ -406,6 +400,12 @@ const GapCoverBody = ({
 		<div className="flex flex-col gap-2">
 			{liveRegion(statusLines.quiet)}
 			{statusLines.alerts}
+			{/* The hours-based people's caption sits over their cards, under the refusal that brought them. */}
+			{panel.view === "backendFallback" && panel.status === "options" && (
+				<p className="text-xs font-semibold text-neutral-700">
+					{t(`${engineKey}.fallbackCaption`)}
+				</p>
+			)}
 			{cards.length > 0 && (
 				<ExpandableList
 					collapsedCount={showAll ? cards.length : CARDS_BEFORE_FOLD}
