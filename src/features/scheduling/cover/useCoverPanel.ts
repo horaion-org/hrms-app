@@ -313,6 +313,7 @@ export const useCoverPanel = ({
 		assignment: engineOffer?.assignment ?? candidateRow ?? dayRow,
 		choice: engineOffer?.choice ?? personChoice,
 		offerKind: engineOffer?.offerKind,
+		gap,
 		leaveMove: false,
 		body,
 		checksFingerprint: fingerprint,

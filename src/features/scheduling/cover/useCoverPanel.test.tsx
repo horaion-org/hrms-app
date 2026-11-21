@@ -549,6 +549,33 @@ describe("useCoverPanel", () => {
 			});
 		});
 
+		it("given_aPublishedRoster_when_aStretchIsOffered_then_itsRivalsAreTheOffersOutForTheShortShift", async () => {
+			const rival = coverOfferFixture({
+				offerId: "o-chen",
+				expiresAt: "2099-01-01T00:00:00Z",
+				member: {
+					...coverOfferFixture().member!,
+					membershipId: "m-3",
+					displayName: "Chen Wei",
+				},
+			});
+			const { result } = await chooseOption(
+				stretchAfterOption(),
+				{},
+				{
+					coverOffers: { offers: [rival], timeZone: "Asia/Singapore" },
+				}
+			);
+
+			// Ben stays on his own Lunch Rush; the race is for Front Desk AM, Chen's offer.
+			await waitFor(() => {
+				expect(result.current.offer?.consentKind).toBe("STRETCH");
+			});
+			expect(
+				result.current.offer?.rivals.map((offer) => offer.offerId)
+			).toEqual(["o-chen"]);
+		});
+
 		it("given_aPublishedRoster_when_aTwoPersonOptionIsReviewed_then_noOfferAndApplyWaitsForARemark", async () => {
 			const { result } = await chooseOption(
 				stretchPairOption(),
