@@ -1,8 +1,5 @@
 import { useEffect, useState } from "react";
 
-/** How long the engine may work before the panel says it is still working. */
-export const STILL_WORKING_AFTER_MILLISECONDS = 8_000;
-
 /**
  * Whether `active` has held for `afterMilliseconds` without a break; false
  * again as soon as it stops, so the next wait starts afresh.

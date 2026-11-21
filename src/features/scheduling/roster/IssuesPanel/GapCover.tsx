@@ -2,6 +2,7 @@ import { useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { formatDay } from "@/common/formatDay";
 import { formattingLocale } from "@/common/formattingLocale";
+import { useWaitedLong } from "@/common/useWaitedLong";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { ExpandableList } from "@/components/ui/ExpandableList";
@@ -16,10 +17,6 @@ import {
 	type CoverPanelInput,
 } from "@/features/scheduling/cover/useCoverPanel";
 import { useRepairWarmUp } from "@/features/scheduling/cover/useRepairWarmUp";
-import {
-	STILL_WORKING_AFTER_MILLISECONDS,
-	useWaitedLong,
-} from "@/features/scheduling/cover/useWaitedLong";
 import {
 	changeTileGroups,
 	type TileShift,
@@ -50,6 +47,9 @@ export type GapCoverProps = {
 
 const key = "scheduling.cover";
 const engineKey = "scheduling.cover.engine";
+
+/** How long the engine may work before the row says it is still working. */
+const STILL_WORKING_AFTER_MILLISECONDS = 8_000;
 
 /** A plain line, and its one action when it has one. */
 const Line = ({

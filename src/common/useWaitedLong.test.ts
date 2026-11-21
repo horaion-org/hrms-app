@@ -1,6 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { useWaitedLong } from "@/features/scheduling/cover/useWaitedLong";
+import { useWaitedLong } from "@/common/useWaitedLong";
 
 beforeEach(() => {
 	vi.useFakeTimers();
