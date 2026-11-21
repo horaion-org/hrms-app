@@ -86,6 +86,38 @@ export const offerKindOfOption = (
 	}
 };
 
+/** What an offer of an engine option is about: the member's row on the day it adds work, that shift, and the kind. */
+export type EngineOfferTarget = {
+	assignment: ScheduleAssignment;
+	choice: Extract<RosterEditChoice, { kind: "shift" }>;
+	offerKind: SentOptionKind;
+};
+
+/**
+ * What an offer of an engine option asks, or undefined for one no single
+ * offer can ask (two people, or a member the roster no longer holds): the
+ * member's row on the day of its WORK cell, that cell's shift, and its kind.
+ */
+export const engineOfferTargetOf = (
+	option: Pick<RepairOption, "kind" | "people" | "extraMinutes" | "cells">,
+	assignments: ReadonlyArray<ScheduleAssignment>
+): EngineOfferTarget | undefined => {
+	const work = option.cells.find((cell) => cell.kind === "WORK");
+	if (work?.kind !== "WORK") return undefined;
+	const assignment = assignments.find(
+		(row) =>
+			row.member?.membershipId === work.membershipId && row.day === work.day
+	);
+	const offerKind = offerKindOfOption(option, assignment);
+	return assignment && offerKind
+		? {
+				assignment,
+				choice: { kind: "shift", shiftId: work.shiftId },
+				offerKind,
+			}
+		: undefined;
+};
+
 /** The member's open offer for one day, if any: the API allows one per member and day. */
 export const openOfferOf = (
 	offers: ReadonlyArray<CoverOffer>,

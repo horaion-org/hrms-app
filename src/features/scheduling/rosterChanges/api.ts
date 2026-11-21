@@ -3,6 +3,7 @@ import { z } from "zod";
 import { apiRequest } from "@/common/api-client";
 import type { DepartmentPath } from "@/common/companyPath";
 import type { QueryOptionsFor } from "@/common/query-client";
+import type { RepairOptionKind } from "@/features/scheduling/cover/engineRepairApi";
 import { schedulePath } from "@/features/scheduling/paths";
 import {
 	rosterCellSchema,
@@ -88,6 +89,8 @@ export type RosterChangeBody = {
 	assumeLeaveCancelledOn?: Array<string>;
 	/** Apply only: this edit is the roster half of a leave move, so the API never undoes it alone. */
 	leaveMove?: boolean;
+	/** Apply only: this edit is one of the scheduling engine's repair options, of this kind; the API records it as the change's source. */
+	repairOptionKind?: RepairOptionKind;
 };
 
 // A code or severity a newer API adds still shows, as a plain note.

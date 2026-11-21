@@ -8,6 +8,7 @@ import { envelope, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
 	callInMove,
+	callInOption,
 	feasibleRepair,
 	NOT_ASSIGNED_FIXTURE,
 	repairOptionsFixture,
@@ -118,9 +119,14 @@ describe("GapCover", () => {
 		const calls = stubApi({
 			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
 			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
-			[`POST ${CHANGES}`]: { status: 201, body: envelope(rosterChangeFixture()) },
+			[`POST ${CHANGES}`]: {
+				status: 201,
+				body: envelope(rosterChangeFixture()),
+			},
 			[`POST ${REPAIR_OPTIONS}`]: answer(
-				repairOptionsFixture([feasibleRepair([callInMove()])])
+				repairOptionsFixture([
+					feasibleRepair([callInMove()], { cells: callInOption().cells }),
+				])
 			),
 		});
 		const { onApplied } = show();
@@ -139,9 +145,7 @@ describe("GapCover", () => {
 		await waitFor(() => {
 			expect(onApplied).toHaveBeenCalled();
 		});
-		expect(
-			calls.find((call) => call.path === CHANGES)?.body
-		).toMatchObject({
+		expect(calls.find((call) => call.path === CHANGES)?.body).toMatchObject({
 			cells: [{ membershipId: "m-1", day: GAP.day, kind: "WORK" }],
 		});
 	});

@@ -179,7 +179,7 @@ const GapCoverBody = ({
 	const review = (card: CoverCard): void => {
 		const { choice } = card;
 		if (choice.kind === "backend") panel.select(choice.option.membershipId);
-		else if (choice.cells) panel.chooseRepair(choice.cells, choice.option);
+		else if (choice.cells) panel.chooseRepair(choice.option);
 		setReviewKey(card.key);
 	};
 	// A published roster's engine options go out as offers, one person at a time: made by hand there.

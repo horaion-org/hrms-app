@@ -8,9 +8,13 @@ import { envelope, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
 	callInMove,
+	daySwapOption,
 	feasibleRepair,
 	repairOptionsFixture,
+	stretchAfterOption,
+	stretchPairOption,
 } from "@/features/scheduling/cover/engineRepairFixtures";
+import type { RepairOption } from "@/features/scheduling/cover/engineRepairApi";
 import {
 	coverOptionFixture,
 	coverOptionsFixture,
@@ -309,6 +313,170 @@ describe("useCoverPanel", () => {
 			expectedRevision: 1,
 			cells: coverOptionFixture().cells,
 			send: true,
+		});
+	});
+
+	describe("an engine option", () => {
+		/** The panel with the engine answering `option` at revision 5, chosen once the answer is in. */
+		const chooseOption = async (
+			option: RepairOption,
+			routes: Parameters<typeof stubApi>[0] = {},
+			props: Partial<CoverPanelInput> = {}
+		): Promise<{
+			result: { current: ReturnType<typeof useCoverPanel> };
+			calls: ReturnType<typeof stubApi>;
+			input: CoverPanelInput;
+		}> => {
+			const calls = stubApi({
+				[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+				[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+				[`POST ${REPAIR_OPTIONS}`]: answer(
+					repairOptionsFixture([option], [], { revision: 5 })
+				),
+				...routes,
+			});
+			const { result, input } = hook(props);
+			await waitFor(() => {
+				expect(result.current.engineRepair.status).toBe("ready");
+			});
+			act(() => {
+				result.current.chooseRepair(option);
+			});
+			await waitFor(() => {
+				expect(lastPreview(calls)).toBeDefined();
+			});
+			return { result, calls, input };
+		};
+
+		it("given_anOptionChosen_when_previewedAndApplied_then_itsCellsAsSentAtTheAnswersRevisionAndItsKindOnApplyOnly", async () => {
+			const option = daySwapOption();
+			const { result, calls, input } = await chooseOption(option, {
+				[`POST ${CHANGES}`]: {
+					status: 201,
+					body: envelope(rosterChangeFixture()),
+				},
+			});
+
+			expect(lastPreview(calls)?.body).toEqual({
+				expectedRevision: 5,
+				cells: option.cells,
+			});
+			await waitFor(() => {
+				expect(result.current.review.applyBlocked).toBe(false);
+			});
+			act(() => {
+				result.current.review.apply();
+			});
+			await waitFor(() => {
+				expect(input.onApplied).toHaveBeenCalled();
+			});
+			expect(calls.find((call) => call.path === CHANGES)?.body).toEqual({
+				expectedRevision: 5,
+				cells: option.cells,
+				repairOptionKind: "DAY_SWAP",
+			});
+		});
+
+		it("given_aPartFillApplied_when_itLands_then_theToastSaysWhatIsStillShort", async () => {
+			const { result, input } = await chooseOption(stretchAfterOption(), {
+				[`POST ${CHANGES}`]: {
+					status: 201,
+					body: envelope(rosterChangeFixture()),
+				},
+			});
+			await waitFor(() => {
+				expect(result.current.review.applyBlocked).toBe(false);
+			});
+
+			act(() => {
+				result.current.review.apply();
+			});
+
+			await waitFor(() => {
+				expect(input.onApplied).toHaveBeenCalledWith(
+					expect.anything(),
+					"Roster changed. Front Desk AM is still 1 short 09:00 – 11:00."
+				);
+			});
+		});
+
+		it("given_theRosterMovedUnderTheOption_when_applied_then_applyWaitsAndFindingAgainLetsGo", async () => {
+			const { result } = await chooseOption(stretchAfterOption(), {
+				[`POST ${CHANGES}`]: {
+					status: 409,
+					body: { errorCode: "ROSTER_REVISION_CONFLICT" },
+				},
+			});
+			await waitFor(() => {
+				expect(result.current.review.applyBlocked).toBe(false);
+			});
+
+			act(() => {
+				result.current.review.apply();
+			});
+
+			await waitFor(() => {
+				expect(result.current.review.applyRefusal).toBe("revision");
+			});
+			expect(result.current.review.applyBlocked).toBe(true);
+			act(() => {
+				result.current.review.findOptionsAgain();
+			});
+			expect(result.current.repairChosen).toBe(false);
+		});
+
+		it("given_aPublishedRoster_when_onePersonsOptionIsSent_then_anOfferOfItsKindForTheDayItAddsWork", async () => {
+			const option = stretchAfterOption();
+			const { result, calls } = await chooseOption(
+				option,
+				{
+					[`POST ${OFFERS}`]: {
+						status: 201,
+						body: envelope(coverOfferFixture()),
+					},
+				},
+				{ coverOffers: { offers: [], timeZone: "Asia/Singapore" } }
+			);
+			await waitFor(() => {
+				expect(result.current.offer?.ready).toBe(true);
+			});
+
+			expect(result.current.offer?.consentKind).toBe("STRETCH");
+			expect(result.current.review.bothMustAgree).toBe(false);
+			act(() => {
+				result.current.offer?.send();
+			});
+
+			await waitFor(() => {
+				expect(calls.find((call) => call.path === OFFERS)?.body).toMatchObject({
+					optionKind: "STRETCH",
+					rosterDate: GAP.day,
+					expectedRevision: 5,
+					cells: option.cells,
+					send: true,
+				});
+			});
+		});
+
+		it("given_aPublishedRoster_when_aTwoPersonOptionIsReviewed_then_noOfferAndApplyWaitsForARemark", async () => {
+			const { result } = await chooseOption(
+				stretchPairOption(),
+				{},
+				{
+					coverOffers: { offers: [], timeZone: "Asia/Singapore" },
+				}
+			);
+			await waitFor(() => {
+				expect(result.current.review.preview).toBeDefined();
+			});
+
+			expect(result.current.offer?.consentKind).toBeUndefined();
+			expect(result.current.review.bothMustAgree).toBe(true);
+			expect(result.current.review.applyBlocked).toBe(true);
+			act(() => {
+				result.current.review.setRemark("Both said yes by phone.");
+			});
+			expect(result.current.review.applyBlocked).toBe(false);
 		});
 	});
 });
