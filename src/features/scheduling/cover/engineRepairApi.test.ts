@@ -72,7 +72,7 @@ describe("engine repair options client", () => {
 		expect(parsed.options).toEqual([callInOption()]);
 	});
 
-	it("reads why others were not assigned, an empty list as empty, and an answer without it as not known", async () => {
+	it("reads why others were not assigned, an empty list as empty, and null as not known", async () => {
 		/** What the client reads `notAssigned` as for one answer. */
 		const notAssignedOf = async (answer: unknown): Promise<unknown> => {
 			stubApi({
@@ -89,13 +89,7 @@ describe("engine repair options client", () => {
 			await notAssignedOf(repairOptionsFixture([], NOT_ASSIGNED_FIXTURE))
 		).toEqual(NOT_ASSIGNED_FIXTURE);
 		expect(await notAssignedOf(repairOptionsFixture([], []))).toEqual([]);
-		// Left out of the JSON, as an older API sends it.
-		expect(
-			await notAssignedOf({
-				...repairOptionsFixture([]),
-				notAssigned: undefined,
-			})
-		).toBeNull();
+		expect(await notAssignedOf(repairOptionsFixture([], null))).toBeNull();
 	});
 
 	it("reads a reason code the app has never seen as it is", async () => {

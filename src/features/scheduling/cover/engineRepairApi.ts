@@ -39,9 +39,6 @@ const repairFillsSchema = z
 	.nullable()
 	.catch(null);
 
-/** How much of the gap an option fills; null when the engine does not say. */
-export type RepairFills = z.infer<typeof repairFillsSchema>;
-
 /** A span of local time and how many people it is short. */
 const shortSpanSchema = z.object({
 	start: z.string(),
@@ -94,9 +91,6 @@ const optionSchema = z.object({
 /** One of the engine's ways to fill the gap, ready to show and apply. */
 export type RepairOption = z.infer<typeof optionSchema>;
 
-/** An option's extra minutes that week, by kind. */
-export type RepairExtraMinutes = NonNullable<RepairOption["extraMinutes"]>;
-
 /** One reason the engine gives for not putting someone on the short shift; `code` is open, so a new one still reads. */
 const notAssignedReasonSchema = z.object({
 	code: z.string(),
@@ -138,10 +132,9 @@ const repairOptionsSchema = z.object({
 	options: z.array(optionSchema),
 	/**
 	 * Why each person with the gap's job title was not assigned; null when the
-	 * engine could not work it out, and from an older API. Empty: nobody else
-	 * holds the job title.
+	 * engine could not work it out. Empty: nobody else holds the job title.
 	 */
-	notAssigned: z.array(notAssignedPersonSchema).nullable().default(null),
+	notAssigned: z.array(notAssignedPersonSchema).nullable(),
 });
 
 /** The engine's answer for one gap: its options, and why nobody else was assigned. */

@@ -290,6 +290,31 @@ describe("useCoverPanel", () => {
 		});
 	});
 
+	it("given_aChangeInFlight_when_appliedAgain_then_oneChangeIsSent", async () => {
+		const calls = stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+			[`POST ${CHANGES}`]: {
+				status: 201,
+				body: envelope(rosterChangeFixture()),
+			},
+		});
+		const { result, input } = hook();
+		await waitFor(() => {
+			expect(result.current.review.applyBlocked).toBe(false);
+		});
+
+		act(() => {
+			result.current.review.apply();
+			result.current.review.apply();
+		});
+
+		await waitFor(() => {
+			expect(input.onApplied).toHaveBeenCalled();
+		});
+		expect(calls.filter((call) => call.path === CHANGES)).toHaveLength(1);
+	});
+
 	it("given_onePersonOfTheListOnAGapShortByTwo_when_applied_then_theGapIsNotFilled", async () => {
 		stubApi({
 			[`POST ${COVER_OPTIONS}`]: answer(

@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import {
@@ -206,6 +206,7 @@ export const useCoverPanel = ({
 	const language = formattingLocale(i18n);
 	const client = useQueryClient();
 	const { apply } = useRosterChangeActions(target);
+	const applyInFlight = useRef(false);
 	const [chosen, setChosen] = useState<string>();
 	const [editedRemark, setEditedRemark] = useState<string>();
 	const [tickedFor, setTickedFor] = useState<string | null>(null);
@@ -425,7 +426,9 @@ export const useCoverPanel = ({
 				(remarkRequired && remark.trim() === "") ||
 				applyRefusal === "revision",
 			apply: (): void => {
-				if (!body || !preview.data) return;
+				// One change in flight at a time: a second call before the first's answer sends nothing.
+				if (!body || !preview.data || applyInFlight.current) return;
+				applyInFlight.current = true;
 				apply.mutate(
 					{
 						...body,
@@ -434,6 +437,9 @@ export const useCoverPanel = ({
 						...(repairOption ? { repairOptionKind: repairOption.kind } : {}),
 					},
 					{
+						onSettled: () => {
+							applyInFlight.current = false;
+						},
 						onSuccess: (change) => {
 							onApplied(change, {
 								// An engine option says what it fills; one person of the list fills a gap short by one.
