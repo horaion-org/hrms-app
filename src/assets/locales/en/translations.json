@@ -5097,7 +5097,8 @@
 			"partDayKeptFree": "Approved before this roster was made. The scheduler can’t plan part days yet, so {{name}}’s whole day was kept free.",
 			"works": "Works {{time}} · {{shift}}",
 			"shortenedForLeave": "Shortened for leave",
-			"openInLeave": "Open in Leave"
+			"openInLeave": "Open in Leave",
+			"addRemark": "Add a remark"
 		},
 		"publishedWeek": {
 			"setup": "This week already has a published roster for this department. Only one roster can be published per week, so pick another week to make a new one.",

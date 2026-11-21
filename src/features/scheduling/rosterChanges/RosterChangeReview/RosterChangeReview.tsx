@@ -1,4 +1,4 @@
-import { useId, type ReactNode } from "react";
+import { useId, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { FormRow, formRowIds } from "@/components/forms/FormRow";
@@ -38,6 +38,10 @@ export type RosterChangeReviewProps = {
 	remarkHint?: string;
 	/** Says rules aren't re-checked; off where the panel already says so in its own words (Find cover). */
 	showsRulesNote?: boolean;
+	/** Shows the checks' heading and "No issues found." when the preview has none; off in the Issues panel, which keeps to what matters. */
+	showsEmptyChecks?: boolean;
+	/** Keeps the remark behind "Add a remark" until pressed, unless a check or `remarkRequired` asks for one or it already holds words. */
+	remarkFolded?: boolean;
 	/** Why the preview couldn't be read, in the refusal's own words; a retry only where one can work (refusalNextStep). */
 	previewRefusal?: RosterChangeRefusal;
 	/** Reads the preview again, or reloads the roster after a "revision" refusal. */
@@ -73,6 +77,8 @@ export const RosterChangeReview = ({
 	remarkRequired = false,
 	remarkHint,
 	showsRulesNote = true,
+	showsEmptyChecks = true,
+	remarkFolded = false,
 	previewRefusal,
 	onRetryPreview,
 	beforeAfter,
@@ -83,6 +89,11 @@ export const RosterChangeReview = ({
 	const gate = applyGate(preview?.checks ?? []);
 	const nextStep = previewRefusal && refusalNextStep(previewRefusal);
 	const needsRemark = gate.needsRemark || remarkRequired;
+	const [remarkOpened, setRemarkOpened] = useState(false);
+	const remarkShown =
+		!remarkFolded || needsRemark || remarkOpened || remark !== "";
+	const checksShown =
+		showsEmptyChecks || (preview !== undefined && preview.checks.length > 0);
 	return (
 		<div className="flex flex-col gap-3">
 			<h3 className="text-sm font-semibold text-neutral-800">
@@ -108,16 +119,29 @@ export const RosterChangeReview = ({
 					<Skeleton className="h-3 w-1/2" />
 				</span>
 			)}
-			<h3 className="text-sm font-semibold text-neutral-800">
-				{t(`${key}.checks`)}
-			</h3>
-			{preview && (
+			{checksShown && (
+				<h3 className="text-sm font-semibold text-neutral-800">
+					{t(`${key}.checks`)}
+				</h3>
+			)}
+			{preview && checksShown && (
 				<>
 					<RosterChangeChecks checks={preview.checks} names={names} />
 					{showsRulesNote && <Callout>{t(`${key}.rulesNotChecked`)}</Callout>}
 				</>
 			)}
-			{preview && !gate.refused && (
+			{preview && !gate.refused && !remarkShown && (
+				<Button
+					className="self-start"
+					variant="textlink"
+					onClick={(): void => {
+						setRemarkOpened(true);
+					}}
+				>
+					{t(`${key}.addRemark`)}
+				</Button>
+			)}
+			{preview && !gate.refused && remarkShown && (
 				<FormRow
 					counter={`${remark.length}/${ROSTER_CHANGE_REMARK_MAX_LENGTH}`}
 					htmlFor={remarkId}
@@ -134,6 +158,8 @@ export const RosterChangeReview = ({
 					}
 				>
 					<Textarea
+						// Opened by "Add a remark": the box takes focus, as the decline reason does.
+						autoFocus={remarkOpened}
 						aria-describedby={remarkIds.hintId}
 						aria-required={needsRemark}
 						className="w-full"
