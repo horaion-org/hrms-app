@@ -42,6 +42,31 @@ const brokenMust = ruleFixture({
 });
 
 describe("rosterIssues", () => {
+	it("lists one shift short in two runs that day as one item with both runs, the most short counted", () => {
+		const issues = rosterIssues(
+			input({
+				gaps: [
+					staffingGapFixture({
+						start: "2026-10-17T09:00",
+						end: "2026-10-17T11:00",
+					}),
+					staffingGapFixture({
+						conflictId: "c-2",
+						start: "2026-10-17T13:00",
+						end: "2026-10-17T15:00",
+						missing: 2,
+					}),
+				],
+			})
+		);
+
+		expect(issues).toHaveLength(1);
+		expect(issues[0]).toMatchObject({
+			who: "scheduling.issues.jobShort(2|Front Desk Staff)",
+			time: "scheduling.constraints.list(09:00–11:00,13:00–15:00)",
+		});
+	});
+
 	it("lists a shift short as its job title short, its day and time, with Find cover", () => {
 		const [issue] = rosterIssues(input({ gaps: [staffingGapFixture()] }));
 
@@ -49,7 +74,7 @@ describe("rosterIssues", () => {
 			group: "mustFix",
 			who: "scheduling.issues.jobShort(1|Front Desk Staff)",
 			day: "2026-10-17",
-			time: "09:00–15:00",
+			time: "scheduling.constraints.list(09:00–15:00)",
 			action: {
 				kind: "findCover",
 				gap: { day: "2026-10-17" },
