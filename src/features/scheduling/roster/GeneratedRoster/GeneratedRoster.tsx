@@ -15,10 +15,7 @@ import {
 	shortShiftCount,
 	type RosterIssue,
 } from "@/features/scheduling/roster/rosterIssueGroups";
-import {
-	IssuesPanelHead,
-	type IssueCoverContext,
-} from "@/features/scheduling/roster/IssuesPanel";
+import { IssuesPanelHead } from "@/features/scheduling/roster/IssuesPanel";
 import type { IssueFixing } from "@/features/scheduling/roster/RosterIssueGroups";
 import { issuesOfRoster } from "@/features/scheduling/roster/rosterIssueSources";
 import {
@@ -54,6 +51,7 @@ import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 import type { PreferenceOutcomeLookup } from "@/features/shiftPreferences/preferenceOutcome";
 import type { RosterEditing } from "./rosterEditing";
 import { RosterSidePanelSlot } from "./RosterSidePanelSlot";
+import { issueCoverOf } from "./issueCoverOf";
 import { ROSTER_SIDE_LISTS } from "./rosterSideLists";
 import { useCheckedGaps } from "./useCheckedGaps";
 import { useRosterView } from "./useRosterView";
@@ -228,28 +226,18 @@ export const GeneratedRoster = ({
 		},
 	};
 	// Covering a short shift from its Issues row: applied as a hand change, the list staying open.
-	const issueCover: IssueCoverContext | undefined = editing && {
-		target: editing.target,
-		revision: editing.revision,
-		assignments,
-		shifts: editing.shifts,
-		coverOffers: editing.coverOffers && {
-			offers: editing.coverOffers.offers,
+	const issueCover =
+		editing &&
+		issueCoverOf({
+			editing,
 			timeZone: schedule.timeZone,
-		},
-		onPreviewDays: roster.onPreviewDays,
-		onApplied: (change, { filled, stillShort }): void => {
-			setApplied({ change, stillShort });
-			// The roster is checked again by itself once it shows the change, so the rows follow what is left.
-			validation?.askAt(change.toRevision);
-			// A filled gap keeps no row of its own: the list is the new check's; one still short stays open.
-			if (filled && view.cover) onViewChange({ ...view, cover: undefined });
-		},
-		// A recorded yes applies one change too: the roster is checked again once it shows it.
-		onCoverRecorded: (): void => {
-			validation?.askAt(editing.revision + 1);
-		},
-	};
+			assignments,
+			validation,
+			view,
+			onViewChange,
+			onPreviewDays: roster.onPreviewDays,
+			onLanded: setApplied,
+		});
 	/** Closes the panel beside the grid, and forgets the day a fix from Issues opened. */
 	const closePanel = (): void => {
 		setFixPreset(undefined);
