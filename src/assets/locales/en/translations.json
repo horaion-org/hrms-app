@@ -6759,7 +6759,8 @@
 				"LEAVE_RECORDED": "Leave recorded",
 				"LEAVE_MOVE": "Leave moved",
 				"COVER_OPTION": "Cover",
-				"OTHER": "Other"
+				"OTHER": "Other",
+				"REPAIR_OPTION": "Repair option"
 			},
 			"empty": "No published rosters in these dates.",
 			"question": "Are published rosters stable?",

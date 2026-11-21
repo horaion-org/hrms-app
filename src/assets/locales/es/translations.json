@@ -6759,7 +6759,8 @@
 				"LEAVE_RECORDED": "Ausencia registrada",
 				"LEAVE_MOVE": "Ausencia movida",
 				"COVER_OPTION": "Cobertura",
-				"OTHER": "Otro"
+				"OTHER": "Otro",
+				"REPAIR_OPTION": "Opción de reparación"
 			},
 			"empty": "No hay horarios publicados en estas fechas.",
 			"question": "¿Son estables los cuadrantes publicados?",

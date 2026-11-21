@@ -10,6 +10,7 @@ export const chartColours = [
 	"inkBlue500",
 	"inkBlue200",
 	"porcelain300",
+	"porcelain500",
 	"success600",
 	"neutral400",
 ] as const;
@@ -23,6 +24,7 @@ export const CHART_FILL_CLASSES: Record<ChartColour, string> = {
 	inkBlue500: "fill-ink-blue-500",
 	inkBlue200: "fill-ink-blue-200",
 	porcelain300: "fill-porcelain-300",
+	porcelain500: "fill-porcelain-500",
 	success600: "fill-success-600",
 	neutral400: "fill-neutral-400",
 };
@@ -33,6 +35,7 @@ export const CHART_BACKGROUND_CLASSES: Record<ChartColour, string> = {
 	inkBlue500: "bg-ink-blue-500",
 	inkBlue200: "bg-ink-blue-200",
 	porcelain300: "bg-porcelain-300",
+	porcelain500: "bg-porcelain-500",
 	success600: "bg-success-600",
 	neutral400: "bg-neutral-400",
 };
