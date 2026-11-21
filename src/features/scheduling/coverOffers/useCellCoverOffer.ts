@@ -29,6 +29,11 @@ export type CellCoverOfferInput = {
 	assignment: ScheduleAssignment;
 	choice: RosterEditChoice | undefined;
 	leaveMove: boolean;
+	/**
+	 * The kind an engine repair option goes out as (`offerKindOfOption`); the
+	 * cell panel leaves it out, and the kind follows from the chosen change.
+	 */
+	offerKind?: SentOptionKind;
 	/** The change previewed, as the panel sends it to the preview. */
 	body: RosterChangeBody | undefined;
 	/** The preview's fingerprint; null until previewed or when no check asks for a tick. */
@@ -74,6 +79,7 @@ export const useCellCoverOffer = ({
 	assignment,
 	choice,
 	leaveMove,
+	offerKind,
 	body,
 	checksFingerprint,
 	remark,
@@ -82,12 +88,10 @@ export const useCellCoverOffer = ({
 }: CellCoverOfferInput): CellCoverOffer => {
 	const { create, withdraw } = useCoverOfferActions(target);
 	const membershipId = assignment.member?.membershipId ?? null;
-	const consentKind = consentKindOf({
-		published,
-		assignment,
-		choice,
-		leaveMove,
-	});
+	const consentKind =
+		published && offerKind
+			? offerKind
+			: consentKindOf({ published, assignment, choice, leaveMove });
 	const rivals =
 		consentKind && choice?.kind === "shift"
 			? rivalOffers(offers, {

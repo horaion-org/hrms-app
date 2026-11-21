@@ -27,10 +27,17 @@ import { retry } from "@/features/workspace/retry";
 
 // A value a newer API adds still reads, as the nearest plain one.
 const optionKindSchema = z
-	.enum(["MOVE", "STRETCH", "OFF_DAY_SHIFT", "REST_DAY_SHIFT", "UNKNOWN"])
+	.enum([
+		"MOVE",
+		"STRETCH",
+		"OFF_DAY_SHIFT",
+		"REST_DAY_SHIFT",
+		"DAY_SWAP",
+		"UNKNOWN",
+	])
 	.catch("UNKNOWN");
 
-/** What the member is asked to do: move shift, stay longer, or work a day off or rest day. */
+/** What the member is asked to do: move shift, stay longer, work a day off or rest day, or work one day instead of another. */
 export type CoverOptionKind = z.infer<typeof optionKindSchema>;
 
 const statusSchema = z
@@ -98,6 +105,8 @@ export const coverOfferSchema = z.object({
 	 * older API. It follows the roster: an open offer says what a yes costs now.
 	 */
 	pay: payMinutesSchema.nullish(),
+	/** On a day swap, the day the member gives up for `rosterDate`; null for every other kind, absent from an older API. */
+	dayGivenUp: z.string().nullish(),
 });
 
 export type CoverOffer = z.infer<typeof coverOfferSchema>;
