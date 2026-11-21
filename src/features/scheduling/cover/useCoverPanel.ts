@@ -9,6 +9,10 @@ import {
 	type CoverOptions,
 } from "@/features/scheduling/cover/api";
 import {
+	coverPanelStatus,
+	type CoverPanelStatus,
+} from "@/features/scheduling/cover/coverStatus";
+import {
 	coverListView,
 	showsBackendList,
 	type CoverListView,
@@ -89,20 +93,6 @@ export type CoverApplied = {
 	stillShort?: string;
 };
 
-/** Where the list stands: what the panel shows in place of the options. */
-export type CoverPanelStatus =
-	| "loading"
-	| "rosterMoved"
-	| "notEditable"
-	| "failed"
-	| "closed"
-	| "nobody"
-	| "options";
-
-/** The list's refusals that have a status of their own; any other refusal is a plain failure. */
-const REFUSAL_STATUSES: Partial<Record<RosterChangeRefusal, CoverPanelStatus>> =
-	{ revision: "rosterMoved", notEditable: "notEditable" };
-
 export type CoverPanel = {
 	status: CoverPanelStatus;
 	options: CoverOptions | undefined;
@@ -160,35 +150,6 @@ export type CoverPanel = {
 	};
 	/** On a published roster: send the offer or record a yes. */
 	offer: (CellCoverOffer & { timeZone: string; ready: boolean }) | undefined;
-};
-
-/**
- * Whether the gap is closed. The engine's answer for the roster's revision
- * says so when it worked out what is short (`shortNow`): closed only when
- * nothing is. Under a refusal, or when the engine could not say, the
- * backend list's count decides; while the engine works, it is not closed yet.
- */
-const gapClosed = (
-	options: CoverOptions,
-	engineRepair: EngineRepairState
-): boolean => {
-	if (engineRepair.status === "loading") return false;
-	if (engineRepair.status === "ready" && engineRepair.shortNow !== null)
-		return engineRepair.shortNow.length === 0;
-	return options.gap.shortBy === 0;
-};
-
-/** Where the list stands, from its query and whether the gap is closed. */
-const statusOf = (
-	query: { isPending: boolean; error: Error | null },
-	options: CoverOptions | undefined,
-	engineRepair: EngineRepairState
-): CoverPanelStatus => {
-	if (query.error)
-		return REFUSAL_STATUSES[rosterChangeRefusal(query.error)] ?? "failed";
-	if (!options || query.isPending) return "loading";
-	if (gapClosed(options, engineRepair)) return "closed";
-	return options.options.length === 0 ? "nobody" : "options";
 };
 
 /**
@@ -252,7 +213,7 @@ export const useCoverPanel = ({
 		enabled: !landing,
 	});
 	const options = list.data;
-	const status = statusOf(list, options, engineRepair);
+	const status = coverPanelStatus(list, options, engineRepair);
 	/** A roster member's profile id, which is how the engine names people. */
 	const profileIdOf = (membershipId: string): string | undefined =>
 		assignments.find((row) => row.member?.membershipId === membershipId)?.member

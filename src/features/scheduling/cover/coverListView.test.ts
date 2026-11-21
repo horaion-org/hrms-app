@@ -5,7 +5,7 @@ import {
 	type CoverListView,
 } from "@/features/scheduling/cover/coverListView";
 import type { EngineRepairState } from "@/features/scheduling/cover/useEngineRepair";
-import type { CoverPanelStatus } from "@/features/scheduling/cover/useCoverPanel";
+import type { CoverPanelStatus } from "@/features/scheduling/cover/coverStatus";
 
 describe("coverListView", () => {
 	it.each<[CoverPanelStatus, EngineRepairState["status"], CoverListView]>([

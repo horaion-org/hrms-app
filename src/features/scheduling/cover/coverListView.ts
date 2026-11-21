@@ -1,5 +1,5 @@
 import type { EngineRepairState } from "@/features/scheduling/cover/useEngineRepair";
-import type { CoverPanelStatus } from "@/features/scheduling/cover/useCoverPanel";
+import type { CoverPanelStatus } from "@/features/scheduling/cover/coverStatus";
 
 /*
  * Find cover's one list, pure: which list the panel shows for a short shift.
