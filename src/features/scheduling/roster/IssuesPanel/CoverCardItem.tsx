@@ -39,7 +39,8 @@ const CHIP_TONES: Record<CostChipKind, BadgeTone> = {
 /**
  * One option (UX note 2): initials and who, "Suggested" on the one card
  * suggested, what it is, the change drawn by person and day, what it still
- * leaves short in red, then its cost chips and the week with Review at the
+ * leaves short in red, then its cost chips (and "Taken off this shift
+ * earlier" when so) and the week with Review at the
  * end of that line (on a line of its own only when it does not fit). An offer
  * out to its person reads in Review's place; a declined one says so.
  */
@@ -89,6 +90,11 @@ export const CoverCardItem = ({
 					{leaves?.kind === "onePerson" && (
 						<Badge compact tone="neutral">
 							{leaves.text}
+						</Badge>
+					)}
+					{card.takenOffEarlier && (
+						<Badge compact tone="neutral">
+							{card.takenOffEarlier}
 						</Badge>
 					)}
 					{card.weekLine && (

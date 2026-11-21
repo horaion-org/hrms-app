@@ -5306,7 +5306,8 @@
 				"shortRun_one": "{{count}} short {{times}}",
 				"shortRun_other": "{{count}} short {{times}}",
 				"spanSeparator": ", ",
-				"appliedRosterMoved": "The roster changed, so that change was not made. These are the options now."
+				"appliedRosterMoved": "The roster changed, so that change was not made. These are the options now.",
+				"takenOffEarlier": "Taken off this shift earlier"
 			}
 		},
 		"reach": {

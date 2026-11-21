@@ -5106,7 +5106,8 @@
 				"shortRun_one": "{{count}} {{times}}",
 				"shortRun_other": "{{count}} {{times}}",
 				"spanSeparator": ", ",
-				"appliedRosterMoved": "El cuadrante cambió, así que ese cambio no se hizo. Estas son las opciones ahora."
+				"appliedRosterMoved": "El cuadrante cambió, así que ese cambio no se hizo. Estas son las opciones ahora.",
+				"takenOffEarlier": "Quitado de este turno antes"
 			}
 		},
 		"reach": {

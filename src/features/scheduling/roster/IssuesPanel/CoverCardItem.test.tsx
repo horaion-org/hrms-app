@@ -12,6 +12,7 @@ import {
 	restDayCallInOption,
 	stretchAfterOption,
 	stretchPairOption,
+	takenOffCallInOption,
 } from "@/features/scheduling/cover/engineRepairFixtures";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
 import { coverOfferFixture } from "@/features/scheduling/coverOffers/fixtures";
@@ -126,6 +127,13 @@ describe("CoverCardItem", () => {
 		show([oneOfTwoOption()]);
 
 		expect(screen.getByText("Fills 1 of 2")).toBeVisible();
+	});
+
+	it("given_someoneTakenOffTheShiftEarlier_when_drawn_then_aNeutralChipSaysSoAndNotSuggested", () => {
+		const card = show([takenOffCallInOption()]);
+
+		expect(screen.getByText("Taken off this shift earlier")).toBeVisible();
+		expect(card).not.toHaveTextContent("Suggested");
 	});
 
 	it("given_aCard_when_reviewed_then_theButtonNamesWhoseChangeItIs", async () => {

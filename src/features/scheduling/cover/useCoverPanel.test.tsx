@@ -595,6 +595,7 @@ describe("useCoverPanel", () => {
 							membershipId: "m-9",
 							displayName: "Gone Person",
 							weekMinutes: null,
+							takenOffThisShift: false,
 						},
 					],
 				}),

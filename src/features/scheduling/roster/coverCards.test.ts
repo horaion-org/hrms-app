@@ -10,6 +10,7 @@ import {
 	stretchAfterOption,
 	stretchBeforeOption,
 	stretchPairOption,
+	takenOffCallInOption,
 } from "@/features/scheduling/cover/engineRepairFixtures";
 import {
 	coverOptionFixture,
@@ -197,6 +198,19 @@ describe("optionCardList", () => {
 			false,
 		]);
 		expect(list).toMatchObject({ partCaptionAt: 2, noFullFill: false });
+	});
+
+	it("marks someone taken off the shift earlier and never suggests them", () => {
+		const list = optionCardList(
+			[takenOffCallInOption(), moveOption()],
+			sources()
+		);
+
+		expect(list.cards.map((card) => card.takenOffEarlier)).toEqual([
+			"Taken off this shift earlier",
+			undefined,
+		]);
+		expect(list.cards.map((card) => card.suggested)).toEqual([false, false]);
 	});
 
 	it("puts the caption before the first part fill wherever it falls", () => {
@@ -419,7 +433,12 @@ describe("optionCardList: someone the roster no longer shows", () => {
 				},
 			],
 			people: [
-				{ membershipId: "m-9", displayName: "Gone Person", weekMinutes: null },
+				{
+					membershipId: "m-9",
+					displayName: "Gone Person",
+					weekMinutes: null,
+					takenOffThisShift: false,
+				},
 			],
 		});
 		const [card] = optionCardList([gone], {

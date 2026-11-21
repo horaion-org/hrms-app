@@ -57,6 +57,8 @@ const repairPersonSchema = z.object({
 	weekMinutes: z
 		.object({ before: z.number(), after: z.number(), contract: z.number() })
 		.nullable(),
+	/** Taken off this shift by hand earlier: the engine ranks such options last, and the app never suggests one. */
+	takenOffThisShift: z.boolean(),
 });
 
 /** Someone an option changes, and their week's minutes. */

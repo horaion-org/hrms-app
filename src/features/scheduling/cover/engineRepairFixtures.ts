@@ -34,12 +34,18 @@ const NO_EXTRA_MINUTES = {
 	pastContract: 0,
 };
 
-/** A person an option changes, with their week before and after it. */
+/** A person an option changes, with their week before and after it; not taken off the shift earlier unless told. */
 const person = (
 	membershipId: string,
 	displayName: string,
-	weekMinutes: RepairPerson["weekMinutes"]
-): RepairPerson => ({ membershipId, displayName, weekMinutes });
+	weekMinutes: RepairPerson["weekMinutes"],
+	takenOffThisShift = false
+): RepairPerson => ({
+	membershipId,
+	displayName,
+	weekMinutes,
+	takenOffThisShift,
+});
 
 const AISHA = "m-1";
 const BEN = "m-2";
@@ -95,6 +101,21 @@ export const callInOption = (
 	}),
 	...overrides,
 });
+
+/** Aisha comes back to the shift she was taken off by hand earlier, which the engine moves last. */
+export const takenOffCallInOption = (): RepairOption =>
+	repairOption({
+		kind: "CALL_IN",
+		cells: [workCell(AISHA, SATURDAY, FRONT_DESK_AM)],
+		people: [
+			person(
+				AISHA,
+				"Aisha Rahman",
+				{ before: 1800, after: 2160, contract: 2640 },
+				true
+			),
+		],
+	});
 
 /** Aisha comes in on her Sunday rest day: six hours on a rest day, and as much time off earned. */
 export const restDayCallInOption = (): RepairOption =>

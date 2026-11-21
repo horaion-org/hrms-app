@@ -126,6 +126,7 @@ export const ruleLabCase = (): NotAssignedLeaveCase => ({
 						membershipId: TAMSIN.membershipId,
 						displayName: TAMSIN.displayName,
 						weekMinutes: null,
+						takenOffThisShift: false,
 					},
 				],
 			}),

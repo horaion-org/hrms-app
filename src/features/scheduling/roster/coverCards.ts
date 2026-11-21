@@ -101,6 +101,8 @@ export type OptionCard = {
 	/** One person's week before and after; none for two people, or when the ledger could not price it. */
 	weekLine: string | undefined;
 	leaves: WhatItLeaves | undefined;
+	/** "Taken off this shift earlier" when a person it changes was taken off this shift by hand; never suggested then. */
+	takenOffEarlier: string | undefined;
 	suggested: boolean;
 	offer: CardOffer;
 	choice: OptionCardChoice;
@@ -204,6 +206,9 @@ const optionCardOf = (
 				? weekLine(onlyPerson.weekMinutes, sources.t)
 				: undefined,
 		leaves: whatItLeaves(option, sources.shortNow, sources.t),
+		takenOffEarlier: option.people.some((person) => person.takenOffThisShift)
+			? sources.t("scheduling.cover.engine.takenOffEarlier")
+			: undefined,
 		suggested: false,
 		offer: onePerson
 			? cardOfferOf(sources.offers, workCellOf(option), sources.now)
@@ -214,8 +219,8 @@ const optionCardOf = (
 
 /**
  * The engine's options as cards, in its order (UX note 3): the first is
- * Suggested when it fills more than part of the gap and its person has not
- * declined; the caption "Cover part of it" sits before the first part
+ * Suggested when it fills more than part of the gap, its person has not
+ * declined and nobody it changes was taken off this shift earlier; the caption "Cover part of it" sits before the first part
  * fill. Pure.
  */
 export const optionCardList = (
@@ -232,7 +237,11 @@ export const optionCardList = (
 	const partCaptionAt = firstPart > 0 ? firstPart : undefined;
 	const cards = unmarked.map((card, place) => ({
 		...card,
-		suggested: place === 0 && !isPart(card) && card.offer.kind !== "declined",
+		suggested:
+			place === 0 &&
+			!isPart(card) &&
+			card.offer.kind !== "declined" &&
+			card.takenOffEarlier === undefined,
 	}));
 	return { cards, partCaptionAt, noFullFill };
 };
@@ -272,6 +281,7 @@ export const fallbackCards = (
 			),
 			weekLine: weekLine(option.weekMinutes, sources.t),
 			leaves: undefined,
+			takenOffEarlier: undefined,
 			// As among the engine's options: someone who declined is never the one suggested.
 			suggested: place === 0 && offer.kind !== "declined",
 			offer,
