@@ -5100,7 +5100,7 @@
 				"optionsFound_one": "{{count}} opción encontrada",
 				"optionsFound_other": "{{count}} opciones encontradas",
 				"findAgain": "Buscar opciones de nuevo",
-				"fallbackCaption": "Libres según sus horas, sin comprobar con las reglas",
+				"fallbackCaption": "Libres según sus horas",
 				"partCaption": "Cubrir una parte",
 				"bestOf": "Las {{shown}} mejores de {{found}}."
 			}

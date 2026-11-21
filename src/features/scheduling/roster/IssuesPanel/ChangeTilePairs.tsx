@@ -42,16 +42,19 @@ const ChangeTile = ({ face }: { face: ChangeTileFace }): FunctionComponent => {
 };
 
 /**
- * A change drawn as the roster's own tiles, one line per day: the day, then
- * before → after (the arrow read as "becomes"), a stretch's "+2 h" after the
- * tile it widens. With more than one person each person's days sit under
- * their name. A tile never grows past its column: it is cut short, its
- * title holding the whole of it.
+ * A change drawn as the roster's own tiles, one line per day: the day (left
+ * out for `knownDay`, which the row already names), then before → after (the
+ * arrow read as "becomes"), a stretch's "+2 h" after the tile it widens. With
+ * more than one person each person's days sit under their name. A tile never
+ * grows past its column: it is cut short, its title holding the whole of it.
  */
 export const ChangeTilePairs = ({
 	groups,
+	knownDay,
 }: {
 	groups: ReadonlyArray<ChangeTileGroup>;
+	/** The day the row already names (a short shift's day): its pairs say no date. */
+	knownDay?: string;
 }): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
@@ -72,9 +75,11 @@ export const ChangeTilePairs = ({
 								: undefined;
 						return (
 							<span key={key} className="flex flex-wrap items-center gap-1.5">
-								<span className="text-xs whitespace-nowrap text-neutral-700">
-									{formatDay(day, language)}
-								</span>
+								{day !== knownDay && (
+									<span className="text-xs whitespace-nowrap text-neutral-700">
+										{formatDay(day, language)}
+									</span>
+								)}
 								<ChangeTile face={before} />
 								<span
 									aria-hidden="true"

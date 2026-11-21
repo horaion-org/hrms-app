@@ -288,6 +288,7 @@ const GapCoverBody = ({
 		return (
 			<CoverRowReview
 				card={reviewed}
+				gapDay={gap.day}
 				panel={panel}
 				onBack={() => {
 					panel.unchoose();
@@ -353,6 +354,7 @@ const GapCoverBody = ({
 							)}
 							<CoverCardItem
 								card={card}
+								gapDay={gap.day}
 								now={now}
 								timeZone={cover.coverOffers?.timeZone ?? ""}
 								reviewRef={(button) => {

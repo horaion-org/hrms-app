@@ -29,6 +29,8 @@ import { ChangeTilePairs } from "./ChangeTilePairs";
 
 export type CoverRowReviewProps = {
 	card: OptionCard;
+	/** The short shift's day, which the row names: the pairs on it say no date. */
+	gapDay?: string;
 	panel: Pick<CoverPanel, "review" | "offer">;
 	onBack: () => void;
 };
@@ -51,9 +53,11 @@ const PersonBlock = ({
 	person,
 	group,
 	cost,
+	gapDay,
 }: {
 	person: ReviewPerson;
 	group: ChangeTileGroup | undefined;
+	gapDay: string | undefined;
 	/** What the change costs this person in words; their overtime past the contract without. */
 	cost: string | undefined;
 }): FunctionComponent => {
@@ -69,7 +73,9 @@ const PersonBlock = ({
 	return (
 		<div className="flex flex-col gap-1">
 			<p className="font-semibold text-neutral-900">{person.name}</p>
-			{group && <ChangeTilePairs groups={[{ ...group, name: "" }]} />}
+			{group && (
+				<ChangeTilePairs groups={[{ ...group, name: "" }]} knownDay={gapDay} />
+			)}
 			{person.weekMinutes && week && (
 				<>
 					<p className="text-neutral-800">
@@ -101,6 +107,7 @@ const PersonBlock = ({
  */
 export const CoverRowReview = ({
 	card,
+	gapDay,
 	panel: { review, offer },
 	onBack,
 }: CoverRowReviewProps): FunctionComponent => {
@@ -164,6 +171,7 @@ export const CoverRowReview = ({
 								<PersonBlock
 									key={person.membershipId}
 									cost={onePersonCost}
+									gapDay={gapDay}
 									person={person}
 									group={groups.find(
 										(group) => group.membershipId === person.membershipId

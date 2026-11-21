@@ -13,6 +13,8 @@ import { ChangeTilePairs } from "./ChangeTilePairs";
 
 export type CoverCardItemProps = {
 	card: OptionCard;
+	/** The short shift's day, which the row names: the card's pairs on it say no date. */
+	gapDay?: string;
 	/** Opens the card's review inside the row; without it (an offer out to its person) there is nothing to review. */
 	onReview?: () => void;
 	/** The Review button, so focus can come back to it from the review. */
@@ -43,6 +45,7 @@ const CHIP_TONES: Record<CostChipKind, BadgeTone> = {
  */
 export const CoverCardItem = ({
 	card,
+	gapDay,
 	onReview,
 	reviewRef,
 	timeZone,
@@ -73,7 +76,7 @@ export const CoverCardItem = ({
 					)}
 				</span>
 				<span className="text-neutral-800">{card.kindLine}</span>
-				<ChangeTilePairs groups={card.groups} />
+				<ChangeTilePairs groups={card.groups} knownDay={gapDay} />
 				{leaves?.kind === "part" && (
 					<span className="text-error-700">{leaves.text}</span>
 				)}

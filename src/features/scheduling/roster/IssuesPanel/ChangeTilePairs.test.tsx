@@ -58,4 +58,29 @@ describe("ChangeTilePairs", () => {
 			/Ben Ong.*Sat, Oct 17.*\+2 h.*Chen Wei.*Fri, Oct 16/
 		);
 	});
+
+	it("given_theDayTheRowNames_when_drawn_then_itsPairsSayNoDateAndOtherDaysDo", () => {
+		const drawn = render(
+			<I18nextProvider i18n={authTestI18n}>
+				<ChangeTilePairs
+					knownDay="2026-10-17"
+					groups={[
+						{
+							...group("m-1", "Aisha Rahman", "2026-10-17"),
+							days: [
+								...group("m-1", "", "2026-10-17").days,
+								...group("m-1", "", "2026-10-16").days.map((day) => ({
+									...day,
+									key: "m-1|2026-10-16",
+								})),
+							],
+						},
+					]}
+				/>
+			</I18nextProvider>
+		).container;
+
+		expect(drawn).not.toHaveTextContent("Sat, Oct 17");
+		expect(drawn).toHaveTextContent("Fri, Oct 16");
+	});
 });

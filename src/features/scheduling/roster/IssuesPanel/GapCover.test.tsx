@@ -162,7 +162,7 @@ describe("GapCover", () => {
 
 		expect(await screen.findByText(UNREACHABLE)).toBeVisible();
 		expect(
-			screen.getByText("Free by their hours, not checked against the rules")
+			screen.getByText("Free by their hours")
 		).toBeVisible();
 		const cards = await screen.findAllByRole("listitem");
 		expect(cards[0]).toHaveTextContent(

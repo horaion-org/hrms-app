@@ -5300,7 +5300,7 @@
 				"optionsFound_one": "{{count}} option found",
 				"optionsFound_other": "{{count}} options found",
 				"findAgain": "Find options again",
-				"fallbackCaption": "Free by their hours, not checked against the rules",
+				"fallbackCaption": "Free by their hours",
 				"partCaption": "Cover part of it",
 				"bestOf": "The best {{shown}} of {{found}}."
 			}
