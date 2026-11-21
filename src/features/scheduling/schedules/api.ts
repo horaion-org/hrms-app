@@ -725,14 +725,7 @@ export type RosterCellValue = z.infer<typeof rosterCellSchema>;
  * changed after publication, without who changed it (docs/adr/0063).
  */
 const rosterChangeReasonSchema = z
-	.enum([
-		"MANUAL",
-		"LEAVE_APPROVED",
-		"LEAVE_RECORDED",
-		"LEAVE_MOVE",
-		"REPAIR_OPTION",
-		"UNKNOWN",
-	])
+	.enum(["MANUAL", "LEAVE_APPROVED", "LEAVE_RECORDED", "LEAVE_MOVE", "REPAIR_OPTION", "UNKNOWN"])
 	.catch("UNKNOWN");
 
 const rosterLastChangeSchema = z.object({

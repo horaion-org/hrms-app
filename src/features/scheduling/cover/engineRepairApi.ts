@@ -5,7 +5,10 @@ import type { QueryOptionsFor } from "@/common/query-client";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import { ENGINE_ANSWER_WAIT_MILLISECONDS } from "@/features/scheduling/engineWait";
 import { schedulePath } from "@/features/scheduling/paths";
-import { rosterChangeCellSchema } from "@/features/scheduling/rosterChanges/api";
+import {
+	REPAIR_OPTION_KINDS,
+	rosterChangeCellSchema,
+} from "@/features/scheduling/rosterChanges/api";
 import type { RosterChangeTarget } from "@/features/scheduling/rosterChanges/useRosterChangeActions";
 import { scheduleKey } from "@/features/scheduling/schedules/api";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
@@ -21,20 +24,8 @@ import { administrativeMeta } from "@/features/workspace/queryAccess";
 /** A span of local time, `yyyy-MM-ddTHH:mm:ss`. */
 export type RepairSpan = { start: string | null; end: string | null };
 
-/** What an option does, as the API names it; OTHER for the older repair's options and a kind this app does not know. */
-const repairOptionKindSchema = z
-	.enum([
-		"CALL_IN",
-		"MOVE",
-		"OVERTIME_STRETCH",
-		"STRETCH_PAIR",
-		"DAY_SWAP",
-		"OTHER",
-	])
-	.catch("OTHER");
-
-/** What an option does: call someone in, move them, stretch one or two shifts, swap a day, or another change. */
-export type RepairOptionKind = z.infer<typeof repairOptionKindSchema>;
+/** What an option does; OTHER for the older repair's options and a kind this app does not know. */
+const repairOptionKindSchema = z.enum(REPAIR_OPTION_KINDS).catch("OTHER");
 
 /**
  * How much of the gap an option fills: all of it, one person of several for

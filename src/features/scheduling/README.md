@@ -44,7 +44,8 @@ Each area has one job. `SCHEDULING_TOP_LEVEL` in `scripts/check-feature-cycles.m
 | `preferenceOutcomes/` | What a generated roster made of each person's shift preferences |
 
 Shared by every area, at the top: `paths.ts` (request paths and the query root), `periods.ts`, `dayTypes.ts`,
-`schedulingSearch.ts`, and the six page tests (`*.test.tsx`). These also stay at the top, because areas on both
+`schedulingSearch.ts`, `engineWait.ts` (how long a read the engine answers may take), and the six page tests
+(`*.test.tsx`). These also stay at the top, because areas on both
 sides read them, so inside one area they would make two areas import each other: `scheduleDraft.ts` (a draft's
 setup, shifts, constraints and forecast), `weekChoice.ts`, `steps.ts`, `setupReach.ts`, and the components
 `WeekChoiceSummary`, `RosterSidePanel` and `RosterCellPanel`.

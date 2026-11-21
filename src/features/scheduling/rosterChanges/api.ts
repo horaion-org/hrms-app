@@ -3,7 +3,6 @@ import { z } from "zod";
 import { apiRequest } from "@/common/api-client";
 import type { DepartmentPath } from "@/common/companyPath";
 import type { QueryOptionsFor } from "@/common/query-client";
-import type { RepairOptionKind } from "@/features/scheduling/cover/engineRepairApi";
 import { schedulePath } from "@/features/scheduling/paths";
 import {
 	rosterCellSchema,
@@ -75,6 +74,23 @@ export const rosterChangeCellSchema: z.ZodType<RosterChangeCell> =
 				.transform((dayType) => dayType ?? undefined),
 		}),
 	]);
+
+/**
+ * What a repair option does, as the API names it (`…/repair-options`): call
+ * someone in, move them, stretch one or two shifts, swap a day, or another
+ * change (the older repair's, or a kind this app does not know). An apply
+ * names it when the change is one of those options.
+ */
+export const REPAIR_OPTION_KINDS = [
+	"CALL_IN",
+	"MOVE",
+	"OVERTIME_STRETCH",
+	"STRETCH_PAIR",
+	"DAY_SWAP",
+	"OTHER",
+] as const;
+
+export type RepairOptionKind = (typeof REPAIR_OPTION_KINDS)[number];
 
 /** What a preview and an apply send. */
 export type RosterChangeBody = {

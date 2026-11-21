@@ -24,7 +24,7 @@ import {
 	type EngineRepairState,
 } from "@/features/scheduling/cover/useEngineRepair";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
-import { engineOfferTargetOf } from "@/features/scheduling/coverOffers/coverOfferRules";
+import { engineOfferTargetOf } from "@/features/scheduling/coverOffers/engineOfferKind";
 import {
 	useCellCoverOffer,
 	type CellCoverOffer,
