@@ -4,13 +4,15 @@ import { apiRequest } from "@/common/api-client";
 import type { QueryOptionsFor } from "@/common/query-client";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import { ENGINE_ANSWER_WAIT_MILLISECONDS } from "@/features/scheduling/engineWait";
-import { schedulePath } from "@/features/scheduling/paths";
+import {
+	SCHEDULING_QUERY_ROOT,
+	schedulePath,
+} from "@/features/scheduling/paths";
 import {
 	REPAIR_OPTION_KINDS,
 	rosterChangeCellSchema,
 } from "@/features/scheduling/rosterChanges/api";
 import type { RosterChangeTarget } from "@/features/scheduling/rosterChanges/useRosterChangeActions";
-import { scheduleKey } from "@/features/scheduling/schedules/api";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
 
 /*
@@ -162,7 +164,12 @@ export const fetchRepairOptions = (
 		}
 	);
 
-/** The key one gap's engine options at `revision` are cached under, below the schedule's own. */
+/**
+ * The key one gap's engine options at `revision` are cached under. Not below
+ * the schedule's own key, which every refresh of the schedule invalidates:
+ * that would ask the engine again at a revision already known to be stale;
+ * the next revision is asked afresh under its own key.
+ */
 export const repairOptionsKey = (
 	companyId: string,
 	scheduleId: string,
@@ -171,16 +178,17 @@ export const repairOptionsKey = (
 ): readonly [
 	"scheduling",
 	string,
-	"schedules",
-	string,
 	"repairOptions",
+	string,
 	string,
 	string,
 	number,
 ] =>
 	[
-		...scheduleKey(companyId, scheduleId),
+		SCHEDULING_QUERY_ROOT,
+		companyId,
 		"repairOptions",
+		scheduleId,
 		gap.shiftId,
 		gap.day,
 		revision,
@@ -192,7 +200,9 @@ const REPAIR_OPTIONS_KEPT_MS = 5 * 60 * 1000;
 /**
  * The engine's options for `gap` at `revision`, asked for only while `asked`
  * (Find cover asks as it opens, but not while a change lands). Kept for a
- * while under the gap and revision, so reopening the gap does not solve again.
+ * while under the gap and revision, so reopening the gap does not solve
+ * again; never asked again by itself when the window regains focus or the
+ * network returns.
  */
 export const repairOptionsQuery = (
 	target: RosterChangeTarget,
@@ -219,4 +229,7 @@ export const repairOptionsQuery = (
 		staleTime: REPAIR_OPTIONS_KEPT_MS,
 		gcTime: REPAIR_OPTIONS_KEPT_MS,
 		retry: false,
+		// A solve takes seconds and the answer belongs to its revision: never asked again by itself.
+		refetchOnWindowFocus: false,
+		refetchOnReconnect: false,
 	});

@@ -88,7 +88,8 @@ const useStatusLines = (
 	const { status, view, engineRepair } = panel;
 	const engineWorking =
 		engineRepair.status === "loading" ||
-		(engineRepair.status === "refused" && engineRepair.retrying);
+		(engineRepair.status === "refused" && engineRepair.retrying) ||
+		(engineRepair.status === "ready" && engineRepair.asking);
 	const waitedLong = useWaitedLong(
 		engineWorking,
 		STILL_WORKING_AFTER_MILLISECONDS
@@ -125,13 +126,42 @@ const useStatusLines = (
 		lines.push(
 			<Line key="stillWorking" text={t(`${engineKey}.stillWorking`)} />
 		);
+	const refusal =
+		engineRepair.status === "refused" ||
+		(engineRepair.status === "ready" && !engineRepair.asking)
+			? engineRepair.refusal
+			: undefined;
+	if (refusal) {
+		const action =
+			engineRepair.status === "refused" && engineRepair.retrying
+				? undefined
+				: REFUSAL_ACTIONS[refusal];
+		lines.push(
+			<Line
+				key="refused"
+				alert
+				text={t(`${engineKey}.refusal.${refusal}`)}
+				action={
+					action === "tryAgain"
+						? { label: tryAgain, onClick: engineRepair.askAgain }
+						: action === "findAgain"
+							? {
+									label: t(`${engineKey}.findAgain`),
+									onClick: panel.review.findOptionsAgain,
+								}
+							: undefined
+				}
+			/>
+		);
+	}
 	if (engineRepair.status === "ready") {
-		const { options, search } = engineRepair;
+		const { options, search, asking } = engineRepair;
 		if (options.length === 0)
 			lines.push(<Line key="nobody" text={t(`${engineKey}.nobodyCan`)} />);
 		else if (list.noFullFill)
 			lines.push(<Line key="noFullFill" text={t(`${engineKey}.noFullFill`)} />);
-		if (search && !search.complete)
+		// While it asks again the options found so far stay; the line returns if the new answer is cut short too.
+		if (search && !search.complete && !asking && !refusal)
 			lines.push(
 				<Line
 					key="incomplete"
@@ -145,28 +175,6 @@ const useStatusLines = (
 					{t(`${engineKey}.optionsFound`, { count: options.length })}
 				</span>
 			);
-	}
-	if (engineRepair.status === "refused") {
-		const action = engineRepair.retrying
-			? undefined
-			: REFUSAL_ACTIONS[engineRepair.refusal];
-		lines.push(
-			<Line
-				key="refused"
-				alert
-				text={t(`${engineKey}.refusal.${engineRepair.refusal}`)}
-				action={
-					action === "tryAgain"
-						? { label: tryAgain, onClick: engineRepair.askAgain }
-						: action === "findAgain"
-							? {
-									label: t(`${engineKey}.findAgain`),
-									onClick: panel.review.findOptionsAgain,
-								}
-							: undefined
-				}
-			/>
-		);
 	}
 	if (view !== "backendFallback") return lines;
 	if (status === "options")

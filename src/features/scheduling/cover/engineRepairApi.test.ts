@@ -133,14 +133,21 @@ describe("engine repair options client", () => {
 		expect(parsed.notAssigned?.[0]?.reasons[0]?.code).toBe("on_training");
 	});
 
-	it("keys one gap's options at one revision below the schedule", () => {
-		expect(repairOptionsKey("c-1", "s-1", GAP, 2)).toEqual([
-			...scheduleKey("c-1", "s-1"),
+	it("keys one gap's options at one revision apart from the schedule, so its refreshes never ask again", () => {
+		const key = repairOptionsKey("c-1", "s-1", GAP, 2);
+
+		expect(key).toEqual([
+			"scheduling",
+			"c-1",
 			"repairOptions",
+			"s-1",
 			GAP.shiftId,
 			GAP.day,
 			2,
 		]);
+		expect(key.slice(0, scheduleKey("c-1", "s-1").length)).not.toEqual(
+			scheduleKey("c-1", "s-1")
+		);
 	});
 
 	it("reads the answer's revision, search and what is short now, and each option's kind, fill, cost, cells and people", async () => {

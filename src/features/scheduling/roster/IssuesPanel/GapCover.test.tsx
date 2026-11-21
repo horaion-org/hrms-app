@@ -161,9 +161,7 @@ describe("GapCover", () => {
 		const user = userEvent.setup();
 
 		expect(await screen.findByText(UNREACHABLE)).toBeVisible();
-		expect(
-			screen.getByText("Free by their hours")
-		).toBeVisible();
+		expect(screen.getByText("Free by their hours")).toBeVisible();
 		const cards = await screen.findAllByRole("listitem");
 		expect(cards[0]).toHaveTextContent(
 			/Aisha Rahman.*Suggested.*Not rule-checked/
@@ -246,6 +244,32 @@ describe("GapCover", () => {
 		expect(screen.getByRole("button", { name: "Try again" })).toBeVisible();
 		expect(screen.getByText("The best 1 of 12.")).toBeVisible();
 		expect(screen.getByText("1 option found")).toHaveClass("sr-only");
+	});
+
+	it("given_aSearchCutShort_when_triedAgainAndRefused_then_itsOptionsStayWithTheRefusalAboveThem", async () => {
+		stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${REPAIR_OPTIONS}`]: [
+				answer(
+					repairOptionsFixture([callInOption()], [], {
+						search: { complete: false, optionsFound: 12 },
+					})
+				),
+				{ status: 504, body: { errorCode: "REPAIR_ENGINE_TOO_SLOW" } },
+			],
+		});
+		show();
+		const user = userEvent.setup();
+		await screen.findByText(
+			"Ran out of time. These are the options found so far."
+		);
+
+		await user.click(screen.getByRole("button", { name: "Try again" }));
+
+		expect(await screen.findByText("The engine took too long.")).toBeVisible();
+		expect(
+			screen.getByRole("button", { name: "Review Aisha Rahman’s change" })
+		).toBeVisible();
 	});
 
 	it("given_noOptionAtAll_when_shown_then_saysNobodyCanAndWhyNotIsOpen", async () => {

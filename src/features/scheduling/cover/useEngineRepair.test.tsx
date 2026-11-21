@@ -192,4 +192,56 @@ describe("useEngineRepair", () => {
 			expect(result.current.status).toBe("ready");
 		});
 	});
+
+	it("keeps an answer on screen while it is asked again, and says a refused retry above it", async () => {
+		let reply: (response: Response) => void = () => {};
+		const replies = [
+			Promise.resolve(
+				new Response(
+					JSON.stringify(
+						envelope(
+							repairOptionsFixture([callInOption()], null, {
+								search: { complete: false, optionsFound: 4 },
+							})
+						)
+					),
+					{ status: 200 }
+				)
+			),
+			new Promise<Response>((resolve) => {
+				reply = resolve;
+			}),
+		];
+		vi.stubGlobal("fetch", (): Promise<Response> => replies.shift()!);
+		const { result } = hook();
+		await waitFor(() => {
+			expect(result.current.status).toBe("ready");
+		});
+
+		act(() => {
+			result.current.askAgain();
+		});
+
+		await waitFor(() => {
+			expect(result.current).toMatchObject({ status: "ready", asking: true });
+		});
+		expect(
+			result.current.status === "ready" && result.current.options
+		).toHaveLength(1);
+		reply(
+			new Response(JSON.stringify({ errorCode: "REPAIR_ENGINE_TOO_SLOW" }), {
+				status: 504,
+			})
+		);
+		await waitFor(() => {
+			expect(result.current).toMatchObject({
+				status: "ready",
+				asking: false,
+				refusal: "tooSlow",
+			});
+		});
+		expect(
+			result.current.status === "ready" && result.current.options
+		).toHaveLength(1);
+	});
 });

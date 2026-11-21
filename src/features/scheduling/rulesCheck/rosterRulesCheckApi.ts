@@ -3,13 +3,15 @@ import { z } from "zod";
 import { apiRequest } from "@/common/api-client";
 import type { QueryOptionsFor } from "@/common/query-client";
 import { ENGINE_ANSWER_WAIT_MILLISECONDS } from "@/features/scheduling/engineWait";
-import { schedulePath } from "@/features/scheduling/paths";
+import {
+	SCHEDULING_QUERY_ROOT,
+	schedulePath,
+} from "@/features/scheduling/paths";
 import type { RosterChangeTarget } from "@/features/scheduling/rosterChanges/useRosterChangeActions";
 import {
 	findingsConflictSchema,
 	findingsMemberSchema,
 	findingsViolationSchema,
-	scheduleKey,
 	type FindingsConflict,
 } from "@/features/scheduling/schedules/api";
 import { administrativeMeta } from "@/features/workspace/queryAccess";
@@ -89,13 +91,23 @@ export const fetchRosterRulesCheck = (
 		}
 	);
 
-/** The key one revision's check is cached under, below the schedule's own. */
+/**
+ * The key one revision's check is cached under. Not below the schedule's own
+ * key, so a refresh of the schedule never checks again a revision already
+ * known to be stale; the next revision is asked under its own key.
+ */
 export const rosterRulesCheckKey = (
 	companyId: string,
 	scheduleId: string,
 	revision: number
-): readonly ["scheduling", string, "schedules", string, "rulesCheck", number] =>
-	[...scheduleKey(companyId, scheduleId), "rulesCheck", revision] as const;
+): readonly ["scheduling", string, "rulesCheck", string, number] =>
+	[
+		SCHEDULING_QUERY_ROOT,
+		companyId,
+		"rulesCheck",
+		scheduleId,
+		revision,
+	] as const;
 
 /**
  * The check at `revision`, asked for only once `asked` (the engine takes a
