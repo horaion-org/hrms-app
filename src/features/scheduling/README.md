@@ -255,12 +255,16 @@ gate, the saves and generating the draft's month.
   panel; a day to decide reads "Needs attention" to a roster editor who can't see leave, with no leave detail. A
   notification about such a day opens its week with the Issues panel (`?week=…&panel=issues`).
 - `cover/` — what covering a short shift is made of, shown in its Issues row (`roster/IssuesPanel/GapCover`): the
-  engine's own repair, asked as the row opens (`engineRepairApi.ts` `…/repair-options`, kept per gap and revision;
-  `useEngineRepair.ts`, `engineRepairWords.ts`, `engineRepairChange.ts` `repairCells`), the API's list ranked by hours
-  (`api.ts`, `coverOptionWords.ts`), `coverListView.ts` (which of the two is the list: the engine's on a roster not
-  published, the API's when the engine cannot answer and on a published roster, whose offers go out from it),
-  `coverWithEngine.ts` (the engine's answer merged into the API's list), `useCoverPanel.ts` (state, preview, Apply and
-  offers) and `NotAssignedList` (`notAssignedWords.ts`, why nobody else was put on the shift, folded).
+  engine's own repair, asked as the row opens (`engineRepairApi.ts` `…/repair-options`: each option's kind, how much
+  it fills, its cost, its cells and each person's week, kept per gap and revision apart from the schedule's key, and
+  never asked again by itself; `useEngineRepair.ts`, which keeps an answer on screen while it is asked again;
+  `engineRepairWords.ts`, every line of a card in words), the API's list ranked by hours (`api.ts`,
+  `coverOptionWords.ts`), `coverListView.ts` (which of the two is the list: the engine's, published or not, the API's
+  only when the engine cannot answer), `useCoverPanel.ts` (state, preview, Apply with the option's cells at the
+  answer's revision, and offers), `notAssignedLeave.ts` (the why-not list's "on leave" corrected by the API's list)
+  and `NotAssignedList` (`notAssignedWords.ts`, why nobody else was put on the shift, folded). How one person's option
+  goes out as a cover offer is `coverOffers/engineOfferKind.ts`; the "still working" timer is
+  `src/common/useWaitedLong.ts`.
 - `rulesCheck/` — Validate schedule, for whoever may change the roster (`…/roster-check`, under
   `schedule:edit_shift`): `rosterRulesCheckApi.ts` (the working-time rules broken and the staffing gaps, at one
   revision, asked on demand), `useRosterRulesCheck.ts` (the ask and the last answer), `rosterRulesCheckWords.ts` (rule
