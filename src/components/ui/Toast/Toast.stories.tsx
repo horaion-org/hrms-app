@@ -30,3 +30,12 @@ export const WithAction: Story = {
 		action: { label: "Undo", onClick: fn() },
 	},
 };
+
+/** A long message wraps to as many lines as it needs, Undo kept beside it. */
+export const LongMessage: Story = {
+	args: {
+		children:
+			"Roster changed. Swing Shift is still 1 short 14:00 – 15:00, 17:00 – 22:00.",
+		action: { label: "Undo", onClick: fn() },
+	},
+};

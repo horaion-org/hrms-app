@@ -18,6 +18,19 @@ describe("Toast", () => {
 		);
 	});
 
+	it("given_aLongMessage_when_rendered_then_itWrapsInsteadOfBeingCutShort", () => {
+		render(
+			<Toast onDismiss={vi.fn()}>
+				Roster changed. Swing Shift is still 1 short 14:00 – 15:00, 17:00 –
+				22:00.
+			</Toast>
+		);
+
+		const message = screen.getByText(/Swing Shift is still 1 short/);
+		expect(message).not.toHaveClass("truncate");
+		expect(message).toHaveClass("break-words");
+	});
+
 	it("given_theDuration_when_itPasses_then_dismissesOnce", () => {
 		const onDismiss = vi.fn();
 		render(
