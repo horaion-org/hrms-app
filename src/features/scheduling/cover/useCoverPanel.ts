@@ -195,6 +195,8 @@ export const useCoverPanel = ({
 	const [editedRemark, setEditedRemark] = useState<string>();
 	const [tickedFor, setTickedFor] = useState<string | null>(null);
 	const [rosterMovedUnderApply, setRosterMovedUnderApply] = useState(false);
+	// A change that filled the gap: the gap is covered, and nothing more is asked for it.
+	const [filledByApply, setFilledByApply] = useState(false);
 	// An engine option holds for the revision on screen it was chosen at: once it lands (or the roster moves),
 	// it is dropped with its preview, as a chosen person of the list is when the list is made afresh.
 	const [repairChoice, setRepairChoice] = useState<{
@@ -214,13 +216,16 @@ export const useCoverPanel = ({
 	const landing =
 		apply.isPending ||
 		(landedRevision !== undefined && landedRevision > revision);
-	const engineRepair = useEngineRepair(target, gap, revision, landing);
+	const asksNothing = landing || filledByApply;
+	const engineRepair = useEngineRepair(target, gap, revision, asksNothing);
 	const list = useQuery({
 		...coverOptionsQuery(target, gap, revision),
-		enabled: !landing,
+		enabled: !asksNothing,
 	});
 	const options = list.data;
-	const status = coverPanelStatus(list, options, engineRepair);
+	const status = filledByApply
+		? "closed"
+		: coverPanelStatus(list, options, engineRepair);
 	/** A roster member's profile id, which is how the engine names people. */
 	const profileIdOf = (membershipId: string): string | undefined =>
 		assignments.find((row) => row.member?.membershipId === membershipId)?.member
@@ -254,7 +259,7 @@ export const useCoverPanel = ({
 			target.scheduleId,
 			body
 		),
-		enabled: !landing,
+		enabled: !asksNothing,
 	});
 	const fingerprint = preview.data?.checksFingerprint ?? null;
 	const gate = applyGate(preview.data?.checks ?? []);
@@ -433,13 +438,12 @@ export const useCoverPanel = ({
 							applyInFlight.current = false;
 						},
 						onSuccess: (change) => {
-							onApplied(change, {
-								// An engine option says what it fills; one person of the list fills a gap short by one.
-								filled: repairOption
-									? repairOption.fills === "GAP"
-									: (options?.gap.shortBy ?? 0) <= 1,
-								stillShort: stillShortOfChoice(),
-							});
+							// An engine option says what it fills; one person of the list fills a gap short by one.
+							const filled = repairOption
+								? repairOption.fills === "GAP"
+								: (options?.gap.shortBy ?? 0) <= 1;
+							if (filled) setFilledByApply(true);
+							onApplied(change, { filled, stillShort: stillShortOfChoice() });
 						},
 						onError: (error) => {
 							const refusal = rosterChangeRefusal(error);

@@ -664,7 +664,7 @@ describe("useCoverPanel", () => {
 });
 
 describe("useCoverPanel: the engine asked once per revision", () => {
-	it("given_aRefusedApplyThenFindOptionsAgain_when_theRosterMovesOn_then_oneAskAtTheOldRevisionAndOneAtTheNew", async () => {
+	it("given_aRefusedApply_when_theRosterMovesOn_then_oneAskAtTheOldRevisionAndOneAtTheNew", async () => {
 		const option = stretchAfterOption();
 		const calls = stubApi({
 			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
@@ -724,5 +724,68 @@ describe("useCoverPanel: the engine asked once per revision", () => {
 			).toEqual([1, 2]);
 		});
 		expect(result.current.engineRepair.status).toBe("ready");
+	});
+});
+
+describe("useCoverPanel: a gap just filled", () => {
+	it("given_anOptionThatFillsTheGapApplied_when_theRosterShowsItsRevision_then_nothingMoreIsAskedAndTheGapReadsCovered", async () => {
+		const option = callInOption();
+		const calls = stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+			[`POST ${CHANGES}`]: {
+				status: 201,
+				body: envelope(rosterChangeFixture({ fromRevision: 1, toRevision: 2 })),
+			},
+			[`POST ${REPAIR_OPTIONS}`]: answer(repairOptionsFixture([option], [])),
+		});
+		const input: CoverPanelInput = {
+			target: {
+				companyId: "c-1",
+				unit: { branchId: "b-1", departmentId: "d-1" },
+				scheduleId: "s-1",
+				runId: "r-1",
+			},
+			revision: 1,
+			gap: { shiftId: GAP.shiftId, day: GAP.day },
+			assignments: roster,
+			dayRow: roster.find((row) => row.day === GAP.day)!,
+			shifts: frozenShiftsFixture(),
+			onPreviewDays: vi.fn(),
+			onApplied: vi.fn(),
+		};
+		const { result, rerender } = renderHook(
+			({ revision }) => useCoverPanel({ ...input, revision }),
+			{ wrapper, initialProps: { revision: 1 } }
+		);
+		await waitFor(() => {
+			expect(result.current.engineRepair.status).toBe("ready");
+		});
+		act(() => {
+			result.current.chooseRepair(option);
+		});
+		await waitFor(() => {
+			expect(result.current.review.applyBlocked).toBe(false);
+		});
+		act(() => {
+			result.current.review.apply();
+		});
+		await waitFor(() => {
+			expect(input.onApplied).toHaveBeenCalled();
+		});
+
+		rerender({ revision: 2 });
+
+		await waitFor(() => {
+			expect(result.current.status).toBe("closed");
+		});
+		// Nothing is asked at the revision the fill landed at: the gap is covered.
+		expect(
+			calls.filter(
+				(call) =>
+					(call.body as { expectedRevision?: number } | undefined)
+						?.expectedRevision === 2
+			)
+		).toEqual([]);
 	});
 });
