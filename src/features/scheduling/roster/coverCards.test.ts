@@ -61,6 +61,7 @@ const cardsOf = (
 		pairsOf: (cells) =>
 			cells.map((cell) => ({
 				key: cell.day,
+				day: cell.day,
 				before: { kind: "day", label: "Day off" },
 				after: { kind: "day", label: cell.kind },
 			})),

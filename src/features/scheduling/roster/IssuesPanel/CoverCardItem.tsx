@@ -74,7 +74,9 @@ export const CoverCardItem = ({
 					)}
 				</span>
 				{card.pairs.length > 0 ? (
-					<ChangeTilePairs pairs={card.pairs} />
+					<ChangeTilePairs
+						groups={[{ membershipId: "", name: "", days: card.pairs }]}
+					/>
 				) : (
 					choice.kind === "engine" &&
 					choice.option.moves.map((move) => (

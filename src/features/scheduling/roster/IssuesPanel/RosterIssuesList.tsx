@@ -93,7 +93,6 @@ export const RosterIssuesList = ({
 				<IssueRowBody
 					cover={cover}
 					fixes={fixes}
-					language={language}
 					row={row}
 					onShow={onShow}
 				/>

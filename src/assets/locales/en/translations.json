@@ -4951,7 +4951,8 @@
 				"week": "This week {{before}} → {{after}} h of {{contract}} h",
 				"weekOvertime": "This week {{before}} → {{after}} h of {{contract}} h · {{overtime}} h overtime",
 				"weekBar": "This week’s hours against the contract",
-				"whyNot": "Why not others ({{count}})"
+				"whyNot": "Why not others ({{count}})",
+				"becomes": "becomes"
 			}
 		},
 		"rosterMarkers": {

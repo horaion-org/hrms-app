@@ -1,8 +1,10 @@
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
+import { formatDay } from "@/common/formatDay";
+import { formattingLocale } from "@/common/formattingLocale";
 import type {
 	ChangeTileFace,
-	ChangeTilePair,
+	ChangeTileGroup,
 } from "@/features/scheduling/roster/changeTiles";
 import {
 	rosterLooks,
@@ -40,38 +42,60 @@ const ChangeTile = ({ face }: { face: ChangeTileFace }): FunctionComponent => {
 };
 
 /**
- * A change drawn as the roster's own tiles, one before → after pair per day,
- * a stretch's "+2 h" after the tile it widens. A tile never grows past its
- * column: it is cut short, its title holding the whole of it.
+ * A change drawn as the roster's own tiles, one line per day: the day, then
+ * before → after (the arrow read as "becomes"), a stretch's "+2 h" after the
+ * tile it widens. With more than one person each person's days sit under
+ * their name. A tile never grows past its column: it is cut short, its
+ * title holding the whole of it.
  */
 export const ChangeTilePairs = ({
-	pairs,
+	groups,
 }: {
-	pairs: ReadonlyArray<ChangeTilePair>;
+	groups: ReadonlyArray<ChangeTileGroup>;
 }): FunctionComponent => {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
+	const language = formattingLocale(i18n);
+	const named = groups.length > 1;
 	return (
-		<span className="flex flex-col gap-1">
-			{pairs.map(({ key, before, after }) => {
-				const mark =
-					after.kind === "shift"
-						? stretchHoursMark(after.stretchMinutes, t)
-						: undefined;
-				return (
-					<span key={key} className="flex flex-wrap items-center gap-1.5">
-						<ChangeTile face={before} />
-						<span aria-hidden="true" className="font-semibold text-neutral-600">
-							→
+		<span className="flex flex-col gap-1.5">
+			{groups.map((group) => (
+				<span key={group.membershipId} className="flex flex-col gap-1">
+					{named && (
+						<span className="text-xs font-semibold text-neutral-900">
+							{group.name}
 						</span>
-						<ChangeTile face={after} />
-						{mark && (
-							<span className="rounded bg-warning-100 px-1.5 py-0.5 text-xs font-semibold text-warning-900">
-								{mark}
+					)}
+					{group.days.map(({ key, day, before, after }) => {
+						const mark =
+							after.kind === "shift"
+								? stretchHoursMark(after.stretchMinutes, t)
+								: undefined;
+						return (
+							<span key={key} className="flex flex-wrap items-center gap-1.5">
+								<span className="text-xs whitespace-nowrap text-neutral-700">
+									{formatDay(day, language)}
+								</span>
+								<ChangeTile face={before} />
+								<span
+									aria-hidden="true"
+									className="font-semibold text-neutral-600"
+								>
+									→
+								</span>
+								<span className="sr-only">
+									{t("scheduling.issues.cover.becomes")}
+								</span>
+								<ChangeTile face={after} />
+								{mark && (
+									<span className="rounded bg-warning-100 px-1.5 py-0.5 text-xs font-semibold text-warning-900">
+										{mark}
+									</span>
+								)}
 							</span>
-						)}
-					</span>
-				);
-			})}
+						);
+					})}
+				</span>
+			))}
 		</span>
 	);
 };

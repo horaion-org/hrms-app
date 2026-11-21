@@ -97,7 +97,9 @@ export const CoverRowReview = ({
 					title: t(`${key}.whatChanges`, { name: card.name }),
 					content: (
 						<>
-							<ChangeTilePairs pairs={pairs} />
+							<ChangeTilePairs
+								groups={[{ membershipId: "", name: "", days: pairs }]}
+							/>
 							<WeekLine card={card} />
 						</>
 					),

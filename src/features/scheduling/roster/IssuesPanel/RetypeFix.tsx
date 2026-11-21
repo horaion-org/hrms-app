@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { formatDay } from "@/common/formatDay";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { dayTypeLabel } from "@/features/scheduling/dayTypes";
@@ -12,33 +11,34 @@ import { ChangeTilePairs } from "./ChangeTilePairs";
 export type RetypeFixProps = {
 	retype: DayTypeRetype;
 	fixes: Pick<IssueFixes, "onFix" | "busy">;
-	/** The locale dates are written in (`formattingLocale`). */
-	language: string;
 };
 
 /**
  * A rest-day or day-off row's fix: the day drawn as one before → after pair,
- * "Sun, Oct 18 · Day off" → "Sun, Oct 18 · Rest day", and Apply, which makes
+ * "Sun, Oct 18  Day off → Rest day", and Apply, which makes
  * it as the fix always has (applied, or on a published roster opened in the
  * day's editor).
  */
 export const RetypeFix = ({
 	retype,
 	fixes,
-	language,
 }: RetypeFixProps): FunctionComponent => {
 	const { t } = useTranslation();
-	const day = formatDay(retype.day, language);
-	const labelOf = (dayType: string): string =>
-		`${day} · ${dayTypeLabel(dayType, t)}`;
 	return (
 		<div className="flex flex-wrap items-center justify-between gap-2">
 			<ChangeTilePairs
-				pairs={[
+				groups={[
 					{
-						key: retype.issueKey,
-						before: { kind: "day", label: labelOf(retype.from) },
-						after: { kind: "day", label: labelOf(retype.to) },
+						membershipId: retype.membershipId,
+						name: "",
+						days: [
+							{
+								key: retype.issueKey,
+								day: retype.day,
+								before: { kind: "day", label: dayTypeLabel(retype.from, t) },
+								after: { kind: "day", label: dayTypeLabel(retype.to, t) },
+							},
+						],
 					},
 				]}
 			/>

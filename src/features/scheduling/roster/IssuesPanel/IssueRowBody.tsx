@@ -14,8 +14,6 @@ import { RetypeFix } from "./RetypeFix";
 
 export type IssueRowBodyProps = {
 	row: IssueRow;
-	/** The locale dates are written in (`formattingLocale`). */
-	language: string;
 	/** Outlines the issue's cell on the grid; no Show without. */
 	onShow?: (issue: RosterIssue) => void;
 	/** On a roster that may be changed: what covering a short shift needs. */
@@ -33,7 +31,6 @@ export type IssueRowBodyProps = {
  */
 export const IssueRowBody = ({
 	row,
-	language,
 	onShow,
 	cover,
 	fixes,
@@ -49,7 +46,7 @@ export const IssueRowBody = ({
 	return (
 		<>
 			{retype && fixes ? (
-				<RetypeFix fixes={fixes} language={language} retype={retype} />
+				<RetypeFix fixes={fixes} retype={retype} />
 			) : (
 				<>
 					<p className="text-neutral-800">{issue.rule}</p>
