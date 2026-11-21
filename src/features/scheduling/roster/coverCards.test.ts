@@ -247,6 +247,68 @@ describe("optionCardList", () => {
 		});
 	});
 
+	it("reads the newest offer of the card's shift and day, the offers coming newest first", () => {
+		const declinedThenSent = [
+			coverOfferFixture({ offerId: "o-2", expiresAt: "2099-01-01T00:00:00Z" }),
+			coverOfferFixture({
+				offerId: "o-1",
+				status: "DECLINED",
+				answeredAt: "2026-10-16T04:00:00Z",
+			}),
+		];
+		const withdrawnThenDeclined = [
+			coverOfferFixture({
+				offerId: "o-2",
+				status: "DECLINED",
+				answeredAt: "2026-10-16T06:00:00Z",
+			}),
+			coverOfferFixture({ offerId: "o-1", status: "WITHDRAWN" }),
+		];
+
+		expect(
+			optionCardList([callInOption()], sources({ offers: declinedThenSent }))
+				.cards[0]?.offer
+		).toEqual({ kind: "open", until: "2099-01-01T00:00:00Z" });
+		expect(
+			optionCardList(
+				[callInOption()],
+				sources({ offers: withdrawnThenDeclined })
+			).cards[0]
+		).toMatchObject({ offer: { kind: "declined" }, suggested: false });
+	});
+
+	it("takes no decline of another shift that day for a decline of this one", () => {
+		const otherShift = coverOfferFixture({
+			status: "DECLINED",
+			answeredAt: "2026-10-16T06:00:00Z",
+			shift: { ...coverOfferFixture().shift!, shiftId: "lunch-rush-copy" },
+		});
+
+		expect(
+			optionCardList([callInOption()], sources({ offers: [otherShift] }))
+				.cards[0]
+		).toMatchObject({ offer: { kind: "none" }, suggested: true });
+	});
+
+	it("never suggests a person of the hours-based list who declined, as among the engine's options", () => {
+		const cards = fallbackCards(
+			coverOptionsFixture().options,
+			sources({
+				offers: [
+					coverOfferFixture({
+						status: "DECLINED",
+						answeredAt: "2026-10-16T06:00:00Z",
+					}),
+				],
+			})
+		);
+
+		expect(cards[0]).toMatchObject({
+			offer: { kind: "declined" },
+			suggested: false,
+		});
+	});
+
 	it("cards the hours-based people with their cost, not rule-checked, their week, the first suggested", () => {
 		const cards = fallbackCards(coverOptionsFixture().options, sources());
 

@@ -143,19 +143,26 @@ const peopleNamesOf = (
 		),
 	});
 
-/** Where the latest offer to one person for one day stands, as a card shows it. */
+/**
+ * Where the newest offer to one person for the shift and day their card adds
+ * stands, as the card shows it: the offers come newest first, and a decline
+ * of another shift that day is no decline of this one.
+ */
 const cardOfferOf = (
 	offers: ReadonlyArray<CoverOffer>,
 	cell: RosterChangeCell | undefined,
 	now: Date
 ): CardOffer => {
-	const forTheDay = offers.filter(
-		(offer) =>
-			offer.member?.membershipId === cell?.membershipId &&
-			offer.rosterDate === cell?.day
-	);
-	const latest = forTheDay[forTheDay.length - 1];
-	const standing = latest && offerStanding(latest, now);
+	const newest =
+		cell?.kind === "WORK"
+			? offers.find(
+					(offer) =>
+						offer.member?.membershipId === cell.membershipId &&
+						offer.rosterDate === cell.day &&
+						offer.shift?.shiftId === cell.shiftId
+				)
+			: undefined;
+	const standing = newest && offerStanding(newest, now);
 	if (standing?.kind === "open") return { kind: "open", until: standing.until };
 	return standing?.kind === "declined"
 		? { kind: "declined" }
@@ -222,7 +229,7 @@ export const optionCardList = (
 /**
  * The hours-based people as cards, when the engine cannot answer: each comes
  * in on their day off, with its cost and "Not rule-checked", their week, and
- * the first one suggested as before. Pure.
+ * the first one suggested unless they declined. Pure.
  */
 export const fallbackCards = (
 	options: ReadonlyArray<CoverOption>,
@@ -230,6 +237,7 @@ export const fallbackCards = (
 ): Array<OptionCard> =>
 	options.map((option, place) => {
 		const [cell] = option.cells;
+		const offer = cardOfferOf(sources.offers, cell, sources.now);
 		return {
 			key: `backend|${option.membershipId}`,
 			people: sources.memberName(option.membershipId),
@@ -253,8 +261,9 @@ export const fallbackCards = (
 			),
 			weekLine: weekLine(option.weekMinutes, sources.t),
 			leaves: undefined,
-			suggested: place === 0,
-			offer: cardOfferOf(sources.offers, cell, sources.now),
+			// As among the engine's options: someone who declined is never the one suggested.
+			suggested: place === 0 && offer.kind !== "declined",
+			offer,
 			choice: { kind: "backend", option },
 		};
 	});
