@@ -218,7 +218,8 @@ const optionCardOf = (
 };
 
 /**
- * The engine's options as cards, in its order (UX note 3): the first is
+ * The engine's options as cards, in its order, every part fill after the
+ * fuller fills (UX note 3): the first is
  * Suggested when it fills more than part of the gap, its person has not
  * declined and nobody it changes was taken off this shift earlier; the caption "Cover part of it" sits before the first part
  * fill. Pure.
@@ -227,11 +228,16 @@ export const optionCardList = (
 	options: ReadonlyArray<RepairOption>,
 	sources: OptionCardSources
 ): OptionCardList => {
-	const unmarked = options.map((option, rank) =>
-		optionCardOf(option, rank, sources)
-	);
 	const isPart = (card: OptionCard): boolean =>
 		card.choice.kind === "engine" && card.choice.option.fills === "PART";
+	const ranked = options.map((option, rank) =>
+		optionCardOf(option, rank, sources)
+	);
+	// The caption heads part fills only: a fuller fill the engine sent after one is drawn above it.
+	const unmarked = [
+		...ranked.filter((card) => !isPart(card)),
+		...ranked.filter(isPart),
+	];
 	const firstPart = unmarked.findIndex(isPart);
 	const noFullFill = unmarked.length > 0 && unmarked.every(isPart);
 	const partCaptionAt = firstPart > 0 ? firstPart : undefined;

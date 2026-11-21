@@ -12,6 +12,7 @@ import {
 	stretchPairOption,
 	takenOffCallInOption,
 } from "@/features/scheduling/cover/engineRepairFixtures";
+import type { RepairOption } from "@/features/scheduling/cover/engineRepairApi";
 import {
 	coverOptionFixture,
 	coverOptionsFixture,
@@ -213,14 +214,38 @@ describe("optionCardList", () => {
 		expect(list.cards.map((card) => card.suggested)).toEqual([false, false]);
 	});
 
-	it("puts the caption before the first part fill wherever it falls", () => {
-		const list = optionCardList(
+	it.each<[string, Array<RepairOption>, Array<string>, number | undefined]>([
+		[
+			"full fills, then a part fill",
 			[callInOption(), moveOption(), daySwapOption(), stretchAfterOption()],
-			sources()
-		);
+			["CALL_IN", "MOVE", "DAY_SWAP", "OVERTIME_STRETCH"],
+			3,
+		],
+		[
+			"a full fill sent after a part fill (someone taken off the shift, ranked last)",
+			[stretchAfterOption(), takenOffCallInOption()],
+			["CALL_IN", "OVERTIME_STRETCH"],
+			1,
+		],
+		[
+			"part fills only",
+			[stretchAfterOption(), stretchBeforeOption()],
+			["OVERTIME_STRETCH", "OVERTIME_STRETCH"],
+			undefined,
+		],
+	])(
+		"heads only part fills with the caption: %s",
+		(_case, options, kinds, captionAt) => {
+			const list = optionCardList(options, sources());
 
-		expect(list.partCaptionAt).toBe(3);
-	});
+			expect(
+				list.cards.map((card) =>
+					card.choice.kind === "engine" ? card.choice.option.kind : ""
+				)
+			).toEqual(kinds);
+			expect(list.partCaptionAt).toBe(captionAt);
+		}
+	);
 
 	it("suggests nothing and needs no caption when every option fills only part", () => {
 		const list = optionCardList(
