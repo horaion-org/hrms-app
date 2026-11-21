@@ -41,6 +41,7 @@ const CHANGES = `${SCHEDULE}/roster-changes`;
 const REPAIR_OPTIONS = `${SCHEDULE}/repair-options`;
 const GAP = coverOptionsFixture().gap;
 const UNREACHABLE = "The engine could not be reached.";
+const NOT_LOADED = "The options could not be loaded.";
 const answer = (body: unknown): { status: number; body: unknown } => ({
 	status: 200,
 	body: envelope(body),
@@ -151,7 +152,7 @@ describe("GapCover", () => {
 		});
 	});
 
-	it("given_theEngineUnreachable_when_opened_then_thePlainLineAndTheBackendsPeopleWithTheirWeekInTheReview", async () => {
+	it("given_theEngineFailing_when_opened_then_thePlainLineAndTheBackendsPeopleWithTheirWeekInTheReview", async () => {
 		stubApi({
 			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
 			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
@@ -160,7 +161,7 @@ describe("GapCover", () => {
 		show();
 		const user = userEvent.setup();
 
-		expect(await screen.findByText(UNREACHABLE)).toBeVisible();
+		expect(await screen.findByText(NOT_LOADED)).toBeVisible();
 		expect(screen.getByText("Free by their hours")).toBeVisible();
 		const cards = await screen.findAllByRole("listitem");
 		expect(cards[0]).toHaveTextContent(
@@ -369,7 +370,10 @@ describe("GapCover", () => {
 	it.each([
 		[504, "REPAIR_ENGINE_TOO_SLOW", "The engine took too long.", "Try again"],
 		[503, "REPAIR_ENGINE_NOT_CONFIGURED", UNREACHABLE, "Try again"],
-		[500, undefined, UNREACHABLE, "Try again"],
+		[500, undefined, NOT_LOADED, "Try again"],
+		[502, "REPAIR_ENGINE_FAILED", NOT_LOADED, "Try again"],
+		// Whatever failed, the line is true: an authorization failure says nothing about the engine.
+		[403, "DECISION_ENGINE_FAILURE", NOT_LOADED, "Try again"],
 		[
 			409,
 			"ROSTER_REVISION_CONFLICT",

@@ -41,7 +41,7 @@ const REFUSALS: Record<string, RepairRefusal> = {
 	REPAIR_ENGINE_TOO_SLOW: "tooSlow",
 };
 
-/** What a failed ask means; anything not named reads as the engine failing, which a retry may mend. */
+/** What a failed ask means; anything not named (the engine failing, an authorization failure, an outage) reads as the options not loaded, which a retry may mend. */
 export const repairRefusalOf = (error: unknown): RepairRefusal =>
 	(error instanceof ApiProblemError && error.errorCode
 		? REFUSALS[error.errorCode]

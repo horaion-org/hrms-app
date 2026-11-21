@@ -5248,7 +5248,7 @@
 					"notConnected": "The engine could not be reached.",
 					"rosterMoved": "The roster changed.",
 					"tooSlow": "The engine took too long.",
-					"failed": "The engine could not be reached."
+					"failed": "The options could not be loaded."
 				},
 				"whyNot": {
 					"title": "Why nobody was assigned",

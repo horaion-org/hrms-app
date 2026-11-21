@@ -5048,7 +5048,7 @@
 					"notConnected": "No se pudo contactar con el motor.",
 					"rosterMoved": "El cuadrante cambió.",
 					"tooSlow": "El motor tardó demasiado.",
-					"failed": "No se pudo contactar con el motor."
+					"failed": "No se pudieron cargar las opciones."
 				},
 				"whyNot": {
 					"title": "Por qué no se asignó a nadie",
