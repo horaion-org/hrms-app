@@ -5052,12 +5052,12 @@
 					"UNKNOWN": "Un cambio que la aplicación aún no sabe describir"
 				},
 				"refusal": {
-					"notSeenByEngine": "El motor ve este turno completo tal como está el cuadrante, así que no tiene nada que reparar. Los permisos de parte de un turno aún no se le envían: elige a alguien de las personas que muestra Buscar cobertura.",
-					"expired": "El motor ya no guarda la generación de esta semana, así que no puede sugerir un cambio. Elige a alguien en Quién cubre.",
-					"notConnected": "El motor de planificación no está conectado aquí.",
-					"rosterMoved": "El cuadrante cambió desde que abriste esto. Busca cobertura de nuevo para preguntar al motor.",
-					"tooSlow": "El motor tardó demasiado en buscar opciones esta vez.",
-					"failed": "El motor no pudo responder."
+					"notSeenByEngine": "El motor cuenta este turno como cubierto.",
+					"expired": "Ya no se guarda la ejecución del motor de este cuadrante. Genera la semana de nuevo para tener opciones comprobadas.",
+					"notConnected": "No se pudo contactar con el motor.",
+					"rosterMoved": "El cuadrante cambió.",
+					"tooSlow": "El motor tardó demasiado.",
+					"failed": "No se pudo contactar con el motor."
 				},
 				"byHand": "La aplicación no puede aplicar esta: hazla a mano en el cuadrante.",
 				"whyNot": {
@@ -5078,7 +5078,32 @@
 					"breaksRule": "Incumpliría: {{rule}}",
 					"aWorkingTimeRule": "una norma de tiempo de trabajo",
 					"otherReason": "No puede cubrir este turno."
-				}
+				},
+				"kindLine": {
+					"callIn": "Viene en su {{dayType}}",
+					"move": "Pasa desde {{shift}}",
+					"stretchAfter": "Se queda {{hours}} h más",
+					"stretchBefore": "Empieza {{hours}} h antes",
+					"stretchPair": "Lo cubren entre los dos",
+					"daySwap": "Trabaja el {{day}} en lugar del {{dayGivenUp}}",
+					"other_one": "{{count}} cambio",
+					"other_other": "{{count}} cambios"
+				},
+				"cost": {
+					"withinHours": "Dentro de horas",
+					"pastContract": "+{{hours}} h sobre su contrato",
+					"overtime": "+{{hours}} h extra",
+					"restDayWork": "{{hours}} h en día de descanso",
+					"timeOffEarned": "+{{hours}} h de descanso compensatorio",
+					"notRuleChecked": "Sin comprobar reglas"
+				},
+				"leaves": {
+					"onePerson": "Cubre 1 de {{count}}",
+					"stillShort": "Aún falta {{times}}"
+				},
+				"weekLine": "{{before}} → {{after}} h de {{contract}} h esta semana",
+				"stillShortToast_one": "Cuadrante cambiado. A {{shift}} aún le falta {{count}} {{times}}.",
+				"stillShortToast_other": "Cuadrante cambiado. A {{shift}} aún le faltan {{count}} {{times}}."
 			}
 		},
 		"reach": {
