@@ -98,6 +98,7 @@ const SCHEDULING_TOP_LEVEL = [
 	"schedulingSearch.ts",
 	"schedulingSearch.test.ts",
 	"engineWait.ts",
+	"engineWait.test.ts",
 	"CreateMonthSchedule.test.tsx",
 	"CreateSchedule.test.tsx",
 	"MyRoster.test.tsx",

@@ -183,7 +183,7 @@ it("passes the caller's signal and rethrows its abort as itself, not as an outag
 });
 it.each([
 	[undefined, DEFAULT_TIMEOUT_MILLISECONDS],
-	[35_000, 35_000],
+	[40_000, 40_000],
 ])(
 	"waits the caller's timeout for the answer, or the default without one: %s",
 	async (timeoutMilliseconds, expected) => {

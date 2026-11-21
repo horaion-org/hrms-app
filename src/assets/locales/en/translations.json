@@ -5292,7 +5292,7 @@
 				},
 				"weekLine": "{{before}} → {{after}} h of {{contract}} h this week",
 				"peopleAnd": "{{items, list(type: conjunction)}}",
-				"stillWorking": "Still working. This can take up to half a minute.",
+				"stillWorking": "Still working. This can take up to {{seconds}} seconds.",
 				"nobodyCan": "Nobody can cover this within the rules.",
 				"noFullFill": "Nothing covers the whole shift.",
 				"incomplete": "Ran out of time. These are the options found so far.",

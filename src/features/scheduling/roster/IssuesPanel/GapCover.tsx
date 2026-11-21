@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { formatDay } from "@/common/formatDay";
 import { formattingLocale } from "@/common/formattingLocale";
 import { useWaitedLong } from "@/common/useWaitedLong";
+import { ENGINE_ANSWER_WAIT_MILLISECONDS } from "@/features/scheduling/engineWait";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
 import { ExpandableList } from "@/components/ui/ExpandableList";
@@ -131,7 +132,12 @@ const useStatusLines = (
 		quiet.push(<Line key="working" text={t(`${engineKey}.loading`)} />);
 	if (waitedLong)
 		quiet.push(
-			<Line key="stillWorking" text={t(`${engineKey}.stillWorking`)} />
+			<Line
+				key="stillWorking"
+				text={t(`${engineKey}.stillWorking`, {
+					seconds: ENGINE_ANSWER_WAIT_MILLISECONDS / 1000,
+				})}
+			/>
 		);
 	const refusal =
 		engineRepair.status === "refused" ||

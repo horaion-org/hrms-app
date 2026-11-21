@@ -606,7 +606,7 @@ describe("GapCover: a long wait", () => {
 		});
 
 		expect(
-			screen.getByText("Still working. This can take up to half a minute.")
+			screen.getByText("Still working. This can take up to 40 seconds.")
 		).toBeVisible();
 	});
 });

@@ -5092,7 +5092,7 @@
 				},
 				"weekLine": "{{before}} → {{after}} h de {{contract}} h esta semana",
 				"peopleAnd": "{{items, list(type: conjunction)}}",
-				"stillWorking": "Sigue trabajando. Puede tardar hasta medio minuto.",
+				"stillWorking": "Sigue trabajando. Puede tardar hasta {{seconds}} segundos.",
 				"nobodyCan": "Nadie puede cubrirlo dentro de las reglas.",
 				"noFullFill": "Nada cubre el turno completo.",
 				"incomplete": "Se acabó el tiempo. Estas son las opciones encontradas hasta ahora.",
