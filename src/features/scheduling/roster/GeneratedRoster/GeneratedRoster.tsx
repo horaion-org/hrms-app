@@ -55,6 +55,7 @@ import type { PreferenceOutcomeLookup } from "@/features/shiftPreferences/prefer
 import type { RosterEditing } from "./rosterEditing";
 import { RosterSidePanelSlot } from "./RosterSidePanelSlot";
 import { ROSTER_SIDE_LISTS } from "./rosterSideLists";
+import { useCheckedGaps } from "./useCheckedGaps";
 import { useRosterView } from "./useRosterView";
 
 export type GeneratedRosterProps = {
@@ -189,12 +190,19 @@ export const GeneratedRoster = ({
 	});
 	const { rows, days, period, openList } = roster;
 	// A list or Find cover keeps to the grid's height and scrolls inside, so it never makes the row taller.
-	const panelFollowsGridHeight =
-		roster.sidePanel === "list";
+	const panelFollowsGridHeight = roster.sidePanel === "list";
 
+	const checkedGaps = useCheckedGaps({
+		standing,
+		last,
+		coverGap: roster.coverGap,
+		view,
+		onViewChange,
+	});
 	const issues = issuesOfRoster({
 		roster,
 		check: last?.check,
+		checkedGaps,
 		startingRuns,
 		noteLines: issueNoteLines({
 			roster,

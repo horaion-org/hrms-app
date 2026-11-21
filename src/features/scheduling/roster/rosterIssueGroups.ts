@@ -130,6 +130,12 @@ const gapKeyOf = (gap: StaffingGap): string =>
 	gapIssueKey(gap.shiftUuids[0], gap.date) ??
 	`${GAP_KEY_PREFIX}${gap.conflictId}`;
 
+/** The keys of the gaps a rules check found, by shift and day; none when it did not work them out. */
+export const checkedGapKeys = (
+	staffingGaps: ReadonlyArray<StaffingGap> | null
+): ReadonlySet<string> | undefined =>
+	staffingGaps === null ? undefined : new Set(staffingGaps.map(gapKeyOf));
+
 /** One shift's gaps that day: the first, which names the item, and every run. */
 type GapRuns = { gap: StaffingGap; runs: Array<StaffingGap> };
 

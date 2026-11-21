@@ -80,6 +80,26 @@ describe("issuesOfRoster", () => {
 		expect(issues[0]?.rule).toMatch(/^scheduling\.issues\.leaveShort\(/);
 	});
 
+	it("lists a shift short by leave as information once the current check finds that shift staffed", () => {
+		const row = leaveGapRow();
+		const shiftId = row.uncoveredShift?.shiftId ?? "";
+		const listed = (checkedGaps: ReadonlySet<string>): Array<unknown> =>
+			issuesOfRoster(input({ checkedGaps }, { leaveAndCover: [row] }));
+
+		expect(listed(new Set())).toEqual([
+			expect.objectContaining({
+				group: "forInformation",
+				action: { kind: "show" },
+			}),
+		]);
+		expect(listed(new Set([`gap|${shiftId}|${row.day}`]))).toEqual([
+			expect.objectContaining({
+				group: "mustFix",
+				action: { kind: "findCover", gap: { shiftId, day: row.day } },
+			}),
+		]);
+	});
+
 	it("lists a setup note first by who it is about and its day, in the engine's words without names", () => {
 		const issues = issuesOfRoster(
 			input(

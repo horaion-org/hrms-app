@@ -42,6 +42,12 @@ export type RosterIssueSourceInput = {
 	>;
 	/** The last validation's answer, when there is one. */
 	check: RosterRulesCheck | undefined;
+	/**
+	 * The gaps the rules check for the roster's revision found, by
+	 * `gapIssueKey`; left out when no check is current or it did not work
+	 * them out. A shift left short by leave that it does not list is staffed.
+	 */
+	checkedGaps?: ReadonlySet<string>;
 	/** The working days in a row each member brought into the period. */
 	startingRuns?: ReadonlyMap<string, number>;
 	/** Notes about the whole list, such as the week before having changed. */
@@ -92,16 +98,27 @@ const toDecideIssue = (row: ScheduleAssignment, t: TFunction): RosterIssue => {
 	};
 };
 
-/** A day on leave or covered: to fix with Find cover while its shift is short, else for information. */
+/**
+ * A day on leave or covered: to fix with Find cover while its shift is short,
+ * else for information. The current rules check, when it has one, says
+ * whether the shift is still short.
+ */
 const leaveAndCoverIssue = (
 	row: ScheduleAssignment,
+	checkedGaps: ReadonlySet<string> | undefined,
 	t: TFunction
 ): RosterIssue => {
 	const markerKey = row.flag ? LEAVE_MARKER_KEYS[row.flag] : undefined;
 	const marker = markerKey
 		? t(`scheduling.rosterMarkers.${markerKey}`)
 		: t("scheduling.detail.leaveAndCover");
-	const shift = row.uncoveredShift;
+	const uncovered = row.uncoveredShift;
+	const shift =
+		uncovered &&
+		(checkedGaps === undefined ||
+			checkedGaps.has(gapIssueKey(uncovered.shiftId, row.day) ?? ""))
+			? uncovered
+			: undefined;
 	const base = {
 		who: nameOf(row, t),
 		memberProfileId: row.member?.memberProfileId ?? null,
@@ -140,10 +157,11 @@ const leaveAndCoverIssue = (
 const listIssues = ({
 	roster: { rows, toDecide, leaveAndCover },
 	startingRuns,
+	checkedGaps,
 	t,
 }: RosterIssueSourceInput): Array<RosterIssue> => [
 	...toDecide.map((row) => toDecideIssue(row, t)),
-	...leaveAndCover.map((row) => leaveAndCoverIssue(row, t)),
+	...leaveAndCover.map((row) => leaveAndCoverIssue(row, checkedGaps, t)),
 	...rows.flatMap((row): Array<RosterIssue> => {
 		const run =
 			row.memberProfileId === undefined

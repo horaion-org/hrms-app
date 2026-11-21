@@ -730,9 +730,13 @@ describe("GeneratedRoster", () => {
 			);
 			// One row per day, as the engine's two sentences differ.
 			expect(
-				within(panel).getAllByRole("button", { name: /^Must fix.*Aisha Rahman/ })
+				within(panel).getAllByRole("button", {
+					name: /^Must fix.*Aisha Rahman/,
+				})
 			).toHaveLength(2);
-			await user.click(within(panel).getByRole("button", { name: "If possible" }));
+			await user.click(
+				within(panel).getByRole("button", { name: "If possible" })
+			);
 			const ifPossible = within(panel).getAllByRole("listitem");
 			expect(ifPossible).toHaveLength(2);
 			for (const row of ifPossible) {
@@ -800,7 +804,9 @@ describe("GeneratedRoster", () => {
 			expect(ask).toHaveBeenCalledOnce();
 			const panel = screen.getByRole("complementary", { name: "Issues" });
 			expect(panel).toHaveTextContent("Not checked since your changes");
-			await user.click(within(panel).getByRole("button", { name: "Check now" }));
+			await user.click(
+				within(panel).getByRole("button", { name: "Check now" })
+			);
 			expect(ask).toHaveBeenCalledTimes(2);
 		});
 
@@ -823,7 +829,12 @@ describe("GeneratedRoster", () => {
 						assignments={[handChanged, ...rest]}
 						editing={editing}
 						schedule={schedule}
-						validation={{ status: "idle", ask: vi.fn(), askAt: vi.fn(), revision: 1 }}
+						validation={{
+							status: "idle",
+							ask: vi.fn(),
+							askAt: vi.fn(),
+							revision: 1,
+						}}
 					/>
 				</QueryClientProvider>
 			);
@@ -1029,7 +1040,9 @@ describe("GeneratedRoster: one place for cover", () => {
 		const calls = showAt({ week: "2026-10-12", panel: "issues" });
 
 		const panel = screen.getByRole("complementary", { name: "Issues" });
-		await user.click(within(panel).getAllByRole("button", { name: /Ben Ong/ })[0]!);
+		await user.click(
+			within(panel).getAllByRole("button", { name: /Ben Ong/ })[0]!
+		);
 
 		expect(
 			calls.filter((call) => call.path.endsWith("/repair-options"))
@@ -1091,7 +1104,9 @@ describe("GeneratedRoster: one place for cover", () => {
 		);
 
 		await user.click(
-			await screen.findByRole("button", { name: "Review Aisha Rahman’s change" })
+			await screen.findByRole("button", {
+				name: "Review Aisha Rahman’s change",
+			})
 		);
 		const apply = await screen.findByRole("button", { name: "Apply change" });
 		await waitFor(() => {
@@ -1110,6 +1125,50 @@ describe("GeneratedRoster: one place for cover", () => {
 		});
 		await waitFor(() => {
 			expect(screen.getByRole("heading", { name: "Issues" })).toHaveFocus();
+		});
+	});
+
+	it("given_anOpenGapRow_when_theCurrentCheckListsNoGapForIt_then_itClosesAsAFilledOneDoes", () => {
+		configureApiClient({
+			accessToken: () => Promise.resolve("test-pass"),
+			renew: () => Promise.resolve({ kind: "expired" }),
+			onUnauthenticated: () => {},
+		});
+		stubApi({});
+		const check = rulesCheckFixture({ staffingGaps: [] });
+		const onViewChange = vi.fn();
+		render(
+			<QueryClientProvider
+				client={
+					new QueryClient({ defaultOptions: { queries: { retry: false } } })
+				}
+			>
+				<GeneratedRoster
+					assignments={scheduleAssignmentsFixture()}
+					editing={coverEditing}
+					schedule={schedule}
+					validation={{
+						status: "ready",
+						check,
+						ask: vi.fn(),
+						askAt: vi.fn(),
+						last: { revision: 1, check },
+						revision: 1,
+					}}
+					view={{
+						week: "2026-10-12",
+						panel: "issues",
+						cover: "front-desk-am-copy|2026-10-17",
+					}}
+					onViewChange={onViewChange}
+				/>
+			</QueryClientProvider>
+		);
+
+		expect(onViewChange).toHaveBeenCalledWith({
+			week: "2026-10-12",
+			panel: "issues",
+			cover: undefined,
 		});
 	});
 
@@ -1161,9 +1220,13 @@ describe("GeneratedRoster: one place for cover", () => {
 		);
 
 		await user.click(
-			await screen.findByRole("button", { name: "Review Aisha Rahman’s change" })
+			await screen.findByRole("button", {
+				name: "Review Aisha Rahman’s change",
+			})
 		);
-		await user.click(await screen.findByRole("button", { name: "They agreed" }));
+		await user.click(
+			await screen.findByRole("button", { name: "They agreed" })
+		);
 		await user.click(screen.getByRole("button", { name: "How" }));
 		await user.click(screen.getByRole("option", { name: "Phone call" }));
 		await user.click(screen.getByRole("button", { name: "Record and apply" }));
