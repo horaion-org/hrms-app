@@ -62,7 +62,8 @@ const spanText = (span: RepairSpan, t: TFunction): string =>
 export const spansText = (
 	spans: ReadonlyArray<RepairSpan>,
 	t: TFunction
-): string => spans.map((span) => spanText(span, t)).join(", ");
+): string =>
+	spans.map((span) => spanText(span, t)).join(t(`${key}.spanSeparator`));
 
 /** What the words of an option read from the roster: a day as it stands now, and a day's weekday. */
 export type OptionWordSources = {
@@ -72,27 +73,36 @@ export type OptionWordSources = {
 	weekday: (isoDate: string) => string;
 };
 
-/** A stretch in a manager's words, by the side its cell stretches: "Stays on 2 h", "Starts 2 h early". */
-const stretchKindLine = (cell: RosterChangeCell, t: TFunction): string => {
-	const after = cell.kind === "WORK" ? (cell.stretchAfterMinutes ?? 0) : 0;
-	const before = cell.kind === "WORK" ? (cell.stretchBeforeMinutes ?? 0) : 0;
-	return after > 0
-		? t(`${key}.kindLine.stretchAfter`, { hours: hoursFromMinutes(after) })
-		: t(`${key}.kindLine.stretchBefore`, { hours: hoursFromMinutes(before) });
-};
+/** A stretch's minutes after and before its shift, from its WORK cell; none from a cell of another kind. */
+const stretchOf = (
+	cell: RosterChangeCell | undefined
+): { after: number; before: number } =>
+	cell?.kind === "WORK"
+		? {
+				after: cell.stretchAfterMinutes ?? 0,
+				before: cell.stretchBeforeMinutes ?? 0,
+			}
+		: { after: 0, before: 0 };
+
+/** The plain line for a change the app has no line for: "2 changes". */
+const otherKindLine = (
+	option: Pick<RepairOption, "cells">,
+	t: TFunction
+): string => t(`${key}.kindLine.other`, { count: option.cells.length });
 
 /**
  * What an option is, in one short line by its kind (UX note 2.2): "Comes in
  * on a day off", "Moves from Lunch Rush", "Stays on 2 h", "Cover it between
- * them", "Works Saturday instead of Friday", "2 changes". The first cell is
- * the day taken; a day swap's OFF cell is the day given up. Pure.
+ * them", "Works Saturday instead of Friday", "2 changes". The day taken is
+ * the option's WORK cell wherever it sits; a day swap's OFF cell is the day
+ * given up; a stretch with no minutes reads as any other change. Pure.
  */
 export const optionKindLine = (
 	option: Pick<RepairOption, "kind" | "cells">,
 	{ dayBefore, weekday }: OptionWordSources,
 	t: TFunction
 ): string => {
-	const [taken] = option.cells;
+	const taken = option.cells.find((cell) => cell.kind === "WORK");
 	const before = taken && dayBefore(taken);
 	switch (option.kind) {
 		case "CALL_IN":
@@ -103,21 +113,31 @@ export const optionKindLine = (
 			return t(`${key}.kindLine.move`, {
 				shift: before?.shift?.name ?? t(`${key}.unknownShift`),
 			});
-		case "OVERTIME_STRETCH":
-			return taken
-				? stretchKindLine(taken, t)
-				: t(`${key}.kindLine.stretchPair`);
+		case "OVERTIME_STRETCH": {
+			const stretch = stretchOf(taken);
+			if (stretch.after > 0)
+				return t(`${key}.kindLine.stretchAfter`, {
+					hours: hoursFromMinutes(stretch.after),
+				});
+			return stretch.before > 0
+				? t(`${key}.kindLine.stretchBefore`, {
+						hours: hoursFromMinutes(stretch.before),
+					})
+				: otherKindLine(option, t);
+		}
 		case "STRETCH_PAIR":
 			return t(`${key}.kindLine.stretchPair`);
 		case "DAY_SWAP": {
 			const givenUp = option.cells.find((cell) => cell.kind === "OFF");
-			return t(`${key}.kindLine.daySwap`, {
-				day: taken ? weekday(taken.day) : "",
-				dayGivenUp: givenUp ? weekday(givenUp.day) : "",
-			});
+			return taken && givenUp
+				? t(`${key}.kindLine.daySwap`, {
+						day: weekday(taken.day),
+						dayGivenUp: weekday(givenUp.day),
+					})
+				: otherKindLine(option, t);
 		}
 		default:
-			return t(`${key}.kindLine.other`, { count: option.cells.length });
+			return otherKindLine(option, t);
 	}
 };
 
@@ -184,23 +204,22 @@ const mostShort = (spans: ReadonlyArray<RepairShortSpan>): number =>
 /**
  * What an option leaves short (UX note 2.5), by its `fills`: nothing for the
  * whole gap or when the engine does not say; "Fills 1 of 2" for one person of
- * several, n being the most `shortNow` has short (else one more than it
- * leaves); "Still short 09:00 – 11:00" for some hours. Pure.
+ * several, n being the most `shortNow` has short (nothing without `shortNow`);
+ * "Still short 09:00 – 11:00" for some hours. Pure.
  */
 export const whatItLeaves = (
 	option: Pick<RepairOption, "fills" | "stillShort">,
 	shortNow: ReadonlyArray<RepairShortSpan> | null,
 	t: TFunction
 ): WhatItLeaves | undefined => {
+	// "Fills 1 of n" counts n from what the roster has short now; without it nothing is said.
 	if (option.fills === "ONE_PERSON")
-		return {
-			kind: "onePerson",
-			text: t(`${key}.leaves.onePerson`, {
-				count: shortNow
-					? mostShort(shortNow)
-					: mostShort(option.stillShort) + 1,
-			}),
-		};
+		return shortNow && shortNow.length > 0
+			? {
+					kind: "onePerson",
+					text: t(`${key}.leaves.onePerson`, { count: mostShort(shortNow) }),
+				}
+			: undefined;
 	if (option.fills === "PART")
 		return {
 			kind: "part",
@@ -223,6 +242,28 @@ export const weekLine = (
 	});
 
 /**
+ * What a set of spans is still short, one count for all when they share it
+ * ("1 short 14:00 – 15:00, 17:00 – 22:00"), else each span with its own ("1
+ * short 22:00 – 02:00, 2 short 02:00 – 04:00").
+ */
+const shortRunsText = (
+	spans: ReadonlyArray<RepairShortSpan>,
+	t: TFunction
+): string => {
+	const counts = new Set(spans.map((span) => span.shortBy));
+	const runs =
+		counts.size === 1
+			? [{ count: mostShort(spans), times: spansText(spans, t) }]
+			: spans.map((span) => ({
+					count: span.shortBy,
+					times: spansText([span], t),
+				}));
+	return runs
+		.map((run) => t(`${key}.shortRun`, run))
+		.join(t(`${key}.spanSeparator`));
+};
+
+/**
  * The toast after applying an option that leaves hours short: "Roster
  * changed. Swing Shift is still 1 short 17:00 – 22:00." Nothing for an option
  * that leaves nothing short, so the toast says only "Roster changed.". Pure.
@@ -235,9 +276,8 @@ export const stillShortToast = (
 	option.stillShort.length === 0
 		? undefined
 		: t(`${key}.stillShortToast`, {
-				count: mostShort(option.stillShort),
 				shift,
-				times: spansText(option.stillShort, t),
+				runs: shortRunsText(option.stillShort, t),
 			});
 
 /** What the panel offers under a refusal: ask the engine again, find the options again at the roster's new revision, or nothing. */

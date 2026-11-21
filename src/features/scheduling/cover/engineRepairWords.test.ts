@@ -138,12 +138,13 @@ describe("whatItLeaves", () => {
 		).toBeUndefined();
 	});
 
-	it("says one of how many the roster has short now, else one more than it leaves", () => {
+	it("says one of how many the roster has short now, and nothing without that count", () => {
 		expect(whatItLeaves(oneOfTwoOption(), shortByTwo, t)).toEqual({
 			kind: "onePerson",
 			text: "Fills 1 of 2",
 		});
-		expect(whatItLeaves(oneOfTwoOption(), null, t)?.text).toBe("Fills 1 of 2");
+		expect(whatItLeaves(oneOfTwoOption(), null, t)).toBeUndefined();
+		expect(whatItLeaves(oneOfTwoOption(), [], t)).toBeUndefined();
 	});
 
 	it("names every span a part fill leaves short", () => {
@@ -199,5 +200,58 @@ describe("REFUSAL_ACTIONS", () => {
 			expired: undefined,
 			notSeenByEngine: undefined,
 		});
+	});
+});
+
+describe("optionKindLine: edges", () => {
+	it("reads a day swap from its WORK cell whatever the order of its cells", () => {
+		const swap = daySwapOption();
+		expect(
+			optionKindLine({ ...swap, cells: [...swap.cells].reverse() }, sources, t)
+		).toBe("Works Saturday instead of Friday");
+	});
+
+	it("reads a stretch with no minutes, or no cells, as any other change", () => {
+		const stretch = stretchAfterOption();
+		expect(
+			optionKindLine(
+				{
+					...stretch,
+					cells: [{ ...stretch.cells[0]!, stretchAfterMinutes: undefined }],
+				},
+				sources,
+				t
+			)
+		).toBe("1 change");
+		expect(optionKindLine({ ...stretch, cells: [] }, sources, t)).toBe(
+			"0 changes"
+		);
+	});
+});
+
+describe("stillShortToast: counts by span", () => {
+	it("gives each span its own count when they differ", () => {
+		expect(
+			stillShortToast(
+				{
+					stillShort: [
+						{
+							start: "2026-10-17T22:00:00",
+							end: "2026-10-18T02:00:00",
+							shortBy: 1,
+						},
+						{
+							start: "2026-10-18T02:00:00",
+							end: "2026-10-18T04:00:00",
+							shortBy: 2,
+						},
+					],
+				},
+				"Overnight Ops",
+				t
+			)
+		).toBe(
+			"Roster changed. Overnight Ops is still 1 short 22:00 – 02:00, 2 short 02:00 – 04:00."
+		);
 	});
 });

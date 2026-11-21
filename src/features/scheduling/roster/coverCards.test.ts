@@ -66,10 +66,10 @@ describe("optionCardList", () => {
 		},
 		weekday: (isoDate) => (isoDate === "2026-10-17" ? "Saturday" : "Friday"),
 		memberName: (membershipId) => NAMES[membershipId] ?? "",
-		groupsOf: (cells) =>
+		groupsOf: (cells, nameOf) =>
 			cells.map((cell) => ({
 				membershipId: cell.membershipId,
-				name: "",
+				name: nameOf(cell.membershipId),
 				days: [],
 			})),
 		shortNow: SHORT_BY_TWO,
@@ -404,5 +404,41 @@ describe("reviewedCardOf", () => {
 				membershipId: undefined,
 			})
 		).toBeUndefined();
+	});
+});
+
+describe("optionCardList: someone the roster no longer shows", () => {
+	it("names them once, as the answer does, in the card's head and over their tiles", () => {
+		const gone = callInOption({
+			cells: [
+				{
+					membershipId: "m-9",
+					day: "2026-10-17",
+					kind: "WORK",
+					shiftId: "front-desk-am-copy",
+				},
+			],
+			people: [
+				{ membershipId: "m-9", displayName: "Gone Person", weekMinutes: null },
+			],
+		});
+		const [card] = optionCardList([gone], {
+			dayBefore: () => undefined,
+			weekday: () => "Saturday",
+			memberName: () => "Former member",
+			groupsOf: (cells, nameOf) =>
+				cells.map((cell) => ({
+					membershipId: cell.membershipId,
+					name: nameOf(cell.membershipId),
+					days: [],
+				})),
+			shortNow: null,
+			offers: [],
+			now: new Date("2026-10-16T05:00:00Z"),
+			t: authTestI18n.t,
+		}).cards;
+
+		expect(card?.people).toBe("Gone Person");
+		expect(card?.groups[0]?.name).toBe("Gone Person");
 	});
 });

@@ -111,7 +111,11 @@ export type OptionCardSources = OptionWordSources & {
 	/** A member's name by membership id, for someone the answer does not name. */
 	memberName: (membershipId: string) => string;
 	/** A change's cells drawn by person (`changeTileGroups`). */
-	groupsOf: (cells: ReadonlyArray<RosterChangeCell>) => Array<ChangeTileGroup>;
+	/** A change's cells drawn by person (`changeTileGroups`), each named by `nameOf`. */
+	groupsOf: (
+		cells: ReadonlyArray<RosterChangeCell>,
+		nameOf: (membershipId: string) => string
+	) => Array<ChangeTileGroup>;
 	/** What the roster has short on this gap now, which "Fills 1 of 2" counts from. */
 	shortNow: ReadonlyArray<RepairShortSpan> | null;
 	/** The roster's cover offers, on a published roster; none on a draft. */
@@ -132,15 +136,21 @@ export type OptionCardList = {
 /** How many cards show before the rest are folded away. */
 export const CARDS_BEFORE_FOLD = 3;
 
+/** A person an option changes, named as the answer names them, else as the roster does: one name for the card and its tiles. */
+const nameInOption =
+	(option: RepairOption, memberName: (membershipId: string) => string) =>
+	(membershipId: string): string =>
+		option.people.find((person) => person.membershipId === membershipId)
+			?.displayName ?? memberName(membershipId);
+
 /** The people a change names, in the answer's order: "Ben Ong and Chen Wei". */
 const peopleNamesOf = (
 	option: RepairOption,
-	{ memberName, t }: OptionCardSources
+	nameOf: (membershipId: string) => string,
+	t: TFunction
 ): string =>
 	t("scheduling.cover.engine.peopleAnd", {
-		items: option.people.map(
-			(person) => person.displayName ?? memberName(person.membershipId)
-		),
+		items: option.people.map((person) => nameOf(person.membershipId)),
 	});
 
 /**
@@ -181,12 +191,13 @@ const optionCardOf = (
 ): OptionCard => {
 	const [onlyPerson, ...others] = option.people;
 	const onePerson = onlyPerson !== undefined && others.length === 0;
+	const nameOf = nameInOption(option, sources.memberName);
 	return {
 		// An option has no id of its own; its place in the engine's ranking is stable.
 		key: `engine|${rank}`,
-		people: peopleNamesOf(option, sources),
+		people: peopleNamesOf(option, nameOf, sources.t),
 		kindLine: optionKindLine(option, sources, sources.t),
-		groups: sources.groupsOf(option.cells),
+		groups: sources.groupsOf(option.cells, nameOf),
 		costChips: costChips(option, sources.t),
 		weekLine:
 			onePerson && onlyPerson.weekMinutes
@@ -246,7 +257,7 @@ export const fallbackCards = (
 				sources,
 				sources.t
 			),
-			groups: sources.groupsOf(option.cells),
+			groups: sources.groupsOf(option.cells, sources.memberName),
 			costChips: costChips(
 				{
 					extraMinutes: {

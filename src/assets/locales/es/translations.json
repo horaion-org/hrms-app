@@ -5090,8 +5090,6 @@
 					"stillShort": "Aún falta {{times}}"
 				},
 				"weekLine": "{{before}} → {{after}} h de {{contract}} h esta semana",
-				"stillShortToast_one": "Cuadrante cambiado. A {{shift}} aún le falta {{count}} {{times}}.",
-				"stillShortToast_other": "Cuadrante cambiado. A {{shift}} aún le faltan {{count}} {{times}}.",
 				"peopleAnd": "{{items, list(type: conjunction)}}",
 				"stillWorking": "Sigue trabajando. Puede tardar hasta medio minuto.",
 				"nobodyCan": "Nadie puede cubrirlo dentro de las reglas.",
@@ -5102,7 +5100,11 @@
 				"findAgain": "Buscar opciones de nuevo",
 				"fallbackCaption": "Libres según sus horas",
 				"partCaption": "Cubrir una parte",
-				"bestOf": "Las {{shown}} mejores de {{found}}."
+				"bestOf": "Las {{shown}} mejores de {{found}}.",
+				"stillShortToast": "Cuadrante cambiado. A {{shift}} aún le falta {{runs}}.",
+				"shortRun_one": "{{count}} {{times}}",
+				"shortRun_other": "{{count}} {{times}}",
+				"spanSeparator": ", "
 			}
 		},
 		"reach": {

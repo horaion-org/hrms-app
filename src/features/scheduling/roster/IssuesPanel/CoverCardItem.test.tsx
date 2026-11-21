@@ -50,14 +50,14 @@ const show = (
 		},
 		weekday: (isoDate) => (isoDate === "2026-10-17" ? "Saturday" : "Friday"),
 		memberName,
-		groupsOf: (cells) =>
+		groupsOf: (cells, nameOf) =>
 			changeTileGroups(
 				cells,
 				roster,
 				(shiftId) =>
 					roster.find((row) => row.shift?.shiftId === shiftId)?.shift ??
 					undefined,
-				memberName,
+				nameOf,
 				t
 			),
 		shortNow: [

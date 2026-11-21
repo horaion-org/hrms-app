@@ -265,8 +265,8 @@ const GapCoverBody = ({
 		},
 		weekday: (isoDate) => weekdayName.format(new Date(`${isoDate}T00:00:00`)),
 		memberName,
-		groupsOf: (cells) =>
-			changeTileGroups(cells, cover.assignments, shiftOf, memberName, t),
+		groupsOf: (cells, nameOf) =>
+			changeTileGroups(cells, cover.assignments, shiftOf, nameOf, t),
 		shortNow: engineRepair.status === "ready" ? engineRepair.shortNow : null,
 		offers: cover.coverOffers?.offers ?? [],
 		now,
