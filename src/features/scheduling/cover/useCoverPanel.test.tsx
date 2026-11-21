@@ -806,3 +806,69 @@ describe("useCoverPanel: a gap just filled", () => {
 		).toEqual([]);
 	});
 });
+
+describe("useCoverPanel: a yes recorded for an option that fills the gap", () => {
+	it("given_aYesRecorded_when_itLandsAndTheRosterShowsItsRevision_then_nothingMoreIsAskedForTheShift", async () => {
+		const option = callInOption();
+		const calls = stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+			[`POST ${REPAIR_OPTIONS}`]: answer(repairOptionsFixture([option], [])),
+			[`POST ${OFFERS}`]: {
+				status: 201,
+				body: envelope(
+					coverOfferFixture({ status: "ACCEPTED", channel: "RECORDED" })
+				),
+			},
+		});
+		const onCoverRecorded = vi.fn();
+		const input: CoverPanelInput = {
+			target: {
+				companyId: "c-1",
+				unit: { branchId: "b-1", departmentId: "d-1" },
+				scheduleId: "s-1",
+				runId: "r-1",
+			},
+			revision: 1,
+			gap: { shiftId: GAP.shiftId, day: GAP.day },
+			assignments: roster,
+			dayRow: roster.find((row) => row.day === GAP.day)!,
+			shifts: frozenShiftsFixture(),
+			coverOffers: { offers: [], timeZone: "Asia/Singapore" },
+			onPreviewDays: vi.fn(),
+			onApplied: vi.fn(),
+			onCoverRecorded,
+		};
+		const { result, rerender } = renderHook(
+			({ revision }) => useCoverPanel({ ...input, revision }),
+			{ wrapper, initialProps: { revision: 1 } }
+		);
+		await waitFor(() => {
+			expect(result.current.engineRepair.status).toBe("ready");
+		});
+		act(() => {
+			result.current.chooseRepair(option);
+		});
+		await waitFor(() => {
+			expect(result.current.offer?.ready).toBe(true);
+		});
+		const before = calls.length;
+
+		act(() => {
+			result.current.offer?.record({
+				how: "PHONE",
+				when: "2026-10-16T05:10:00Z",
+			});
+		});
+		await waitFor(() => {
+			expect(onCoverRecorded).toHaveBeenCalledOnce();
+		});
+		rerender({ revision: 2 });
+
+		await waitFor(() => {
+			expect(result.current.status).toBe("closed");
+		});
+		// The yes went out, and nothing else: no read at the old revision, none for the shift at the new one.
+		expect(calls.slice(before).map((call) => call.path)).toEqual([OFFERS]);
+	});
+});

@@ -205,8 +205,10 @@ export const useCoverPanel = ({
 	const [editedRemark, setEditedRemark] = useState<string>();
 	const [tickedFor, setTickedFor] = useState<string | null>(null);
 	const [rosterMovedUnderApply, setRosterMovedUnderApply] = useState(false);
-	// A change that filled the gap: the gap is covered, and nothing more is asked for it.
-	const [filledByApply, setFilledByApply] = useState(false);
+	// A change that filled the gap, applied or a recorded yes: the gap is covered, and nothing more is asked for it.
+	const [filledByChange, setFilledByChange] = useState(false);
+	// The revision on screen a yes is recorded at: it lands until the roster shows the change it made.
+	const [yesAt, setYesAt] = useState<number>();
 	// An engine option holds for the revision on screen it was chosen at: once it lands (or the roster moves),
 	// it is dropped with its preview, as a chosen person of the list is when the list is made afresh.
 	const [repairChoice, setRepairChoice] = useState<{
@@ -225,8 +227,9 @@ export const useCoverPanel = ({
 	const landedRevision = apply.data?.toRevision;
 	const landing =
 		apply.isPending ||
+		yesAt === revision ||
 		(landedRevision !== undefined && landedRevision > revision);
-	const asksNothing = landing || filledByApply;
+	const asksNothing = landing || filledByChange;
 	const engineRepair = useEngineRepair(
 		target,
 		gap,
@@ -239,7 +242,7 @@ export const useCoverPanel = ({
 		enabled: !asksNothing && !listWaitsForCheck,
 	});
 	const options = list.data;
-	const status = filledByApply
+	const status = filledByChange
 		? "closed"
 		: coverPanelStatus(list, options, engineRepair);
 	/** A roster member's profile id, which is how the engine names people. */
@@ -313,6 +316,11 @@ export const useCoverPanel = ({
 		candidateRow && selected && !repairOption
 			? { kind: "shift" as const, shiftId: gap.shiftId }
 			: undefined;
+	/** Whether the change chosen fills the gap: an engine option says so; one person of the list fills a gap short by one. */
+	const fillsTheGap = (): boolean =>
+		repairOption
+			? repairOption.fills === "GAP"
+			: (options?.gap.shortBy ?? 0) <= 1;
 	const offer = useCellCoverOffer({
 		target,
 		offers: coverOffers?.offers,
@@ -328,8 +336,14 @@ export const useCoverPanel = ({
 		onChecksChanged: () => {
 			void preview.refetch();
 		},
-		onRecorded: onCoverRecorded,
+		onRecorded: (): void => {
+			// As a filling Apply does: the check first, nothing more asked for a shift it filled.
+			if (fillsTheGap()) setFilledByChange(true);
+			onCoverRecorded?.();
+		},
 	});
+	// A yes refused: nothing lands after all.
+	if (yesAt !== undefined && offer.createRefusal) setYesAt(undefined);
 
 	const previewKeys = (body?.cells ?? [])
 		.map((cell) => rosterCellKey(cell.membershipId, cell.day))
@@ -454,11 +468,8 @@ export const useCoverPanel = ({
 							applyInFlight.current = false;
 						},
 						onSuccess: (change) => {
-							// An engine option says what it fills; one person of the list fills a gap short by one.
-							const filled = repairOption
-								? repairOption.fills === "GAP"
-								: (options?.gap.shortBy ?? 0) <= 1;
-							if (filled) setFilledByApply(true);
+							const filled = fillsTheGap();
+							if (filled) setFilledByChange(true);
 							onApplied(change, { filled, stillShort: stillShortOfChoice() });
 						},
 						onError: (error) => {
@@ -477,6 +488,10 @@ export const useCoverPanel = ({
 		},
 		offer: coverOffers && {
 			...offer,
+			record: (recorded): void => {
+				setYesAt(revision);
+				offer.record(recorded);
+			},
 			timeZone: coverOffers.timeZone,
 			ready: Boolean(preview.data) && canApply(gate, ticked, remark),
 		},
