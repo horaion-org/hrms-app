@@ -4950,7 +4950,8 @@
 				"extraHours": "Horas complementarias (tiempo parcial) · {{hours}} h",
 				"overtime": "Horas extra · {{hours}} h",
 				"restDay": "Trabajo en día de descanso, a petición de la empresa",
-				"unknown": "Según lo fije la empresa"
+				"unknown": "Según lo fije la empresa",
+				"daySwap": "Trabaja el {{day}} en lugar del {{dayGivenUp}}, mismas horas"
 			},
 			"tileOffered": "{{label}}, turno ofrecido, responde antes de las {{time}}",
 			"actions": {

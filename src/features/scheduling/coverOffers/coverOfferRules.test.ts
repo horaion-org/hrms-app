@@ -198,6 +198,12 @@ describe("payWordsOf", () => {
 		}
 	);
 
+	it("given_aDaySwap_when_read_then_theDayWorkedInPlaceOfTheDayGivenUp", () => {
+		expect(
+			payWordsOf(offer({ optionKind: "DAY_SWAP", dayGivenUp: "2026-10-16" }))
+		).toEqual({ key: "daySwap", day: "2026-10-17", dayGivenUp: "2026-10-16" });
+	});
+
 	it("given_aDayOffOfferWithoutPay_when_read_then_theShiftsHoursAsOvertimeAsBefore", () => {
 		expect(
 			payWordsOf(offer({ optionKind: "OFF_DAY_SHIFT", pay: null }))
@@ -481,7 +487,10 @@ describe("offerKindOfOption", () => {
 	});
 
 	it("reads one of the older repair's one-person changes as the cell panel does", () => {
-		const one = { ...otherTwoPeopleOption(), people: [moveOption().people[0]!] };
+		const one = {
+			...otherTwoPeopleOption(),
+			people: [moveOption().people[0]!],
+		};
 
 		expect(offerKindOfOption(one, { shift: null })).toBe("OFF_DAY_SHIFT");
 		expect(offerKindOfOption(one, working)).toBe("MOVE");

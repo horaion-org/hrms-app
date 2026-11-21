@@ -5150,7 +5150,8 @@
 				"extraHours": "Extra hours (part-time) · {{hours}} h",
 				"overtime": "Overtime · {{hours}} h",
 				"restDay": "Rest day work, at the company’s request",
-				"unknown": "As set by the company"
+				"unknown": "As set by the company",
+				"daySwap": "Work {{day}} instead of {{dayGivenUp}}, same hours"
 			},
 			"tileOffered": "{{label}}, shift offered, answer by {{time}}",
 			"actions": {

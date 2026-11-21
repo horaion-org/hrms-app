@@ -88,7 +88,7 @@ export const OffersOutSection = ({
 	const lineText = (line: OfferLine): string =>
 		t(`${key}.line`, {
 			name: line.name ?? t("scheduling.detail.formerMember"),
-			pay: payText(line.pay, t),
+			pay: payText(line.pay, t, (day) => formatDay(day, language)),
 			standing: t(`${key}.${line.standing}`, { time: time(line.at) }),
 		});
 	return (

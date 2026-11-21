@@ -106,7 +106,10 @@ export const CoverOfferCard = ({
 
 	const details = [
 		...(was ? [{ label: t(`${key}.was`), value: was }] : []),
-		{ label: t(`${key}.pay`), value: payText(payWordsOf(offer), t) },
+		{
+			label: t(`${key}.pay`),
+			value: payText(payWordsOf(offer), t, (day) => formatDay(day, language)),
+		},
 		{
 			label: t(`${key}.askedBy`),
 			value: t(`${key}.askedByValue`, { name: manager }),
