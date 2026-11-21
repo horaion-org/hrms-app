@@ -5240,19 +5240,7 @@
 			},
 			"engine": {
 				"loading": "Working out the options…",
-				"unreachable": "The engine could not be reached. These people are free by their hours and are not checked against the rules.",
-				"none": "The engine found no way to fill this.",
 				"unknownShift": "a shift",
-				"appliedStillShort_one": "Roster changed. {{shift}} on {{day}} is still {{count}} short {{times}}: find cover again for those hours.",
-				"appliedStillShort_other": "Roster changed. {{shift}} on {{day}} is still {{count}} short {{times}}: find cover again for those hours.",
-				"move": {
-					"REASSIGN": "Move {{name}} from {{fromShift}} {{fromDay}} to {{shift}} {{day}}",
-					"CALL_IN": "Call in {{name}} for {{shift}} {{day}}",
-					"OVERTIME_EXTENSION": "Extend {{name}}’s {{shift}} · {{overtime}}",
-					"OVERTIME_EXTENSION_AFTER": "{{name}} stays on after {{shift}} · {{overtime}}, until {{time}}",
-					"OVERTIME_EXTENSION_BEFORE": "{{name}} starts {{shift}} early · {{overtime}}, from {{time}}",
-					"UNKNOWN": "A change the app can’t describe yet"
-				},
 				"refusal": {
 					"notSeenByEngine": "The engine counts this shift as staffed.",
 					"expired": "This roster’s engine run is no longer kept. Generate the week again to get checked options.",
@@ -5261,7 +5249,6 @@
 					"tooSlow": "The engine took too long.",
 					"failed": "The engine could not be reached."
 				},
-				"byHand": "The app can’t apply this one: make it by hand on the roster.",
 				"whyNot": {
 					"title": "Why nobody was assigned",
 					"couldTake": "Could take this shift.",

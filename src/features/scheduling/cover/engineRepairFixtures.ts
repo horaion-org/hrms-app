@@ -1,6 +1,5 @@
 import type {
 	NotAssignedPerson,
-	RepairMove,
 	RepairOption,
 	RepairOptions,
 	RepairPerson,
@@ -27,61 +26,6 @@ const MORNING = {
 	end: "2026-10-17T15:00:00",
 };
 
-/** Aisha, off that day, called in for Front Desk AM. */
-export const callInMove = (
-	overrides: Partial<RepairMove> = {}
-): RepairMove => ({
-	kind: "CALL_IN",
-	membershipId: "m-1",
-	displayName: "Aisha Rahman",
-	fromShiftId: null,
-	fromShiftName: null,
-	fromDate: null,
-	shiftId: FRONT_DESK_AM,
-	shiftName: "Front Desk AM",
-	date: SATURDAY,
-	period: MORNING,
-	extensionMinutes: null,
-	...overrides,
-});
-
-/** Ben moved from the swing shift to Front Desk AM the same day. */
-export const reassignMove = (
-	overrides: Partial<RepairMove> = {}
-): RepairMove => ({
-	kind: "REASSIGN",
-	membershipId: "m-2",
-	displayName: "Ben Ong",
-	fromShiftId: SWING_SHIFT,
-	fromShiftName: "Swing Shift",
-	fromDate: SATURDAY,
-	shiftId: FRONT_DESK_AM,
-	shiftName: "Front Desk AM",
-	date: SATURDAY,
-	period: MORNING,
-	extensionMinutes: null,
-	...overrides,
-});
-
-/** Chen stays on two hours after the swing shift, until 15:00. */
-export const stretchMove = (
-	overrides: Partial<RepairMove> = {}
-): RepairMove => ({
-	kind: "OVERTIME_EXTENSION",
-	membershipId: "m-3",
-	displayName: "Chen Wei",
-	fromShiftId: null,
-	fromShiftName: null,
-	fromDate: null,
-	shiftId: SWING_SHIFT,
-	shiftName: "Swing Shift",
-	date: SATURDAY,
-	period: { start: "2026-10-17T13:00:00", end: "2026-10-17T15:00:00" },
-	extensionMinutes: 120,
-	side: "AFTER_SHIFT",
-	...overrides,
-});
-
 /** No extra minutes of any kind. */
 const NO_EXTRA_MINUTES = {
 	overtime: 0,
@@ -89,58 +33,6 @@ const NO_EXTRA_MINUTES = {
 	timeOffEarned: 0,
 	pastContract: 0,
 };
-
-/** A feasible option with the given moves: a call-in that fills the gap, checked against the rules. */
-export const feasibleRepair = (
-	moves: Array<RepairMove> = [callInMove()],
-	overrides: Partial<RepairOption> = {}
-): RepairOption => ({
-	feasible: true,
-	workingTimeRulesChecked: false,
-	moves,
-	summary: "Call in Aisha Rahman for Front Desk AM",
-	infeasibleReason: null,
-	leftShort: [],
-	leftShortBy: null,
-	warnings: [],
-	kind: "CALL_IN",
-	fills: "GAP",
-	stillShort: [],
-	extraMinutes: NO_EXTRA_MINUTES,
-	cells: [],
-	people: [],
-	...overrides,
-});
-
-/**
- * Chen's stretch after the swing shift fills the gap's last two hours,
- * 13:00 to 15:00; 09:00 to 13:00 is still one short (the engine's ADR-0036).
- */
-export const partStretchRepair = (): RepairOption =>
-	feasibleRepair([stretchMove()], {
-		kind: "OVERTIME_STRETCH",
-		fills: "PART",
-		workingTimeRulesChecked: true,
-		leftShort: [{ start: "2026-10-17T09:00:00", end: "2026-10-17T13:00:00" }],
-		leftShortBy: 1,
-		stillShort: [
-			{ start: "2026-10-17T09:00:00", end: "2026-10-17T13:00:00", shortBy: 1 },
-		],
-	});
-
-/** The engine's honest no for a staffing gap as generated. */
-export const infeasibleRepair = (): RepairOption => ({
-	...feasibleRepair([]),
-	feasible: false,
-	summary: null,
-	infeasibleReason: "Moving anyone would leave another shift short.",
-	leftShort: [MORNING],
-	leftShortBy: 1,
-	kind: "OTHER",
-	fills: null,
-	stillShort: [{ ...MORNING, shortBy: 1 }],
-	extraMinutes: null,
-});
 
 /** A person an option changes, with their week before and after it. */
 const person = (
@@ -167,7 +59,7 @@ const workCell = (
 	...stretch,
 });
 
-/** An option of the API's shape: what the app reads, with the older fields it no longer reads left plain. */
+/** An option of the API's shape, checked against the rules, filling the gap unless told otherwise. */
 const repairOption = (option: {
 	kind: RepairOption["kind"];
 	cells: Array<RosterChangeCell>;
@@ -177,8 +69,6 @@ const repairOption = (option: {
 	extraMinutes?: Partial<NonNullable<RepairOption["extraMinutes"]>>;
 	workingTimeRulesChecked?: boolean;
 }): RepairOption => ({
-	...feasibleRepair([]),
-	summary: null,
 	workingTimeRulesChecked: option.workingTimeRulesChecked ?? true,
 	kind: option.kind,
 	fills: option.fills ?? "GAP",
@@ -324,7 +214,7 @@ export const oneOfTwoOption = (): RepairOption =>
 
 /** The engine's answer at revision 1 with the given options, and why others were not assigned when given. */
 export const repairOptionsFixture = (
-	options: Array<RepairOption> = [feasibleRepair()],
+	options: Array<RepairOption> = [callInOption()],
 	notAssigned: Array<NotAssignedPerson> | null = null,
 	overrides: Partial<RepairOptions> = {}
 ): RepairOptions => ({

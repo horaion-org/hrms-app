@@ -13,54 +13,13 @@ import { administrativeMeta } from "@/features/workspace/queryAccess";
 /*
  * The scheduling engine's repair options for one short shift (the API's
  * `…/repair-options`, engine ADR-0018), under `schedule:edit_shift`: the
- * engine's own ways to fill the gap the generation left, against the roster
- * as it stands now. Nothing is stored, and the engine checks no
- * working-time rule, so every option says so.
+ * engine's own ways to fill the gap, against the roster as it stands now,
+ * each ready to show and apply (its kind, how much it fills, its cost, its
+ * cells and each person's week). Nothing is stored.
  */
 
-// A kind a newer API adds still reads, as a change the app can't describe yet.
-const moveKindSchema = z
-	.enum(["REASSIGN", "CALL_IN", "OVERTIME_EXTENSION", "UNKNOWN"])
-	.catch("UNKNOWN");
-
-/** What one move does: a move between shifts, a call-in on a day off, or a shift stretched into overtime. */
-export type RepairMoveKind = z.infer<typeof moveKindSchema>;
-
-/** A span of local time, `yyyy-MM-ddTHH:mm:ss`; an end the engine wrote unreadably is null. */
-const spanSchema = z.object({
-	start: z.string().nullable(),
-	end: z.string().nullable(),
-});
-
-/** A span of local time; an unreadable end is null. */
-export type RepairSpan = z.infer<typeof spanSchema>;
-
-const moveSchema = z.object({
-	kind: moveKindSchema,
-	/** Null for someone the roster no longer names. */
-	membershipId: z.string().nullable(),
-	displayName: z.string().nullable(),
-	/** Where a move between shifts leaves (a frozen shift's id and name); null for the other kinds. */
-	fromShiftId: z.string().nullable(),
-	fromShiftName: z.string().nullable(),
-	fromDate: z.string().nullable(),
-	/** The frozen shift worked after the move, its name, and its day. */
-	shiftId: z.string().nullable(),
-	shiftName: z.string().nullable(),
-	date: z.string().nullable(),
-	period: spanSchema,
-	/** How long a stretch is; null for the other kinds. */
-	extensionMinutes: z.number().nullable(),
-	/**
-	 * Which edge of the shift a stretch hangs off (the API's ADR-0110): the
-	 * person starts early, or stays on after it. Null for the other kinds, for
-	 * a side the API does not know, and absent from an older API.
-	 */
-	side: z.enum(["BEFORE_SHIFT", "AFTER_SHIFT"]).nullish().catch(null),
-});
-
-/** One move of an engine option: who, from where, to which shift and day. */
-export type RepairMove = z.infer<typeof moveSchema>;
+/** A span of local time, `yyyy-MM-ddTHH:mm:ss`. */
+export type RepairSpan = { start: string | null; end: string | null };
 
 /** What an option does, as the API names it; OTHER for the older repair's options and a kind this app does not know. */
 const repairOptionKindSchema = z
@@ -114,17 +73,8 @@ const repairPersonSchema = z.object({
 export type RepairPerson = z.infer<typeof repairPersonSchema>;
 
 const optionSchema = z.object({
-	feasible: z.boolean(),
 	/** Whether the option was checked against the working-time rules; false shows "Not rule-checked". */
 	workingTimeRulesChecked: z.boolean(),
-	moves: z.array(moveSchema),
-	/** The engine's own sentences, quoted, never the app's copy. */
-	summary: z.string().nullable(),
-	infeasibleReason: z.string().nullable(),
-	/** The gap's spans this option still leaves short. */
-	leftShort: z.array(spanSchema),
-	leftShortBy: z.number().nullable(),
-	warnings: z.array(z.string()),
 	kind: repairOptionKindSchema,
 	fills: repairFillsSchema,
 	/** The gap's hours still short with the option applied, each run with its count; empty when it fills the gap. */
@@ -148,7 +98,7 @@ const optionSchema = z.object({
 	people: z.array(repairPersonSchema),
 });
 
-/** One of the engine's ways to fill the gap, or its honest no. */
+/** One of the engine's ways to fill the gap, ready to show and apply. */
 export type RepairOption = z.infer<typeof optionSchema>;
 
 /** An option's extra minutes that week, by kind. */

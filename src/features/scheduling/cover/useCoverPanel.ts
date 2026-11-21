@@ -13,11 +13,11 @@ import {
 	showsBackendList,
 	type CoverListView,
 } from "@/features/scheduling/cover/coverListView";
-import {
-	coverWithEngine,
-	type CoverWithEngine,
-} from "@/features/scheduling/cover/coverWithEngine";
-import type { RepairOption } from "@/features/scheduling/cover/engineRepairApi";
+import { notAssignedWithLeaveCorrected } from "@/features/scheduling/cover/notAssignedLeave";
+import type {
+	NotAssignedPerson,
+	RepairOption,
+} from "@/features/scheduling/cover/engineRepairApi";
 import { stillShortToast } from "@/features/scheduling/cover/engineRepairWords";
 import {
 	useEngineRepair,
@@ -102,17 +102,15 @@ const REFUSAL_STATUSES: Partial<Record<RosterChangeRefusal, CoverPanelStatus>> =
 export type CoverPanel = {
 	status: CoverPanelStatus;
 	options: CoverOptions | undefined;
-	/** The list with the engine's answer merged into it; the backend's own until the engine has answered. */
-	withEngine: CoverWithEngine | undefined;
+	/** Why each person with the gap's job title has no option, "on leave" corrected by the backend's list; null when the engine did not say. */
+	notAssigned: Array<NotAssignedPerson> | null;
 	/** The engine's own options for the gap, asked for as the panel opens. */
 	engineRepair: EngineRepairState & { askAgain: () => void };
 	/** Which list the panel shows: the engine's options, or the backend's people (`coverListView`). */
 	view: CoverListView;
 	/**
-	 * The chosen person of the backend's list, only while that list is shown;
-	 * until one is chosen, the one the engine suggests, or the first while the
-	 * engine has not answered. Nobody once the engine has answered without a
-	 * suggestion, or refuses the one chosen.
+	 * The chosen person of the backend's list, only while that list is shown
+	 * (the engine refused); until one is chosen, the first.
 	 */
 	selected: CoverOption | undefined;
 	select: (membershipId: string) => void;
@@ -169,10 +167,10 @@ const statusOf = (
 /**
  * Find cover's state and calls, no words on screen: the ranked list for the
  * gap, the engine's own answer asked for at once (`useEngineRepair`), which of
- * the two the panel lists (`coverListView`), the engine's answer merged into
- * the ranked list where that list shows (`coverWithEngine`), the chosen person
- * (the engine's suggestion, or the first while the engine has not answered;
- * nobody while the engine's options are the list), its preview
+ * the two the panel lists (`coverListView`), the engine's why-not list with
+ * its "on leave" corrected by the backend's (`notAssignedLeave`), the chosen
+ * person of the backend's list (the first; nobody while the engine's options
+ * are the list), its preview
  * through the roster-change preview (the grid outlines what it touches),
  * and Apply on a draft or the offer actions on a published roster, exactly
  * as the day editor does it (`useRosterCellPanel`, `useCellCoverOffer`). An
@@ -231,28 +229,20 @@ export const useCoverPanel = ({
 	const profileIdOf = (membershipId: string): string | undefined =>
 		assignments.find((row) => row.member?.membershipId === membershipId)?.member
 			?.memberProfileId;
-	const withEngine =
-		options &&
-		coverWithEngine(
-			options,
-			engineRepair.status === "ready" ? engineRepair : undefined,
-			profileIdOf
-		);
+	const engineNotAssigned =
+		engineRepair.status === "ready" ? (engineRepair.notAssigned ?? null) : null;
+	const notAssigned =
+		engineNotAssigned && options
+			? notAssignedWithLeaveCorrected(engineNotAssigned, options, profileIdOf)
+			: engineNotAssigned;
 	const view = coverListView(status, engineRepair.status);
 	// While the engine's options are the list, nobody of the backend's list is chosen or previewed.
 	const shown =
-		status === "options" && showsBackendList(view)
-			? (withEngine?.options ?? [])
+		status === "options" && showsBackendList(view) && options
+			? options.options
 			: [];
-	// The first row is the default only while the list is the backend's own: once the engine has answered,
-	// the default is the person it suggests, and nobody when it suggests no one.
-	const defaultChoice =
-		withEngine?.order === "engineFirst"
-			? withEngine.suggested
-			: shown[0]?.membershipId;
 	const selected =
-		shown.find((option) => option.membershipId === chosen) ??
-		shown.find((option) => option.membershipId === defaultChoice);
+		shown.find((option) => option.membershipId === chosen) ?? shown[0];
 
 	const body: RosterChangeBody | undefined =
 		repairOption && repairChoice
@@ -360,7 +350,7 @@ export const useCoverPanel = ({
 	return {
 		status,
 		options,
-		withEngine,
+		notAssigned,
 		engineRepair,
 		view,
 		selected,

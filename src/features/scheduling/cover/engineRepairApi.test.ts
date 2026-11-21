@@ -7,10 +7,8 @@ import {
 	repairOptionsKey,
 } from "@/features/scheduling/cover/engineRepairApi";
 import {
-	callInMove,
 	callInOption,
 	daySwapOption,
-	feasibleRepair,
 	moveOption,
 	NOT_ASSIGNED_FIXTURE,
 	oneOfTwoOption,
@@ -18,7 +16,6 @@ import {
 	repairOptionsFixture,
 	restDayCallInOption,
 	stretchAfterOption,
-	stretchMove,
 	stretchPairOption,
 } from "@/features/scheduling/cover/engineRepairFixtures";
 import { scheduleKey } from "@/features/scheduling/schedules/api";
@@ -72,27 +69,7 @@ describe("engine repair options client", () => {
 		});
 
 		expect(calls[0]?.body).toEqual({ ...GAP, expectedRevision: 1 });
-		expect(parsed.options).toEqual([feasibleRepair()]);
-	});
-
-	it("reads a move kind a newer API adds as one the app can't describe", async () => {
-		stubApi({
-			[`POST ${REPAIR_OPTIONS}`]: {
-				status: 200,
-				body: envelope(
-					repairOptionsFixture([
-						feasibleRepair([{ ...callInMove(), kind: "SWAP" as never }]),
-					])
-				),
-			},
-		});
-
-		const parsed = await fetchRepairOptions(TARGET, {
-			...GAP,
-			expectedRevision: 1,
-		});
-
-		expect(parsed.options[0]?.moves[0]?.kind).toBe("UNKNOWN");
+		expect(parsed.options).toEqual([callInOption()]);
 	});
 
 	it("reads why others were not assigned, an empty list as empty, and an answer without it as not known", async () => {
@@ -272,29 +249,5 @@ describe("engine repair options client", () => {
 			},
 			{ membershipId: "m-1", day: "2026-10-16", kind: "OFF", dayType: "OFF" },
 		]);
-	});
-
-	it("reads a stretch move's side, and a side it does not know as none", async () => {
-		stubApi({
-			[`POST ${REPAIR_OPTIONS}`]: {
-				status: 200,
-				body: envelope(
-					repairOptionsFixture([
-						feasibleRepair([stretchMove()]),
-						feasibleRepair([stretchMove({ side: "SIDEWAYS" as never })]),
-						feasibleRepair([callInMove()]),
-					])
-				),
-			},
-		});
-
-		const parsed = await fetchRepairOptions(TARGET, {
-			...GAP,
-			expectedRevision: 1,
-		});
-
-		expect(parsed.options[0]?.moves[0]?.side).toBe("AFTER_SHIFT");
-		expect(parsed.options[1]?.moves[0]?.side).toBeNull();
-		expect(parsed.options[2]?.moves[0]?.side).toBeUndefined();
 	});
 });

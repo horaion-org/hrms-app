@@ -5,12 +5,11 @@ import {
 	reasonText,
 	type CoverShift,
 } from "@/features/scheduling/cover/coverOptionWords";
-import type { CoverUnavailableWithEngine } from "@/features/scheduling/cover/coverWithEngine";
-import { notAssignedReasonLine } from "@/features/scheduling/cover/notAssignedWords";
+import type { CoverUnavailable } from "@/features/scheduling/cover/api";
 
 export type WhyNotOthersProps = {
-	/** The people of the hours-based list who can't help, by the engine's reason or the backend's. */
-	people: ReadonlyArray<CoverUnavailableWithEngine>;
+	/** The people of the hours-based list who can't help, by the backend's reason. */
+	people: ReadonlyArray<CoverUnavailable>;
 	/** A member's name by membership id. */
 	memberName: (membershipId: string) => string;
 	/** The short shift, whose job titles a reason may name. */
@@ -35,10 +34,7 @@ export const WhyNotOthers = ({
 					<li key={person.membershipId}>
 						{t("scheduling.cover.list.cantHelpLine", {
 							name: memberName(person.membershipId),
-							reason:
-								"engineReason" in person
-									? notAssignedReasonLine(person.engineReason, t)
-									: reasonText(person.reason, shift, t),
+							reason: reasonText(person.reason, shift, t),
 						})}
 					</li>
 				))}

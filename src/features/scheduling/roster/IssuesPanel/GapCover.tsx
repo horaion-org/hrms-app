@@ -240,7 +240,7 @@ const GapCoverBody = ({
 		shift: shift?.name ?? "",
 		day: formatDay(gap.day, language),
 	};
-	const { engineRepair, withEngine } = panel;
+	const { engineRepair } = panel;
 	const memberName = panel.review.names.member;
 	const weekdayName = new Intl.DateTimeFormat(language, { weekday: "long" });
 	const now = new Date();
@@ -319,12 +319,9 @@ const GapCoverBody = ({
 			)
 			.flatMap((membershipId) => profileIdOf(membershipId) ?? [])
 	);
-	const engineNotAssigned =
-		withEngine?.notAssigned ??
-		(engineRepair.status === "ready" ? engineRepair.notAssigned : undefined);
 	const notAssigned =
-		engineNotAssigned &&
-		whyNotWithoutCards(engineNotAssigned, profileIdsWithCards);
+		panel.notAssigned &&
+		whyNotWithoutCards(panel.notAssigned, profileIdsWithCards);
 	const noOptions =
 		engineRepair.status === "ready" && engineRepair.options.length === 0;
 	const optionsFound =
@@ -333,7 +330,6 @@ const GapCoverBody = ({
 			: undefined;
 	const showsNotAssigned =
 		panel.view === "engine" &&
-		notAssigned !== undefined &&
 		notAssigned !== null &&
 		(notAssigned.length > 0 || noOptions);
 	return (
@@ -392,7 +388,7 @@ const GapCoverBody = ({
 			{panel.view === "backendFallback" && (
 				<WhyNotOthers
 					memberName={memberName}
-					people={withEngine?.unavailable ?? []}
+					people={panel.options?.unavailable ?? []}
 					shift={shift}
 				/>
 			)}

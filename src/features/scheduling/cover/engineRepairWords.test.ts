@@ -3,20 +3,14 @@ import { beforeAll, describe, expect, it } from "vitest";
 import en from "@/assets/locales/en/translations.json";
 import { ApiProblemError } from "@/common/problem";
 import {
-	callInMove,
 	callInOption,
 	daySwapOption,
-	feasibleRepair,
-	infeasibleRepair,
 	moveOption,
 	oneOfTwoOption,
 	otherTwoPeopleOption,
-	partStretchRepair,
-	reassignMove,
 	restDayCallInOption,
 	stretchAfterOption,
 	stretchBeforeOption,
-	stretchMove,
 	stretchPairOption,
 } from "@/features/scheduling/cover/engineRepairFixtures";
 import { scheduleAssignmentsFixture } from "@/features/scheduling/schedules/fixtures";
@@ -30,11 +24,7 @@ import {
 	weekLine,
 	whatItLeaves,
 	type OptionWordSources,
-	moveLine,
-	optionHeadingKey,
-	stillShortAfterApplying,
 	repairRefusalOf,
-	type RepairNames,
 } from "@/features/scheduling/cover/engineRepairWords";
 
 let t: TFunction;
@@ -45,12 +35,6 @@ beforeAll(async () => {
 	t = i18n.t;
 });
 
-const names: RepairNames = {
-	member: (membershipId) => `Member ${membershipId}`,
-	day: (isoDate) => (isoDate === "2026-10-17" ? "Sat, Oct 17" : isoDate),
-	hours: (minutes) => String(minutes / 60),
-};
-
 /** A refusal as the API client raises it. */
 const problem = (errorCode: string): ApiProblemError =>
 	new ApiProblemError({
@@ -60,64 +44,6 @@ const problem = (errorCode: string): ApiProblemError =>
 		fieldErrors: [],
 		reason: "http",
 	});
-
-describe("moveLine", () => {
-	it("words each kind of move", () => {
-		expect(moveLine(reassignMove(), names, t)).toBe(
-			"Move Ben Ong from Swing Shift Sat, Oct 17 to Front Desk AM Sat, Oct 17"
-		);
-		expect(moveLine(callInMove(), names, t)).toBe(
-			"Call in Aisha Rahman for Front Desk AM Sat, Oct 17"
-		);
-		expect(moveLine(stretchMove(), names, t)).toBe(
-			"Chen Wei stays on after Swing Shift · +2 h overtime, until 15:00"
-		);
-		expect(
-			moveLine(
-				stretchMove({
-					side: "BEFORE_SHIFT",
-					period: { start: "2026-10-17T07:00:00", end: "2026-10-17T09:00:00" },
-				}),
-				names,
-				t
-			)
-		).toBe("Chen Wei starts Swing Shift early · +2 h overtime, from 07:00");
-		expect(moveLine(stretchMove({ side: null }), names, t)).toBe(
-			"Extend Chen Wei’s Swing Shift · +2 h overtime"
-		);
-		expect(moveLine({ ...callInMove(), kind: "UNKNOWN" }, names, t)).toBe(
-			"A change the app can’t describe yet"
-		);
-	});
-
-	it("names someone the roster no longer names as a former member", () => {
-		expect(
-			moveLine(callInMove({ membershipId: null, displayName: null }), names, t)
-		).toBe("Call in Former member for Front Desk AM Sat, Oct 17");
-	});
-});
-
-describe("optionHeadingKey", () => {
-	it("heads a full fill, a part fill and the engine's honest no apart", () => {
-		expect(optionHeadingKey(feasibleRepair())).toBe("fills");
-		expect(optionHeadingKey(partStretchRepair())).toBe("fillsPart");
-		expect(optionHeadingKey(infeasibleRepair())).toBe("cannotFill");
-	});
-});
-
-describe("stillShortAfterApplying", () => {
-	const gap = { shift: "Front Desk AM", day: "Sat, Oct 17" };
-
-	it("says which hours an applied option leaves short, and to find cover again", () => {
-		expect(stillShortAfterApplying(partStretchRepair(), gap, t)).toBe(
-			"Roster changed. Front Desk AM on Sat, Oct 17 is still 1 short 09:00 – 13:00: find cover again for those hours."
-		);
-	});
-
-	it("says nothing more for an option that fills the gap", () => {
-		expect(stillShortAfterApplying(feasibleRepair(), gap, t)).toBeUndefined();
-	});
-});
 
 describe("repairRefusalOf", () => {
 	it.each([

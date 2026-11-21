@@ -5040,19 +5040,7 @@
 			},
 			"engine": {
 				"loading": "Buscando las opciones…",
-				"unreachable": "No se pudo contactar con el motor. Estas personas están libres según sus horas y no se comprueban con las reglas.",
-				"none": "El motor no encontró forma de cubrirlo.",
 				"unknownShift": "un turno",
-				"appliedStillShort_one": "Cuadrante cambiado. A {{shift}} del {{day}} aún le falta {{count}} {{times}}: vuelve a buscar cobertura para esas horas.",
-				"appliedStillShort_other": "Cuadrante cambiado. A {{shift}} del {{day}} aún le faltan {{count}} {{times}}: vuelve a buscar cobertura para esas horas.",
-				"move": {
-					"REASSIGN": "Mover a {{name}} de {{fromShift}} {{fromDay}} a {{shift}} {{day}}",
-					"CALL_IN": "Llamar a {{name}} para {{shift}} {{day}}",
-					"OVERTIME_EXTENSION": "Alargar {{shift}} de {{name}} · {{overtime}}",
-					"OVERTIME_EXTENSION_AFTER": "{{name}} se queda después de {{shift}} · {{overtime}}, hasta las {{time}}",
-					"OVERTIME_EXTENSION_BEFORE": "{{name}} empieza {{shift}} antes · {{overtime}}, desde las {{time}}",
-					"UNKNOWN": "Un cambio que la aplicación aún no sabe describir"
-				},
 				"refusal": {
 					"notSeenByEngine": "El motor cuenta este turno como cubierto.",
 					"expired": "Ya no se guarda la ejecución del motor de este cuadrante. Genera la semana de nuevo para tener opciones comprobadas.",
@@ -5061,7 +5049,6 @@
 					"tooSlow": "El motor tardó demasiado.",
 					"failed": "No se pudo contactar con el motor."
 				},
-				"byHand": "La aplicación no puede aplicar esta: hazla a mano en el cuadrante.",
 				"whyNot": {
 					"title": "Por qué no se asignó a nadie",
 					"couldTake": "Podría cubrir este turno.",

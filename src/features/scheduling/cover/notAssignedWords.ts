@@ -16,7 +16,7 @@ const key = "scheduling.cover.engine.whyNot";
 /** The reason that names the rule the shift would break. */
 const BREAKS_RULE = "breaks_rule";
 
-/** The app's own reason, in place of the engine's "on leave", for a part-timer with no shift that day (`coverWithEngine`). */
+/** The app's own reason, in place of the engine's "on leave", for a part-timer with no shift that day (`notAssignedLeave`). */
 export const NO_SHIFT_PART_TIME = "no_shift_part_time";
 
 /** The reason for a rule the engine does not name, which a broken rule nobody can name reads as too. */

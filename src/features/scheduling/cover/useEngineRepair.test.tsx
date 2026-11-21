@@ -6,8 +6,8 @@ import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, stubApi } from "@/common/testing/stubApi";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import {
-	feasibleRepair,
-	infeasibleRepair,
+	callInOption,
+	moveOption,
 	repairOptionsFixture,
 } from "@/features/scheduling/cover/engineRepairFixtures";
 import { useEngineRepair } from "@/features/scheduling/cover/useEngineRepair";
@@ -73,7 +73,7 @@ const answer = (options = repairOptionsFixture()): ReturnType<typeof stubApi> =>
 describe("useEngineRepair", () => {
 	it("asks at once for the gap at the revision on screen, and keeps the engine's order and revision", async () => {
 		const calls = answer(
-			repairOptionsFixture([infeasibleRepair(), feasibleRepair()], null, {
+			repairOptionsFixture([moveOption(), callInOption()], null, {
 				revision: 4,
 			})
 		);
@@ -92,8 +92,8 @@ describe("useEngineRepair", () => {
 		});
 		expect(
 			result.current.status === "ready" &&
-				result.current.options.map((option) => option.feasible)
-		).toEqual([false, true]);
+				result.current.options.map((option) => option.kind)
+		).toEqual(["MOVE", "CALL_IN"]);
 	});
 
 	it("asks afresh once the roster moves on", async () => {

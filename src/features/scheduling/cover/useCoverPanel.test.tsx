@@ -7,9 +7,8 @@ import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
-	callInMove,
+	callInOption,
 	daySwapOption,
-	feasibleRepair,
 	repairOptionsFixture,
 	stretchAfterOption,
 	stretchPairOption,
@@ -115,7 +114,7 @@ describe("useCoverPanel", () => {
 			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
 			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
 			[`POST ${REPAIR_OPTIONS}`]: answer(
-				repairOptionsFixture([feasibleRepair([callInMove()])], [])
+				repairOptionsFixture([callInOption()], [])
 			),
 		});
 		const { result, input } = hook();
