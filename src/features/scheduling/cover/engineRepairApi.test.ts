@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, stubApi } from "@/common/testing/stubApi";
+import { ENGINE_ANSWER_WAIT_MILLISECONDS } from "@/features/scheduling/engineWait";
 import {
 	fetchRepairOptions,
 	repairOptionsKey,
@@ -37,6 +38,16 @@ afterEach(() => {
 });
 
 describe("engine repair options client", () => {
+	it("waits for the engine as long as the API does, past the default", async () => {
+		const timeout = vi.spyOn(AbortSignal, "timeout");
+		stubApi({ [`POST ${REPAIR_OPTIONS}`]: { status: 503 } });
+
+		await fetchRepairOptions(TARGET, { ...GAP, expectedRevision: 3 }).catch(() => undefined);
+
+		expect(timeout).toHaveBeenCalledWith(ENGINE_ANSWER_WAIT_MILLISECONDS);
+		timeout.mockRestore();
+	});
+
 	it("posts the gap and the revision, and reads each option", async () => {
 		const calls = stubApi({
 			[`POST ${REPAIR_OPTIONS}`]: {

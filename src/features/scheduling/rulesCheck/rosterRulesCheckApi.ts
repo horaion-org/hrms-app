@@ -2,6 +2,7 @@ import { queryOptions, skipToken } from "@tanstack/react-query";
 import { z } from "zod";
 import { apiRequest } from "@/common/api-client";
 import type { QueryOptionsFor } from "@/common/query-client";
+import { ENGINE_ANSWER_WAIT_MILLISECONDS } from "@/features/scheduling/engineWait";
 import { schedulePath } from "@/features/scheduling/paths";
 import type { RosterChangeTarget } from "@/features/scheduling/rosterChanges/useRosterChangeActions";
 import {
@@ -80,7 +81,12 @@ export const fetchRosterRulesCheck = (
 	apiRequest(
 		`${schedulePath(companyId, unit, scheduleId)}/roster-check`,
 		rosterRulesCheckSchema,
-		{ method: "POST", body, signal }
+		{
+			method: "POST",
+			body,
+			signal,
+			timeoutMilliseconds: ENGINE_ANSWER_WAIT_MILLISECONDS,
+		}
 	);
 
 /** The key one revision's check is cached under, below the schedule's own. */
