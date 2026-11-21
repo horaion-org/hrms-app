@@ -254,6 +254,29 @@ describe("GapCover", () => {
 		expect(regions()).toEqual([region]);
 	});
 
+	it("given_aRefusalAndNobodyFreeByTheirHours_when_shown_then_itSaysOnlyThat", async () => {
+		stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(
+				coverOptionsFixture({ options: [], unavailable: [] })
+			),
+			[`POST ${REPAIR_OPTIONS}`]: {
+				status: 504,
+				body: { errorCode: "REPAIR_ENGINE_TOO_SLOW" },
+			},
+		});
+		show();
+
+		const nobody = await screen.findByText("Nobody is free by their hours.");
+		expect(nobody).toBeVisible();
+		expect(screen.queryByText(/Nobody on this roster can cover/)).toBeNull();
+		// It stands where the hours-based people would, under the refusal that asked for them.
+		expect(
+			screen
+				.getByText("The engine took too long.")
+				.compareDocumentPosition(nobody) & Node.DOCUMENT_POSITION_FOLLOWING
+		).toBeTruthy();
+	});
+
 	it("given_aRefusal_when_shown_then_itsAlertSitsOutsideTheQuietRegion", async () => {
 		stubApi({
 			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),

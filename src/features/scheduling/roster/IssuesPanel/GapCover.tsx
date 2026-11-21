@@ -223,8 +223,6 @@ const useStatusLines = (
 				text={t(`${key}.panel.failed`)}
 			/>
 		);
-	if (status === "nobody")
-		quiet.push(<Line key="nobody" text={t(`${key}.panel.nobody`, shiftDay)} />);
 	return { quiet, alerts };
 };
 
@@ -400,11 +398,14 @@ const GapCoverBody = ({
 		<div className="flex flex-col gap-2">
 			{liveRegion(statusLines.quiet)}
 			{statusLines.alerts}
-			{/* The hours-based people's caption sits over their cards, under the refusal that brought them. */}
+			{/* The hours-based people's caption sits over their cards, under the refusal that brought them; with nobody, the line saying so. */}
 			{panel.view === "backendFallback" && panel.status === "options" && (
 				<p className="text-xs font-semibold text-neutral-700">
 					{t(`${engineKey}.fallbackCaption`)}
 				</p>
+			)}
+			{panel.view === "backendFallback" && panel.status === "nobody" && (
+				<Line text={t(`${engineKey}.fallbackNobody`)} />
 			)}
 			{cards.length > 0 && (
 				<ExpandableList

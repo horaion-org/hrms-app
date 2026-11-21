@@ -5237,8 +5237,7 @@
 				"rosterMoved": "The roster changed since this list was made.",
 				"findAgain": "Find again",
 				"failed": "The list couldn't be loaded.",
-				"covered": "{{shift}} on {{day}} is covered now.",
-				"nobody": "Nobody on this roster can cover {{shift}} on {{day}}."
+				"covered": "{{shift}} on {{day}} is covered now."
 			},
 			"engine": {
 				"loading": "Working out the options…",
@@ -5308,7 +5307,8 @@
 				"shortRun_other": "{{count}} short {{times}}",
 				"spanSeparator": ", ",
 				"appliedRosterMoved": "The roster changed, so that change was not made. These are the options now.",
-				"takenOffEarlier": "Taken off this shift earlier"
+				"takenOffEarlier": "Taken off this shift earlier",
+				"fallbackNobody": "Nobody is free by their hours."
 			}
 		},
 		"reach": {
