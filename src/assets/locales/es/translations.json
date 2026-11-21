@@ -4643,7 +4643,7 @@
 			"unknownJob": "un puesto",
 			"wholeRoster": "Todo el cuadrante",
 			"jobShort_one": "Falta {{count}} {{job}}",
-			"jobShort_other": "Faltan {{count}} {{job}}",
+			"jobShort_other": "Faltan {{count}} × {{job}}",
 			"brokenMust": "Aquí se incumple una regla obligatoria. Cambia este día a mano y vuelve a validar. Regla: {{rule}}",
 			"notMetRule": "Se pidió si es posible, y este cuadrante no pudo cumplirla. Regla: {{rule}}",
 			"leaveShort": "De permiso, así que falta gente en {{shift}}.",

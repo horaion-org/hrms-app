@@ -1,5 +1,6 @@
 import type { TFunction } from "i18next";
 import { describe, expect, it } from "vitest";
+import { authTestI18n } from "@/features/auth/testingI18n";
 import {
 	ruleFixture,
 	staffingGapFixture,
@@ -65,6 +66,19 @@ describe("rosterIssues", () => {
 			who: "scheduling.issues.jobShort(2|Front Desk Staff)",
 			time: "scheduling.constraints.list(09:00–11:00,13:00–15:00)",
 		});
+	});
+
+	it("names more than one short as a count times the job title, which cannot be made plural, and one as today", () => {
+		const whoOf = (missing: number): string | undefined =>
+			rosterIssues(
+				input({
+					gaps: [staffingGapFixture({ missing })],
+					t: authTestI18n.t,
+				})
+			)[0]?.who;
+
+		expect(whoOf(2)).toBe("2 × Front Desk Staff short");
+		expect(whoOf(1)).toBe("1 Front Desk Staff short");
 	});
 
 	it("lists a shift short as its job title short, its day and time, with Find cover", () => {

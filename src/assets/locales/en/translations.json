@@ -4843,7 +4843,7 @@
 			"unknownJob": "A job title",
 			"wholeRoster": "Whole roster",
 			"jobShort_one": "{{count}} {{job}} short",
-			"jobShort_other": "{{count}} {{job}} short",
+			"jobShort_other": "{{count}} × {{job}} short",
 			"brokenMust": "A rule that must hold is broken here. Change this day by hand, then validate again. Rule: {{rule}}",
 			"notMetRule": "Asked for if possible, and this roster could not meet it. Rule: {{rule}}",
 			"leaveShort": "On leave, so {{shift}} is short.",
