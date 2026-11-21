@@ -4951,7 +4951,8 @@
 				"bothAgreed": "They both agreed",
 				"bothAgreedHint": "Say how each person agreed.",
 				"working": "Working it: {{names, list(type: conjunction)}}",
-				"nobodyWorks": "Nobody works it yet."
+				"nobodyWorks": "Nobody works it yet.",
+				"withCost": "{{line}} · {{cost}}"
 			}
 		},
 		"rosterMarkers": {

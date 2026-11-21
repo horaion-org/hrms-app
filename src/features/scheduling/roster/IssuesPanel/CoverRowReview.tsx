@@ -52,14 +52,14 @@ const EXTRA_COSTS: ReadonlyArray<CostChipKind> = [
 const PersonBlock = ({
 	person,
 	group,
-	cost,
+	costs,
 	gapDay,
 }: {
 	person: ReviewPerson;
 	group: ChangeTileGroup | undefined;
 	gapDay: string | undefined;
-	/** What the change costs this person in words; their overtime past the contract without. */
-	cost: string | undefined;
+	/** What the change costs this person in words; their overtime past the contract when not given. */
+	costs: ReadonlyArray<string> | undefined;
 }): FunctionComponent => {
 	const { t } = useTranslation();
 	const week = person.weekMinutes && weekHoursOf(person.weekMinutes);
@@ -69,7 +69,7 @@ const PersonBlock = ({
 					hours: hoursFromMinutes(week.overtimeMinutes),
 				})
 			: undefined;
-	const costWords = cost ?? overtime;
+	const costWords = costs ?? (overtime ? [overtime] : []);
 	return (
 		<div className="flex flex-col gap-1">
 			<p className="font-semibold text-neutral-900">{person.name}</p>
@@ -79,8 +79,10 @@ const PersonBlock = ({
 			{person.weekMinutes && week && (
 				<>
 					<p className="text-neutral-800">
-						{weekLine(person.weekMinutes, t)}
-						{costWords && ` · ${costWords}`}
+						{costWords.reduce(
+							(line, cost) => t(`${key}.withCost`, { line, cost }),
+							weekLine(person.weekMinutes, t)
+						)}
 					</p>
 					<ProgressBar
 						label={t(`${key}.weekBar`)}
@@ -144,7 +146,7 @@ export const CoverRowReview = ({
 	);
 	const onePersonCost =
 		people.length === 1 && extraCost.length > 0
-			? extraCost.map((chip) => chip.text).join(" · ")
+			? extraCost.map((chip) => chip.text)
 			: undefined;
 	const stillShort =
 		card.choice.kind === "engine" ? card.choice.option.stillShort : [];
@@ -176,7 +178,7 @@ export const CoverRowReview = ({
 							{people.map((person) => (
 								<PersonBlock
 									key={person.membershipId}
-									cost={onePersonCost}
+									costs={onePersonCost}
 									gapDay={gapDay}
 									person={person}
 									group={groups.find(

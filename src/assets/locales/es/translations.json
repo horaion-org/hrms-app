@@ -4751,7 +4751,8 @@
 				"bothAgreed": "Ambos aceptaron",
 				"bothAgreedHint": "Indica cómo aceptó cada persona.",
 				"working": "Lo trabajan: {{names, list(type: conjunction)}}",
-				"nobodyWorks": "Nadie lo trabaja todavía."
+				"nobodyWorks": "Nadie lo trabaja todavía.",
+				"withCost": "{{line}} · {{cost}}"
 			}
 		},
 		"rosterMarkers": {
