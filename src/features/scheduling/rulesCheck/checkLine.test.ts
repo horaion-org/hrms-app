@@ -1,8 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import {
-	checkLineOf,
-	type CheckLine,
-} from "@/features/scheduling/rulesCheck/checkLine";
+import { checkLineOf, type CheckLine } from "@/features/scheduling/rulesCheck/checkLine";
 import { rulesCheckFixture } from "@/features/scheduling/rulesCheck/fixtures";
 import type { ValidationStanding } from "@/features/scheduling/rulesCheck/issuesFromValidation";
 import type { RosterValidation } from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
@@ -28,12 +25,7 @@ const validationOf = (
 
 describe("checkLineOf", () => {
 	it.each<[string, ValidationStanding, RosterValidation, CheckLine]>([
-		[
-			"a check running",
-			"current",
-			validationOf({ status: "loading" }),
-			{ state: "checking" },
-		],
+		["a check running", "current", validationOf({ status: "loading" }), { state: "checking" }],
 		[
 			"a refusal a retry may mend",
 			"current",
@@ -67,21 +59,13 @@ describe("checkLineOf", () => {
 		[
 			"a check the engine ran out of time on",
 			"current",
-			validationOf(
-				{ status: "idle" },
-				1,
-				rulesCheckFixture({ mayBeShort: true })
-			),
+			validationOf({ status: "idle" }, 1, rulesCheckFixture({ mayBeShort: true })),
 			{ state: "checked", checkedAt: CHECKED_AT, incomplete: true },
 		],
 		[
 			"a check that could not work out the staffing",
 			"current",
-			validationOf(
-				{ status: "idle" },
-				1,
-				rulesCheckFixture({ staffingGaps: null })
-			),
+			validationOf({ status: "idle" }, 1, rulesCheckFixture({ staffingGaps: null })),
 			{ state: "checked", checkedAt: CHECKED_AT, incomplete: true },
 		],
 		[

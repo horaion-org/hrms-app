@@ -63,10 +63,7 @@ const shiftFace = (
 	kind: "shift",
 	name: shift.name,
 	colour: shift.colour,
-	times: stretchedTimes(
-		{ start: shift.startTime, end: shift.endTime },
-		stretch
-	),
+	times: stretchedTimes({ start: shift.startTime, end: shift.endTime }, stretch),
 	stretchMinutes: stretchMinutes(stretch),
 });
 

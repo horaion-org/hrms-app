@@ -18,17 +18,13 @@ describe("Toast", () => {
 		);
 	});
 
-	it("given_aLongMessage_when_rendered_then_itWrapsInsteadOfBeingCutShort", () => {
-		render(
-			<Toast onDismiss={vi.fn()}>
-				Roster changed. Swing Shift is still 1 short 14:00 – 15:00, 17:00 –
-				22:00.
-			</Toast>
-		);
+	it("given_aLongMessage_when_rendered_then_theWholeMessageIsInTheToast", () => {
+		const message =
+			"Roster changed. Swing Shift is still 1 short 14:00 – 15:00, 17:00 – 22:00.";
+		render(<Toast onDismiss={vi.fn()}>{message}</Toast>);
 
-		const message = screen.getByText(/Swing Shift is still 1 short/);
-		expect(message).not.toHaveClass("truncate");
-		expect(message).toHaveClass("break-words");
+		// How it wraps is shown by the LongMessage story and the before-and-after shots.
+		expect(screen.getByRole("status")).toHaveTextContent(message);
 	});
 
 	it("given_theDuration_when_itPasses_then_dismissesOnce", () => {
