@@ -6,6 +6,7 @@ import {
 	apiRequestVoid,
 	configureApiClient,
 	configureApiLanguage,
+	DEFAULT_TIMEOUT_MILLISECONDS,
 	resetApiClient,
 } from "@/common/api-client";
 import { stubApi, envelope, problemReply } from "@/common/testing/stubApi";
@@ -180,6 +181,18 @@ it("passes the caller's signal and rethrows its abort as itself, not as an outag
 	await expect(request).rejects.toBe(reason);
 	expect(received?.aborted).toBe(true);
 });
+it.each([
+	[undefined, DEFAULT_TIMEOUT_MILLISECONDS],
+	[35_000, 35_000],
+])(
+	"waits the caller's timeout for the answer, or the default without one: %s",
+	async (timeoutMilliseconds, expected) => {
+		const timeout = vi.spyOn(AbortSignal, "timeout");
+		stubApi({ [`GET ${path}`]: { status: 200, body: envelope({ id: "a" }) } });
+		await apiRequest(path, schema, { anonymous: true, timeoutMilliseconds });
+		expect(timeout).toHaveBeenCalledWith(expected);
+	}
+);
 it("sends FormData as multipart, leaving the Content-Type to the browser", async () => {
 	const fetch = vi.fn<(url: string, init: RequestInit) => Promise<Response>>(
 		() =>
