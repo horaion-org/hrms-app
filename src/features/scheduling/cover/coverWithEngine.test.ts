@@ -7,7 +7,10 @@ import {
 } from "@/features/scheduling/cover/engineRepairFixtures";
 import { coverOptionsFixture } from "@/features/scheduling/cover/fixtures";
 import { NO_SHIFT_PART_TIME } from "@/features/scheduling/cover/notAssignedWords";
-import { coverWithEngine } from "@/features/scheduling/cover/coverWithEngine";
+import {
+	coverWithEngine,
+	notAssignedWithLeaveCorrected,
+} from "@/features/scheduling/cover/coverWithEngine";
 import {
 	frontDeskSundayLateCase,
 	profileIdIn,
@@ -256,5 +259,26 @@ describe("coverWithEngine: the guards", () => {
 		);
 
 		expect(firstCodes(merged.notAssigned)).toEqual({ "m-9": "on_leave" });
+	});
+});
+
+describe("notAssignedWithLeaveCorrected", () => {
+	it("keeps leave the backend agrees with, and reads a working part-timer's 'leave' as no shift that day", () => {
+		const people = notAssignedWithLeaveCorrected(
+			[said("m-4", ["on_leave"]), said("m-2", ["on_leave"])],
+			{
+				...COVER,
+				unavailable: [
+					{ membershipId: "m-4", reason: "ON_LEAVE" },
+					{ membershipId: "m-2", reason: "ALREADY_WORKING" },
+				],
+			},
+			profileIdOf
+		);
+
+		expect(firstCodes(people)).toEqual({
+			"m-4": "on_leave",
+			"m-2": NO_SHIFT_PART_TIME,
+		});
 	});
 });

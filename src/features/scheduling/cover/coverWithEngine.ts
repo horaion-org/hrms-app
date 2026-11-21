@@ -282,3 +282,19 @@ export const coverWithEngine = (
 		),
 	};
 };
+
+/**
+ * The engine's why-not list with each "on leave" corrected by what the
+ * backend's hours-based list says of that person (`correctedLeaveCode`);
+ * `profileIdOf` gives a roster member's profile id, which is how the engine
+ * names people. Pure.
+ */
+export const notAssignedWithLeaveCorrected = (
+	notAssigned: ReadonlyArray<NotAssignedPerson>,
+	backendList: CoverOptions,
+	profileIdOf: (membershipId: string) => string | undefined
+): Array<NotAssignedPerson> =>
+	withCorrectedLeave(
+		notAssigned,
+		backendSaysByProfile(backendList, profileIdOf)
+	);

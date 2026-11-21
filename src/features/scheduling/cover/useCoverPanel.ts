@@ -225,7 +225,7 @@ export const useCoverPanel = ({
 			engineRepair.status === "ready" ? engineRepair : undefined,
 			profileIdOf
 		);
-	const view = coverListView(status, engineRepair.status, Boolean(coverOffers));
+	const view = coverListView(status, engineRepair.status);
 	// While the engine's options are the list, nobody of the backend's list is chosen or previewed.
 	const shown =
 		status === "options" && showsBackendList(view)

@@ -167,28 +167,4 @@ describe("GapCover", () => {
 		await user.click(screen.getByRole("button", { name: "Back" }));
 		expect(screen.getAllByRole("button", { name: "Review" })).toHaveLength(2);
 	});
-
-	it("given_aPublishedRoster_when_aPersonIsReviewed_then_theOffersActionsInApplysPlace", async () => {
-		stubApi({
-			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
-			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
-			[`POST ${REPAIR_OPTIONS}`]: answer(
-				repairOptionsFixture([feasibleRepair([stretchMove()])])
-			),
-		});
-		show(true);
-		const user = userEvent.setup();
-
-		const cards = await screen.findAllByRole("listitem");
-		// The people the shift can be offered to, not the engine's stretch.
-		expect(cards.map((card) => card.textContent)).toEqual([
-			expect.stringMatching(/Aisha Rahman/),
-			expect.stringMatching(/Chen Wei/),
-		]);
-		await user.click(within(cards[0]!).getByRole("button", { name: "Review" }));
-
-		expect(await screen.findByRole("button", { name: "Send offer" })).toBeVisible();
-		expect(screen.queryByRole("button", { name: "Apply change" })).toBeNull();
-		expect(screen.getByRole("button", { name: "Back" })).toBeVisible();
-	});
 });

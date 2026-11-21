@@ -82,7 +82,7 @@ describe("coverCards", () => {
 		expect(cards[2]?.badge).toEqual({ kind: "leavesShort", count: 1 });
 	});
 
-	it.each<CoverListView>(["backendFallback", "backendWithEngine"])(
+	it.each<CoverListView>(["backendFallback"])(
 		"given_the %s view_when_carded_then_theBackendsPeopleNotRuleCheckedTheFirstSuggested",
 		(view) => {
 			const cards = cardsOf(view);
@@ -103,7 +103,7 @@ describe("coverCards", () => {
 			engineNote: { "m-3": "fills" as const },
 		};
 
-		const cards = cardsOf("backendWithEngine", { backend });
+		const cards = cardsOf("backendFallback", { backend });
 
 		expect(cards.find((card) => card.suggested)?.name).toBe("Chen Wei");
 		expect(cards.find((card) => card.name === "Chen Wei")?.badge.kind).toBe(
