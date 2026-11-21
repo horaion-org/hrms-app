@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
 import { Button } from "@/components/ui/Button";
@@ -40,8 +40,19 @@ export const IssuesPanel = ({
 	const [filter, setFilter] = useState<IssueFilter>("all");
 	const [openKey, setOpenKey] = useState(initiallyOpen);
 	const shown = rowsOfFilter(rows, filter);
+	const list = useRef<HTMLDivElement>(null);
+	// A row fixed and checked away takes focus with it: it goes to the panel's heading instead of being lost.
+	const openRowGone =
+		openKey !== undefined && !rows.some((row) => row.key === openKey);
+	useEffect(() => {
+		if (!openRowGone || document.activeElement !== document.body) return;
+		list.current
+			?.closest("aside")
+			?.querySelector<HTMLElement>("h2")
+			?.focus();
+	}, [openRowGone]);
 	return (
-		<div className="flex flex-col gap-3">
+		<div ref={list} className="flex flex-col gap-3">
 			<div
 				aria-label={t(`${key}.filtersLabel`)}
 				className="flex gap-4"

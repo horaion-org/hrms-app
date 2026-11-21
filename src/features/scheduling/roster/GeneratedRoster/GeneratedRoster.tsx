@@ -232,6 +232,8 @@ export const GeneratedRoster = ({
 		onPreviewDays: roster.onPreviewDays,
 		onApplied: (change, stillShort): void => {
 			setApplied({ change, stillShort });
+			// The roster is checked again by itself once it shows the change, so the rows follow what is left.
+			validation?.askAt(change.toRevision);
 		},
 	};
 	/** Closes the panel beside the grid, and forgets the day a fix from Issues opened. */

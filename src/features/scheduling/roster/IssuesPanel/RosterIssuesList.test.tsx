@@ -4,7 +4,10 @@ import { I18nextProvider } from "react-i18next";
 import { describe, expect, it, vi } from "vitest";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { rosterIssuesFixture } from "@/features/scheduling/roster/rosterIssueFixtures";
-import { RosterIssuesList, type RosterIssuesListProps } from "./RosterIssuesList";
+import {
+	RosterIssuesList,
+	type RosterIssuesListProps,
+} from "./RosterIssuesList";
 
 /*
  * The fixture's four issues: a shift short, a must broken, a rule not met
@@ -81,7 +84,9 @@ describe("RosterIssuesList", () => {
 		await user.click(screen.getByRole("button", { name: "Show" }));
 		expect(onShow).toHaveBeenCalledWith(rosterIssuesFixture()[1]);
 
-		const gap = screen.getByRole("button", { name: /1 Front Desk Staff short/ });
+		const gap = screen.getByRole("button", {
+			name: /1 Front Desk Staff short/,
+		});
 		await user.click(gap);
 		expect(must).toHaveAttribute("aria-expanded", "false");
 		expect(gap).toHaveAttribute("aria-expanded", "true");
@@ -105,7 +110,37 @@ describe("RosterIssuesList", () => {
 
 		await user.click(screen.getByRole("button", { name: /^If possibleAsked/ }));
 
-		expect(screen.getByText("Works Saturday. Rule: Weekends off")).toBeVisible();
+		expect(
+			screen.getByText("Works Saturday. Rule: Weekends off")
+		).toBeVisible();
 		expect(screen.queryByRole("button", { name: /Apply/ })).toBeNull();
+	});
+
+	it("given_theOpenRowCheckedAway_when_focusWasOnIt_then_focusGoesToThePanelsHeading", async () => {
+		const issues = rosterIssuesFixture();
+		/** The list inside a panel with its heading, as the side panel draws it. */
+		const inPanel = (shown: typeof issues): React.JSX.Element => (
+			<I18nextProvider i18n={authTestI18n}>
+				<aside aria-label="Issues">
+					<h2 tabIndex={-1}>Issues</h2>
+					<RosterIssuesList issues={shown} shiftName={() => "Front Desk AM"} />
+				</aside>
+			</I18nextProvider>
+		);
+		const { rerender } = render(inPanel(issues));
+		const row = screen.getByRole("button", { name: /Rules broken/ });
+		await userEvent.click(row);
+		row.blur();
+
+		rerender(
+			inPanel(
+				issues.filter(
+					(issue) =>
+						issue.group !== "mustFix" || issue.action.kind === "findCover"
+				)
+			)
+		);
+
+		expect(screen.getByRole("heading", { name: "Issues" })).toHaveFocus();
 	});
 });

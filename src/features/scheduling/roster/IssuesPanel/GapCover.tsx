@@ -32,6 +32,7 @@ import {
 	type OptionCardList,
 	type OptionCardSources,
 } from "@/features/scheduling/roster/coverCards";
+import { gapIssueKey } from "@/features/scheduling/roster/rosterIssueGroups";
 import { assignmentCell } from "@/features/scheduling/rosterChanges/cellText";
 import { CoverCardItem } from "./CoverCardItem";
 import { CoverRowReview } from "./CoverRowReview";
@@ -200,7 +201,20 @@ const GapCoverBody = ({
 }): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
-	const panel = useCoverPanel({ ...cover, gap, dayRow });
+	const panel = useCoverPanel({
+		...cover,
+		gap,
+		dayRow,
+		onApplied: (change, stillShort): void => {
+			cover.onApplied(change, stillShort);
+			// The review closes as the change lands: focus goes to the row's own button.
+			document
+				.querySelector<HTMLElement>(
+					`[data-issue-row="${CSS.escape(gapIssueKey(gap.shiftId, gap.day) ?? "")}"]`
+				)
+				?.focus();
+		},
+	});
 	// Opening a gap warms the engine's worker, so its first options come fast.
 	useRepairWarmUp(cover.target, cover.revision, true);
 	const [reviewKey, setReviewKey] = useState<string>();

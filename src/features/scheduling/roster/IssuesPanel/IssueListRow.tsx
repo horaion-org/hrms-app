@@ -35,6 +35,7 @@ export const IssueListRow = ({
 			<button
 				aria-controls={open ? bodyId : undefined}
 				aria-expanded={open}
+				data-issue-row={row.key}
 				className="grid w-full cursor-pointer grid-cols-[4px_minmax(0,1fr)_auto] items-center gap-3 py-3 pr-1 text-left focus-visible:outline-2 focus-visible:outline-ink-blue-500"
 				type="button"
 				onClick={onToggle}
