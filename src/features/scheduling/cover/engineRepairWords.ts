@@ -65,14 +65,6 @@ export const repairRefusalOf = (error: unknown): RepairRefusal =>
 export const clockTime = (dateTime: string | null): string =>
 	dateTime === null ? "" : dateTime.slice(CLOCK_TIME_START, CLOCK_TIME_END);
 
-/** Feasible options first, each group in the engine's order. */
-export const optionsInOrder = (
-	options: ReadonlyArray<RepairOption>
-): Array<RepairOption> => [
-	...options.filter((option) => option.feasible),
-	...options.filter((option) => !option.feasible),
-];
-
 /** The person a move is about, as the roster names them, else as someone who left. */
 const personOf = (move: RepairMove, names: RepairNames, t: TFunction): string =>
 	move.displayName ??

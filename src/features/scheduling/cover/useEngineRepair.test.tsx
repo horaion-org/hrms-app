@@ -73,9 +73,11 @@ const answer = (
 	});
 
 describe("useEngineRepair", () => {
-	it("asks at once for the gap at the revision on screen, feasible options first", async () => {
+	it("asks at once for the gap at the revision on screen, and keeps the engine's order and revision", async () => {
 		const calls = answer(
-			repairOptionsFixture([infeasibleRepair(), feasibleRepair()])
+			repairOptionsFixture([infeasibleRepair(), feasibleRepair()], null, {
+				revision: 4,
+			})
 		);
 		const { result } = hook(4);
 
@@ -86,10 +88,14 @@ describe("useEngineRepair", () => {
 		expect(calls.map((call) => call.body)).toEqual([
 			{ ...GAP, expectedRevision: 4 },
 		]);
+		expect(result.current).toMatchObject({
+			revision: 4,
+			search: { complete: true, optionsFound: 2 },
+		});
 		expect(
 			result.current.status === "ready" &&
 				result.current.options.map((option) => option.feasible)
-		).toEqual([true, false]);
+		).toEqual([false, true]);
 	});
 
 	it("asks afresh once the roster moves on", async () => {
@@ -143,6 +149,49 @@ describe("useEngineRepair", () => {
 		});
 		await waitFor(() => {
 			expect(calls).toHaveLength(2);
+		});
+	});
+
+	it("keeps a refusal on screen while it asks again, then reads the answer", async () => {
+		let release: (response: Response) => void = () => {};
+		const replies = [
+			Promise.resolve(
+				new Response(JSON.stringify({ errorCode: "REPAIR_ENGINE_TOO_SLOW" }), {
+					status: 504,
+				})
+			),
+			new Promise<Response>((resolve) => {
+				release = resolve;
+			}),
+		];
+		vi.stubGlobal("fetch", (): Promise<Response> => replies.shift()!);
+		const { result } = hook();
+		await waitFor(() => {
+			expect(result.current).toMatchObject({
+				status: "refused",
+				refusal: "tooSlow",
+				retrying: false,
+			});
+		});
+
+		act(() => {
+			result.current.askAgain();
+		});
+
+		await waitFor(() => {
+			expect(result.current).toMatchObject({
+				status: "refused",
+				refusal: "tooSlow",
+				retrying: true,
+			});
+		});
+		release(
+			new Response(JSON.stringify(envelope(repairOptionsFixture())), {
+				status: 200,
+			})
+		);
+		await waitFor(() => {
+			expect(result.current.status).toBe("ready");
 		});
 	});
 });

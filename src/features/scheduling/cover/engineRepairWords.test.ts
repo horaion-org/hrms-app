@@ -15,7 +15,6 @@ import {
 	moveLine,
 	optionHeadingKey,
 	stillShortAfterApplying,
-	optionsInOrder,
 	repairRefusalOf,
 	type RepairNames,
 } from "@/features/scheduling/cover/engineRepairWords";
@@ -99,14 +98,6 @@ describe("stillShortAfterApplying", () => {
 
 	it("says nothing more for an option that fills the gap", () => {
 		expect(stillShortAfterApplying(feasibleRepair(), gap, t)).toBeUndefined();
-	});
-});
-
-describe("optionsInOrder", () => {
-	it("puts feasible options first, keeping the engine's order inside each", () => {
-		const no = infeasibleRepair();
-		const yes = feasibleRepair();
-		expect(optionsInOrder([no, yes])).toEqual([yes, no]);
 	});
 });
 
