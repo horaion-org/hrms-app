@@ -5262,21 +5262,20 @@
 				"byHand": "The app can’t apply this one: make it by hand on the roster.",
 				"whyNot": {
 					"title": "Why nobody was assigned",
-					"couldTake": "Could take this shift",
+					"couldTake": "Could take this shift.",
 					"nobodyElse": "Nobody else holds this shift’s job title.",
 					"reason": {
-						"fixed_day_no_call_back": "Has a fixed rest or off day that day, and may not be called back.",
+						"fixed_day_no_call_back": "Has a fixed day off that day and may not be called back.",
 						"on_leave": "On leave that day.",
-						"outside_availability": "Not available for this shift’s hours.",
-						"too_little_shift_left": "Leave that day leaves too little of the shift to work.",
-						"works_another_shift": "Already on another shift that day.",
+						"outside_availability": "Not available for these hours.",
+						"works_another_shift": "On another shift that day, which would be left short.",
 						"breaks_unnamed_rule": "Would break a working-time rule.",
 						"not_checked": "Not checked in time.",
-						"no_shift_part_time": "Part-time with no shift that day. The engine doesn’t call in part-timers: choose them under Who covers.",
-						"needs_overtime": "Only as overtime, which isn’t assigned when a roster is generated."
+						"no_shift_part_time": "Part-time, with no shift that day.",
+						"needs_overtime": "Could take it with extra hours.",
+						"role_not_on_shift": "Does not hold this shift’s job title."
 					},
 					"breaksRule": "Would break: {{rule}}",
-					"aWorkingTimeRule": "a working-time rule",
 					"otherReason": "Cannot take this shift."
 				},
 				"kindLine": {

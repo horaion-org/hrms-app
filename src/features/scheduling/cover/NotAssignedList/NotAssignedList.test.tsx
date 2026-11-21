@@ -7,10 +7,13 @@ import type { NotAssignedPerson } from "@/features/scheduling/cover/engineRepair
 import { NOT_ASSIGNED_FIXTURE } from "@/features/scheduling/cover/engineRepairFixtures";
 import { NotAssignedList } from "@/features/scheduling/cover/NotAssignedList";
 
-const show = (people: Array<NotAssignedPerson> | null): void => {
+const show = (
+	people: Array<NotAssignedPerson> | null,
+	defaultOpen = false
+): void => {
 	render(
 		<I18nextProvider i18n={authTestI18n}>
-			<NotAssignedList people={people} />
+			<NotAssignedList defaultOpen={defaultOpen} people={people} />
 		</I18nextProvider>
 	);
 };
@@ -27,7 +30,7 @@ describe("NotAssignedList", () => {
 		await userEvent.click(fold);
 
 		expect(screen.getAllByRole("list")[0]).toHaveTextContent(
-			"Farid AzizCould take this shift" +
+			"Farid AzizCould take this shift." +
 				"Dana LimOn leave that day." +
 				"Ella TanWould break: Rest between shifts"
 		);
@@ -42,6 +45,15 @@ describe("NotAssignedList", () => {
 		expect(
 			screen.getByText("Nobody else holds this shift’s job title.")
 		).toBeVisible();
+	});
+
+	it("given_askedToStartOpen_when_shown_then_itsPeopleShowAtOnce", () => {
+		show(NOT_ASSIGNED_FIXTURE, true);
+
+		expect(
+			screen.getByRole("button", { name: "Why nobody was assigned" })
+		).toHaveAttribute("aria-expanded", "true");
+		expect(screen.getByText("Dana Lim")).toBeVisible();
 	});
 
 	it("given_theEngineCouldNotWorkItOut_when_shown_then_showsNothing", () => {

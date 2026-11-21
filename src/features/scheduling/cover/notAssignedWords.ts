@@ -19,14 +19,17 @@ const BREAKS_RULE = "breaks_rule";
 /** The app's own reason, in place of the engine's "on leave", for a part-timer with no shift that day (`coverWithEngine`). */
 export const NO_SHIFT_PART_TIME = "no_shift_part_time";
 
+/** The reason for a rule the engine does not name, which a broken rule nobody can name reads as too. */
+const BREAKS_UNNAMED_RULE = "breaks_unnamed_rule";
+
 /** The other reason codes the app has a sentence for; any code not here reads as a plain "Cannot take this shift." */
 const WORDED_REASONS = [
+	"role_not_on_shift",
 	"fixed_day_no_call_back",
 	"on_leave",
 	"outside_availability",
-	"too_little_shift_left",
 	"works_another_shift",
-	"breaks_unnamed_rule",
+	BREAKS_UNNAMED_RULE,
 	"not_checked",
 	"needs_overtime",
 	NO_SHIFT_PART_TIME,
@@ -38,23 +41,25 @@ type WordedReason = (typeof WORDED_REASONS)[number];
 const isWordedReason = (code: string): code is WordedReason =>
 	isOneOf(WORDED_REASONS, code);
 
-/** The rule a reason would break: the company's constraint name, else what the rule is called, else "a working-time rule". */
-const brokenRuleName = (reason: NotAssignedReason, t: TFunction): string => {
-	if (reason.constraintName) return reason.constraintName;
-	const named =
-		reason.rule === null ? undefined : ruleNameLabel(reason.rule, t);
-	return named ?? t(`${key}.aWorkingTimeRule`);
-};
+/** The rule a reason would break: the company's constraint name, else what the rule is called; undefined when neither names it. */
+const brokenRuleName = (
+	reason: NotAssignedReason,
+	t: TFunction
+): string | undefined =>
+	reason.constraintName ??
+	(reason.rule === null ? undefined : ruleNameLabel(reason.rule, t));
 
-/** One reason as a plain sentence. */
+/** One reason as a plain sentence; a broken rule nothing names reads as "Would break a working-time rule." */
 export const notAssignedReasonLine = (
 	reason: NotAssignedReason,
 	t: TFunction
 ): string => {
-	if (reason.code === BREAKS_RULE)
-		return t(`${key}.breaksRule`, { rule: brokenRuleName(reason, t) });
-	return isWordedReason(reason.code)
-		? t(`${key}.reason.${reason.code}`)
+	const rule =
+		reason.code === BREAKS_RULE ? brokenRuleName(reason, t) : undefined;
+	if (rule) return t(`${key}.breaksRule`, { rule });
+	const code = reason.code === BREAKS_RULE ? BREAKS_UNNAMED_RULE : reason.code;
+	return isWordedReason(code)
+		? t(`${key}.reason.${code}`)
 		: t(`${key}.otherReason`);
 };
 
@@ -73,3 +78,13 @@ export const notAssignedInOrder = (
 	...people.filter((person) => couldTakeTheShift(person)),
 	...people.filter((person) => !couldTakeTheShift(person)),
 ];
+
+/**
+ * The people of the why-not list who have no card of their own, in the
+ * engine's order: someone an option already changes is not listed again.
+ */
+export const whyNotWithoutCards = (
+	people: ReadonlyArray<NotAssignedPerson>,
+	profileIdsWithCards: ReadonlySet<string>
+): Array<NotAssignedPerson> =>
+	people.filter((person) => !profileIdsWithCards.has(person.memberProfileId));

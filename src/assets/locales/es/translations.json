@@ -5062,21 +5062,20 @@
 				"byHand": "La aplicación no puede aplicar esta: hazla a mano en el cuadrante.",
 				"whyNot": {
 					"title": "Por qué no se asignó a nadie",
-					"couldTake": "Podría cubrir este turno",
+					"couldTake": "Podría cubrir este turno.",
 					"nobodyElse": "Nadie más tiene el puesto de este turno.",
 					"reason": {
-						"fixed_day_no_call_back": "Tiene ese día un descanso o día libre fijo y no se le puede volver a llamar.",
+						"fixed_day_no_call_back": "Tiene ese día un día libre fijo y no se le puede volver a llamar.",
 						"on_leave": "Tiene permiso ese día.",
-						"outside_availability": "No está disponible en el horario de este turno.",
-						"too_little_shift_left": "El permiso de ese día deja muy poco turno por trabajar.",
-						"works_another_shift": "Ya tiene otro turno ese día.",
+						"outside_availability": "No está disponible en ese horario.",
+						"works_another_shift": "Tiene otro turno ese día, que quedaría sin cubrir.",
 						"breaks_unnamed_rule": "Incumpliría una norma de tiempo de trabajo.",
 						"not_checked": "No se comprobó a tiempo.",
-						"no_shift_part_time": "A tiempo parcial y sin turno ese día. El motor no llama a personal a tiempo parcial: elígelo en Quién cubre.",
-						"needs_overtime": "Solo como horas extra, que no se asignan al generar un cuadrante."
+						"no_shift_part_time": "A tiempo parcial, sin turno ese día.",
+						"needs_overtime": "Podría cubrirlo con horas adicionales.",
+						"role_not_on_shift": "No tiene el puesto de este turno."
 					},
 					"breaksRule": "Incumpliría: {{rule}}",
-					"aWorkingTimeRule": "una norma de tiempo de trabajo",
 					"otherReason": "No puede cubrir este turno."
 				},
 				"kindLine": {
