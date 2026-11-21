@@ -317,6 +317,7 @@ export const GeneratedRoster = ({
 				issueFixing,
 				issueCover,
 				issueCoverGap: roster.coverGap,
+				shifts,
 				onShowIssue: showIssue,
 				onShowAllIssues: roster.showAllIssues,
 				onFindCover: editing ? roster.openCover : undefined,

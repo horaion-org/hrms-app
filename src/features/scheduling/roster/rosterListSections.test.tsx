@@ -180,8 +180,21 @@ describe("issueNoteLines", () => {
 				topic: "scheduling.issues.topics.fromGeneration",
 			},
 		]);
-		expect(
-			issueNoteLines(withFindings({ validating: true }))
-		).toEqual([]);
+		expect(issueNoteLines(withFindings({ validating: true }))).toEqual([]);
+	});
+
+	it("given_aShortShiftNobodyOnTheRosterWorks_when_listed_then_itsRowIsNamedFromTheFrozenShifts", () => {
+		const [issues] = rosterListSections(
+			"issues",
+			inputOf({
+				shifts: [{ shiftId: "overnight-ops-copy", name: "Overnight Ops" }],
+			})
+		);
+
+		const list = issues?.content as {
+			props: { shiftName: (shiftId: string) => string };
+		};
+		expect(list.props.shiftName("overnight-ops-copy")).toBe("Overnight Ops");
+		expect(list.props.shiftName("front-desk-am-copy")).toBe("Front Desk AM");
 	});
 });
