@@ -41,6 +41,7 @@ import {
 } from "@/features/scheduling/roster/RosterWeekBar";
 import {
 	brokenRuleIssueCount,
+	checkPending,
 	scheduleWithFindingsShown,
 	validationStanding,
 } from "@/features/scheduling/rulesCheck/issuesFromValidation";
@@ -54,6 +55,7 @@ import { RosterSidePanelSlot } from "./RosterSidePanelSlot";
 import { issueCoverOf } from "./issueCoverOf";
 import { ROSTER_SIDE_LISTS } from "./rosterSideLists";
 import { useCheckedGaps } from "./useCheckedGaps";
+import { useCheckKeptCurrent } from "./useCheckKeptCurrent";
 import { useRosterView } from "./useRosterView";
 
 export type GeneratedRosterProps = {
@@ -190,9 +192,15 @@ export const GeneratedRoster = ({
 	// A list or Find cover keeps to the grid's height and scrolls inside, so it never makes the row taller.
 	const panelFollowsGridHeight = roster.sidePanel === "list";
 
+	// While Issues is open on a roster that may be changed, the check follows every move of the roster.
+	useCheckKeptCurrent(
+		validation,
+		openList === "issues" && editing !== undefined
+	);
 	const checkedGaps = useCheckedGaps({
 		standing,
 		last,
+		checkPending: validation !== undefined && checkPending(validation),
 		coverGap: roster.coverGap,
 		view,
 		onViewChange,

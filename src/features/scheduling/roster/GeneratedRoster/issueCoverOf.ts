@@ -1,6 +1,7 @@
 import type { IssueCoverContext } from "@/features/scheduling/roster/IssuesPanel";
 import type { RosterSearch } from "@/features/scheduling/roster/rosterSearch";
 import type { RosterChange } from "@/features/scheduling/rosterChanges/api";
+import { checkPending } from "@/features/scheduling/rulesCheck/issuesFromValidation";
 import type { RosterValidation } from "@/features/scheduling/rulesCheck/useRosterRulesCheck";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 import type { RosterEditing } from "./rosterEditing";
@@ -43,8 +44,8 @@ export const issueCoverOf = ({
 		timeZone,
 	},
 	onPreviewDays,
-	// After a change the check is asked first: the hours-based list for the new revision waits for its answer.
-	listWaitsForCheck: validation?.status === "loading",
+	// The check for the roster's revision comes first: the hours-based list waits while it is on its way.
+	listWaitsForCheck: validation !== undefined && checkPending(validation),
 	onApplied: (change, { filled, stillShort }): void => {
 		onLanded({ change, stillShort });
 		validation?.askAt(change.toRevision);
