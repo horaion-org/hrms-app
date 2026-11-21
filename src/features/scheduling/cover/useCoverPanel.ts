@@ -162,15 +162,32 @@ export type CoverPanel = {
 	offer: (CellCoverOffer & { timeZone: string; ready: boolean }) | undefined;
 };
 
-/** Where the list stands, from its query. */
+/**
+ * Whether the gap is closed. The engine's answer for the roster's revision
+ * says so when it worked out what is short (`shortNow`): closed only when
+ * nothing is. Under a refusal, or when the engine could not say, the
+ * backend list's count decides; while the engine works, it is not closed yet.
+ */
+const gapClosed = (
+	options: CoverOptions,
+	engineRepair: EngineRepairState
+): boolean => {
+	if (engineRepair.status === "loading") return false;
+	if (engineRepair.status === "ready" && engineRepair.shortNow !== null)
+		return engineRepair.shortNow.length === 0;
+	return options.gap.shortBy === 0;
+};
+
+/** Where the list stands, from its query and whether the gap is closed. */
 const statusOf = (
 	query: { isPending: boolean; error: Error | null },
-	options: CoverOptions | undefined
+	options: CoverOptions | undefined,
+	engineRepair: EngineRepairState
 ): CoverPanelStatus => {
 	if (query.error)
 		return REFUSAL_STATUSES[rosterChangeRefusal(query.error)] ?? "failed";
 	if (!options || query.isPending) return "loading";
-	if (options.gap.shortBy === 0) return "closed";
+	if (gapClosed(options, engineRepair)) return "closed";
 	return options.options.length === 0 ? "nobody" : "options";
 };
 
@@ -235,7 +252,7 @@ export const useCoverPanel = ({
 		enabled: !landing,
 	});
 	const options = list.data;
-	const status = statusOf(list, options);
+	const status = statusOf(list, options, engineRepair);
 	/** A roster member's profile id, which is how the engine names people. */
 	const profileIdOf = (membershipId: string): string | undefined =>
 		assignments.find((row) => row.member?.membershipId === membershipId)?.member

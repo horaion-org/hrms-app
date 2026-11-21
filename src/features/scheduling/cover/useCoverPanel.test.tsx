@@ -248,6 +248,46 @@ describe("useCoverPanel", () => {
 		expect(result.current.selected).toBeUndefined();
 	});
 
+	it("given_theListCountingNobodyShortButTheEngineStillShort_when_bothAnswer_then_theEnginesOptionsAreTheList", async () => {
+		stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(
+				coverOptionsFixture({
+					gap: { ...GAP, shortBy: 0, shortSinceGeneration: 0 },
+					options: [],
+					unavailable: [],
+				})
+			),
+			[`POST ${REPAIR_OPTIONS}`]: answer(
+				repairOptionsFixture([callInOption()], [])
+			),
+		});
+		const { result } = hook();
+
+		await waitFor(() => {
+			expect(result.current.engineRepair.status).toBe("ready");
+		});
+		await waitFor(() => {
+			expect(result.current.options).toBeDefined();
+		});
+		expect(result.current.status).not.toBe("closed");
+		expect(result.current.view).toBe("engine");
+	});
+
+	it("given_theEngineFindingNothingShort_when_theListStillCountsOne_then_closed", async () => {
+		stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${REPAIR_OPTIONS}`]: answer(
+				repairOptionsFixture([], [], { shortNow: [] })
+			),
+		});
+		const { result } = hook();
+
+		await waitFor(() => {
+			expect(result.current.status).toBe("closed");
+		});
+		expect(result.current.view).toBe("gapStatus");
+	});
+
 	it("given_nobodyCanCover_when_listed_then_nobody", async () => {
 		stubApi({
 			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture({ options: [] })),
