@@ -1049,7 +1049,7 @@ describe("GeneratedRoster: one place for cover", () => {
 		).toHaveLength(0);
 	});
 
-	it("given_anOptionApplied_when_itLands_then_theRosterIsCheckedAtTheNewRevisionAndFocusIsOnTheRow", async () => {
+	it("given_anOptionThatFillsTheGapApplied_when_itLands_then_theRosterIsCheckedAtTheNewRevisionAndTheRowIsTheChecksOwn", async () => {
 		configureApiClient({
 			accessToken: () => Promise.resolve("test-pass"),
 			renew: () => Promise.resolve({ kind: "expired" }),
@@ -1070,6 +1070,7 @@ describe("GeneratedRoster: one place for cover", () => {
 			},
 		});
 		const askAt = vi.fn();
+		const onViewChange = vi.fn();
 		const user = userEvent.setup();
 		render(
 			<QueryClientProvider
@@ -1087,7 +1088,7 @@ describe("GeneratedRoster: one place for cover", () => {
 						panel: "issues",
 						cover: "front-desk-am-copy|2026-10-17",
 					}}
-					onViewChange={() => {}}
+					onViewChange={onViewChange}
 				/>
 			</QueryClientProvider>
 		);
@@ -1103,6 +1104,11 @@ describe("GeneratedRoster: one place for cover", () => {
 
 		await waitFor(() => {
 			expect(askAt).toHaveBeenCalledWith(2);
+		});
+		expect(onViewChange).toHaveBeenCalledWith({
+			week: "2026-10-12",
+			panel: "issues",
+			cover: undefined,
 		});
 		const panel = screen.getByRole("complementary", { name: "Issues" });
 		expect(within(panel).getByRole("button", { expanded: true })).toHaveFocus();
