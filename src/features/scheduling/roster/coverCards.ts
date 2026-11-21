@@ -267,13 +267,12 @@ const cardOfferOf = (
 	cell: RosterChangeCell | undefined,
 	now: Date
 ): CardOffer => {
-	const latest = offers
-		.filter(
-			(offer) =>
-				offer.member?.membershipId === cell?.membershipId &&
-				offer.rosterDate === cell?.day
-		)
-		.at(-1);
+	const forTheDay = offers.filter(
+		(offer) =>
+			offer.member?.membershipId === cell?.membershipId &&
+			offer.rosterDate === cell?.day
+	);
+	const latest = forTheDay[forTheDay.length - 1];
 	const standing = latest && offerStanding(latest, now);
 	if (standing?.kind === "open") return { kind: "open", until: standing.until };
 	return standing?.kind === "declined"
