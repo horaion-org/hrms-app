@@ -283,6 +283,39 @@ describe("useCoverPanel", () => {
 			cells: coverOptionFixture().cells,
 		});
 		expect(result.current.offer).toBeUndefined();
+		// The list's gap is short by one: the person fills it.
+		expect(input.onApplied).toHaveBeenCalledWith(expect.anything(), {
+			filled: true,
+			stillShort: undefined,
+		});
+	});
+
+	it("given_onePersonOfTheListOnAGapShortByTwo_when_applied_then_theGapIsNotFilled", async () => {
+		stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(
+				coverOptionsFixture({ gap: { ...GAP, shortBy: 2 } })
+			),
+			[`POST ${PREVIEW}`]: answer(rosterChangePreviewFixture()),
+			[`POST ${CHANGES}`]: {
+				status: 201,
+				body: envelope(rosterChangeFixture()),
+			},
+		});
+		const { result, input } = hook();
+		await waitFor(() => {
+			expect(result.current.review.applyBlocked).toBe(false);
+		});
+
+		act(() => {
+			result.current.review.apply();
+		});
+
+		await waitFor(() => {
+			expect(input.onApplied).toHaveBeenCalledWith(expect.anything(), {
+				filled: false,
+				stillShort: undefined,
+			});
+		});
 	});
 
 	it("given_aPublishedRoster_when_theOfferIsSent_then_aDayOffShiftOfferWithTheCells", async () => {
@@ -392,10 +425,11 @@ describe("useCoverPanel", () => {
 			});
 
 			await waitFor(() => {
-				expect(input.onApplied).toHaveBeenCalledWith(
-					expect.anything(),
-					"Roster changed. Front Desk AM is still 1 short 09:00 – 11:00."
-				);
+				expect(input.onApplied).toHaveBeenCalledWith(expect.anything(), {
+					filled: false,
+					stillShort:
+						"Roster changed. Front Desk AM is still 1 short 09:00 – 11:00.",
+				});
 			});
 		});
 

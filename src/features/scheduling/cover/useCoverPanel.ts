@@ -76,13 +76,17 @@ export type CoverPanelInput = {
 	coverOffers?: { offers: ReadonlyArray<CoverOffer>; timeZone: string };
 	/** The days the previewed change touches, as `rosterCellKey` names them. */
 	onPreviewDays: (keys: ReadonlyArray<string>) => void;
-	/**
-	 * A draft's change landed; the roster already shows it. With an engine
-	 * option that leaves hours short, the toast's words saying so.
-	 */
-	onApplied: (change: RosterChange, stillShort?: string) => void;
+	/** A change landed; the roster already shows it. What it leaves says whether the gap is filled. */
+	onApplied: (change: RosterChange, leaves: CoverApplied) => void;
 	/** A recorded yes applied the change; the roster refreshes by itself. */
 	onCoverRecorded?: () => void;
+};
+
+/** What a landed cover change leaves: whether the gap is filled, and the toast's words when hours stay short. */
+export type CoverApplied = {
+	/** Decided from what is left: the option fills the whole gap, or the gap was short by one person. */
+	filled: boolean;
+	stillShort?: string;
 };
 
 /** Where the list stands: what the panel shows in place of the options. */
@@ -416,7 +420,13 @@ export const useCoverPanel = ({
 					},
 					{
 						onSuccess: (change) => {
-							onApplied(change, stillShortOfChoice());
+							onApplied(change, {
+								// An engine option says what it fills; one person of the list fills a gap short by one.
+								filled: repairOption
+									? repairOption.fills === "GAP"
+									: (options?.gap.shortBy ?? 0) <= 1,
+								stillShort: stillShortOfChoice(),
+							});
 						},
 						onError: (error) => {
 							if (rosterChangeRefusal(error) === "checksChanged")

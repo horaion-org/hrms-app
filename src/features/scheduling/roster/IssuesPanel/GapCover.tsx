@@ -214,8 +214,8 @@ const GapCoverBody = ({
 		...cover,
 		gap,
 		dayRow,
-		onApplied: (change, stillShort): void => {
-			cover.onApplied(change, stillShort);
+		onApplied: (change, leaves): void => {
+			cover.onApplied(change, leaves);
 			// The review closes as the change lands: focus goes to the row's own button.
 			document
 				.querySelector<HTMLElement>(

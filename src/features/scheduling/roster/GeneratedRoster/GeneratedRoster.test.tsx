@@ -1113,4 +1113,64 @@ describe("GeneratedRoster: one place for cover", () => {
 		const panel = screen.getByRole("complementary", { name: "Issues" });
 		expect(within(panel).getByRole("button", { expanded: true })).toHaveFocus();
 	});
+
+	it("given_aPublishedRosterAndAYesRecordedForAnOption_when_itApplies_then_theRosterIsCheckedAtTheNextRevision", async () => {
+		configureApiClient({
+			accessToken: () => Promise.resolve("test-pass"),
+			renew: () => Promise.resolve({ kind: "expired" }),
+			onUnauthenticated: () => {},
+		});
+		stubApi({
+			[`POST ${SCHEDULE_PATH}/repair-options`]: {
+				status: 200,
+				body: envelope(repairOptionsFixture([callInOption()], [])),
+			},
+			[`POST ${SCHEDULE_PATH}/roster-changes/preview`]: {
+				status: 200,
+				body: envelope(rosterChangePreviewFixture({ checks: [] })),
+			},
+			[`POST ${SCHEDULE_PATH}/cover-offers`]: {
+				status: 201,
+				body: envelope(coverOfferFixture({ status: "APPLIED" })),
+			},
+		});
+		const askAt = vi.fn();
+		const user = userEvent.setup();
+		render(
+			<QueryClientProvider
+				client={
+					new QueryClient({ defaultOptions: { queries: { retry: false } } })
+				}
+			>
+				<GeneratedRoster
+					assignments={scheduleAssignmentsFixture()}
+					schedule={schedule}
+					validation={{ status: "idle", ask: vi.fn(), askAt, revision: 1 }}
+					editing={{
+						...coverEditing,
+						notifiesMembers: true,
+						coverOffers: { offers: [], failed: false, retry: vi.fn() },
+					}}
+					view={{
+						week: "2026-10-12",
+						panel: "issues",
+						cover: "front-desk-am-copy|2026-10-17",
+					}}
+					onViewChange={vi.fn()}
+				/>
+			</QueryClientProvider>
+		);
+
+		await user.click(
+			await screen.findByRole("button", { name: "Review Aisha Rahman’s change" })
+		);
+		await user.click(await screen.findByRole("button", { name: "They agreed" }));
+		await user.click(screen.getByRole("button", { name: "How" }));
+		await user.click(screen.getByRole("option", { name: "Phone call" }));
+		await user.click(screen.getByRole("button", { name: "Record and apply" }));
+
+		await waitFor(() => {
+			expect(askAt).toHaveBeenCalledWith(2);
+		});
+	});
 });

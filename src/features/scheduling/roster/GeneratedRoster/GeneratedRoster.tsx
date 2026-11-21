@@ -230,13 +230,16 @@ export const GeneratedRoster = ({
 			timeZone: schedule.timeZone,
 		},
 		onPreviewDays: roster.onPreviewDays,
-		onApplied: (change, stillShort): void => {
+		onApplied: (change, { filled, stillShort }): void => {
 			setApplied({ change, stillShort });
 			// The roster is checked again by itself once it shows the change, so the rows follow what is left.
 			validation?.askAt(change.toRevision);
 			// A filled gap keeps no row of its own: the list is the new check's; one still short stays open.
-			if (stillShort === undefined && view.cover)
-				onViewChange({ ...view, cover: undefined });
+			if (filled && view.cover) onViewChange({ ...view, cover: undefined });
+		},
+		// A recorded yes applies one change too: the roster is checked again once it shows it.
+		onCoverRecorded: (): void => {
+			validation?.askAt(editing.revision + 1);
 		},
 	};
 	/** Closes the panel beside the grid, and forgets the day a fix from Issues opened. */
