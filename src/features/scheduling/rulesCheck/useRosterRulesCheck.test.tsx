@@ -105,6 +105,28 @@ describe("useRosterRulesCheck", () => {
 		expect(result.current.last).toMatchObject({ revision: 1, check: CHECK });
 	});
 
+	it("asked at a revision the roster has yet to reach, reads as under way and checks once, when it gets there", async () => {
+		const calls = stubApi({
+			[`POST ${ROSTER_CHECK}`]: { status: 200, body: envelope(CHECK) },
+		});
+		const { result, rerender } = hook(TARGET, 1);
+
+		act(() => {
+			result.current.askAt(2);
+		});
+
+		expect(result.current.status).toBe("loading");
+		rerender({ revision: 1, hasChanges: false });
+		expect(calls).toHaveLength(0);
+
+		rerender({ revision: 2, hasChanges: false });
+
+		await waitFor(() => {
+			expect(result.current.status).toBe("ready");
+		});
+		expect(calls.map((call) => call.body)).toEqual([{ expectedRevision: 2 }]);
+	});
+
 	it("reads a refusal as what the note says", async () => {
 		stubApi({
 			[`POST ${ROSTER_CHECK}`]: {

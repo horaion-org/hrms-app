@@ -579,7 +579,7 @@ describe("GeneratedRoster", () => {
 						assignments={scheduleAssignmentsFixture()}
 						editing={mayEdit ? editing : undefined}
 						schedule={schedule}
-						validation={{ ...validation, revision: 1 }}
+						validation={{ askAt: vi.fn(), ...validation, revision: 1 }}
 					/>
 				</QueryClientProvider>
 			);
@@ -723,9 +723,13 @@ describe("GeneratedRoster", () => {
 			);
 			// One row per day, as the engine's two sentences differ.
 			expect(
-				within(panel).getAllByRole("button", { name: /^Must fix.*Aisha Rahman/ })
+				within(panel).getAllByRole("button", {
+					name: /^Must fix.*Aisha Rahman/,
+				})
 			).toHaveLength(2);
-			await user.click(within(panel).getByRole("button", { name: "If possible" }));
+			await user.click(
+				within(panel).getByRole("button", { name: "If possible" })
+			);
 			const ifPossible = within(panel).getAllByRole("listitem");
 			expect(ifPossible).toHaveLength(2);
 			for (const row of ifPossible) {
@@ -793,7 +797,9 @@ describe("GeneratedRoster", () => {
 			expect(ask).toHaveBeenCalledOnce();
 			const panel = screen.getByRole("complementary", { name: "Issues" });
 			expect(panel).toHaveTextContent("Not checked since your changes");
-			await user.click(within(panel).getByRole("button", { name: "Check now" }));
+			await user.click(
+				within(panel).getByRole("button", { name: "Check now" })
+			);
 			expect(ask).toHaveBeenCalledTimes(2);
 		});
 
@@ -816,7 +822,12 @@ describe("GeneratedRoster", () => {
 						assignments={[handChanged, ...rest]}
 						editing={editing}
 						schedule={schedule}
-						validation={{ status: "idle", ask: vi.fn(), revision: 1 }}
+						validation={{
+							status: "idle",
+							ask: vi.fn(),
+							askAt: vi.fn(),
+							revision: 1,
+						}}
 					/>
 				</QueryClientProvider>
 			);
@@ -1022,7 +1033,9 @@ describe("GeneratedRoster: one place for cover", () => {
 		const calls = showAt({ week: "2026-10-12", panel: "issues" });
 
 		const panel = screen.getByRole("complementary", { name: "Issues" });
-		await user.click(within(panel).getAllByRole("button", { name: /Ben Ong/ })[0]!);
+		await user.click(
+			within(panel).getAllByRole("button", { name: /Ben Ong/ })[0]!
+		);
 
 		expect(
 			calls.filter((call) => call.path.endsWith("/repair-options"))
