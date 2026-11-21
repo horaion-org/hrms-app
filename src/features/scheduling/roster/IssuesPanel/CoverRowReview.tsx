@@ -116,6 +116,12 @@ export const CoverRowReview = ({
 	useEffect(() => {
 		region.current?.focus();
 	}, []);
+	// Apply is disabled as the roster turns out to have moved: focus goes to the way on, not to the page.
+	const findAgain = useRef<HTMLButtonElement>(null);
+	const rosterMoved = review.applyRefusal === "revision";
+	useEffect(() => {
+		if (rosterMoved) findAgain.current?.focus();
+	}, [rosterMoved]);
 	const offerOut = offer && (offer.justSent ?? offer.openOffer);
 	if (offer && offerOut)
 		return (
@@ -200,8 +206,12 @@ export const CoverRowReview = ({
 					<ErrorText>
 						{t(`scheduling.rosterEdit.error.${review.applyRefusal}`)}
 					</ErrorText>
-					{review.applyRefusal === "revision" && (
-						<Button variant="textlink" onClick={review.findOptionsAgain}>
+					{rosterMoved && (
+						<Button
+							ref={findAgain}
+							variant="textlink"
+							onClick={review.findOptionsAgain}
+						>
 							{t("scheduling.cover.engine.findAgain")}
 						</Button>
 					)}

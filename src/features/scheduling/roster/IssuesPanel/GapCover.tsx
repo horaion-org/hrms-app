@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { formatDay } from "@/common/formatDay";
 import { formattingLocale } from "@/common/formattingLocale";
@@ -36,6 +36,7 @@ import {
 import { gapIssueKey } from "@/features/scheduling/roster/rosterIssueGroups";
 import { assignmentCell } from "@/features/scheduling/rosterChanges/cellText";
 import { CoverCardItem } from "./CoverCardItem";
+import { FocusIssueRow } from "./focusIssueRow";
 import { CoverRowReview } from "./CoverRowReview";
 import { WhyNotOthers } from "./WhyNotOthers";
 
@@ -73,18 +74,22 @@ const Line = ({
 	</div>
 );
 
+/** The lines above the cards: the quiet ones a live region reads as they change, and the alerts, read at once. */
+type StatusLines = { quiet: Array<ReactNode>; alerts: Array<ReactNode> };
+
 /**
- * The lines above the cards (UX note 6), in one polite live region: the
- * gap's own state; the engine at work, and still at work after a while; what
- * its answer lacks (nothing at all, nothing that covers the whole shift, a
- * search cut short); a refusal with its one action, over the hours-based
- * people; the hours-based list's own state.
+ * The lines above the cards (UX note 6): the gap's own state; the engine at
+ * work, and still at work after a while; what its answer lacks (nothing at
+ * all, nothing that covers the whole shift, a search cut short) and, for a
+ * screen reader only, how many options it found; a refusal with its one
+ * action, over the hours-based people; the hours-based list's own state.
+ * Refusals and failures are alerts; the rest is quiet.
  */
 const useStatusLines = (
 	panel: CoverPanel,
 	list: OptionCardList,
 	shiftDay: { shift: string; day: string }
-): ReactNode => {
+): StatusLines => {
 	const { t } = useTranslation();
 	const { status, view, engineRepair } = panel;
 	const engineWorking =
@@ -96,9 +101,10 @@ const useStatusLines = (
 		STILL_WORKING_AFTER_MILLISECONDS
 	);
 	const tryAgain = t("scheduling.rosterEdit.tryAgain");
-	const lines: Array<ReactNode> = [];
+	const quiet: Array<ReactNode> = [];
+	const alerts: Array<ReactNode> = [];
 	if (status === "rosterMoved")
-		lines.push(
+		quiet.push(
 			<Line
 				key="moved"
 				text={t(`${key}.panel.rosterMoved`)}
@@ -109,7 +115,7 @@ const useStatusLines = (
 			/>
 		);
 	if (status === "notEditable")
-		lines.push(
+		alerts.push(
 			<Line
 				key="locked"
 				alert
@@ -117,14 +123,14 @@ const useStatusLines = (
 			/>
 		);
 	if (status === "closed")
-		lines.push(
+		quiet.push(
 			<Line key="closed" text={t(`${key}.panel.covered`, shiftDay)} />
 		);
-	if (view === "gapStatus") return lines;
+	if (view === "gapStatus") return { quiet, alerts };
 	if (engineWorking)
-		lines.push(<Line key="working" text={t(`${engineKey}.loading`)} />);
+		quiet.push(<Line key="working" text={t(`${engineKey}.loading`)} />);
 	if (waitedLong)
-		lines.push(
+		quiet.push(
 			<Line key="stillWorking" text={t(`${engineKey}.stillWorking`)} />
 		);
 	const refusal =
@@ -137,7 +143,7 @@ const useStatusLines = (
 			engineRepair.status === "refused" && engineRepair.retrying
 				? undefined
 				: REFUSAL_ACTIONS[refusal];
-		lines.push(
+		alerts.push(
 			<Line
 				key="refused"
 				alert
@@ -158,36 +164,36 @@ const useStatusLines = (
 	if (engineRepair.status === "ready") {
 		const { options, search, asking } = engineRepair;
 		if (options.length === 0)
-			lines.push(<Line key="nobody" text={t(`${engineKey}.nobodyCan`)} />);
+			quiet.push(<Line key="nobody" text={t(`${engineKey}.nobodyCan`)} />);
 		else if (list.noFullFill)
-			lines.push(<Line key="noFullFill" text={t(`${engineKey}.noFullFill`)} />);
+			quiet.push(<Line key="noFullFill" text={t(`${engineKey}.noFullFill`)} />);
 		// While it asks again the options found so far stay; the line returns if the new answer is cut short too.
 		if (search && !search.complete && !asking && !refusal)
-			lines.push(
+			quiet.push(
 				<Line
 					key="incomplete"
 					action={{ label: tryAgain, onClick: engineRepair.askAgain }}
 					text={t(`${engineKey}.incomplete`)}
 				/>
 			);
-		if (options.length > 0)
-			lines.push(
+		if (options.length > 0 && !asking)
+			quiet.push(
 				<span key="found" className="sr-only">
 					{t(`${engineKey}.optionsFound`, { count: options.length })}
 				</span>
 			);
 	}
-	if (view !== "backendFallback") return lines;
+	if (view !== "backendFallback") return { quiet, alerts };
 	if (status === "options")
-		lines.push(
+		quiet.push(
 			<p key="fallback" className="text-xs font-semibold text-neutral-700">
 				{t(`${engineKey}.fallbackCaption`)}
 			</p>
 		);
 	if (status === "loading")
-		lines.push(<Line key="loading" text={t(`${key}.panel.loading`)} />);
+		quiet.push(<Line key="loading" text={t(`${key}.panel.loading`)} />);
 	if (status === "failed")
-		lines.push(
+		alerts.push(
 			<Line
 				key="failed"
 				alert
@@ -196,8 +202,8 @@ const useStatusLines = (
 			/>
 		);
 	if (status === "nobody")
-		lines.push(<Line key="nobody" text={t(`${key}.panel.nobody`, shiftDay)} />);
-	return lines;
+		quiet.push(<Line key="nobody" text={t(`${key}.panel.nobody`, shiftDay)} />);
+	return { quiet, alerts };
 };
 
 /** The open row's body for a gap whose day the roster holds (`GapCover`). */
@@ -210,6 +216,7 @@ const GapCoverBody = ({
 }): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
+	const focusRow = useContext(FocusIssueRow);
 	const panel = useCoverPanel({
 		...cover,
 		gap,
@@ -217,11 +224,8 @@ const GapCoverBody = ({
 		onApplied: (change, leaves): void => {
 			cover.onApplied(change, leaves);
 			// The review closes as the change lands: focus goes to the row's own button.
-			document
-				.querySelector<HTMLElement>(
-					`[data-issue-row="${CSS.escape(gapIssueKey(gap.shiftId, gap.day) ?? "")}"]`
-				)
-				?.focus();
+			const rowKey = gapIssueKey(gap.shiftId, gap.day);
+			if (rowKey) focusRow(rowKey);
 		},
 	});
 	// Opening a gap warms the engine's worker, so its first options come fast.
@@ -287,6 +291,22 @@ const GapCoverBody = ({
 			? undefined
 			: engineList.cards[engineList.partCaptionAt]?.key;
 	const statusLines = useStatusLines(panel, engineList, shiftDay);
+	// The region starts empty and is filled a moment after it mounts, so the first line is read too.
+	const [regionReady, setRegionReady] = useState(false);
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setRegionReady(true);
+		});
+		return (): void => {
+			clearTimeout(timer);
+		};
+	}, []);
+	// Mounted for the row's life, empty while a card is reviewed; the alerts sit outside it.
+	const liveRegion = (quiet: Array<ReactNode>): ReactNode => (
+		<div aria-live="polite" className="flex flex-col gap-2">
+			{regionReady && quiet}
+		</div>
+	);
 
 	const reviewed = reviewing
 		? reviewedCardOf(cards, {
@@ -298,16 +318,19 @@ const GapCoverBody = ({
 	if (reviewing && !reviewed) setReviewing(false);
 	if (reviewed)
 		return (
-			<CoverRowReview
-				card={reviewed}
-				gapDay={gap.day}
-				panel={panel}
-				onBack={() => {
-					panel.unchoose();
-					focusAfterBack.current = reviewed.key;
-					setReviewing(false);
-				}}
-			/>
+			<div className="flex flex-col gap-2">
+				{liveRegion([])}
+				<CoverRowReview
+					card={reviewed}
+					gapDay={gap.day}
+					panel={panel}
+					onBack={() => {
+						panel.unchoose();
+						focusAfterBack.current = reviewed.key;
+						setReviewing(false);
+					}}
+				/>
+			</div>
 		);
 
 	/** Chooses the card's change, then shows its review. */
@@ -346,9 +369,8 @@ const GapCoverBody = ({
 		panel.view === "engine" && notAssigned !== null && notAssigned.length > 0;
 	return (
 		<div className="flex flex-col gap-2">
-			<div aria-live="polite" className="flex flex-col gap-2">
-				{statusLines}
-			</div>
+			{liveRegion(statusLines.quiet)}
+			{statusLines.alerts}
 			{cards.length > 0 && (
 				<ExpandableList
 					collapsedCount={showAll ? cards.length : CARDS_BEFORE_FOLD}

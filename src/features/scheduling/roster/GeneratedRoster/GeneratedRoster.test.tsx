@@ -1070,7 +1070,28 @@ describe("GeneratedRoster: one place for cover", () => {
 			},
 		});
 		const askAt = vi.fn();
-		const onViewChange = vi.fn();
+		const views: Array<RosterSearch> = [];
+		/** The roster with its view kept in state, as its page keeps it in the URL. */
+		const WithView = (): ReactElement => {
+			const [view, setView] = useState<RosterSearch>({
+				week: "2026-10-12",
+				panel: "issues",
+				cover: "front-desk-am-copy|2026-10-17",
+			});
+			return (
+				<GeneratedRoster
+					assignments={scheduleAssignmentsFixture()}
+					editing={coverEditing}
+					schedule={schedule}
+					validation={{ status: "idle", ask: vi.fn(), askAt, revision: 1 }}
+					view={view}
+					onViewChange={(next) => {
+						views.push(next);
+						setView(next);
+					}}
+				/>
+			);
+		};
 		const user = userEvent.setup();
 		render(
 			<QueryClientProvider
@@ -1078,18 +1099,7 @@ describe("GeneratedRoster: one place for cover", () => {
 					new QueryClient({ defaultOptions: { queries: { retry: false } } })
 				}
 			>
-				<GeneratedRoster
-					assignments={scheduleAssignmentsFixture()}
-					editing={coverEditing}
-					schedule={schedule}
-					validation={{ status: "idle", ask: vi.fn(), askAt, revision: 1 }}
-					view={{
-						week: "2026-10-12",
-						panel: "issues",
-						cover: "front-desk-am-copy|2026-10-17",
-					}}
-					onViewChange={onViewChange}
-				/>
+				<WithView />
 			</QueryClientProvider>
 		);
 
@@ -1105,13 +1115,15 @@ describe("GeneratedRoster: one place for cover", () => {
 		await waitFor(() => {
 			expect(askAt).toHaveBeenCalledWith(2);
 		});
-		expect(onViewChange).toHaveBeenCalledWith({
+		// The filled gap's link goes: the list is drawn afresh and its panel's heading takes focus.
+		expect(views).toContainEqual({
 			week: "2026-10-12",
 			panel: "issues",
 			cover: undefined,
 		});
-		const panel = screen.getByRole("complementary", { name: "Issues" });
-		expect(within(panel).getByRole("button", { expanded: true })).toHaveFocus();
+		await waitFor(() => {
+			expect(screen.getByRole("heading", { name: "Issues" })).toHaveFocus();
+		});
 	});
 
 	it("given_aPublishedRosterAndAYesRecordedForAnOption_when_itApplies_then_theRosterIsCheckedAtTheNextRevision", async () => {

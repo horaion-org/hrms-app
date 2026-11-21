@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { CloseIcon } from "@/components/ui/Icon";
 import type { PanelItem } from "@/features/scheduling/roster/rosterPanels";
+import { FocusSidePanelHeading } from "./focusSidePanelHeading";
 
 /** One part of the panel: an optional heading, then a list of items or other content. */
 export type RosterSidePanelSection = {
@@ -64,9 +65,12 @@ export const RosterSidePanel = ({
 	const heading = useRef<HTMLHeadingElement>(null);
 	// What had focus as the panel opened, read on the first render, before the heading takes focus.
 	const opener = useRef(document.activeElement);
-	useEffect(() => {
+	const focusHeading = useCallback((): void => {
 		heading.current?.focus();
 	}, []);
+	useEffect(() => {
+		focusHeading();
+	}, [focusHeading]);
 	const close = useCallback((): void => {
 		onClose();
 		if (opener.current instanceof HTMLElement && opener.current.isConnected)
@@ -119,66 +123,68 @@ export const RosterSidePanel = ({
 					</Button>
 				</div>
 				<div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-4 py-4">
-					{sections
-						.filter(hasSomething)
-						.map(({ key, title: sectionTitle, items = [], content }) => (
-							<section key={key} className="text-sm">
-								{sectionTitle && (
-									<h3 className="mb-2 font-semibold text-neutral-800">
-										{sectionTitle}
-									</h3>
-								)}
-								{items.length > 0 && (
-									<ul
-										className={
-											items.some((item) => item.title)
-												? "flex flex-col divide-y divide-neutral-300"
-												: "flex flex-col gap-1"
-										}
-									>
-										{items.map((item) => (
-											<li
-												key={item.key}
-												className={
-													item.title ? "py-3 first:pt-0 last:pb-0" : undefined
-												}
-											>
-												{item.title && (
-													<p className="font-semibold text-neutral-900">
-														{item.title}
-														{item.tag && (
-															<Badge
-																compact
-																className="ml-2"
-																tone={item.tag.tone}
-															>
-																{item.tag.label}
-															</Badge>
-														)}
-													</p>
-												)}
-												{item.lines.map((line, index) => (
-													<p key={line} className={lineTone(index)}>
-														{line}
-													</p>
-												))}
-												{item.action && (
-													<Button
-														className="mt-2"
-														size="sm"
-														variant="secondary"
-														onClick={item.action.onClick}
-													>
-														{item.action.label}
-													</Button>
-												)}
-											</li>
-										))}
-									</ul>
-								)}
-								{content}
-							</section>
-						))}
+					<FocusSidePanelHeading value={focusHeading}>
+						{sections
+							.filter(hasSomething)
+							.map(({ key, title: sectionTitle, items = [], content }) => (
+								<section key={key} className="text-sm">
+									{sectionTitle && (
+										<h3 className="mb-2 font-semibold text-neutral-800">
+											{sectionTitle}
+										</h3>
+									)}
+									{items.length > 0 && (
+										<ul
+											className={
+												items.some((item) => item.title)
+													? "flex flex-col divide-y divide-neutral-300"
+													: "flex flex-col gap-1"
+											}
+										>
+											{items.map((item) => (
+												<li
+													key={item.key}
+													className={
+														item.title ? "py-3 first:pt-0 last:pb-0" : undefined
+													}
+												>
+													{item.title && (
+														<p className="font-semibold text-neutral-900">
+															{item.title}
+															{item.tag && (
+																<Badge
+																	compact
+																	className="ml-2"
+																	tone={item.tag.tone}
+																>
+																	{item.tag.label}
+																</Badge>
+															)}
+														</p>
+													)}
+													{item.lines.map((line, index) => (
+														<p key={line} className={lineTone(index)}>
+															{line}
+														</p>
+													))}
+													{item.action && (
+														<Button
+															className="mt-2"
+															size="sm"
+															variant="secondary"
+															onClick={item.action.onClick}
+														>
+															{item.action.label}
+														</Button>
+													)}
+												</li>
+											))}
+										</ul>
+									)}
+									{content}
+								</section>
+							))}
+					</FocusSidePanelHeading>
 				</div>
 			</div>
 		</aside>

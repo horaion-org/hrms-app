@@ -4,6 +4,7 @@ import { I18nextProvider } from "react-i18next";
 import { describe, expect, it, vi } from "vitest";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { rosterIssuesFixture } from "@/features/scheduling/roster/rosterIssueFixtures";
+import { FocusSidePanelHeading } from "@/features/scheduling/RosterSidePanel";
 import {
 	RosterIssuesList,
 	type RosterIssuesListProps,
@@ -116,15 +117,15 @@ describe("RosterIssuesList", () => {
 		expect(screen.queryByRole("button", { name: /Apply/ })).toBeNull();
 	});
 
-	it("given_theOpenRowCheckedAway_when_focusWasOnIt_then_focusGoesToThePanelsHeading", async () => {
+	it("given_theOpenRowCheckedAway_when_focusWasOnIt_then_thePanelIsAskedToFocusItsHeading", async () => {
 		const issues = rosterIssuesFixture();
-		/** The list inside a panel with its heading, as the side panel draws it. */
+		const focusHeading = vi.fn();
+		/** The list inside a side panel, which hands it the way to its heading. */
 		const inPanel = (shown: typeof issues): React.JSX.Element => (
 			<I18nextProvider i18n={authTestI18n}>
-				<aside aria-label="Issues">
-					<h2 tabIndex={-1}>Issues</h2>
+				<FocusSidePanelHeading value={focusHeading}>
 					<RosterIssuesList issues={shown} shiftName={() => "Front Desk AM"} />
-				</aside>
+				</FocusSidePanelHeading>
 			</I18nextProvider>
 		);
 		const { rerender } = render(inPanel(issues));
@@ -141,7 +142,7 @@ describe("RosterIssuesList", () => {
 			)
 		);
 
-		expect(screen.getByRole("heading", { name: "Issues" })).toHaveFocus();
+		expect(focusHeading).toHaveBeenCalledOnce();
 	});
 
 	it("given_aRosterThatMayNotBeChanged_when_aShortShiftsRowOpens_then_saysWhoWorksItAndNamesNoButton", async () => {

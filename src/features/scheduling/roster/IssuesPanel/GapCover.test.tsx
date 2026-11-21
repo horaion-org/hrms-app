@@ -103,8 +103,8 @@ describe("GapCover", () => {
 		});
 		show();
 
-		expect(screen.getByText("Working out the options…")).toBeVisible();
-		const cards = await screen.findAllByRole("listitem");
+		await screen.findByText("2 options found");
+		const cards = screen.getAllByRole("listitem");
 		expect(cards).toHaveLength(2);
 		expect(cards[0]).toHaveTextContent(/Aisha Rahman.*Suggested.*Within hours/);
 		expect(cards[1]).toHaveTextContent(
@@ -190,10 +190,77 @@ describe("GapCover", () => {
 			),
 		});
 		show();
-		await waitFor(() => {
-			expect(screen.queryByText("Working out the options…")).toBeNull();
-		});
+		// The engine has answered once its count, or its "nobody", is said.
+		await screen.findByText(
+			/options? found$|^Nobody can cover this within the rules\.$/
+		);
 	};
+
+	it("given_theRowOpening_when_theEngineAnswers_then_oneQuietRegionStartsEmptyAndSaysWhatItFound", async () => {
+		stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${REPAIR_OPTIONS}`]: answer(
+				repairOptionsFixture([callInOption(), moveOption()], [])
+			),
+		});
+		const { container } = render(
+			<I18nextProvider i18n={authTestI18n}>
+				<QueryClientProvider
+					client={
+						new QueryClient({ defaultOptions: { queries: { retry: false } } })
+					}
+				>
+					<GapCover
+						gap={{ shiftId: GAP.shiftId, day: GAP.day }}
+						cover={{
+							target: {
+								companyId: "c-1",
+								unit: { branchId: "b-1", departmentId: "d-1" },
+								scheduleId: "s-1",
+								runId: "r-1",
+							},
+							revision: 1,
+							assignments: scheduleAssignmentsFixture(),
+							shifts: frozenShiftsFixture(),
+							onPreviewDays: vi.fn(),
+							onApplied: vi.fn(),
+						}}
+					/>
+				</QueryClientProvider>
+			</I18nextProvider>
+		);
+		const regions = (): Array<Element> => [
+			...container.querySelectorAll("[aria-live=polite]"),
+		];
+
+		expect(regions()).toHaveLength(1);
+		expect(regions()[0]).toHaveTextContent(/^$/);
+		await waitFor(() => {
+			expect(regions()[0]).toHaveTextContent("2 options found");
+		});
+		const region = regions()[0];
+		await userEvent.click(
+			screen.getByRole("button", { name: "Review Aisha Rahman’s change" })
+		);
+		// The same region lives on through the review.
+		expect(regions()).toEqual([region]);
+	});
+
+	it("given_aRefusal_when_shown_then_itsAlertSitsOutsideTheQuietRegion", async () => {
+		stubApi({
+			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
+			[`POST ${REPAIR_OPTIONS}`]: {
+				status: 504,
+				body: { errorCode: "REPAIR_ENGINE_TOO_SLOW" },
+			},
+		});
+		show();
+
+		const alert = (
+			await screen.findByText("The engine took too long.")
+		).closest("[role=alert]");
+		expect(alert?.closest("[aria-live]")).toBeNull();
+	});
 
 	it("given_fourOptions_when_shown_then_threeCardsAndTheRestBehindShowAll", async () => {
 		const user = userEvent.setup();
@@ -464,10 +531,16 @@ describe("GapCover: the review inside the row", () => {
 
 		await user.click(apply);
 
-		expect(
-			await screen.findByRole("button", { name: "Find options again" })
-		).toBeVisible();
+		const findAgain = await screen.findByRole("button", {
+			name: "Find options again",
+		});
+		expect(findAgain).toBeVisible();
+		await waitFor(() => {
+			expect(findAgain).toHaveFocus();
+		});
 		expect(screen.getByRole("button", { name: "Apply change" })).toBeDisabled();
+		// The review stays open: the refusal's refresh asks the engine nothing more at the old revision.
+		expect(screen.getByRole("group", { name: "What changes" })).toBeVisible();
 	});
 
 	it("given_aPublishedRoster_when_onePersonsOptionIsReviewed_then_theOffersActionsInApplysPlace", async () => {
@@ -526,7 +599,7 @@ describe("GapCover: a long wait", () => {
 		);
 		show();
 
-		expect(screen.getByText("Working out the options…")).toBeVisible();
+		expect(await screen.findByText("Working out the options…")).toBeVisible();
 		expect(screen.queryByText(/Still working/)).toBeNull();
 		await act(async () => {
 			await vi.advanceTimersByTimeAsync(8_000);

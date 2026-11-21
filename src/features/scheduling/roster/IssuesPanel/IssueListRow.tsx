@@ -1,4 +1,4 @@
-import { useId, type ReactNode } from "react";
+import { useId, type ReactNode, type Ref } from "react";
 import { useTranslation } from "react-i18next";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
@@ -12,6 +12,8 @@ export type IssueListRowProps = {
 	onToggle: () => void;
 	/** What opens under the row; drawn only while it is open. */
 	children: ReactNode;
+	/** The row's own button, so focus can come back to it. */
+	buttonRef?: Ref<HTMLButtonElement>;
 };
 
 const key = "scheduling.issues.panel";
@@ -26,6 +28,7 @@ export const IssueListRow = ({
 	open,
 	onToggle,
 	children,
+	buttonRef,
 }: IssueListRowProps): FunctionComponent => {
 	const { t } = useTranslation();
 	const bodyId = useId();
@@ -33,10 +36,10 @@ export const IssueListRow = ({
 	return (
 		<li className="border-b border-neutral-300 last:border-b-0">
 			<button
+				ref={buttonRef}
 				aria-controls={open ? bodyId : undefined}
 				aria-expanded={open}
 				className="grid w-full cursor-pointer grid-cols-[4px_minmax(0,1fr)_auto] items-center gap-3 py-3 pr-1 text-left focus-visible:outline-2 focus-visible:outline-ink-blue-500"
-				data-issue-row={row.key}
 				type="button"
 				onClick={onToggle}
 			>
