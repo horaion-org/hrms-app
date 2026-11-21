@@ -116,8 +116,8 @@ export type CoverPanel = {
 	select: (membershipId: string) => void;
 	/** A change is landing, or landed at a revision the roster does not show yet: nothing is asked meanwhile. */
 	landing: boolean;
-	/** Whether the change under review is one of the scheduling engine's options instead. */
-	repairChosen: boolean;
+	/** The engine's option under review, in place of a person of the list; none while a person, or nothing, is chosen. */
+	chosenOption: RepairOption | undefined;
 	/** Reviews an engine option's change, its cells exactly as the answer gave them, in place of the chosen person. */
 	chooseRepair: (option: RepairOption) => void;
 	/** Lets go of the chosen person or engine option: back to the list, its default chosen again. */
@@ -360,7 +360,7 @@ export const useCoverPanel = ({
 			startReview();
 		},
 		landing,
-		repairChosen: repairOption !== undefined,
+		chosenOption: repairOption,
 		chooseRepair: (option): void => {
 			setRepairChoice({
 				option,

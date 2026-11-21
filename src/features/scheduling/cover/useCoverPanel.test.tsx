@@ -421,7 +421,7 @@ describe("useCoverPanel", () => {
 			act(() => {
 				result.current.review.findOptionsAgain();
 			});
-			expect(result.current.repairChosen).toBe(false);
+			expect(result.current.chosenOption).toBeUndefined();
 		});
 
 		it("given_aPublishedRoster_when_onePersonsOptionIsSent_then_anOfferOfItsKindForTheDayItAddsWork", async () => {

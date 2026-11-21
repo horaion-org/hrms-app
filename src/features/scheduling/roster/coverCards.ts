@@ -258,3 +258,25 @@ export const fallbackCards = (
 			choice: { kind: "backend", option },
 		};
 	});
+
+/** Whether two engine options make the same change: the same kind, and the same cells in the same order. */
+const isSameChange = (first: RepairOption, second: RepairOption): boolean =>
+	first.kind === second.kind &&
+	JSON.stringify(first.cells) === JSON.stringify(second.cells);
+
+/**
+ * The card under review: the one whose engine option makes the chosen
+ * change, wherever it ranks now, else the hours-based person chosen; none
+ * when the answer no longer holds the change. Pure.
+ */
+export const reviewedCardOf = (
+	cards: ReadonlyArray<OptionCard>,
+	chosen: { option: RepairOption | undefined; membershipId: string | undefined }
+): OptionCard | undefined =>
+	cards.find(({ choice }) =>
+		choice.kind === "engine"
+			? chosen.option !== undefined &&
+				isSameChange(choice.option, chosen.option)
+			: chosen.option === undefined &&
+				choice.option.membershipId === chosen.membershipId
+	);

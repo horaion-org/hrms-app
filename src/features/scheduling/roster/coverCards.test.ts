@@ -19,6 +19,7 @@ import { coverOfferFixture } from "@/features/scheduling/coverOffers/fixtures";
 import {
 	fallbackCards,
 	optionCardList,
+	reviewedCardOf,
 	reviewPeopleOf,
 	weekHoursOf,
 	type OptionCardSources,
@@ -302,5 +303,44 @@ describe("reviewPeopleOf", () => {
 				weekMinutes: { before: 1440, after: 1800, contract: 2640 },
 			},
 		]);
+	});
+});
+
+describe("reviewedCardOf", () => {
+	it("finds the card of the chosen change wherever the answer ranks it now, and none once it is gone", () => {
+		const roster = scheduleAssignmentsFixture();
+		const sources: OptionCardSources = {
+			dayBefore: (cell): RosterCellValue | undefined => {
+				const row = roster.find(
+					(candidate) =>
+						candidate.member?.membershipId === cell.membershipId &&
+						candidate.day === cell.day
+				);
+				return row && assignmentCell(row);
+			},
+			weekday: () => "Saturday",
+			memberName: (membershipId) => NAMES[membershipId] ?? "",
+			groupsOf: () => [],
+			shortNow: null,
+			offers: [],
+			now: new Date("2026-10-16T05:00:00Z"),
+			t: authTestI18n.t,
+		};
+		const chosen = moveOption();
+		const reordered = optionCardList(
+			[callInOption(), moveOption()],
+			sources
+		).cards;
+
+		expect(
+			reviewedCardOf(reordered, { option: chosen, membershipId: undefined })
+				?.people
+		).toBe("Ben Ong");
+		expect(
+			reviewedCardOf(optionCardList([callInOption()], sources).cards, {
+				option: chosen,
+				membershipId: undefined,
+			})
+		).toBeUndefined();
 	});
 });

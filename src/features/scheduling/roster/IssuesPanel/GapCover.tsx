@@ -28,6 +28,7 @@ import {
 	CARDS_BEFORE_FOLD,
 	fallbackCards,
 	optionCardList,
+	reviewedCardOf,
 	type OptionCard,
 	type OptionCardList,
 	type OptionCardSources,
@@ -225,7 +226,8 @@ const GapCoverBody = ({
 	});
 	// Opening a gap warms the engine's worker, so its first options come fast.
 	useRepairWarmUp(cover.target, cover.revision, true);
-	const [reviewKey, setReviewKey] = useState<string>();
+	// Whether a card's review is open; which card is found through the change chosen, not its place in the list.
+	const [reviewing, setReviewing] = useState(false);
 	// Once a card past the fold was reviewed, the list stays open, so Back returns to it.
 	const [showAll, setShowAll] = useState(false);
 	const reviewButtons = useRef(new Map<string, HTMLButtonElement>());
@@ -233,7 +235,7 @@ const GapCoverBody = ({
 	// Back returns focus to the Review of the card it came from, once the list is drawn again.
 	useEffect(() => {
 		const cardKey = focusAfterBack.current;
-		if (cardKey === undefined || reviewKey !== undefined) return;
+		if (cardKey === undefined || reviewing) return;
 		focusAfterBack.current = undefined;
 		reviewButtons.current.get(cardKey)?.focus();
 	});
@@ -286,13 +288,15 @@ const GapCoverBody = ({
 			: engineList.cards[engineList.partCaptionAt]?.key;
 	const statusLines = useStatusLines(panel, engineList, shiftDay);
 
-	/** Whether the card under review is the one chosen now: a person of the list, or the engine's change. */
-	const isChosen = (card: OptionCard): boolean =>
-		card.choice.kind === "engine"
-			? panel.repairChosen
-			: panel.selected?.membershipId === card.choice.option.membershipId;
-	const reviewed = cards.find((card) => card.key === reviewKey);
-	if (reviewed && isChosen(reviewed))
+	const reviewed = reviewing
+		? reviewedCardOf(cards, {
+				option: panel.chosenOption,
+				membershipId: panel.selected?.membershipId,
+			})
+		: undefined;
+	// The chosen change left the answer (the roster moved, or a new answer lacks it): the review closes.
+	if (reviewing && !reviewed) setReviewing(false);
+	if (reviewed)
 		return (
 			<CoverRowReview
 				card={reviewed}
@@ -301,7 +305,7 @@ const GapCoverBody = ({
 				onBack={() => {
 					panel.unchoose();
 					focusAfterBack.current = reviewed.key;
-					setReviewKey(undefined);
+					setReviewing(false);
 				}}
 			/>
 		);
@@ -312,7 +316,7 @@ const GapCoverBody = ({
 		if (choice.kind === "backend") panel.select(choice.option.membershipId);
 		else panel.chooseRepair(choice.option);
 		if (cards.indexOf(card) >= CARDS_BEFORE_FOLD) setShowAll(true);
-		setReviewKey(card.key);
+		setReviewing(true);
 	};
 	/** A roster member's profile id, which is how the engine names people. */
 	const profileIdOf = (membershipId: string): string | undefined =>
