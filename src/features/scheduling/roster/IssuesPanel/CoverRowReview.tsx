@@ -6,20 +6,18 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import type { CoverPanel } from "@/features/scheduling/cover/useCoverPanel";
 import { CoverOfferSent } from "@/features/scheduling/coverOffers/CoverOfferActions/CoverOfferSent";
 import { offerActionsOf } from "@/features/scheduling/coverOffers/coverOfferRules";
-import { previewTilePairs } from "@/features/scheduling/roster/changeTiles";
+import { previewTileGroups } from "@/features/scheduling/roster/changeTiles";
 import {
-	engineOvertimeMinutes,
 	weekHoursOf,
-	type CoverCard,
+	type OptionCard,
 } from "@/features/scheduling/roster/coverCards";
 import { CellPanelFooter } from "@/features/scheduling/RosterCellPanel/CellPanelFooter";
 import { RosterChangeReview } from "@/features/scheduling/rosterChanges/RosterChangeReview";
 import { hoursFromMinutes } from "@/features/scheduling/shifts/shiftHours";
-import { stretchOvertimeText } from "@/features/scheduling/shifts/stretchWords";
 import { ChangeTilePairs } from "./ChangeTilePairs";
 
 export type CoverRowReviewProps = {
-	card: CoverCard;
+	card: OptionCard;
 	panel: Pick<CoverPanel, "review" | "offer">;
 	onBack: () => void;
 };
@@ -27,15 +25,13 @@ export type CoverRowReviewProps = {
 const key = "scheduling.issues.cover";
 
 /** What the change does to the person's week: hours before → after of the contract, with a bar; or the overtime an engine option adds. */
-const WeekLine = ({ card }: { card: CoverCard }): FunctionComponent => {
+const WeekLine = ({ card }: { card: OptionCard }): FunctionComponent => {
 	const { t } = useTranslation();
 	const { choice } = card;
-	if (choice.kind === "engine") {
-		const overtime = engineOvertimeMinutes(choice.option);
-		return overtime > 0 ? (
-			<p className="text-neutral-800">{stretchOvertimeText(overtime, t)}</p>
+	if (choice.kind === "engine")
+		return card.weekLine ? (
+			<p className="text-neutral-800">{card.weekLine}</p>
 		) : null;
-	}
 	const week = weekHoursOf(choice.option);
 	const values = {
 		before: hoursFromMinutes(week.beforeMinutes),
@@ -74,7 +70,7 @@ export const CoverRowReview = ({
 	if (offer && offerOut)
 		return (
 			<CoverOfferSent
-				name={card.name}
+				name={card.people}
 				offer={offerOut}
 				refusal={offer.withdrawRefusal}
 				timeZone={offer.timeZone}
@@ -82,7 +78,9 @@ export const CoverRowReview = ({
 				onWithdraw={offer.withdraw}
 			/>
 		);
-	const pairs = review.preview ? previewTilePairs(review.preview, t) : card.pairs;
+	const groups = review.preview
+		? previewTileGroups(review.preview, review.names.member, t)
+		: card.groups;
 	return (
 		<div className="flex flex-col gap-3 rounded-lg border border-ink-blue-500 bg-ink-blue-50 p-3">
 			<RosterChangeReview
@@ -94,12 +92,10 @@ export const CoverRowReview = ({
 				showsRulesNote={false}
 				ticked={review.ticked}
 				beforeAfter={{
-					title: t(`${key}.whatChanges`, { name: card.name }),
+					title: t(`${key}.whatChanges`, { name: card.people }),
 					content: (
 						<>
-							<ChangeTilePairs
-								groups={[{ membershipId: "", name: "", days: pairs }]}
-							/>
+							<ChangeTilePairs groups={groups} />
 							<WeekLine card={card} />
 						</>
 					),
@@ -123,7 +119,7 @@ export const CoverRowReview = ({
 				applyDisabled={review.applyBlocked}
 				busy={review.busy}
 				cancelLabel={t(`${key}.back`)}
-				offerActions={offerActionsOf(offer, card.name)}
+				offerActions={offerActionsOf(offer, card.people)}
 				applyLabel={t(
 					review.applyAnyway
 						? "scheduling.rosterEdit.applyAnyway"

@@ -7,12 +7,10 @@ import { configureApiClient, resetApiClient } from "@/common/api-client";
 import { envelope, stubApi } from "@/common/testing/stubApi";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import {
-	callInMove,
 	callInOption,
-	feasibleRepair,
 	NOT_ASSIGNED_FIXTURE,
 	repairOptionsFixture,
-	stretchMove,
+	stretchAfterOption,
 } from "@/features/scheduling/cover/engineRepairFixtures";
 import { coverOptionsFixture } from "@/features/scheduling/cover/fixtures";
 import {
@@ -93,10 +91,7 @@ describe("GapCover", () => {
 			[`POST ${COVER_OPTIONS}`]: answer(coverOptionsFixture()),
 			[`POST ${REPAIR_OPTIONS}`]: answer(
 				repairOptionsFixture(
-					[
-						feasibleRepair([callInMove()]),
-						feasibleRepair([stretchMove()], { extraMinutes: null }),
-					],
+					[callInOption(), stretchAfterOption()],
 					NOT_ASSIGNED_FIXTURE
 				)
 			),
@@ -106,9 +101,8 @@ describe("GapCover", () => {
 		expect(screen.getByText("Working out the options…")).toBeVisible();
 		const cards = await screen.findAllByRole("listitem");
 		expect(cards).toHaveLength(2);
-		expect(cards[0]).toHaveTextContent(/Aisha Rahman.*Within hours.*Suggested/);
-		expect(cards[1]).toHaveTextContent(/Chen Wei.*Overtime/);
-		expect(cards[1]).toHaveTextContent(/Swing Shift .*\+2 h/);
+		expect(cards[0]).toHaveTextContent(/Aisha Rahman.*Suggested.*Within hours/);
+		expect(cards[1]).toHaveTextContent(/Ben Ong.*Stays on 2 h.*Lunch Rush .*\+2 h/);
 		expect(screen.getAllByText("Suggested")).toHaveLength(1);
 		const whyNot = screen.getByRole("button", { name: "Why not others (3)" });
 		expect(whyNot).toHaveAttribute("aria-expanded", "false");
@@ -124,15 +118,15 @@ describe("GapCover", () => {
 				body: envelope(rosterChangeFixture()),
 			},
 			[`POST ${REPAIR_OPTIONS}`]: answer(
-				repairOptionsFixture([
-					feasibleRepair([callInMove()], { cells: callInOption().cells }),
-				])
+				repairOptionsFixture([callInOption()])
 			),
 		});
 		const { onApplied } = show();
 		const user = userEvent.setup();
 
-		await user.click(await screen.findByRole("button", { name: "Review" }));
+		await user.click(
+			await screen.findByRole("button", { name: "Review Aisha Rahman’s change" })
+		);
 
 		expect(
 			screen.getByRole("heading", { name: "What changes for Aisha Rahman" })
@@ -162,13 +156,13 @@ describe("GapCover", () => {
 		expect(await screen.findByText(UNREACHABLE)).toBeVisible();
 		const cards = await screen.findAllByRole("listitem");
 		expect(cards[0]).toHaveTextContent(
-			/Aisha Rahman.*Not rule-checked.*Suggested/
+			/Aisha Rahman.*Suggested.*Not rule-checked/
 		);
-		await user.click(within(cards[0]!).getByRole("button", { name: "Review" }));
+		await user.click(within(cards[0]!).getByRole("button", { name: /^Review/ }));
 
 		expect(screen.getByText("This week 24 → 30 h of 44 h")).toBeVisible();
 		expect(screen.getByRole("progressbar")).toBeVisible();
 		await user.click(screen.getByRole("button", { name: "Back" }));
-		expect(screen.getAllByRole("button", { name: "Review" })).toHaveLength(2);
+		expect(screen.getAllByRole("button", { name: /^Review/ })).toHaveLength(2);
 	});
 });

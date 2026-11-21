@@ -4738,13 +4738,6 @@
 				"shiftShort": "{{shift}} con falta de personal"
 			},
 			"cover": {
-				"badge": {
-					"withinHours": "Dentro de horas",
-					"extraHours": "Horas extra de contrato",
-					"overtime": "Horas extra",
-					"leavesShort": "Deja {{shift}} con {{count}} menos",
-					"notRuleChecked": "Sin comprobar reglas"
-				},
 				"review": "Revisar",
 				"whatChanges": "Qué cambia para {{name}}",
 				"back": "Volver",
@@ -4752,7 +4745,10 @@
 				"weekOvertime": "Esta semana {{before}} → {{after}} h de {{contract}} h · {{overtime}} h extra",
 				"weekBar": "Horas de esta semana frente al contrato",
 				"whyNot": "Por qué no otros ({{count}})",
-				"becomes": "pasa a"
+				"becomes": "pasa a",
+				"offerSent": "Oferta enviada · respuesta antes de {{time}}",
+				"declined": "Rechazada",
+				"reviewFor": "Revisar el cambio de {{name}}"
 			}
 		},
 		"rosterMarkers": {

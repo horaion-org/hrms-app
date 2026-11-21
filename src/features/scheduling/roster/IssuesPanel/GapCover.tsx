@@ -16,10 +16,16 @@ import {
 import { useRepairWarmUp } from "@/features/scheduling/cover/useRepairWarmUp";
 import type { CoverShift } from "@/features/scheduling/cover/coverOptionWords";
 import {
-	changeTilePairs,
+	changeTileGroups,
 	type TileShift,
 } from "@/features/scheduling/roster/changeTiles";
-import { coverCards, type CoverCard } from "@/features/scheduling/roster/coverCards";
+import {
+	fallbackCards,
+	optionCardList,
+	type OptionCard,
+	type OptionCardSources,
+} from "@/features/scheduling/roster/coverCards";
+import { assignmentCell } from "@/features/scheduling/rosterChanges/cellText";
 import { CoverCardItem } from "./CoverCardItem";
 import { CoverRowReview } from "./CoverRowReview";
 import { WhyNotOthers } from "./WhyNotOthers";
@@ -136,29 +142,42 @@ const GapCoverBody = ({
 		undefined;
 	const shift = shiftOf(gap.shiftId);
 	const shiftName = shift?.name ?? "";
-	const hours = new Intl.NumberFormat(language, { maximumFractionDigits: 1 });
 	const shiftDay = { shift: shiftName, day: formatDay(gap.day, language) };
-	const names = {
-		member: panel.review.names.member,
-		day: (date: string): string => formatDay(date, language),
-		hours: (minutes: number): string => hours.format(minutes / 60),
+	const { engineRepair } = panel;
+	const memberName = panel.review.names.member;
+	const weekdayName = new Intl.DateTimeFormat(language, { weekday: "long" });
+	const now = new Date();
+	const sources: OptionCardSources = {
+		dayBefore: (cell) => {
+			const row = cover.assignments.find(
+				(candidate) =>
+					candidate.member?.membershipId === cell.membershipId &&
+					candidate.day === cell.day
+			);
+			return row && assignmentCell(row);
+		},
+		weekday: (isoDate) => weekdayName.format(new Date(`${isoDate}T00:00:00`)),
+		memberName,
+		groupsOf: (cells) =>
+			changeTileGroups(cells, cover.assignments, shiftOf, memberName, t),
+		shortNow: engineRepair.status === "ready" ? engineRepair.shortNow : null,
+		offers: cover.coverOffers?.offers ?? [],
+		now,
+		t,
 	};
-	const { engineRepair, withEngine } = panel;
-	const cards = coverCards({
-		view: panel.view,
-		engineOptions:
-			engineRepair.status === "ready" ? engineRepair.options : undefined,
-		backend:
-			panel.status === "options" || panel.status === "nobody"
-				? withEngine
-				: undefined,
-		memberName: panel.review.names.member,
-		pairsOf: (cells) => changeTilePairs(cells, cover.assignments, shiftOf, t),
-	});
+	const cards =
+		panel.view === "engine"
+			? optionCardList(
+					engineRepair.status === "ready" ? engineRepair.options : [],
+					sources
+				).cards
+			: panel.view === "backendFallback"
+				? fallbackCards(panel.options?.options ?? [], sources)
+				: [];
 	const statusLines = useStatusLines(panel, shiftDay);
 
 	/** Whether the card under review is the one chosen now: a person of the list, or the engine's change. */
-	const isChosen = (card: CoverCard): boolean =>
+	const isChosen = (card: OptionCard): boolean =>
 		card.choice.kind === "engine"
 			? panel.repairChosen
 			: panel.selected?.membershipId === card.choice.option.membershipId;
@@ -176,15 +195,13 @@ const GapCoverBody = ({
 		);
 
 	/** Chooses the card's change, then shows its review. */
-	const review = (card: CoverCard): void => {
+	const review = (card: OptionCard): void => {
 		const { choice } = card;
 		if (choice.kind === "backend") panel.select(choice.option.membershipId);
-		else if (choice.cells) panel.chooseRepair(choice.option);
+		else panel.chooseRepair(choice.option);
 		setReviewKey(card.key);
 	};
-	// A published roster's engine options go out as offers, one person at a time: made by hand there.
-	const reviewable = (card: CoverCard): boolean =>
-		card.choice.kind === "backend" || cover.coverOffers === undefined;
+	const { withEngine } = panel;
 	const notAssigned = withEngine?.notAssigned ??
 		(engineRepair.status === "ready" ? engineRepair.notAssigned : undefined);
 	return (
@@ -193,19 +210,16 @@ const GapCoverBody = ({
 			{cards.length > 0 && (
 				<ul className="flex flex-col gap-2">
 					{cards.map((card) => (
-						<CoverCardItem
-							key={card.key}
-							card={card}
-							names={names}
-							shiftName={shiftName}
-							onReview={
-								reviewable(card)
-									? (): void => {
-											review(card);
-										}
-									: undefined
-							}
-						/>
+						<li key={card.key}>
+							<CoverCardItem
+								card={card}
+								now={now}
+								timeZone={cover.coverOffers?.timeZone ?? ""}
+								onReview={(): void => {
+									review(card);
+								}}
+							/>
+						</li>
 					))}
 				</ul>
 			)}

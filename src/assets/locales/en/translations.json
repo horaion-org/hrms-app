@@ -4938,13 +4938,6 @@
 				"shiftShort": "{{shift}} short"
 			},
 			"cover": {
-				"badge": {
-					"withinHours": "Within hours",
-					"extraHours": "Extra hours",
-					"overtime": "Overtime",
-					"leavesShort": "Leaves {{shift}} {{count}} short",
-					"notRuleChecked": "Not rule-checked"
-				},
 				"review": "Review",
 				"whatChanges": "What changes for {{name}}",
 				"back": "Back",
@@ -4952,7 +4945,10 @@
 				"weekOvertime": "This week {{before}} → {{after}} h of {{contract}} h · {{overtime}} h overtime",
 				"weekBar": "This week’s hours against the contract",
 				"whyNot": "Why not others ({{count}})",
-				"becomes": "becomes"
+				"becomes": "becomes",
+				"offerSent": "Offer sent · answer by {{time}}",
+				"declined": "Declined",
+				"reviewFor": "Review {{name}}’s change"
 			}
 		},
 		"rosterMarkers": {
