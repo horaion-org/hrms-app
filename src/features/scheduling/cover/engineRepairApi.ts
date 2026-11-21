@@ -64,7 +64,14 @@ export type RepairMove = z.infer<typeof moveSchema>;
 
 /** What an option does, as the API names it; OTHER for the older repair's options and a kind this app does not know. */
 const repairOptionKindSchema = z
-	.enum(["CALL_IN", "MOVE", "OVERTIME_STRETCH", "STRETCH_PAIR", "DAY_SWAP", "OTHER"])
+	.enum([
+		"CALL_IN",
+		"MOVE",
+		"OVERTIME_STRETCH",
+		"STRETCH_PAIR",
+		"DAY_SWAP",
+		"OTHER",
+	])
 	.catch("OTHER");
 
 /** What an option does: call someone in, move them, stretch one or two shifts, swap a day, or another change. */
@@ -75,7 +82,10 @@ export type RepairOptionKind = z.infer<typeof repairOptionKindSchema>;
  * all its hours, or only some hours. Null from the engine's older model,
  * which does not say.
  */
-const repairFillsSchema = z.enum(["GAP", "ONE_PERSON", "PART"]).nullable().catch(null);
+const repairFillsSchema = z
+	.enum(["GAP", "ONE_PERSON", "PART"])
+	.nullable()
+	.catch(null);
 
 /** How much of the gap an option fills; null when the engine does not say. */
 export type RepairFills = z.infer<typeof repairFillsSchema>;

@@ -49,12 +49,24 @@ describe("tileFaceOfCell", () => {
 		],
 		[
 			"a rest day",
-			{ kind: "OFF", dayType: "REST", shift: null, jobTitle: null, stretch: null },
+			{
+				kind: "OFF",
+				dayType: "REST",
+				shift: null,
+				jobTitle: null,
+				stretch: null,
+			},
 			{ kind: "day", label: "Rest day" },
 		],
 		[
 			"leave",
-			{ kind: "LEAVE", dayType: null, shift: null, jobTitle: null, stretch: null },
+			{
+				kind: "LEAVE",
+				dayType: null,
+				shift: null,
+				jobTitle: null,
+				stretch: null,
+			},
 			{ kind: "day", label: "On leave" },
 		],
 	])("draws %s", (_case, cell, face) => {
@@ -76,7 +88,12 @@ describe("changeTilePairs", () => {
 					shiftId: "swing",
 					stretchAfterMinutes: 60,
 				},
-				{ membershipId: "m-9", day: "2026-10-12", kind: "OFF", dayType: "REST" },
+				{
+					membershipId: "m-9",
+					day: "2026-10-12",
+					kind: "OFF",
+					dayType: "REST",
+				},
 			],
 			roster,
 			shiftOf,
@@ -123,8 +140,13 @@ describe("changeTileGroups", () => {
 		);
 
 		expect(groups).toHaveLength(1);
-		expect(groups[0]).toMatchObject({ membershipId: "m-1", name: "Aisha Rahman" });
-		expect(groups[0]?.days.map((day) => [day.day, day.before.kind, day.after.kind])).toEqual([
+		expect(groups[0]).toMatchObject({
+			membershipId: "m-1",
+			name: "Aisha Rahman",
+		});
+		expect(
+			groups[0]?.days.map((day) => [day.day, day.before.kind, day.after.kind])
+		).toEqual([
 			["2026-10-17", "day", "shift"],
 			["2026-10-16", "shift", "day"],
 		]);

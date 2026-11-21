@@ -35,7 +35,9 @@ describe("roster rules check client", () => {
 		const timeout = vi.spyOn(AbortSignal, "timeout");
 		stubApi({ [`POST ${ROSTER_CHECK}`]: { status: 503 } });
 
-		await fetchRosterRulesCheck(TARGET, { expectedRevision: 3 }).catch(() => undefined);
+		await fetchRosterRulesCheck(TARGET, { expectedRevision: 3 }).catch(
+			() => undefined
+		);
 
 		expect(timeout).toHaveBeenCalledWith(ENGINE_ANSWER_WAIT_MILLISECONDS);
 		timeout.mockRestore();

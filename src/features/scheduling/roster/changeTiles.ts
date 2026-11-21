@@ -61,7 +61,10 @@ const shiftFace = (
 	kind: "shift",
 	name: shift.name,
 	colour: shift.colour,
-	times: stretchedTimes({ start: shift.startTime, end: shift.endTime }, stretch),
+	times: stretchedTimes(
+		{ start: shift.startTime, end: shift.endTime },
+		stretch
+	),
 	stretchMinutes: stretchMinutes(stretch),
 });
 
@@ -144,7 +147,11 @@ export type ChangeTileGroup = {
 
 /** The days of a change grouped by person, in the order each person first appears. */
 const groupedByPerson = (
-	days: ReadonlyArray<{ membershipId: string; name: string; day: ChangeTileDay }>
+	days: ReadonlyArray<{
+		membershipId: string;
+		name: string;
+		day: ChangeTileDay;
+	}>
 ): Array<ChangeTileGroup> =>
 	days.reduce<Array<ChangeTileGroup>>((groups, { membershipId, name, day }) => {
 		const group = groups.find(

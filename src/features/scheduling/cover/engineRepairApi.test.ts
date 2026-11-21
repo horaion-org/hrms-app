@@ -50,7 +50,9 @@ describe("engine repair options client", () => {
 		const timeout = vi.spyOn(AbortSignal, "timeout");
 		stubApi({ [`POST ${REPAIR_OPTIONS}`]: { status: 503 } });
 
-		await fetchRepairOptions(TARGET, { ...GAP, expectedRevision: 3 }).catch(() => undefined);
+		await fetchRepairOptions(TARGET, { ...GAP, expectedRevision: 3 }).catch(
+			() => undefined
+		);
 
 		expect(timeout).toHaveBeenCalledWith(ENGINE_ANSWER_WAIT_MILLISECONDS);
 		timeout.mockRestore();
@@ -203,7 +205,11 @@ describe("engine repair options client", () => {
 				status: 200,
 				body: envelope(
 					repairOptionsFixture([
-						{ ...callInOption(), kind: "SPLIT_SHIFT" as never, fills: "HALF" as never },
+						{
+							...callInOption(),
+							kind: "SPLIT_SHIFT" as never,
+							fills: "HALF" as never,
+						},
 					])
 				),
 			},

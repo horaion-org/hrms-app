@@ -276,7 +276,9 @@ const cardOfferOf = (
 		.at(-1);
 	const standing = latest && offerStanding(latest, now);
 	if (standing?.kind === "open") return { kind: "open", until: standing.until };
-	return standing?.kind === "declined" ? { kind: "declined" } : { kind: "none" };
+	return standing?.kind === "declined"
+		? { kind: "declined" }
+		: { kind: "none" };
 };
 
 /** The day an option adds work on: its first WORK cell. */

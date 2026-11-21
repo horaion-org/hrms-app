@@ -163,7 +163,11 @@ const sources: OptionWordSources = {
 describe("optionKindLine", () => {
 	it.each([
 		["a call-in on a day off", callInOption(), "Comes in on a day off"],
-		["a call-in on a rest day", restDayCallInOption(), "Comes in on a rest day"],
+		[
+			"a call-in on a rest day",
+			restDayCallInOption(),
+			"Comes in on a rest day",
+		],
 		["a move", moveOption(), "Moves from Lunch Rush"],
 		["a stretch after", stretchAfterOption(), "Stays on 2 h"],
 		["a stretch before", stretchBeforeOption(), "Starts 2 h early"],
@@ -190,11 +194,7 @@ describe("costChips", () => {
 			callInOption({ workingTimeRulesChecked: false }),
 			["Within hours", "Not rule-checked"],
 		],
-		[
-			"no figures from the engine",
-			callInOption({ extraMinutes: null }),
-			[],
-		],
+		["no figures from the engine", callInOption({ extraMinutes: null }), []],
 	])("chips %s", (_case, option, chips) => {
 		expect(costChips(option, t).map((chip) => chip.text)).toEqual(chips);
 	});
@@ -207,7 +207,9 @@ describe("whatItLeaves", () => {
 
 	it("says nothing for an option that fills the gap, or one that does not say", () => {
 		expect(whatItLeaves(callInOption(), shortByTwo, t)).toBeUndefined();
-		expect(whatItLeaves(callInOption({ fills: null }), null, t)).toBeUndefined();
+		expect(
+			whatItLeaves(callInOption({ fills: null }), null, t)
+		).toBeUndefined();
 	});
 
 	it("says one of how many the roster has short now, else one more than it leaves", () => {
@@ -224,14 +226,25 @@ describe("whatItLeaves", () => {
 				{
 					fills: "PART",
 					stillShort: [
-						{ start: "2026-10-17T09:00:00", end: "2026-10-17T11:00:00", shortBy: 1 },
-						{ start: "2026-10-17T14:00:00", end: "2026-10-17T15:00:00", shortBy: 1 },
+						{
+							start: "2026-10-17T09:00:00",
+							end: "2026-10-17T11:00:00",
+							shortBy: 1,
+						},
+						{
+							start: "2026-10-17T14:00:00",
+							end: "2026-10-17T15:00:00",
+							shortBy: 1,
+						},
 					],
 				},
 				null,
 				t
 			)
-		).toEqual({ kind: "part", text: "Still short 09:00 – 11:00, 14:00 – 15:00" });
+		).toEqual({
+			kind: "part",
+			text: "Still short 09:00 – 11:00, 14:00 – 15:00",
+		});
 	});
 });
 

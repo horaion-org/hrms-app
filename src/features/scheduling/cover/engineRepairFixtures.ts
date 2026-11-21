@@ -196,7 +196,11 @@ export const callInOption = (
 		kind: "CALL_IN",
 		cells: [workCell(AISHA, SATURDAY, FRONT_DESK_AM)],
 		people: [
-			person(AISHA, "Aisha Rahman", { before: 1800, after: 2160, contract: 2640 }),
+			person(AISHA, "Aisha Rahman", {
+				before: 1800,
+				after: 2160,
+				contract: 2640,
+			}),
 		],
 	}),
 	...overrides,
@@ -208,7 +212,11 @@ export const restDayCallInOption = (): RepairOption =>
 		kind: "CALL_IN",
 		cells: [workCell(AISHA, SUNDAY, FRONT_DESK_AM)],
 		people: [
-			person(AISHA, "Aisha Rahman", { before: 1800, after: 2160, contract: 2640 }),
+			person(AISHA, "Aisha Rahman", {
+				before: 1800,
+				after: 2160,
+				contract: 2640,
+			}),
 		],
 		extraMinutes: { restDayWork: 360, timeOffEarned: 360 },
 	});
@@ -218,7 +226,9 @@ export const moveOption = (): RepairOption =>
 	repairOption({
 		kind: "MOVE",
 		cells: [workCell(BEN, SATURDAY, FRONT_DESK_AM)],
-		people: [person(BEN, "Ben Ong", { before: 1200, after: 1440, contract: 1320 })],
+		people: [
+			person(BEN, "Ben Ong", { before: 1200, after: 1440, contract: 1320 }),
+		],
 		extraMinutes: { pastContract: 120 },
 	});
 
@@ -227,10 +237,10 @@ export const stretchAfterOption = (): RepairOption =>
 	repairOption({
 		kind: "OVERTIME_STRETCH",
 		fills: "PART",
-		cells: [
-			workCell(BEN, SATURDAY, LUNCH_RUSH, { stretchAfterMinutes: 120 }),
+		cells: [workCell(BEN, SATURDAY, LUNCH_RUSH, { stretchAfterMinutes: 120 })],
+		people: [
+			person(BEN, "Ben Ong", { before: 1200, after: 1320, contract: 1320 }),
 		],
-		people: [person(BEN, "Ben Ong", { before: 1200, after: 1320, contract: 1320 })],
 		stillShort: [
 			{ start: "2026-10-17T09:00:00", end: "2026-10-17T11:00:00", shortBy: 1 },
 		],
@@ -245,7 +255,9 @@ export const stretchBeforeOption = (): RepairOption =>
 		cells: [
 			workCell(CHEN, SATURDAY, SWING_SHIFT, { stretchBeforeMinutes: 120 }),
 		],
-		people: [person(CHEN, "Chen Wei", { before: 2880, after: 3000, contract: 2640 })],
+		people: [
+			person(CHEN, "Chen Wei", { before: 2880, after: 3000, contract: 2640 }),
+		],
 		stillShort: [
 			{ start: "2026-10-17T09:00:00", end: "2026-10-17T12:00:00", shortBy: 1 },
 		],
@@ -276,7 +288,11 @@ export const daySwapOption = (): RepairOption =>
 			{ membershipId: AISHA, day: FRIDAY, kind: "OFF", dayType: "OFF" },
 		],
 		people: [
-			person(AISHA, "Aisha Rahman", { before: 1800, after: 1800, contract: 2640 }),
+			person(AISHA, "Aisha Rahman", {
+				before: 1800,
+				after: 1800,
+				contract: 2640,
+			}),
 		],
 	});
 
@@ -290,7 +306,11 @@ export const otherTwoPeopleOption = (): RepairOption =>
 		],
 		people: [
 			person(BEN, "Ben Ong", { before: 1200, after: 1440, contract: 1320 }),
-			person(AISHA, "Aisha Rahman", { before: 1800, after: 1920, contract: 2640 }),
+			person(AISHA, "Aisha Rahman", {
+				before: 1800,
+				after: 1920,
+				contract: 2640,
+			}),
 		],
 		extraMinutes: { pastContract: 120 },
 	});

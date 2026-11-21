@@ -120,15 +120,20 @@ describe("weekHoursOf and engineOvertimeMinutes", () => {
 	it.each([
 		[{ before: 1440, after: 1800, contract: 2640 }, 0, 1800 / 26.4],
 		[{ before: 2400, after: 2880, contract: 2640 }, 240, 100],
-	])("reads the week %o as %s minutes over, %s percent full", (week, overtime, percent) => {
-		const hours = weekHoursOf(coverOptionFixture({ weekMinutes: week }));
-		expect(hours.overtimeMinutes).toBe(overtime);
-		expect(hours.percent).toBeCloseTo(percent);
-	});
+	])(
+		"reads the week %o as %s minutes over, %s percent full",
+		(week, overtime, percent) => {
+			const hours = weekHoursOf(coverOptionFixture({ weekMinutes: week }));
+			expect(hours.overtimeMinutes).toBe(overtime);
+			expect(hours.percent).toBeCloseTo(percent);
+		}
+	);
 
 	it("counts an option's own overtime, else its stretches", () => {
 		expect(
-			engineOvertimeMinutes(feasibleRepair([stretchMove()], { extraMinutes: null }))
+			engineOvertimeMinutes(
+				feasibleRepair([stretchMove()], { extraMinutes: null })
+			)
 		).toBe(120);
 		expect(
 			engineOvertimeMinutes(
@@ -165,7 +170,11 @@ describe("optionCardList", () => {
 		weekday: (isoDate) => (isoDate === "2026-10-17" ? "Saturday" : "Friday"),
 		memberName: (membershipId) => NAMES[membershipId] ?? "",
 		groupsOf: (cells) =>
-			cells.map((cell) => ({ membershipId: cell.membershipId, name: "", days: [] })),
+			cells.map((cell) => ({
+				membershipId: cell.membershipId,
+				name: "",
+				days: [],
+			})),
 		shortNow: SHORT_BY_TWO,
 		offers: [],
 		now: new Date("2026-10-16T05:00:00Z"),
@@ -177,42 +186,90 @@ describe("optionCardList", () => {
 		[
 			"a call-in on a day off",
 			callInOption(),
-			["Aisha Rahman", "Comes in on a day off", ["Within hours"], "30 → 36 h of 44 h this week", undefined],
+			[
+				"Aisha Rahman",
+				"Comes in on a day off",
+				["Within hours"],
+				"30 → 36 h of 44 h this week",
+				undefined,
+			],
 		],
 		[
 			"a call-in on a rest day",
 			restDayCallInOption(),
-			["Aisha Rahman", "Comes in on a rest day", ["6 h on a rest day", "+6 h time off earned"], "30 → 36 h of 44 h this week", undefined],
+			[
+				"Aisha Rahman",
+				"Comes in on a rest day",
+				["6 h on a rest day", "+6 h time off earned"],
+				"30 → 36 h of 44 h this week",
+				undefined,
+			],
 		],
 		[
 			"a move",
 			moveOption(),
-			["Ben Ong", "Moves from Lunch Rush", ["+2 h extra hours"], "20 → 24 h of 22 h this week", undefined],
+			[
+				"Ben Ong",
+				"Moves from Lunch Rush",
+				["+2 h extra hours"],
+				"20 → 24 h of 22 h this week",
+				undefined,
+			],
 		],
 		[
 			"a stretch that fills part",
 			stretchAfterOption(),
-			["Ben Ong", "Stays on 2 h", ["+2 h overtime"], "20 → 22 h of 22 h this week", "Still short 09:00 – 11:00"],
+			[
+				"Ben Ong",
+				"Stays on 2 h",
+				["+2 h overtime"],
+				"20 → 22 h of 22 h this week",
+				"Still short 09:00 – 11:00",
+			],
 		],
 		[
 			"a stretch pair",
 			stretchPairOption(),
-			["Ben Ong and Chen Wei", "Cover it between them", ["+4 h overtime"], undefined, undefined],
+			[
+				"Ben Ong and Chen Wei",
+				"Cover it between them",
+				["+4 h overtime"],
+				undefined,
+				undefined,
+			],
 		],
 		[
 			"a day swap",
 			daySwapOption(),
-			["Aisha Rahman", "Works Saturday instead of Friday", ["Within hours"], "30 → 30 h of 44 h this week", undefined],
+			[
+				"Aisha Rahman",
+				"Works Saturday instead of Friday",
+				["Within hours"],
+				"30 → 30 h of 44 h this week",
+				undefined,
+			],
 		],
 		[
 			"the older repair's two changes",
 			otherTwoPeopleOption(),
-			["Ben Ong and Aisha Rahman", "2 changes", ["+2 h extra hours"], undefined, undefined],
+			[
+				"Ben Ong and Aisha Rahman",
+				"2 changes",
+				["+2 h extra hours"],
+				undefined,
+				undefined,
+			],
 		],
 		[
 			"one person of two",
 			oneOfTwoOption(),
-			["Aisha Rahman", "Comes in on a day off", ["Within hours"], "30 → 36 h of 44 h this week", "Fills 1 of 2"],
+			[
+				"Aisha Rahman",
+				"Comes in on a day off",
+				["Within hours"],
+				"30 → 36 h of 44 h this week",
+				"Fills 1 of 2",
+			],
 		],
 	])("cards %s", (_case, option, [people, kindLine, chips, week, leaves]) => {
 		const [card] = optionCardList([option], sources()).cards;
@@ -227,12 +284,26 @@ describe("optionCardList", () => {
 
 	it("suggests the first card only when it fills more than part, and puts the caption before the first part fill", () => {
 		const list = optionCardList(
-			[callInOption(), moveOption(), stretchAfterOption(), stretchBeforeOption()],
+			[
+				callInOption(),
+				moveOption(),
+				stretchAfterOption(),
+				stretchBeforeOption(),
+			],
 			sources()
 		);
 
-		expect(list.cards.map((card) => card.suggested)).toEqual([true, false, false, false]);
-		expect(list).toMatchObject({ partCaptionAt: 2, noFullFill: false, collapsedCount: 4 });
+		expect(list.cards.map((card) => card.suggested)).toEqual([
+			true,
+			false,
+			false,
+			false,
+		]);
+		expect(list).toMatchObject({
+			partCaptionAt: 2,
+			noFullFill: false,
+			collapsedCount: 4,
+		});
 	});
 
 	it("folds after three cards when the caption falls past them", () => {
@@ -257,7 +328,9 @@ describe("optionCardList", () => {
 	it("shows an offer out on its person's card, and never suggests someone who declined", () => {
 		const open = optionCardList(
 			[callInOption()],
-			sources({ offers: [coverOfferFixture({ expiresAt: "2099-01-01T00:00:00Z" })] })
+			sources({
+				offers: [coverOfferFixture({ expiresAt: "2099-01-01T00:00:00Z" })],
+			})
 		).cards[0];
 		const declined = optionCardList(
 			[callInOption(), moveOption()],
@@ -271,18 +344,39 @@ describe("optionCardList", () => {
 			})
 		).cards;
 
-		expect(open?.offer).toEqual({ kind: "open", until: "2099-01-01T00:00:00Z" });
-		expect(declined[0]).toMatchObject({ offer: { kind: "declined" }, suggested: false });
+		expect(open?.offer).toEqual({
+			kind: "open",
+			until: "2099-01-01T00:00:00Z",
+		});
+		expect(declined[0]).toMatchObject({
+			offer: { kind: "declined" },
+			suggested: false,
+		});
 	});
 
 	it("cards the hours-based people with their cost, not rule-checked, their week, the first suggested", () => {
 		const cards = fallbackCards(coverOptionsFixture().options, sources());
 
 		expect(
-			cards.map((card) => [card.people, card.kindLine, card.costChips.map((chip) => chip.text), card.suggested])
+			cards.map((card) => [
+				card.people,
+				card.kindLine,
+				card.costChips.map((chip) => chip.text),
+				card.suggested,
+			])
 		).toEqual([
-			["Aisha Rahman", "Comes in on a day off", ["Within hours", "Not rule-checked"], true],
-			["Chen Wei", "Comes in on a rest day", ["+6 h overtime", "Not rule-checked"], false],
+			[
+				"Aisha Rahman",
+				"Comes in on a day off",
+				["Within hours", "Not rule-checked"],
+				true,
+			],
+			[
+				"Chen Wei",
+				"Comes in on a rest day",
+				["+6 h overtime", "Not rule-checked"],
+				false,
+			],
 		]);
 		expect(cards[0]?.weekLine).toBe("24 → 30 h of 44 h this week");
 	});

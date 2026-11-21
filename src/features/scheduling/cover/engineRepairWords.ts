@@ -214,7 +214,9 @@ export const optionKindLine = (
 				shift: before?.shift?.name ?? t(`${key}.unknownShift`),
 			});
 		case "OVERTIME_STRETCH":
-			return taken ? stretchKindLine(taken, t) : t(`${key}.kindLine.stretchPair`);
+			return taken
+				? stretchKindLine(taken, t)
+				: t(`${key}.kindLine.stretchPair`);
 		case "STRETCH_PAIR":
 			return t(`${key}.kindLine.stretchPair`);
 		case "DAY_SWAP": {
@@ -276,7 +278,10 @@ export const costChips = (
 			: extra;
 	return option.workingTimeRulesChecked
 		? cost
-		: [...cost, { kind: "notRuleChecked", text: t(`${key}.cost.notRuleChecked`) }];
+		: [
+				...cost,
+				{ kind: "notRuleChecked", text: t(`${key}.cost.notRuleChecked`) },
+			];
 };
 
 /** What an option leaves short: one person of several (neutral), or some hours (red). */

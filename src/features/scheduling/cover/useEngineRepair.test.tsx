@@ -65,9 +65,7 @@ const hook = (
 	);
 
 /** Answers every ask with `options`; returns what was sent. */
-const answer = (
-	options = repairOptionsFixture()
-): ReturnType<typeof stubApi> =>
+const answer = (options = repairOptionsFixture()): ReturnType<typeof stubApi> =>
 	stubApi({
 		[`POST ${REPAIR_OPTIONS}`]: { status: 200, body: envelope(options) },
 	});
