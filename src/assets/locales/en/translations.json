@@ -5305,7 +5305,8 @@
 				"stillShortToast": "Roster changed. {{shift}} is still {{runs}}.",
 				"shortRun_one": "{{count}} short {{times}}",
 				"shortRun_other": "{{count}} short {{times}}",
-				"spanSeparator": ", "
+				"spanSeparator": ", ",
+				"appliedRosterMoved": "The roster changed, so that change was not made. These are the options now."
 			}
 		},
 		"reach": {

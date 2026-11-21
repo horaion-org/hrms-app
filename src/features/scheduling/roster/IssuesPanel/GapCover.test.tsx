@@ -519,7 +519,7 @@ describe("GapCover: the review inside the row", () => {
 		).toBeVisible();
 	});
 
-	it("given_theRosterMovedUnderTheOption_when_applied_then_applyIsDisabledWithFindOptionsAgain", async () => {
+	it("given_theRosterMovedUnderTheOption_when_applied_then_theRowSaysTheChangeWasNotMadeOverTheOptionsNow", async () => {
 		const user = userEvent.setup();
 		await reviewOption(callInOption(), {
 			apply: { status: 409, body: { errorCode: "ROSTER_REVISION_CONFLICT" } },
@@ -531,16 +531,22 @@ describe("GapCover: the review inside the row", () => {
 
 		await user.click(apply);
 
-		const findAgain = await screen.findByRole("button", {
-			name: "Find options again",
-		});
-		expect(findAgain).toBeVisible();
+		const said = await screen.findByText(
+			"The roster changed, so that change was not made. These are the options now."
+		);
+		const line = said.closest("[role=alert]");
+		expect(line).not.toBeNull();
 		await waitFor(() => {
-			expect(findAgain).toHaveFocus();
+			expect(line).toHaveFocus();
 		});
-		expect(screen.getByRole("button", { name: "Apply change" })).toBeDisabled();
-		// The review stays open: the refusal's refresh asks the engine nothing more at the old revision.
-		expect(screen.getByRole("group", { name: "What changes" })).toBeVisible();
+		// The review is gone; the list is back under the line, with nothing to find again by hand.
+		expect(screen.queryByRole("group", { name: "What changes" })).toBeNull();
+		expect(
+			screen.getByRole("button", { name: "Review Aisha Rahman’s change" })
+		).toBeVisible();
+		expect(
+			screen.queryByRole("button", { name: "Find options again" })
+		).toBeNull();
 	});
 
 	it("given_aPublishedRoster_when_onePersonsOptionIsReviewed_then_theOffersActionsInApplysPlace", async () => {

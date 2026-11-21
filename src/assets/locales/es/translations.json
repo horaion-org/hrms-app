@@ -5105,7 +5105,8 @@
 				"stillShortToast": "Cuadrante cambiado. A {{shift}} aún le falta {{runs}}.",
 				"shortRun_one": "{{count}} {{times}}",
 				"shortRun_other": "{{count}} {{times}}",
-				"spanSeparator": ", "
+				"spanSeparator": ", ",
+				"appliedRosterMoved": "El cuadrante cambió, así que ese cambio no se hizo. Estas son las opciones ahora."
 			}
 		},
 		"reach": {

@@ -498,7 +498,7 @@ describe("useCoverPanel", () => {
 			});
 		});
 
-		it("given_theRosterMovedUnderTheOption_when_applied_then_applyWaitsAndFindingAgainLetsGo", async () => {
+		it("given_theRosterMovedUnderTheOption_when_applied_then_itSaysSoUntilTheNextChoice", async () => {
 			const { result } = await chooseOption(stretchAfterOption(), {
 				[`POST ${CHANGES}`]: {
 					status: 409,
@@ -514,13 +514,12 @@ describe("useCoverPanel", () => {
 			});
 
 			await waitFor(() => {
-				expect(result.current.review.applyRefusal).toBe("revision");
+				expect(result.current.rosterMovedUnderApply).toBe(true);
 			});
-			expect(result.current.review.applyBlocked).toBe(true);
 			act(() => {
-				result.current.review.findOptionsAgain();
+				result.current.chooseRepair(stretchAfterOption());
 			});
-			expect(result.current.chosenOption).toBeUndefined();
+			expect(result.current.rosterMovedUnderApply).toBe(false);
 		});
 
 		it("given_aPublishedRoster_when_onePersonsOptionIsSent_then_anOfferOfItsKindForTheDayItAddsWork", async () => {
@@ -708,12 +707,10 @@ describe("useCoverPanel: the engine asked once per revision", () => {
 			result.current.review.apply();
 		});
 		await waitFor(() => {
-			expect(result.current.review.applyRefusal).toBe("revision");
-		});
-		act(() => {
-			result.current.review.findOptionsAgain();
+			expect(result.current.rosterMovedUnderApply).toBe(true);
 		});
 
+		// The refusal reads the roster again by itself, which then shows the new revision.
 		rerender({ revision: 2 });
 
 		await waitFor(() => {

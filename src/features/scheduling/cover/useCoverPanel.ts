@@ -118,6 +118,14 @@ export type CoverPanel = {
 	unchoose: () => void;
 	/** After the roster moved, reads it again so the list is made afresh; otherwise asks again. */
 	findAgain: () => void;
+	/** The engine's answer is for a revision the roster has left: lets go of any choice and reads the roster again, so the options are asked afresh. */
+	findOptionsAgain: () => void;
+	/**
+	 * Apply was refused because the roster moved: the change was not made, and
+	 * the options are asked again at the new revision by themselves. Holds until
+	 * the next choice.
+	 */
+	rosterMovedUnderApply: boolean;
 	review: {
 		names: CheckNames;
 		/**
@@ -132,8 +140,6 @@ export type CoverPanel = {
 		 * wrote; no remark is filled in for it.
 		 */
 		remarkRequired: boolean;
-		/** Apply was refused because the roster moved: Apply waits, and this finds the options again at the new revision. */
-		findOptionsAgain: () => void;
 		preview: RosterChangePreview | undefined;
 		previewRefusal: RosterChangeRefusal | undefined;
 		retryPreview: () => void;
@@ -188,6 +194,7 @@ export const useCoverPanel = ({
 	const [chosen, setChosen] = useState<string>();
 	const [editedRemark, setEditedRemark] = useState<string>();
 	const [tickedFor, setTickedFor] = useState<string | null>(null);
+	const [rosterMovedUnderApply, setRosterMovedUnderApply] = useState(false);
 	// An engine option holds for the revision on screen it was chosen at: once it lands (or the roster moves),
 	// it is dropped with its preview, as a chosen person of the list is when the list is made afresh.
 	const [repairChoice, setRepairChoice] = useState<{
@@ -341,6 +348,7 @@ export const useCoverPanel = ({
 	/** A new choice starts its review afresh. */
 	const startReview = (): void => {
 		setTickedFor(null);
+		setRosterMovedUnderApply(false);
 		apply.reset();
 		offer.reset();
 	};
@@ -377,6 +385,13 @@ export const useCoverPanel = ({
 			if (status === "rosterMoved") refreshRoster();
 			else void list.refetch();
 		},
+		findOptionsAgain: (): void => {
+			setChosen(undefined);
+			setRepairChoice(undefined);
+			startReview();
+			refreshRoster();
+		},
+		rosterMovedUnderApply,
 		review: {
 			names: {
 				member: memberName,
@@ -401,8 +416,7 @@ export const useCoverPanel = ({
 			applyBlocked:
 				!preview.data ||
 				!canApply(gate, ticked, remark) ||
-				(remarkRequired && remark.trim() === "") ||
-				applyRefusal === "revision",
+				(remarkRequired && remark.trim() === ""),
 			apply: (): void => {
 				// One change in flight at a time: a second call before the first's answer sends nothing.
 				if (!body || !preview.data || applyInFlight.current) return;
@@ -428,8 +442,10 @@ export const useCoverPanel = ({
 							});
 						},
 						onError: (error) => {
-							if (rosterChangeRefusal(error) === "checksChanged")
-								void preview.refetch();
+							const refusal = rosterChangeRefusal(error);
+							if (refusal === "checksChanged") void preview.refetch();
+							// The roster is read again by the refusal itself, and the options with it.
+							if (refusal === "revision") setRosterMovedUnderApply(true);
 						},
 					}
 				);
@@ -438,12 +454,6 @@ export const useCoverPanel = ({
 			busy: apply.isPending,
 			bothMustAgree,
 			remarkRequired,
-			findOptionsAgain: (): void => {
-				setChosen(undefined);
-				setRepairChoice(undefined);
-				startReview();
-				refreshRoster();
-			},
 		},
 		offer: coverOffers && {
 			...offer,

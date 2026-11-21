@@ -1,4 +1,11 @@
-import { useContext, useEffect, useRef, useState, type ReactNode } from "react";
+import {
+	useContext,
+	useEffect,
+	useRef,
+	useState,
+	type ReactNode,
+	type Ref,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { formatDay } from "@/common/formatDay";
 import { formattingLocale } from "@/common/formattingLocale";
@@ -57,14 +64,19 @@ const Line = ({
 	text,
 	action,
 	alert = false,
+	lineRef,
 }: {
 	text: string;
 	action?: { label: string; onClick: () => void };
 	alert?: boolean;
+	/** A line focus is moved to; it can take focus only from the code. */
+	lineRef?: Ref<HTMLDivElement>;
 }): FunctionComponent => (
 	<div
+		ref={lineRef}
 		className="flex flex-col items-start gap-1"
 		role={alert ? "alert" : undefined}
+		tabIndex={lineRef ? -1 : undefined}
 	>
 		<p className="text-neutral-800">{text}</p>
 		{action && (
@@ -89,7 +101,8 @@ type StatusLines = { quiet: Array<ReactNode>; alerts: Array<ReactNode> };
 const useStatusLines = (
 	panel: CoverPanel,
 	list: OptionCardList,
-	shiftDay: { shift: string; day: string }
+	shiftDay: { shift: string; day: string },
+	movedLine: Ref<HTMLDivElement>
 ): StatusLines => {
 	const { t } = useTranslation();
 	const { status, view, engineRepair } = panel;
@@ -104,6 +117,15 @@ const useStatusLines = (
 	const tryAgain = t("scheduling.rosterEdit.tryAgain");
 	const quiet: Array<ReactNode> = [];
 	const alerts: Array<ReactNode> = [];
+	if (panel.rosterMovedUnderApply)
+		alerts.push(
+			<Line
+				key="appliedRosterMoved"
+				alert
+				lineRef={movedLine}
+				text={t(`${engineKey}.appliedRosterMoved`)}
+			/>
+		);
 	if (status === "rosterMoved")
 		quiet.push(
 			<Line
@@ -160,7 +182,7 @@ const useStatusLines = (
 						: action === "findAgain"
 							? {
 									label: t(`${engineKey}.findAgain`),
-									onClick: panel.review.findOptionsAgain,
+									onClick: panel.findOptionsAgain,
 								}
 							: undefined
 				}
@@ -296,7 +318,12 @@ const GapCoverBody = ({
 		engineList.partCaptionAt === undefined
 			? undefined
 			: engineList.cards[engineList.partCaptionAt]?.key;
-	const statusLines = useStatusLines(panel, engineList, shiftDay);
+	// Apply refused because the roster moved: the line saying so takes focus over the options now.
+	const movedLine = useRef<HTMLDivElement>(null);
+	useEffect(() => {
+		if (panel.rosterMovedUnderApply) movedLine.current?.focus();
+	}, [panel.rosterMovedUnderApply]);
+	const statusLines = useStatusLines(panel, engineList, shiftDay, movedLine);
 	// The region starts empty and is filled a moment after it mounts, so the first line is read too.
 	const [regionReady, setRegionReady] = useState(false);
 	useEffect(() => {
@@ -320,9 +347,11 @@ const GapCoverBody = ({
 				membershipId: panel.selected?.membershipId,
 			})
 		: undefined;
-	// The chosen change left the answer (the roster moved, or a new answer lacks it): the review closes.
-	if (reviewing && !reviewed) setReviewing(false);
-	if (reviewed)
+	// The chosen change left the answer (the roster moved, or a new answer lacks it), or Apply was refused
+	// because the roster moved: the review closes.
+	if (reviewing && (!reviewed || panel.rosterMovedUnderApply))
+		setReviewing(false);
+	if (reviewed && !panel.rosterMovedUnderApply)
 		return (
 			<div className="flex flex-col gap-2">
 				{liveRegion([])}
