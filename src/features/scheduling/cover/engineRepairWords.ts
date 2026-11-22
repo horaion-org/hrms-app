@@ -1,11 +1,11 @@
 import type { TFunction } from "i18next";
 import { ApiProblemError } from "@/common/problem";
-import { MINUTES_PER_DAY, minutesOfDay, timeOfDay } from "@/common/timeOfDay";
 import { dayTypeInSentence } from "@/features/scheduling/dayTypes";
 import type { RosterChangeCell } from "@/features/scheduling/rosterChanges/api";
 import type { RosterCellValue } from "@/features/scheduling/schedules/api";
 import { formatTimeRange } from "@/features/scheduling/shifts/formatShift";
 import { hoursFromMinutes } from "@/features/scheduling/shifts/shiftHours";
+import { stretchedTimes } from "@/features/scheduling/shifts/shiftStretch";
 import type {
 	RepairOption,
 	RepairPerson,
@@ -155,6 +155,11 @@ const stretchSentence = (
 	if (!shift || (after === 0 && before === 0)) return undefined;
 	const onGapDay = cell.day === gapDay;
 	const values = { shift: shift.name, weekday: weekday(cell.day) };
+	// The times worked, the shift's widened by the stretch; past midnight either way, as the roster draws it.
+	const worked = stretchedTimes(
+		{ start: shift.startTime, end: shift.endTime },
+		{ beforeMinutes: before, afterMinutes: after }
+	);
 	if (after > 0)
 		return {
 			membershipId: cell.membershipId,
@@ -164,7 +169,7 @@ const stretchSentence = (
 			values: {
 				...values,
 				hours: hoursFromMinutes(after),
-				time: timeOfDay(minutesOfDay(shift.endTime) + after),
+				time: worked.end,
 			},
 		};
 	return {
@@ -175,7 +180,7 @@ const stretchSentence = (
 		values: {
 			...values,
 			hours: hoursFromMinutes(before),
-			time: timeOfDay(minutesOfDay(shift.startTime) - before + MINUTES_PER_DAY),
+			time: worked.start,
 		},
 	};
 };

@@ -171,6 +171,36 @@ describe("optionSentences", () => {
 		]);
 	});
 
+	it.each([
+		[
+			"a stay-on past midnight",
+			{ startTime: "15:00", endTime: "23:00" },
+			{ stretchAfterMinutes: 240 },
+			"<name>m-2</name> stays on 4 h, until 03:00",
+		],
+		[
+			"an early start back past midnight",
+			{ startTime: "03:00", endTime: "11:00" },
+			{ stretchBeforeMinutes: 240 },
+			"<name>m-2</name> starts 4 h early, at 23:00",
+		],
+	])("says %s", (_case, times, stretch, sentence) => {
+		const option = stretchAfterOption();
+		const roster = sources.dayBefore(option.cells[0]!)!;
+		const onThatShift: OptionWordSources = {
+			...sources,
+			dayBefore: () => ({ ...roster, shift: { ...roster.shift!, ...times } }),
+		};
+		const cell = {
+			...option.cells[0]!,
+			stretchAfterMinutes: 0,
+			stretchBeforeMinutes: 0,
+			...stretch,
+		};
+
+		expect(said({ ...option, cells: [cell] }, onThatShift)).toEqual([sentence]);
+	});
+
 	it("puts the one who stays on first even when the engine lists them second", () => {
 		const pair = stretchPairOption();
 
