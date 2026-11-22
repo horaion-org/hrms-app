@@ -1,5 +1,4 @@
 import { useCallback, useRef, useState } from "react";
-import { dayParameter } from "@/common/dayView";
 import { isoDateIn, type RosterRow } from "@/features/scheduling/roster/roster";
 import type { IssuesAbout } from "@/features/scheduling/roster/rosterMarks";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
@@ -139,7 +138,7 @@ export const useRosterView = ({
 		showDay: (day): void => {
 			onViewChange({
 				...view,
-				day: dayParameter(roster.periodDays, day, today),
+				day: day === roster.defaultDay ? undefined : day,
 			});
 		},
 	};

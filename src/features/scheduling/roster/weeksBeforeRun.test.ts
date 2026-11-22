@@ -4,6 +4,7 @@ import type { RosterRow } from "@/features/scheduling/roster/roster";
 import type { RosterWeek } from "@/features/scheduling/roster/RosterWeekBar";
 import {
 	beforeRunColumnsOf,
+	daysBeforeByMemberOf,
 	daysOfRosterPeople,
 	daysShownBeforeRun,
 	enteredNoteOf,
@@ -165,6 +166,23 @@ describe("beforeRunColumnsOf", () => {
 	])("gives %s", (_name, weekDays, shownDays, expected) => {
 		expect(beforeRunColumnsOf(weekDays, THURSDAY_RUN, shownDays)).toEqual(
 			expected
+		);
+	});
+});
+
+describe("daysBeforeByMemberOf", () => {
+	it("looks each day up by person, then date", () => {
+		const byMember = daysBeforeByMemberOf([
+			dayOf("2026-11-10"),
+			dayOf("2026-11-11"),
+			dayOf("2026-11-10", "p-siti"),
+		]);
+		expect(Object.keys(byMember.get("p-tan") ?? {})).toEqual([
+			"2026-11-10",
+			"2026-11-11",
+		]);
+		expect(byMember.get("p-siti")?.["2026-11-10"]).toEqual(
+			dayOf("2026-11-10", "p-siti")
 		);
 	});
 });

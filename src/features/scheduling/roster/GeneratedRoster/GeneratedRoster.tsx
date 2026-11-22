@@ -456,7 +456,7 @@ export const GeneratedRoster = ({
 						<DaySwitcher
 							className="mt-4"
 							day={roster.shownDay}
-							days={roster.periodDays}
+							days={roster.phoneDays}
 							onDayChange={roster.showDay}
 						/>
 					)}

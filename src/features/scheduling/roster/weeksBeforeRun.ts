@@ -86,6 +86,19 @@ export const beforeRunColumnsOf = (
 	return shownDays.some((day) => columns.includes(day.date)) ? columns : [];
 };
 
+/** The days shown before the run by person (their profile), then by ISO date, as the grid looks them up. */
+export const daysBeforeByMemberOf = (
+	days: ReadonlyArray<DayBeforeRun>
+): Map<string, Record<string, DayBeforeRun>> => {
+	const byMember = new Map<string, Record<string, DayBeforeRun>>();
+	for (const day of days)
+		byMember.set(day.memberProfileId, {
+			...byMember.get(day.memberProfileId),
+			[day.date]: day,
+		});
+	return byMember;
+};
+
 /** Whether the week starting `monday` lies before the run's first week and holds one of the 14 days before it. */
 const isWeekBeforeRun = (firstDay: string, monday: string): boolean =>
 	monday < mondayOf(firstDay) &&

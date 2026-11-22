@@ -1,5 +1,5 @@
 import { shownDayOf } from "@/common/dayView";
-import { mondayOf } from "@/common/weeks";
+import { daysOf } from "@/common/weeks";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import {
 	findingCounts,
@@ -16,7 +16,6 @@ import {
 } from "@/features/scheduling/roster/findings/findingsOnGrid";
 import {
 	rosterFromAssignments,
-	weekDays,
 	type RosterCell,
 	type RosterRow,
 } from "@/features/scheduling/roster/roster";
@@ -27,6 +26,7 @@ import {
 	type IssuesAbout,
 } from "@/features/scheduling/roster/rosterMarks";
 import type { RosterDayNotesProps } from "@/features/scheduling/roster/RosterDayNotes";
+import type { RosterWeek } from "@/features/scheduling/roster/RosterWeekBar";
 import {
 	coverGapOf,
 	issuesAboutOf,
@@ -39,6 +39,16 @@ import {
 	issueCount,
 	leaveAndCoverDays,
 } from "@/features/scheduling/roster/rosterSummary";
+import {
+	beforeRunColumnsOf,
+	daysBeforeByMemberOf,
+	daysOfRosterPeople,
+	daysShownBeforeRun,
+	enteredNoteOf,
+	mondaysShownBeforeRun,
+	shownWeekOf,
+	type EnteredNote,
+} from "@/features/scheduling/roster/weeksBeforeRun";
 import { rosterCellKey } from "@/features/scheduling/rosterChanges/rosterEdit";
 import type { SchedulePeriod } from "@/features/scheduling/periods";
 import type {
@@ -46,6 +56,10 @@ import type {
 	Schedule,
 	ScheduleAssignment,
 } from "@/features/scheduling/schedules/api";
+import type {
+	DayBeforeRun,
+	DaysBeforeRunState,
+} from "@/features/scheduling/startingContext/daysBeforeRun";
 
 /** What the roster reads of its schedule: its week, the zone its days are in and, for the findings, its generation. */
 export type RosterSchedule = Pick<
@@ -85,6 +99,10 @@ export type RosterViewInput = {
 	withSummary: boolean;
 	/** The editor offers leave choices, so it says requested leave in its own words. */
 	changesLeave: boolean;
+	/** The days before the run, on a schedule's own page; none elsewhere, or when they can't be read. */
+	daysBefore?: DaysBeforeRunState;
+	/** The Department's weeks of the month the bar lists; none until read, or where the bar pages the schedule's own. */
+	monthWeeks?: ReadonlyArray<RosterWeek>;
 };
 
 /** Everything the roster shows that follows from its rows and its view. */
@@ -92,10 +110,20 @@ export type RosterView = {
 	period: SchedulePeriod;
 	/** The week's seven days, Monday first. */
 	days: Array<string>;
-	/** The week's days inside the period, which a phone steps through. */
-	periodDays: Array<string>;
-	/** The week's days the schedule does not cover (API ADR-0113): greyed, with no cells. */
+	/** The week's days a phone steps through: its columns before the run, then its days inside the period. */
+	phoneDays: Array<string>;
+	/** The day a phone shows unless one is asked for: today on a day of the period, else its first, else the first of `phoneDays`. */
+	defaultDay: string | undefined;
+	/** The week's days the schedule does not cover (API ADR-0113), and not shown as days before: greyed, with no cells. */
 	outsideDays: Array<string>;
+	/** The week's days drawn as days before the run (`beforeRunColumnsOf`): muted, read-only. */
+	beforeRunDays: Array<string>;
+	/** The days before the run this page shows, by person's profile then date. */
+	daysBeforeByMember: ReadonlyMap<string, Record<string, DayBeforeRun>>;
+	/** The Mondays of the weeks before the run this page shows (`mondaysShownBeforeRun`). */
+	mondaysBeforeRun: Array<string>;
+	/** What the note of days entered by hand says, and the week its button shows; none without one. */
+	enteredNote: EnteredNote | undefined;
 	/** The one day a phone shows. */
 	shownDay: string | undefined;
 	rows: Array<RosterRow>;
@@ -206,12 +234,40 @@ export const rosterViewOf = ({
 	editable,
 	withSummary,
 	changesLeave,
+	daysBefore,
+	monthWeeks,
 }: RosterViewInput): RosterView => {
 	// The days this schedule covers: its whole week, or a run of it (API ADR-0113).
 	const period = { start: schedule.coveredFrom, end: schedule.coveredTo };
-	const week = view.week ?? mondayOf(today);
-	const days = weekDays(period, week);
 	const rows = rosterFromAssignments(assignments, period);
+	// Days before the run are shown once both they and the month's weeks are read, so the bar and the guard agree.
+	const firstDay = schedule.coveredFrom;
+	const knownBefore =
+		daysBefore?.status === "ready" && monthWeeks
+			? daysOfRosterPeople(daysBefore.days, rows)
+			: [];
+	const mondaysBeforeRun = mondaysShownBeforeRun(
+		firstDay,
+		knownBefore,
+		monthWeeks ?? []
+	);
+	const shownBefore = daysShownBeforeRun(
+		firstDay,
+		knownBefore,
+		mondaysBeforeRun
+	);
+	const week = shownWeekOf({
+		requested: view.week,
+		today,
+		period,
+		firstDay,
+		mondaysShown: mondaysBeforeRun,
+		reading:
+			daysBefore !== undefined &&
+			(daysBefore.status === "pending" || monthWeeks === undefined),
+	});
+	const days = daysOf(week);
+	const beforeRunDays = beforeRunColumnsOf(days, firstDay, shownBefore);
 	const findings = schedule.generation?.findings ?? null;
 	const counts = findings ? findingCounts(findings) : null;
 	// Names whenever there is a finding to show, information notes ("Rest carried in from before") included.
@@ -246,12 +302,22 @@ export const rosterViewOf = ({
 			row.member !== null &&
 			rosterCellKey(row.member.membershipId, row.day) === view.cell
 	);
-	// A phone shows one of the week's days inside the period, the grid hiding the others'
-	// columns: a chosen day's, so its tile stays in view, else the URL's.
+	// A phone shows one of the week's days inside the period or before the run, the grid hiding the
+	// others' columns: a chosen day's, so its tile stays in view, else the URL's, else the default.
 	const periodDays = days.filter(
 		(day) => day >= period.start && day <= period.end
 	);
-	const shownDay = shownDayOf(periodDays, chosenRow?.day ?? view.day, today);
+	const phoneDays = [...beforeRunDays, ...periodDays];
+	const defaultDay = shownDayOf(
+		periodDays.length > 0 ? periodDays : phoneDays,
+		undefined,
+		today
+	);
+	const askedDay = chosenRow?.day ?? view.day;
+	const shownDay =
+		askedDay !== undefined && phoneDays.includes(askedDay)
+			? askedDay
+			: defaultDay;
 	const coverGap = editable && !chosenRow ? coverGapOf(view.cover) : undefined;
 	// Issues opens for a short shift "Find cover" names even when nothing else is listed.
 	const openable = (panel: RosterPanel): boolean =>
@@ -267,8 +333,13 @@ export const rosterViewOf = ({
 	return {
 		period,
 		days,
-		periodDays,
-		outsideDays: days.filter((day) => !periodDays.includes(day)),
+		phoneDays,
+		defaultDay,
+		outsideDays: days.filter((day) => !phoneDays.includes(day)),
+		beforeRunDays,
+		daysBeforeByMember: daysBeforeByMemberOf(shownBefore),
+		mondaysBeforeRun,
+		enteredNote: enteredNoteOf(shownBefore),
 		shownDay,
 		rows,
 		findings,

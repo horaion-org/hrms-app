@@ -7,6 +7,11 @@ import {
 	generationFixture,
 	scheduleAssignmentsFixture,
 } from "@/features/scheduling/schedules/fixtures";
+import type { RosterWeek } from "@/features/scheduling/roster/RosterWeekBar";
+import type {
+	DayBeforeRun,
+	DaysBeforeRunState,
+} from "@/features/scheduling/startingContext/daysBeforeRun";
 import {
 	rosterViewOf,
 	sidePanelOf,
@@ -120,21 +125,21 @@ describe("rosterViewOf", () => {
 	});
 
 	it("given_noWeekInTheURL_when_derived_then_showsTodaysWeek", () => {
-		const { days, periodDays } = viewOf({ view: {} });
+		const { days, phoneDays } = viewOf({ view: {} });
 
 		expect(days[0]).toBe("2026-10-12");
 		expect(days).toHaveLength(7);
-		expect(periodDays).toEqual(days);
+		expect(phoneDays).toEqual(days);
 	});
 
 	it("given_aPart_when_viewed_then_sevenDaysAndTheOthersOutside", () => {
-		const { days, periodDays, outsideDays, rows } = viewOf({
+		const { days, phoneDays, outsideDays, rows } = viewOf({
 			view: {},
 			schedule: { ...schedule, coveredFrom: "2026-10-15" },
 		});
 
 		expect(days).toHaveLength(7);
-		expect(periodDays).toEqual(days.slice(3));
+		expect(phoneDays).toEqual(days.slice(3));
 		expect(outsideDays).toEqual(["2026-10-12", "2026-10-13", "2026-10-14"]);
 		expect(
 			rows.every((row) =>
@@ -299,5 +304,134 @@ describe("rosterViewOf: the findings' names", () => {
 		});
 
 		expect(view.names?.members.get("mp-3")).toBe("Chen Wei");
+	});
+});
+
+/*
+ * The days before schedule s-1's run (12–18 October 2026): 28 September to
+ * 11 October, the weeks of 28 September and 5 October, neither with a
+ * schedule of its own in the month.
+ */
+describe("rosterViewOf, with the days before the run", () => {
+	const OCTOBER: Array<RosterWeek> = [
+		{ start: "2026-10-05", end: "2026-10-11", disabled: true },
+		{ start: "2026-10-12", end: "2026-10-18" },
+	];
+	const dayOf = (
+		date: string,
+		memberProfileId = "mp-1",
+		enteredByHand = false
+	): DayBeforeRun => ({
+		memberProfileId,
+		date,
+		what: { kind: "off", dayType: null },
+		enteredByHand,
+	});
+	const ready = (days: Array<DayBeforeRun>): DaysBeforeRunState => ({
+		status: "ready",
+		days,
+	});
+	const WEEK_BEFORE = [
+		"2026-10-05",
+		"2026-10-06",
+		"2026-10-07",
+		"2026-10-08",
+		"2026-10-09",
+		"2026-10-10",
+		"2026-10-11",
+	];
+
+	it("given_aPartWithAKnownDayInItsFirstWeek_when_derived_then_thoseDaysAreColumnsBeforeTheRun", () => {
+		const view = viewOf({
+			view: {},
+			schedule: { ...schedule, coveredFrom: "2026-10-15" },
+			daysBefore: ready([dayOf("2026-10-13")]),
+			monthWeeks: OCTOBER,
+		});
+
+		expect(view.beforeRunDays).toEqual([
+			"2026-10-12",
+			"2026-10-13",
+			"2026-10-14",
+		]);
+		expect(view.outsideDays).toEqual([]);
+		expect(view.phoneDays).toEqual(view.days);
+		// The phone still opens on the run's first day; the days before are a step back.
+		expect(view.shownDay).toBe("2026-10-15");
+		expect(view.daysBeforeByMember.get("mp-1")?.["2026-10-13"]).toEqual(
+			dayOf("2026-10-13")
+		);
+	});
+
+	it("given_aPartWithNothingKnownInItsFirstWeek_when_derived_then_itsDaysStayOutside", () => {
+		const view = viewOf({
+			view: {},
+			schedule: { ...schedule, coveredFrom: "2026-10-15" },
+			daysBefore: ready([dayOf("2026-10-07")]),
+			monthWeeks: OCTOBER,
+		});
+
+		expect(view.beforeRunDays).toEqual([]);
+		expect(view.outsideDays).toEqual([
+			"2026-10-12",
+			"2026-10-13",
+			"2026-10-14",
+		]);
+	});
+
+	it("given_aURLWeekWhollyBeforeTheRun_when_derived_then_showsItAsDaysBefore", () => {
+		const view = viewOf({
+			view: { week: "2026-10-05" },
+			daysBefore: ready([dayOf("2026-10-07", "mp-1", true)]),
+			monthWeeks: OCTOBER,
+		});
+
+		expect(view.days).toEqual(WEEK_BEFORE);
+		expect(view.beforeRunDays).toEqual(WEEK_BEFORE);
+		expect(view.outsideDays).toEqual([]);
+		expect(view.mondaysBeforeRun).toEqual(["2026-10-05"]);
+		expect(view.shownDay).toBe("2026-10-05");
+		expect(view.enteredNote).toEqual({ count: 1, week: "2026-10-05" });
+	});
+
+	it.each<[string, Partial<RosterViewInput>, string]>([
+		[
+			"the days still being read",
+			{ daysBefore: { status: "pending" } },
+			"2026-10-05",
+		],
+		[
+			"the month's weeks still being read",
+			{ daysBefore: ready([dayOf("2026-10-07")]), monthWeeks: undefined },
+			"2026-10-05",
+		],
+		[
+			"the read ending with nothing known",
+			{ daysBefore: ready([]) },
+			"2026-10-12",
+		],
+		[
+			"only someone not on the roster known",
+			{ daysBefore: ready([dayOf("2026-10-07", "mp-other")]) },
+			"2026-10-12",
+		],
+		[
+			"only a member who no longer resolves known",
+			{ daysBefore: ready([dayOf("2026-10-07", "mp-9")]) },
+			"2026-10-12",
+		],
+		["no days before at all", { daysBefore: undefined }, "2026-10-12"],
+	])("given %s, a URL week before the run shows %s", (_, change, expected) => {
+		const view = viewOf({
+			view: { week: "2026-10-05" },
+			monthWeeks: OCTOBER,
+			...change,
+		});
+
+		expect(view.days[0]).toBe(expected);
+		// Nothing is drawn as a day before until it can be shown.
+		expect(view.beforeRunDays).toEqual([]);
+		expect(view.mondaysBeforeRun).toEqual([]);
+		expect(view.enteredNote).toBeUndefined();
 	});
 });
