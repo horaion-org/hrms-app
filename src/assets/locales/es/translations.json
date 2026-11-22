@@ -4754,6 +4754,9 @@
 				"bothMustAgree": "El cuadrante está publicado, así que ambos deben aceptar.",
 				"bothAgreed": "Ambos aceptaron",
 				"bothAgreedHint": "Indica cómo aceptó cada persona.",
+				"theyAgreed": "Ha aceptado",
+				"theyAgreedHint": "Indica cómo aceptó.",
+				"theyMustAgree": "El cuadrante está publicado, así que debe aceptar.",
 				"working": "Lo trabajan: {{names, list(type: conjunction)}}",
 				"nobodyWorks": "Nadie lo trabaja todavía.",
 				"withCost": "{{line}} · {{cost}}"

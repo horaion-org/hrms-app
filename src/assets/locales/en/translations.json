@@ -4954,6 +4954,9 @@
 				"bothMustAgree": "The roster is published, so both must agree.",
 				"bothAgreed": "They both agreed",
 				"bothAgreedHint": "Say how each person agreed.",
+				"theyAgreed": "They agreed",
+				"theyAgreedHint": "Say how they agreed.",
+				"theyMustAgree": "The roster is published, so they must agree.",
 				"working": "Working it: {{names, list(type: conjunction)}}",
 				"nobodyWorks": "Nobody works it yet.",
 				"withCost": "{{line}} · {{cost}}"

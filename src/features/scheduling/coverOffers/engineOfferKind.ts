@@ -11,10 +11,12 @@ import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 
 /**
  * The offer kind an engine repair option goes out as, or undefined for one
- * that changes two people, which no single offer can ask: a call-in is a day
- * off's shift, or a rest day's when the engine counts rest-day hours; a move,
- * a stretch and a day swap are their own kinds; one of the older repair's
- * changes reads as the cell panel reads it (`before`: the member's day now).
+ * no offer can ask: a change of two people, and a rest-day move, which has no
+ * offer kind, so it is applied once the person agreed, with a remark. A
+ * call-in is a day off's shift, or a rest day's when the engine counts
+ * rest-day hours; a move, a stretch and a day swap are their own kinds; one
+ * of the older repair's changes reads as the cell panel reads it (`before`:
+ * the member's day now).
  */
 export const offerKindOfOption = (
 	option: Pick<RepairOption, "kind" | "people" | "extraMinutes">,
@@ -33,6 +35,7 @@ export const offerKindOfOption = (
 		case "DAY_SWAP":
 			return "DAY_SWAP";
 		case "STRETCH_PAIR":
+		case "REST_DAY_MOVE":
 			return undefined;
 		default:
 			return before?.shift ? "MOVE" : "OFF_DAY_SHIFT";
@@ -69,4 +72,24 @@ export const engineOfferTargetOf = (
 				offerKind,
 			}
 		: undefined;
+};
+
+/**
+ * Who must have agreed before an engine option no offer can ask applies on
+ * a published roster: both people of a two-person option, or the one person
+ * of a rest-day move; nobody named for any other.
+ */
+export type WhoMustAgree = "bothPeople" | "theirPerson" | undefined;
+
+/**
+ * Who must have agreed before an engine option applies with a remark on a
+ * published roster (`remarkRequired`: no offer can ask it). Pure.
+ */
+export const whoMustAgree = (
+	option: Pick<RepairOption, "kind" | "people"> | undefined,
+	remarkRequired: boolean
+): WhoMustAgree => {
+	if (!remarkRequired || !option) return undefined;
+	if (option.people.length > 1) return "bothPeople";
+	return option.kind === "REST_DAY_MOVE" ? "theirPerson" : undefined;
 };

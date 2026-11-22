@@ -46,6 +46,20 @@ const EXTRA_COSTS: ReadonlyArray<CostChipKind> = [
 	"timeOffEarned",
 ];
 
+/** The words of an option whose people must have agreed: Apply's label, the remark's hint, and the line saying why. */
+const AGREEMENT_WORDS = {
+	bothPeople: {
+		apply: "bothAgreed",
+		hint: "bothAgreedHint",
+		line: "bothMustAgree",
+	},
+	theirPerson: {
+		apply: "theyAgreed",
+		hint: "theyAgreedHint",
+		line: "theyMustAgree",
+	},
+} as const;
+
 /**
  * One person's part of the change: their name, each day drawn, and their
  * week before → after of the contract with a bar, followed by what the
@@ -100,7 +114,8 @@ const PersonBlock = ({
  * unless asked for, and Back and Apply. A roster that moved under the option
  * disables Apply and offers "Find options again". On a published roster one
  * person's change goes out through the offer's actions, and the offer shows
- * once out; a two-person change applies once both agreed, with a remark.
+ * once out; a two-person change applies once both agreed, and a rest-day
+ * move once its person agreed, with a remark.
  * Focus moves to the review as it opens.
  */
 export const CoverRowReview = ({
@@ -142,6 +157,7 @@ export const CoverRowReview = ({
 		card.choice.kind === "engine" ? card.choice.option.stillShort : [];
 	const offerActions = offerActionsOf(offer, card.people);
 	const title = t(`${key}.whatChanges`);
+	const agreement = review.mustAgree && AGREEMENT_WORDS[review.mustAgree];
 	return (
 		<div
 			ref={region}
@@ -157,6 +173,7 @@ export const CoverRowReview = ({
 				preview={review.preview}
 				previewRefusal={review.previewRefusal}
 				remark={review.remark}
+				remarkHint={agreement && t(`${key}.${agreement.hint}`)}
 				remarkRequired={review.remarkRequired}
 				showsEmptyChecks={false}
 				showsRulesNote={false}
@@ -199,9 +216,6 @@ export const CoverRowReview = ({
 						</>
 					),
 				}}
-				remarkHint={
-					review.bothMustAgree ? t(`${key}.bothAgreedHint`) : undefined
-				}
 				onRemarkChange={review.setRemark}
 				onRetryPreview={review.retryPreview}
 				onTickedChange={review.setTicked}
@@ -211,8 +225,8 @@ export const CoverRowReview = ({
 					{t(`scheduling.rosterEdit.error.${review.applyRefusal}`)}
 				</ErrorText>
 			)}
-			{review.bothMustAgree && (
-				<p className="text-neutral-800">{t(`${key}.bothMustAgree`)}</p>
+			{agreement && (
+				<p className="text-neutral-800">{t(`${key}.${agreement.line}`)}</p>
 			)}
 			{/* The offer's actions take Back's place in the footer, so Back stands on its own there. */}
 			{offerActions && (
@@ -226,8 +240,8 @@ export const CoverRowReview = ({
 				cancelLabel={t(`${key}.back`)}
 				offerActions={offerActions}
 				applyLabel={t(
-					review.bothMustAgree
-						? `${key}.bothAgreed`
+					agreement
+						? `${key}.${agreement.apply}`
 						: review.applyAnyway
 							? "scheduling.rosterEdit.applyAnyway"
 							: "scheduling.rosterEdit.apply"

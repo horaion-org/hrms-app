@@ -10,6 +10,7 @@ import {
 	callInOption,
 	daySwapOption,
 	repairOptionsFixture,
+	restDayMoveOption,
 	stretchAfterOption,
 	stretchPairOption,
 } from "@/features/scheduling/cover/engineRepairFixtures";
@@ -555,7 +556,7 @@ describe("useCoverPanel", () => {
 			});
 
 			expect(result.current.offer?.consentKind).toBe("STRETCH");
-			expect(result.current.review.bothMustAgree).toBe(false);
+			expect(result.current.review.mustAgree).toBeUndefined();
 			act(() => {
 				result.current.offer?.send();
 			});
@@ -625,7 +626,7 @@ describe("useCoverPanel", () => {
 			expect(result.current.offer?.consentKind).toBeUndefined();
 			expect(result.current.review).toMatchObject({
 				remarkRequired: true,
-				bothMustAgree: false,
+				mustAgree: undefined,
 				applyBlocked: true,
 			});
 		});
@@ -670,12 +671,42 @@ describe("useCoverPanel", () => {
 			});
 
 			expect(result.current.offer?.consentKind).toBeUndefined();
-			expect(result.current.review.bothMustAgree).toBe(true);
+			expect(result.current.review.mustAgree).toBe("bothPeople");
 			expect(result.current.review.applyBlocked).toBe(true);
 			act(() => {
 				result.current.review.setRemark("Both said yes by phone.");
 			});
 			expect(result.current.review.applyBlocked).toBe(false);
+		});
+
+		it("given_aPublishedRoster_when_aRestDayMoveIsReviewed_then_noOfferAndTheirPersonMustHaveAgreedWithARemark", async () => {
+			const { result } = await chooseOption(
+				restDayMoveOption(),
+				{},
+				{ coverOffers: { offers: [], timeZone: "Asia/Singapore" } }
+			);
+			await waitFor(() => {
+				expect(result.current.review.preview).toBeDefined();
+			});
+
+			expect(result.current.offer?.consentKind).toBeUndefined();
+			expect(result.current.review).toMatchObject({
+				mustAgree: "theirPerson",
+				remarkRequired: true,
+				applyBlocked: true,
+			});
+		});
+
+		it("given_aDraft_when_aRestDayMoveIsReviewed_then_itAppliesAsAnyOptionDoes", async () => {
+			const { result } = await chooseOption(restDayMoveOption());
+			await waitFor(() => {
+				expect(result.current.review.preview).toBeDefined();
+			});
+
+			expect(result.current.review).toMatchObject({
+				mustAgree: undefined,
+				remarkRequired: false,
+			});
 		});
 	});
 });

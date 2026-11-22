@@ -13,6 +13,7 @@ import {
 	moveOption,
 	NOT_ASSIGNED_FIXTURE,
 	restDayCallInOption,
+	restDayMoveOption,
 	repairOptionsFixture,
 	stretchAfterOption,
 	stretchBeforeOption,
@@ -640,6 +641,36 @@ describe("GapCover: the review inside the row", () => {
 			expect(calls.find((call) => call.path === CHANGES)?.body).toMatchObject({
 				remark: "Both said yes by phone.",
 				repairOptionKind: "STRETCH_PAIR",
+			});
+		});
+	});
+	it("given_aPublishedRoster_when_aRestDayMoveIsReviewed_then_bothDaysPreviewedAndTheyAgreedWaitsForARemark", async () => {
+		const user = userEvent.setup();
+		const calls = await reviewOption(restDayMoveOption(), { published: true });
+
+		// Both days go to the preview, which the review draws as a swap of days is drawn.
+		await waitFor(() => {
+			expect(calls.find((call) => call.path === PREVIEW)?.body).toMatchObject({
+				cells: [
+					{ day: "2026-10-18", kind: "WORK" },
+					{ day: "2026-10-17", kind: "OFF", dayType: "REST" },
+				],
+			});
+		});
+		expect(
+			screen.getByText("The roster is published, so they must agree.")
+		).toBeVisible();
+		expect(screen.queryByRole("button", { name: "Send offer" })).toBeNull();
+		const agreed = await screen.findByRole("button", { name: "They agreed" });
+		expect(agreed).toBeDisabled();
+		expect(screen.getByText("Say how they agreed.")).toBeVisible();
+		await user.type(screen.getByRole("textbox"), "Said yes by phone.");
+		await user.click(agreed);
+
+		await waitFor(() => {
+			expect(calls.find((call) => call.path === CHANGES)?.body).toMatchObject({
+				remark: "Said yes by phone.",
+				repairOptionKind: "REST_DAY_MOVE",
 			});
 		});
 	});
