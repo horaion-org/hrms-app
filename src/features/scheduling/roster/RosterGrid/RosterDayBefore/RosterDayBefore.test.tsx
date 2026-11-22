@@ -98,4 +98,28 @@ describe("RosterDayBefore", () => {
 		expect(screen.getByTitle(/A, Tue/)).toHaveClass("border-dotted");
 		expect(screen.getByTitle(/B, Wed/)).not.toHaveClass("border-dotted");
 	});
+
+	it("never cuts a shift's time, and beside an open panel shows the time alone", () => {
+		const { rerender } = render(
+			<RosterDayBefore day={dayOf(NIGHT, true)} dayName="Tue" name="A" />
+		);
+
+		expect(screen.getByText("22:00 – 06:00")).not.toHaveClass("truncate");
+		expect(screen.getByTitle(/A, Tue/)).toHaveClass("min-h-14");
+
+		rerender(
+			<RosterDayBefore
+				compact
+				day={dayOf(NIGHT, true)}
+				dayName="Tue"
+				name="A"
+			/>
+		);
+
+		const tile = screen.getByTitle(/A, Tue/);
+		expect(screen.getByText("22:00 – 06:00")).not.toHaveClass("truncate");
+		expect(tile.querySelector('[aria-hidden="true"]')).toHaveTextContent(
+			/^22:00 – 06:00$/
+		);
+	});
 });

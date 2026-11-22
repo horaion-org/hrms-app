@@ -55,9 +55,10 @@ const labelOf = (
 
 /**
  * A person's day before the run, in a roster's column before its first
- * day: read-only, never a button. A shift by its time over its name, a day
- * off or leave in the roster's own words; a day entered by hand in the
- * dotted entered look with the word "Entered"; a day not known blank. Its
+ * day: read-only, never a button. A shift by its time over its name, the
+ * time never cut, a day off or leave in the roster's own words; a day
+ * entered by hand in the dotted entered look with the word "Entered"; a day
+ * not known blank. Beside an open panel a shift shows its time alone. Its
  * full words are its `title` and hidden label.
  */
 export const RosterDayBefore = (
@@ -71,7 +72,8 @@ export const RosterDayBefore = (
 			title={label}
 			className={joinClassNames(
 				"relative flex w-full min-w-0 flex-col items-center justify-center overflow-hidden rounded text-center text-xs font-medium",
-				compact ? "h-10 px-1.5" : "h-14 px-1",
+				// Grows to fit a time on two lines; beside an open panel, as tall as a compact shift tile.
+				compact ? "h-10 px-1.5" : "min-h-14 px-1 py-1",
 				day &&
 					joinClassNames(
 						"border",
@@ -83,7 +85,8 @@ export const RosterDayBefore = (
 				<span aria-hidden="true" className="flex max-w-full flex-col">
 					{day.what.kind === "shift" ? (
 						<>
-							<span className="truncate tabular-nums">
+							{/* Never cut: it breaks onto two lines in a narrow column, as a shift tile's time does. */}
+							<span className="block text-balance tabular-nums">
 								{shiftTimeText(day.what, t)}
 							</span>
 							{!compact && <span className="truncate">{day.what.name}</span>}
@@ -93,7 +96,8 @@ export const RosterDayBefore = (
 							{dayWithoutShiftTileText(day.what, t)}
 						</span>
 					)}
-					{day.enteredByHand && (
+					{/* Beside an open panel the dotted border and the label say it, as the timeline's narrow zooms do. */}
+					{day.enteredByHand && !compact && (
 						<span className="truncate text-[0.625rem] leading-3 font-normal">
 							{t(`${key}.mark`)}
 						</span>
