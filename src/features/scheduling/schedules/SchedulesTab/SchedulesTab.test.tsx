@@ -3,7 +3,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactElement } from "react";
 import { I18nextProvider } from "react-i18next";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { authTestI18n } from "@/features/auth/testingI18n";
 import { storyCompany } from "@/features/people/storyCompany";
 import {
@@ -50,7 +50,19 @@ const UNITS = resolveWorkspaceUnits(
 	SCHEDULING_UNIT_RULES
 );
 
+/**
+ * Today, for the tests: Wednesday 18 November 2026, in the fixture month's
+ * second week to review. The department cards count the days to review from
+ * this week on, so the real date would leave the fixture's weeks behind.
+ */
+const IN_THE_FIXTURE_WEEK = new Date("2026-11-18T09:00:00+08:00");
+
+beforeEach(() => {
+	vi.useFakeTimers({ toFake: ["Date"], now: IN_THE_FIXTURE_WEEK });
+});
+
 afterEach(() => {
+	vi.useRealTimers();
 	vi.unstubAllGlobals();
 	vi.restoreAllMocks();
 });
