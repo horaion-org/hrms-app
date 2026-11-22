@@ -5297,6 +5297,7 @@
 					"stillShort": "Still short {{times}}"
 				},
 				"weekLine": "{{before}} → {{after}} h of {{contract}} h this week",
+				"weekLineUnchanged": "{{after}} h of {{contract}} h this week",
 				"peopleAnd": "{{items, list(type: conjunction)}}",
 				"stillWorking": "Still working. This can take up to {{seconds}} seconds.",
 				"nobodyCan": "Nobody can cover this within the rules.",

@@ -144,7 +144,7 @@ describe("optionCardList", () => {
 				"Aisha Rahman",
 				"Works Saturday instead of Friday",
 				["Within hours"],
-				"30 → 30 h of 44 h this week",
+				"30 h of 44 h this week",
 				undefined,
 			],
 		],

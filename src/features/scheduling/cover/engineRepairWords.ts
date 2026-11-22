@@ -230,16 +230,25 @@ export const whatItLeaves = (
 	return undefined;
 };
 
-/** A person's week before and after an option, in hours: "30 → 36 h of 44 h this week". */
+/**
+ * A person's week before and after an option, in hours: "30 → 36 h of 44 h
+ * this week"; a week the option leaves as it was, without the arrow: "30 h
+ * of 44 h this week".
+ */
 export const weekLine = (
 	weekMinutes: NonNullable<RepairPerson["weekMinutes"]>,
 	t: TFunction
 ): string =>
-	t(`${key}.weekLine`, {
-		before: hoursFromMinutes(weekMinutes.before),
-		after: hoursFromMinutes(weekMinutes.after),
-		contract: hoursFromMinutes(weekMinutes.contract),
-	});
+	t(
+		weekMinutes.before === weekMinutes.after
+			? `${key}.weekLineUnchanged`
+			: `${key}.weekLine`,
+		{
+			before: hoursFromMinutes(weekMinutes.before),
+			after: hoursFromMinutes(weekMinutes.after),
+			contract: hoursFromMinutes(weekMinutes.contract),
+		}
+	);
 
 /**
  * What a set of spans is still short, one count for all when they share it

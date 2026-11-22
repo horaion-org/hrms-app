@@ -182,6 +182,12 @@ describe("weekLine and stillShortToast", () => {
 		);
 	});
 
+	it("words a week the option leaves as it was without an arrow", () => {
+		expect(weekLine({ before: 1800, after: 1800, contract: 2640 }, t)).toBe(
+			"30 h of 44 h this week"
+		);
+	});
+
 	it("says what a part fill still leaves short, and nothing for a full one", () => {
 		expect(stillShortToast(stretchAfterOption(), "Front Desk AM", t)).toBe(
 			"Roster changed. Front Desk AM is still 1 short 09:00 – 11:00."
