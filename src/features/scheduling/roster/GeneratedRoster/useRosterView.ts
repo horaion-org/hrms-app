@@ -35,10 +35,7 @@ export type DepartmentWeeks = {
 };
 
 /** What the roster's view is worked out from, and where it writes a new view. */
-export type RosterViewOptions = Omit<
-	RosterViewInput,
-	"today" | "monthWeeks"
-> & {
+export type RosterViewOptions = Omit<RosterViewInput, "today"> & {
 	/** Changes the view; the page writes it back to its URL. */
 	onViewChange: (view: RosterSearch) => void;
 	/** The month's weeks for the bar; without them it pages the schedule's own weeks. */
@@ -104,11 +101,7 @@ export const useRosterView = ({
 	);
 	// "This week" and "today" follow the branch's time zone, not the browser's.
 	const today = isoDateIn(schedule.timeZone, new Date());
-	const roster = rosterViewOf({
-		...input,
-		today,
-		monthWeeks: departmentWeeks?.weeks,
-	});
+	const roster = rosterViewOf({ ...input, today });
 	const ownWeeks = weeksOf(roster.period).map((week) => week.start);
 	const showWeek = (week: string | undefined): void => {
 		onViewChange({ ...view, week, day: undefined });

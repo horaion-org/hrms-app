@@ -26,7 +26,6 @@ import {
 	type IssuesAbout,
 } from "@/features/scheduling/roster/rosterMarks";
 import type { RosterDayNotesProps } from "@/features/scheduling/roster/RosterDayNotes";
-import type { RosterWeek } from "@/features/scheduling/roster/RosterWeekBar";
 import {
 	coverGapOf,
 	issuesAboutOf,
@@ -46,6 +45,7 @@ import {
 	daysShownBeforeRun,
 	enteredNoteOf,
 	mondaysShownBeforeRun,
+	type MonthsBeforeRun,
 	shownWeekOf,
 	type EnteredNote,
 } from "@/features/scheduling/roster/weeksBeforeRun";
@@ -101,8 +101,8 @@ export type RosterViewInput = {
 	changesLeave: boolean;
 	/** The days before the run, on a schedule's own page; none elsewhere, or when they can't be read. */
 	daysBefore?: DaysBeforeRunState;
-	/** The Department's weeks of the month the bar lists; none until read, or where the bar pages the schedule's own. */
-	monthWeeks?: ReadonlyArray<RosterWeek>;
+	/** What the month reads say of the weeks before the run (`monthsBeforeRunOf`); none where none are read. */
+	monthsBeforeRun?: MonthsBeforeRun;
 };
 
 /** Everything the roster shows that follows from its rows and its view. */
@@ -235,21 +235,24 @@ export const rosterViewOf = ({
 	withSummary,
 	changesLeave,
 	daysBefore,
-	monthWeeks,
+	monthsBeforeRun,
 }: RosterViewInput): RosterView => {
 	// The days this schedule covers: its whole week, or a run of it (API ADR-0113).
 	const period = { start: schedule.coveredFrom, end: schedule.coveredTo };
 	const rows = rosterFromAssignments(assignments, period);
-	// Days before the run are shown once both they and the month's weeks are read, so the bar and the guard agree.
+	// Days before the run are shown once they and the month reads have all ended, so the bar and the guard agree.
 	const firstDay = schedule.coveredFrom;
+	const reading =
+		daysBefore !== undefined &&
+		(daysBefore.status === "pending" || monthsBeforeRun?.reading === true);
 	const knownBefore =
-		daysBefore?.status === "ready" && monthWeeks
+		daysBefore?.status === "ready" && monthsBeforeRun && !reading
 			? daysOfRosterPeople(daysBefore.days, rows)
 			: [];
 	const mondaysBeforeRun = mondaysShownBeforeRun(
 		firstDay,
 		knownBefore,
-		monthWeeks ?? []
+		monthsBeforeRun?.mondaysWithoutSchedule ?? []
 	);
 	const shownBefore = daysShownBeforeRun(
 		firstDay,
@@ -262,9 +265,7 @@ export const rosterViewOf = ({
 		period,
 		firstDay,
 		mondaysShown: mondaysBeforeRun,
-		reading:
-			daysBefore !== undefined &&
-			(daysBefore.status === "pending" || monthWeeks === undefined),
+		reading,
 	});
 	const days = daysOf(week);
 	const beforeRunDays = beforeRunColumnsOf(days, firstDay, shownBefore);

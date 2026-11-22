@@ -7,7 +7,7 @@ import {
 	generationFixture,
 	scheduleAssignmentsFixture,
 } from "@/features/scheduling/schedules/fixtures";
-import type { RosterWeek } from "@/features/scheduling/roster/RosterWeekBar";
+import type { MonthsBeforeRun } from "@/features/scheduling/roster/weeksBeforeRun";
 import type {
 	DayBeforeRun,
 	DaysBeforeRunState,
@@ -313,10 +313,11 @@ describe("rosterViewOf: the findings' names", () => {
  * schedule of its own in the month.
  */
 describe("rosterViewOf, with the days before the run", () => {
-	const OCTOBER: Array<RosterWeek> = [
-		{ start: "2026-10-05", end: "2026-10-11", disabled: true },
-		{ start: "2026-10-12", end: "2026-10-18" },
-	];
+	/** The month reads: October lists the week of 5 October without a schedule. */
+	const OCTOBER: MonthsBeforeRun = {
+		mondaysWithoutSchedule: ["2026-10-05"],
+		reading: false,
+	};
 	const dayOf = (
 		date: string,
 		memberProfileId = "mp-1",
@@ -346,7 +347,7 @@ describe("rosterViewOf, with the days before the run", () => {
 			view: {},
 			schedule: { ...schedule, coveredFrom: "2026-10-15" },
 			daysBefore: ready([dayOf("2026-10-13")]),
-			monthWeeks: OCTOBER,
+			monthsBeforeRun: OCTOBER,
 		});
 
 		expect(view.beforeRunDays).toEqual([
@@ -368,7 +369,7 @@ describe("rosterViewOf, with the days before the run", () => {
 			view: {},
 			schedule: { ...schedule, coveredFrom: "2026-10-15" },
 			daysBefore: ready([dayOf("2026-10-07")]),
-			monthWeeks: OCTOBER,
+			monthsBeforeRun: OCTOBER,
 		});
 
 		expect(view.beforeRunDays).toEqual([]);
@@ -383,7 +384,7 @@ describe("rosterViewOf, with the days before the run", () => {
 		const view = viewOf({
 			view: { week: "2026-10-05" },
 			daysBefore: ready([dayOf("2026-10-07", "mp-1", true)]),
-			monthWeeks: OCTOBER,
+			monthsBeforeRun: OCTOBER,
 		});
 
 		expect(view.days).toEqual(WEEK_BEFORE);
@@ -401,13 +402,24 @@ describe("rosterViewOf, with the days before the run", () => {
 			"2026-10-05",
 		],
 		[
-			"the month's weeks still being read",
-			{ daysBefore: ready([dayOf("2026-10-07")]), monthWeeks: undefined },
+			"a month read still under way",
+			{
+				daysBefore: ready([dayOf("2026-10-07")]),
+				monthsBeforeRun: { mondaysWithoutSchedule: [], reading: true },
+			},
 			"2026-10-05",
 		],
 		[
 			"the read ending with nothing known",
 			{ daysBefore: ready([]) },
+			"2026-10-12",
+		],
+		[
+			"the month read failed: it lists nothing, so the week is not shown",
+			{
+				daysBefore: ready([dayOf("2026-10-07")]),
+				monthsBeforeRun: { mondaysWithoutSchedule: [], reading: false },
+			},
 			"2026-10-12",
 		],
 		[
@@ -424,7 +436,7 @@ describe("rosterViewOf, with the days before the run", () => {
 	])("given %s, a URL week before the run shows %s", (_, change, expected) => {
 		const view = viewOf({
 			view: { week: "2026-10-05" },
-			monthWeeks: OCTOBER,
+			monthsBeforeRun: OCTOBER,
 			...change,
 		});
 

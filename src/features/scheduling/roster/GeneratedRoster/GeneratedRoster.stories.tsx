@@ -114,9 +114,9 @@ export const PanelClosedWithHours: Story = {
 
 /**
  * A run starting Thursday 15 October with days before it known: Monday to
- * Wednesday show as muted columns, the week of 5 October (no schedule of its
- * own) is offered in the bar as "Before these days", and the note says who
- * has days entered by hand.
+ * Wednesday show as muted columns, the week of 5 October (which the month
+ * lists without a schedule) is offered in the bar as "Before these days", and
+ * the note says who has days entered by hand.
  */
 export const DaysBeforeTheRun: Story = {
 	args: {
@@ -135,6 +135,10 @@ export const DaysBeforeTheRun: Story = {
 				{ start: "2026-10-12", end: "2026-10-18", state: "To review" },
 			],
 			onWeekChange: fn(),
+		},
+		monthsBeforeRun: {
+			mondaysWithoutSchedule: ["2026-10-05"],
+			reading: false,
 		},
 		daysBefore: {
 			status: "ready",

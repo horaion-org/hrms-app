@@ -1,16 +1,76 @@
+import dayjs from "dayjs";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import { type DateRange, daysOf, mondayOf, weeksOf } from "@/common/weeks";
 import type { RosterRow } from "@/features/scheduling/roster/roster";
 import type { RosterWeek } from "@/features/scheduling/roster/RosterWeekBar";
 import type { DayBeforeRun } from "@/features/scheduling/startingContext/daysBeforeRun";
-import { isInDaysBeforeRun } from "@/features/scheduling/startingContext/enteredDays";
+import {
+	DAYS_BEFORE_A_RUN,
+	isInDaysBeforeRun,
+} from "@/features/scheduling/startingContext/enteredDays";
 
 /*
  * Which days before a schedule's run its own roster shows, pure. The week
  * bar lists the Department's month, and a week with a schedule of its own
- * opens that schedule; only a week before the run without one, holding a
- * known day, is shown here, read-only. Days are ISO dates, so they compare
- * as strings.
+ * opens that schedule; only a week before the run that a month read lists
+ * without a schedule, holding a known day, is shown here, read-only. A
+ * Monday no read lists is never shown: not knowing is not "no schedule".
+ * Days are ISO dates, so they compare as strings.
  */
+
+/** The month ("YYYY-MM") a week belongs to: the month its Monday falls in, as the API's month reads assign it. */
+const monthOfWeek = (monday: string): string => monday.slice(0, 7);
+
+/**
+ * The month to read besides the page's own (the month of the run's first
+ * week): the month before, when the oldest week holding one of the 14 days
+ * before the run falls in it; none when every such week is in the page's month.
+ */
+export const monthBeforeRunOf = (firstDay: string): string | undefined => {
+	const oldestWeek = mondayOf(
+		dayjs(firstDay).subtract(DAYS_BEFORE_A_RUN, "day").format(ISO_DATE_FORMAT)
+	);
+	const oldestMonth = monthOfWeek(oldestWeek);
+	return oldestMonth === monthOfWeek(mondayOf(firstDay))
+		? undefined
+		: oldestMonth;
+};
+
+/** One month read as the roster needs it: still under way, and the weeks it lists once read (none when not asked or failed). */
+export type MonthRead = {
+	isLoading: boolean;
+	data:
+		| {
+				weeks: ReadonlyArray<{
+					periodStart: string;
+					scheduleId: string | null;
+				}>;
+		  }
+		| undefined;
+};
+
+/** What the month reads say of the weeks before a run: the Mondays they list without a schedule, and whether a read is still under way. */
+export type MonthsBeforeRun = {
+	mondaysWithoutSchedule: ReadonlyArray<string>;
+	reading: boolean;
+};
+
+/**
+ * The month reads (the page's own and, when needed, the month before) as
+ * the weeks before a run need them. A read not asked for, or failed, is not
+ * reading and lists nothing, so nothing in its month is shown.
+ */
+export const monthsBeforeRunOf = (
+	reads: ReadonlyArray<MonthRead>
+): MonthsBeforeRun => ({
+	mondaysWithoutSchedule: reads.flatMap(
+		(read) =>
+			read.data?.weeks
+				.filter((week) => week.scheduleId === null)
+				.map((week) => week.periodStart) ?? []
+	),
+	reading: reads.some((read) => read.isLoading),
+});
 
 /**
  * The known days before the run of the people on this roster; someone not on
@@ -30,30 +90,23 @@ export const daysOfRosterPeople = (
 	return days.filter((day) => people.has(day.memberProfileId));
 };
 
-/** Whether a week of the month has a schedule of its own: listed and choosable. */
-const hasOwnSchedule = (
-	monthWeeks: ReadonlyArray<RosterWeek>,
-	monday: string
-): boolean =>
-	monthWeeks.some((week) => week.start === monday && !week.disabled);
-
 /**
  * The Mondays of the weeks before the run's first week this page shows,
- * oldest first: each holds a known day within the 14 and has no schedule of
- * its own in the month (listed as not choosable, or not listed). A week
- * holding nothing is left out, even between two that hold something.
+ * oldest first: each holds a known day within the 14 and a month read lists
+ * it without a schedule. A week holding nothing is left out, even between
+ * two that hold something.
  */
 export const mondaysShownBeforeRun = (
 	firstDay: string,
 	days: ReadonlyArray<DayBeforeRun>,
-	monthWeeks: ReadonlyArray<RosterWeek>
+	mondaysWithoutSchedule: ReadonlyArray<string>
 ): Array<string> => {
 	const firstWeek = mondayOf(firstDay);
 	const mondays = days
 		.filter((day) => isInDaysBeforeRun(firstDay, day.date))
 		.map((day) => mondayOf(day.date))
 		.filter(
-			(monday) => monday < firstWeek && !hasOwnSchedule(monthWeeks, monday)
+			(monday) => monday < firstWeek && mondaysWithoutSchedule.includes(monday)
 		);
 	return [...new Set(mondays)].sort();
 };

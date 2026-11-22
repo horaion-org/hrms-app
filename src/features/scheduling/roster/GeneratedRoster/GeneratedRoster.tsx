@@ -34,6 +34,7 @@ import type { RosterChange } from "@/features/scheduling/rosterChanges/api";
 import { rosterCellKey } from "@/features/scheduling/rosterChanges/rosterEdit";
 import { RosterGrid } from "@/features/scheduling/roster/RosterGrid";
 import { RosterWeekBar } from "@/features/scheduling/roster/RosterWeekBar";
+import type { MonthsBeforeRun } from "@/features/scheduling/roster/weeksBeforeRun";
 import { EnteredDaysNote } from "@/features/scheduling/startingContext/EnteredDaysNote";
 import {
 	brokenRuleIssueCount,
@@ -73,6 +74,8 @@ export type GeneratedRosterProps = {
 	membersWithChangedStart?: number;
 	/** The days before the run, shown read-only in the grid on a schedule's own page; none elsewhere. */
 	daysBefore?: DaysBeforeRunState;
+	/** What the page's month reads say of the weeks before the run; given with `daysBefore`. */
+	monthsBeforeRun?: MonthsBeforeRun;
 	/** The schedule's history for the Details panel; none, and no Details, without. */
 	details?: ReadonlyArray<DescriptionListItem>;
 	/** The roster's approval trail for the Approval panel; none, and no Approval panel, without. */
@@ -135,6 +138,7 @@ export const GeneratedRoster = ({
 	startingRuns,
 	membersWithChangedStart = 0,
 	daysBefore,
+	monthsBeforeRun,
 	details,
 	approval,
 	withSummary = true,
@@ -183,6 +187,7 @@ export const GeneratedRoster = ({
 		changesLeave: editing?.leave !== undefined,
 		departmentWeeks,
 		daysBefore,
+		monthsBeforeRun,
 	});
 	const { rows, days, period, openList } = roster;
 	// A list or Find cover keeps to the grid's height and scrolls inside, so it never makes the row taller.

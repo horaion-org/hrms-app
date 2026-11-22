@@ -8,6 +8,10 @@ import {
 	daysOfRosterPeople,
 	daysShownBeforeRun,
 	enteredNoteOf,
+	monthBeforeRunOf,
+	type MonthRead,
+	type MonthsBeforeRun,
+	monthsBeforeRunOf,
 	mondaysShownBeforeRun,
 	shownWeekOf,
 	withWeeksBeforeRun,
@@ -70,61 +74,156 @@ describe("daysOfRosterPeople", () => {
 	});
 });
 
-describe("mondaysShownBeforeRun", () => {
+describe("monthBeforeRunOf", () => {
 	it.each([
-		["nothing known", MONDAY_RUN, [], NOVEMBER, []],
+		[
+			"a run whose 14 days are all in weeks of its own month",
+			"2026-11-16",
+			undefined,
+		],
+		["a run in its month's first week", "2026-12-07", "2026-11"],
+		[
+			"a run whose oldest week before starts on its month's first Monday",
+			"2027-03-15",
+			undefined,
+		],
+		[
+			"a Thursday run whose oldest day falls in a week of the month before",
+			"2027-03-04",
+			"2027-02",
+		],
+		// Its first week (29 Mar – 4 Apr) is March's, as is the week of its oldest day.
+		[
+			"a run starting on 1 April, in a week that straddles March and April",
+			"2027-04-01",
+			undefined,
+		],
+		[
+			"a run in January, whose month before is December",
+			"2027-01-04",
+			"2026-12",
+		],
+	])("asks for %s: %s", (_name, firstDay, expected) => {
+		expect(monthBeforeRunOf(firstDay)).toBe(expected);
+	});
+});
+
+describe("monthsBeforeRunOf", () => {
+	const read = (
+		weeks: Array<[string, string | null]>,
+		isLoading = false
+	): MonthRead => ({
+		isLoading,
+		data: {
+			weeks: weeks.map(([periodStart, scheduleId]) => ({
+				periodStart,
+				scheduleId,
+			})),
+		},
+	});
+	const NOT_READ: MonthRead = { isLoading: false, data: undefined };
+	it.each<[string, Array<MonthRead>, MonthsBeforeRun]>([
+		[
+			"both months read: the Mondays they list without a schedule",
+			[
+				read([
+					["2026-12-07", "s-1"],
+					["2026-12-14", null],
+				]),
+				read([
+					["2026-11-23", null],
+					["2026-11-30", "s-0"],
+				]),
+			],
+			{ mondaysWithoutSchedule: ["2026-12-14", "2026-11-23"], reading: false },
+		],
+		[
+			"the month before still being read",
+			[read([["2026-12-07", "s-1"]]), { isLoading: true, data: undefined }],
+			{ mondaysWithoutSchedule: [], reading: true },
+		],
+		[
+			"the month before failed, or not asked for: it lists nothing and is not reading",
+			[read([["2026-12-14", null]]), NOT_READ],
+			{ mondaysWithoutSchedule: ["2026-12-14"], reading: false },
+		],
+	])("gives %s", (_name, reads, expected) => {
+		expect(monthsBeforeRunOf(reads)).toEqual(expected);
+	});
+});
+
+describe("mondaysShownBeforeRun", () => {
+	/** November's Mondays the month read lists without a schedule. */
+	const NOVEMBER_FREE = ["2026-11-02", "2026-11-09"];
+	it.each<[string, string, Array<DayBeforeRun>, Array<string>, Array<string>]>([
+		["nothing known", MONDAY_RUN, [], NOVEMBER_FREE, []],
 		[
 			"a day in each week before a Monday run",
 			MONDAY_RUN,
 			[dayOf("2026-11-02"), dayOf("2026-11-15")],
-			NOVEMBER,
+			NOVEMBER_FREE,
 			["2026-11-02", "2026-11-09"],
 		],
 		[
 			"the oldest known day deciding how far: only the week before",
 			MONDAY_RUN,
 			[dayOf("2026-11-12")],
-			NOVEMBER,
+			NOVEMBER_FREE,
 			["2026-11-09"],
 		],
 		[
 			"a Thursday run's first-week days, which are not a week before",
 			THURSDAY_RUN,
 			[dayOf("2026-11-17")],
-			NOVEMBER,
+			NOVEMBER_FREE,
 			[],
 		],
 		[
 			"a Thursday run's oldest week, two Mondays back",
 			THURSDAY_RUN,
 			[dayOf("2026-11-05")],
-			NOVEMBER,
+			NOVEMBER_FREE,
 			["2026-11-02"],
 		],
 		[
-			"a Monday the month lists with a schedule: never offered",
+			"a Monday a read lists with a schedule: never offered",
 			MONDAY_RUN,
 			[dayOf("2026-11-10")],
-			[monthWeek("2026-11-09", true), monthWeek("2026-11-16", true)],
+			["2026-11-02"],
 			[],
 		],
 		[
-			"a Monday the month does not list (the month before)",
+			"a Monday the month before lists without a schedule",
 			"2026-12-07",
 			[dayOf("2026-11-30")],
-			[monthWeek("2026-12-07", true)],
 			["2026-11-30"],
+			["2026-11-30"],
+		],
+		[
+			"a Monday no read lists: not known, so not shown",
+			"2026-12-07",
+			[dayOf("2026-11-30")],
+			[],
+			[],
 		],
 		[
 			"a week holding nothing between two that hold something",
 			THURSDAY_RUN,
 			[dayOf("2026-11-06"), dayOf("2026-11-17")],
-			[],
+			NOVEMBER_FREE,
 			["2026-11-02"],
 		],
-		["a day older than the 14", MONDAY_RUN, [dayOf("2026-11-01")], [], []],
-	])("gives %s", (_name, firstDay, days, monthWeeks, expected) => {
-		expect(mondaysShownBeforeRun(firstDay, days, monthWeeks)).toEqual(expected);
+		[
+			"a day older than the 14",
+			MONDAY_RUN,
+			[dayOf("2026-11-01")],
+			["2026-10-26"],
+			[],
+		],
+	])("gives %s", (_name, firstDay, days, mondaysWithoutSchedule, expected) => {
+		expect(
+			mondaysShownBeforeRun(firstDay, days, mondaysWithoutSchedule)
+		).toEqual(expected);
 	});
 });
 

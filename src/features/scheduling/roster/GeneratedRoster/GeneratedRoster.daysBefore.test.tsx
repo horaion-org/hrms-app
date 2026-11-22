@@ -25,9 +25,9 @@ import type {
 /*
  * Schedule s-1's roster (12–18 October 2026) with the days before its run
  * (28 September – 11 October) beside the Department's month in the bar: a
- * week before the run without a schedule of its own, holding a known day of
- * someone on the roster, is shown here read-only; a week with its own
- * schedule keeps opening it.
+ * week before the run that a month read lists without a schedule, holding a
+ * known day of someone on the roster, is shown here read-only; a week with
+ * its own schedule keeps opening it, and a week no read lists is not shown.
  */
 
 beforeAll(async () => {
@@ -78,24 +78,38 @@ const OCTOBER = [
 	monthWeek("2026-10-12", "2026-10-18", "To review", true),
 ];
 
-/** The roster with its view kept as the page keeps it in the URL, and the month's weeks in the bar. */
+/**
+ * The roster with its view kept as the page keeps it in the URL, the month's
+ * weeks in the bar, and what the month reads list without a schedule: the
+ * month's disabled weeks and `monthBeforeFree`, the month before's.
+ */
 const Roster = ({
 	weeks = OCTOBER,
+	monthBeforeFree = [],
 	firstView = { week: "2026-10-12" },
 	onMonthWeek = vi.fn(),
 	...props
 }: Partial<GeneratedRosterProps> & {
 	weeks?: Array<RosterWeek>;
+	monthBeforeFree?: Array<string>;
 	firstView?: RosterSearch;
 	onMonthWeek?: (week: string) => void;
 }): ReactElement => {
 	const [view, setView] = useState<RosterSearch>(firstView);
+	const freeWeeks = weeks.filter((week) => week.disabled);
 	return (
 		<GeneratedRoster
 			assignments={scheduleAssignmentsFixture()}
 			departmentWeeks={{ weeks, onWeekChange: onMonthWeek }}
 			schedule={schedule}
 			view={view}
+			monthsBeforeRun={{
+				mondaysWithoutSchedule: [
+					...freeWeeks.map((week) => week.start),
+					...monthBeforeFree,
+				],
+				reading: false,
+			}}
 			onViewChange={setView}
 			{...props}
 		/>
@@ -161,11 +175,12 @@ describe("GeneratedRoster, with the days before its run", () => {
 		expect(screen.queryByText(/Before these days/)).toBeNull();
 	});
 
-	it("given_aWeekTheMonthDoesNotList_when_itHoldsAKnownDay_then_itIsAdded", async () => {
+	it("given_aWeekTheMonthBeforeListsWithoutASchedule_when_itHoldsAKnownDay_then_itIsAddedToTheBar", async () => {
 		const user = userEvent.setup();
 		render(
 			<Roster
 				daysBefore={ready([aishaOn("2026-10-02")])}
+				monthBeforeFree={["2026-09-28"]}
 				weeks={[OCTOBER[1]!]}
 			/>
 		);
@@ -177,11 +192,23 @@ describe("GeneratedRoster, with the days before its run", () => {
 		);
 	});
 
+	it("given_aWeekNoMonthReadLists_when_itHoldsAKnownDay_then_itIsNotShown", () => {
+		render(
+			<Roster
+				daysBefore={ready([aishaOn("2026-10-02", true)])}
+				weeks={[OCTOBER[1]!]}
+			/>
+		);
+
+		expect(previousWeek()).toBeDisabled();
+		expect(screen.queryByRole("button", { name: "Show them" })).toBeNull();
+	});
+
 	it("given_theNoteOfEnteredDays_when_showThemIsChosen_then_showsTheNewestWeekHoldingOne", async () => {
 		const user = userEvent.setup();
 		render(
 			<Roster
-				weeks={[OCTOBER[1]!]}
+				monthBeforeFree={["2026-09-28"]}
 				daysBefore={ready([
 					aishaOn("2026-09-30", true),
 					aishaOn("2026-10-07", true),

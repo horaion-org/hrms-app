@@ -64,6 +64,26 @@ const ok = (data: unknown): StubReply => ({
 });
 
 const OCTOBER_MONTH = "/api/v1/companies/c-1/schedule-months/2026-10";
+const SEPTEMBER_MONTH = "/api/v1/companies/c-1/schedule-months/2026-09";
+
+/** September: its last week, 28 September – 4 October, has no schedule. */
+const september = (): StubReply =>
+	ok(
+		scheduleMonthFixture({
+			month: "2026-09",
+			departmentName: "Front Office",
+			weeks: [
+				monthWeekFixture({
+					periodStart: "2026-09-28",
+					periodEnd: "2026-10-04",
+					state: "NOT_GENERATED",
+					scheduleId: null,
+					days: [],
+					handChangedDays: null,
+				}),
+			],
+		})
+	);
 
 /** The 14 days before s-1's run (12–18 October 2026): 28 September to 11 October. */
 const BEFORE_OCTOBER_RUN = Array.from({ length: 14 }, (_, offset) =>
@@ -124,7 +144,8 @@ const openSchedule = async (
 	startingDays: StartingDays,
 	workspace = schedulingWorkspace(["schedule:read"]),
 	entry = "/scheduling/s-1",
-	startingDaysReply: StubReply = ok(startingDays)
+	startingDaysReply: StubReply = ok(startingDays),
+	moreRoutes: Parameters<typeof stubApi>[0] = {}
 ): Promise<ReturnType<typeof stubApi>> => {
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
 	const calls = stubApi({
@@ -140,6 +161,7 @@ const openSchedule = async (
 		[`GET ${SCHEDULE}/assignments`]: ok(scheduleAssignmentsFixture()),
 		[`GET ${STARTING_DAYS}`]: startingDaysReply,
 		[`GET ${OCTOBER_MONTH}`]: october(),
+		...moreRoutes,
 	});
 	app = await openApp(entry);
 	renderAuthApp(app);
@@ -232,5 +254,53 @@ describe("a schedule's page, of the days entered by hand before its run", () => 
 			"Before these days"
 		);
 		expect(calls.filter((call) => call.path === STARTING_DAYS)).toHaveLength(1);
+	});
+
+	it("reads the month before when a week before the run falls there, and shows that week when it has no schedule", async () => {
+		const days = aishaEnteredWeek();
+		days.members[0]!.cells = BEFORE_OCTOBER_RUN.map((date) =>
+			date === "2026-09-30" ? enteredNightCell(date) : unknownCell(date)
+		);
+		const calls = await openSchedule(
+			days,
+			undefined,
+			"/scheduling/s-1?week=2026-09-28",
+			ok(days),
+			{ [`GET ${SEPTEMBER_MONTH}`]: september() }
+		);
+
+		const aisha = await screen.findByRole("row", { name: /Aisha Rahman/ });
+		expect(await within(aisha).findByText("Entered")).toBeVisible();
+		expect(screen.getByRole("button", { name: "Week" })).toHaveTextContent(
+			"Before these days"
+		);
+		expect(calls.filter((call) => call.path === SEPTEMBER_MONTH)).toHaveLength(
+			1
+		);
+	});
+
+	it("asks for no month before when every week before the run is in its own month", async () => {
+		const calls = await openSchedule(
+			aishaEnteredWeek(),
+			undefined,
+			"/scheduling/s-1",
+			undefined,
+			{
+				"GET /api/v1/companies/c-1/schedules/s-1": ok(
+					generatedScheduleFixture({
+						status: "PUBLISHED",
+						periodStart: "2026-10-19",
+						periodEnd: "2026-10-25",
+						coveredFrom: "2026-10-19",
+						coveredTo: "2026-10-25",
+					})
+				),
+			}
+		);
+
+		await vi.waitFor(() => {
+			expect(calls.some((call) => call.path === OCTOBER_MONTH)).toBe(true);
+		});
+		expect(calls.some((call) => call.path === SEPTEMBER_MONTH)).toBe(false);
 	});
 });
