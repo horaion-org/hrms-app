@@ -28,8 +28,7 @@ import {
 } from "@/features/scheduling/roster/rosterSearch";
 import {
 	changedDays,
-	rosterSummarySegments,
-	type SummarySegment,
+	rosterSummaryLine,
 } from "@/features/scheduling/roster/rosterSummary";
 import type { RosterSchedule } from "@/features/scheduling/roster/rosterView";
 import type { RosterChange } from "@/features/scheduling/rosterChanges/api";
@@ -110,9 +109,6 @@ export type GeneratedRosterProps = {
 	/** Told how many shifts are still short whenever Issues changes, so Publish can warn of them. */
 	onShortShiftsChange?: (count: number) => void;
 };
-
-/** Hours in the summary line keep one decimal at most: "37.5 h". */
-const HOURS_FRACTION_DIGITS = 1;
 
 const key = "scheduling.detail";
 
@@ -282,17 +278,6 @@ export const GeneratedRoster = ({
 				return button && count > 0 ? [{ panel, button, count }] : [];
 			})
 		: [];
-	const numbers = new Intl.NumberFormat(language, {
-		maximumFractionDigits: HOURS_FRACTION_DIGITS,
-	});
-	const summaryText = (segment: SummarySegment): string => {
-		const { count, total, hours } = segment.values;
-		return t(`${key}.summary.${segment.key}`, {
-			count,
-			total,
-			hours: hours === undefined ? undefined : numbers.format(hours),
-		});
-	};
 	// An undo is a change too: checked again once the roster shows it, as after Apply.
 	const latestChange = editing && (
 		<LastRosterChange
@@ -373,7 +358,7 @@ export const GeneratedRoster = ({
 		<>
 			{withSummary && (
 				<p className="mt-2 text-sm text-neutral-700">
-					{rosterSummarySegments(rows).map(summaryText).join(" · ")}
+					{rosterSummaryLine(rows, t, language)}
 				</p>
 			)}
 			{openList !== "changes" && latestChange}
