@@ -9,6 +9,7 @@ import {
 	daySwapOption,
 	moveOption,
 	oneOfTwoOption,
+	otherTwoPeopleOption,
 	restDayCallInOption,
 	stretchAfterOption,
 	stretchPairOption,
@@ -86,34 +87,58 @@ describe("CoverCardItem", () => {
 		[
 			"a call-in on a day off",
 			callInOption(),
-			/Aisha Rahman.*Suggested.*Comes in on a day off.*Sat, Oct 17.*Day off.*Front Desk AM.*Within hours.*30 → 36 h of 44 h this week/,
+			/Aisha Rahman comes in on a day offSuggestedWithin hours30 → 36 h of 44 h this week/,
 		],
 		[
 			"a call-in on a rest day",
 			restDayCallInOption(),
-			/Comes in on a rest day.*Sun, Oct 18.*Rest day.*6 h on a rest day.*\+6 h time off earned/,
+			/Aisha Rahman comes in on a rest day.*6 h on a rest day.*\+6 h time off earned/,
 		],
 		[
 			"a move",
 			moveOption(),
-			/Ben Ong.*Moves from Lunch Rush.*Lunch Rush.*Front Desk AM.*\+2 h extra hours/,
+			/Ben Ong moves from Lunch Rush 11:00 – 13:00.*\+2 h extra hours/,
 		],
 		[
-			"a day swap, each day with its date",
+			"a day swap",
 			daySwapOption(),
-			/Works Saturday instead of Friday.*Sat, Oct 17.*Day off.*Front Desk AM.*Fri, Oct 16.*Front Desk AM.*Day off/,
+			/Aisha Rahman works this shift instead of Friday Front Desk AM.*Within hours.*30 h of 44 h this week/,
 		],
 		[
-			"a stretch pair, each person under their name",
+			"a stretch pair, one sentence each, the one who stays on first",
 			stretchPairOption(),
-			/Ben Ong and Chen Wei.*Cover it between them.*Ben Ong.*Sat, Oct 17.*Chen Wei.*Sat, Oct 17.*\+4 h overtime/,
+			/Ben Ong stays on 2 h, until 15:00Suggested.*Chen Wei starts 2 h early, at 12:00\+4 h overtime/,
 		],
 	])(
-		"given_%s_when_drawn_then_whoWhatTheChangeAndTheCost",
+		"given_%s_when_drawn_then_aSentencePerPersonAndOneCostLineWithoutTiles",
 		(_case, option, text) => {
-			expect(show([option])).toHaveTextContent(text);
+			const card = show([option]);
+
+			expect(card).toHaveTextContent(text);
+			// No before → after tiles: the sentence says the change.
+			expect(card).not.toHaveTextContent("becomes");
 		}
 	);
+
+	it("given_aSentence_when_drawn_then_theNameStandsInTheCardsNameWeight", () => {
+		show([callInOption()]);
+
+		expect(screen.getByText("Aisha Rahman")).toHaveClass("font-semibold");
+	});
+
+	it("given_aStretchPair_when_drawn_then_aFaceAndASentenceEachAndNoSharedTitle", () => {
+		const card = show([stretchPairOption()]);
+
+		expect(card.querySelectorAll('[role="img"]')).toHaveLength(2);
+		expect(card).not.toHaveTextContent("Ben Ong and Chen Wei");
+		expect(card).not.toHaveTextContent("Cover it between them");
+	});
+
+	it("given_theOlderRepairsChange_when_drawn_then_itsCountAndEachPersonsDaysUnderTheirName", () => {
+		expect(show([otherTwoPeopleOption()])).toHaveTextContent(
+			/Ben Ong and Aisha Rahman.*2 changes.*Ben Ong.*Lunch Rush.*becomes.*Front Desk AM.*Aisha Rahman.*Day off.*becomes.*Lunch Rush/
+		);
+	});
 
 	it("given_aPartFill_when_drawn_then_whatIsStillShortInRedAndNotSuggested", () => {
 		const card = show([stretchAfterOption()]);

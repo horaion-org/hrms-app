@@ -21,7 +21,6 @@ import { assignmentCell } from "@/features/scheduling/rosterChanges/cellText";
 import {
 	clockTime,
 	costChips,
-	optionKindLine,
 	optionSentences,
 	REFUSAL_ACTIONS,
 	stillShortToast,
@@ -96,25 +95,6 @@ const sources: OptionWordSources = {
 	gapDay: "2026-10-17",
 };
 
-describe("optionKindLine", () => {
-	it.each([
-		["a call-in on a day off", callInOption(), "Comes in on a day off"],
-		[
-			"a call-in on a rest day",
-			restDayCallInOption(),
-			"Comes in on a rest day",
-		],
-		["a move", moveOption(), "Moves from Lunch Rush"],
-		["a stretch after", stretchAfterOption(), "Stays on 2 h"],
-		["a stretch before", stretchBeforeOption(), "Starts 2 h early"],
-		["a stretch pair", stretchPairOption(), "Cover it between them"],
-		["a day swap", daySwapOption(), "Works Saturday instead of Friday"],
-		["the older repair's two changes", otherTwoPeopleOption(), "2 changes"],
-	])("words %s", (_kind, option, line) => {
-		expect(optionKindLine(option, sources, t)).toBe(line);
-	});
-});
-
 describe("optionSentences", () => {
 	/** An option's sentences read (in English unless told) with each person's id for a name, as the card reads them. */
 	const said = (
@@ -181,6 +161,14 @@ describe("optionSentences", () => {
 		["the older repair's two changes", otherTwoPeopleOption(), undefined],
 	])("says %s", (_kind, option, sentences) => {
 		expect(said(option)).toEqual(sentences);
+	});
+
+	it("reads a day swap from its WORK cell whatever the order of its cells", () => {
+		const swap = daySwapOption();
+
+		expect(said({ ...swap, cells: [...swap.cells].reverse() })).toEqual([
+			"<name>m-1</name> works this shift instead of Friday Front Desk AM",
+		]);
 	});
 
 	it("puts the one who stays on first even when the engine lists them second", () => {
@@ -355,39 +343,6 @@ describe("REFUSAL_ACTIONS", () => {
 			expired: undefined,
 			notSeenByEngine: undefined,
 		});
-	});
-});
-
-describe("optionKindLine: edges", () => {
-	it("reads a day swap from its WORK cell whatever the order of its cells", () => {
-		const swap = daySwapOption();
-		expect(
-			optionKindLine({ ...swap, cells: [...swap.cells].reverse() }, sources, t)
-		).toBe("Works Saturday instead of Friday");
-	});
-
-	it("reads a stretch with no minutes, or no cells, as any other change", () => {
-		const stretch = stretchAfterOption();
-		expect(
-			optionKindLine(
-				{
-					...stretch,
-					cells: [
-						{
-							membershipId: "m-2",
-							day: "2026-10-17",
-							kind: "WORK",
-							shiftId: "lunch-rush-copy",
-						},
-					],
-				},
-				sources,
-				t
-			)
-		).toBe("1 change");
-		expect(optionKindLine({ ...stretch, cells: [] }, sources, t)).toBe(
-			"0 changes"
-		);
 	});
 });
 

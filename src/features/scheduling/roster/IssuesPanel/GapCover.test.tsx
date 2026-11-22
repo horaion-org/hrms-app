@@ -109,7 +109,7 @@ describe("GapCover", () => {
 		expect(cards).toHaveLength(2);
 		expect(cards[0]).toHaveTextContent(/Aisha Rahman.*Suggested.*Within hours/);
 		expect(cards[1]).toHaveTextContent(
-			/Ben Ong.*Stays on 2 h.*Lunch Rush .*\+2 h/
+			/Ben Ong stays on 2 h, until 15:00.*\+2 h overtime/
 		);
 		expect(screen.getAllByText("Suggested")).toHaveLength(1);
 		const whyNot = screen.getByRole("button", { name: "Why not others (3)" });

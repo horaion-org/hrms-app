@@ -88,63 +88,6 @@ const stretchOf = (
 			}
 		: { after: 0, before: 0 };
 
-/** The plain line for a change the app has no line for: "2 changes". */
-const otherKindLine = (
-	option: Pick<RepairOption, "cells">,
-	t: TFunction
-): string => t(`${key}.kindLine.other`, { count: option.cells.length });
-
-/**
- * What an option is, in one short line by its kind (UX note 2.2): "Comes in
- * on a day off", "Moves from Lunch Rush", "Stays on 2 h", "Cover it between
- * them", "Works Saturday instead of Friday", "2 changes". The day taken is
- * the option's WORK cell wherever it sits; a day swap's OFF cell is the day
- * given up; a stretch with no minutes reads as any other change. Pure.
- */
-export const optionKindLine = (
-	option: Pick<RepairOption, "kind" | "cells">,
-	{ dayBefore, weekday }: OptionWordSources,
-	t: TFunction
-): string => {
-	const taken = option.cells.find((cell) => cell.kind === "WORK");
-	const before = taken && dayBefore(taken);
-	switch (option.kind) {
-		case "CALL_IN":
-			return t(`${key}.kindLine.callIn`, {
-				dayType: dayTypeInSentence(before?.dayType ?? null, t),
-			});
-		case "MOVE":
-			return t(`${key}.kindLine.move`, {
-				shift: before?.shift?.name ?? t(`${key}.unknownShift`),
-			});
-		case "OVERTIME_STRETCH": {
-			const stretch = stretchOf(taken);
-			if (stretch.after > 0)
-				return t(`${key}.kindLine.stretchAfter`, {
-					hours: hoursFromMinutes(stretch.after),
-				});
-			return stretch.before > 0
-				? t(`${key}.kindLine.stretchBefore`, {
-						hours: hoursFromMinutes(stretch.before),
-					})
-				: otherKindLine(option, t);
-		}
-		case "STRETCH_PAIR":
-			return t(`${key}.kindLine.stretchPair`);
-		case "DAY_SWAP": {
-			const givenUp = option.cells.find((cell) => cell.kind === "OFF");
-			return taken && givenUp
-				? t(`${key}.kindLine.daySwap`, {
-						day: weekday(taken.day),
-						dayGivenUp: weekday(givenUp.day),
-					})
-				: otherKindLine(option, t);
-		}
-		default:
-			return otherKindLine(option, t);
-	}
-};
-
 /** The sentences an option is said in, one per person (UX note 2026-11-22 §2.1). */
 type SentenceKind =
 	| "callIn"

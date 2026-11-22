@@ -5047,7 +5047,6 @@
 			},
 			"engine": {
 				"loading": "Buscando las opciones…",
-				"unknownShift": "un turno",
 				"refusal": {
 					"notSeenByEngine": "El motor cuenta este turno como cubierto.",
 					"expired": "Ya no se guarda la ejecución del motor de este cuadrante. Genera la semana de nuevo para tener opciones comprobadas.",
@@ -5083,16 +5082,8 @@
 					"stretchBeforeOtherDay": "<name>{{name}}</name> empieza {{shift}} del {{weekday}} {{hours}} h antes, a las {{time}}",
 					"daySwap": "<name>{{name}}</name> trabaja este turno en lugar de {{shift}} del {{weekday}}"
 				},
-				"kindLine": {
-					"callIn": "Viene en su {{dayType}}",
-					"move": "Pasa desde {{shift}}",
-					"stretchAfter": "Se queda {{hours}} h más",
-					"stretchBefore": "Empieza {{hours}} h antes",
-					"stretchPair": "Lo cubren entre los dos",
-					"daySwap": "Trabaja el {{day}} en lugar del {{dayGivenUp}}",
-					"other_one": "{{count}} cambio",
-					"other_other": "{{count}} cambios"
-				},
+				"changeCount_one": "{{count}} cambio",
+				"changeCount_other": "{{count}} cambios",
 				"cost": {
 					"withinHours": "Dentro de horas",
 					"pastContract": "+{{hours}} h sobre su contrato",

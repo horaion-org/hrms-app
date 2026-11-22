@@ -5247,7 +5247,6 @@
 			},
 			"engine": {
 				"loading": "Working out the options…",
-				"unknownShift": "a shift",
 				"refusal": {
 					"notSeenByEngine": "The engine counts this shift as staffed.",
 					"expired": "This roster’s engine run is no longer kept. Generate the week again to get checked options.",
@@ -5283,16 +5282,8 @@
 					"stretchBeforeOtherDay": "<name>{{name}}</name> starts {{weekday}} {{shift}} {{hours}} h early, at {{time}}",
 					"daySwap": "<name>{{name}}</name> works this shift instead of {{weekday}} {{shift}}"
 				},
-				"kindLine": {
-					"callIn": "Comes in on a {{dayType}}",
-					"move": "Moves from {{shift}}",
-					"stretchAfter": "Stays on {{hours}} h",
-					"stretchBefore": "Starts {{hours}} h early",
-					"stretchPair": "Cover it between them",
-					"daySwap": "Works {{day}} instead of {{dayGivenUp}}",
-					"other_one": "{{count}} change",
-					"other_other": "{{count}} changes"
-				},
+				"changeCount_one": "{{count}} change",
+				"changeCount_other": "{{count}} changes",
 				"cost": {
 					"withinHours": "Within hours",
 					"pastContract": "+{{hours}} h extra hours",
