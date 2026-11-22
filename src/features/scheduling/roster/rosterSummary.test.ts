@@ -1,3 +1,5 @@
+import { createInstance } from "i18next";
+import en from "@/assets/locales/en/translations.json";
 import { describe, expect, it } from "vitest";
 import { rosterFromAssignments } from "@/features/scheduling/roster/roster";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
@@ -9,6 +11,7 @@ import {
 	daysToDecide,
 	issueCount,
 	leaveAndCoverDays,
+	rosterSummaryLine,
 	rosterSummarySegments,
 	type IssueFacts,
 } from "./rosterSummary";
@@ -27,6 +30,20 @@ const benOffAllWeek = scheduleAssignmentsFixture().map((row) =>
 			}
 		: row
 );
+
+describe("rosterSummaryLine", () => {
+	it("joins the segments in the copy's words", async () => {
+		const i18n = createInstance();
+		await i18n.init({ lng: "en", resources: { en: { translation: en } } });
+		expect(
+			rosterSummaryLine(
+				rosterFromAssignments(scheduleAssignmentsFixture(), WEEK),
+				i18n.t,
+				"en"
+			)
+		).toBe("3 people · 15 shifts · 3 days off · 2 days on leave · 94 h");
+	});
+});
 
 describe("rosterSummarySegments", () => {
 	it.each([

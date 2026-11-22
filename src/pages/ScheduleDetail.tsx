@@ -26,7 +26,7 @@ import {
 	type GeneratedRosterProps,
 } from "@/features/scheduling/roster/GeneratedRoster";
 import { GenerationFailurePanel } from "@/features/scheduling/roster/GenerationFailurePanel";
-import { scheduleMonthQuery } from "@/features/scheduling/months/api";
+import { useRunMonths } from "@/features/scheduling/months/useRunMonths";
 import { formatMonth, monthOf } from "@/features/scheduling/months/monthWeeks";
 import {
 	listsWeekParts,
@@ -107,7 +107,7 @@ import {
 	startingContextQuery,
 	type StartingContext,
 } from "@/features/scheduling/startingContext/api";
-import { EnteredDaysNote } from "@/features/scheduling/startingContext/EnteredDaysNote";
+import { useDaysBeforeRun } from "@/features/scheduling/startingContext/useDaysBeforeRun";
 import { runsByMember } from "@/features/scheduling/startingContext/startingGrid";
 import { useAccess } from "@/features/workspace/useAccess";
 import {
@@ -421,6 +421,7 @@ const ApiSchedule = ({
 			showsRoster && permissions.mayRead
 		)
 	);
+	const daysBefore = useDaysBeforeRun(companyId, unit, scheduleId);
 	// Another schedule already published for the week means this one can't be generated again or published.
 	const awaitingPublication =
 		state.status === "ready" && state.schedule.status !== "PUBLISHED"
@@ -445,14 +446,14 @@ const ApiSchedule = ({
 	// The Department's weeks of the schedule's month, for the week bar and the back link.
 	const month =
 		state.status === "ready" ? monthOf(state.schedule.periodStart) : "";
-	const scheduleMonth = useQuery(
-		scheduleMonthQuery(
-			companyId,
-			unit?.departmentId ?? "",
-			month,
-			permissions.mayRead
-		)
-	).data;
+	const runMonths = useRunMonths(
+		companyId,
+		unit?.departmentId ?? "",
+		month,
+		state.status === "ready" ? state.schedule.coveredFrom : undefined,
+		permissions.mayRead
+	);
+	const scheduleMonth = runMonths.month;
 	const monthName = month ? formatMonth(month, formattingLocale(i18n)) : "";
 	if (state.status !== "ready")
 		return (
@@ -750,15 +751,16 @@ const ApiSchedule = ({
 					parts={weekParts}
 				/>
 			)}
-			<EnteredDaysNote className="mt-6" schedule={schedule} />
 			{rosterShown(noticeFacts) && (
 				<RosterBody
 					approval={trail}
 					assignments={assignments}
 					constraints={readyItems(constraints)}
+					daysBefore={daysBefore}
 					departmentWeeks={departmentWeeks}
 					editing={editing}
 					hours={rosterHours}
+					monthsBeforeRun={runMonths.beforeRun}
 					preferenceOutcomes={preferenceOutcomes}
 					schedule={schedule}
 					shifts={readyItems(shifts)}

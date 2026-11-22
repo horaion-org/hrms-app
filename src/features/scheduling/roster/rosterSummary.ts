@@ -1,3 +1,4 @@
+import type { TFunction } from "i18next";
 import type { FindingCounts } from "@/features/scheduling/roster/findings/findingCounts";
 import {
 	hoursInDays,
@@ -77,6 +78,29 @@ export const rosterSummarySegments = (
 	return SUMMARY_SEGMENTS.filter(
 		({ shownWhen }) => shownWhen?.(figures) ?? true
 	).map(({ key, values }) => ({ key, values: values(figures) }));
+};
+
+/** Hours in the summary line keep one decimal at most: "37.5 h". */
+const HOURS_FRACTION_DIGITS = 1;
+
+/** The summary line above the grid, its segments joined: "3 people · 15 shifts · … · 94 h". */
+export const rosterSummaryLine = (
+	rows: ReadonlyArray<RosterRow>,
+	t: TFunction,
+	language: string
+): string => {
+	const numbers = new Intl.NumberFormat(language, {
+		maximumFractionDigits: HOURS_FRACTION_DIGITS,
+	});
+	return rosterSummarySegments(rows)
+		.map(({ key, values: { count, total, hours } }) =>
+			t(`scheduling.detail.summary.${key}`, {
+				count,
+				total,
+				hours: hours === undefined ? undefined : numbers.format(hours),
+			})
+		)
+		.join(" · ");
 };
 
 /** What the Issues count reads. */

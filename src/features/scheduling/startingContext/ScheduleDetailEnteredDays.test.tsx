@@ -1,6 +1,9 @@
-import { screen } from "@testing-library/react";
+import dayjs from "dayjs";
+import { screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import {
 	currentUserReply,
 	openApp,
@@ -19,16 +22,22 @@ import {
 	scheduleAssignmentsFixture,
 	schedulingWorkspace,
 } from "@/features/scheduling/schedules/fixtures";
+import {
+	monthWeekFixture,
+	scheduleMonthFixture,
+} from "@/features/scheduling/months/fixtures";
 import type { StartingDays } from "@/features/scheduling/startingContext/api";
 import type { Workspace } from "@/features/workspace/api";
 import {
 	carriedWeek,
+	enteredNightCell,
 	firstWeek,
+	unknownCell,
 } from "@/features/scheduling/startingContext/fixtures";
 
 /*
  * A schedule's own page when days were entered by hand before its run: one
- * line above the grid saying so, with the link to the set-up where they show.
+ * line above the week bar saying so, whose button shows them on the roster.
  */
 
 beforeAll(async () => {
@@ -49,11 +58,78 @@ const SCHEDULE =
 	"/api/v1/companies/c-1/branches/b-1/departments/d-1/schedules/s-1";
 const STARTING_DAYS = `${SCHEDULE}/starting-days`;
 const NOTE = /shifts entered for the days before these days/;
-
 const ok = (data: unknown): StubReply => ({
 	status: 200,
 	body: envelope(data),
 });
+
+const OCTOBER_MONTH = "/api/v1/companies/c-1/schedule-months/2026-10";
+const SEPTEMBER_MONTH = "/api/v1/companies/c-1/schedule-months/2026-09";
+
+/** September: its last week, 28 September – 4 October, has no schedule. */
+const september = (): StubReply =>
+	ok(
+		scheduleMonthFixture({
+			month: "2026-09",
+			departmentName: "Front Office",
+			weeks: [
+				monthWeekFixture({
+					periodStart: "2026-09-28",
+					periodEnd: "2026-10-04",
+					state: "NOT_GENERATED",
+					scheduleId: null,
+					days: [],
+					handChangedDays: null,
+				}),
+			],
+		})
+	);
+
+/** The 14 days before s-1's run (12–18 October 2026): 28 September to 11 October. */
+const BEFORE_OCTOBER_RUN = Array.from({ length: 14 }, (_, offset) =>
+	dayjs("2026-09-28").add(offset, "day").format(ISO_DATE_FORMAT)
+);
+
+/** Aisha (mp-1) entered for a night on Wednesday 7 October; nothing else known. */
+const aishaEnteredWeek = (): StartingDays => ({
+	...firstWeek(),
+	days: BEFORE_OCTOBER_RUN,
+	members: [
+		{
+			memberProfileId: "mp-1",
+			displayName: "Aisha Rahman",
+			jobTitleName: "Front Desk Lead",
+			cells: BEFORE_OCTOBER_RUN.map((date) =>
+				date === "2026-10-07" ? enteredNightCell(date) : unknownCell(date)
+			),
+		},
+	],
+});
+
+/** October: the week of 5 October has no schedule, the week of 12 October is s-1's. */
+const october = (): StubReply =>
+	ok(
+		scheduleMonthFixture({
+			month: "2026-10",
+			departmentName: "Front Office",
+			weeks: [
+				monthWeekFixture({
+					periodStart: "2026-10-05",
+					periodEnd: "2026-10-11",
+					state: "NOT_GENERATED",
+					scheduleId: null,
+					days: [],
+					handChangedDays: null,
+				}),
+				monthWeekFixture({
+					periodStart: "2026-10-12",
+					periodEnd: "2026-10-18",
+					state: "PUBLISHED",
+					scheduleId: "s-1",
+				}),
+			],
+		})
+	);
 
 /** Company c-1 for someone who reads schedules at Kitchen (d-2) only, not at Front Office (d-1), schedule s-1's own. */
 const kitchenReaderWorkspace = (): Workspace => {
@@ -66,7 +142,10 @@ const kitchenReaderWorkspace = (): Workspace => {
 /** Opens published schedule s-1 in `workspace` (a reader company-wide unless given), its starting days answering `startingDays`. */
 const openSchedule = async (
 	startingDays: StartingDays,
-	workspace = schedulingWorkspace(["schedule:read"])
+	workspace = schedulingWorkspace(["schedule:read"]),
+	entry = "/scheduling/s-1",
+	startingDaysReply: StubReply = ok(startingDays),
+	moreRoutes: Parameters<typeof stubApi>[0] = {}
 ): Promise<ReturnType<typeof stubApi>> => {
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
 	const calls = stubApi({
@@ -80,9 +159,11 @@ const openSchedule = async (
 			generatedScheduleFixture({ status: "PUBLISHED" })
 		),
 		[`GET ${SCHEDULE}/assignments`]: ok(scheduleAssignmentsFixture()),
-		[`GET ${STARTING_DAYS}`]: ok(startingDays),
+		[`GET ${STARTING_DAYS}`]: startingDaysReply,
+		[`GET ${OCTOBER_MONTH}`]: october(),
+		...moreRoutes,
 	});
-	app = await openApp("/scheduling/s-1");
+	app = await openApp(entry);
 	renderAuthApp(app);
 	await screen.findByRole("heading", {
 		level: 1,
@@ -92,20 +173,49 @@ const openSchedule = async (
 };
 
 describe("a schedule's page, of the days entered by hand before its run", () => {
-	/** Tan's Sunday night was entered before the run: the note counts him and links to the set-up. */
-	it("says how many people have them, with the link to the set-up", async () => {
-		await openSchedule(firstWeek());
+	/** Aisha's Wednesday night, in a week before the run with no schedule of its own: the note counts her. */
+	it("says how many people have them; Show them shows their week, where the note hides", async () => {
+		const user = userEvent.setup();
+		await openSchedule(aishaEnteredWeek());
 
 		expect(
 			await screen.findByText(
-				"1 person has shifts entered for the days before these days. View them in the setup."
+				"1 person has shifts entered for the days before these days."
 			)
 		).toBeVisible();
-		const link = screen.getByRole("link", { name: "View setup" });
-		expect(link).toHaveAttribute(
-			"href",
-			"/scheduling/new?step=setup&scheduleId=s-1&departmentId=d-1"
+		expect(screen.queryByRole("link", { name: "View setup" })).toBeNull();
+		await user.click(screen.getByRole("button", { name: "Show them" }));
+
+		const aisha = screen.getByRole("row", { name: /Aisha Rahman/ });
+		expect(await within(aisha).findByText("Entered")).toBeVisible();
+		expect(app?.router.state.location.search).toMatchObject({
+			week: "2026-10-05",
+		});
+		expect(screen.queryByText(NOTE)).toBeNull();
+	});
+
+	it("leaves the roster as it is when the read fails", async () => {
+		const calls = await openSchedule(
+			aishaEnteredWeek(),
+			undefined,
+			"/scheduling/s-1?week=2026-10-05",
+			{
+				status: 403,
+				body: { status: 403, errorCode: "FORBIDDEN" },
+			}
 		);
+
+		await vi.waitFor(() => {
+			expect(calls.some((call) => call.path === STARTING_DAYS)).toBe(true);
+		});
+		// The URL's week before the run falls back to the run's own week.
+		await vi.waitFor(() => {
+			expect(screen.getByRole("button", { name: "Week" })).toHaveTextContent(
+				"Oct 12 – 18, 2026"
+			);
+		});
+		expect(screen.queryByText("Entered")).toBeNull();
+		expect(screen.queryByText(NOTE)).toBeNull();
 	});
 
 	it("says nothing when rosters cover the days before and nobody was entered", async () => {
@@ -124,5 +234,73 @@ describe("a schedule's page, of the days entered by hand before its run", () => 
 		// The page is up with its schedule read, so the note is mounted and had its chance to ask.
 		expect(calls.some((call) => call.path === STARTING_DAYS)).toBe(false);
 		expect(screen.queryByText(NOTE)).toBeNull();
+	});
+
+	it("reads the days before once and shows a week without its own schedule on the page", async () => {
+		const calls = await openSchedule(
+			aishaEnteredWeek(),
+			undefined,
+			"/scheduling/s-1?week=2026-10-05"
+		);
+
+		const aisha = await screen.findByRole("row", { name: /Aisha Rahman/ });
+		expect(
+			await within(aisha).findByText(
+				/Night 22:00 – 06:00 – entered by hand, not rostered/
+			)
+		).toBeInTheDocument();
+		expect(within(aisha).getByText("Entered")).toBeVisible();
+		expect(screen.getByRole("button", { name: "Week" })).toHaveTextContent(
+			"Before these days"
+		);
+		expect(calls.filter((call) => call.path === STARTING_DAYS)).toHaveLength(1);
+	});
+
+	it("reads the month before when a week before the run falls there, and shows that week when it has no schedule", async () => {
+		const days = aishaEnteredWeek();
+		days.members[0]!.cells = BEFORE_OCTOBER_RUN.map((date) =>
+			date === "2026-09-30" ? enteredNightCell(date) : unknownCell(date)
+		);
+		const calls = await openSchedule(
+			days,
+			undefined,
+			"/scheduling/s-1?week=2026-09-28",
+			ok(days),
+			{ [`GET ${SEPTEMBER_MONTH}`]: september() }
+		);
+
+		const aisha = await screen.findByRole("row", { name: /Aisha Rahman/ });
+		expect(await within(aisha).findByText("Entered")).toBeVisible();
+		expect(screen.getByRole("button", { name: "Week" })).toHaveTextContent(
+			"Before these days"
+		);
+		expect(calls.filter((call) => call.path === SEPTEMBER_MONTH)).toHaveLength(
+			1
+		);
+	});
+
+	it("asks for no month before when every week before the run is in its own month", async () => {
+		const calls = await openSchedule(
+			aishaEnteredWeek(),
+			undefined,
+			"/scheduling/s-1",
+			undefined,
+			{
+				"GET /api/v1/companies/c-1/schedules/s-1": ok(
+					generatedScheduleFixture({
+						status: "PUBLISHED",
+						periodStart: "2026-10-19",
+						periodEnd: "2026-10-25",
+						coveredFrom: "2026-10-19",
+						coveredTo: "2026-10-25",
+					})
+				),
+			}
+		);
+
+		await vi.waitFor(() => {
+			expect(calls.some((call) => call.path === OCTOBER_MONTH)).toBe(true);
+		});
+		expect(calls.some((call) => call.path === SEPTEMBER_MONTH)).toBe(false);
 	});
 });

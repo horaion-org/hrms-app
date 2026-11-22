@@ -3,7 +3,7 @@ import type { StartingCell } from "@/features/scheduling/startingContext/api";
 import {
 	enteredDaysBeforeOf,
 	enteredWhatOf,
-	peopleWithEnteredDays,
+	isInDaysBeforeRun,
 } from "@/features/scheduling/startingContext/enteredDays";
 import {
 	carriedWeek,
@@ -72,11 +72,14 @@ describe("enteredDaysBeforeOf", () => {
 	});
 });
 
-describe("peopleWithEnteredDays", () => {
+describe("isInDaysBeforeRun", () => {
+	// A run starting on Monday 16 November 2026: its 14 days before are 2 to 15 November.
 	it.each([
-		["one person entered, one unknown", firstWeek(), 1],
-		["nobody entered", carriedWeek(), 0],
-	])("counts %s", (_name, startingDays, expected) => {
-		expect(peopleWithEnteredDays(startingDays)).toBe(expected);
+		["the run's first day", "2026-11-16", false],
+		["the day before", "2026-11-15", true],
+		["14 days before", "2026-11-02", true],
+		["15 days before", "2026-11-01", false],
+	])("says %s is %s", (_name, day, expected) => {
+		expect(isInDaysBeforeRun("2026-11-16", day)).toBe(expected);
 	});
 });

@@ -4,6 +4,7 @@ import { daysOf } from "@/common/weeks";
 import { RosterGrid } from "@/features/scheduling/roster/RosterGrid";
 import { placeFindings } from "@/features/scheduling/roster/findings/findingsOnGrid";
 import { rosterFromAssignments } from "@/features/scheduling/roster/roster";
+import { daysBeforeByMemberOf } from "@/features/scheduling/roster/weeksBeforeRun";
 import {
 	findingsOfEveryKindFixture,
 	scheduleAssignmentsFixture,
@@ -188,5 +189,41 @@ export const APartWeek: Story = {
 			end: "2026-10-18",
 		}),
 		outsideDays: ["2026-10-12", "2026-10-13", "2026-10-14"],
+	},
+};
+
+/**
+ * A run starting Thursday: Monday to Wednesday are its days before, muted as
+ * a whole and read-only. Aisha's Monday night was entered by hand, her
+ * Tuesday comes from an earlier roster, her Wednesday is not known; Ben was
+ * on leave on Tuesday.
+ */
+export const DaysBeforeTheRun: Story = {
+	args: {
+		rows: rosterFromAssignments(scheduleAssignmentsFixture(), {
+			start: "2026-10-15",
+			end: "2026-10-18",
+		}),
+		beforeRunDays: ["2026-10-12", "2026-10-13", "2026-10-14"],
+		daysBeforeByMember: daysBeforeByMemberOf([
+			{
+				memberProfileId: "mp-1",
+				date: "2026-10-12",
+				what: { kind: "shift", name: "Night", start: "22:00", end: "06:00" },
+				enteredByHand: true,
+			},
+			{
+				memberProfileId: "mp-1",
+				date: "2026-10-13",
+				what: { kind: "off", dayType: "REST" },
+				enteredByHand: false,
+			},
+			{
+				memberProfileId: "mp-2",
+				date: "2026-10-13",
+				what: { kind: "leave" },
+				enteredByHand: false,
+			},
+		]),
 	},
 };

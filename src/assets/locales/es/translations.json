@@ -4313,7 +4313,8 @@
 			"leaveWithTime": "{{leave}} {{time}}",
 			"regenerateWeek": "Regenerar esta semana",
 			"regenerateDays": "Regenerar estos días",
-			"laterPartPublished": "Un horario posterior de esta semana está publicado, o se publicó y se retiró, y se calculó a partir de estos días, así que este no se puede generar de nuevo. Cambia su cuadrante a mano, o elige estos días en la página Generar."
+			"laterPartPublished": "Un horario posterior de esta semana está publicado, o se publicó y se retiró, y se calculó a partir de estos días, así que este no se puede generar de nuevo. Cambia su cuadrante a mano, o elige estos días en la página Generar.",
+			"beforeRunWeek": "Antes de estos días"
 		},
 		"myRoster": {
 			"title": "Mi cuadrante · {{department}} · {{period}}",
@@ -4597,8 +4598,12 @@
 			"shown": {
 				"mark": "Introducido",
 				"cellLabel": "{{name}}, {{day}}: {{shift}} – introducido a mano, fuera del cuadrante",
-				"note_one": "{{count}} persona tiene turnos introducidos para los días anteriores a estos días. Consúltalos en la configuración.",
-				"note_other": "{{count}} personas tienen turnos introducidos para los días anteriores a estos días. Consúltalos en la configuración."
+				"note_one": "{{count}} persona tiene turnos introducidos para los días anteriores a estos días.",
+				"note_other": "{{count}} personas tienen turnos introducidos para los días anteriores a estos días.",
+				"rosteredLabel": "{{name}}, {{day}}: {{what}} – de un cuadrante",
+				"leaveLabel": "{{name}}, {{day}}: de permiso",
+				"notKnownLabel": "{{name}}, {{day}}: no se sabe",
+				"showThem": "Verlos"
 			}
 		},
 		"openingHours": {

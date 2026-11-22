@@ -35,6 +35,7 @@ import {
 	type RostersRead,
 	type TimelineRow,
 } from "@/features/scheduling/timeline/timelineRows";
+import { enteredTileLooks } from "@/features/scheduling/startingContext/enteredLooks";
 
 export type TimelineGridProps = {
 	/** The ISO dates shown, one column each. */
@@ -117,12 +118,9 @@ const EnteredDayCell = ({
 	});
 	return (
 		<span
+			className={joinClassNames(tileClasses, enteredTileLooks)}
 			data-entered-for={entered.scheduleId}
 			title={label}
-			className={joinClassNames(
-				tileClasses,
-				"border-dotted border-neutral-400 text-neutral-600"
-			)}
 		>
 			<TileLines cell={entered.what} view={view} />
 			{ZOOM_LOOKS[view].enteredWord && (

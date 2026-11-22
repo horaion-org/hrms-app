@@ -7,6 +7,7 @@ import en from "@/assets/locales/en/translations.json";
 import { daysOf } from "@/common/weeks";
 import { RosterGrid } from "@/features/scheduling/roster/RosterGrid";
 import { rosterFromAssignments } from "@/features/scheduling/roster/roster";
+import { daysBeforeByMemberOf } from "@/features/scheduling/roster/weeksBeforeRun";
 import { placeFindings } from "@/features/scheduling/roster/findings/findingsOnGrid";
 import {
 	findingsOfEveryKindFixture,
@@ -103,6 +104,71 @@ describe("RosterGrid", () => {
 		expect(onDaySelect).not.toHaveBeenCalled();
 		expect(onAssignmentSelect).not.toHaveBeenCalled();
 		expect(cells[3]).not.toHaveTextContent("Not in these days");
+	});
+
+	it("given_daysBeforeTheRun_when_shown_then_mutedReadOnlyTilesWithTheirWords", async () => {
+		const user = userEvent.setup();
+		const onDaySelect = vi.fn();
+		const onAssignmentSelect = vi.fn();
+		const part = rosterFromAssignments(scheduleAssignmentsFixture(), {
+			start: "2026-10-15",
+			end: "2026-10-18",
+		});
+		render(
+			<RosterGrid
+				beforeRunDays={week.slice(0, 3)}
+				days={week}
+				rows={part}
+				daysBeforeByMember={daysBeforeByMemberOf([
+					{
+						memberProfileId: "mp-1",
+						date: "2026-10-12",
+						what: {
+							kind: "shift",
+							name: "Night",
+							start: "22:00",
+							end: "06:00",
+						},
+						enteredByHand: true,
+					},
+				])}
+				onAssignmentSelect={onAssignmentSelect}
+				onDaySelect={onDaySelect}
+			/>
+		);
+
+		const aisha = screen.getByRole("row", { name: /Aisha Rahman/ });
+		const cells = within(aisha).getAllByRole("cell");
+		expect(cells[0]).toHaveTextContent("22:00 – 06:00NightEntered");
+		expect(cells[0]).toHaveClass("bg-neutral-100");
+		expect(within(cells[1]!).getByText(/not known/)).toHaveClass("sr-only");
+		for (const cell of cells.slice(0, 3)) {
+			expect(cell).not.toHaveTextContent("Not in these days");
+			expect(within(cell).queryByRole("button")).toBeNull();
+		}
+		await user.click(within(cells[0]!).getByText("Night"));
+		expect(onDaySelect).not.toHaveBeenCalled();
+		expect(onAssignmentSelect).not.toHaveBeenCalled();
+		expect(screen.getByRole("columnheader", { name: /Mon/ })).toHaveClass(
+			"bg-neutral-100"
+		);
+		// The run's days still count their hours.
+		expect(aisha).toHaveTextContent(/hrs?/);
+	});
+
+	it("given_aWeekWhollyBeforeTheRun_when_shown_then_noHoursInTheRowHeaders", () => {
+		render(
+			<RosterGrid
+				beforeRunDays={week}
+				days={week}
+				daysBeforeByMember={new Map()}
+				rows={rows}
+			/>
+		);
+
+		const aisha = screen.getByRole("row", { name: /Aisha Rahman/ });
+		expect(aisha).not.toHaveTextContent(/\d+ hrs?/);
+		expect(within(aisha).getAllByText(/not known/)).toHaveLength(7);
 	});
 
 	it("given_aNonWorkingDayWithoutAType_when_rendered_then_showsOff", () => {

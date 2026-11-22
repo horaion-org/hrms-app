@@ -111,3 +111,57 @@ export const ShortPanelLongGrid: Story = {
 export const PanelClosedWithHours: Story = {
 	decorators: [withHoursBelow],
 };
+
+/**
+ * A run starting Thursday 15 October with days before it known: Monday to
+ * Wednesday show as muted columns, the week of 5 October (which the month
+ * lists without a schedule) is offered in the bar as "Before these days", and
+ * the note says who has days entered by hand.
+ */
+export const DaysBeforeTheRun: Story = {
+	args: {
+		schedule: {
+			...generatedScheduleFixture({ status: "GENERATED" }),
+			coveredFrom: "2026-10-15",
+		},
+		departmentWeeks: {
+			weeks: [
+				{
+					start: "2026-10-05",
+					end: "2026-10-11",
+					state: "Not generated",
+					disabled: true,
+				},
+				{ start: "2026-10-12", end: "2026-10-18", state: "To review" },
+			],
+			onWeekChange: fn(),
+		},
+		monthsBeforeRun: {
+			mondaysWithoutSchedule: ["2026-10-05"],
+			reading: false,
+		},
+		daysBefore: {
+			status: "ready",
+			days: [
+				{
+					memberProfileId: "mp-1",
+					date: "2026-10-07",
+					what: { kind: "shift", name: "Night", start: "22:00", end: "06:00" },
+					enteredByHand: true,
+				},
+				{
+					memberProfileId: "mp-1",
+					date: "2026-10-13",
+					what: { kind: "off", dayType: "REST" },
+					enteredByHand: false,
+				},
+				{
+					memberProfileId: "mp-2",
+					date: "2026-10-14",
+					what: { kind: "leave" },
+					enteredByHand: false,
+				},
+			],
+		},
+	},
+};
