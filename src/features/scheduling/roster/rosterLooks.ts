@@ -1,10 +1,20 @@
 import type { CSSProperties } from "react";
 import type { CellMark } from "@/features/scheduling/roster/rosterMarks";
+import { enteredTileLooks } from "@/features/scheduling/startingContext/enteredLooks";
 
 /** A roster day's colours when no shift is worked: a day off, or leave. */
 export const rosterLooks: Record<"off" | "leave", string> = {
 	off: "border-neutral-400 bg-neutral-100 text-neutral-600",
 	leave: "border-ink-blue-200 bg-ink-blue-50 text-ink-blue-900",
+};
+
+/**
+ * A day before the run, muted as its column is: entered by hand in the
+ * timeline's entered look (dotted), any other known day with a plain border.
+ */
+export const dayBeforeLooks: Record<"enteredByHand" | "known", string> = {
+	enteredByHand: enteredTileLooks,
+	known: "border-neutral-300 text-neutral-600",
 };
 
 /**

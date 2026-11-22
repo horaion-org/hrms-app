@@ -4598,7 +4598,10 @@
 				"mark": "Introducido",
 				"cellLabel": "{{name}}, {{day}}: {{shift}} – introducido a mano, fuera del cuadrante",
 				"note_one": "{{count}} persona tiene turnos introducidos para los días anteriores a estos días. Consúltalos en la configuración.",
-				"note_other": "{{count}} personas tienen turnos introducidos para los días anteriores a estos días. Consúltalos en la configuración."
+				"note_other": "{{count}} personas tienen turnos introducidos para los días anteriores a estos días. Consúltalos en la configuración.",
+				"rosteredLabel": "{{name}}, {{day}}: {{what}} – de un cuadrante",
+				"leaveLabel": "{{name}}, {{day}}: de permiso",
+				"notKnownLabel": "{{name}}, {{day}}: no se sabe"
 			}
 		},
 		"openingHours": {
