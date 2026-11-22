@@ -107,7 +107,6 @@ import {
 	startingContextQuery,
 	type StartingContext,
 } from "@/features/scheduling/startingContext/api";
-import { EnteredDaysNote } from "@/features/scheduling/startingContext/EnteredDaysNote";
 import { useDaysBeforeRun } from "@/features/scheduling/startingContext/useDaysBeforeRun";
 import { runsByMember } from "@/features/scheduling/startingContext/startingGrid";
 import { useAccess } from "@/features/workspace/useAccess";
@@ -752,7 +751,6 @@ const ApiSchedule = ({
 					parts={weekParts}
 				/>
 			)}
-			<EnteredDaysNote className="mt-6" schedule={schedule} />
 			{rosterShown(noticeFacts) && (
 				<RosterBody
 					approval={trail}

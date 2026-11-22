@@ -1,5 +1,6 @@
 import dayjs from "dayjs";
 import { screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { resetApiClient } from "@/common/api-client";
 import { ISO_DATE_FORMAT } from "@/common/isoDate";
@@ -36,7 +37,7 @@ import {
 
 /*
  * A schedule's own page when days were entered by hand before its run: one
- * line above the grid saying so, with the link to the set-up where they show.
+ * line above the week bar saying so, whose button shows them on the roster.
  */
 
 beforeAll(async () => {
@@ -122,7 +123,8 @@ const kitchenReaderWorkspace = (): Workspace => {
 const openSchedule = async (
 	startingDays: StartingDays,
 	workspace = schedulingWorkspace(["schedule:read"]),
-	entry = "/scheduling/s-1"
+	entry = "/scheduling/s-1",
+	startingDaysReply: StubReply = ok(startingDays)
 ): Promise<ReturnType<typeof stubApi>> => {
 	vi.spyOn(window, "scrollTo").mockImplementation(() => {});
 	const calls = stubApi({
@@ -136,7 +138,7 @@ const openSchedule = async (
 			generatedScheduleFixture({ status: "PUBLISHED" })
 		),
 		[`GET ${SCHEDULE}/assignments`]: ok(scheduleAssignmentsFixture()),
-		[`GET ${STARTING_DAYS}`]: ok(startingDays),
+		[`GET ${STARTING_DAYS}`]: startingDaysReply,
 		[`GET ${OCTOBER_MONTH}`]: october(),
 	});
 	app = await openApp(entry);
@@ -149,20 +151,49 @@ const openSchedule = async (
 };
 
 describe("a schedule's page, of the days entered by hand before its run", () => {
-	/** Tan's Sunday night was entered before the run: the note counts him and links to the set-up. */
-	it("says how many people have them, with the link to the set-up", async () => {
-		await openSchedule(firstWeek());
+	/** Aisha's Wednesday night, in a week before the run with no schedule of its own: the note counts her. */
+	it("says how many people have them; Show them shows their week, where the note hides", async () => {
+		const user = userEvent.setup();
+		await openSchedule(aishaEnteredWeek());
 
 		expect(
 			await screen.findByText(
-				"1 person has shifts entered for the days before these days. View them in the setup."
+				"1 person has shifts entered for the days before these days."
 			)
 		).toBeVisible();
-		const link = screen.getByRole("link", { name: "View setup" });
-		expect(link).toHaveAttribute(
-			"href",
-			"/scheduling/new?step=setup&scheduleId=s-1&departmentId=d-1"
+		expect(screen.queryByRole("link", { name: "View setup" })).toBeNull();
+		await user.click(screen.getByRole("button", { name: "Show them" }));
+
+		const aisha = screen.getByRole("row", { name: /Aisha Rahman/ });
+		expect(await within(aisha).findByText("Entered")).toBeVisible();
+		expect(app?.router.state.location.search).toMatchObject({
+			week: "2026-10-05",
+		});
+		expect(screen.queryByText(NOTE)).toBeNull();
+	});
+
+	it("leaves the roster as it is when the read fails", async () => {
+		const calls = await openSchedule(
+			aishaEnteredWeek(),
+			undefined,
+			"/scheduling/s-1?week=2026-10-05",
+			{
+				status: 403,
+				body: { status: 403, errorCode: "FORBIDDEN" },
+			}
 		);
+
+		await vi.waitFor(() => {
+			expect(calls.some((call) => call.path === STARTING_DAYS)).toBe(true);
+		});
+		// The URL's week before the run falls back to the run's own week.
+		await vi.waitFor(() => {
+			expect(screen.getByRole("button", { name: "Week" })).toHaveTextContent(
+				"Oct 12 – 18, 2026"
+			);
+		});
+		expect(screen.queryByText("Entered")).toBeNull();
+		expect(screen.queryByText(NOTE)).toBeNull();
 	});
 
 	it("says nothing when rosters cover the days before and nobody was entered", async () => {

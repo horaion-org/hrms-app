@@ -4,7 +4,6 @@ import {
 	enteredDaysBeforeOf,
 	enteredWhatOf,
 	isInDaysBeforeRun,
-	peopleWithEnteredDays,
 } from "@/features/scheduling/startingContext/enteredDays";
 import {
 	carriedWeek,
@@ -70,15 +69,6 @@ describe("enteredDaysBeforeOf", () => {
 
 	it("gives none when rosters cover the days before", () => {
 		expect(enteredDaysBeforeOf(carriedWeek())).toEqual([]);
-	});
-});
-
-describe("peopleWithEnteredDays", () => {
-	it.each([
-		["one person entered, one unknown", firstWeek(), 1],
-		["nobody entered", carriedWeek(), 0],
-	])("counts %s", (_name, startingDays, expected) => {
-		expect(peopleWithEnteredDays(startingDays)).toBe(expected);
 	});
 });
 

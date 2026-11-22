@@ -4798,11 +4798,12 @@
 			"shown": {
 				"mark": "Entered",
 				"cellLabel": "{{name}}, {{day}}: {{shift}} – entered by hand, not rostered",
-				"note_one": "{{count}} person has shifts entered for the days before these days. View them in the setup.",
-				"note_other": "{{count}} people have shifts entered for the days before these days. View them in the setup.",
+				"note_one": "{{count}} person has shifts entered for the days before these days.",
+				"note_other": "{{count}} people have shifts entered for the days before these days.",
 				"rosteredLabel": "{{name}}, {{day}}: {{what}} – from a roster",
 				"leaveLabel": "{{name}}, {{day}}: on leave",
-				"notKnownLabel": "{{name}}, {{day}}: not known"
+				"notKnownLabel": "{{name}}, {{day}}: not known",
+				"showThem": "Show them"
 			}
 		},
 		"openingHours": {

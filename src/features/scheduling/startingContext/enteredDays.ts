@@ -83,8 +83,3 @@ export const enteredDaysBeforeOf = (
 				: [];
 		})
 	);
-
-/** How many people have a day entered by hand before a schedule's run. */
-export const peopleWithEnteredDays = (startingDays: StartingDays): number =>
-	new Set(enteredDaysBeforeOf(startingDays).map((day) => day.memberProfileId))
-		.size;

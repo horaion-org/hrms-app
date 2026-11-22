@@ -34,6 +34,7 @@ import type { RosterChange } from "@/features/scheduling/rosterChanges/api";
 import { rosterCellKey } from "@/features/scheduling/rosterChanges/rosterEdit";
 import { RosterGrid } from "@/features/scheduling/roster/RosterGrid";
 import { RosterWeekBar } from "@/features/scheduling/roster/RosterWeekBar";
+import { EnteredDaysNote } from "@/features/scheduling/startingContext/EnteredDaysNote";
 import {
 	brokenRuleIssueCount,
 	checkPending,
@@ -365,6 +366,16 @@ export const GeneratedRoster = ({
 				<p className="mt-8 text-sm text-neutral-800">{t(`${key}.noRows`)}</p>
 			) : (
 				<>
+					{/* Hidden while the week shown already holds its columns before the run. */}
+					{roster.enteredNote && roster.beforeRunDays.length === 0 && (
+						<EnteredDaysNote
+							className="mt-6"
+							count={roster.enteredNote.count}
+							onShowWeek={() => {
+								roster.showWeek(roster.enteredNote?.week);
+							}}
+						/>
+					)}
 					<RosterWeekBar
 						className="mt-6"
 						legend={legendOf(rows)}
