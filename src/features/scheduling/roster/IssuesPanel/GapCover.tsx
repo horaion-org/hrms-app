@@ -254,14 +254,14 @@ const GapCoverBody = ({
 	const [reviewing, setReviewing] = useState(false);
 	// Once a card past the fold was reviewed, the list stays open, so Back returns to it.
 	const [showAll, setShowAll] = useState(false);
-	const reviewButtons = useRef(new Map<string, HTMLButtonElement>());
+	const cardButtons = useRef(new Map<string, HTMLButtonElement>());
 	const focusAfterBack = useRef<string>(undefined);
-	// Back returns focus to the Review of the card it came from, once the list is drawn again.
+	// Back returns focus to the card it came from, once the list is drawn again.
 	useEffect(() => {
 		const cardKey = focusAfterBack.current;
 		if (cardKey === undefined || reviewing) return;
 		focusAfterBack.current = undefined;
-		reviewButtons.current.get(cardKey)?.focus();
+		cardButtons.current.get(cardKey)?.focus();
 	});
 
 	// The roster's own days name a shift when the frozen shifts can't be read.
@@ -429,8 +429,8 @@ const GapCoverBody = ({
 								now={now}
 								timeZone={cover.coverOffers?.timeZone ?? ""}
 								reviewRef={(button) => {
-									if (button) reviewButtons.current.set(card.key, button);
-									else reviewButtons.current.delete(card.key);
+									if (button) cardButtons.current.set(card.key, button);
+									else cardButtons.current.delete(card.key);
 								}}
 								onReview={(): void => {
 									review(card);
@@ -472,7 +472,7 @@ const GapCoverBody = ({
  * A short shift's row, open: its options as cards (`optionCardList`), asked
  * of the engine as it opens, best first, the first suggested only when it
  * fills more than part, part fills under their caption, three cards before
- * the fold; "Review" opens the change inside the row (`CoverRowReview`), and why
+ * the fold; a card opens its change inside the row (`CoverRowReview`), and why
  * others have no card is folded under them. Under a refusal the hours-based
  * people stand in, each not rule-checked. `useCoverPanel` holds the state and
  * calls. Nothing for a day the roster does not hold.

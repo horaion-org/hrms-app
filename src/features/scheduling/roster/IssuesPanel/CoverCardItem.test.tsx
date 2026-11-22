@@ -162,15 +162,42 @@ describe("CoverCardItem", () => {
 		expect(card).not.toHaveTextContent("Suggested");
 	});
 
-	it("given_aCard_when_reviewed_then_theButtonNamesWhoseChangeItIs", async () => {
+	it("given_aCard_when_pressedOrEntered_then_theWholeCardOpensItsReviewNamedForWhoseChangeItIs", async () => {
+		const user = userEvent.setup();
 		const onReview = vi.fn();
 		show([callInOption()], [], onReview);
 
-		await userEvent.click(
-			screen.getByRole("button", { name: "Review Aisha Rahman’s change" })
+		const card = screen.getByRole("button", {
+			name: "Review Aisha Rahman’s change",
+		});
+		expect(card).toHaveAccessibleDescription(
+			/Aisha Rahman comes in on a day off.*Within hours/
 		);
+		await user.click(card);
+		card.focus();
+		await user.keyboard("{Enter}");
 
-		expect(onReview).toHaveBeenCalledOnce();
+		expect(onReview).toHaveBeenCalledTimes(2);
+	});
+
+	it("given_aCardThatOpensItsReview_when_queried_then_itHoldsNoOtherControl", () => {
+		show([otherTwoPeopleOption()]);
+
+		const card = screen.getByRole("button", { name: /^Review/ });
+		expect(card.querySelectorAll("button, a, input, [tabindex]")).toHaveLength(
+			0
+		);
+		expect(screen.getAllByRole("button")).toEqual([card]);
+	});
+
+	it("given_aTwoPersonCard_when_drawn_then_itsButtonNamesThemBoth", () => {
+		show([stretchPairOption()]);
+
+		expect(
+			screen.getByRole("button", {
+				name: "Review Ben Ong and Chen Wei’s change",
+			})
+		).toBeVisible();
 	});
 
 	it("given_anOfferOutToItsPerson_when_drawn_then_itsDeadlineInReviewsPlace", () => {
@@ -180,7 +207,9 @@ describe("CoverCardItem", () => {
 		);
 
 		expect(card).toHaveTextContent(/Offer sent · answer by .*3:30/);
-		expect(screen.queryByRole("button", { name: /Review/ })).toBeNull();
+		// Nothing to review while the offer is out: a plain card, no chevron.
+		expect(screen.queryByRole("button")).toBeNull();
+		expect(card.querySelector("svg")).toBeNull();
 	});
 
 	it("given_itsPersonDeclined_when_drawn_then_saysSoAndIsNotSuggested", () => {
@@ -196,5 +225,9 @@ describe("CoverCardItem", () => {
 
 		expect(card).toHaveTextContent("Declined");
 		expect(card).not.toHaveTextContent("Suggested");
+		// A new offer can go out from its review, so it still opens it.
+		expect(
+			screen.getByRole("button", { name: "Review Aisha Rahman’s change" })
+		).toHaveTextContent("Declined");
 	});
 });

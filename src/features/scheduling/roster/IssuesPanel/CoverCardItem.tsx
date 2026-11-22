@@ -1,11 +1,11 @@
-import type { Ref } from "react";
+import { useId, type Ref } from "react";
 import { Trans, useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Avatar } from "@/components/ui/Avatar";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
+import { ChevronRightIcon } from "@/components/ui/Icon";
 import { formatOfferTime } from "@/features/scheduling/coverOffers/coverOfferRules";
 import type {
 	OptionCard,
@@ -18,9 +18,9 @@ export type CoverCardItemProps = {
 	card: OptionCard;
 	/** The short shift's day, which the row names: a drawn change's pairs on it say no date. */
 	gapDay?: string;
-	/** Opens the card's review inside the row; without it (an offer out to its person) there is nothing to review. */
+	/** Opens the card's review inside the row; without it there is nothing to review. */
 	onReview?: () => void;
-	/** The Review button, so focus can come back to it from the review. */
+	/** The card itself, when it opens the review, so focus can come back to it from the review. */
 	reviewRef?: Ref<HTMLButtonElement>;
 	/** The roster's time zone and now, for an offer's deadline. */
 	timeZone: string;
@@ -108,9 +108,10 @@ const DrawnChange = ({
  * and their sentence ("Aisha Rahman comes in on a day off"), "Suggested" on
  * the one card suggested; a change no sentence says is drawn instead. Under
  * them what it still leaves short in red, then one cost line: its cost chips
- * (and "Fills 1 of 2", "Taken off this shift earlier" when so) and the week,
- * with Review at its end. An offer out to its person reads in Review's place;
- * a declined one says so.
+ * (and "Fills 1 of 2", "Taken off this shift earlier" when so), the week, and
+ * a declined offer's "Declined". The whole card opens its review, a chevron
+ * at its right edge, as RosterShift's tile opens its day; a card with an
+ * offer out to its person is no control and says so on its cost line.
  */
 export const CoverCardItem = ({
 	card,
@@ -122,13 +123,17 @@ export const CoverCardItem = ({
 }: CoverCardItemProps): FunctionComponent => {
 	const { t, i18n } = useTranslation();
 	const language = formattingLocale(i18n);
+	const bodyId = useId();
 	const { offer, leaves, change } = card;
-	return (
-		<div
-			className={joinClassNames(
-				"grid grid-cols-[2rem_minmax(0,1fr)] items-start gap-x-2.5 gap-y-1.5 rounded-lg border p-2.5",
-				card.suggested ? "border-ink-blue-500" : "border-neutral-400"
-			)}
+	const opensReview = onReview !== undefined && offer.kind !== "open";
+	const looks = joinClassNames(
+		"w-full rounded-lg border p-2.5 text-left",
+		card.suggested ? "border-ink-blue-500" : "border-neutral-400"
+	);
+	const body = (
+		<span
+			className="grid min-w-0 flex-1 grid-cols-[2rem_minmax(0,1fr)] items-start gap-x-2.5 gap-y-1.5"
+			id={bodyId}
 		>
 			{change.kind === "sentences" ? (
 				change.sentences.map((sentence, place) => (
@@ -168,36 +173,42 @@ export const CoverCardItem = ({
 					{card.weekLine && (
 						<span className="text-xs text-neutral-700">{card.weekLine}</span>
 					)}
-					<span className="ms-auto flex items-center gap-2">
-						{offer.kind === "declined" && (
-							<span className="text-xs text-neutral-700">
-								{t(`${key}.declined`)}
-							</span>
-						)}
-						{offer.kind === "open" ? (
-							<span className="text-xs text-neutral-700">
-								{t(`${key}.offerSent`, {
-									time: offer.until
-										? formatOfferTime(offer.until, language, timeZone, now)
-										: "",
-								})}
-							</span>
-						) : (
-							onReview && (
-								<Button
-									ref={reviewRef}
-									aria-label={t(`${key}.reviewFor`, { name: card.people })}
-									size="sm"
-									variant="secondary"
-									onClick={onReview}
-								>
-									{t(`${key}.review`)}
-								</Button>
-							)
-						)}
-					</span>
+					{offer.kind === "declined" && (
+						<span className="ms-auto text-xs text-neutral-700">
+							{t(`${key}.declined`)}
+						</span>
+					)}
+					{offer.kind === "open" && (
+						<span className="ms-auto text-xs text-neutral-700">
+							{t(`${key}.offerSent`, {
+								time: offer.until
+									? formatOfferTime(offer.until, language, timeZone, now)
+									: "",
+							})}
+						</span>
+					)}
 				</span>
 			</span>
-		</div>
+		</span>
+	);
+	if (!opensReview) return <div className={looks}>{body}</div>;
+	return (
+		<button
+			ref={reviewRef}
+			aria-describedby={bodyId}
+			aria-label={t(`${key}.reviewFor`, { name: card.people })}
+			type="button"
+			className={joinClassNames(
+				looks,
+				"flex cursor-pointer items-center gap-2 hover:brightness-98 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink-blue-500"
+			)}
+			onClick={onReview}
+		>
+			{body}
+			<ChevronRightIcon
+				aria-hidden="true"
+				className="size-5 shrink-0 text-neutral-600"
+			/>
+		</button>
 	);
 };

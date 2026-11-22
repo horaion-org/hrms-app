@@ -468,7 +468,22 @@ describe("GapCover", () => {
 		expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
 	});
 
-	it("given_aCardReviewed_when_backIsPressed_then_focusReturnsToItsReview", async () => {
+	it("given_cards_when_tabbedThrough_then_oneStopPerCard", async () => {
+		const user = userEvent.setup();
+		await showAnswer([callInOption(), moveOption()]);
+
+		const first = screen.getByRole("button", {
+			name: "Review Aisha Rahman’s change",
+		});
+		first.focus();
+		await user.tab();
+
+		expect(
+			screen.getByRole("button", { name: "Review Ben Ong’s change" })
+		).toHaveFocus();
+	});
+
+	it("given_aCardReviewed_when_backIsPressed_then_focusReturnsToTheCard", async () => {
 		const user = userEvent.setup();
 		await showAnswer([callInOption(), moveOption()]);
 
@@ -484,7 +499,7 @@ describe("GapCover", () => {
 });
 
 describe("GapCover: the review inside the row", () => {
-	/** The open row, the engine answering `option`, its Review pressed; gives the calls. */
+	/** The open row, the engine answering `option`, its card pressed; gives the calls. */
 	const reviewOption = async (
 		option: RepairOption,
 		{
