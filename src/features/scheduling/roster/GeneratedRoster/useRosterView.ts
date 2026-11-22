@@ -1,4 +1,6 @@
 import { useCallback, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { weeksOf } from "@/common/weeks";
 import { isoDateIn, type RosterRow } from "@/features/scheduling/roster/roster";
 import type { IssuesAbout } from "@/features/scheduling/roster/rosterMarks";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
@@ -12,6 +14,8 @@ import {
 	type RosterView,
 	type RosterViewInput,
 } from "@/features/scheduling/roster/rosterView";
+import type { RosterWeek } from "@/features/scheduling/roster/RosterWeekBar";
+import { withWeeksBeforeRun } from "@/features/scheduling/roster/weeksBeforeRun";
 import { rosterCellKey } from "@/features/scheduling/rosterChanges/rosterEdit";
 
 const NO_DAYS: ReadonlySet<string> = new Set();
@@ -24,10 +28,21 @@ const focusedElement = (): HTMLElement | null =>
 const cellOf = (row: RosterRow, day: string): string | undefined =>
 	row.membershipId === null ? undefined : rosterCellKey(row.membershipId, day);
 
+/** The Department's weeks of the schedule's month, for the week bar to step through, and where choosing one goes. */
+export type DepartmentWeeks = {
+	weeks: Array<RosterWeek>;
+	onWeekChange: (week: string) => void;
+};
+
 /** What the roster's view is worked out from, and where it writes a new view. */
-export type RosterViewOptions = Omit<RosterViewInput, "today"> & {
+export type RosterViewOptions = Omit<
+	RosterViewInput,
+	"today" | "monthWeeks"
+> & {
 	/** Changes the view; the page writes it back to its URL. */
 	onViewChange: (view: RosterSearch) => void;
+	/** The month's weeks for the bar; without them it pages the schedule's own weeks. */
+	departmentWeeks?: DepartmentWeeks;
 };
 
 /** The roster's view, the days a change being previewed touches, and the ways to change what is shown. */
@@ -56,6 +71,10 @@ export type RosterViewState = RosterView & {
 	showIssuesOf: (about: IssuesAbout, from: HTMLElement) => void;
 	/** Shows another week, or this week when none is given. */
 	showWeek: (week: string | undefined) => void;
+	/** The weeks the bar steps through: the month's with the weeks shown before the run, else the schedule's own. */
+	barWeeks: Array<RosterWeek>;
+	/** A week chosen in the bar: shown here when it is the schedule's own or one before the run, else opened as the month's. */
+	chooseWeek: (week: string) => void;
 	/** Shows another day on a phone. */
 	showDay: (day: string) => void;
 };
@@ -68,8 +87,10 @@ export type RosterViewState = RosterView & {
  */
 export const useRosterView = ({
 	onViewChange,
+	departmentWeeks,
 	...input
 }: RosterViewOptions): RosterViewState => {
+	const { t } = useTranslation();
 	const { view, schedule } = input;
 	const [previewDays, setPreviewDays] = useState<ReadonlySet<string>>(NO_DAYS);
 	// Where focus goes back to when the panel closes: what opened it.
@@ -83,7 +104,15 @@ export const useRosterView = ({
 	);
 	// "This week" and "today" follow the branch's time zone, not the browser's.
 	const today = isoDateIn(schedule.timeZone, new Date());
-	const roster = rosterViewOf({ ...input, today });
+	const roster = rosterViewOf({
+		...input,
+		today,
+		monthWeeks: departmentWeeks?.weeks,
+	});
+	const ownWeeks = weeksOf(roster.period).map((week) => week.start);
+	const showWeek = (week: string | undefined): void => {
+		onViewChange({ ...view, week, day: undefined });
+	};
 
 	/** Shows `next` beside the grid, keeping the week and day shown. */
 	const showView = (next: Omit<RosterSearch, "week" | "day">): void => {
@@ -132,8 +161,19 @@ export const useRosterView = ({
 				from
 			);
 		},
-		showWeek: (week): void => {
-			onViewChange({ ...view, week, day: undefined });
+		showWeek,
+		barWeeks: departmentWeeks
+			? withWeeksBeforeRun(
+					departmentWeeks.weeks,
+					roster.mondaysBeforeRun,
+					t("scheduling.detail.beforeRunWeek")
+				)
+			: weeksOf(roster.period),
+		chooseWeek: (week): void => {
+			const shownHere =
+				ownWeeks.includes(week) || roster.mondaysBeforeRun.includes(week);
+			if (departmentWeeks && !shownHere) departmentWeeks.onWeekChange(week);
+			else showWeek(week);
 		},
 		showDay: (day): void => {
 			onViewChange({

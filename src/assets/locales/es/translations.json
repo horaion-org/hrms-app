@@ -4313,7 +4313,8 @@
 			"leaveWithTime": "{{leave}} {{time}}",
 			"regenerateWeek": "Regenerar esta semana",
 			"regenerateDays": "Regenerar estos días",
-			"laterPartPublished": "Un horario posterior de esta semana está publicado, o se publicó y se retiró, y se calculó a partir de estos días, así que este no se puede generar de nuevo. Cambia su cuadrante a mano, o elige estos días en la página Generar."
+			"laterPartPublished": "Un horario posterior de esta semana está publicado, o se publicó y se retiró, y se calculó a partir de estos días, así que este no se puede generar de nuevo. Cambia su cuadrante a mano, o elige estos días en la página Generar.",
+			"beforeRunWeek": "Antes de estos días"
 		},
 		"myRoster": {
 			"title": "Mi cuadrante · {{department}} · {{period}}",

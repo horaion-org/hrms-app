@@ -4513,7 +4513,8 @@
 			"leaveWithTime": "{{leave}} {{time}}",
 			"regenerateWeek": "Regenerate this week",
 			"regenerateDays": "Regenerate these days",
-			"laterPartPublished": "A later schedule of this week is published, or was published and withdrawn, and it was worked out from these days, so this one can’t be generated again. Change its roster by hand, or choose these days on the Generate page."
+			"laterPartPublished": "A later schedule of this week is published, or was published and withdrawn, and it was worked out from these days, so this one can’t be generated again. Change its roster by hand, or choose these days on the Generate page.",
+			"beforeRunWeek": "Before these days"
 		},
 		"myRoster": {
 			"title": "My roster · {{department}} · {{period}}",

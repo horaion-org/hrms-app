@@ -2,7 +2,6 @@ import { useEffect, useId, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { formattingLocale } from "@/common/formattingLocale";
 import type { FunctionComponent } from "@/common/types";
-import { weeksOf } from "@/common/weeks";
 import { Button } from "@/components/ui/Button";
 import { CountBadge } from "@/components/ui/CountBadge";
 import { DaySwitcher } from "@/components/ui/DaySwitcher";
@@ -34,10 +33,7 @@ import type { RosterSchedule } from "@/features/scheduling/roster/rosterView";
 import type { RosterChange } from "@/features/scheduling/rosterChanges/api";
 import { rosterCellKey } from "@/features/scheduling/rosterChanges/rosterEdit";
 import { RosterGrid } from "@/features/scheduling/roster/RosterGrid";
-import {
-	RosterWeekBar,
-	type RosterWeek,
-} from "@/features/scheduling/roster/RosterWeekBar";
+import { RosterWeekBar } from "@/features/scheduling/roster/RosterWeekBar";
 import {
 	brokenRuleIssueCount,
 	checkPending,
@@ -55,7 +51,7 @@ import { issueCoverOf } from "./issueCoverOf";
 import { ROSTER_SIDE_LISTS } from "./rosterSideLists";
 import { useCheckedGaps } from "./useCheckedGaps";
 import { useCheckKeptCurrent } from "./useCheckKeptCurrent";
-import { useRosterView } from "./useRosterView";
+import { type DepartmentWeeks, useRosterView } from "./useRosterView";
 
 export type GeneratedRosterProps = {
 	schedule: RosterSchedule;
@@ -100,10 +96,7 @@ export type GeneratedRosterProps = {
 	 * step through, and where choosing one goes; without it the bar pages the
 	 * schedule's own weeks, as a member's own roster does.
 	 */
-	departmentWeeks?: {
-		weeks: Array<RosterWeek>;
-		onWeekChange: (week: string) => void;
-	};
+	departmentWeeks?: DepartmentWeeks;
 	/** The roster's shift preference outcomes by person and day, said in a chosen day's panel; none without. */
 	preferenceOutcomes?: PreferenceOutcomeLookup;
 	/** Told how many shifts are still short whenever Issues changes, so Publish can warn of them. */
@@ -183,6 +176,7 @@ export const GeneratedRoster = ({
 		editable: editing !== undefined,
 		withSummary,
 		changesLeave: editing?.leave !== undefined,
+		departmentWeeks,
 	});
 	const { rows, days, period, openList } = roster;
 	// A list or Find cover keeps to the grid's height and scrolls inside, so it never makes the row taller.
@@ -370,13 +364,10 @@ export const GeneratedRoster = ({
 						className="mt-6"
 						legend={legendOf(rows)}
 						week={days[0] ?? period.start}
-						weeks={departmentWeeks?.weeks ?? weeksOf(period)}
+						weeks={roster.barWeeks}
+						onWeekChange={roster.chooseWeek}
 						onToday={() => {
 							roster.showWeek(undefined);
-						}}
-						onWeekChange={(next) => {
-							if (departmentWeeks) departmentWeeks.onWeekChange(next);
-							else roster.showWeek(next);
 						}}
 					>
 						{toolbarLists.map(({ panel, button, count }) => (
@@ -447,9 +438,11 @@ export const GeneratedRoster = ({
 					)}
 					<div className="mt-4 flex flex-col items-start gap-6 lg:flex-row lg:items-stretch">
 						<RosterGrid
+							beforeRunDays={roster.beforeRunDays}
 							className="w-full lg:flex-1 lg:self-start"
 							compact={roster.sidePanel !== undefined}
 							days={days}
+							daysBeforeByMember={roster.daysBeforeByMember}
 							editedDays={roster.editedDays}
 							findings={roster.placed}
 							offeredDays={offeredDays}
