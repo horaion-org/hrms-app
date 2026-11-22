@@ -34,16 +34,21 @@ const NO_EXTRA_MINUTES = {
 	pastContract: 0,
 };
 
-/** A person an option changes, with their week before and after it; not taken off the shift earlier unless told. */
+/** A person an option changes, with their week before and after it (no leave counted unless told); not taken off the shift earlier unless told. */
 const person = (
 	membershipId: string,
 	displayName: string,
-	weekMinutes: RepairPerson["weekMinutes"],
+	weekMinutes: {
+		before: number;
+		after: number;
+		contract: number;
+		countedLeave?: number;
+	} | null,
 	takenOffThisShift = false
 ): RepairPerson => ({
 	membershipId,
 	displayName,
-	weekMinutes,
+	weekMinutes: weekMinutes && { countedLeave: 0, ...weekMinutes },
 	takenOffThisShift,
 });
 

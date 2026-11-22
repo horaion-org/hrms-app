@@ -8,7 +8,6 @@ import { hoursFromMinutes } from "@/features/scheduling/shifts/shiftHours";
 import { stretchedTimes } from "@/features/scheduling/shifts/shiftStretch";
 import type {
 	RepairOption,
-	RepairPerson,
 	RepairShortSpan,
 	RepairSpan,
 } from "@/features/scheduling/cover/engineRepairApi";
@@ -369,25 +368,45 @@ export const whatItLeaves = (
 	return undefined;
 };
 
+/** A person's week as its line reads it; the hours-based list's week counts no leave. */
+export type WeekLineMinutes = {
+	before: number;
+	after: number;
+	contract: number;
+	/** Minutes of approved leave counted inside `before` and `after`. */
+	countedLeave?: number;
+};
+
+/** The week line's words: changed or left as it was, with leave counted inside it or without. */
+const WEEK_LINE_KEYS = {
+	changed: { plain: `${key}.weekLine`, withLeave: `${key}.weekLineWithLeave` },
+	unchanged: {
+		plain: `${key}.weekLineUnchanged`,
+		withLeave: `${key}.weekLineUnchangedWithLeave`,
+	},
+} as const;
+
 /**
  * A person's week before and after an option, in hours: "30 → 36 h of 44 h
  * this week"; a week the option leaves as it was, without the arrow: "30 h
- * of 44 h this week".
+ * of 44 h this week"; either ending ", incl. 8 h leave" when approved leave
+ * is counted inside it, so the figure reads apart from the roster's hours.
  */
 export const weekLine = (
-	weekMinutes: NonNullable<RepairPerson["weekMinutes"]>,
+	{ before, after, contract, countedLeave = 0 }: WeekLineMinutes,
 	t: TFunction
-): string =>
-	t(
-		weekMinutes.before === weekMinutes.after
-			? `${key}.weekLineUnchanged`
-			: `${key}.weekLine`,
-		{
-			before: hoursFromMinutes(weekMinutes.before),
-			after: hoursFromMinutes(weekMinutes.after),
-			contract: hoursFromMinutes(weekMinutes.contract),
-		}
-	);
+): string => {
+	const words =
+		WEEK_LINE_KEYS[before === after ? "unchanged" : "changed"][
+			countedLeave > 0 ? "withLeave" : "plain"
+		];
+	return t(words, {
+		before: hoursFromMinutes(before),
+		after: hoursFromMinutes(after),
+		contract: hoursFromMinutes(contract),
+		leave: hoursFromMinutes(countedLeave),
+	});
+};
 
 /**
  * What a set of spans is still short, one count for all when they share it

@@ -5301,6 +5301,8 @@
 				},
 				"weekLine": "{{before}} → {{after}} h of {{contract}} h this week",
 				"weekLineUnchanged": "{{after}} h of {{contract}} h this week",
+				"weekLineWithLeave": "{{before}} → {{after}} h of {{contract}} h this week, incl. {{leave}} h leave",
+				"weekLineUnchangedWithLeave": "{{after}} h of {{contract}} h this week, incl. {{leave}} h leave",
 				"peopleAnd": "{{items, list(type: conjunction)}}",
 				"stillWorking": "Still working. This can take up to {{seconds}} seconds.",
 				"nobodyCan": "Nobody can cover this within the rules.",

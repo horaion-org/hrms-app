@@ -180,6 +180,30 @@ describe("engine repair options client", () => {
 		expect(parsed.options).toEqual(options);
 	});
 
+	it("reads a week without counted leave, as an API that does not send it yet, as 0", async () => {
+		const option = callInOption();
+		const [person] = option.people;
+		// The week as an API without the field sends it.
+		const olderWeek = { before: 1800, after: 2160, contract: 2640 };
+		stubApi({
+			[`POST ${REPAIR_OPTIONS}`]: {
+				status: 200,
+				body: envelope(
+					repairOptionsFixture([
+						{ ...option, people: [{ ...person!, weekMinutes: olderWeek }] },
+					] as Array<typeof option>)
+				),
+			},
+		});
+
+		const parsed = await fetchRepairOptions(TARGET, {
+			...GAP,
+			expectedRevision: 1,
+		});
+
+		expect(parsed.options[0]?.people[0]?.weekMinutes?.countedLeave).toBe(0);
+	});
+
 	it("reads an option kind or fill this app does not know as OTHER and as not said", async () => {
 		stubApi({
 			[`POST ${REPAIR_OPTIONS}`]: {

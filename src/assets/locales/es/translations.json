@@ -5101,6 +5101,8 @@
 				},
 				"weekLine": "{{before}} → {{after}} h de {{contract}} h esta semana",
 				"weekLineUnchanged": "{{after}} h de {{contract}} h esta semana",
+				"weekLineWithLeave": "{{before}} → {{after}} h de {{contract}} h esta semana, incl. {{leave}} h de permiso",
+				"weekLineUnchangedWithLeave": "{{after}} h de {{contract}} h esta semana, incl. {{leave}} h de permiso",
 				"peopleAnd": "{{items, list(type: conjunction)}}",
 				"stillWorking": "Sigue trabajando. Puede tardar hasta {{seconds}} segundos.",
 				"nobodyCan": "Nadie puede cubrirlo dentro de las reglas.",

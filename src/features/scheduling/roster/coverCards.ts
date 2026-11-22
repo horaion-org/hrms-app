@@ -39,7 +39,13 @@ export type WeekHours = {
 };
 
 /** A person's week before and after a change, in minutes, against their contract. */
-export type WeekMinutes = { before: number; after: number; contract: number };
+export type WeekMinutes = {
+	before: number;
+	after: number;
+	contract: number;
+	/** Minutes of approved leave counted inside `before` and `after`; the hours-based list's week has none. */
+	countedLeave?: number;
+};
 
 /** A week as the review draws it: its minutes, the overtime past the contract, and how full it is. */
 export const weekHoursOf = ({

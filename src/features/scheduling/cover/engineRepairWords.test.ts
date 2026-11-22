@@ -366,6 +366,35 @@ describe("weekLine and stillShortToast", () => {
 		);
 	});
 
+	it.each([
+		[
+			{ before: 2520, after: 2970, contract: 2640, countedLeave: 480 },
+			"42 → 49.5 h of 44 h this week, incl. 8 h leave",
+		],
+		[
+			{ before: 2520, after: 2520, contract: 2640, countedLeave: 480 },
+			"42 h of 44 h this week, incl. 8 h leave",
+		],
+		[
+			{ before: 2520, after: 2970, contract: 2640, countedLeave: 0 },
+			"42 → 49.5 h of 44 h this week",
+		],
+	])(
+		"words the week %o with the leave counted inside it, when some is",
+		(week, line) => {
+			expect(weekLine(week, t)).toBe(line);
+		}
+	);
+
+	it("words a week with leave in Spanish with the app's word for it", () => {
+		expect(
+			weekLine(
+				{ before: 2520, after: 2970, contract: 2640, countedLeave: 480 },
+				spanish
+			)
+		).toBe("42 → 49.5 h de 44 h esta semana, incl. 8 h de permiso");
+	});
+
 	it("words a week the option leaves as it was without an arrow", () => {
 		expect(weekLine({ before: 1800, after: 1800, contract: 2640 }, t)).toBe(
 			"30 h of 44 h this week"

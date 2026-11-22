@@ -428,12 +428,22 @@ describe("reviewPeopleOf", () => {
 			{
 				membershipId: "m-2",
 				name: "Ben Ong",
-				weekMinutes: { before: 1200, after: 1320, contract: 1320 },
+				weekMinutes: {
+					before: 1200,
+					after: 1320,
+					contract: 1320,
+					countedLeave: 0,
+				},
 			},
 			{
 				membershipId: "m-3",
 				name: "Chen Wei",
-				weekMinutes: { before: 2880, after: 3000, contract: 2640 },
+				weekMinutes: {
+					before: 2880,
+					after: 3000,
+					contract: 2640,
+					countedLeave: 0,
+				},
 			},
 		]);
 		expect(
