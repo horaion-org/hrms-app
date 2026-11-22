@@ -1,10 +1,8 @@
-import dayjs from "dayjs";
-import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import type { StartingDays } from "@/features/scheduling/startingContext/api";
 import {
-	DAYS_BEFORE_A_RUN,
 	type EnteredDayBefore,
 	enteredDaysBeforeOf,
+	isInDaysBeforeRun,
 } from "@/features/scheduling/startingContext/enteredDays";
 import {
 	scheduleOfDay,
@@ -24,23 +22,12 @@ import type {
 /** One day entered by hand, and the schedule whose run it was entered for. */
 export type EnteredCell = EnteredDayBefore & { scheduleId: string };
 
-/** What placing entered days needs of a schedule: its id and the first day of its run. */
-type Run = Pick<TimelineSchedule, "id" | "firstDay">;
-
 /** The days of the window no schedule covers. */
 const daysWithoutSchedule = (
 	schedules: ReadonlyArray<TimelineSchedule>,
 	days: ReadonlyArray<string>
 ): Array<string> =>
 	days.filter((day) => scheduleOfDay(schedules, day) === undefined);
-
-/** Whether `day` is one of the days before the run that can be entered for it. */
-const isBeforeRun = (run: Run, day: string): boolean =>
-	day < run.firstDay &&
-	day >=
-		dayjs(run.firstDay)
-			.subtract(DAYS_BEFORE_A_RUN, "day")
-			.format(ISO_DATE_FORMAT);
 
 /**
  * The schedules whose entered days are read: those with a day of the window
@@ -53,7 +40,7 @@ export const schedulesWithFreeDaysBefore = (
 ): Array<TimelineSchedule> => {
 	const freeDays = daysWithoutSchedule(schedules, days);
 	return schedules.filter((schedule) =>
-		freeDays.some((day) => isBeforeRun(schedule, day))
+		freeDays.some((day) => isInDaysBeforeRun(schedule.firstDay, day))
 	);
 };
 

@@ -1,3 +1,5 @@
+import dayjs from "dayjs";
+import { ISO_DATE_FORMAT } from "@/common/isoDate";
 import type {
 	StartingCell,
 	StartingDays,
@@ -12,6 +14,12 @@ import type {
 
 /** How many days before a run the API answers, and lets a manager enter. */
 export const DAYS_BEFORE_A_RUN = 14;
+
+/** Whether `day` is one of the days before a run starting on `firstDay` that the API answers. */
+export const isInDaysBeforeRun = (firstDay: string, day: string): boolean =>
+	day < firstDay &&
+	day >=
+		dayjs(firstDay).subtract(DAYS_BEFORE_A_RUN, "day").format(ISO_DATE_FORMAT);
 
 /** What a manager entered for a day: the shift worked, by name and times, or a day off by its type (null without one). */
 export type EnteredWhat =
