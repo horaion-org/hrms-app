@@ -7,6 +7,7 @@ import {
 	oneOfTwoOption,
 	otherTwoPeopleOption,
 	restDayCallInOption,
+	restDayMoveOption,
 	stretchAfterOption,
 	stretchBeforeOption,
 	stretchPairOption,
@@ -163,6 +164,19 @@ describe("optionCardList", () => {
 				],
 				["Within hours"],
 				"30 h of 44 h this week",
+				undefined,
+			],
+		],
+		[
+			"a rest-day move",
+			restDayMoveOption(),
+			[
+				"Aisha Rahman",
+				[
+					"<name>Aisha Rahman</name> comes in on a rest day; Saturday becomes their rest day",
+				],
+				["Within hours"],
+				"30 → 36 h of 44 h this week",
 				undefined,
 			],
 		],

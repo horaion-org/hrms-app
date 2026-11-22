@@ -96,7 +96,8 @@ type SentenceKind =
 	| "stretchAfterOtherDay"
 	| "stretchBefore"
 	| "stretchBeforeOtherDay"
-	| "daySwap";
+	| "daySwap"
+	| "restDayMove";
 
 /** The copy key of one person's sentence. */
 export type OptionSentenceKey = `${typeof key}.sentence.${SentenceKind}`;
@@ -201,6 +202,25 @@ const daySwapSentence = (
 		: undefined;
 };
 
+/**
+ * "Farid comes in on a rest day; Friday becomes their rest day": the gap's
+ * day's type as the roster holds it now, and the weekday of the day off that
+ * takes that type.
+ */
+const restDayMoveSentence = (
+	taken: RosterChangeCell,
+	takesTheType: RosterChangeCell,
+	{ dayBefore, weekday }: OptionWordSources,
+	t: TFunction
+): OptionSentence => ({
+	membershipId: taken.membershipId,
+	key: `${key}.sentence.restDayMove`,
+	values: {
+		dayType: dayTypeInSentence(dayBefore(taken)?.dayType ?? null, t),
+		weekday: weekday(takesTheType.day),
+	},
+});
+
 /** Keeps a list only when every one of its sentences could be said. */
 const allSaid = (
 	sentences: ReadonlyArray<OptionSentence | undefined>
@@ -211,10 +231,11 @@ const allSaid = (
 
 /**
  * An option said as one sentence per person, by its kind (UX note
- * 2026-11-22 §2.1): a call-in, a move, a stretch, a day swap; a pair of
- * stretches as two, the one who stays on first. The day taken is the
- * option's WORK cell wherever it sits; a day swap's OFF cell is the day given
- * up. Undefined when the option cannot be said (OTHER, a stretch of no
+ * 2026-11-22 §2.1): a call-in, a move, a stretch, a day swap, a rest-day
+ * move; a pair of stretches as two, the one who stays on first. The day
+ * taken is the option's WORK cell wherever it sits; a day swap's OFF cell is
+ * the day given up, a rest-day move's the day that takes the gap's day's
+ * type. Undefined when the option cannot be said (OTHER, a stretch of no
  * minutes, a shift the roster does not name): its card draws it instead.
  * Pure.
  */
@@ -246,6 +267,12 @@ export const optionSentences = (
 			const givenUp = option.cells.find((cell) => cell.kind === "OFF");
 			return givenUp
 				? allSaid([daySwapSentence(taken, givenUp, sources)])
+				: undefined;
+		}
+		case "REST_DAY_MOVE": {
+			const takesTheType = option.cells.find((cell) => cell.kind === "OFF");
+			return takesTheType
+				? [restDayMoveSentence(taken, takesTheType, sources, t)]
 				: undefined;
 		}
 		default:

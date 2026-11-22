@@ -5279,7 +5279,8 @@
 					"stretchAfterOtherDay": "<name>{{name}}</name> stays on {{hours}} h after {{weekday}} {{shift}}, until {{time}}",
 					"stretchBefore": "<name>{{name}}</name> starts {{hours}} h early, at {{time}}",
 					"stretchBeforeOtherDay": "<name>{{name}}</name> starts {{weekday}} {{shift}} {{hours}} h early, at {{time}}",
-					"daySwap": "<name>{{name}}</name> works this shift instead of {{weekday}} {{shift}}"
+					"daySwap": "<name>{{name}}</name> works this shift instead of {{weekday}} {{shift}}",
+					"restDayMove": "<name>{{name}}</name> comes in on a {{dayType}}; {{weekday}} becomes their {{dayType}}"
 				},
 				"changeCount_one": "{{count}} change",
 				"changeCount_other": "{{count}} changes",

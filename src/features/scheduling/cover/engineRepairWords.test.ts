@@ -10,6 +10,7 @@ import {
 	oneOfTwoOption,
 	otherTwoPeopleOption,
 	restDayCallInOption,
+	restDayMoveOption,
 	stretchAfterOption,
 	stretchAfterOtherDayOption,
 	stretchBeforeOption,
@@ -158,6 +159,13 @@ describe("optionSentences", () => {
 			daySwapOption(),
 			["<name>m-1</name> works this shift instead of Friday Front Desk AM"],
 		],
+		[
+			"a rest-day move",
+			restDayMoveOption(),
+			[
+				"<name>m-1</name> comes in on a rest day; Saturday becomes their rest day",
+			],
+		],
 		["the older repair's two changes", otherTwoPeopleOption(), undefined],
 	])("says %s", (_kind, option, sentences) => {
 		expect(said(option)).toEqual(sentences);
@@ -243,6 +251,13 @@ describe("optionSentences", () => {
 			},
 		],
 		["an option with no day worked", { ...callInOption(), cells: [] }],
+		[
+			"a rest-day move with no day that takes the type",
+			{
+				...restDayMoveOption(),
+				cells: restDayMoveOption().cells.slice(0, 1),
+			},
+		],
 	])("cannot say %s, so the card draws it", (_case, option) => {
 		expect(optionSentences(option, sources, t)).toBeUndefined();
 	});
@@ -259,6 +274,7 @@ describe("optionSentences", () => {
 				stretchAfterOtherDayOption(),
 				stretchBeforeOtherDayOption(),
 				daySwapOption(),
+				restDayMoveOption(),
 			].flatMap((option) => said(option, spanishSources, spanish))
 		).toEqual([
 			"<name>m-1</name> viene en su día libre",
@@ -268,6 +284,7 @@ describe("optionSentences", () => {
 			"<name>m-2</name> se queda 2 h más tras Lunch Rush del viernes, hasta las 15:00",
 			"<name>m-3</name> empieza Swing Shift del viernes 2 h antes, a las 12:00",
 			"<name>m-1</name> trabaja este turno en lugar de Front Desk AM del viernes",
+			"<name>m-1</name> viene en su día de descanso; el viernes pasa a ser su día de descanso",
 		]);
 	});
 });

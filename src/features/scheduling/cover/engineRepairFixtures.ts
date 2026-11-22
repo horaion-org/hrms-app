@@ -237,6 +237,23 @@ export const daySwapOption = (): RepairOption =>
 		],
 	});
 
+/** Aisha comes in on her Sunday rest day; Saturday, her day off, becomes her rest day: she gives up no day. */
+export const restDayMoveOption = (): RepairOption =>
+	repairOption({
+		kind: "REST_DAY_MOVE",
+		cells: [
+			workCell(AISHA, SUNDAY, FRONT_DESK_AM),
+			{ membershipId: AISHA, day: SATURDAY, kind: "OFF", dayType: "REST" },
+		],
+		people: [
+			person(AISHA, "Aisha Rahman", {
+				before: 1800,
+				after: 2160,
+				contract: 2640,
+			}),
+		],
+	});
+
 /** The older repair's two-person change: Ben moves to Front Desk AM, and Aisha is called in for his Lunch Rush. */
 export const otherTwoPeopleOption = (): RepairOption =>
 	repairOption({

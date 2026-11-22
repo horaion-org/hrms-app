@@ -5079,7 +5079,8 @@
 					"stretchAfterOtherDay": "<name>{{name}}</name> se queda {{hours}} h más tras {{shift}} del {{weekday}}, hasta las {{time}}",
 					"stretchBefore": "<name>{{name}}</name> empieza {{hours}} h antes, a las {{time}}",
 					"stretchBeforeOtherDay": "<name>{{name}}</name> empieza {{shift}} del {{weekday}} {{hours}} h antes, a las {{time}}",
-					"daySwap": "<name>{{name}}</name> trabaja este turno en lugar de {{shift}} del {{weekday}}"
+					"daySwap": "<name>{{name}}</name> trabaja este turno en lugar de {{shift}} del {{weekday}}",
+					"restDayMove": "<name>{{name}}</name> viene en su {{dayType}}; el {{weekday}} pasa a ser su {{dayType}}"
 				},
 				"changeCount_one": "{{count}} cambio",
 				"changeCount_other": "{{count}} cambios",

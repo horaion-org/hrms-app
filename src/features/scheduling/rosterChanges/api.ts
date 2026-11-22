@@ -87,6 +87,7 @@ export const REPAIR_OPTION_KINDS = [
 	"OVERTIME_STRETCH",
 	"STRETCH_PAIR",
 	"DAY_SWAP",
+	"REST_DAY_MOVE",
 	"OTHER",
 ] as const;
 

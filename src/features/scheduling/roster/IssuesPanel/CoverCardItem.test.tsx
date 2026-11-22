@@ -11,6 +11,7 @@ import {
 	oneOfTwoOption,
 	otherTwoPeopleOption,
 	restDayCallInOption,
+	restDayMoveOption,
 	stretchAfterOption,
 	stretchPairOption,
 	takenOffCallInOption,
@@ -105,6 +106,11 @@ describe("CoverCardItem", () => {
 			/Aisha Rahman works this shift instead of Friday Front Desk AM.*Within hours.*30 h of 44 h this week/,
 		],
 		[
+			"a rest-day move",
+			restDayMoveOption(),
+			/Aisha Rahman comes in on a rest day; Saturday becomes their rest day.*Within hours/,
+		],
+		[
 			"a stretch pair, one sentence each, the one who stays on first",
 			stretchPairOption(),
 			/Suggested.*Ben Ong stays on 2 h, until 15:00.*Chen Wei starts 2 h early, at 12:00\+4 h overtime/,
@@ -115,8 +121,8 @@ describe("CoverCardItem", () => {
 			const card = show([option]);
 
 			expect(card).toHaveTextContent(text);
-			// No before → after tiles: the sentence says the change.
-			expect(card).not.toHaveTextContent("becomes");
+			// No before → after tiles (each pair's arrow reads "becomes"): the sentence says the change.
+			expect(screen.queryByText("becomes")).toBeNull();
 		}
 	);
 
