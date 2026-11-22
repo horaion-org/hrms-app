@@ -4,7 +4,7 @@ import { formatTimeRange } from "@/features/scheduling/shifts/formatShift";
 import {
 	stretchedTimes,
 	stretchMinutes,
-} from "@/features/scheduling/roster/shiftStretch";
+} from "@/features/scheduling/shifts/shiftStretch";
 import { stretchOvertimeText } from "@/features/scheduling/shifts/stretchWords";
 import type {
 	RosterCellValue,

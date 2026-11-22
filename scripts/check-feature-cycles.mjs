@@ -56,7 +56,6 @@ const ALLOWED_AREA_PAIRS = [
 	"dates<->startingContext",
 	"hours<->startingContext",
 	"months<->schedules",
-	"roster<->rosterChanges",
 	"roster<->rulesCheck",
 	"roster<->schedules",
 	"schedules<->shifts",
