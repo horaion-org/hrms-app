@@ -107,7 +107,7 @@ describe("GapCover", () => {
 		await screen.findByText("2 options found");
 		const cards = screen.getAllByRole("listitem");
 		expect(cards).toHaveLength(2);
-		expect(cards[0]).toHaveTextContent(/Aisha Rahman.*Suggested.*Within hours/);
+		expect(cards[0]).toHaveTextContent(/Suggested.*Aisha Rahman.*Within hours/);
 		expect(cards[1]).toHaveTextContent(
 			/Ben Ong stays on 2 h, until 15:00.*\+2 h overtime/
 		);

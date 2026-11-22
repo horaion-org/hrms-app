@@ -41,15 +41,12 @@ const SuggestedBadge = (): FunctionComponent => {
 
 /**
  * One person's line: their initials, then their sentence, the name in the
- * card's name weight and the rest in its body weight; "Suggested" after the
- * first person's sentence on the suggested card.
+ * card's name weight and the rest in its body weight.
  */
 const PersonLine = ({
 	sentence,
-	suggested,
 }: {
 	sentence: PersonSentence;
-	suggested: boolean;
 }): FunctionComponent => (
 	<>
 		{/* The sentence names them; the initials are only a face. */}
@@ -58,17 +55,14 @@ const PersonLine = ({
 			className="size-8! text-xs!"
 			name={sentence.name}
 		/>
-		<span className="flex flex-wrap items-center gap-x-1.5 gap-y-1 self-center text-neutral-800">
-			<span>
-				<Trans
-					i18nKey={sentence.key}
-					values={{ ...sentence.values, name: sentence.name }}
-					components={{
-						name: <span className="font-semibold text-neutral-900" />,
-					}}
-				/>
-			</span>
-			{suggested && <SuggestedBadge />}
+		<span className="self-center text-neutral-800">
+			<Trans
+				i18nKey={sentence.key}
+				values={{ ...sentence.values, name: sentence.name }}
+				components={{
+					name: <span className="font-semibold text-neutral-900" />,
+				}}
+			/>
 		</span>
 	</>
 );
@@ -93,10 +87,7 @@ const DrawnChange = ({
 			name={card.groups[0]?.name || card.people}
 		/>
 		<span className="flex min-w-0 flex-col gap-1">
-			<span className="flex flex-wrap items-center gap-1.5">
-				<span className="font-semibold text-neutral-900">{card.people}</span>
-				{card.suggested && <SuggestedBadge />}
-			</span>
+			<span className="font-semibold text-neutral-900">{card.people}</span>
 			<span className="text-neutral-800">{changeCount}</span>
 			<ChangeTilePairs groups={card.groups} knownDay={gapDay} />
 		</span>
@@ -105,8 +96,9 @@ const DrawnChange = ({
 
 /**
  * One option (UX note 2026-11-22 §2): one line per person, their initials
- * and their sentence ("Aisha Rahman comes in on a day off"), "Suggested" on
- * the one card suggested; a change no sentence says is drawn instead. Under
+ * and their sentence ("Aisha Rahman comes in on a day off"), under
+ * "Suggested" on the one card suggested; a change no sentence says is drawn
+ * instead. Under
  * them what it still leaves short in red, then one cost line: its cost chips
  * (and "Fills 1 of 2", "Taken off this shift earlier" when so), the week, and
  * a declined offer's "Declined". The whole card opens its review, a chevron
@@ -135,13 +127,15 @@ export const CoverCardItem = ({
 			className="grid min-w-0 flex-1 grid-cols-[2rem_minmax(0,1fr)] items-start gap-x-2.5 gap-y-1.5"
 			id={bodyId}
 		>
+			{/* "Suggested" belongs to the card, not to one of its people: its own first row. */}
+			{card.suggested && (
+				<span className="col-start-2">
+					<SuggestedBadge />
+				</span>
+			)}
 			{change.kind === "sentences" ? (
-				change.sentences.map((sentence, place) => (
-					<PersonLine
-						key={sentence.membershipId}
-						sentence={sentence}
-						suggested={card.suggested && place === 0}
-					/>
+				change.sentences.map((sentence) => (
+					<PersonLine key={sentence.membershipId} sentence={sentence} />
 				))
 			) : (
 				<DrawnChange

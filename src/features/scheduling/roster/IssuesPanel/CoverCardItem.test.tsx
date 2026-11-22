@@ -87,7 +87,7 @@ describe("CoverCardItem", () => {
 		[
 			"a call-in on a day off",
 			callInOption(),
-			/Aisha Rahman comes in on a day offSuggestedWithin hours30 → 36 h of 44 h this week/,
+			/Suggested.*Aisha Rahman comes in on a day offWithin hours30 → 36 h of 44 h this week/,
 		],
 		[
 			"a call-in on a rest day",
@@ -107,7 +107,7 @@ describe("CoverCardItem", () => {
 		[
 			"a stretch pair, one sentence each, the one who stays on first",
 			stretchPairOption(),
-			/Ben Ong stays on 2 h, until 15:00Suggested.*Chen Wei starts 2 h early, at 12:00\+4 h overtime/,
+			/Suggested.*Ben Ong stays on 2 h, until 15:00.*Chen Wei starts 2 h early, at 12:00\+4 h overtime/,
 		],
 	])(
 		"given_%s_when_drawn_then_aSentencePerPersonAndOneCostLineWithoutTiles",
@@ -134,9 +134,20 @@ describe("CoverCardItem", () => {
 		expect(card).not.toHaveTextContent("Cover it between them");
 	});
 
+	it("given_aSuggestedPair_when_drawn_then_suggestedHeadsTheCardBeforeBothPeople", () => {
+		show([stretchPairOption()]);
+
+		const suggested = screen.getByText("Suggested");
+		for (const name of ["Ben Ong", "Chen Wei"])
+			expect(
+				suggested.compareDocumentPosition(screen.getByText(name)) &
+					Node.DOCUMENT_POSITION_FOLLOWING
+			).toBeTruthy();
+	});
+
 	it("given_theOlderRepairsChange_when_drawn_then_itsCountAndEachPersonsDaysUnderTheirName", () => {
 		expect(show([otherTwoPeopleOption()])).toHaveTextContent(
-			/Ben Ong and Aisha Rahman.*2 changes.*Ben Ong.*Lunch Rush.*becomes.*Front Desk AM.*Aisha Rahman.*Day off.*becomes.*Lunch Rush/
+			/Suggested.*Ben Ong and Aisha Rahman.*2 changes.*Ben Ong.*Lunch Rush.*becomes.*Front Desk AM.*Aisha Rahman.*Day off.*becomes.*Lunch Rush/
 		);
 	});
 
