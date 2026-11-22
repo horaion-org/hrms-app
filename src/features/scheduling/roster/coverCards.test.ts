@@ -67,6 +67,7 @@ describe("optionCardList", () => {
 			return row && assignmentCell(row);
 		},
 		weekday: (isoDate) => (isoDate === "2026-10-17" ? "Saturday" : "Friday"),
+		gapDay: "2026-10-17",
 		memberName: (membershipId) => NAMES[membershipId] ?? "",
 		groupsOf: (cells, nameOf) =>
 			cells.map((cell) => ({
@@ -429,6 +430,7 @@ describe("reviewedCardOf", () => {
 				return row && assignmentCell(row);
 			},
 			weekday: () => "Saturday",
+			gapDay: "2026-10-17",
 			memberName: (membershipId) => NAMES[membershipId] ?? "",
 			groupsOf: () => [],
 			shortNow: null,
@@ -478,6 +480,7 @@ describe("optionCardList: someone the roster no longer shows", () => {
 		const [card] = optionCardList([gone], {
 			dayBefore: () => undefined,
 			weekday: () => "Saturday",
+			gapDay: "2026-10-17",
 			memberName: () => "Former member",
 			groupsOf: (cells, nameOf) =>
 				cells.map((cell) => ({

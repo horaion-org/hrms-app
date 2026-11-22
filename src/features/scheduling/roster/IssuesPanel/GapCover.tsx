@@ -288,6 +288,7 @@ const GapCoverBody = ({
 			return row && assignmentCell(row);
 		},
 		weekday: (isoDate) => weekdayName.format(new Date(`${isoDate}T00:00:00`)),
+		gapDay: gap.day,
 		memberName,
 		groupsOf: (cells, nameOf) =>
 			changeTileGroups(cells, cover.assignments, shiftOf, nameOf, t),

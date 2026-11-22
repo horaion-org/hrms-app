@@ -5274,6 +5274,15 @@
 					"breaksRule": "Would break: {{rule}}",
 					"otherReason": "Cannot take this shift."
 				},
+				"sentence": {
+					"callIn": "<name>{{name}}</name> comes in on a {{dayType}}",
+					"move": "<name>{{name}}</name> moves from {{shift}} {{times}}",
+					"stretchAfter": "<name>{{name}}</name> stays on {{hours}} h, until {{time}}",
+					"stretchAfterOtherDay": "<name>{{name}}</name> stays on {{hours}} h after {{weekday}} {{shift}}, until {{time}}",
+					"stretchBefore": "<name>{{name}}</name> starts {{hours}} h early, at {{time}}",
+					"stretchBeforeOtherDay": "<name>{{name}}</name> starts {{weekday}} {{shift}} {{hours}} h early, at {{time}}",
+					"daySwap": "<name>{{name}}</name> works this shift instead of {{weekday}} {{shift}}"
+				},
 				"kindLine": {
 					"callIn": "Comes in on a {{dayType}}",
 					"move": "Moves from {{shift}}",

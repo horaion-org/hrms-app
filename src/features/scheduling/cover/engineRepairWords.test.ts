@@ -1,6 +1,7 @@
 import { createInstance, type TFunction } from "i18next";
 import { beforeAll, describe, expect, it } from "vitest";
 import en from "@/assets/locales/en/translations.json";
+import es from "@/assets/locales/es/translations.json";
 import { ApiProblemError } from "@/common/problem";
 import {
 	callInOption,
@@ -10,7 +11,9 @@ import {
 	otherTwoPeopleOption,
 	restDayCallInOption,
 	stretchAfterOption,
+	stretchAfterOtherDayOption,
 	stretchBeforeOption,
+	stretchBeforeOtherDayOption,
 	stretchPairOption,
 } from "@/features/scheduling/cover/engineRepairFixtures";
 import { scheduleAssignmentsFixture } from "@/features/scheduling/schedules/fixtures";
@@ -19,6 +22,7 @@ import {
 	clockTime,
 	costChips,
 	optionKindLine,
+	optionSentences,
 	REFUSAL_ACTIONS,
 	stillShortToast,
 	weekLine,
@@ -28,11 +32,16 @@ import {
 } from "@/features/scheduling/cover/engineRepairWords";
 
 let t: TFunction;
+let spanish: TFunction;
 
 beforeAll(async () => {
 	const i18n = createInstance();
-	await i18n.init({ lng: "en", resources: { en: { translation: en } } });
+	await i18n.init({
+		lng: "en",
+		resources: { en: { translation: en }, es: { translation: es } },
+	});
 	t = i18n.t;
+	spanish = i18n.getFixedT("es");
 });
 
 /** A refusal as the API client raises it. */
@@ -84,6 +93,7 @@ const sources: OptionWordSources = {
 		new Intl.DateTimeFormat("en", { weekday: "long", timeZone: "UTC" }).format(
 			new Date(isoDate)
 		),
+	gapDay: "2026-10-17",
 };
 
 describe("optionKindLine", () => {
@@ -102,6 +112,145 @@ describe("optionKindLine", () => {
 		["the older repair's two changes", otherTwoPeopleOption(), "2 changes"],
 	])("words %s", (_kind, option, line) => {
 		expect(optionKindLine(option, sources, t)).toBe(line);
+	});
+});
+
+describe("optionSentences", () => {
+	/** An option's sentences read (in English unless told) with each person's id for a name, as the card reads them. */
+	const said = (
+		option: Parameters<typeof optionSentences>[0],
+		wordSources: OptionWordSources = sources,
+		translate: TFunction = t
+	): Array<string> | undefined =>
+		optionSentences(option, wordSources, translate)?.map((sentence) =>
+			translate(sentence.key, {
+				...sentence.values,
+				name: sentence.membershipId,
+			})
+		);
+
+	it.each([
+		[
+			"a call-in on a day off",
+			callInOption(),
+			["<name>m-1</name> comes in on a day off"],
+		],
+		[
+			"a call-in on a rest day",
+			restDayCallInOption(),
+			["<name>m-1</name> comes in on a rest day"],
+		],
+		[
+			"a move",
+			moveOption(),
+			["<name>m-2</name> moves from Lunch Rush 11:00 – 13:00"],
+		],
+		[
+			"a stretch after",
+			stretchAfterOption(),
+			["<name>m-2</name> stays on 2 h, until 15:00"],
+		],
+		[
+			"a stretch before",
+			stretchBeforeOption(),
+			["<name>m-3</name> starts 2 h early, at 12:00"],
+		],
+		[
+			"a stretch after a shift on another day",
+			stretchAfterOtherDayOption(),
+			["<name>m-2</name> stays on 2 h after Friday Lunch Rush, until 15:00"],
+		],
+		[
+			"a stretch before a shift on another day",
+			stretchBeforeOtherDayOption(),
+			["<name>m-3</name> starts Sunday Swing Shift 2 h early, at 12:00"],
+		],
+		[
+			"a pair of stretches, the one who stays on first",
+			stretchPairOption(),
+			[
+				"<name>m-2</name> stays on 2 h, until 15:00",
+				"<name>m-3</name> starts 2 h early, at 12:00",
+			],
+		],
+		[
+			"a day swap",
+			daySwapOption(),
+			["<name>m-1</name> works this shift instead of Friday Front Desk AM"],
+		],
+		["the older repair's two changes", otherTwoPeopleOption(), undefined],
+	])("says %s", (_kind, option, sentences) => {
+		expect(said(option)).toEqual(sentences);
+	});
+
+	it("puts the one who stays on first even when the engine lists them second", () => {
+		const pair = stretchPairOption();
+
+		expect(said({ ...pair, cells: [...pair.cells].reverse() })).toEqual([
+			"<name>m-2</name> stays on 2 h, until 15:00",
+			"<name>m-3</name> starts 2 h early, at 12:00",
+		]);
+	});
+
+	it("says a call-in on a day type of the company's own by its name", () => {
+		const onHoliday: OptionWordSources = {
+			...sources,
+			dayBefore: () => ({
+				kind: "OFF",
+				dayType: "PUBLIC_HOLIDAY_OFF",
+				shift: null,
+				jobTitle: null,
+				stretch: null,
+			}),
+		};
+
+		expect(said(callInOption(), onHoliday)).toEqual([
+			"<name>m-1</name> comes in on a public holiday off",
+		]);
+	});
+
+	it.each([
+		[
+			"a stretch of no minutes",
+			{
+				...stretchAfterOption(),
+				cells: [{ ...stretchAfterOption().cells[0]!, stretchAfterMinutes: 0 }],
+			},
+		],
+		[
+			"a move from a shift the roster does not name",
+			{
+				...moveOption(),
+				cells: [{ ...moveOption().cells[0]!, day: "2026-11-01" }],
+			},
+		],
+		["an option with no day worked", { ...callInOption(), cells: [] }],
+	])("cannot say %s, so the card draws it", (_case, option) => {
+		expect(optionSentences(option, sources, t)).toBeUndefined();
+	});
+
+	it("says each kind in Spanish with the same values", () => {
+		const spanishSources = { ...sources, weekday: (): string => "viernes" };
+
+		expect(
+			[
+				callInOption(),
+				moveOption(),
+				stretchAfterOption(),
+				stretchBeforeOption(),
+				stretchAfterOtherDayOption(),
+				stretchBeforeOtherDayOption(),
+				daySwapOption(),
+			].flatMap((option) => said(option, spanishSources, spanish))
+		).toEqual([
+			"<name>m-1</name> viene en su día libre",
+			"<name>m-2</name> pasa desde Lunch Rush 11:00 – 13:00",
+			"<name>m-2</name> se queda 2 h más, hasta las 15:00",
+			"<name>m-3</name> empieza 2 h antes, a las 12:00",
+			"<name>m-2</name> se queda 2 h más tras Lunch Rush del viernes, hasta las 15:00",
+			"<name>m-3</name> empieza Swing Shift del viernes 2 h antes, a las 12:00",
+			"<name>m-1</name> trabaja este turno en lugar de Front Desk AM del viernes",
+		]);
 	});
 });
 

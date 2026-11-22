@@ -158,6 +158,36 @@ export const stretchAfterOption = (): RepairOption =>
 		extraMinutes: { overtime: 120 },
 	});
 
+/** Ben stays on two hours after Friday's Lunch Rush: a stretch on another day than Saturday's gap, as a night shift stretched into the next morning is. */
+export const stretchAfterOtherDayOption = (): RepairOption =>
+	repairOption({
+		kind: "OVERTIME_STRETCH",
+		fills: "PART",
+		cells: [workCell(BEN, FRIDAY, LUNCH_RUSH, { stretchAfterMinutes: 120 })],
+		people: [
+			person(BEN, "Ben Ong", { before: 1200, after: 1320, contract: 1320 }),
+		],
+		stillShort: [
+			{ start: "2026-10-17T09:00:00", end: "2026-10-17T15:00:00", shortBy: 1 },
+		],
+		extraMinutes: { overtime: 120 },
+	});
+
+/** Chen starts Sunday's swing shift two hours early, for a gap on another day. */
+export const stretchBeforeOtherDayOption = (): RepairOption =>
+	repairOption({
+		kind: "OVERTIME_STRETCH",
+		fills: "PART",
+		cells: [workCell(CHEN, SUNDAY, SWING_SHIFT, { stretchBeforeMinutes: 120 })],
+		people: [
+			person(CHEN, "Chen Wei", { before: 2880, after: 3000, contract: 2640 }),
+		],
+		stillShort: [
+			{ start: "2026-10-17T09:00:00", end: "2026-10-17T15:00:00", shortBy: 1 },
+		],
+		extraMinutes: { overtime: 120 },
+	});
+
 /** Chen starts the swing shift two hours early; 09:00 to 12:00 is still one short. */
 export const stretchBeforeOption = (): RepairOption =>
 	repairOption({

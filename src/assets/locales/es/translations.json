@@ -5074,6 +5074,15 @@
 					"breaksRule": "Incumpliría: {{rule}}",
 					"otherReason": "No puede cubrir este turno."
 				},
+				"sentence": {
+					"callIn": "<name>{{name}}</name> viene en su {{dayType}}",
+					"move": "<name>{{name}}</name> pasa desde {{shift}} {{times}}",
+					"stretchAfter": "<name>{{name}}</name> se queda {{hours}} h más, hasta las {{time}}",
+					"stretchAfterOtherDay": "<name>{{name}}</name> se queda {{hours}} h más tras {{shift}} del {{weekday}}, hasta las {{time}}",
+					"stretchBefore": "<name>{{name}}</name> empieza {{hours}} h antes, a las {{time}}",
+					"stretchBeforeOtherDay": "<name>{{name}}</name> empieza {{shift}} del {{weekday}} {{hours}} h antes, a las {{time}}",
+					"daySwap": "<name>{{name}}</name> trabaja este turno en lugar de {{shift}} del {{weekday}}"
+				},
 				"kindLine": {
 					"callIn": "Viene en su {{dayType}}",
 					"move": "Pasa desde {{shift}}",

@@ -50,6 +50,7 @@ const show = (
 			return row && assignmentCell(row);
 		},
 		weekday: (isoDate) => (isoDate === "2026-10-17" ? "Saturday" : "Friday"),
+		gapDay: "2026-10-17",
 		memberName,
 		groupsOf: (cells, nameOf) =>
 			changeTileGroups(
