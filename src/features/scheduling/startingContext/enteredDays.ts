@@ -36,12 +36,13 @@ export type EnteredDayBefore = {
 };
 
 /**
- * What was entered in a cell; nothing for a day a roster or leave fills
- * (locked) or one not known. A worked day whose shift is no longer in use
- * names none and reads as not known, as the grid to enter them shows it.
+ * A cell as a shift worked or a day off, whatever told the API; nothing for
+ * leave or a day not known. A worked day without its shift's name and times
+ * (a shift no longer in use) reads as not known, as the grid to enter them shows it.
  */
-export const enteredWhatOf = (cell: StartingCell): EnteredWhat | undefined => {
-	if (cell.locked) return undefined;
+export const shiftOrDayOffOf = (
+	cell: StartingCell
+): EnteredWhat | undefined => {
 	if (cell.kind === "OFF") return { kind: "off", dayType: cell.dayType };
 	if (
 		cell.kind !== "WORKED" ||
@@ -57,6 +58,10 @@ export const enteredWhatOf = (cell: StartingCell): EnteredWhat | undefined => {
 		end: cell.endTime,
 	};
 };
+
+/** What was entered in a cell; nothing for a day a roster or leave fills (locked) or one not known. */
+export const enteredWhatOf = (cell: StartingCell): EnteredWhat | undefined =>
+	cell.locked ? undefined : shiftOrDayOffOf(cell);
 
 /** Every day entered by hand before a schedule's run, by person then day, as the API orders them. */
 export const enteredDaysBeforeOf = (
