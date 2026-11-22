@@ -524,15 +524,27 @@ describe("GapCover: the review inside the row", () => {
 		expect(screen.queryByText(/Still short afterwards/)).toBeNull();
 	});
 
-	it("given_aTwoPersonOption_when_reviewed_then_aBlockEachWithTheirWeekAndOvertime", async () => {
+	it("given_aTwoPersonOption_when_reviewed_then_aBlockEachWithTheirWeekThenTheOptionsChipsOnce", async () => {
 		await reviewOption(stretchPairOption());
 
-		expect(
-			screen.getByRole("group", { name: "What changes" })
-		).toHaveTextContent(
-			/Ben Ong.*20 → 22 h of 22 h this week.*Chen Wei.*48 → 50 h of 44 h this week · \+6 h overtime/
+		const review = screen.getByRole("group", { name: "What changes" });
+		// Each week is the week's totals: no overtime worked out from it beside a person.
+		expect(review).toHaveTextContent(
+			/Ben Ong.*20 → 22 h of 22 h this week.*Chen Wei.*48 → 50 h of 44 h this week\+4 h overtime/
 		);
+		expect(within(review).queryByText(/this week ·/)).toBeNull();
+		expect(within(review).getAllByText("+4 h overtime")).toHaveLength(1);
 		expect(screen.getAllByRole("progressbar")).toHaveLength(2);
+	});
+
+	it("given_onePersonsStretch_when_reviewed_then_itsCostBesideTheWeekAndNoChipRow", async () => {
+		await reviewOption(stretchAfterOption());
+
+		const review = screen.getByRole("group", { name: "What changes" });
+		expect(
+			within(review).getByText("20 → 22 h of 22 h this week · +2 h overtime")
+		).toBeVisible();
+		expect(within(review).queryByText("+2 h overtime")).toBeNull();
 	});
 
 	it("given_aRestDayCallIn_when_reviewed_then_itsWeekSaysWhatItCosts", async () => {

@@ -4,12 +4,12 @@ import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Avatar } from "@/components/ui/Avatar";
-import { Badge, type BadgeTone } from "@/components/ui/Badge";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
-import type { CostChipKind } from "@/features/scheduling/cover/engineRepairWords";
 import { formatOfferTime } from "@/features/scheduling/coverOffers/coverOfferRules";
 import type { OptionCard } from "@/features/scheduling/roster/coverCards";
 import { ChangeTilePairs } from "./ChangeTilePairs";
+import { COST_CHIP_TONES } from "./issuePanelLooks";
 
 export type CoverCardItemProps = {
 	card: OptionCard;
@@ -25,16 +25,6 @@ export type CoverCardItemProps = {
 };
 
 const key = "scheduling.issues.cover";
-
-/** Each cost chip's tone: within hours in green, extra hours, overtime and a rest day in amber, the rest neutral. */
-const CHIP_TONES: Record<CostChipKind, BadgeTone> = {
-	withinHours: "success",
-	pastContract: "warning",
-	overtime: "warning",
-	restDayWork: "warning",
-	timeOffEarned: "neutral",
-	notRuleChecked: "neutral",
-};
 
 /**
  * One option (UX note 2): initials and who, "Suggested" on the one card
@@ -83,7 +73,7 @@ export const CoverCardItem = ({
 				)}
 				<span className="flex flex-wrap items-center gap-1.5">
 					{card.costChips.map((chip) => (
-						<Badge key={chip.kind} compact tone={CHIP_TONES[chip.kind]}>
+						<Badge key={chip.kind} compact tone={COST_CHIP_TONES[chip.kind]}>
 							{chip.text}
 						</Badge>
 					))}
