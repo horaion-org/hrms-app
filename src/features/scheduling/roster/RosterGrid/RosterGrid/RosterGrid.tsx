@@ -6,6 +6,7 @@ import { formattingLocale } from "@/common/formattingLocale";
 import { joinClassNames } from "@/common/joinClassNames";
 import type { FunctionComponent } from "@/common/types";
 import { Avatar } from "@/components/ui/Avatar";
+import { RosterDayBefore } from "@/features/scheduling/roster/RosterGrid/RosterDayBefore";
 import { RosterHeaderCount } from "@/features/scheduling/roster/RosterGrid/RosterHeaderCount";
 import { RosterShift } from "@/features/scheduling/roster/RosterGrid/RosterShift";
 import type { GridFindings } from "@/features/scheduling/roster/findings/findingsOnGrid";
@@ -31,8 +32,12 @@ import {
 	type IssuesAbout,
 } from "@/features/scheduling/roster/rosterMarks";
 import { rosterCellKey } from "@/features/scheduling/rosterChanges/rosterEdit";
-import { cellMarkLooks, rosterLooks } from "@/features/scheduling/roster/rosterLooks";
+import {
+	cellMarkLooks,
+	rosterLooks,
+} from "@/features/scheduling/roster/rosterLooks";
 import { usePreviewedCellInView } from "@/features/scheduling/roster/RosterGrid/RosterGrid/usePreviewedCellInView";
+import type { DayBeforeRun } from "@/features/scheduling/startingContext/daysBeforeRun";
 
 export type RosterGridProps = {
 	/** The seven ISO dates shown, Monday first. */
@@ -91,6 +96,10 @@ export type RosterGridProps = {
 	shownDay?: string;
 	/** Days of the week this schedule does not cover (API ADR-0113): shown greyed, with no cells to choose. */
 	outsideDays?: ReadonlyArray<string>;
+	/** Days before the run's first day, shown muted with each person's day then (`RosterDayBefore`), read-only. */
+	beforeRunDays?: ReadonlyArray<string>;
+	/** Those days by person's profile, then date; a day missing is not known. */
+	daysBeforeByMember?: ReadonlyMap<string, Record<string, DayBeforeRun>>;
 	className?: string;
 };
 
@@ -128,6 +137,8 @@ export const RosterGrid = ({
 	previewDays,
 	offeredDays,
 	outsideDays,
+	beforeRunDays,
+	daysBeforeByMember,
 	compact = false,
 	shownDay,
 	className,
@@ -146,6 +157,12 @@ export const RosterGrid = ({
 	});
 	const dayName = (date: string): string =>
 		fullDay.format(dayjs(date).toDate());
+	const isBeforeRun = (date: string): boolean =>
+		beforeRunDays?.includes(date) === true;
+	// A week wholly before the run has no hours of this roster to give.
+	const showsRunDay = days.some(
+		(date) => !isBeforeRun(date) && outsideDays?.includes(date) !== true
+	);
 	const gridRef = useRef<HTMLDivElement>(null);
 	usePreviewedCellInView(gridRef, previewDays);
 	const previewing = previewDays !== undefined && previewDays.size > 0;
@@ -209,6 +226,15 @@ export const RosterGrid = ({
 		name: string,
 		date: string
 	): ReactNode => {
+		if (isBeforeRun(date))
+			return (
+				<RosterDayBefore
+					compact={compact}
+					day={daysBeforeByMember?.get(row.memberProfileId ?? "")?.[date]}
+					dayName={dayName(date)}
+					name={name}
+				/>
+			);
 		if (outsideDays?.includes(date))
 			return (
 				<span className="flex h-14 w-full items-center justify-center rounded bg-neutral-100 px-1 text-center text-xs text-neutral-700">
@@ -357,7 +383,9 @@ export const RosterGrid = ({
 									scope="col"
 									className={joinClassNames(
 										"h-16 px-2 text-center max-md:h-11",
-										dayColumnClasses(date, shownDay)
+										dayColumnClasses(date, shownDay),
+										// A column before the run is muted as a whole: not this roster's day.
+										isBeforeRun(date) && "bg-neutral-100 text-neutral-700"
 									)}
 								>
 									<span className="flex items-center justify-center gap-1 text-sm font-bold max-md:inline-flex">
@@ -418,11 +446,13 @@ export const RosterGrid = ({
 											<span className="mt-0.5 block truncate text-[0.625rem]">
 												{row.jobTitle ?? row.employeeCode}
 											</span>
-											<span className="block text-[0.625rem]">
-												{t("scheduling.detail.hours", {
-													count: hoursInDays(row, days),
-												})}
-											</span>
+											{showsRunDay && (
+												<span className="block text-[0.625rem]">
+													{t("scheduling.detail.hours", {
+														count: hoursInDays(row, days),
+													})}
+												</span>
+											)}
 										</span>
 									</span>
 								</th>
@@ -436,6 +466,7 @@ export const RosterGrid = ({
 												"align-middle transition-opacity motion-reduce:transition-none",
 												compact ? "p-1" : "p-3",
 												dayColumnClasses(date, shownDay),
+												isBeforeRun(date) && "bg-neutral-100",
 												// While a change is previewed, its days stand out and the rest step back.
 												isPreviewed(key)
 													? "bg-ink-blue-50 outline-2 -outline-offset-4 outline-solid outline-ink-blue-700"
