@@ -1833,7 +1833,7 @@ it("changes a generated roster's day by hand: preview, apply, mark, then undo", 
 	await user.click(within(panel).getByRole("radio", { name: "Not working" }));
 
 	expect(
-		await within(panel).findByText("Front Desk AM, Mon, Oct 12: 2 → 1 people.")
+		await within(panel).findByText("Front Desk AM, Mon, Oct 12: 2 → 1 person.")
 	).toBeVisible();
 	expect(panel).toHaveTextContent(
 		"Working-time rules aren’t checked for changes made by hand. After you apply this, press Validate schedule."
@@ -1932,7 +1932,7 @@ it("asks before an undo that needs a tick and a remark, as an edit would", async
 
 	const panel = await openAishaMonday(user);
 	await user.click(within(panel).getByRole("radio", { name: "Not working" }));
-	await within(panel).findByText("Front Desk AM, Mon, Oct 12: 2 → 1 people.");
+	await within(panel).findByText("Front Desk AM, Mon, Oct 12: 2 → 1 person.");
 	await user.click(within(panel).getByRole("button", { name: "Apply change" }));
 	await user.click(
 		await screen.findByRole("button", { name: "Changed by hand: 1 day" })
@@ -2017,7 +2017,7 @@ it("says the roster changed when someone else got there first, and reads it agai
 
 	const panel = await openAishaMonday(user);
 	await user.click(within(panel).getByRole("radio", { name: "Not working" }));
-	await within(panel).findByText("Front Desk AM, Mon, Oct 12: 2 → 1 people.");
+	await within(panel).findByText("Front Desk AM, Mon, Oct 12: 2 → 1 person.");
 	const readsBefore = readsOf(calls, SCHEDULE_READ).length;
 	await user.click(within(panel).getByRole("button", { name: "Apply change" }));
 
@@ -2223,7 +2223,7 @@ it("sends nothing when the person cancels a change to a published roster", async
 
 	const panel = await openAishaMonday(user);
 	await user.click(within(panel).getByRole("radio", { name: "Not working" }));
-	await within(panel).findByText("Front Desk AM, Mon, Oct 12: 2 → 1 people.");
+	await within(panel).findByText("Front Desk AM, Mon, Oct 12: 2 → 1 person.");
 	await user.click(within(panel).getByRole("button", { name: "Apply change" }));
 	await user.click(
 		within(

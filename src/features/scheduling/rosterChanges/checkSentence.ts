@@ -22,7 +22,8 @@ export type CheckSentence = {
 /**
  * The sentence for one check. Pure: the API sends codes and ids only, and the
  * app writes every sentence (ADR-0003), naming the member, shift, day and,
- * on WORKS_ON_DAY_OFF, the type of the day worked.
+ * on WORKS_ON_DAY_OFF, the type of the day worked; a count says "1 person"
+ * or "2 people" by the number after the change.
  */
 export const checkSentence = (
 	check: RosterCheck,
@@ -35,6 +36,8 @@ export const checkSentence = (
 		day: names.day(check.day),
 		before: check.countBefore ?? 0,
 		after: check.countAfter ?? 0,
+		// The people counted after the change, which makes "0 → 1 person" singular.
+		count: check.countAfter ?? 0,
 		dayType: names.dayType(check.dayType),
 	},
 });

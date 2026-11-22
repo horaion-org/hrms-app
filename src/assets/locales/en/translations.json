@@ -5084,7 +5084,8 @@
 				"ROSTERED_ELSEWHERE": "{{name}} also works on {{day}} in another roster.",
 				"NOT_SCHEDULABLE_NOW": "{{name}} can no longer be rostered in this department.",
 				"WORKS_ON_DAY_OFF": "{{name}} works on their {{dayType}} on {{day}}.",
-				"COVERAGE_CHANGED": "{{shift}}, {{day}}: {{before}} → {{after}} people.",
+				"COVERAGE_CHANGED_one": "{{shift}}, {{day}}: {{before}} → {{after}} person.",
+				"COVERAGE_CHANGED_other": "{{shift}}, {{day}}: {{before}} → {{after}} people.",
 				"UNKNOWN": "Another check applies to this change."
 			},
 			"error": {
