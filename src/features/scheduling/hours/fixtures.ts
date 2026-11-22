@@ -39,6 +39,7 @@ export const officerWeek = (
 	normalMinutes: 2640,
 	extraMinutes: 0,
 	overtimeMinutes: 1680,
+	countedLeaveMinutes: 0,
 	...overrides,
 });
 
@@ -49,6 +50,7 @@ export const partTimerWeek = (memberProfileId = "mp-2"): MemberWeekHours => ({
 	normalMinutes: 1200,
 	extraMinutes: 600,
 	overtimeMinutes: 0,
+	countedLeaveMinutes: 0,
 });
 
 /** A roster's hours for the week of Monday 30 November 2026, totals added up. */
@@ -68,6 +70,10 @@ export const rosterHours = (
 		extraMinutes: members.reduce((sum, member) => sum + member.extraMinutes, 0),
 		overtimeMinutes: members.reduce(
 			(sum, member) => sum + member.overtimeMinutes,
+			0
+		),
+		countedLeaveMinutes: members.reduce(
+			(sum, member) => sum + member.countedLeaveMinutes,
 			0
 		),
 	},

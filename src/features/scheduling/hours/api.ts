@@ -119,6 +119,11 @@ const memberWeekHoursSchema = z.object({
 	/** A part-timer's minutes past their own contract and within the full-time week; 0 for anyone else. */
 	extraMinutes: z.number(),
 	overtimeMinutes: z.number(),
+	/** Minutes of approved leave the week counts towards its hours; 0 when none, or from an API that does not send it yet. */
+	countedLeaveMinutes: z
+		.number()
+		.nullish()
+		.transform((minutes) => minutes ?? 0),
 });
 
 /** One person's week on a roster, as the hours ledger classifies it. */

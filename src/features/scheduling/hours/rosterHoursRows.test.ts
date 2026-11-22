@@ -7,6 +7,7 @@ import {
 import {
 	hasRosterHours,
 	rosterHoursRows,
+	showsCountedLeave,
 	TOTAL_ROW_KEY,
 } from "@/features/scheduling/hours/rosterHoursRows";
 import {
@@ -63,6 +64,27 @@ describe("rosterHoursRows", () => {
 		expect(
 			rosterHoursRows(rosterHours([]), scheduleAssignmentsFixture(), NAMES)
 		).toEqual([]);
+	});
+});
+
+describe("showsCountedLeave", () => {
+	it.each([
+		["no leave counted", [officerWeek(), partTimerWeek()], false],
+		[
+			"one person's leave counted",
+			[officerWeek("mp-1", { countedLeaveMinutes: 480 }), partTimerWeek()],
+			true,
+		],
+	])("shows a Leave column with %s: %s", (_case, members, shows) => {
+		expect(
+			showsCountedLeave(
+				rosterHoursRows(
+					rosterHours(members),
+					scheduleAssignmentsFixture(),
+					NAMES
+				)
+			)
+		).toBe(shows);
 	});
 });
 

@@ -19,6 +19,8 @@ export type RosterHoursRow = {
 	normalMinutes: number;
 	extraMinutes: number;
 	overtimeMinutes: number;
+	/** Approved leave the week counts towards its hours. */
+	countedLeaveMinutes: number;
 };
 
 /** The words the rows need: a person who left, and the total line. */
@@ -47,6 +49,11 @@ const rosterMembersOf = (
 	}
 	return members;
 };
+
+/** Whether some line of the week counts leave, so the table shows a Leave column. Pure. */
+export const showsCountedLeave = (
+	rows: ReadonlyArray<RosterHoursRow>
+): boolean => rows.some((row) => row.countedLeaveMinutes > 0);
 
 /**
  * One row per person in the roster's order, a person the roster no longer

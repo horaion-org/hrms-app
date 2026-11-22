@@ -8,6 +8,7 @@ import {
 } from "@/features/scheduling/hours/api";
 import {
 	midMonthOpenings,
+	officerWeek,
 	rosterHours,
 } from "@/features/scheduling/hours/fixtures";
 
@@ -85,8 +86,43 @@ describe("roster hours client", () => {
 			normalMinutes: 2640,
 			extraMinutes: 0,
 			overtimeMinutes: 1680,
+			countedLeaveMinutes: 0,
 		});
 		expect(read.totals.overtimeMinutes).toBe(1680);
+	});
+
+	it("reads counted leave on each person and the totals, and 0 from an API without it", async () => {
+		const withLeave = rosterHours([
+			officerWeek("mp-1", { countedLeaveMinutes: 480 }),
+		]);
+		// A week as an API without the field sends it.
+		const olderWeek = {
+			daysWorked: 6,
+			normalMinutes: 2640,
+			extraMinutes: 0,
+			overtimeMinutes: 1680,
+		};
+		stubApi({
+			[`GET ${HOURS}`]: [
+				{ status: 200, body: envelope(withLeave) },
+				{
+					status: 200,
+					body: envelope({
+						...withLeave,
+						members: [{ memberProfileId: "mp-1", ...olderWeek }],
+						totals: olderWeek,
+					}),
+				},
+			],
+		});
+
+		const read = await fetchRosterHours("c-1", UNIT, "s-1");
+		const older = await fetchRosterHours("c-1", UNIT, "s-1");
+
+		expect(read.members[0]?.countedLeaveMinutes).toBe(480);
+		expect(read.totals.countedLeaveMinutes).toBe(480);
+		expect(older.members[0]?.countedLeaveMinutes).toBe(0);
+		expect(older.totals.countedLeaveMinutes).toBe(0);
 	});
 
 	it("reads the first day counted, the week's Monday from an API without it", async () => {

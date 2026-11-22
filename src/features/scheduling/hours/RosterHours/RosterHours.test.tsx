@@ -62,6 +62,58 @@ describe("RosterHours", () => {
 		).toBeInTheDocument();
 	});
 
+	it("given_aWeekThatCountsLeave_when_shown_then_aLeaveColumnWithItsFiguresAndTotalAndTheNoteSaysWhatItIs", () => {
+		render(
+			<RosterHours
+				assignments={scheduleAssignmentsFixture()}
+				hours={{
+					status: "ready",
+					hours: rosterHours([
+						officerWeek("mp-1", { countedLeaveMinutes: 480 }),
+						partTimerWeek(),
+					]),
+				}}
+			/>
+		);
+
+		expect(
+			within(screen.getByRole("table", { name: "Hours" })).getByRole(
+				"columnheader",
+				{ name: "Leave" }
+			)
+		).toBeInTheDocument();
+		expect(bodyRows().map((cells) => cells.slice(1))).toEqual([
+			["6", "44 h", "0 h", "28 h", "8 h"],
+			["5", "20 h", "10 h", "0 h", "0 h"],
+			["11", "64 h", "10 h", "28 h", "8 h"],
+		]);
+		expect(
+			screen.getByText(
+				/Leave: approved leave that counts towards the week’s hours\.$/
+			)
+		).toBeInTheDocument();
+	});
+
+	it("given_aWeekWithoutCountedLeave_when_shown_then_noLeaveColumnAndTodaysNote", () => {
+		render(
+			<RosterHours
+				assignments={scheduleAssignmentsFixture()}
+				hours={{
+					status: "ready",
+					hours: rosterHours([officerWeek(), partTimerWeek()]),
+				}}
+			/>
+		);
+
+		expect(
+			within(screen.getByRole("table", { name: "Hours" })).queryByRole(
+				"columnheader",
+				{ name: "Leave" }
+			)
+		).toBeNull();
+		expect(screen.queryByText(/approved leave that counts/)).toBeNull();
+	});
+
 	it("writes part hours with one decimal at most", () => {
 		render(
 			<RosterHours
