@@ -201,6 +201,15 @@ describe("optionCardList", () => {
 		expect(list).toMatchObject({ partCaptionAt: 2, noFullFill: false });
 	});
 
+	it("never suggests an option not checked against the rules, nor the one after it", () => {
+		const list = optionCardList(
+			[callInOption({ workingTimeRulesChecked: false }), moveOption()],
+			sources()
+		);
+
+		expect(list.cards.map((card) => card.suggested)).toEqual([false, false]);
+	});
+
 	it("marks someone taken off the shift earlier and never suggests them", () => {
 		const list = optionCardList(
 			[takenOffCallInOption(), moveOption()],
@@ -348,7 +357,7 @@ describe("optionCardList", () => {
 		});
 	});
 
-	it("cards the hours-based people with their cost, not rule-checked, their week, the first suggested", () => {
+	it("cards the hours-based people with their cost, not rule-checked, their week, none suggested", () => {
 		const cards = fallbackCards(coverOptionsFixture().options, sources());
 
 		expect(
@@ -363,7 +372,7 @@ describe("optionCardList", () => {
 				"Aisha Rahman",
 				"Comes in on a day off",
 				["Within hours", "Not rule-checked"],
-				true,
+				false,
 			],
 			[
 				"Chen Wei",

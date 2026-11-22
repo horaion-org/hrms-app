@@ -185,6 +185,10 @@ const cardOfferOf = (
 const workCellOf = (option: RepairOption): RosterChangeCell | undefined =>
 	option.cells.find((cell) => cell.kind === "WORK");
 
+/** Whether a card's change was checked against the working-time rules; one marked "Not rule-checked" is never suggested. */
+const isRuleChecked = (card: Pick<OptionCard, "costChips">): boolean =>
+	!card.costChips.some((chip) => chip.kind === "notRuleChecked");
+
 /** One engine option as its card, not yet marked Suggested. */
 const optionCardOf = (
 	option: RepairOption,
@@ -219,10 +223,10 @@ const optionCardOf = (
 
 /**
  * The engine's options as cards, in its order, every part fill after the
- * fuller fills (UX note 3): the first is
- * Suggested when it fills more than part of the gap, its person has not
- * declined and nobody it changes was taken off this shift earlier; the caption "Cover part of it" sits before the first part
- * fill. Pure.
+ * fuller fills (UX note 3): the first is Suggested when it fills more than
+ * part of the gap, was checked against the working-time rules, its person
+ * has not declined and nobody it changes was taken off this shift earlier;
+ * the caption "Cover part of it" sits before the first part fill. Pure.
  */
 export const optionCardList = (
 	options: ReadonlyArray<RepairOption>,
@@ -246,6 +250,7 @@ export const optionCardList = (
 		suggested:
 			place === 0 &&
 			!isPart(card) &&
+			isRuleChecked(card) &&
 			card.offer.kind !== "declined" &&
 			card.takenOffEarlier === undefined,
 	}));
@@ -254,8 +259,9 @@ export const optionCardList = (
 
 /**
  * The hours-based people as cards, when the engine cannot answer: each comes
- * in on their day off, with its cost and "Not rule-checked", their week, and
- * the first one suggested unless they declined. Pure.
+ * in on their day off, with its cost and "Not rule-checked", and their week.
+ * None is suggested, being not rule-checked; as among the engine's options,
+ * nor is someone who declined. Pure.
  */
 export const fallbackCards = (
 	options: ReadonlyArray<CoverOption>,
@@ -264,6 +270,18 @@ export const fallbackCards = (
 	options.map((option, place) => {
 		const [cell] = option.cells;
 		const offer = cardOfferOf(sources.offers, cell, sources.now);
+		const costs = costChips(
+			{
+				extraMinutes: {
+					overtime: option.pay.overtimeMinutes,
+					pastContract: option.pay.extraMinutes,
+					restDayWork: 0,
+					timeOffEarned: 0,
+				},
+				workingTimeRulesChecked: false,
+			},
+			sources.t
+		);
 		return {
 			key: `backend|${option.membershipId}`,
 			people: sources.memberName(option.membershipId),
@@ -273,23 +291,14 @@ export const fallbackCards = (
 				sources.t
 			),
 			groups: sources.groupsOf(option.cells, sources.memberName),
-			costChips: costChips(
-				{
-					extraMinutes: {
-						overtime: option.pay.overtimeMinutes,
-						pastContract: option.pay.extraMinutes,
-						restDayWork: 0,
-						timeOffEarned: 0,
-					},
-					workingTimeRulesChecked: false,
-				},
-				sources.t
-			),
+			costChips: costs,
 			weekLine: weekLine(option.weekMinutes, sources.t),
 			leaves: undefined,
 			takenOffEarlier: undefined,
-			// As among the engine's options: someone who declined is never the one suggested.
-			suggested: place === 0 && offer.kind !== "declined",
+			suggested:
+				place === 0 &&
+				isRuleChecked({ costChips: costs }) &&
+				offer.kind !== "declined",
 			offer,
 			choice: { kind: "backend", option },
 		};

@@ -171,9 +171,9 @@ describe("GapCover", () => {
 				Node.DOCUMENT_POSITION_FOLLOWING
 		).toBeTruthy();
 		const cards = await screen.findAllByRole("listitem");
-		expect(cards[0]).toHaveTextContent(
-			/Aisha Rahman.*Suggested.*Not rule-checked/
-		);
+		// Not checked against the rules, so none of them is suggested.
+		expect(cards[0]).toHaveTextContent(/Aisha Rahman.*Not rule-checked/);
+		expect(screen.queryByText("Suggested")).not.toBeInTheDocument();
 		await user.click(
 			within(cards[0]!).getByRole("button", { name: /^Review/ })
 		);
