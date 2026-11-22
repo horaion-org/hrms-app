@@ -108,6 +108,7 @@ import {
 	type StartingContext,
 } from "@/features/scheduling/startingContext/api";
 import { EnteredDaysNote } from "@/features/scheduling/startingContext/EnteredDaysNote";
+import { useDaysBeforeRun } from "@/features/scheduling/startingContext/useDaysBeforeRun";
 import { runsByMember } from "@/features/scheduling/startingContext/startingGrid";
 import { useAccess } from "@/features/workspace/useAccess";
 import {
@@ -421,6 +422,7 @@ const ApiSchedule = ({
 			showsRoster && permissions.mayRead
 		)
 	);
+	const daysBefore = useDaysBeforeRun(companyId, unit, scheduleId);
 	// Another schedule already published for the week means this one can't be generated again or published.
 	const awaitingPublication =
 		state.status === "ready" && state.schedule.status !== "PUBLISHED"
@@ -756,6 +758,7 @@ const ApiSchedule = ({
 					approval={trail}
 					assignments={assignments}
 					constraints={readyItems(constraints)}
+					daysBefore={daysBefore}
 					departmentWeeks={departmentWeeks}
 					editing={editing}
 					hours={rosterHours}

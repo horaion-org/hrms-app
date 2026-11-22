@@ -44,6 +44,7 @@ import type { RosterValidation } from "@/features/scheduling/rulesCheck/useRoste
 import { checkLineOf } from "@/features/scheduling/rulesCheck/checkLine";
 import { ValidateScheduleButton } from "@/features/scheduling/rulesCheck/ValidateScheduleButton";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
+import type { DaysBeforeRunState } from "@/features/scheduling/startingContext/daysBeforeRun";
 import type { PreferenceOutcomeLookup } from "@/features/shiftPreferences/preferenceOutcome";
 import type { RosterEditing } from "./rosterEditing";
 import { RosterSidePanelSlot } from "./RosterSidePanelSlot";
@@ -69,6 +70,8 @@ export type GeneratedRosterProps = {
 	startingRuns?: ReadonlyMap<string, number>;
 	/** How many members' week before changed since generation; said in the Issues panel. */
 	membersWithChangedStart?: number;
+	/** The days before the run, shown read-only in the grid on a schedule's own page; none elsewhere. */
+	daysBefore?: DaysBeforeRunState;
 	/** The schedule's history for the Details panel; none, and no Details, without. */
 	details?: ReadonlyArray<DescriptionListItem>;
 	/** The roster's approval trail for the Approval panel; none, and no Approval panel, without. */
@@ -130,6 +133,7 @@ export const GeneratedRoster = ({
 	constraints = [],
 	startingRuns,
 	membersWithChangedStart = 0,
+	daysBefore,
 	details,
 	approval,
 	withSummary = true,
@@ -177,6 +181,7 @@ export const GeneratedRoster = ({
 		withSummary,
 		changesLeave: editing?.leave !== undefined,
 		departmentWeeks,
+		daysBefore,
 	});
 	const { rows, days, period, openList } = roster;
 	// A list or Find cover keeps to the grid's height and scrolls inside, so it never makes the row taller.
