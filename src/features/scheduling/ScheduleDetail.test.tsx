@@ -1334,8 +1334,12 @@ it("counts what the engine found on one Issues button and lists it in the side p
 		"Shift Breakfast Prep: no employee holds an eligible role."
 	);
 	expect(rows).toMatch(/Chen Wei · Sun, Oct 18.*Chen Wei covers the Sunday/);
-	expect(rows).toMatch(/^Must fix1 Front Desk Staff short.*Rule: Morning cover/m);
-	expect(rows).toMatch(/^Must fix.*Ben Ong.*Ben Ong works more than five days/m);
+	expect(rows).toMatch(
+		/^Must fix1 Front Desk Staff short.*Rule: Morning cover/m
+	);
+	expect(rows).toMatch(
+		/^Must fix.*Ben Ong.*Ben Ong works more than five days/m
+	);
 	expect(screen.queryByRole("dialog")).toBeNull();
 	await waitFor(() => {
 		expect(readsOf(calls, `${SCHEDULE}/constraints`)).toHaveLength(1);
@@ -1379,12 +1383,9 @@ it("opens Issues narrowed to the member its link names", async () => {
 	expect(
 		within(panel).getByRole("list", { name: "Active filters" })
 	).toHaveTextContent("Ben Ong");
-	expect(panel).toHaveTextContent(
-		"Ben Ong works more than five days in a row."
-	);
-	expect(panel).not.toHaveTextContent(
-		"Chen Wei covers the Sunday swing alone."
-	);
+	const rows = await issueRowsText(userEvent.setup(), panel);
+	expect(rows).toContain("Ben Ong works more than five days in a row.");
+	expect(rows).not.toContain("Chen Wei covers the Sunday swing alone.");
 });
 
 it("names findings without reading the setup it can't see", async () => {
@@ -1450,8 +1451,11 @@ it("counts findings in the row and day headers, opens them in Issues, and says a
 		member: "m-2",
 	});
 	expect(
-		screen.getByRole("complementary", { name: "Issues" })
-	).toHaveTextContent("Ben Ong works more than five days in a row.");
+		await issueRowsText(
+			user,
+			screen.getByRole("complementary", { name: "Issues" })
+		)
+	).toContain("Ben Ong works more than five days in a row.");
 });
 
 it("shows nothing about findings when the engine found nothing", async () => {
@@ -1510,9 +1514,9 @@ it("lists where members started the week, and that it changed since, under Issue
 	const panel = screen.getByRole("complementary", { name: "Issues" });
 	const rows = await issueRowsText(user, panel);
 	// Three days worked before Monday make Monday the fourth day of the run, said once.
-	expect(rows.match(/Aisha Rahman has worked 3 days in a row before/g)).toHaveLength(
-		1
-	);
+	expect(
+		rows.match(/Aisha Rahman has worked 3 days in a row before/g)
+	).toHaveLength(1);
 	// The week before having changed is one row: a title, then what it means and what to do.
 	expect(
 		within(panel).getByText("1 person’s days before this week changed")

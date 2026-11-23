@@ -412,13 +412,17 @@ describe("GeneratedRoster", () => {
 		expect(
 			within(panel).getByRole("heading", { level: 2, name: "Issues" })
 		).toHaveFocus();
-		expect(within(panel).getByText("Ben Ong")).toBeVisible();
+		// The same rows as the whole list, under a chip naming him.
 		expect(
-			within(panel).getByRole("heading", { name: "Roster" })
+			within(panel).getByRole("button", { name: /^Remove Ben Ong/ })
 		).toBeVisible();
-		expect(panel).toHaveTextContent(
-			"Ben Ong works more than five days in a row."
+		expect(within(panel).queryByRole("heading", { name: "Roster" })).toBeNull();
+		await user.click(
+			within(panel).getByRole("button", { name: /Rules broken.*Ben Ong/ })
 		);
+		expect(
+			within(panel).getByText("Ben Ong works more than five days in a row.")
+		).toBeVisible();
 		expect(panel).not.toHaveTextContent(
 			"Chen Wei covers the Sunday swing alone."
 		);
@@ -454,11 +458,14 @@ describe("GeneratedRoster", () => {
 		);
 
 		const panel = screen.getByRole("complementary", { name: "Issues" });
-		expect(within(panel).getByText("Sat, Oct 17")).toBeVisible();
-		expect(panel).toHaveTextContent("1 Front Desk Staff short");
-		expect(panel).not.toHaveTextContent(
-			"Ben Ong works more than five days in a row."
-		);
+		expect(
+			within(panel).getByRole("button", { name: /^Remove Sat, Oct 17/ })
+		).toBeVisible();
+		expect(within(panel).queryByRole("heading", { name: "Roster" })).toBeNull();
+		expect(
+			within(panel).getByRole("button", { name: /1 Front Desk Staff short/ })
+		).toHaveTextContent("Sat, Oct 17 · Front Desk AM 09:00–15:00");
+		expect(panel).not.toHaveTextContent("Ben Ong");
 	});
 
 	it("given_aColleaguesDayNote_when_theirRowIsCounted_then_itsListNamesTheLeave", async () => {
@@ -482,9 +489,11 @@ describe("GeneratedRoster", () => {
 		);
 
 		const panel = screen.getByRole("complementary", { name: "Issues" });
-		expect(
-			within(panel).getByRole("heading", { name: "Leave and cover" })
-		).toBeVisible();
+		await user.click(
+			within(panel).getByRole("button", {
+				name: /Leave and cover.*Aisha Rahman · Mon, Oct 12/,
+			})
+		);
 		expect(
 			within(panel).getByText("Leave requested: Annual leave")
 		).toBeVisible();

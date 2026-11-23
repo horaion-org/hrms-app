@@ -22,6 +22,7 @@ import {
 	asksForDecision,
 	marksLeaveOrCover,
 } from "@/features/scheduling/roster/rosterSummary";
+import type { RosterIssue } from "@/features/scheduling/roster/rosterIssueGroups";
 import { hoursFromMinutes } from "@/features/scheduling/shifts/shiftHours";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 
@@ -369,46 +370,38 @@ export const overtimePills = (
 export type IssuesAbout =
 	{ kind: "member"; membershipId: string } | { kind: "date"; date: string };
 
-/** What the Issues panel lists for one header: exactly what that header counted. */
-export type IssuesOfHeader = {
-	findings: Array<Finding>;
-	daysToDecide: Array<ScheduleAssignment>;
-	leaveAndCover: Array<ScheduleAssignment>;
-};
+/** Every ISO day an Issues item is about; none for an item about no day. */
+const issueDays = (issue: RosterIssue): ReadonlyArray<string> =>
+	issue.days ?? (issue.day === null ? [] : [issue.day]);
 
 /**
- * The Issues panel's list for one header. A member's: what the engine left
- * about them and on their days in view, then their days to decide and their
- * leave and cover on those days. A day's: what the engine left about the
- * day as a whole.
+ * The Issues list for one header, pure: the Issues items that header counts.
+ * A day's: the items about no one person on that day (a shift short, a rule
+ * about the whole roster). A member's: the items about them on a day in
+ * view, or about no day, as their row counts a finding with no date.
  */
 export const issuesOfHeader = (
 	about: IssuesAbout,
+	issues: ReadonlyArray<RosterIssue>,
 	sources: {
-		placed: GridFindings | undefined;
+		rows: ReadonlyArray<Pick<RosterRow, "membershipId" | "memberProfileId">>;
 		/** The days in view, Monday first. */
 		days: ReadonlyArray<string>;
-		daysToDecide: ReadonlyArray<ScheduleAssignment>;
-		leaveAndCover: ReadonlyArray<ScheduleAssignment>;
 	}
-): IssuesOfHeader => {
-	const { placed, days } = sources;
+): Array<RosterIssue> => {
 	if (about.kind === "date")
-		return {
-			findings: [...(placed?.byDate.get(about.date) ?? NO_FINDINGS)],
-			daysToDecide: [],
-			leaveAndCover: [],
-		};
-	const member = { membershipId: about.membershipId };
-	const shown = new Set(days);
-	const theirs = (row: ScheduleAssignment): boolean =>
-		row.member?.membershipId === about.membershipId && shown.has(row.day);
-	return {
-		findings: [
-			...(placed?.byRow.get(about.membershipId) ?? NO_FINDINGS),
-			...days.flatMap((date) => cellFindings(placed, member, date)),
-		],
-		daysToDecide: sources.daysToDecide.filter(theirs),
-		leaveAndCover: sources.leaveAndCover.filter(theirs),
-	};
+		return issues.filter(
+			(issue) =>
+				issue.memberProfileId === null && issueDays(issue).includes(about.date)
+		);
+	const memberProfileId = sources.rows.find(
+		(row) => row.membershipId === about.membershipId
+	)?.memberProfileId;
+	if (memberProfileId === undefined) return [];
+	return issues.filter(
+		(issue) =>
+			issue.memberProfileId === memberProfileId &&
+			(issueDays(issue).length === 0 ||
+				issueDays(issue).some((day) => sources.days.includes(day)))
+	);
 };
