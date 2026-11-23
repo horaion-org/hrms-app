@@ -22,12 +22,6 @@ export const messageFindings = (
 ): Array<Finding> =>
 	messages.map((message) => ({ kind: "message", date, message }));
 
-/** Roster notes are reviewed on the roster; setup issues are fixed in the setup. */
-export type FindingFamily = "roster" | "setup";
-
-export const findingFamily = (finding: Finding): FindingFamily =>
-	finding.kind === "diagnostic" ? "setup" : "roster";
-
 export type FindingTone = "error" | "warning" | "info";
 
 /** Diagnostics that only inform, whatever severity they come with: days of a days-off block that were not filled in. */

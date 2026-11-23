@@ -322,7 +322,6 @@ export const GeneratedRoster = ({
 				shifts,
 				onShowIssue: showIssue,
 				onShowAllIssues: roster.showAllIssues,
-				onFindCover: editing ? roster.openCover : undefined,
 			})
 		: [];
 	const sidePanel = (

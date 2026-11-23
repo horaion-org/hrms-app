@@ -4500,7 +4500,6 @@
 			"workedInARow_one": "{{name}} has worked {{count}} day in a row before this week.",
 			"workedInARow_other": "{{name}} has worked {{count}} days in a row before this week.",
 			"leaveAndCover": "Leave and cover",
-			"daysToDecide": "Days to decide",
 			"details": {
 				"title": "Details",
 				"requested": "Requested",
@@ -4659,9 +4658,7 @@
 				"dateShort_one": "{{day}}: {{count}} person short. Show in Issues",
 				"dateShort_other": "{{day}}: {{count}} people short. Show in Issues",
 				"tileLabel_one": "{{label}}, needs a look: {{count}}",
-				"tileLabel_other": "{{label}}, needs a look: {{count}}",
-				"roster": "Roster",
-				"setup": "Setup"
+				"tileLabel_other": "{{label}}, needs a look: {{count}}"
 			}
 		},
 		"scheduleMenu": {

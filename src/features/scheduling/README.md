@@ -323,7 +323,8 @@ gate, the saves and generating the draft's month.
   `warning-900` for anything to look at (never red; red is for errors and refusals), `InfoIcon` in `ink-blue-700`
   for information only, then the number, on no background. It opens Issues narrowed to that row (`rowIssueCount`:
   the member's findings and every issue on their days in view) or that day (`dayIssueCount`: the day's own
-  findings), with a `FilterChips` chip that clears back to all of Issues (`issuesOfHeader`).
+  findings). That Issues is the same list, in the same rows, holding only the items that header counts
+  (`issuesOfHeader`), under a `FilterChips` chip that clears back to all of Issues.
 - `roster/FindingList` — one list of findings, each led by its tone's outline icon (`roster/FindingList/findingToneIcons.ts`:
   `AlertIcon` in `warning-900` to look at, `InfoIcon` in `ink-blue-700` for information only).
 - `roster/GeneratedRoster` — the summary line, the week bar with one button per list in `rosterSideLists.ts`, the grid and
