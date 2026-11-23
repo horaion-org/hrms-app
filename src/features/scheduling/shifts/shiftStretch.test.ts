@@ -3,7 +3,7 @@ import {
 	stretchedTimes,
 	stretchMinutes,
 	stretchSpans,
-} from "@/features/scheduling/roster/shiftStretch";
+} from "@/features/scheduling/shifts/shiftStretch";
 
 const MORNING = { start: "06:00", end: "14:00" };
 

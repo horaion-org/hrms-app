@@ -4742,7 +4742,6 @@
 				"shiftShort": "{{shift}} con falta de personal"
 			},
 			"cover": {
-				"review": "Revisar",
 				"whatChanges": "Qué cambia",
 				"back": "Volver",
 				"weekBar": "Horas de esta semana frente al contrato",
@@ -4755,6 +4754,9 @@
 				"bothMustAgree": "El cuadrante está publicado, así que ambos deben aceptar.",
 				"bothAgreed": "Ambos aceptaron",
 				"bothAgreedHint": "Indica cómo aceptó cada persona.",
+				"theyAgreed": "Ha aceptado",
+				"theyAgreedHint": "Indica cómo aceptó.",
+				"theyMustAgree": "El cuadrante está publicado, así que debe aceptar.",
 				"working": "Lo trabajan: {{names, list(type: conjunction)}}",
 				"nobodyWorks": "Nadie lo trabaja todavía.",
 				"withCost": "{{line}} · {{cost}}"
@@ -4884,7 +4886,8 @@
 				"ROSTERED_ELSEWHERE": "{{name}} también trabaja el {{day}} en otro cuadrante.",
 				"NOT_SCHEDULABLE_NOW": "{{name}} ya no puede programarse en este departamento.",
 				"WORKS_ON_DAY_OFF": "{{name}} trabaja en su {{dayType}} el {{day}}.",
-				"COVERAGE_CHANGED": "{{shift}}, {{day}}: {{before}} → {{after}} personas.",
+				"COVERAGE_CHANGED_one": "{{shift}}, {{day}}: {{before}} → {{after}} persona.",
+				"COVERAGE_CHANGED_other": "{{shift}}, {{day}}: {{before}} → {{after}} personas.",
 				"UNKNOWN": "Otra comprobación se aplica a este cambio."
 			},
 			"error": {
@@ -5046,7 +5049,6 @@
 			},
 			"engine": {
 				"loading": "Buscando las opciones…",
-				"unknownShift": "un turno",
 				"refusal": {
 					"notSeenByEngine": "El motor cuenta este turno como cubierto.",
 					"expired": "Ya no se guarda la ejecución del motor de este cuadrante. Genera la semana de nuevo para tener opciones comprobadas.",
@@ -5073,16 +5075,18 @@
 					"breaksRule": "Incumpliría: {{rule}}",
 					"otherReason": "No puede cubrir este turno."
 				},
-				"kindLine": {
-					"callIn": "Viene en su {{dayType}}",
-					"move": "Pasa desde {{shift}}",
-					"stretchAfter": "Se queda {{hours}} h más",
-					"stretchBefore": "Empieza {{hours}} h antes",
-					"stretchPair": "Lo cubren entre los dos",
-					"daySwap": "Trabaja el {{day}} en lugar del {{dayGivenUp}}",
-					"other_one": "{{count}} cambio",
-					"other_other": "{{count}} cambios"
+				"sentence": {
+					"callIn": "<name>{{name}}</name> viene en su {{dayType}}",
+					"move": "<name>{{name}}</name> pasa desde {{shift}} {{times}}",
+					"stretchAfter": "<name>{{name}}</name> se queda {{hours}} h más, hasta las {{time}}",
+					"stretchAfterOtherDay": "<name>{{name}}</name> se queda {{hours}} h más tras {{shift}} del {{weekday}}, hasta las {{time}}",
+					"stretchBefore": "<name>{{name}}</name> empieza {{hours}} h antes, a las {{time}}",
+					"stretchBeforeOtherDay": "<name>{{name}}</name> empieza {{shift}} del {{weekday}} {{hours}} h antes, a las {{time}}",
+					"daySwap": "<name>{{name}}</name> trabaja este turno en lugar de {{shift}} del {{weekday}}",
+					"restDayMove": "<name>{{name}}</name> viene en su {{dayType}}; el {{weekday}} pasa a ser su {{dayType}}"
 				},
+				"changeCount_one": "{{count}} cambio",
+				"changeCount_other": "{{count}} cambios",
 				"cost": {
 					"withinHours": "Dentro de horas",
 					"pastContract": "+{{hours}} h sobre su contrato",
@@ -5096,6 +5100,9 @@
 					"stillShort": "Aún falta {{times}}"
 				},
 				"weekLine": "{{before}} → {{after}} h de {{contract}} h esta semana",
+				"weekLineUnchanged": "{{after}} h de {{contract}} h esta semana",
+				"weekLineWithLeave": "{{before}} → {{after}} h de {{contract}} h esta semana, incl. {{leave}} h de permiso",
+				"weekLineUnchangedWithLeave": "{{after}} h de {{contract}} h esta semana, incl. {{leave}} h de permiso",
 				"peopleAnd": "{{items, list(type: conjunction)}}",
 				"stillWorking": "Sigue trabajando. Puede tardar hasta {{seconds}} segundos.",
 				"nobodyCan": "Nadie puede cubrirlo dentro de las reglas.",
@@ -5487,8 +5494,11 @@
 			"normalSummary": "Normales {{hours}}",
 			"extraSummary": "Complementarias {{hours}}",
 			"overtimeSummary": "Horas extra {{hours}}",
+			"leave": "Permiso",
+			"leaveSummary": "Permiso {{hours}}",
 			"empty": "Nadie tiene turnos esta semana.",
 			"note": "Horas previstas de este cuadrante, según las condiciones de empleo de cada persona esa semana. Normales: dentro de sus horas de contrato. Complementarias: horas de una persona a tiempo parcial por encima de su contrato. Horas extra: las que pasan de la jornada o la semana normal.",
+			"noteWithLeave": "Horas previstas de este cuadrante, según las condiciones de empleo de cada persona esa semana. Normales: dentro de sus horas de contrato. Complementarias: horas de una persona a tiempo parcial por encima de su contrato. Horas extra: las que pasan de la jornada o la semana normal. Permiso: el permiso aprobado que cuenta para las horas de la semana.",
 			"countsEarlierParts": "Cuenta la semana desde el {{from}}, con los días del horario anterior, para que las horas extra semanales coincidan con las reglas del cuadrante.",
 			"loading": "Cargando las horas…",
 			"loadFailed": "No se pudieron cargar las horas."

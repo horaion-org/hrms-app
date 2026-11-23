@@ -4942,7 +4942,6 @@
 				"shiftShort": "{{shift}} short"
 			},
 			"cover": {
-				"review": "Review",
 				"whatChanges": "What changes",
 				"back": "Back",
 				"weekBar": "This week’s hours against the contract",
@@ -4955,6 +4954,9 @@
 				"bothMustAgree": "The roster is published, so both must agree.",
 				"bothAgreed": "They both agreed",
 				"bothAgreedHint": "Say how each person agreed.",
+				"theyAgreed": "They agreed",
+				"theyAgreedHint": "Say how they agreed.",
+				"theyMustAgree": "The roster is published, so they must agree.",
 				"working": "Working it: {{names, list(type: conjunction)}}",
 				"nobodyWorks": "Nobody works it yet.",
 				"withCost": "{{line}} · {{cost}}"
@@ -5084,7 +5086,8 @@
 				"ROSTERED_ELSEWHERE": "{{name}} also works on {{day}} in another roster.",
 				"NOT_SCHEDULABLE_NOW": "{{name}} can no longer be rostered in this department.",
 				"WORKS_ON_DAY_OFF": "{{name}} works on their {{dayType}} on {{day}}.",
-				"COVERAGE_CHANGED": "{{shift}}, {{day}}: {{before}} → {{after}} people.",
+				"COVERAGE_CHANGED_one": "{{shift}}, {{day}}: {{before}} → {{after}} person.",
+				"COVERAGE_CHANGED_other": "{{shift}}, {{day}}: {{before}} → {{after}} people.",
 				"UNKNOWN": "Another check applies to this change."
 			},
 			"error": {
@@ -5246,7 +5249,6 @@
 			},
 			"engine": {
 				"loading": "Working out the options…",
-				"unknownShift": "a shift",
 				"refusal": {
 					"notSeenByEngine": "The engine counts this shift as staffed.",
 					"expired": "This roster’s engine run is no longer kept. Generate the week again to get checked options.",
@@ -5273,16 +5275,18 @@
 					"breaksRule": "Would break: {{rule}}",
 					"otherReason": "Cannot take this shift."
 				},
-				"kindLine": {
-					"callIn": "Comes in on a {{dayType}}",
-					"move": "Moves from {{shift}}",
-					"stretchAfter": "Stays on {{hours}} h",
-					"stretchBefore": "Starts {{hours}} h early",
-					"stretchPair": "Cover it between them",
-					"daySwap": "Works {{day}} instead of {{dayGivenUp}}",
-					"other_one": "{{count}} change",
-					"other_other": "{{count}} changes"
+				"sentence": {
+					"callIn": "<name>{{name}}</name> comes in on a {{dayType}}",
+					"move": "<name>{{name}}</name> moves from {{shift}} {{times}}",
+					"stretchAfter": "<name>{{name}}</name> stays on {{hours}} h, until {{time}}",
+					"stretchAfterOtherDay": "<name>{{name}}</name> stays on {{hours}} h after {{weekday}} {{shift}}, until {{time}}",
+					"stretchBefore": "<name>{{name}}</name> starts {{hours}} h early, at {{time}}",
+					"stretchBeforeOtherDay": "<name>{{name}}</name> starts {{weekday}} {{shift}} {{hours}} h early, at {{time}}",
+					"daySwap": "<name>{{name}}</name> works this shift instead of {{weekday}} {{shift}}",
+					"restDayMove": "<name>{{name}}</name> comes in on a {{dayType}}; {{weekday}} becomes their {{dayType}}"
 				},
+				"changeCount_one": "{{count}} change",
+				"changeCount_other": "{{count}} changes",
 				"cost": {
 					"withinHours": "Within hours",
 					"pastContract": "+{{hours}} h extra hours",
@@ -5296,6 +5300,9 @@
 					"stillShort": "Still short {{times}}"
 				},
 				"weekLine": "{{before}} → {{after}} h of {{contract}} h this week",
+				"weekLineUnchanged": "{{after}} h of {{contract}} h this week",
+				"weekLineWithLeave": "{{before}} → {{after}} h of {{contract}} h this week, incl. {{leave}} h leave",
+				"weekLineUnchangedWithLeave": "{{after}} h of {{contract}} h this week, incl. {{leave}} h leave",
 				"peopleAnd": "{{items, list(type: conjunction)}}",
 				"stillWorking": "Still working. This can take up to {{seconds}} seconds.",
 				"nobodyCan": "Nobody can cover this within the rules.",
@@ -5687,8 +5694,11 @@
 			"normalSummary": "Normal {{hours}}",
 			"extraSummary": "Extra {{hours}}",
 			"overtimeSummary": "Overtime {{hours}}",
+			"leave": "Leave",
+			"leaveSummary": "Leave {{hours}}",
 			"empty": "Nobody is rostered this week.",
 			"note": "Planned hours in this roster, by each person’s employment terms that week. Normal: within their contracted hours. Extra: a part-timer’s hours above their contract. Overtime: hours past the normal day or week.",
+			"noteWithLeave": "Planned hours in this roster, by each person’s employment terms that week. Normal: within their contracted hours. Extra: a part-timer’s hours above their contract. Overtime: hours past the normal day or week. Leave: approved leave that counts towards the week’s hours.",
 			"countsEarlierParts": "Counts the week from {{from}}, with the days of the earlier schedule, so weekly overtime matches the roster’s rules.",
 			"loading": "Loading hours…",
 			"loadFailed": "Couldn’t load the hours."

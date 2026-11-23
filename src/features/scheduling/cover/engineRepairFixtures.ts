@@ -34,16 +34,21 @@ const NO_EXTRA_MINUTES = {
 	pastContract: 0,
 };
 
-/** A person an option changes, with their week before and after it; not taken off the shift earlier unless told. */
+/** A person an option changes, with their week before and after it (no leave counted unless told); not taken off the shift earlier unless told. */
 const person = (
 	membershipId: string,
 	displayName: string,
-	weekMinutes: RepairPerson["weekMinutes"],
+	weekMinutes: {
+		before: number;
+		after: number;
+		contract: number;
+		countedLeave?: number;
+	} | null,
 	takenOffThisShift = false
 ): RepairPerson => ({
 	membershipId,
 	displayName,
-	weekMinutes,
+	weekMinutes: weekMinutes && { countedLeave: 0, ...weekMinutes },
 	takenOffThisShift,
 });
 
@@ -158,6 +163,36 @@ export const stretchAfterOption = (): RepairOption =>
 		extraMinutes: { overtime: 120 },
 	});
 
+/** Ben stays on two hours after Friday's Lunch Rush: a stretch on another day than Saturday's gap, as a night shift stretched into the next morning is. */
+export const stretchAfterOtherDayOption = (): RepairOption =>
+	repairOption({
+		kind: "OVERTIME_STRETCH",
+		fills: "PART",
+		cells: [workCell(BEN, FRIDAY, LUNCH_RUSH, { stretchAfterMinutes: 120 })],
+		people: [
+			person(BEN, "Ben Ong", { before: 1200, after: 1320, contract: 1320 }),
+		],
+		stillShort: [
+			{ start: "2026-10-17T09:00:00", end: "2026-10-17T15:00:00", shortBy: 1 },
+		],
+		extraMinutes: { overtime: 120 },
+	});
+
+/** Chen starts Sunday's swing shift two hours early, for a gap on another day. */
+export const stretchBeforeOtherDayOption = (): RepairOption =>
+	repairOption({
+		kind: "OVERTIME_STRETCH",
+		fills: "PART",
+		cells: [workCell(CHEN, SUNDAY, SWING_SHIFT, { stretchBeforeMinutes: 120 })],
+		people: [
+			person(CHEN, "Chen Wei", { before: 2880, after: 3000, contract: 2640 }),
+		],
+		stillShort: [
+			{ start: "2026-10-17T09:00:00", end: "2026-10-17T15:00:00", shortBy: 1 },
+		],
+		extraMinutes: { overtime: 120 },
+	});
+
 /** Chen starts the swing shift two hours early; 09:00 to 12:00 is still one short. */
 export const stretchBeforeOption = (): RepairOption =>
 	repairOption({
@@ -202,6 +237,23 @@ export const daySwapOption = (): RepairOption =>
 			person(AISHA, "Aisha Rahman", {
 				before: 1800,
 				after: 1800,
+				contract: 2640,
+			}),
+		],
+	});
+
+/** Aisha comes in on her Sunday rest day; Saturday, her day off, becomes her rest day: she gives up no day. */
+export const restDayMoveOption = (): RepairOption =>
+	repairOption({
+		kind: "REST_DAY_MOVE",
+		cells: [
+			workCell(AISHA, SUNDAY, FRONT_DESK_AM),
+			{ membershipId: AISHA, day: SATURDAY, kind: "OFF", dayType: "REST" },
+		],
+		people: [
+			person(AISHA, "Aisha Rahman", {
+				before: 1800,
+				after: 2160,
 				contract: 2640,
 			}),
 		],

@@ -1,4 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { createInstance, type TFunction } from "i18next";
+import { beforeAll, describe, expect, it } from "vitest";
+import en from "@/assets/locales/en/translations.json";
+import es from "@/assets/locales/es/translations.json";
 import { checkSentence } from "@/features/scheduling/rosterChanges/checkSentence";
 import { rosterCheckFixture } from "@/features/scheduling/rosterChanges/fixtures";
 
@@ -12,6 +15,17 @@ const names = {
 		code === null ? "day off" : `type ${code}`,
 };
 
+let translate: Record<string, TFunction>;
+
+beforeAll(async () => {
+	const i18n = createInstance();
+	await i18n.init({
+		lng: "en",
+		resources: { en: { translation: en }, es: { translation: es } },
+	});
+	translate = { en: i18n.getFixedT("en"), es: i18n.getFixedT("es") };
+});
+
 describe("checkSentence", () => {
 	it("given_aCoverageCheck_when_written_then_namesTheShiftDayAndCounts", () => {
 		expect(checkSentence(rosterCheckFixture(), names)).toEqual({
@@ -22,6 +36,7 @@ describe("checkSentence", () => {
 				day: "day 2026-10-12",
 				before: 2,
 				after: 1,
+				count: 1,
 				dayType: "day off",
 			},
 		});
@@ -68,4 +83,21 @@ describe("checkSentence", () => {
 			after: 0,
 		});
 	});
+
+	it.each([
+		["en", 0, 1, "Front Desk AM, day 2026-10-12: 0 → 1 person."],
+		["en", 1, 2, "Front Desk AM, day 2026-10-12: 1 → 2 people."],
+		["es", 0, 1, "Front Desk AM, day 2026-10-12: 0 → 1 persona."],
+		["es", 1, 2, "Front Desk AM, day 2026-10-12: 1 → 2 personas."],
+	])(
+		"given_aCoverageCheckIn_%s_from_%i_to_%i_when_read_then_countsPersonOrPeople",
+		(language, countBefore, countAfter, words) => {
+			const sentence = checkSentence(
+				rosterCheckFixture({ countBefore, countAfter }),
+				names
+			);
+
+			expect(translate[language]!(sentence.key, sentence.values)).toBe(words);
+		}
+	);
 });

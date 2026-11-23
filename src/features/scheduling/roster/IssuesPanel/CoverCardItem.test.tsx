@@ -9,7 +9,9 @@ import {
 	daySwapOption,
 	moveOption,
 	oneOfTwoOption,
+	otherTwoPeopleOption,
 	restDayCallInOption,
+	restDayMoveOption,
 	stretchAfterOption,
 	stretchPairOption,
 	takenOffCallInOption,
@@ -50,6 +52,7 @@ const show = (
 			return row && assignmentCell(row);
 		},
 		weekday: (isoDate) => (isoDate === "2026-10-17" ? "Saturday" : "Friday"),
+		gapDay: "2026-10-17",
 		memberName,
 		groupsOf: (cells, nameOf) =>
 			changeTileGroups(
@@ -85,34 +88,74 @@ describe("CoverCardItem", () => {
 		[
 			"a call-in on a day off",
 			callInOption(),
-			/Aisha Rahman.*Suggested.*Comes in on a day off.*Sat, Oct 17.*Day off.*Front Desk AM.*Within hours.*30 → 36 h of 44 h this week/,
+			/Suggested.*Aisha Rahman comes in on a day offWithin hours30 → 36 h of 44 h this week/,
 		],
 		[
 			"a call-in on a rest day",
 			restDayCallInOption(),
-			/Comes in on a rest day.*Sun, Oct 18.*Rest day.*6 h on a rest day.*\+6 h time off earned/,
+			/Aisha Rahman comes in on a rest day.*6 h on a rest day.*\+6 h time off earned/,
 		],
 		[
 			"a move",
 			moveOption(),
-			/Ben Ong.*Moves from Lunch Rush.*Lunch Rush.*Front Desk AM.*\+2 h extra hours/,
+			/Ben Ong moves from Lunch Rush 11:00 – 13:00.*\+2 h extra hours/,
 		],
 		[
-			"a day swap, each day with its date",
+			"a day swap",
 			daySwapOption(),
-			/Works Saturday instead of Friday.*Sat, Oct 17.*Day off.*Front Desk AM.*Fri, Oct 16.*Front Desk AM.*Day off/,
+			/Aisha Rahman works this shift instead of Friday Front Desk AM.*Within hours.*30 h of 44 h this week/,
 		],
 		[
-			"a stretch pair, each person under their name",
+			"a rest-day move",
+			restDayMoveOption(),
+			/Aisha Rahman comes in on a rest day; Saturday becomes their rest day.*Within hours/,
+		],
+		[
+			"a stretch pair, one sentence each, the one who stays on first",
 			stretchPairOption(),
-			/Ben Ong and Chen Wei.*Cover it between them.*Ben Ong.*Sat, Oct 17.*Chen Wei.*Sat, Oct 17.*\+4 h overtime/,
+			/Suggested.*Ben Ong stays on 2 h, until 15:00.*Chen Wei starts 2 h early, at 12:00\+4 h overtime/,
 		],
 	])(
-		"given_%s_when_drawn_then_whoWhatTheChangeAndTheCost",
+		"given_%s_when_drawn_then_aSentencePerPersonAndOneCostLineWithoutTiles",
 		(_case, option, text) => {
-			expect(show([option])).toHaveTextContent(text);
+			const card = show([option]);
+
+			expect(card).toHaveTextContent(text);
+			// No before → after tiles (each pair's arrow reads "becomes"): the sentence says the change.
+			expect(screen.queryByText("becomes")).toBeNull();
 		}
 	);
+
+	it("given_aSentence_when_drawn_then_theNameStandsInTheCardsNameWeight", () => {
+		show([callInOption()]);
+
+		expect(screen.getByText("Aisha Rahman")).toHaveClass("font-semibold");
+	});
+
+	it("given_aStretchPair_when_drawn_then_aFaceAndASentenceEachAndNoSharedTitle", () => {
+		const card = show([stretchPairOption()]);
+
+		expect(card.querySelectorAll('[role="img"]')).toHaveLength(2);
+		expect(card).not.toHaveTextContent("Ben Ong and Chen Wei");
+		expect(card).not.toHaveTextContent("Cover it between them");
+	});
+
+	it("given_aSuggestedPair_when_drawn_then_suggestedHeadsTheCardBeforeBothPeople", () => {
+		show([stretchPairOption()]);
+
+		const suggested = screen.getByText("Suggested");
+		for (const name of ["Ben Ong", "Chen Wei"])
+			expect(
+				suggested.compareDocumentPosition(screen.getByText(name)) &
+					Node.DOCUMENT_POSITION_FOLLOWING
+			).toBeTruthy();
+	});
+
+	it("given_theOlderRepairsChange_when_drawn_then_itsCountAndEachPersonsDaysUnderTheirName", () => {
+		expect(show([otherTwoPeopleOption()])).toHaveTextContent(
+			/Suggested.*Ben Ong and Aisha Rahman.*2 changes.*Ben Ong.*Lunch Rush.*becomes.*Front Desk AM.*Aisha Rahman.*Day off.*becomes.*Lunch Rush/
+		);
+	});
 
 	it("given_aPartFill_when_drawn_then_whatIsStillShortInRedAndNotSuggested", () => {
 		const card = show([stretchAfterOption()]);
@@ -136,15 +179,42 @@ describe("CoverCardItem", () => {
 		expect(card).not.toHaveTextContent("Suggested");
 	});
 
-	it("given_aCard_when_reviewed_then_theButtonNamesWhoseChangeItIs", async () => {
+	it("given_aCard_when_pressedOrEntered_then_theWholeCardOpensItsReviewNamedForWhoseChangeItIs", async () => {
+		const user = userEvent.setup();
 		const onReview = vi.fn();
 		show([callInOption()], [], onReview);
 
-		await userEvent.click(
-			screen.getByRole("button", { name: "Review Aisha Rahman’s change" })
+		const card = screen.getByRole("button", {
+			name: "Review Aisha Rahman’s change",
+		});
+		expect(card).toHaveAccessibleDescription(
+			/Aisha Rahman comes in on a day off.*Within hours/
 		);
+		await user.click(card);
+		card.focus();
+		await user.keyboard("{Enter}");
 
-		expect(onReview).toHaveBeenCalledOnce();
+		expect(onReview).toHaveBeenCalledTimes(2);
+	});
+
+	it("given_aCardThatOpensItsReview_when_queried_then_itHoldsNoOtherControl", () => {
+		show([otherTwoPeopleOption()]);
+
+		const card = screen.getByRole("button", { name: /^Review/ });
+		expect(card.querySelectorAll("button, a, input, [tabindex]")).toHaveLength(
+			0
+		);
+		expect(screen.getAllByRole("button")).toEqual([card]);
+	});
+
+	it("given_aTwoPersonCard_when_drawn_then_itsButtonNamesThemBoth", () => {
+		show([stretchPairOption()]);
+
+		expect(
+			screen.getByRole("button", {
+				name: "Review Ben Ong and Chen Wei’s change",
+			})
+		).toBeVisible();
 	});
 
 	it("given_anOfferOutToItsPerson_when_drawn_then_itsDeadlineInReviewsPlace", () => {
@@ -154,7 +224,9 @@ describe("CoverCardItem", () => {
 		);
 
 		expect(card).toHaveTextContent(/Offer sent · answer by .*3:30/);
-		expect(screen.queryByRole("button", { name: /Review/ })).toBeNull();
+		// Nothing to review while the offer is out: a plain card, no chevron.
+		expect(screen.queryByRole("button")).toBeNull();
+		expect(card.querySelector("svg")).toBeNull();
 	});
 
 	it("given_itsPersonDeclined_when_drawn_then_saysSoAndIsNotSuggested", () => {
@@ -170,5 +242,9 @@ describe("CoverCardItem", () => {
 
 		expect(card).toHaveTextContent("Declined");
 		expect(card).not.toHaveTextContent("Suggested");
+		// A new offer can go out from its review, so it still opens it.
+		expect(
+			screen.getByRole("button", { name: "Review Aisha Rahman’s change" })
+		).toHaveTextContent("Declined");
 	});
 });

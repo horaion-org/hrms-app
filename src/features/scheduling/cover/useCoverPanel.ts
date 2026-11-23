@@ -28,7 +28,11 @@ import {
 	type EngineRepairState,
 } from "@/features/scheduling/cover/useEngineRepair";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
-import { engineOfferTargetOf } from "@/features/scheduling/coverOffers/engineOfferKind";
+import {
+	engineOfferTargetOf,
+	whoMustAgree,
+	type WhoMustAgree,
+} from "@/features/scheduling/coverOffers/engineOfferKind";
 import {
 	useCellCoverOffer,
 	type CellCoverOffer,
@@ -136,12 +140,8 @@ export type CoverPanel = {
 	rosterMovedUnderApply: boolean;
 	review: {
 		names: CheckNames;
-		/**
-		 * On a published roster, an engine option that changes two people: no
-		 * offer can ask both, so Apply reads "They both agreed" and a remark
-		 * is required.
-		 */
-		bothMustAgree: boolean;
+		/** On a published roster, who must have agreed before an option no offer can ask applies (`whoMustAgree`). */
+		mustAgree: WhoMustAgree;
 		/**
 		 * On a published roster, an engine option no offer can ask (two people,
 		 * or no member's day to ask about): Apply waits for a remark the manager
@@ -375,10 +375,7 @@ export const useCoverPanel = ({
 		apply.error && apply.variables?.expectedRevision === body?.expectedRevision
 			? rosterChangeRefusal(apply.error)
 			: undefined;
-	const bothMustAgree =
-		remarkRequired &&
-		repairOption !== undefined &&
-		repairOption.people.length > 1;
+	const mustAgree = whoMustAgree(repairOption, remarkRequired);
 
 	/** A new choice starts its review afresh. */
 	const startReview = (): void => {
@@ -483,7 +480,7 @@ export const useCoverPanel = ({
 			},
 			applyRefusal,
 			busy: apply.isPending,
-			bothMustAgree,
+			mustAgree,
 			remarkRequired,
 		},
 		offer: coverOffers && {

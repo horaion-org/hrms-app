@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import type { FunctionComponent } from "@/common/types";
+import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ErrorText } from "@/components/ui/ErrorText";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -24,8 +25,8 @@ import {
 } from "@/features/scheduling/roster/coverCards";
 import { CellPanelFooter } from "@/features/scheduling/RosterCellPanel/CellPanelFooter";
 import { RosterChangeReview } from "@/features/scheduling/rosterChanges/RosterChangeReview";
-import { hoursFromMinutes } from "@/features/scheduling/shifts/shiftHours";
 import { ChangeTilePairs } from "./ChangeTilePairs";
+import { COST_CHIP_TONES } from "./issuePanelLooks";
 
 export type CoverRowReviewProps = {
 	card: OptionCard;
@@ -45,9 +46,24 @@ const EXTRA_COSTS: ReadonlyArray<CostChipKind> = [
 	"timeOffEarned",
 ];
 
+/** The words of an option whose people must have agreed: Apply's label, the remark's hint, and the line saying why. */
+const AGREEMENT_WORDS = {
+	bothPeople: {
+		apply: "bothAgreed",
+		hint: "bothAgreedHint",
+		line: "bothMustAgree",
+	},
+	theirPerson: {
+		apply: "theyAgreed",
+		hint: "theyAgreedHint",
+		line: "theyMustAgree",
+	},
+} as const;
+
 /**
  * One person's part of the change: their name, each day drawn, and their
- * week before → after of the contract with a bar, the overtime past it named.
+ * week before → after of the contract with a bar, followed by what the
+ * change costs them when that is known.
  */
 const PersonBlock = ({
 	person,
@@ -58,18 +74,11 @@ const PersonBlock = ({
 	person: ReviewPerson;
 	group: ChangeTileGroup | undefined;
 	gapDay: string | undefined;
-	/** What the change costs this person in words; their overtime past the contract when not given. */
-	costs: ReadonlyArray<string> | undefined;
+	/** What the change costs this person, in the card's chips' words; none when the cost is the whole option's. */
+	costs: ReadonlyArray<string>;
 }): FunctionComponent => {
 	const { t } = useTranslation();
 	const week = person.weekMinutes && weekHoursOf(person.weekMinutes);
-	const overtime =
-		week && week.overtimeMinutes > 0
-			? t("scheduling.cover.engine.cost.overtime", {
-					hours: hoursFromMinutes(week.overtimeMinutes),
-				})
-			: undefined;
-	const costWords = costs ?? (overtime ? [overtime] : []);
 	return (
 		<div className="flex flex-col gap-1">
 			<p className="font-semibold text-neutral-900">{person.name}</p>
@@ -79,7 +88,7 @@ const PersonBlock = ({
 			{person.weekMinutes && week && (
 				<>
 					<p className="text-neutral-800">
-						{costWords.reduce(
+						{costs.reduce(
 							(line, cost) => t(`${key}.withCost`, { line, cost }),
 							weekLine(person.weekMinutes, t)
 						)}
@@ -99,12 +108,14 @@ const PersonBlock = ({
 /**
  * A card's review inside its row (UX note 4): "What changes", then one block
  * per person (their days drawn as the preview works them out once it has,
- * their week), what is still short afterwards for an option that leaves
+ * their week; with two people the option's cost chips once under them),
+ * what is still short afterwards for an option that leaves
  * some, the checks only when there are any, the remark behind "Add a remark"
  * unless asked for, and Back and Apply. A roster that moved under the option
  * disables Apply and offers "Find options again". On a published roster one
  * person's change goes out through the offer's actions, and the offer shows
- * once out; a two-person change applies once both agreed, with a remark.
+ * once out; a two-person change applies once both agreed, and a rest-day
+ * move once its person agreed, with a remark.
  * Focus moves to the review as it opens.
  */
 export const CoverRowReview = ({
@@ -134,18 +145,19 @@ export const CoverRowReview = ({
 		? previewTileGroups(review.preview, review.names.member, t)
 		: card.groups;
 	const people = reviewPeopleOf(card.choice, review.names.member);
-	// One person's change says its whole cost (rest-day hours, time off, extra hours); with two, each says their overtime.
-	const extraCost = card.costChips.filter((chip) =>
-		EXTRA_COSTS.includes(chip.kind)
-	);
-	const onePersonCost =
-		people.length === 1 && extraCost.length > 0
-			? extraCost.map((chip) => chip.text)
-			: undefined;
+	// The API prices the whole option, not each person: one person's week says its cost in hours
+	// (rest-day hours, time off, extra hours); with two, the card's chips follow their blocks once.
+	const onePerson = people.length === 1;
+	const onePersonCost = onePerson
+		? card.costChips
+				.filter((chip) => EXTRA_COSTS.includes(chip.kind))
+				.map((chip) => chip.text)
+		: [];
 	const stillShort =
 		card.choice.kind === "engine" ? card.choice.option.stillShort : [];
 	const offerActions = offerActionsOf(offer, card.people);
 	const title = t(`${key}.whatChanges`);
+	const agreement = review.mustAgree && AGREEMENT_WORDS[review.mustAgree];
 	return (
 		<div
 			ref={region}
@@ -161,6 +173,7 @@ export const CoverRowReview = ({
 				preview={review.preview}
 				previewRefusal={review.previewRefusal}
 				remark={review.remark}
+				remarkHint={agreement && t(`${key}.${agreement.hint}`)}
 				remarkRequired={review.remarkRequired}
 				showsEmptyChecks={false}
 				showsRulesNote={false}
@@ -180,6 +193,19 @@ export const CoverRowReview = ({
 									)}
 								/>
 							))}
+							{!onePerson && card.costChips.length > 0 && (
+								<span className="flex flex-wrap items-center gap-1.5">
+									{card.costChips.map((chip) => (
+										<Badge
+											key={chip.kind}
+											compact
+											tone={COST_CHIP_TONES[chip.kind]}
+										>
+											{chip.text}
+										</Badge>
+									))}
+								</span>
+							)}
 							{stillShort.length > 0 && (
 								<p className="text-error-700">
 									{t(`${key}.stillShortAfter`, {
@@ -190,9 +216,6 @@ export const CoverRowReview = ({
 						</>
 					),
 				}}
-				remarkHint={
-					review.bothMustAgree ? t(`${key}.bothAgreedHint`) : undefined
-				}
 				onRemarkChange={review.setRemark}
 				onRetryPreview={review.retryPreview}
 				onTickedChange={review.setTicked}
@@ -202,8 +225,8 @@ export const CoverRowReview = ({
 					{t(`scheduling.rosterEdit.error.${review.applyRefusal}`)}
 				</ErrorText>
 			)}
-			{review.bothMustAgree && (
-				<p className="text-neutral-800">{t(`${key}.bothMustAgree`)}</p>
+			{agreement && (
+				<p className="text-neutral-800">{t(`${key}.${agreement.line}`)}</p>
 			)}
 			{/* The offer's actions take Back's place in the footer, so Back stands on its own there. */}
 			{offerActions && (
@@ -217,8 +240,8 @@ export const CoverRowReview = ({
 				cancelLabel={t(`${key}.back`)}
 				offerActions={offerActions}
 				applyLabel={t(
-					review.bothMustAgree
-						? `${key}.bothAgreed`
+					agreement
+						? `${key}.${agreement.apply}`
 						: review.applyAnyway
 							? "scheduling.rosterEdit.applyAnyway"
 							: "scheduling.rosterEdit.apply"

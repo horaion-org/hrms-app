@@ -13,6 +13,7 @@ import {
 	moveOption,
 	NOT_ASSIGNED_FIXTURE,
 	restDayCallInOption,
+	restDayMoveOption,
 	repairOptionsFixture,
 	stretchAfterOption,
 	stretchBeforeOption,
@@ -107,9 +108,9 @@ describe("GapCover", () => {
 		await screen.findByText("2 options found");
 		const cards = screen.getAllByRole("listitem");
 		expect(cards).toHaveLength(2);
-		expect(cards[0]).toHaveTextContent(/Aisha Rahman.*Suggested.*Within hours/);
+		expect(cards[0]).toHaveTextContent(/Suggested.*Aisha Rahman.*Within hours/);
 		expect(cards[1]).toHaveTextContent(
-			/Ben Ong.*Stays on 2 h.*Lunch Rush .*\+2 h/
+			/Ben Ong stays on 2 h, until 15:00.*\+2 h overtime/
 		);
 		expect(screen.getAllByText("Suggested")).toHaveLength(1);
 		const whyNot = screen.getByRole("button", { name: "Why not others (3)" });
@@ -171,9 +172,9 @@ describe("GapCover", () => {
 				Node.DOCUMENT_POSITION_FOLLOWING
 		).toBeTruthy();
 		const cards = await screen.findAllByRole("listitem");
-		expect(cards[0]).toHaveTextContent(
-			/Aisha Rahman.*Suggested.*Not rule-checked/
-		);
+		// Not checked against the rules, so none of them is suggested.
+		expect(cards[0]).toHaveTextContent(/Aisha Rahman.*Not rule-checked/);
+		expect(screen.queryByText("Suggested")).not.toBeInTheDocument();
 		await user.click(
 			within(cards[0]!).getByRole("button", { name: /^Review/ })
 		);
@@ -468,7 +469,22 @@ describe("GapCover", () => {
 		expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
 	});
 
-	it("given_aCardReviewed_when_backIsPressed_then_focusReturnsToItsReview", async () => {
+	it("given_cards_when_tabbedThrough_then_oneStopPerCard", async () => {
+		const user = userEvent.setup();
+		await showAnswer([callInOption(), moveOption()]);
+
+		const first = screen.getByRole("button", {
+			name: "Review Aisha Rahman’s change",
+		});
+		first.focus();
+		await user.tab();
+
+		expect(
+			screen.getByRole("button", { name: "Review Ben Ong’s change" })
+		).toHaveFocus();
+	});
+
+	it("given_aCardReviewed_when_backIsPressed_then_focusReturnsToTheCard", async () => {
 		const user = userEvent.setup();
 		await showAnswer([callInOption(), moveOption()]);
 
@@ -484,7 +500,7 @@ describe("GapCover", () => {
 });
 
 describe("GapCover: the review inside the row", () => {
-	/** The open row, the engine answering `option`, its Review pressed; gives the calls. */
+	/** The open row, the engine answering `option`, its card pressed; gives the calls. */
 	const reviewOption = async (
 		option: RepairOption,
 		{
@@ -524,15 +540,27 @@ describe("GapCover: the review inside the row", () => {
 		expect(screen.queryByText(/Still short afterwards/)).toBeNull();
 	});
 
-	it("given_aTwoPersonOption_when_reviewed_then_aBlockEachWithTheirWeekAndOvertime", async () => {
+	it("given_aTwoPersonOption_when_reviewed_then_aBlockEachWithTheirWeekThenTheOptionsChipsOnce", async () => {
 		await reviewOption(stretchPairOption());
 
-		expect(
-			screen.getByRole("group", { name: "What changes" })
-		).toHaveTextContent(
-			/Ben Ong.*20 → 22 h of 22 h this week.*Chen Wei.*48 → 50 h of 44 h this week · \+6 h overtime/
+		const review = screen.getByRole("group", { name: "What changes" });
+		// Each week is the week's totals: no overtime worked out from it beside a person.
+		expect(review).toHaveTextContent(
+			/Ben Ong.*20 → 22 h of 22 h this week.*Chen Wei.*48 → 50 h of 44 h this week\+4 h overtime/
 		);
+		expect(within(review).queryByText(/this week ·/)).toBeNull();
+		expect(within(review).getAllByText("+4 h overtime")).toHaveLength(1);
 		expect(screen.getAllByRole("progressbar")).toHaveLength(2);
+	});
+
+	it("given_onePersonsStretch_when_reviewed_then_itsCostBesideTheWeekAndNoChipRow", async () => {
+		await reviewOption(stretchAfterOption());
+
+		const review = screen.getByRole("group", { name: "What changes" });
+		expect(
+			within(review).getByText("20 → 22 h of 22 h this week · +2 h overtime")
+		).toBeVisible();
+		expect(within(review).queryByText("+2 h overtime")).toBeNull();
 	});
 
 	it("given_aRestDayCallIn_when_reviewed_then_itsWeekSaysWhatItCosts", async () => {
@@ -613,6 +641,36 @@ describe("GapCover: the review inside the row", () => {
 			expect(calls.find((call) => call.path === CHANGES)?.body).toMatchObject({
 				remark: "Both said yes by phone.",
 				repairOptionKind: "STRETCH_PAIR",
+			});
+		});
+	});
+	it("given_aPublishedRoster_when_aRestDayMoveIsReviewed_then_bothDaysPreviewedAndTheyAgreedWaitsForARemark", async () => {
+		const user = userEvent.setup();
+		const calls = await reviewOption(restDayMoveOption(), { published: true });
+
+		// Both days go to the preview, which the review draws as a swap of days is drawn.
+		await waitFor(() => {
+			expect(calls.find((call) => call.path === PREVIEW)?.body).toMatchObject({
+				cells: [
+					{ day: "2026-10-18", kind: "WORK" },
+					{ day: "2026-10-17", kind: "OFF", dayType: "REST" },
+				],
+			});
+		});
+		expect(
+			screen.getByText("The roster is published, so they must agree.")
+		).toBeVisible();
+		expect(screen.queryByRole("button", { name: "Send offer" })).toBeNull();
+		const agreed = await screen.findByRole("button", { name: "They agreed" });
+		expect(agreed).toBeDisabled();
+		expect(screen.getByText("Say how they agreed.")).toBeVisible();
+		await user.type(screen.getByRole("textbox"), "Said yes by phone.");
+		await user.click(agreed);
+
+		await waitFor(() => {
+			expect(calls.find((call) => call.path === CHANGES)?.body).toMatchObject({
+				remark: "Said yes by phone.",
+				repairOptionKind: "REST_DAY_MOVE",
 			});
 		});
 	});

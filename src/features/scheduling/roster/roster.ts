@@ -9,7 +9,7 @@ import {
 	stretchedTimes,
 	stretchMinutes,
 	stretchSpans,
-} from "@/features/scheduling/roster/shiftStretch";
+} from "@/features/scheduling/shifts/shiftStretch";
 import {
 	hoursFromMinutes,
 	paidShiftMinutes,

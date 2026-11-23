@@ -7,6 +7,7 @@ import type { FunctionComponent } from "@/common/types";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
 import {
 	rosterHoursRows,
+	showsCountedLeave,
 	type RosterHoursRow,
 } from "@/features/scheduling/hours/rosterHoursRows";
 import type { RosterHoursState } from "@/features/scheduling/hours/useRosterHours";
@@ -41,7 +42,8 @@ const overtimeClasses = (row: RosterHoursRow): string | undefined =>
 /**
  * The roster's Hours section under the grid: one row per person with days
  * worked and normal, extra and overtime hours as the hours ledger classifies
- * them, then the total, and a line saying what the figures are. Read-only.
+ * them (and the leave it counts, in a week that counts some), then the
+ * total, and a line saying what the figures are. Read-only.
  * Phones keep the name, with every figure on its summary line, as on Job
  * titles. Nothing shows while the hours are hidden.
  */
@@ -120,6 +122,28 @@ export const RosterHours = ({
 			hideBelow: "sm",
 		},
 	];
+	const rows =
+		hours.status === "ready"
+			? rosterHoursRows(hours.hours, assignments, {
+					formerMember: t("scheduling.detail.formerMember"),
+					total: t(`${key}.total`),
+				})
+			: [];
+	// Leave the week counts towards its hours has a column, and a word in the note, only in a week that has some.
+	const countsLeave = showsCountedLeave(rows);
+	if (countsLeave)
+		columns.push({
+			id: "leave",
+			header: t(`${key}.leave`),
+			cell: (row) => (
+				<span className={figureClasses(row)}>
+					{hoursText(row.countedLeaveMinutes)}
+				</span>
+			),
+			summary: (row) =>
+				t(`${key}.leaveSummary`, { hours: hoursText(row.countedLeaveMinutes) }),
+			hideBelow: "sm",
+		});
 	return (
 		<section
 			aria-labelledby={titleId}
@@ -144,15 +168,14 @@ export const RosterHours = ({
 					<DataTable
 						className="mt-3"
 						columns={columns}
+						data={rows}
 						emptyState={t(`${key}.empty`)}
 						getRowId={(row) => row.key}
 						label={t(`${key}.title`)}
-						data={rosterHoursRows(hours.hours, assignments, {
-							formerMember: t("scheduling.detail.formerMember"),
-							total: t(`${key}.total`),
-						})}
 					/>
-					<p className="mt-2 text-neutral-700">{t(`${key}.note`)}</p>
+					<p className="mt-2 text-neutral-700">
+						{t(countsLeave ? `${key}.noteWithLeave` : `${key}.note`)}
+					</p>
 				</>
 			) : (
 				<p

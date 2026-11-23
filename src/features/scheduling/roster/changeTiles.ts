@@ -4,7 +4,7 @@ import {
 	stretchedTimes,
 	stretchMinutes,
 	type DayTimes,
-} from "@/features/scheduling/roster/shiftStretch";
+} from "@/features/scheduling/shifts/shiftStretch";
 import type {
 	RosterChangeCell,
 	RosterChangePreview,
@@ -63,7 +63,10 @@ const shiftFace = (
 	kind: "shift",
 	name: shift.name,
 	colour: shift.colour,
-	times: stretchedTimes({ start: shift.startTime, end: shift.endTime }, stretch),
+	times: stretchedTimes(
+		{ start: shift.startTime, end: shift.endTime },
+		stretch
+	),
 	stretchMinutes: stretchMinutes(stretch),
 });
 

@@ -55,7 +55,16 @@ const repairPersonSchema = z.object({
 	displayName: z.string().nullable(),
 	/** Null when the ledger could not price the change. */
 	weekMinutes: z
-		.object({ before: z.number(), after: z.number(), contract: z.number() })
+		.object({
+			before: z.number(),
+			after: z.number(),
+			contract: z.number(),
+			/** Minutes of approved leave counted inside `before` and `after`; 0 when none, or from an API that does not send it yet. */
+			countedLeave: z
+				.number()
+				.nullish()
+				.transform((minutes) => minutes ?? 0),
+		})
 		.nullable(),
 	/** Taken off this shift by hand earlier: the engine ranks such options last, and the app never suggests one. */
 	takenOffThisShift: z.boolean(),

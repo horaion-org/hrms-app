@@ -28,6 +28,19 @@ type Story = StoryObj<typeof meta>;
 /** An officer with 28 h of overtime and a part-timer with 10 h extra, then the total. */
 export const Default: Story = {};
 
+/** A week that counts the officer's approved leave day: a Leave column, and the note says what it is. */
+export const WithCountedLeave: Story = {
+	args: {
+		hours: {
+			status: "ready",
+			hours: rosterHours([
+				officerWeek("mp-1", { countedLeaveMinutes: 480 }),
+				partTimerWeek(),
+			]),
+		},
+	},
+};
+
 /** A roster with nobody on it. */
 export const NobodyRostered: Story = {
 	args: { hours: { status: "ready", hours: rosterHours([]) } },

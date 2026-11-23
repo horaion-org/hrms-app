@@ -139,7 +139,7 @@ describe("RosterCellPanel", () => {
 		const panel = screen.getByRole("complementary");
 		expect(
 			await within(panel).findByText(
-				"Front Desk AM, Mon, Oct 12: 2 → 1 people."
+				"Front Desk AM, Mon, Oct 12: 2 → 1 person."
 			)
 		).toBeVisible();
 		expect(calls[0]?.body).toEqual({

@@ -7,6 +7,7 @@ import {
 	oneOfTwoOption,
 	otherTwoPeopleOption,
 	restDayCallInOption,
+	restDayMoveOption,
 	stretchAfterOption,
 	stretchBeforeOption,
 	stretchPairOption,
@@ -24,6 +25,7 @@ import {
 	reviewedCardOf,
 	reviewPeopleOf,
 	weekHoursOf,
+	type OptionCard,
 	type OptionCardSources,
 } from "@/features/scheduling/roster/coverCards";
 import { assignmentCell } from "@/features/scheduling/rosterChanges/cellText";
@@ -35,6 +37,17 @@ const NAMES: Record<string, string> = {
 	"m-2": "Ben Ong",
 	"m-3": "Chen Wei",
 };
+
+/** What a card says its change is, as words: each sentence with its person's name, or the count of a drawn change. */
+const said = (card: OptionCard): Array<string> =>
+	card.change.kind === "sentences"
+		? card.change.sentences.map((sentence) =>
+				authTestI18n.t(sentence.key, {
+					...sentence.values,
+					name: sentence.name,
+				})
+			)
+		: [card.change.changeCount];
 
 describe("weekHoursOf", () => {
 	it.each([
@@ -67,6 +80,7 @@ describe("optionCardList", () => {
 			return row && assignmentCell(row);
 		},
 		weekday: (isoDate) => (isoDate === "2026-10-17" ? "Saturday" : "Friday"),
+		gapDay: "2026-10-17",
 		memberName: (membershipId) => NAMES[membershipId] ?? "",
 		groupsOf: (cells, nameOf) =>
 			cells.map((cell) => ({
@@ -87,7 +101,7 @@ describe("optionCardList", () => {
 			callInOption(),
 			[
 				"Aisha Rahman",
-				"Comes in on a day off",
+				["<name>Aisha Rahman</name> comes in on a day off"],
 				["Within hours"],
 				"30 → 36 h of 44 h this week",
 				undefined,
@@ -98,7 +112,7 @@ describe("optionCardList", () => {
 			restDayCallInOption(),
 			[
 				"Aisha Rahman",
-				"Comes in on a rest day",
+				["<name>Aisha Rahman</name> comes in on a rest day"],
 				["6 h on a rest day", "+6 h time off earned"],
 				"30 → 36 h of 44 h this week",
 				undefined,
@@ -109,7 +123,7 @@ describe("optionCardList", () => {
 			moveOption(),
 			[
 				"Ben Ong",
-				"Moves from Lunch Rush",
+				["<name>Ben Ong</name> moves from Lunch Rush 11:00 – 13:00"],
 				["+2 h extra hours"],
 				"20 → 24 h of 22 h this week",
 				undefined,
@@ -120,7 +134,7 @@ describe("optionCardList", () => {
 			stretchAfterOption(),
 			[
 				"Ben Ong",
-				"Stays on 2 h",
+				["<name>Ben Ong</name> stays on 2 h, until 15:00"],
 				["+2 h overtime"],
 				"20 → 22 h of 22 h this week",
 				"Still short 09:00 – 11:00",
@@ -131,7 +145,10 @@ describe("optionCardList", () => {
 			stretchPairOption(),
 			[
 				"Ben Ong and Chen Wei",
-				"Cover it between them",
+				[
+					"<name>Ben Ong</name> stays on 2 h, until 15:00",
+					"<name>Chen Wei</name> starts 2 h early, at 12:00",
+				],
 				["+4 h overtime"],
 				undefined,
 				undefined,
@@ -142,9 +159,24 @@ describe("optionCardList", () => {
 			daySwapOption(),
 			[
 				"Aisha Rahman",
-				"Works Saturday instead of Friday",
+				[
+					"<name>Aisha Rahman</name> works this shift instead of Friday Front Desk AM",
+				],
 				["Within hours"],
-				"30 → 30 h of 44 h this week",
+				"30 h of 44 h this week",
+				undefined,
+			],
+		],
+		[
+			"a rest-day move",
+			restDayMoveOption(),
+			[
+				"Aisha Rahman",
+				[
+					"<name>Aisha Rahman</name> comes in on a rest day; Saturday becomes their rest day",
+				],
+				["Within hours"],
+				"30 → 36 h of 44 h this week",
 				undefined,
 			],
 		],
@@ -153,7 +185,7 @@ describe("optionCardList", () => {
 			otherTwoPeopleOption(),
 			[
 				"Ben Ong and Aisha Rahman",
-				"2 changes",
+				["2 changes"],
 				["+2 h extra hours"],
 				undefined,
 				undefined,
@@ -164,16 +196,17 @@ describe("optionCardList", () => {
 			oneOfTwoOption(),
 			[
 				"Aisha Rahman",
-				"Comes in on a day off",
+				["<name>Aisha Rahman</name> comes in on a day off"],
 				["Within hours"],
 				"30 → 36 h of 44 h this week",
 				"Fills 1 of 2",
 			],
 		],
-	])("cards %s", (_case, option, [people, kindLine, chips, week, leaves]) => {
+	])("cards %s", (_case, option, [people, change, chips, week, leaves]) => {
 		const [card] = optionCardList([option], sources()).cards;
 
-		expect(card).toMatchObject({ people, kindLine, weekLine: week });
+		expect(card).toMatchObject({ people, weekLine: week });
+		expect(card && said(card)).toEqual(change);
 		expect(card?.costChips.map((chip) => chip.text)).toEqual(chips);
 		expect(card?.leaves?.text).toBe(leaves);
 		expect(card?.groups.map((group) => group.membershipId)).toEqual(
@@ -199,6 +232,15 @@ describe("optionCardList", () => {
 			false,
 		]);
 		expect(list).toMatchObject({ partCaptionAt: 2, noFullFill: false });
+	});
+
+	it("never suggests an option not checked against the rules, nor the one after it", () => {
+		const list = optionCardList(
+			[callInOption({ workingTimeRulesChecked: false }), moveOption()],
+			sources()
+		);
+
+		expect(list.cards.map((card) => card.suggested)).toEqual([false, false]);
 	});
 
 	it("marks someone taken off the shift earlier and never suggests them", () => {
@@ -348,26 +390,28 @@ describe("optionCardList", () => {
 		});
 	});
 
-	it("cards the hours-based people with their cost, not rule-checked, their week, the first suggested", () => {
+	// The hours-based list never holds someone whose day already has a shift (the API lists them as
+	// ALREADY_WORKING), so each of its people comes in: a call-in sentence, never a drawn change.
+	it("cards the hours-based people as call-ins with their cost, not rule-checked, their week, none suggested", () => {
 		const cards = fallbackCards(coverOptionsFixture().options, sources());
 
 		expect(
 			cards.map((card) => [
 				card.people,
-				card.kindLine,
+				said(card),
 				card.costChips.map((chip) => chip.text),
 				card.suggested,
 			])
 		).toEqual([
 			[
 				"Aisha Rahman",
-				"Comes in on a day off",
+				["<name>Aisha Rahman</name> comes in on a day off"],
 				["Within hours", "Not rule-checked"],
-				true,
+				false,
 			],
 			[
 				"Chen Wei",
-				"Comes in on a rest day",
+				["<name>Chen Wei</name> comes in on a rest day"],
 				["+6 h overtime", "Not rule-checked"],
 				false,
 			],
@@ -384,12 +428,22 @@ describe("reviewPeopleOf", () => {
 			{
 				membershipId: "m-2",
 				name: "Ben Ong",
-				weekMinutes: { before: 1200, after: 1320, contract: 1320 },
+				weekMinutes: {
+					before: 1200,
+					after: 1320,
+					contract: 1320,
+					countedLeave: 0,
+				},
 			},
 			{
 				membershipId: "m-3",
 				name: "Chen Wei",
-				weekMinutes: { before: 2880, after: 3000, contract: 2640 },
+				weekMinutes: {
+					before: 2880,
+					after: 3000,
+					contract: 2640,
+					countedLeave: 0,
+				},
 			},
 		]);
 		expect(
@@ -420,6 +474,7 @@ describe("reviewedCardOf", () => {
 				return row && assignmentCell(row);
 			},
 			weekday: () => "Saturday",
+			gapDay: "2026-10-17",
 			memberName: (membershipId) => NAMES[membershipId] ?? "",
 			groupsOf: () => [],
 			shortNow: null,
@@ -469,6 +524,7 @@ describe("optionCardList: someone the roster no longer shows", () => {
 		const [card] = optionCardList([gone], {
 			dayBefore: () => undefined,
 			weekday: () => "Saturday",
+			gapDay: "2026-10-17",
 			memberName: () => "Former member",
 			groupsOf: (cells, nameOf) =>
 				cells.map((cell) => ({

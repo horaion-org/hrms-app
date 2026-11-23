@@ -6,10 +6,11 @@ import type {
 } from "@/features/scheduling/cover/engineRepairApi";
 import {
 	costChips,
-	optionKindLine,
+	optionSentences,
 	weekLine,
 	whatItLeaves,
 	type CostChip,
+	type OptionSentence,
 	type OptionWordSources,
 	type WhatItLeaves,
 } from "@/features/scheduling/cover/engineRepairWords";
@@ -19,9 +20,10 @@ import type { ChangeTileGroup } from "@/features/scheduling/roster/changeTiles";
 import type { RosterChangeCell } from "@/features/scheduling/rosterChanges/api";
 
 /*
- * A short shift's options as the Issues panel's cards, pure: who, what the
- * option is, the change drawn by person and day, what it costs, what it still
- * leaves short, and which one card is suggested. The list is the one
+ * A short shift's options as the Issues panel's cards, pure: who and what,
+ * one sentence per person (or, for a change with none, the change drawn by
+ * person and day), what it costs, what it still leaves short, and which one
+ * card is suggested. The list is the one
  * `coverListView` chooses: the engine's options, or the backend's people when
  * the engine cannot answer.
  */
@@ -37,7 +39,13 @@ export type WeekHours = {
 };
 
 /** A person's week before and after a change, in minutes, against their contract. */
-export type WeekMinutes = { before: number; after: number; contract: number };
+export type WeekMinutes = {
+	before: number;
+	after: number;
+	contract: number;
+	/** Minutes of approved leave counted inside `before` and `after`; the hours-based list's week has none. */
+	countedLeave?: number;
+};
 
 /** A week as the review draws it: its minutes, the overtime past the contract, and how full it is. */
 export const weekHoursOf = ({
@@ -89,13 +97,25 @@ export type OptionCardChoice =
 	| { kind: "engine"; option: RepairOption }
 	| { kind: "backend"; option: CoverOption };
 
-/** One option's card, every line in words (UX note 2): who, what, the change drawn, the cost, what it leaves. */
+/** One person's sentence on a card: the words' key and values, and the person's name, which the sentence names. */
+export type PersonSentence = OptionSentence & { name: string };
+
+/**
+ * What a card says the change is: one sentence per person, or, for a change
+ * no sentence says (the older repair's), how many changes it makes, drawn
+ * under the people's names.
+ */
+export type CardChange =
+	| { kind: "sentences"; sentences: Array<PersonSentence> }
+	| { kind: "drawn"; changeCount: string };
+
+/** One option's card, every line in words (UX note 2026-11-22 §2): who and what, the cost, what it leaves. */
 export type OptionCard = {
 	key: string;
 	/** Who the change is for: "Aisha Rahman", "Ben Ong and Chen Wei". */
 	people: string;
-	/** What it is, by kind: "Comes in on a day off". */
-	kindLine: string;
+	change: CardChange;
+	/** The change drawn by person and day: on a card whose change is drawn, and in the review until its preview lands. */
 	groups: Array<ChangeTileGroup>;
 	costChips: Array<CostChip>;
 	/** One person's week before and after; none for two people, or when the ledger could not price it. */
@@ -112,7 +132,6 @@ export type OptionCard = {
 export type OptionCardSources = OptionWordSources & {
 	/** A member's name by membership id, for someone the answer does not name. */
 	memberName: (membershipId: string) => string;
-	/** A change's cells drawn by person (`changeTileGroups`). */
 	/** A change's cells drawn by person (`changeTileGroups`), each named by `nameOf`. */
 	groupsOf: (
 		cells: ReadonlyArray<RosterChangeCell>,
@@ -181,9 +200,39 @@ const cardOfferOf = (
 		: { kind: "none" };
 };
 
+/**
+ * What a card says its change is: the option's sentences, each person named
+ * by `nameOf`; a change no sentence says is drawn, under "2 changes".
+ */
+const cardChangeOf = (
+	option: Pick<RepairOption, "kind" | "cells">,
+	nameOf: (membershipId: string) => string,
+	sources: OptionCardSources
+): CardChange => {
+	const sentences = optionSentences(option, sources, sources.t);
+	return sentences
+		? {
+				kind: "sentences",
+				sentences: sentences.map((sentence) => ({
+					...sentence,
+					name: nameOf(sentence.membershipId),
+				})),
+			}
+		: {
+				kind: "drawn",
+				changeCount: sources.t("scheduling.cover.engine.changeCount", {
+					count: option.cells.length,
+				}),
+			};
+};
+
 /** The day an option adds work on: its first WORK cell. */
 const workCellOf = (option: RepairOption): RosterChangeCell | undefined =>
 	option.cells.find((cell) => cell.kind === "WORK");
+
+/** Whether a card's change was checked against the working-time rules; one marked "Not rule-checked" is never suggested. */
+const isRuleChecked = (card: Pick<OptionCard, "costChips">): boolean =>
+	!card.costChips.some((chip) => chip.kind === "notRuleChecked");
 
 /** One engine option as its card, not yet marked Suggested. */
 const optionCardOf = (
@@ -198,7 +247,7 @@ const optionCardOf = (
 		// An option has no id of its own; its place in the engine's ranking is stable.
 		key: `engine|${rank}`,
 		people: peopleNamesOf(option, nameOf, sources.t),
-		kindLine: optionKindLine(option, sources, sources.t),
+		change: cardChangeOf(option, nameOf, sources),
 		groups: sources.groupsOf(option.cells, nameOf),
 		costChips: costChips(option, sources.t),
 		weekLine:
@@ -219,10 +268,10 @@ const optionCardOf = (
 
 /**
  * The engine's options as cards, in its order, every part fill after the
- * fuller fills (UX note 3): the first is
- * Suggested when it fills more than part of the gap, its person has not
- * declined and nobody it changes was taken off this shift earlier; the caption "Cover part of it" sits before the first part
- * fill. Pure.
+ * fuller fills (UX note 3): the first is Suggested when it fills more than
+ * part of the gap, was checked against the working-time rules, its person
+ * has not declined and nobody it changes was taken off this shift earlier;
+ * the caption "Cover part of it" sits before the first part fill. Pure.
  */
 export const optionCardList = (
 	options: ReadonlyArray<RepairOption>,
@@ -246,6 +295,7 @@ export const optionCardList = (
 		suggested:
 			place === 0 &&
 			!isPart(card) &&
+			isRuleChecked(card) &&
 			card.offer.kind !== "declined" &&
 			card.takenOffEarlier === undefined,
 	}));
@@ -254,8 +304,9 @@ export const optionCardList = (
 
 /**
  * The hours-based people as cards, when the engine cannot answer: each comes
- * in on their day off, with its cost and "Not rule-checked", their week, and
- * the first one suggested unless they declined. Pure.
+ * in on their day off, with its cost and "Not rule-checked", and their week.
+ * None is suggested, being not rule-checked; as among the engine's options,
+ * nor is someone who declined. Pure.
  */
 export const fallbackCards = (
 	options: ReadonlyArray<CoverOption>,
@@ -264,32 +315,35 @@ export const fallbackCards = (
 	options.map((option, place) => {
 		const [cell] = option.cells;
 		const offer = cardOfferOf(sources.offers, cell, sources.now);
+		const costs = costChips(
+			{
+				extraMinutes: {
+					overtime: option.pay.overtimeMinutes,
+					pastContract: option.pay.extraMinutes,
+					restDayWork: 0,
+					timeOffEarned: 0,
+				},
+				workingTimeRulesChecked: false,
+			},
+			sources.t
+		);
 		return {
 			key: `backend|${option.membershipId}`,
 			people: sources.memberName(option.membershipId),
-			kindLine: optionKindLine(
+			change: cardChangeOf(
 				{ kind: "CALL_IN", cells: option.cells },
-				sources,
-				sources.t
+				sources.memberName,
+				sources
 			),
 			groups: sources.groupsOf(option.cells, sources.memberName),
-			costChips: costChips(
-				{
-					extraMinutes: {
-						overtime: option.pay.overtimeMinutes,
-						pastContract: option.pay.extraMinutes,
-						restDayWork: 0,
-						timeOffEarned: 0,
-					},
-					workingTimeRulesChecked: false,
-				},
-				sources.t
-			),
+			costChips: costs,
 			weekLine: weekLine(option.weekMinutes, sources.t),
 			leaves: undefined,
 			takenOffEarlier: undefined,
-			// As among the engine's options: someone who declined is never the one suggested.
-			suggested: place === 0 && offer.kind !== "declined",
+			suggested:
+				place === 0 &&
+				isRuleChecked({ costChips: costs }) &&
+				offer.kind !== "declined",
 			offer,
 			choice: { kind: "backend", option },
 		};

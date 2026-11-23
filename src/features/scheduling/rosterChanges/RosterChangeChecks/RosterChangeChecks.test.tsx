@@ -43,7 +43,7 @@ describe("RosterChangeChecks", () => {
 			"Can’tFront Desk AM doesn’t run on Mon, Oct 12.",
 			"Needs a remarkFront Desk AM is outside Aisha Rahman’s availability on Mon, Oct 12.",
 			"CheckAisha Rahman also works on Mon, Oct 12 in another roster.",
-			"NoteFront Desk AM, Mon, Oct 12: 2 → 1 people.",
+			"NoteFront Desk AM, Mon, Oct 12: 2 → 1 person.",
 		]);
 	});
 
