@@ -19,8 +19,8 @@ export type IssueListRowProps = {
 const key = "scheduling.issues.panel";
 
 /**
- * One issue: a stripe in its severity's colour, what is wrong (wrapping,
- * never cut) over where, and its action on the right ("Cover", "Fix",
+ * One issue: a stripe in its severity's colour, what is wrong over where
+ * (both wrapping, never cut), and its action on the right ("Cover", "Fix",
  * "Details"; "Close" while open). Pressing it opens its part inline, under it.
  */
 export const IssueListRow = ({
@@ -55,7 +55,7 @@ export const IssueListRow = ({
 						{row.what}
 					</span>
 					{row.where && (
-						<span className="truncate text-xs text-neutral-700">
+						<span className="text-xs break-words text-neutral-700">
 							{row.where}
 						</span>
 					)}

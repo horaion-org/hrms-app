@@ -86,6 +86,51 @@ describe("issueRows", () => {
 		expect(row).toMatchObject({ severity, what, where, action });
 	});
 
+	it("names every shift a gap's rule counts across, then the time once", () => {
+		const [row] = issueRows(
+			[
+				rosterIssueFixture({
+					key: "gap|shift-b|2026-10-17",
+					who: "1 Shift Leader short",
+					memberProfileId: null,
+					day: "2026-10-17",
+					time: "13:00–02:00",
+					shiftIds: ["shift-b", "shift-f"],
+					action: {
+						kind: "findCover",
+						gap: { shiftId: "shift-b", day: "2026-10-17" },
+					},
+				}),
+			],
+			{
+				...SOURCES,
+				shiftName: (shiftId) =>
+					({ "shift-b": "Shift B", "shift-f": "Shift F" })[shiftId] ?? "",
+			}
+		);
+		expect(row?.where).toBe("Sat, Oct 17 · Shift B and Shift F 13:00–02:00");
+	});
+
+	it("leaves out a shift whose name is not known", () => {
+		const [row] = issueRows(
+			[
+				rosterIssueFixture({
+					key: "gap|front-desk-am|2026-10-17",
+					memberProfileId: null,
+					day: "2026-10-17",
+					time: "09:00–15:00",
+					shiftIds: ["front-desk-am", "deleted-shift"],
+					action: {
+						kind: "findCover",
+						gap: { shiftId: "front-desk-am", day: "2026-10-17" },
+					},
+				}),
+			],
+			SOURCES
+		);
+		expect(row?.where).toBe("Sat, Oct 17 · Front Desk AM 09:00–15:00");
+	});
+
 	it("names a person's leave that leaves a shift short by its own sentence", () => {
 		const [row] = issueRows(
 			[

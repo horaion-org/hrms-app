@@ -53,6 +53,8 @@ export type RosterIssue = {
 	days?: ReadonlyArray<string>;
 	/** "09:00–15:00" for a shift short, otherwise null. */
 	time: string | null;
+	/** Every shift a short shift's rule counts across, in the engine's order; left out for any other row. */
+	shiftIds?: ReadonlyArray<string>;
 	/** Why it is listed and, where there is something to do, what to do, the rule's name last. */
 	rule: string;
 	/** The rule's name alone, for a rule's row ("Most days a week"); left out for any other row. */
@@ -159,6 +161,7 @@ const gapIssue = (
 		}),
 		memberProfileId: null,
 		day: gap.date,
+		shiftIds: gap.shiftUuids,
 		time: t("scheduling.constraints.list", {
 			items: runs.map((run) => `${clockOf(run.start)}–${clockOf(run.end)}`),
 		}),

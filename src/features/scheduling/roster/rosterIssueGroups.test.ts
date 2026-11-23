@@ -98,6 +98,20 @@ describe("rosterIssues", () => {
 		expect(issue?.rule).toMatch(/^scheduling\.issues\.ruleOnly\(/);
 	});
 
+	it("keeps every shift a gap's rule counts across, and finds cover for the first", () => {
+		const [issue] = rosterIssues(
+			input({
+				gaps: [staffingGapFixture({ shiftUuids: ["shift-b", "shift-f"] })],
+			})
+		);
+
+		expect(issue?.shiftIds).toEqual(["shift-b", "shift-f"]);
+		expect(issue?.action).toEqual({
+			kind: "findCover",
+			gap: { shiftId: "shift-b", day: "2026-10-17" },
+		});
+	});
+
 	it("offers Show for a gap with no shift to find cover for", () => {
 		const [issue] = rosterIssues(
 			input({ gaps: [staffingGapFixture({ shiftUuids: [] })] })
