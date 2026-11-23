@@ -9,10 +9,7 @@ import {
 	type RosterRow,
 	type RosterShiftCell,
 } from "@/features/scheduling/roster/roster";
-import {
-	daysToDecide,
-	leaveAndCoverDays,
-} from "@/features/scheduling/roster/rosterSummary";
+import { rosterIssueFixture } from "@/features/scheduling/roster/rosterIssueFixtures";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 import {
 	generationFindingsFixture,
@@ -443,61 +440,82 @@ describe("tileStatus", () => {
 });
 
 describe("issuesOfHeader", () => {
-	const sources = {
-		placed,
-		days: WEEK,
-		daysToDecide: daysToDecide(noted),
-		leaveAndCover: leaveAndCoverDays(noted),
-	};
-
-	it("lists a member's findings and their days, exactly as their row counts them", () => {
-		const aisha = issuesOfHeader(
-			{ kind: "member", membershipId: "m-1" },
-			sources
-		);
-		const chen = issuesOfHeader(
-			{ kind: "member", membershipId: "m-3" },
-			sources
-		);
-
-		expect(aisha.findings).toEqual([]);
-		expect(aisha.daysToDecide.map((row) => row.assignmentId)).toEqual([
-			"a-mp-1-2026-10-12",
-		]);
-		expect(aisha.leaveAndCover.map((row) => row.assignmentId)).toEqual([
-			"a-mp-1-2026-10-12",
-		]);
-		expect(chen.findings).toEqual([
-			{
-				kind: "message",
-				date: "2026-10-18",
-				message: "Chen Wei covers the Sunday swing alone.",
-			},
-		]);
-		expect(chen.leaveAndCover.map((row) => row.assignmentId)).toEqual([
-			"a-mp-3-2026-10-13",
-		]);
+	const rows = [
+		{ membershipId: "m-1", memberProfileId: "mp-1" },
+		{ membershipId: "m-3", memberProfileId: "mp-3" },
+	];
+	const days = ["2026-10-14", "2026-10-15"];
+	const gap = rosterIssueFixture({
+		key: "gap|front-desk-am|2026-10-14",
+		memberProfileId: null,
+		day: "2026-10-14",
 	});
+	const wholeRoster = rosterIssueFixture({
+		key: "error||2026-10-14|If possible, not met",
+		group: "notMet",
+		who: "Whole roster",
+		memberProfileId: null,
+		day: "2026-10-14",
+	});
+	const anotherDaysGap = rosterIssueFixture({
+		key: "gap|front-desk-am|2026-10-15",
+		memberProfileId: null,
+		day: "2026-10-15",
+	});
+	const aishasWednesday = rosterIssueFixture();
+	const aishasDaysInARow = rosterIssueFixture({
+		key: "start|mp-1",
+		day: null,
+	});
+	const aishasMonday = rosterIssueFixture({
+		key: "decide|a-mp-1-2026-10-12",
+		day: "2026-10-12",
+	});
+	const aishasRunIntoView = rosterIssueFixture({
+		key: "mustFix|days|mp-1",
+		day: "2026-10-13",
+		days: ["2026-10-13", "2026-10-14"],
+	});
+	const chensWednesday = rosterIssueFixture({
+		key: "mustFix|rest|mp-3|2026-10-14",
+		memberProfileId: "mp-3",
+	});
+	const issues = [
+		gap,
+		wholeRoster,
+		anotherDaysGap,
+		aishasWednesday,
+		aishasDaysInARow,
+		aishasMonday,
+		aishasRunIntoView,
+		chensWednesday,
+	];
 
-	it("leaves out a member's days outside the week in view", () => {
+	it("lists a day's issues about no one person on that day, not a person's that day nor another day's", () => {
 		expect(
-			issuesOfHeader(
-				{ kind: "member", membershipId: "m-3" },
-				{ ...sources, days: ["2026-10-14"] }
-			)
-		).toEqual({ findings: [], daysToDecide: [], leaveAndCover: [] });
+			issuesOfHeader({ kind: "date", date: "2026-10-14" }, issues, {
+				rows,
+				days,
+			})
+		).toEqual([gap, wholeRoster]);
 	});
 
-	it("lists a day's own findings and no member's days", () => {
-		const saturday = issuesOfHeader(
-			{ kind: "date", date: "2026-10-17" },
-			sources
-		);
+	it("lists a member's issues on the days in view and those about no day, not another's", () => {
+		expect(
+			issuesOfHeader({ kind: "member", membershipId: "m-1" }, issues, {
+				rows,
+				days,
+			})
+		).toEqual([aishasWednesday, aishasDaysInARow, aishasRunIntoView]);
+	});
 
-		expect(saturday.findings).toHaveLength(1);
-		expect(saturday.findings[0]?.kind).toBe("conflict");
-		expect(saturday.daysToDecide).toEqual([]);
-		expect(saturday.leaveAndCover).toEqual([]);
+	it("lists nothing for a member no row names", () => {
+		expect(
+			issuesOfHeader({ kind: "member", membershipId: "m-9" }, issues, {
+				rows,
+				days,
+			})
+		).toEqual([]);
 	});
 });
 

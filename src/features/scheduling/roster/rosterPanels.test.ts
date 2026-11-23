@@ -1,16 +1,8 @@
 import type { TFunction } from "i18next";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 import { rosterFromAssignments } from "@/features/scheduling/roster/roster";
-import {
-	scheduleAssignmentsFixture,
-	shortenedShiftFixture,
-} from "@/features/scheduling/schedules/fixtures";
-import {
-	changedDayItems,
-	daysToDecideItems,
-	leaveAndCoverItems,
-	startingPointItems,
-} from "./rosterPanels";
+import { scheduleAssignmentsFixture } from "@/features/scheduling/schedules/fixtures";
+import { changedDayItems, startingPointItems } from "./rosterPanels";
 
 /** Echoes the key and its values, so items can be read without copy. */
 const t = ((key: string, values?: Record<string, unknown>) =>
@@ -28,103 +20,6 @@ describe("startingPointItems", () => {
 				(item) => item.lines
 			)
 		).toEqual([["scheduling.detail.workedInARow(Aisha Rahman|3)"]]);
-	});
-});
-
-describe("leaveAndCoverItems", () => {
-	it("given_aShiftLeftShortAndFindCover_when_listed_then_aFindCoverButtonForThatShiftDay", () => {
-		const [first] = scheduleAssignmentsFixture();
-		if (!first?.shift) throw new Error("fixture has a working day");
-		const onFindCover = vi.fn();
-
-		const [item] = leaveAndCoverItems(
-			[{ ...first, uncoveredShift: first.shift }],
-			t,
-			"en",
-			onFindCover
-		);
-		item?.action?.onClick();
-
-		expect(item?.action?.label).toBe("scheduling.cover.findCover");
-		expect(onFindCover).toHaveBeenCalledWith({
-			shiftId: first.shift.shiftId,
-			day: first.day,
-		});
-	});
-
-	it("given_noFindCover_when_listed_then_noButton", () => {
-		const [first] = scheduleAssignmentsFixture();
-		if (!first) throw new Error("fixture has a day");
-
-		const [item] = leaveAndCoverItems(
-			[{ ...first, uncoveredShift: first.shift }],
-			t,
-			"en"
-		);
-
-		expect(item?.action).toBeUndefined();
-	});
-
-	it("says whose day, then the leave marker with its type and any shift left short", () => {
-		const [first] = scheduleAssignmentsFixture();
-		if (!first) throw new Error("fixture has a day");
-
-		const [item] = leaveAndCoverItems(
-			[
-				{
-					...first,
-					flag: "ON_LEAVE_WHILE_ROSTERED",
-					leaveTypeName: "Annual leave",
-					uncoveredShift: first.shift,
-				},
-			],
-			t,
-			"en"
-		);
-
-		expect(item?.lines).toEqual([
-			"scheduling.rosterMarkers.onLeave: Annual leave",
-			`scheduling.rosterMarkers.needsCover(${first.shift?.name ?? ""})`,
-		]);
-	});
-});
-
-describe("leaveAndCoverItems for part of a shift", () => {
-	it("says which hours are short and whose leave it is, and still offers Find cover", () => {
-		const onFindCover = vi.fn();
-		const kept = shortenedShiftFixture();
-
-		const [item] = leaveAndCoverItems([kept], t, "en", onFindCover);
-		item?.action?.onClick();
-
-		expect(item?.lines).toEqual([
-			"scheduling.rosterMarkers.partGap(leave.portion.timeRange(09:00|11:00)|Aisha Rahman)",
-		]);
-		expect(onFindCover).toHaveBeenCalledWith({
-			shiftId: kept.shift?.shiftId,
-			day: kept.day,
-		});
-	});
-});
-
-describe("daysToDecideItems", () => {
-	it("says only that a day needs attention to someone who can't see why", () => {
-		const [first] = scheduleAssignmentsFixture();
-		if (!first) throw new Error("fixture has a day");
-
-		expect(
-			daysToDecideItems(
-				[
-					{ ...first, flag: "NEEDS_ATTENTION" },
-					{ ...first, assignmentId: "a-2", flag: "NEEDS_DECISION" },
-				],
-				t,
-				"en"
-			).map((item) => item.lines)
-		).toEqual([
-			["scheduling.rosterMarkers.needsAttention"],
-			["scheduling.rosterMarkers.needsDecision"],
-		]);
 	});
 });
 

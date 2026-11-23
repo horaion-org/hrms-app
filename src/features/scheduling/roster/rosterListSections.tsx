@@ -8,19 +8,13 @@ import { FilterChips } from "@/components/ui/FilterChips";
 import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import type { CoverOffer } from "@/features/scheduling/coverOffers/api";
 import { OffersOutSection } from "@/features/scheduling/coverOffers/OffersOutSection";
-import { FindingList } from "@/features/scheduling/roster/FindingList";
 import { formatDay } from "@/common/formatDay";
-import { findingFamily } from "@/features/scheduling/roster/findings/finding";
 import {
 	issuesOfHeader,
 	type IssuesAbout,
 } from "@/features/scheduling/roster/rosterMarks";
 import { ChangeTimeline } from "@/features/scheduling/roster/ChangeTimeline";
 import { changeTimeline } from "@/features/scheduling/roster/changeTimeline";
-import {
-	daysToDecideItems,
-	leaveAndCoverItems,
-} from "@/features/scheduling/roster/rosterPanels";
 import {
 	issueTopic,
 	type IssueNote,
@@ -88,8 +82,6 @@ export type RosterListInput = {
 	onShowIssue?: (issue: RosterIssue) => void;
 	/** Shows every issue again, from a header's narrowed Issues list. */
 	onShowAllIssues: () => void;
-	/** On a roster that may be changed: opens Find cover for a short shift, from its Issues row. */
-	onFindCover?: (gap: CoverGapRequest) => void;
 	/** On a roster that may be changed: what the fixes Issues makes itself need (`FixableRosterIssuesList`). */
 	issueFixing?: IssueFixing;
 	/** On a roster that may be changed: what covering a short shift from its Issues row needs. */
@@ -137,89 +129,41 @@ export const issueNoteLines = ({
 		: []),
 ];
 
-/** The Issues list for one header: its filter as a chip, then exactly what that header counted. */
-export const headerIssueSections = (
+/** The chip naming the header an Issues list was opened from, which shows every issue again when removed. */
+const headerChipSection = (
 	about: IssuesAbout,
-	{
-		roster: { rows, days, names, placed, toDecide, leaveAndCover },
-		t,
-		language,
-		onShowAllIssues,
-		onFindCover,
-	}: RosterListInput
-): Array<RosterSidePanelSection> => {
-	const listed = issuesOfHeader(about, {
-		placed,
-		days,
-		daysToDecide: toDecide,
-		leaveAndCover,
-	});
+	{ roster: { rows }, t, language, onShowAllIssues }: RosterListInput
+): RosterSidePanelSection => {
 	const chipLabel =
 		about.kind === "date"
 			? formatDay(about.date, language)
 			: (rows.find((row) => row.membershipId === about.membershipId)?.name ??
 				t(`${key}.formerMember`));
-	const findingPart = (family: "roster" | "setup"): ReactNode => {
-		const part = listed.findings.filter(
-			(finding) => findingFamily(finding) === family
-		);
-		return (
-			names &&
-			part.length > 0 && (
-				<FindingList
-					findings={part}
-					names={names}
-					showDates={about.kind === "member"}
-					onFindCover={onFindCover}
-				/>
-			)
-		);
+	return {
+		key: "about",
+		content: (
+			<FilterChips
+				chips={[
+					{ key: about.kind, label: chipLabel, onRemove: onShowAllIssues },
+				]}
+				onClearAll={onShowAllIssues}
+			/>
+		),
 	};
-	return [
-		{
-			key: "about",
-			content: (
-				<FilterChips
-					chips={[
-						{ key: about.kind, label: chipLabel, onRemove: onShowAllIssues },
-					]}
-					onClearAll={onShowAllIssues}
-				/>
-			),
-		},
-		{
-			key: "roster",
-			title: t("scheduling.findings.marker.roster"),
-			content: findingPart("roster"),
-		},
-		{
-			key: "setup",
-			title: t("scheduling.findings.marker.setup"),
-			content: findingPart("setup"),
-		},
-		{
-			key: "daysToDecide",
-			title: t(`${key}.daysToDecide`),
-			items: daysToDecideItems(listed.daysToDecide, t, language),
-		},
-		{
-			key: "leaveAndCover",
-			title: t(`${key}.leaveAndCover`),
-			items: leaveAndCoverItems(listed.leaveAndCover, t, language, onFindCover),
-		},
-	];
 };
 
 /**
- * The whole Issues list, one row per issue (`RosterIssuesList`), the cover
- * offers out under it; or one header's part of it when it was opened from a
- * header. The rules check's line is the panel's summary, not a section.
+ * The Issues list, one row per issue (`RosterIssuesList`), the cover offers
+ * out under it. Opened from a header, the same list holds only what that
+ * header counted (`issuesOfHeader`), under a chip naming it, and the cover
+ * offers are left out as they are about neither. The rules check's line is
+ * the panel's summary, not a section.
  */
 export const issuesSections = (
 	input: RosterListInput
 ): Array<RosterSidePanelSection> => {
 	const {
-		roster: { issuesAbout },
+		roster: { issuesAbout, rows, days },
 		assignments,
 		coverOffers,
 		issues,
@@ -229,7 +173,6 @@ export const issuesSections = (
 		issueCoverGap,
 		shifts,
 	} = input;
-	if (issuesAbout) return headerIssueSections(issuesAbout, input);
 	/** A shift's name by its id, as the roster's own days name it, else as the frozen shifts do. */
 	const shiftName = (shiftId: string): string =>
 		assignments.find((row) => row.shift?.shiftId === shiftId)?.shift?.name ??
@@ -243,10 +186,13 @@ export const issuesSections = (
 			)
 			.flatMap((row) => row.member?.displayName ?? []);
 	const list = {
-		issues,
+		issues: issuesAbout
+			? issuesOfHeader(issuesAbout, issues, { rows, days })
+			: issues,
 		shiftName,
 		whoWorks,
-		information: coverOffers &&
+		information: !issuesAbout &&
+			coverOffers &&
 			(coverOffers.failed || coverOffers.offers.length > 0) && (
 				<OffersOutSection
 					assignments={assignments}
@@ -262,6 +208,7 @@ export const issuesSections = (
 		onShow: onShowIssue,
 	};
 	return [
+		...(issuesAbout ? [headerChipSection(issuesAbout, input)] : []),
 		{
 			key: "issues",
 			content: issueFixing ? (

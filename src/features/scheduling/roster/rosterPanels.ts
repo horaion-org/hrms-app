@@ -1,18 +1,11 @@
 import type { TFunction } from "i18next";
 import type { BadgeTone } from "@/components/ui/Badge";
-import { timeRangeText } from "@/features/leave/dayPortion";
 import { formatDay } from "@/common/formatDay";
-import {
-	leaveLineText,
-	leavePortionOf,
-	type RosterRow,
-} from "@/features/scheduling/roster/roster";
-import { LEAVE_MARKER_KEYS } from "@/features/scheduling/roster/rosterMarks";
+import type { RosterRow } from "@/features/scheduling/roster/roster";
 import {
 	assignmentCell,
 	rosterCellText,
 } from "@/features/scheduling/rosterChanges/cellText";
-import type { CoverGapRequest } from "@/features/scheduling/cover/api";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 
 /** One entry of a side panel list: an optional bold first line, plain lines, then an optional button. */
@@ -25,84 +18,6 @@ export type PanelItem = {
 	/** A tag beside the title in its own tone, such as a rule's "If possible". */
 	tag?: { label: string; tone: BadgeTone };
 };
-
-/**
- * Each day the roster marks for leave or cover: whose and which day, then
- * what is marked ("Leave requested: Annual leave", "Needs cover: Morning",
- * or for part of a shift "Short 09:00–11:00: Aisha Rahman is on leave").
- * With `onFindCover`, a shift left short has a Find cover button.
- */
-export const leaveAndCoverItems = (
-	days: ReadonlyArray<ScheduleAssignment>,
-	t: TFunction,
-	language: string,
-	onFindCover?: (gap: CoverGapRequest) => void
-): Array<PanelItem> =>
-	days.map((row) => {
-		// A flag without a leave marker has no line.
-		const markerKey = row.flag ? LEAVE_MARKER_KEYS[row.flag] : undefined;
-		const marker = markerKey
-			? t(`scheduling.rosterMarkers.${markerKey}`)
-			: undefined;
-		const name = row.member?.displayName ?? t("scheduling.detail.formerMember");
-		const uncovered = row.uncoveredShift;
-		return {
-			key: row.assignmentId,
-			title: `${name} · ${formatDay(row.day, language)}`,
-			lines: [
-				...(marker
-					? [
-							row.leaveTypeName
-								? `${marker}: ${leaveLineText(row.leaveTypeName, leavePortionOf(row), t)}`
-								: marker,
-						]
-					: []),
-				...(row.uncoveredShift
-					? [
-							row.uncoveredFrom && row.uncoveredTo
-								? t("scheduling.rosterMarkers.partGap", {
-										time: timeRangeText(row.uncoveredFrom, row.uncoveredTo, t),
-										name,
-									})
-								: t("scheduling.rosterMarkers.needsCover", {
-										shift: row.uncoveredShift.name,
-									}),
-						]
-					: []),
-			],
-			...(onFindCover && uncovered
-				? {
-						action: {
-							label: t("scheduling.cover.findCover"),
-							onClick: (): void => {
-								onFindCover({ shiftId: uncovered.shiftId, day: row.day });
-							},
-						},
-					}
-				: {}),
-		};
-	});
-
-/**
- * Each day a manager must decide: whose and which day, and its marker. A
- * day read without leave access says only that it needs attention.
- */
-export const daysToDecideItems = (
-	days: ReadonlyArray<ScheduleAssignment>,
-	t: TFunction,
-	language: string
-): Array<PanelItem> =>
-	days.map((row) => ({
-		key: row.assignmentId,
-		title: `${row.member?.displayName ?? t("scheduling.detail.formerMember")} · ${formatDay(row.day, language)}`,
-		lines: [
-			t(
-				row.flag === "NEEDS_ATTENTION"
-					? "scheduling.rosterMarkers.needsAttention"
-					: "scheduling.rosterMarkers.needsDecision"
-			),
-		],
-	}));
 
 /** "Aisha Rahman has worked 3 days in a row before this week." for each member who brought working days into the period. */
 export const startingPointItems = (

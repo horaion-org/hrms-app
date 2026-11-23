@@ -2,6 +2,7 @@ import type { Decorator, Meta, StoryObj } from "@storybook/react-vite";
 import { fn } from "storybook/test";
 import { GeneratedRoster } from "@/features/scheduling/roster/GeneratedRoster";
 import { frozenConstraintsFixture } from "@/features/scheduling/constraints/fixtures";
+import { gapAcrossShiftsWeekFixture } from "@/features/scheduling/roster/gapAcrossShiftsFixtures";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 import {
 	emptyFindingsFixture,
@@ -56,6 +57,14 @@ export const NothingFound: Story = {
 /** The Issues list open beside the grid. */
 export const IssuesOpen: Story = {
 	args: { view: { week: "2026-10-12", panel: "issues" } },
+};
+
+/** Issues opened from Monday's header: a Shift Leader short across two shifts, and a Concierge asked "if possible". */
+export const IssuesFromADay: Story = {
+	args: {
+		...gapAcrossShiftsWeekFixture(),
+		view: { week: "2026-11-23", panel: "issues", date: "2026-11-23" },
+	},
 };
 
 /** What follows the roster on its page, so the stories below show where it starts with a panel open. */

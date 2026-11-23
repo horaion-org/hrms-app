@@ -4300,7 +4300,6 @@
 			"workedInARow_one": "{{name}} ha trabajado {{count}} día seguido antes de esta semana.",
 			"workedInARow_other": "{{name}} ha trabajado {{count}} días seguidos antes de esta semana.",
 			"leaveAndCover": "Permisos y cobertura",
-			"daysToDecide": "Días por decidir",
 			"details": {
 				"title": "Detalles",
 				"requested": "Solicitado",
@@ -4459,9 +4458,7 @@
 				"dateShort_one": "{{day}}: falta {{count}} persona. Ver en Avisos",
 				"dateShort_other": "{{day}}: faltan {{count}} personas. Ver en Avisos",
 				"tileLabel_one": "{{label}}, por revisar: {{count}}",
-				"tileLabel_other": "{{label}}, por revisar: {{count}}",
-				"roster": "Cuadrante",
-				"setup": "Configuración"
+				"tileLabel_other": "{{label}}, por revisar: {{count}}"
 			}
 		},
 		"scheduleMenu": {

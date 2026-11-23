@@ -28,7 +28,7 @@ export type IssueRow = {
 	severity: IssueSeverity;
 	/** What is wrong, in a few words: "1 Cook short", "Most days a week". */
 	what: string;
-	/** Who, when and which shift: "Thu, Dec 3 · Mid 12:00–20:00", "Mei Wong · Mon, Nov 30". */
+	/** Who, when and which shifts: "Thu, Dec 3 · Mid 12:00–20:00", "Mei Wong · Mon, Nov 30". */
 	where: string;
 	action: IssueRowAction;
 	/** The issue the row stands for, which its open part reads. */
@@ -85,7 +85,11 @@ const whatOf = (issue: RosterIssue): string => {
 	return issue.ruleName ?? issue.topic;
 };
 
-/** Who and when: a short shift's day, shift and time; a person's name and days; a rule's days alone. */
+/**
+ * Who and when: a short shift's day, every shift its rule counts across and
+ * the time ("Mon, Nov 23 · Shift B and Shift F 13:00–02:00"); a person's name
+ * and days; a rule's days alone.
+ */
 const whereOf = (
 	issue: RosterIssue,
 	{ shiftName, formatOne, t }: IssueRowSources
@@ -93,9 +97,14 @@ const whereOf = (
 	const days = issue.days ?? (issue.day ? [issue.day] : []);
 	const when = days.length > 0 ? dayListText(days, formatOne, t) : undefined;
 	if (issue.action.kind === "findCover") {
-		const shift = [shiftName(issue.action.gap.shiftId), issue.time]
-			.filter(Boolean)
-			.join(" ");
+		const shiftNames = (issue.shiftIds ?? [issue.action.gap.shiftId])
+			.map(shiftName)
+			.filter(Boolean);
+		const shifts =
+			shiftNames.length > 0
+				? t("scheduling.constraints.list", { items: shiftNames })
+				: undefined;
+		const shift = [shifts, issue.time].filter(Boolean).join(" ");
 		return [when, shift].filter(Boolean).join(" · ");
 	}
 	// A rule's row already names the rule as its "what"; its "who" is then the person, or the rule again.

@@ -1,5 +1,6 @@
 import type { TFunction } from "i18next";
 import { describe, expect, it, vi } from "vitest";
+import { rosterIssueFixture } from "@/features/scheduling/roster/rosterIssueFixtures";
 import type { RosterSidePanelSection } from "@/features/scheduling/RosterSidePanel";
 import type { ScheduleAssignment } from "@/features/scheduling/schedules/api";
 import {
@@ -84,7 +85,7 @@ describe("rosterListSections", () => {
 					withDayToDecide()
 				),
 			],
-			["about", "daysToDecide"],
+			["about", "issues"],
 		],
 		["Changed with no change", ["changes", inputOf()], []],
 		[
@@ -124,6 +125,41 @@ describe("rosterListSections", () => {
 		expect(about?.key).toBe("about");
 		expect(about?.content).toMatchObject({
 			props: { chips: [{ key: "member", label: "Aisha Rahman" }] },
+		});
+	});
+
+	it("given_aDaysHeader_when_built_then_listsThatDaysWholeRosterIssuesInTheSameListWithoutCoverOffers", () => {
+		const gap = rosterIssueFixture({
+			key: "gap|front-desk-am|2026-10-17",
+			memberProfileId: null,
+			day: "2026-10-17",
+		});
+		const sections = rosterListSections(
+			"issues",
+			inputOf(
+				{
+					issues: [gap, rosterIssueFixture()],
+					coverOffers: {
+						offers: [],
+						failed: true,
+						retry: vi.fn(),
+						target: {
+							companyId: "c-1",
+							unit: { branchId: "b-1", departmentId: "d-1" },
+							scheduleId: "s-1",
+							runId: "r-1",
+						},
+						timeZone: "Asia/Singapore",
+					},
+				},
+				{ week: "2026-10-12", panel: "issues", date: "2026-10-17" },
+				withDayToDecide()
+			)
+		);
+
+		expect(sections.map(({ key }) => key)).toEqual(["about", "issues"]);
+		expect(sections[1]?.content).toMatchObject({
+			props: { issues: [gap], information: false },
 		});
 	});
 });

@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-	findingFamily,
 	findingTone,
 	messageFindings,
 	strongestTone,
@@ -18,19 +17,6 @@ const conflict: Finding = {
 	conflict: findings.conflicts[0]!,
 };
 const message: Finding = { kind: "message", date: null, message: "Short." };
-
-describe("findingFamily", () => {
-	it("given_aDiagnostic_when_classed_then_isASetupIssue", () => {
-		expect(findingFamily(diagnostic("warning"))).toBe("setup");
-	});
-
-	it.each([
-		["conflict", conflict],
-		["message", message],
-	])("given_a_%s_when_classed_then_isARosterNote", (_, finding) => {
-		expect(findingFamily(finding)).toBe("roster");
-	});
-});
 
 describe("findingTone", () => {
 	it.each([
